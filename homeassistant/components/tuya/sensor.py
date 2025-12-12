@@ -76,9 +76,7 @@ class _WindDirectionWrapper(DPCodeTypeInformationWrapper[EnumTypeInformation]):
 
     def read_device_status(self, device: CustomerDevice) -> float | None:
         """Read the device value for the dpcode."""
-        if (
-            raw_value := self._read_device_status_raw(device)
-        ) in self.type_information.range:
+        if (raw_value := device.status.get(self.dpcode)) in self.type_information.range:
             return self._WIND_DIRECTIONS.get(raw_value)
         return None
 

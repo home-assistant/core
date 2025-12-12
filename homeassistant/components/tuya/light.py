@@ -37,7 +37,7 @@ from .models import (
     DPCodeJsonWrapper,
 )
 from .type_information import IntegerTypeInformation
-from .util import remap_value
+from .util import RemapHelper
 
 
 class _BrightnessWrapper(DPCodeIntegerWrapper):
@@ -50,36 +50,45 @@ class _BrightnessWrapper(DPCodeIntegerWrapper):
 
     brightness_min: DPCodeIntegerWrapper | None = None
     brightness_max: DPCodeIntegerWrapper | None = None
+    brightness_min_remap: RemapHelper | None = None
+    brightness_max_remap: RemapHelper | None = None
+
+    def __init__(self, dpcode: str, type_information: IntegerTypeInformation) -> None:
+        """Init DPCodeIntegerWrapper."""
+        super().__init__(dpcode, type_information)
+        self._remap_helper = RemapHelper.from_type_information(type_information, 0, 255)
 
     def read_device_status(self, device: CustomerDevice) -> Any | None:
         """Return the brightness of this light between 0..255."""
-        if (brightness := self._read_device_status_raw(device)) is None:
+        if (brightness := device.status.get(self.dpcode)) is None:
             return None
 
         # Remap value to our scale
-        brightness = self.type_information.remap_value_to(brightness)
+        brightness = self._remap_helper.remap_value_to(brightness)
 
         # If there is a min/max value, the brightness is actually limited.
         # Meaning it is actually not on a 0-255 scale.
         if (
             self.brightness_max is not None
             and self.brightness_min is not None
+            and self.brightness_max_remap is not None
+            and self.brightness_min_remap is not None
             and (brightness_max := device.status.get(self.brightness_max.dpcode))
             is not None
             and (brightness_min := device.status.get(self.brightness_min.dpcode))
             is not None
         ):
             # Remap values onto our scale
-            brightness_max = self.brightness_max.type_information.remap_value_to(
-                brightness_max
-            )
-            brightness_min = self.brightness_min.type_information.remap_value_to(
-                brightness_min
-            )
+            brightness_max = self.brightness_max_remap.remap_value_to(brightness_max)
+            brightness_min = self.brightness_min_remap.remap_value_to(brightness_min)
 
             # Remap the brightness value from their min-max to our 0-255 scale
-            brightness = remap_value(
-                brightness, from_min=brightness_min, from_max=brightness_max
+            brightness = RemapHelper.remap_value(
+                brightness,
+                from_min=brightness_min,
+                from_max=brightness_max,
+                to_min=0,
+                to_max=255,
             )
 
         return round(brightness)
@@ -91,72 +100,69 @@ class _BrightnessWrapper(DPCodeIntegerWrapper):
         if (
             self.brightness_max is not None
             and self.brightness_min is not None
+            and self.brightness_max_remap is not None
+            and self.brightness_min_remap is not None
             and (brightness_max := device.status.get(self.brightness_max.dpcode))
             is not None
             and (brightness_min := device.status.get(self.brightness_min.dpcode))
             is not None
         ):
             # Remap values onto our scale
-            brightness_max = self.brightness_max.type_information.remap_value_to(
-                brightness_max
-            )
-            brightness_min = self.brightness_min.type_information.remap_value_to(
-                brightness_min
-            )
+            brightness_max = self.brightness_max_remap.remap_value_to(brightness_max)
+            brightness_min = self.brightness_min_remap.remap_value_to(brightness_min)
 
             # Remap the brightness value from our 0-255 scale to their min-max
-            value = remap_value(value, to_min=brightness_min, to_max=brightness_max)
-        return round(self.type_information.remap_value_from(value))
+            value = RemapHelper.remap_value(
+                value,
+                from_min=0,
+                from_max=255,
+                to_min=brightness_min,
+                to_max=brightness_max,
+            )
+        return round(self._remap_helper.remap_value_from(value))
 
 
 class _ColorTempWrapper(DPCodeIntegerWrapper):
     """Wrapper for color temperature DP code."""
 
+    def __init__(self, dpcode: str, type_information: IntegerTypeInformation) -> None:
+        """Init DPCodeIntegerWrapper."""
+        super().__init__(dpcode, type_information)
+        self._remap_helper = RemapHelper.from_type_information(
+            type_information, MIN_MIREDS, MAX_MIREDS
+        )
+
     def read_device_status(self, device: CustomerDevice) -> Any | None:
         """Return the color temperature value in Kelvin."""
-        if (temperature := self._read_device_status_raw(device)) is None:
+        if (temperature := device.status.get(self.dpcode)) is None:
             return None
 
         return color_util.color_temperature_mired_to_kelvin(
-            self.type_information.remap_value_to(
-                temperature,
-                MIN_MIREDS,
-                MAX_MIREDS,
-                reverse=True,
-            )
+            self._remap_helper.remap_value_to(temperature, reverse=True)
         )
 
     def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
         """Convert a Home Assistant value (Kelvin) back to a raw device value."""
         return round(
-            self.type_information.remap_value_from(
-                color_util.color_temperature_kelvin_to_mired(value),
-                MIN_MIREDS,
-                MAX_MIREDS,
-                reverse=True,
+            self._remap_helper.remap_value_from(
+                color_util.color_temperature_kelvin_to_mired(value), reverse=True
             )
         )
 
 
-DEFAULT_H_TYPE = IntegerTypeInformation(
-    dpcode=DPCode.COLOUR_DATA_HSV, min=1, scale=0, max=360, step=1
-)
-DEFAULT_S_TYPE = IntegerTypeInformation(
-    dpcode=DPCode.COLOUR_DATA_HSV, min=1, scale=0, max=255, step=1
-)
-DEFAULT_V_TYPE = IntegerTypeInformation(
-    dpcode=DPCode.COLOUR_DATA_HSV, min=1, scale=0, max=255, step=1
-)
+DEFAULT_H_TYPE = RemapHelper(source_min=1, source_max=360, target_min=0, target_max=360)
+DEFAULT_S_TYPE = RemapHelper(source_min=1, source_max=255, target_min=0, target_max=100)
+DEFAULT_V_TYPE = RemapHelper(source_min=1, source_max=255, target_min=0, target_max=255)
 
 
-DEFAULT_H_TYPE_V2 = IntegerTypeInformation(
-    dpcode=DPCode.COLOUR_DATA_HSV, min=1, scale=0, max=360, step=1
+DEFAULT_H_TYPE_V2 = RemapHelper(
+    source_min=1, source_max=360, target_min=0, target_max=360
 )
-DEFAULT_S_TYPE_V2 = IntegerTypeInformation(
-    dpcode=DPCode.COLOUR_DATA_HSV, min=1, scale=0, max=1000, step=1
+DEFAULT_S_TYPE_V2 = RemapHelper(
+    source_min=1, source_max=1000, target_min=0, target_max=100
 )
-DEFAULT_V_TYPE_V2 = IntegerTypeInformation(
-    dpcode=DPCode.COLOUR_DATA_HSV, min=1, scale=0, max=1000, step=1
+DEFAULT_V_TYPE_V2 = RemapHelper(
+    source_min=1, source_max=1000, target_min=0, target_max=255
 )
 
 
@@ -172,23 +178,23 @@ class _ColorDataWrapper(DPCodeJsonWrapper):
         if (status := self.read_device_status(device)) is None:
             return None
         return (
-            self.h_type.remap_value_to(cast(int, status["h"]), 0, 360),
-            self.s_type.remap_value_to(cast(int, status["s"]), 0, 100),
+            self.h_type.remap_value_to(status["h"]),
+            self.s_type.remap_value_to(status["s"]),
         )
 
     def read_brightness(self, device: CustomerDevice) -> int | None:
         """Get the brightness value from this color data."""
         if (status := self.read_device_status(device)) is None:
             return None
-        return round(self.v_type.remap_value_to(cast(int, status["v"]), 0, 255))
+        return round(self.v_type.remap_value_to(status["v"]))
 
     def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
         """Convert a Home Assistant color/brightness pair back to a raw device value."""
         color, brightness = value
         return json.dumps(
             {
-                "h": round(self.h_type.remap_value_from(color[0], 0, 360)),
-                "s": round(self.s_type.remap_value_from(color[1], 0, 100)),
+                "h": round(self.h_type.remap_value_from(color[0])),
+                "s": round(self.s_type.remap_value_from(color[1])),
                 "v": round(self.v_type.remap_value_from(brightness)),
             }
         )
@@ -545,12 +551,20 @@ def _get_brightness_wrapper(
         )
     ) is None:
         return None
-    brightness_wrapper.brightness_max = DPCodeIntegerWrapper.find_dpcode(
+    if brightness_max := DPCodeIntegerWrapper.find_dpcode(
         device, description.brightness_max, prefer_function=True
-    )
-    brightness_wrapper.brightness_min = DPCodeIntegerWrapper.find_dpcode(
+    ):
+        brightness_wrapper.brightness_max = brightness_max
+        brightness_wrapper.brightness_max_remap = RemapHelper.from_type_information(
+            brightness_max.type_information, 0, 255
+        )
+    if brightness_min := DPCodeIntegerWrapper.find_dpcode(
         device, description.brightness_min, prefer_function=True
-    )
+    ):
+        brightness_wrapper.brightness_min = brightness_min
+        brightness_wrapper.brightness_min_remap = RemapHelper.from_type_information(
+            brightness_min.type_information, 0, 255
+        )
     return brightness_wrapper
 
 
@@ -568,19 +582,16 @@ def _get_color_data_wrapper(
 
     # Fetch color data type information
     if function_data := json_loads_object(
-        cast(str, color_data_wrapper.type_information.type_data)
+        color_data_wrapper.type_information.type_data
     ):
-        color_data_wrapper.h_type = IntegerTypeInformation(
-            dpcode=color_data_wrapper.dpcode,
-            **cast(dict, function_data["h"]),
+        color_data_wrapper.h_type = RemapHelper.from_function_data(
+            cast(dict, function_data["h"]), 0, 360
         )
-        color_data_wrapper.s_type = IntegerTypeInformation(
-            dpcode=color_data_wrapper.dpcode,
-            **cast(dict, function_data["s"]),
+        color_data_wrapper.s_type = RemapHelper.from_function_data(
+            cast(dict, function_data["s"]), 0, 100
         )
-        color_data_wrapper.v_type = IntegerTypeInformation(
-            dpcode=color_data_wrapper.dpcode,
-            **cast(dict, function_data["v"]),
+        color_data_wrapper.v_type = RemapHelper.from_function_data(
+            cast(dict, function_data["v"]), 0, 255
         )
     elif (
         description.fallback_color_data_mode == FallbackColorDataMode.V2
