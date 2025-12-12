@@ -212,13 +212,15 @@ async def test_sensors_legacy(
 async def test_sensors_http(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
-    mock_devices,
+    mock_devices_http,
     entry_unique_id,
     connect_http,
     create_device_registry_devices,
 ) -> None:
     """Test creating AsusWRT default sensors and tracker with http protocol."""
-    await _test_sensors(hass, freezer, mock_devices, CONFIG_DATA_HTTP, entry_unique_id)
+    await _test_sensors(
+        hass, freezer, mock_devices_http, CONFIG_DATA_HTTP, entry_unique_id
+    )
 
 
 async def _test_loadavg_sensors(

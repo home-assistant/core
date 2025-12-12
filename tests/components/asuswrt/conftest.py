@@ -81,14 +81,14 @@ def _mock_devices(protocol: str) -> dict[str, WrtDevice]:
     }
 
 
-@pytest.fixture
-def mock_devices() -> dict[str, WrtDevice]:
+@pytest.fixture(name="mock_devices_http")
+def mock_devices_http_fixture() -> dict[str, WrtDevice]:
     """Mock a list of AsusRouter client devices for HTTP backend."""
     return _mock_devices(PROTOCOL_HTTP)
 
 
-@pytest.fixture
-def mock_devices_legacy() -> dict[str, WrtDevice]:
+@pytest.fixture(name="mock_devices_legacy")
+def mock_devices_legacy_fixture() -> dict[str, WrtDevice]:
     """Mock a list of AsusRouter client devices for SSH backend."""
     return _mock_devices(PROTOCOL_SSH)
 
@@ -118,7 +118,7 @@ def mock_controller_connect_legacy(mock_devices_legacy):
 
 
 @pytest.fixture(name="connect_http")
-def mock_controller_connect_http(mock_devices):
+def mock_controller_connect_http(mock_devices_http):
     """Mock a successful connection with http library."""
     with patch(ASUSWRT_HTTP_LIB, spec_set=AsusRouter) as service_mock:
         instance = service_mock.return_value
@@ -138,7 +138,7 @@ def mock_controller_connect_http(mock_devices):
 
         # Data fetches via async_get_data
         instance.async_get_data.side_effect = lambda datatype, *args, **kwargs: {
-            AsusData.CLIENTS: mock_devices,
+            AsusData.CLIENTS: mock_devices_http,
             AsusData.NETWORK: MOCK_CURRENT_NETWORK,
             AsusData.SYSINFO: MOCK_LOAD_AVG,
             AsusData.TEMPERATURE: {
