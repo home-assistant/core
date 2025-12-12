@@ -329,6 +329,8 @@ async def test_door_lock_operating_mode_select(
         "privacy",
         "no_remote_lock_unlock",
     }
+    # Verify that the initial state is part of the allowed options
+    assert state.state in state.attributes["options"]
 
     # Dynamically obtain ids instead of hardcoding
     door_lock_cluster_id = clusters.DoorLock.Attributes.OperatingMode.cluster_id
