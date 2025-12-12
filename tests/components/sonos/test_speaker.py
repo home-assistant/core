@@ -1,8 +1,9 @@
 """Tests for common SonosSpeaker behavior."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
+from soco.exceptions import SoCoException
 
 from homeassistant.components.media_player import (
     DOMAIN as MP_DOMAIN,
@@ -198,16 +199,18 @@ async def test_async_offline_without_subscription_lock(
 ) -> None:
     """Test unloading entry works when subscription lock was never created.
 
-    This can happen when a speaker is discovered but async_setup()
-    was never called (e.g., no activity detected before shutdown).
-    The integration should handle this gracefully during unload.
+    This can happen when a speaker is discovered but setup() fails early
+    before async_setup() is scheduled. The integration should handle this
+    gracefully during unload.
     """
-    # Patch async_setup to do nothing, simulating the scenario where
-    # the speaker is discovered but async_setup() never completes
-    # (which would normally call async_subscribe and create the lock)
-    with patch(
-        "homeassistant.components.sonos.speaker.SonosSpeaker.async_setup",
-        new_callable=AsyncMock,
+    # Make play_mode raise an exception to cause setup() to fail early.
+    # The speaker is added to discovered before setup() is called in _add_speaker,
+    # so this creates a speaker in discovered without _subscription_lock being created.
+    # Using PropertyMock to only affect this specific test's soco instance.
+    with patch.object(
+        type(soco), "play_mode", new_callable=lambda: property(
+            fget=lambda self: (_ for _ in ()).throw(SoCoException("Connection failed"))
+        )
     ):
         config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
