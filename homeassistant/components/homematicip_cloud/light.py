@@ -134,49 +134,49 @@ class HomematicipLightHS(HomematicipGenericEntity, LightEntity):
     @property
     def is_on(self) -> bool:
         """Return true if light is on."""
-        return self.functional_channel.on
+        channel = self.get_channel_or_raise()
+        return channel.on
 
     @property
     def brightness(self) -> int | None:
         """Return the current brightness."""
-        return int(self.functional_channel.dimLevel * 255.0)
+        channel = self.get_channel_or_raise()
+        return int(channel.dimLevel * 255.0)
 
     @property
     def hs_color(self) -> tuple[float, float] | None:
         """Return the hue and saturation color value [float, float]."""
-        if (
-            self.functional_channel.hue is None
-            or self.functional_channel.saturationLevel is None
-        ):
+        channel = self.get_channel_or_raise()
+        if channel.hue is None or channel.saturationLevel is None:
             return None
         return (
-            self.functional_channel.hue,
-            self.functional_channel.saturationLevel * 100.0,
+            channel.hue,
+            channel.saturationLevel * 100.0,
         )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-
+        channel = self.get_channel_or_raise()
         hs_color = kwargs.get(ATTR_HS_COLOR, (0.0, 0.0))
         hue = hs_color[0] % 360.0
         saturation = hs_color[1] / 100.0
         dim_level = round(kwargs.get(ATTR_BRIGHTNESS, 255) / 255.0, 2)
 
         if ATTR_HS_COLOR not in kwargs:
-            hue = self.functional_channel.hue
-            saturation = self.functional_channel.saturationLevel
+            hue = channel.hue
+            saturation = channel.saturationLevel
 
         if ATTR_BRIGHTNESS not in kwargs:
             # If no brightness is set, use the current brightness
-            dim_level = self.functional_channel.dimLevel or 1.0
-
-        await self.functional_channel.set_hue_saturation_dim_level_async(
+            dim_level = channel.dimLevel or 1.0
+        await channel.set_hue_saturation_dim_level_async(
             hue=hue, saturation_level=saturation, dim_level=dim_level
         )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        await self.functional_channel.set_switch_state_async(on=False)
+        channel = self.get_channel_or_raise()
+        await channel.set_switch_state_async(on=False)
 
 
 class HomematicipLightMeasuring(HomematicipLight):

@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, patch
 from uuid import UUID
 
 from aiohttp import ClientError
-from freezegun.api import FrozenDateTimeFactory, freeze_time
+from freezegun.api import FrozenDateTimeFactory
 from habiticalib import HabiticaGroupMembersResponse
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -82,7 +82,7 @@ async def test_notify_platform(
         ),
     ],
 )
-@freeze_time("2025-08-13T00:00:00+00:00")
+@pytest.mark.freeze_time("2025-08-13T00:00:00+00:00")
 async def test_send_message(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,

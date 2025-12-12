@@ -50,7 +50,7 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][VS_COORDINATOR]
 
     @callback
-    def discover(devices):
+    def discover(devices: list[VeSyncBaseDevice]) -> None:
         """Add new devices to platform."""
         _setup_entities(devices, async_add_entities, coordinator)
 
@@ -66,9 +66,9 @@ async def async_setup_entry(
 @callback
 def _setup_entities(
     devices: list[VeSyncBaseDevice],
-    async_add_entities,
+    async_add_entities: AddConfigEntryEntitiesCallback,
     coordinator: VeSyncDataCoordinator,
-):
+) -> None:
     """Check if device is fan and add entity."""
 
     async_add_entities(
@@ -115,7 +115,10 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
         """Return the currently set speed."""
 
         current_level = self.device.state.fan_level
-        if self.device.state.mode == VS_FAN_MODE_MANUAL and current_level is not None:
+        if (
+            self.device.state.mode in (VS_FAN_MODE_MANUAL, VS_FAN_MODE_NORMAL)
+            and current_level is not None
+        ):
             if current_level == 0:
                 return 0
             return ordered_list_item_to_percentage(
@@ -156,17 +159,27 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
         if hasattr(self.device.state, "active_time"):
             attr["active_time"] = self.device.state.active_time
 
-        if hasattr(self.device.state, "display_status"):
+        if (
+            hasattr(self.device.state, "display_status")
+            and self.device.state.display_status is not None
+        ):
             attr["display_status"] = getattr(
                 self.device.state.display_status, "value", None
             )
 
-        if hasattr(self.device.state, "child_lock"):
+        if (
+            hasattr(self.device.state, "child_lock")
+            and self.device.state.child_lock is not None
+        ):
             attr["child_lock"] = self.device.state.child_lock
 
-        if hasattr(self.device.state, "nightlight_status"):
-            attr["night_light"] = self.device.state.nightlight_status
-
+        if (
+            hasattr(self.device.state, "nightlight_status")
+            and self.device.state.nightlight_status is not None
+        ):
+            attr["night_light"] = getattr(
+                self.device.state.nightlight_status, "value", None
+            )
         if hasattr(self.device.state, "mode"):
             attr["mode"] = self.device.state.mode
 
@@ -197,7 +210,7 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
                 )
 
         # Switch to manual mode if not already set
-        if self.device.state.mode != VS_FAN_MODE_MANUAL:
+        if self.device.state.mode not in (VS_FAN_MODE_MANUAL, VS_FAN_MODE_NORMAL):
             if not await self.device.set_manual_mode():
                 raise HomeAssistantError(
                     "An error occurred while setting manual mode."
@@ -254,8 +267,12 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
             await self.async_set_preset_mode(preset_mode)
             return
         if percentage is None:
-            percentage = 50
-        await self.async_set_percentage(percentage)
+            success = await self.device.turn_on()
+            if not success:
+                raise HomeAssistantError(self.device.last_response.message)
+            self.schedule_update_ha_state()
+        else:
+            await self.async_set_percentage(percentage)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""

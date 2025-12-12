@@ -167,6 +167,13 @@
         'unit': 'mi',
         'value': 150,
       }),
+      'engineStatus': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T15:00:00+00:00',
+        'unit': None,
+        'value': 'STOPPED',
+      }),
       'estimatedChargingTimeToTargetBatteryChargeLevel': dict({
         'extra_data': dict({
           'updated_at': '2025-07-02T08:51:23Z',
@@ -193,6 +200,23 @@
         'timestamp': '2024-12-30T14:32:26.169000+00:00',
         'unit': None,
         'value': 'AVAILABLE',
+      }),
+      'location': dict({
+        'extra_data': dict({
+        }),
+        'geometry': dict({
+          'coordinates': '**REDACTED**',
+          'extra_data': dict({
+            'type': 'Point',
+          }),
+        }),
+        'properties': dict({
+          'extra_data': dict({
+          }),
+          'heading': '**REDACTED**',
+          'timestamp': '2024-12-30T15:00:00+00:00',
+        }),
+        'type': 'Feature',
       }),
     }),
     'Volvo very slow interval coordinator': dict({
