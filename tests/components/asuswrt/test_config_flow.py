@@ -94,7 +94,7 @@ async def test_user_legacy(
     assert flow_result["type"] is FlowResultType.FORM
     assert flow_result["step_id"] == "user"
 
-    connect_legacy.return_value.async_get_nvram.return_value = unique_id
+    connect_legacy.return_value.get_nvram.return_value = unique_id
 
     # test with all provided
     legacy_result = await hass.config_entries.flow.async_configure(
@@ -258,7 +258,7 @@ async def test_abort_invalid_unique_id(hass: HomeAssistant, connect_legacy) -> N
         unique_id=ROUTER_MAC_ADDR,
     ).add_to_hass(hass)
 
-    connect_legacy.return_value.async_get_nvram.return_value = {}
+    connect_legacy.return_value.get_nvram.return_value = {}
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -287,7 +287,7 @@ async def test_on_connect_legacy_failed(
     )
 
     connect_legacy.return_value.is_connected = False
-    connect_legacy.return_value.connection.async_connect.side_effect = side_effect
+    connect_legacy.return_value.connect.side_effect = side_effect
 
     # go to legacy form
     result = await hass.config_entries.flow.async_configure(
