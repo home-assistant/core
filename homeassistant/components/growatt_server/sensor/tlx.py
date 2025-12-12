@@ -79,6 +79,7 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="ppv1",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
         precision=1,
     ),
     GrowattSensorEntityDescription(
@@ -122,6 +123,7 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="ppv2",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
         precision=1,
     ),
     GrowattSensorEntityDescription(
@@ -165,6 +167,7 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="ppv3",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
         precision=1,
     ),
     GrowattSensorEntityDescription(
@@ -208,6 +211,7 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="ppv4",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
         precision=1,
     ),
     GrowattSensorEntityDescription(
@@ -234,6 +238,7 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="ppv",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
         precision=1,
     ),
     GrowattSensorEntityDescription(
@@ -258,6 +263,7 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="pac",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
         precision=1,
     ),
     GrowattSensorEntityDescription(
@@ -323,6 +329,7 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="bdc1DischargePower",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     GrowattSensorEntityDescription(
         key="tlx_battery_1_discharge_total",
@@ -339,6 +346,7 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="bdc2DischargePower",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     GrowattSensorEntityDescription(
         key="tlx_battery_2_discharge_total",
@@ -372,6 +380,7 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="bdc1ChargePower",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     GrowattSensorEntityDescription(
         key="tlx_battery_1_charge_total",
@@ -388,6 +397,7 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="bdc2ChargePower",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     GrowattSensorEntityDescription(
         key="tlx_battery_2_charge_total",
@@ -445,6 +455,7 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="pacToLocalLoad",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
         precision=1,
     ),
     GrowattSensorEntityDescription(
@@ -453,6 +464,7 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="pacToUserTotal",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
         precision=1,
     ),
     GrowattSensorEntityDescription(
@@ -461,6 +473,7 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="pacToGridTotal",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
         precision=1,
     ),
     GrowattSensorEntityDescription(
@@ -545,6 +558,7 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="psystem",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
         precision=1,
     ),
     GrowattSensorEntityDescription(
@@ -553,6 +567,7 @@ TLX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="pself",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
         precision=1,
     ),
 )
