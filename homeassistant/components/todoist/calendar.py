@@ -8,8 +8,6 @@ from typing import Any
 import uuid
 
 from todoist_api_python.api_async import TodoistAPIAsync
-from todoist_api_python.endpoints import get_sync_url
-from todoist_api_python.headers import create_headers
 from todoist_api_python.models import Due, Label, Task
 import voluptuous as vol
 
@@ -307,7 +305,7 @@ def async_register_services(  # noqa: C901
         # @NOTE: The rest-api doesn't support reminders, this works manually using
         # the sync api, in order to keep functional parity with the component.
         # https://developer.todoist.com/sync/v9/#reminders
-        sync_url = get_sync_url("sync")
+        sync_url = "https://api.todoist.com/sync/v9/sync"
         _reminder_due: dict = {}
         if REMINDER_DATE_STRING in call.data:
             _reminder_due["string"] = call.data[REMINDER_DATE_STRING]
@@ -344,7 +342,10 @@ def async_register_services(  # noqa: C901
                     }
                 ]
             }
-            headers = create_headers(token=coordinator.token, with_content=True)
+            headers = {
+                "Authorization": f"Bearer {coordinator.token}",
+                "Content-Type": "application/json",
+            }
             return await session.post(sync_url, headers=headers, json=reminder_data)
 
         if _reminder_due:
@@ -516,9 +517,11 @@ class TodoistProjectData:
                 end=start.date() + timedelta(days=1),
             )
 
-        return CalendarEvent(
-            summary=self.event[SUMMARY], start=start, end=self.event[END]
-        )
+        end = self.event[END]
+        if end is None:
+            # If no end time, default to start time
+            end = start
+        return CalendarEvent(summary=self.event[SUMMARY], start=start, end=end)
 
     def create_todoist_task(self, data: Task):
         """Create a dictionary based on a Task passed from the Todoist API.
@@ -565,18 +568,18 @@ class TodoistProjectData:
                 data.due.datetime if data.due.datetime else data.due.date
             )
             task[END] = dt_util.as_local(end) if end is not None else end
-            if task[END] is not None:
+            if (task_end := task[END]) is not None:
                 if self._due_date_days is not None and (
-                    task[END] > dt_util.now() + self._due_date_days
+                    task_end > dt_util.now() + self._due_date_days
                 ):
                     # This task is out of range of our due date;
                     # it shouldn't be counted.
                     return None
 
-                task[DUE_TODAY] = task[END].date() == dt_util.now().date()
+                task[DUE_TODAY] = task_end.date() == dt_util.now().date()
 
                 # Special case: Task is overdue.
-                if task[END] <= task[START]:
+                if task_end <= task[START]:
                     task[OVERDUE] = True
                     # Set end time to the current time plus 1 hour.
                     # We're pretty much guaranteed to update within that 1 hour,
@@ -644,11 +647,18 @@ class TodoistProjectData:
                 event = proposed_event
                 continue
 
-            if proposed_event[END].date() > event[END].date():
+            if (proposed_end := proposed_event[END]) is None:
+                # Proposed event has no end time, skip it
+                continue
+
+            event_end = event[END]
+            assert event_end is not None  # Type narrowing after None check above
+
+            if proposed_end.date() > event_end.date():
                 # Event is too late.
                 continue
 
-            if proposed_event[END].date() < event[END].date():
+            if proposed_end.date() < event_end.date():
                 # Event is earlier than current, select it.
                 event = proposed_event
                 continue
@@ -658,9 +668,7 @@ class TodoistProjectData:
                 event = proposed_event
                 continue
 
-            if proposed_event[PRIORITY] == event[PRIORITY] and (
-                event[END] is not None and proposed_event[END] < event[END]
-            ):
+            if proposed_event[PRIORITY] == event[PRIORITY] and proposed_end < event_end:
                 event = proposed_event
                 continue
         return event
