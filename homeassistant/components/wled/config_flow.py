@@ -27,11 +27,10 @@ from .coordinator import WLEDConfigEntry
 
 def _normalize_host(host: str) -> str:
     """Normalize host by extracting hostname if a URL is provided."""
-    if "://" in host:
-        try:
-            return yarl.URL(host).host or host
-        except ValueError:
-            pass
+    try:
+        return yarl.URL(host).host or host
+    except ValueError:
+        pass
     return host
 
 
