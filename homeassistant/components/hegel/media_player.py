@@ -1,14 +1,25 @@
+"""Hegel media player platform."""
+
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 from datetime import timedelta
 from typing import Any
 
+from hegel_ip_client import (
+    apply_state_changes,
+    COMMANDS,
+    HegelClient,
+    parse_reply_message,
+)
+from hegel_ip_client.exceptions import HegelConnectionError
+
 from homeassistant.components.media_player import MediaPlayerEntity
 from homeassistant.components.media_player.const import MediaPlayerEntityFeature
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON
+from homeassistant.const import CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -17,14 +28,6 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
     UpdateFailed,
-)
-
-from hegel_ip_client import (
-    apply_state_changes,
-    COMMANDS,
-    HegelClient,
-    HegelStateUpdate,
-    parse_reply_message,
 )
 
 from .const import (
@@ -40,20 +43,18 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-):
+) -> None:
     """Set up the Hegel media player from a config entry."""
     host = entry.data[CONF_HOST]
-    port = entry.data.get(CONF_PORT, 50001)
     name = entry.data.get(CONF_NAME, f"Hegel {host}")
     model = entry.data.get(CONF_MODEL)
     mac = entry.data.get("mac")
     unique_id = entry.data.get("unique_id")
 
     # map inputs (source_map)
-    source_map: dict[int, str] = {}
-    if model in MODEL_INPUTS:
-        for idx, label in enumerate(MODEL_INPUTS[model], start=1):
-            source_map[idx] = label
+    source_map: dict[int, str] = (
+        dict(enumerate(MODEL_INPUTS[model], start=1)) if model in MODEL_INPUTS else {}
+    )
 
     # Use the client from the config entry's runtime_data (already connected)
     client = entry.runtime_data
@@ -71,7 +72,7 @@ async def async_setup_entry(
     # Fetch initial data (coordinator will attempt to connect and fetch)
     try:
         await coordinator.async_config_entry_first_refresh()
-    except Exception as exc:
+    except (HegelConnectionError, TimeoutError, OSError) as exc:
         _LOGGER.debug("Initial coordinator refresh failed: %s", exc)
 
     # Create entity
@@ -99,7 +100,10 @@ async def async_setup_entry(
 class HegelSlowPollCoordinator(DataUpdateCoordinator):
     """Very slow fallback polling coordinator."""
 
-    def __init__(self, hass: HomeAssistant, client: HegelClient, shared_state: dict):
+    def __init__(
+        self, hass: HomeAssistant, client: HegelClient, shared_state: dict
+    ) -> None:
+        """Initialize the slow poll coordinator."""
         super().__init__(
             hass,
             _LOGGER,
@@ -109,26 +113,24 @@ class HegelSlowPollCoordinator(DataUpdateCoordinator):
         self._client = client
         self._state = shared_state
 
-    async def _async_update_data(self):
-        """Periodically poll the amplifier to keep state in sync as a fallback"""
-
-        try:
-            for key, cmd in {
-                "power": COMMANDS["power_query"],
-                "volume": COMMANDS["volume_query"],
-                "mute": COMMANDS["mute_query"],
-                "input": COMMANDS["input_query"],
-            }.items():
-                # client.send() now returns parsed changes directly
+    async def _async_update_data(self) -> dict[str, Any]:
+        """Periodically poll the amplifier to keep state in sync as a fallback."""
+        for cmd in [
+            COMMANDS["power_query"],
+            COMMANDS["volume_query"],
+            COMMANDS["mute_query"],
+            COMMANDS["input_query"],
+        ]:
+            try:
                 update = await self._client.send(cmd, expect_reply=True, timeout=3.0)
                 if update and update.has_changes():
                     apply_state_changes(
                         self._state, update, logger=_LOGGER, source="poll"
                     )
-            return self._state
-        except Exception as err:
-            _LOGGER.error("Slow poll failed: %s", err)
-            raise UpdateFailed(str(err))
+            except (HegelConnectionError, TimeoutError, OSError) as err:
+                _LOGGER.error("Slow poll failed: %s", err)
+                raise UpdateFailed(str(err)) from err
+        return self._state
 
 
 class HegelMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
@@ -147,6 +149,7 @@ class HegelMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         unique_id: str | None,
         coordinator: HegelSlowPollCoordinator,
     ) -> None:
+        """Initialize the Hegel media player entity."""
         CoordinatorEntity.__init__(self, coordinator)
         MediaPlayerEntity.__init__(self)
 
@@ -179,14 +182,16 @@ class HegelMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         # register push handler (schedule coroutine)
         # the client expects a synchronous callable; schedule a coroutine safely
         def push_handler(msg: str) -> None:
-            asyncio.create_task(self._async_handle_push(msg))
+            self._push_task = asyncio.create_task(self._async_handle_push(msg))
 
         self._client.add_push_callback(push_handler)
+        self._push_task: asyncio.Task | None = None
 
         # start a watcher task to refresh state on reconnect
         self._connected_watcher_task = asyncio.create_task(self._connected_watcher())
 
     async def async_added_to_hass(self) -> None:
+        """Handle entity added to Home Assistant."""
         # 1. Call parent (important for CoordinatorEntity)
         await super().async_added_to_hass()
         # 2. Schedule the heartbeat every 2 minutes while the reset timeout is 3 minutes
@@ -207,7 +212,7 @@ class HegelMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
             await self._client.send(
                 f"-r.{HEARTBEAT_TIMEOUT_MINUTES}", expect_reply=False
             )
-        except Exception as err:
+        except (HegelConnectionError, TimeoutError, OSError) as err:
             _LOGGER.debug("Heartbeat failed: %s", err)
 
     @property
@@ -222,7 +227,8 @@ class HegelMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         return f"hegel_{self._entry.entry_id}"
 
     @property
-    def device_info(self):
+    def device_info(self) -> dict[str, Any]:
+        """Return device information for this entity."""
         info = {
             "identifiers": {(DOMAIN, self.unique_id)},
             "name": self._attr_name,
@@ -241,8 +247,8 @@ class HegelMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
                 apply_state_changes(self._state, update, logger=_LOGGER, source="push")
                 # notify HA
                 self.async_write_ha_state()
-        except Exception as err:
-            _LOGGER.exception("Failed to handle push message: %s", err)
+        except (ValueError, KeyError, AttributeError):
+            _LOGGER.exception("Failed to handle push message")
 
     async def _connected_watcher(self) -> None:
         """Watch the client's connected_event and refresh when it becomes set."""
@@ -264,7 +270,7 @@ class HegelMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
                 # do an immediate refresh (best-effort)
                 try:
                     await self._refresh_state()
-                except Exception as e:
+                except (HegelConnectionError, TimeoutError, OSError) as e:
                     _LOGGER.debug("Reconnect refresh failed: %s", e)
 
                 # wait until disconnected before looping (to avoid spamming refresh)
@@ -277,19 +283,18 @@ class HegelMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
 
         except asyncio.CancelledError:
             _LOGGER.debug("Connected watcher cancelled")
-            pass
-        except Exception as err:
-            _LOGGER.exception("Connected watcher failed: %s", err)
+        except (HegelConnectionError, OSError):
+            _LOGGER.exception("Connected watcher failed")
 
     async def _refresh_state(self) -> None:
         """Query the amplifier for the main values and update state dict."""
         try:
-            for key, cmd in {
-                "power": COMMANDS["power_query"],
-                "volume": COMMANDS["volume_query"],
-                "mute": COMMANDS["mute_query"],
-                "input": COMMANDS["input_query"],
-            }.items():
+            for cmd in [
+                COMMANDS["power_query"],
+                COMMANDS["volume_query"],
+                COMMANDS["mute_query"],
+                COMMANDS["input_query"],
+            ]:
                 try:
                     update = await self._client.send(
                         cmd, expect_reply=True, timeout=3.0
@@ -298,11 +303,11 @@ class HegelMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
                         apply_state_changes(
                             self._state, update, logger=_LOGGER, source="reconnect"
                         )
-                except Exception as err:
+                except (HegelConnectionError, TimeoutError, OSError) as err:
                     _LOGGER.debug("Refresh command %s failed: %s", cmd, err)
             # update entity state
             self.async_write_ha_state()
-        except Exception as err:
+        except (HegelConnectionError, TimeoutError, OSError) as err:
             _LOGGER.debug("Failed to refresh Hegel state: %s", err)
 
     @property
@@ -321,85 +326,96 @@ class HegelMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
 
     @property
     def state(self) -> str | None:
+        """Return the current state of the media player."""
         return STATE_ON if self._state.get("power") else STATE_OFF
 
     @property
     def volume_level(self) -> float | None:
+        """Return the volume level."""
         return float(self._state.get("volume", 0.0))
 
     @property
     def is_volume_muted(self) -> bool | None:
+        """Return whether volume is muted."""
         return bool(self._state.get("mute", False))
 
     @property
     def source(self) -> str | None:
+        """Return the current input source."""
         idx = self._state.get("input")
         return self._source_map.get(idx, f"Input {idx}") if idx else None
 
     @property
     def source_list(self) -> list[str] | None:
+        """Return the list of available input sources."""
         return [self._source_map[k] for k in sorted(self._source_map.keys())] or None
 
     async def async_turn_on(self) -> None:
+        """Turn on the media player."""
         try:
             await self._client.send(COMMANDS["power_on"], expect_reply=False)
-        except Exception as err:
+        except (HegelConnectionError, TimeoutError, OSError) as err:
             _LOGGER.warning("Failed to send power_on: %s", err)
 
     async def async_turn_off(self) -> None:
+        """Turn off the media player."""
         try:
             await self._client.send(COMMANDS["power_off"], expect_reply=False)
-        except Exception as err:
+        except (HegelConnectionError, TimeoutError, OSError) as err:
             _LOGGER.warning("Failed to send power_off: %s", err)
 
     async def async_set_volume_level(self, volume: float) -> None:
+        """Set volume level, range 0..1."""
         vol = max(0.0, min(volume, 1.0))
         amp_vol = int(round(vol * 100))
         try:
             await self._client.send(COMMANDS["volume_set"](amp_vol), expect_reply=False)
-        except Exception as err:
+        except (HegelConnectionError, TimeoutError, OSError) as err:
             _LOGGER.warning("Failed to set volume: %s", err)
 
     async def async_mute_volume(self, mute: bool) -> None:
+        """Mute or unmute the volume."""
         try:
             await self._client.send(
                 COMMANDS["mute_on" if mute else "mute_off"], expect_reply=False
             )
-        except Exception as err:
+        except (HegelConnectionError, TimeoutError, OSError) as err:
             _LOGGER.warning("Failed to set mute: %s", err)
 
     async def async_volume_up(self) -> None:
+        """Increase volume."""
         try:
             await self._client.send(COMMANDS["volume_up"], expect_reply=False)
-        except Exception as err:
+        except (HegelConnectionError, TimeoutError, OSError) as err:
             _LOGGER.warning("Failed to increase volume: %s", err)
 
     async def async_volume_down(self) -> None:
+        """Decrease volume."""
         try:
             await self._client.send(COMMANDS["volume_down"], expect_reply=False)
-        except Exception as err:
+        except (HegelConnectionError, TimeoutError, OSError) as err:
             _LOGGER.warning("Failed to decrease volume: %s", err)
 
     async def async_select_source(self, source: str) -> None:
+        """Select input source."""
         inv = {v: k for k, v in self._source_map.items()}
         idx = inv.get(source)
         if idx is not None:
             try:
                 await self._client.send(COMMANDS["input_set"](idx), expect_reply=False)
-            except Exception as err:
+            except (HegelConnectionError, TimeoutError, OSError) as err:
                 _LOGGER.warning("Failed to select source %s: %s", source, err)
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
+        """Handle entity removal from Home Assistant."""
         # Cancel background watcher and stop client
         if self._connected_watcher_task:
             self._connected_watcher_task.cancel()
-            try:
+            with contextlib.suppress(asyncio.CancelledError):
                 await self._connected_watcher_task
-            except asyncio.CancelledError:
-                pass
 
         # stop client manager
         try:
             await self._client.stop()
-        except Exception as err:
+        except (HegelConnectionError, OSError) as err:
             _LOGGER.debug("Error while stopping Hegel client: %s", err)

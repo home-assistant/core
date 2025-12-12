@@ -3,7 +3,7 @@
   "name": "Hegel Amplifier",
   "version": "0.1.0",
   "documentation": "https://www.home-assistant.io/integrations/hegel/",
-  "requirements": ["hegel-ip-client==0.1.0"],
+  "requirements": ["hegel-ip-client==0.1.2"],
   "codeowners": [
     "@boazca"
   ],

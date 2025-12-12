@@ -1,4 +1,5 @@
-# const.py
+"""Constants for the Hegel integration."""
+
 DOMAIN = "hegel"
 DEFAULT_PORT = 50001
 

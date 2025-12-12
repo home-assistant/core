@@ -1,17 +1,22 @@
+"""The Hegel integration."""
+
 from __future__ import annotations
 
 import logging
 
 import voluptuous as vol
+
+from hegel_ip_client import HegelClient
+from hegel_ip_client.exceptions import HegelConnectionError
+
 from homeassistant.config_entries import ConfigEntry, ConfigEntryNotReady
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv, entity_registry as er
-from hegel_ip_client import HegelClient
 
 from .const import DEFAULT_PORT, DOMAIN
 
-PLATFORMS = ["media_player"]
+PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER]
 _LOGGER = logging.getLogger(__name__)
 
 type HegelConfigEntry = ConfigEntry[HegelClient]
@@ -40,7 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HegelConfigEntry) -> boo
         await client.start()
         await client.ensure_connected(timeout=10.0)
         _LOGGER.debug("Successfully connected to Hegel at %s:%s", host, port)
-    except Exception as err:
+    except (HegelConnectionError, TimeoutError, OSError) as err:
         _LOGGER.error("Failed to connect to Hegel at %s:%s: %s", host, port, err)
         await client.stop()  # Clean up
         raise ConfigEntryNotReady(
@@ -69,7 +74,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: HegelConfigEntry) -> bo
         try:
             _LOGGER.debug("Stopping Hegel client for %s", entry.title)
             await client.stop()
-        except Exception as err:
+        except (HegelConnectionError, OSError) as err:
             _LOGGER.warning("Error while stopping Hegel client: %s", err)
 
     return unload_ok
@@ -99,7 +104,7 @@ async def _async_register_services(hass: HomeAssistant) -> None:
                         try:
                             await client.send(command, expect_reply=False)
                             _LOGGER.debug("Sent command '%s' to %s", command, entity_id)
-                        except Exception as err:
+                        except (HegelConnectionError, TimeoutError, OSError) as err:
                             _LOGGER.error(
                                 "Failed to send command '%s' to %s: %s",
                                 command,

@@ -7,7 +7,6 @@
         "data": {
           "host": "Host/IP",
           "port": "Port",
-          "name": "Name",
           "model": "Model"
         }
       },
@@ -17,7 +16,6 @@
         "data": {
           "host": "Host/IP",
           "port": "Port",
-          "name": "Name",
           "model": "Model"
         }
       }

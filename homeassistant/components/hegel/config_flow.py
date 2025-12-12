@@ -1,15 +1,17 @@
-# config_flow.py
+"""Config flow for Hegel integration."""
+
 from __future__ import annotations
 
 import asyncio
 import logging
 import re
-import xml.etree.ElementTree as ET
 from typing import Any
 
+import aiohttp
+import defusedxml.ElementTree as ET
 import voluptuous as vol
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigFlowResult
+
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
@@ -19,17 +21,16 @@ from .const import CONF_MODEL, DEFAULT_PORT, DOMAIN, MODEL_INPUTS
 _LOGGER = logging.getLogger(__name__)
 
 
-class HegelFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for Hegel amplifiers."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     def __init__(self) -> None:
+        """Initialize the config flow."""
         self._discovered_data: dict[str, Any] = {}
         self._host = ""
         self._port = DEFAULT_PORT
-        self._name = ""
         self._model = ""
         self._errors: dict[str, str] = {}
 
@@ -47,8 +48,8 @@ class HegelFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 await asyncio.wait_for(asyncio.open_connection(host, port), timeout=2.0)
-            except Exception:
-                _LOGGER.debug("Cannot connect to %s:%s", host, port)
+            except (TimeoutError, OSError, ConnectionRefusedError) as err:
+                _LOGGER.debug("Cannot connect to %s:%s: %s", host, port, err)
                 errors[CONF_HOST] = "cannot_connect"
             else:
                 unique_id = entry_data.get("unique_id")
@@ -56,8 +57,14 @@ class HegelFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     await self.async_set_unique_id(unique_id)
                     self._abort_if_unique_id_configured()
 
+                # Determine recognizable title: prefer discovered name, then model, then generic
+                title = entry_data.get(CONF_NAME)  # From SSDP discovery
+                if not title:
+                    model = entry_data.get(CONF_MODEL)
+                    title = f"Hegel {model}" if model else "Hegel Amplifier"
+
                 return self.async_create_entry(
-                    title=entry_data.get(CONF_NAME, f"Hegel {host}"),
+                    title=title,
                     data=entry_data,
                 )
 
@@ -71,9 +78,6 @@ class HegelFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_PORT,
                     default=self._discovered_data.get(CONF_PORT, DEFAULT_PORT),
                 ): int,
-                vol.Optional(
-                    CONF_NAME, default=self._discovered_data.get(CONF_NAME, "")
-                ): str,
                 vol.Optional(
                     CONF_MODEL, default=self._discovered_data.get(CONF_MODEL)
                 ): vol.In(list(MODEL_INPUTS.keys())),
@@ -91,7 +95,6 @@ class HegelFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._host = user_input[CONF_HOST]
             self._port = user_input.get(CONF_PORT, DEFAULT_PORT)
-            self._name = user_input.get(CONF_NAME, f"Hegel {self._host}")
             self._model = user_input.get(CONF_MODEL)
 
             # Test connection
@@ -99,16 +102,21 @@ class HegelFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 await asyncio.wait_for(
                     asyncio.open_connection(self._host, self._port), timeout=2.0
                 )
-            except Exception:
-                _LOGGER.debug("Cannot connect to %s:%s", self._host, self._port)
+            except (TimeoutError, OSError, ConnectionRefusedError) as err:
+                _LOGGER.debug(
+                    "Cannot connect to %s:%s: %s", self._host, self._port, err
+                )
                 self._errors[CONF_HOST] = "cannot_connect"
             else:
+                # Determine recognizable title from model
+                title = f"Hegel {self._model}" if self._model else "Hegel Amplifier"
+
                 return self.async_update_reload_and_abort(
                     reconfigure_entry,
+                    title=title,
                     data_updates={
                         CONF_HOST: self._host,
                         CONF_PORT: self._port,
-                        CONF_NAME: self._name,
                         CONF_MODEL: self._model,
                     },
                 )
@@ -119,7 +127,6 @@ class HegelFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     {
                         vol.Required(CONF_HOST, default=self._host): str,
                         vol.Optional(CONF_PORT, default=self._port): int,
-                        vol.Optional(CONF_NAME, default=self._name): str,
                         vol.Optional(CONF_MODEL, default=self._model): vol.In(
                             list(MODEL_INPUTS.keys())
                         ),
@@ -131,7 +138,6 @@ class HegelFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # Pre-populate with current values
         self._host = reconfigure_entry.data[CONF_HOST]
         self._port = reconfigure_entry.data.get(CONF_PORT, DEFAULT_PORT)
-        self._name = reconfigure_entry.data.get(CONF_NAME, f"Hegel {self._host}")
         self._model = reconfigure_entry.data.get(CONF_MODEL)
 
         return self.async_show_form(
@@ -140,7 +146,6 @@ class HegelFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_HOST, default=self._host): str,
                     vol.Optional(CONF_PORT, default=self._port): int,
-                    vol.Optional(CONF_NAME, default=self._name): str,
                     vol.Optional(CONF_MODEL, default=self._model): vol.In(
                         list(MODEL_INPUTS.keys())
                     ),
@@ -205,7 +210,8 @@ class HegelFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             async with session.get(ssdp_location, timeout=5) as resp:
                 text = await resp.text()
-        except Exception:
+        except (TimeoutError, aiohttp.ClientError, OSError) as err:
+            _LOGGER.debug("Failed to fetch device description: %s", err)
             return None, None
 
         # Try MAC regex
@@ -238,7 +244,7 @@ class HegelFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if udn:
                 # use udn as stable id if mac/serial absent
                 return f"udn:{udn}", None
-        except Exception:
-            pass
+        except ET.ParseError as err:
+            _LOGGER.debug("Failed to parse device description XML: %s", err)
 
         return None, None
