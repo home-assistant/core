@@ -32,6 +32,14 @@ CAPABILITIES = (
     Capability.COLOR_TEMPERATURE,
 )
 
+# Components that should be exposed as light entities
+# (in addition to the main component)
+LIGHT_COMPONENTS = {
+    "lamp",
+    "cookinglight",
+    "edgelight",
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -46,6 +54,7 @@ async def async_setup_entry(
         for component in device.status
         if Capability.SWITCH in device.status[component]
         and any(capability in device.status[component] for capability in CAPABILITIES)
+        and (component == MAIN or component in LIGHT_COMPONENTS)
     )
 
 

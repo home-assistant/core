@@ -451,3 +451,38 @@ async def test_availability_at_start(
     """Test unavailable at boot."""
     await setup_integration(hass, mock_config_entry)
     assert hass.states.get("light.standing_light").state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ks_hood_01001"])
+async def test_hood_multi_component_lights(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that range hood device creates light entities for multiple components."""
+    await setup_integration(hass, mock_config_entry)
+
+    # The hood device should create a light entity for the lamp component
+    lamp_light = hass.states.get("light.range_hood_lamp")
+    assert lamp_light is not None
+    assert lamp_light.state == STATE_OFF
+
+    # Verify the entity is registered with correct unique_id
+    lamp_entity = entity_registry.async_get("light.range_hood_lamp")
+    assert lamp_entity is not None
+    assert lamp_entity.unique_id == "fa5fca25-fa7a-1807-030a-2f72ee0f7bff_lamp"
+
+    # Test turning on the lamp light
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "light.range_hood_lamp"},
+        blocking=True,
+    )
+    assert devices.execute_device_command.call_args_list[-1] == call(
+        "fa5fca25-fa7a-1807-030a-2f72ee0f7bff",
+        Capability.SWITCH,
+        Command.ON,
+        "lamp",
+    )
