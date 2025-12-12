@@ -5,6 +5,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Self
 
+from tuya_device_handlers.device_wrapper import (
+    DeviceWrapper,
+    DPCodeBooleanWrapper,
+    DPCodeEnumWrapper,
+    DPCodeIntegerWrapper,
+)
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.climate import (
@@ -32,12 +38,6 @@ from .const import (
     DPCode,
 )
 from .entity import TuyaEntity
-from .models import (
-    DeviceWrapper,
-    DPCodeBooleanWrapper,
-    DPCodeEnumWrapper,
-    DPCodeIntegerWrapper,
-)
 
 TUYA_HVAC_TO_HA = {
     "auto": HVACMode.HEAT_COOL,

@@ -7,6 +7,14 @@ from enum import StrEnum
 import json
 from typing import Any, cast
 
+from tuya_device_handlers.device_wrapper import (
+    DPCodeBooleanWrapper,
+    DPCodeEnumWrapper,
+    DPCodeIntegerWrapper,
+    DPCodeJsonWrapper,
+)
+from tuya_device_handlers.type_information import IntegerTypeInformation
+from tuya_device_handlers.utils import RemapHelper
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.light import (
@@ -30,14 +38,6 @@ from homeassistant.util.json import json_loads_object
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, WorkMode
 from .entity import TuyaEntity
-from .models import (
-    DPCodeBooleanWrapper,
-    DPCodeEnumWrapper,
-    DPCodeIntegerWrapper,
-    DPCodeJsonWrapper,
-)
-from .type_information import IntegerTypeInformation
-from .util import RemapHelper
 
 
 class _BrightnessWrapper(DPCodeIntegerWrapper):

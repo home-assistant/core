@@ -6,6 +6,12 @@ from base64 import b64decode
 from dataclasses import dataclass
 from typing import Any
 
+from tuya_device_handlers.device_wrapper import (
+    DPCodeEnumWrapper,
+    DPCodeRawWrapper,
+    DPCodeStringWrapper,
+    DPCodeTypeInformationWrapper,
+)
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.event import (
@@ -20,12 +26,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .models import (
-    DPCodeEnumWrapper,
-    DPCodeRawWrapper,
-    DPCodeStringWrapper,
-    DPCodeTypeInformationWrapper,
-)
 
 
 class _DPCodeEventWrapper(DPCodeTypeInformationWrapper):

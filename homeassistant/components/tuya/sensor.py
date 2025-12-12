@@ -4,6 +4,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from tuya_device_handlers.device_wrapper import (
+    DPCodeEnumWrapper,
+    DPCodeIntegerWrapper,
+    DPCodeJsonWrapper,
+    DPCodeRawWrapper,
+    DPCodeTypeInformationWrapper,
+    DPCodeWrapper,
+)
+from tuya_device_handlers.raw_data_model import ElectricityData
+from tuya_device_handlers.type_information import EnumTypeInformation
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.sensor import (
@@ -38,16 +48,6 @@ from .const import (
     DPCode,
 )
 from .entity import TuyaEntity
-from .models import (
-    DPCodeEnumWrapper,
-    DPCodeIntegerWrapper,
-    DPCodeJsonWrapper,
-    DPCodeRawWrapper,
-    DPCodeTypeInformationWrapper,
-    DPCodeWrapper,
-)
-from .raw_data_models import ElectricityData
-from .type_information import EnumTypeInformation
 
 
 class _WindDirectionWrapper(DPCodeTypeInformationWrapper[EnumTypeInformation]):
@@ -86,7 +86,7 @@ class _JsonElectricityCurrentWrapper(DPCodeJsonWrapper):
 
     native_unit = UnitOfElectricCurrent.AMPERE
 
-    def read_device_status(self, device: CustomerDevice) -> float | None:
+    def read_device_status(self, device: CustomerDevice) -> float | None:  # type: ignore[override]
         """Read the device value for the dpcode."""
         if (status := super().read_device_status(device)) is None:
             return None
@@ -98,7 +98,7 @@ class _JsonElectricityPowerWrapper(DPCodeJsonWrapper):
 
     native_unit = UnitOfPower.KILO_WATT
 
-    def read_device_status(self, device: CustomerDevice) -> float | None:
+    def read_device_status(self, device: CustomerDevice) -> float | None:  # type: ignore[override]
         """Read the device value for the dpcode."""
         if (status := super().read_device_status(device)) is None:
             return None
@@ -110,7 +110,7 @@ class _JsonElectricityVoltageWrapper(DPCodeJsonWrapper):
 
     native_unit = UnitOfElectricPotential.VOLT
 
-    def read_device_status(self, device: CustomerDevice) -> float | None:
+    def read_device_status(self, device: CustomerDevice) -> float | None:  # type: ignore[override]
         """Read the device value for the dpcode."""
         if (status := super().read_device_status(device)) is None:
             return None
@@ -124,7 +124,7 @@ class _RawElectricityDataWrapper(DPCodeRawWrapper):
         """Extract specific value from T."""
         raise NotImplementedError
 
-    def read_device_status(self, device: CustomerDevice) -> float | None:
+    def read_device_status(self, device: CustomerDevice) -> float | None:  # type: ignore[override]
         """Read the device value for the dpcode."""
         if (raw_value := super().read_device_status(device)) is None or (
             value := ElectricityData.from_bytes(raw_value)
