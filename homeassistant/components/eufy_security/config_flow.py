@@ -6,12 +6,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-import voluptuous as vol
-
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from pyeufysecurity import (
+from eufy_security import (
     CannotConnectError,
     CaptchaRequiredError,
     EufySecurityAPI,
@@ -20,6 +15,11 @@ from pyeufysecurity import (
     InvalidCredentialsError,
     async_login,
 )
+import voluptuous as vol
+
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     CONF_API_BASE,
