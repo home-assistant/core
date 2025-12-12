@@ -63,7 +63,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> bool:
     """Set up Teslemetry config."""
 
-    access_token = entry.data[CONF_ACCESS_TOKEN]
+    access_token = entry.data["token"]["access_token"]
     session = async_get_clientsession(hass)
 
     # Create API connection
@@ -281,9 +281,23 @@ async def async_migrate_entry(
 
     if config_entry.version == 1 and config_entry.minor_version < 2:
         # Add unique_id to existing entry
+        # Handle both old access_token format and new OAuth token format
+        if "token" in config_entry.data:
+            access_token = config_entry.data["token"]["access_token"]
+        else:
+            access_token = config_entry.data[CONF_ACCESS_TOKEN]
+            # Convert legacy access token to OAuth format
+            oauth_data = {
+                "token": {
+                    "access_token": access_token,
+                    "token_type": "Bearer",
+                }
+            }
+            hass.config_entries.async_update_entry(config_entry, data=oauth_data)
+
         teslemetry = Teslemetry(
             session=async_get_clientsession(hass),
-            access_token=config_entry.data[CONF_ACCESS_TOKEN],
+            access_token=access_token,
         )
         try:
             metadata = await teslemetry.metadata()

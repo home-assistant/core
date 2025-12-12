@@ -5,6 +5,10 @@ from __future__ import annotations
 from enum import StrEnum
 import logging
 
+AUTHORIZE_URL = "https://teslemetry.com/connect"
+TOKEN_URL = "https://api.teslemetry.com/oauth/token"
+CLIENT_ID = "homeassistant"
+
 DOMAIN = "teslemetry"
 
 LOGGER = logging.getLogger(__package__)

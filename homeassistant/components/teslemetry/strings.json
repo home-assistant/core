@@ -39,17 +39,8 @@
     },
     "step": {
       "reauth_confirm": {
-        "data": {
-          "access_token": "[%key:common::config_flow::data::access_token%]"
-        },
-        "description": "The {name} integration needs to re-authenticate your account, please enter an access token from {url}",
+        "description": "The {name} integration needs to re-authenticate your account",
         "title": "[%key:common::config_flow::title::reauth%]"
-      },
-      "user": {
-        "data": {
-          "access_token": "[%key:common::config_flow::data::access_token%]"
-        },
-        "description": "Enter an access token from {url}."
       }
     }
   },
