@@ -208,20 +208,11 @@ class AutarcoSensorBase(CoordinatorEntity[AutarcoDataUpdateCoordinator], SensorE
     """Base class for Autarco sensors."""
 
     _attr_has_entity_name = True
-    entity_description: (
-        AutarcoBatterySensorEntityDescription
-        | AutarcoSolarSensorEntityDescription
-        | AutarcoInverterSensorEntityDescription
-    )
 
     def __init__(
         self,
         coordinator: AutarcoDataUpdateCoordinator,
-        description: (
-            AutarcoBatterySensorEntityDescription
-            | AutarcoSolarSensorEntityDescription
-            | AutarcoInverterSensorEntityDescription
-        ),
+        description: SensorEntityDescription,
     ) -> None:
         """Initialize Autarco sensor base."""
         super().__init__(coordinator)
