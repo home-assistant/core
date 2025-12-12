@@ -31,17 +31,18 @@ async def async_setup_entry(
     """Add fans for a config entry."""
     entry_data = entry.runtime_data
     async_add_entities(
-        SmartThingsFan(entry_data.client, device)
+        SmartThingsFan(entry_data.client, device, component)
         for device in entry_data.devices.values()
-        if Capability.SWITCH in device.status[MAIN]
+        for component in device.status
+        if Capability.SWITCH in device.status[component]
         and any(
-            capability in device.status[MAIN]
+            capability in device.status[component]
             for capability in (
                 Capability.FAN_SPEED,
                 Capability.AIR_CONDITIONER_FAN_MODE,
             )
         )
-        and Capability.THERMOSTAT_COOLING_SETPOINT not in device.status[MAIN]
+        and Capability.THERMOSTAT_COOLING_SETPOINT not in device.status[component]
     )
 
 
@@ -51,7 +52,9 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
     _attr_name = None
     _attr_speed_count = int_states_in_range(SPEED_RANGE)
 
-    def __init__(self, client: SmartThings, device: FullDevice) -> None:
+    def __init__(
+        self, client: SmartThings, device: FullDevice, component: str = MAIN
+    ) -> None:
         """Init the class."""
         super().__init__(
             client,
@@ -61,6 +64,7 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
                 Capability.FAN_SPEED,
                 Capability.AIR_CONDITIONER_FAN_MODE,
             },
+            component=component,
         )
         self._attr_supported_features = self._determine_features()
 
