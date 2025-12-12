@@ -81,10 +81,11 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=timedelta(seconds=10),
+            update_interval=timedelta(seconds=15),
         )
         self.data = XboxData()
         self.current_friends: set[str] = set()
+        self.title_data: dict[str, Title] = {}
 
     async def _async_setup(self) -> None:
         """Set up coordinator."""
@@ -217,7 +218,6 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
             )
 
         # retrieve title details
-        title_data: dict[str, Title] = {}
         for person in presence_data.values():
             if presence_detail := next(
                 (
@@ -227,6 +227,12 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
                 ),
                 None,
             ):
+                if (
+                    person.xuid in self.title_data
+                    and presence_detail.title_id
+                    == self.title_data[person.xuid].title_id
+                ):
+                    continue
                 try:
                     title = await self.client.titlehub.get_title_info(
                         presence_detail.title_id
@@ -250,7 +256,9 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
                         translation_domain=DOMAIN,
                         translation_key="request_exception",
                     ) from e
-                title_data[person.xuid] = title.titles[0]
+                self.title_data[person.xuid] = title.titles[0]
+            else:
+                self.title_data.pop(person.xuid, None)
             person.last_seen_date_time_utc = self.last_seen_timestamp(person)
         if (
             self.current_friends - (new_friends := set(presence_data))
@@ -259,7 +267,7 @@ class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
             self.remove_stale_devices(new_friends)
         self.current_friends = new_friends
 
-        return XboxData(new_console_data, presence_data, title_data)
+        return XboxData(new_console_data, presence_data, self.title_data)
 
     def last_seen_timestamp(self, person: Person) -> datetime | None:
         """Returns the most recent of two timestamps."""
