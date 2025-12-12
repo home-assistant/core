@@ -1039,16 +1039,20 @@
     },
     "cloudflare": {
       "name": "Cloudflare",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "cloud_push",
-      "single_config_entry": true
-    },
-    "cloudflare_r2": {
-      "name": "Cloudflare R2",
-      "integration_type": "service",
-      "config_flow": true,
-      "iot_class": "cloud_push"
+      "integrations": {
+        "cloudflare": {
+          "integration_type": "hub",
+          "config_flow": true,
+          "iot_class": "cloud_push",
+          "name": "Cloudflare"
+        },
+        "cloudflare_r2": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_push",
+          "name": "Cloudflare R2"
+        }
+      }
     },
     "cmus": {
       "name": "cmus",
