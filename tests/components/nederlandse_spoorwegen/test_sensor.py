@@ -216,7 +216,7 @@ async def test_sensor_with_custom_time_parsing(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_with_time_filtering(
     hass: HomeAssistant,
-    mock_nsapi_with_time: AsyncMock,
+    mock_nsapi_with_time_1641: AsyncMock,
 ) -> None:
     """Test that the time-based window filter correctly filters trips.
 
