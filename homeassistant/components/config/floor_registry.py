@@ -61,12 +61,9 @@ def websocket_create_floor(
     data.pop("id")
 
     if "aliases" in data:
-        # Convert aliases to a set
-        data["aliases"] = set(data["aliases"])
-
-        # Clean the aliases set:
-        #   - Remove empty strings
-        #   - Remove trailing and leasing whitespace characters from aliases
+        # Create a set for the aliases without:
+        #   - Empty strings
+        #   - Trailing and leading whitespace characters in the individual aliases
         data["aliases"] = {s_strip for s in data["aliases"] if (s_strip := s.strip())}
 
     try:
@@ -122,12 +119,9 @@ def websocket_update_floor(
     data.pop("id")
 
     if "aliases" in data:
-        # Convert aliases to a set
-        data["aliases"] = set(data["aliases"])
-
-        # Clean the aliases set:
-        #   - Remove empty strings
-        #   - Remove trailing and leasing whitespace characters from aliases
+        # Create a set for the aliases without:
+        #   - Empty strings
+        #   - Trailing and leading whitespace characters in the individual aliases
         data["aliases"] = {s_strip for s in data["aliases"] if (s_strip := s.strip())}
 
     try:
