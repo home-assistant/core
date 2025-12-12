@@ -24,7 +24,8 @@ from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
 from .models import DPCodeBooleanWrapper, DPCodeEnumWrapper, DPCodeIntegerWrapper
-from .util import get_dpcode
+from .type_information import IntegerTypeInformation
+from .util import RemapHelper, get_dpcode
 
 _DIRECTION_DPCODES = (DPCode.FAN_DIRECTION,)
 _MODE_DPCODES = (DPCode.FAN_MODE, DPCode.MODE)
@@ -80,7 +81,7 @@ class _FanSpeedEnumWrapper(DPCodeEnumWrapper):
         """Get the number of speeds supported by the fan."""
         return len(self.type_information.range)
 
-    def read_device_status(self, device: CustomerDevice) -> int | None:  # type: ignore[override]
+    def read_device_status(self, device: CustomerDevice) -> int | None:
         """Get the current speed as a percentage."""
         if (value := super().read_device_status(device)) is None:
             return None
@@ -94,6 +95,11 @@ class _FanSpeedEnumWrapper(DPCodeEnumWrapper):
 class _FanSpeedIntegerWrapper(DPCodeIntegerWrapper):
     """Wrapper for fan speed DP code (from an integer)."""
 
+    def __init__(self, dpcode: str, type_information: IntegerTypeInformation) -> None:
+        """Init DPCodeIntegerWrapper."""
+        super().__init__(dpcode, type_information)
+        self._remap_helper = RemapHelper.from_type_information(type_information, 1, 100)
+
     def get_speed_count(self) -> int:
         """Get the number of speeds supported by the fan."""
         return 100
@@ -102,11 +108,11 @@ class _FanSpeedIntegerWrapper(DPCodeIntegerWrapper):
         """Get the current speed as a percentage."""
         if (value := super().read_device_status(device)) is None:
             return None
-        return round(self.type_information.remap_value_to(value, 1, 100))
+        return round(self._remap_helper.remap_value_to(value))
 
     def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
         """Convert a Home Assistant value back to a raw device value."""
-        return round(self.type_information.remap_value_from(value, 1, 100))
+        return round(self._remap_helper.remap_value_from(value))
 
 
 def _get_speed_wrapper(

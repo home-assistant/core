@@ -129,6 +129,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "airpatrol": {
+      "name": "AirPatrol",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "airq": {
       "name": "air-Q",
       "integration_type": "hub",
@@ -1591,6 +1597,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "egauge": {
+      "name": "eGauge",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "eheimdigital": {
       "name": "EHEIM Digital",
       "integration_type": "hub",
@@ -1764,7 +1776,7 @@
     },
     "entur_public_transport": {
       "name": "Entur",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -2294,6 +2306,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "gentex_homelink": {
+      "name": "HomeLink",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push"
     },
     "geo_json_events": {
       "name": "GeoJSON",

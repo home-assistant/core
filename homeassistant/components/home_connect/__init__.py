@@ -111,7 +111,7 @@ async def async_migrate_entry(
     hass: HomeAssistant, entry: HomeConnectConfigEntry
 ) -> bool:
     """Migrate old entry."""
-    _LOGGER.debug("Migrating from version %s", entry.version)
+    _LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
 
     if entry.version == 1:
         match entry.minor_version:
@@ -147,5 +147,7 @@ async def async_migrate_entry(
                     )["sub"],
                 )
 
-    _LOGGER.debug("Migration to version %s successful", entry.version)
+    _LOGGER.debug(
+        "Migration to version %s.%s successful", entry.version, entry.minor_version
+    )
     return True

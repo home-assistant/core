@@ -7,7 +7,6 @@ import pytest
 
 from homeassistant.const import ATTR_LABEL_ID, CONF_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.setup import async_setup_component
 
 from tests.components import (
     StateDescription,
@@ -91,8 +90,6 @@ async def test_fan_state_trigger_behavior_any(
     states: list[StateDescription],
 ) -> None:
     """Test that the fan state trigger fires when any fan state changes to a specific state."""
-    await async_setup_component(hass, "fan", {})
-
     other_entity_ids = set(target_fans) - {entity_id}
 
     # Set all fans, including the tested fan, to the initial state
@@ -150,8 +147,6 @@ async def test_fan_state_trigger_behavior_first(
     states: list[StateDescription],
 ) -> None:
     """Test that the fan state trigger fires when the first fan changes to a specific state."""
-    await async_setup_component(hass, "fan", {})
-
     other_entity_ids = set(target_fans) - {entity_id}
 
     # Set all fans, including the tested fan, to the initial state
@@ -208,8 +203,6 @@ async def test_fan_state_trigger_behavior_last(
     states: list[StateDescription],
 ) -> None:
     """Test that the fan state trigger fires when the last fan changes to a specific state."""
-    await async_setup_component(hass, "fan", {})
-
     other_entity_ids = set(target_fans) - {entity_id}
 
     # Set all fans, including the tested fan, to the initial state

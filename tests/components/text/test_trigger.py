@@ -12,7 +12,6 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.setup import async_setup_component
 
 from tests.components import (
     StateDescription,
@@ -42,31 +41,6 @@ def enable_experimental_triggers_conditions() -> Generator[None]:
 async def target_texts(hass: HomeAssistant) -> list[str]:
     """Create multiple text entities associated with different targets."""
     return (await target_entities(hass, "text"))["included"]
-
-
-@pytest.mark.parametrize(
-    "trigger_key",
-    [
-        "alarm_control_panel.armed",
-        "alarm_control_panel.armed_away",
-        "alarm_control_panel.armed_home",
-        "alarm_control_panel.armed_night",
-        "alarm_control_panel.armed_vacation",
-        "alarm_control_panel.disarmed",
-        "alarm_control_panel.triggered",
-    ],
-)
-async def test_alarm_control_panel_triggers_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
-) -> None:
-    """Test the ACP triggers are gated by the labs flag."""
-    await arm_trigger(hass, trigger_key, None, {ATTR_LABEL_ID: "test_label"})
-    assert (
-        "Unnamed automation failed to setup triggers and has been disabled: Trigger "
-        f"'{trigger_key}' requires the experimental 'New triggers and conditions' "
-        "feature to be enabled in Home Assistant Labs settings (feature flag: "
-        "'new_triggers_conditions')"
-    ) in caplog.text
 
 
 @pytest.mark.parametrize("trigger_key", ["text.changed"])
@@ -153,8 +127,6 @@ async def test_text_state_trigger_behavior_any(
     states: list[StateDescription],
 ) -> None:
     """Test that the text state trigger fires when any text state changes to a specific state."""
-    await async_setup_component(hass, "text", {})
-
     other_entity_ids = set(target_texts) - {entity_id}
 
     # Set all texts, including the tested text, to the initial state
