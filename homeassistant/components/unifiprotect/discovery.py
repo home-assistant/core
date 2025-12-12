@@ -14,21 +14,19 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import DOMAIN
+from .const import DATA_DISCOVERY_STARTED, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DISCOVERY = "discovery"
 DISCOVERY_INTERVAL = timedelta(minutes=60)
 
 
 @callback
 def async_start_discovery(hass: HomeAssistant) -> None:
     """Start discovery."""
-    domain_data = hass.data.setdefault(DOMAIN, {})
-    if DISCOVERY in domain_data:
+    if hass.data.get(DATA_DISCOVERY_STARTED):
         return
-    domain_data[DISCOVERY] = True
+    hass.data[DATA_DISCOVERY_STARTED] = True
 
     async def _async_discovery() -> None:
         async_trigger_discovery(hass, await async_discover_devices())

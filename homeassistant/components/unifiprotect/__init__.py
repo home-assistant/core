@@ -34,6 +34,7 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     AUTH_RETRIES,
     CONF_ALLOW_EA,
+    DATA_AUTH_RETRIES,
     DEVICES_THAT_ADOPT,
     DOMAIN,
     MIN_REQUIRED_PROTECT_V,
@@ -79,11 +80,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:
     try:
         await protect.update()
     except NotAuthorized as err:
-        retry_key = f"{entry.entry_id}_auth"
-        retries = hass.data.setdefault(DOMAIN, {}).get(retry_key, 0)
+        auth_retries = hass.data.setdefault(DATA_AUTH_RETRIES, {})
+        retries = auth_retries.get(entry.entry_id, 0)
         if retries < AUTH_RETRIES:
             retries += 1
-            hass.data[DOMAIN][retry_key] = retries
+            auth_retries[entry.entry_id] = retries
             raise ConfigEntryNotReady from err
         raise ConfigEntryAuthFailed(err) from err
     except (TimeoutError, ClientError, ServerDisconnectedError) as err:
