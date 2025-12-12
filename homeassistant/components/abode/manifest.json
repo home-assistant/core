@@ -7,6 +7,7 @@
   "homekit": {
     "models": ["Abode", "Iota"]
   },
+  "integration_type": "device",
   "iot_class": "cloud_push",
   "loggers": ["jaraco.abode", "lomond"],
   "requirements": ["jaraco.abode==6.2.1"],
