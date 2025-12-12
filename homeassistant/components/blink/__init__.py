@@ -64,6 +64,12 @@ async def async_migrate_entry(hass: HomeAssistant, entry: BlinkConfigEntry) -> b
     if entry.version == 2:
         await _reauth_flow_wrapper(hass, entry, data)
         return False
+    if entry.version == 3:
+        # Migrate device_id to hardware_id for blinkpy 0.25.x OAuth2 compatibility
+        if "device_id" in data:
+            data["hardware_id"] = data.pop("device_id")
+            hass.config_entries.async_update_entry(entry, data=data, version=4)
+        return True
     return True
 
 
