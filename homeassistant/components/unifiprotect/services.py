@@ -12,7 +12,7 @@ from uiprotect.data import Camera, Chime
 from uiprotect.exceptions import ClientError
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.event import EventDeviceClass
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_NAME, Platform
 from homeassistant.core import (
     HomeAssistant,
@@ -227,16 +227,15 @@ async def set_chime_paired_doorbells(call: ServiceCall) -> None:
     )
     doorbell_ids: set[str] = set()
     for camera_id in doorbell_refs.referenced | doorbell_refs.indirectly_referenced:
-        doorbell_sensor = entity_registry.async_get(camera_id)
-        assert doorbell_sensor is not None
+        doorbell_entity = entity_registry.async_get(camera_id)
+        assert doorbell_entity is not None
         if (
-            doorbell_sensor.platform != DOMAIN
-            or doorbell_sensor.domain != Platform.BINARY_SENSOR
-            or doorbell_sensor.original_device_class
-            != BinarySensorDeviceClass.OCCUPANCY
+            doorbell_entity.platform != DOMAIN
+            or doorbell_entity.domain != Platform.EVENT
+            or doorbell_entity.original_device_class != EventDeviceClass.DOORBELL
         ):
             continue
-        doorbell_mac = _async_unique_id_to_mac(doorbell_sensor.unique_id)
+        doorbell_mac = _async_unique_id_to_mac(doorbell_entity.unique_id)
         camera = instance.bootstrap.get_device_from_mac(doorbell_mac)
         assert camera is not None
         doorbell_ids.add(camera.id)

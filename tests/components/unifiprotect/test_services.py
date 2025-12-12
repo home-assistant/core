@@ -187,7 +187,7 @@ async def test_set_chime_paired_doorbells(
     await init_entry(hass, ufp, [camera1, camera2, chime])
 
     chime_entry = entity_registry.async_get("button.test_chime_play_chime")
-    camera_entry = entity_registry.async_get("binary_sensor.test_camera_2_doorbell")
+    camera_entry = entity_registry.async_get("event.test_camera_2_doorbell")
     assert chime_entry is not None
     assert camera_entry is not None
 
@@ -197,7 +197,7 @@ async def test_set_chime_paired_doorbells(
         {
             ATTR_DEVICE_ID: chime_entry.device_id,
             "doorbells": {
-                ATTR_ENTITY_ID: ["binary_sensor.test_camera_1_doorbell"],
+                ATTR_ENTITY_ID: ["event.test_camera_1_doorbell"],
                 ATTR_DEVICE_ID: [camera_entry.device_id],
             },
         },
@@ -222,7 +222,7 @@ async def test_remove_privacy_zone_no_zone(
 
     await init_entry(hass, ufp, [doorbell])
 
-    camera_entry = entity_registry.async_get("binary_sensor.test_camera_doorbell")
+    camera_entry = entity_registry.async_get("binary_sensor.test_camera_is_dark")
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -249,7 +249,7 @@ async def test_remove_privacy_zone(
 
     await init_entry(hass, ufp, [doorbell])
 
-    camera_entry = entity_registry.async_get("binary_sensor.test_camera_doorbell")
+    camera_entry = entity_registry.async_get("binary_sensor.test_camera_is_dark")
 
     await hass.services.async_call(
         DOMAIN,
@@ -286,7 +286,7 @@ async def get_user_keyring_info(
 
     await init_entry(hass, ufp, [doorbell])
 
-    camera_entry = entity_registry.async_get("binary_sensor.test_camera_doorbell")
+    camera_entry = entity_registry.async_get("binary_sensor.test_camera_is_dark")
 
     response = await hass.services.async_call(
         DOMAIN,
@@ -330,7 +330,7 @@ async def test_get_user_keyring_info_no_users(
 
     await init_entry(hass, ufp, [doorbell])
 
-    camera_entry = entity_registry.async_get("binary_sensor.test_camera_doorbell")
+    camera_entry = entity_registry.async_get("binary_sensor.test_camera_is_dark")
 
     with pytest.raises(
         HomeAssistantError, match="No users found, please check Protect permissions"

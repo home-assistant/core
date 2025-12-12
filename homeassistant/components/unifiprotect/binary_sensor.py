@@ -383,13 +383,6 @@ SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
 
 EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
     ProtectBinaryEventEntityDescription(
-        key="doorbell",
-        translation_key="doorbell",
-        device_class=BinarySensorDeviceClass.OCCUPANCY,
-        ufp_required_field="feature_flags.is_doorbell",
-        ufp_event_obj="last_ring_event",
-    ),
-    ProtectBinaryEventEntityDescription(
         key="motion",
         device_class=BinarySensorDeviceClass.MOTION,
         ufp_enabled="is_motion_detection_on",

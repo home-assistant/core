@@ -36,7 +36,7 @@ async def test_exclude_attributes(
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
 
     _, entity_id = await ids_from_device_description(
-        hass, Platform.BINARY_SENSOR, doorbell, EVENT_SENSORS[1]
+        hass, Platform.BINARY_SENSOR, doorbell, EVENT_SENSORS[0]
     )
 
     event = Event(

@@ -64,11 +64,11 @@ async def test_binary_sensor_camera_remove(
 
     ufp.api.bootstrap.nvr.system_info.ustorage = None
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 9, 6)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 8, 5)
     await remove_entities(hass, ufp, [doorbell, unadopted_camera])
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 0, 0)
     await adopt_devices(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 9, 6)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 8, 5)
 
 
 async def test_binary_sensor_light_remove(
@@ -136,8 +136,9 @@ async def test_binary_sensor_setup_camera_all(
 
     ufp.api.bootstrap.nvr.system_info.ustorage = None
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 9, 6)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 8, 5)
 
+    # Motion (EVENT_SENSORS[0])
     description = EVENT_SENSORS[0]
     unique_id, entity_id = await ids_from_device_description(
         hass, Platform.BINARY_SENSOR, doorbell, description
@@ -152,7 +153,7 @@ async def test_binary_sensor_setup_camera_all(
     assert state.state == STATE_OFF
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
-    # Is Dark
+    # Is Dark (CAMERA_SENSORS[0])
     description = CAMERA_SENSORS[0]
     unique_id, entity_id = await ids_from_device_description(
         hass, Platform.BINARY_SENSOR, doorbell, description
@@ -167,8 +168,8 @@ async def test_binary_sensor_setup_camera_all(
     assert state.state == STATE_OFF
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
-    # Motion
-    description = EVENT_SENSORS[1]
+    # Person detected (EVENT_SENSORS[2])
+    description = EVENT_SENSORS[2]
     unique_id, entity_id = await ids_from_device_description(
         hass, Platform.BINARY_SENSOR, doorbell, description
     )
@@ -176,11 +177,6 @@ async def test_binary_sensor_setup_camera_all(
     entity = entity_registry.async_get(entity_id)
     assert entity
     assert entity.unique_id == unique_id
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_OFF
-    assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
 
 async def test_binary_sensor_setup_camera_none(
@@ -286,10 +282,10 @@ async def test_binary_sensor_update_motion(
     """Test binary_sensor motion entity."""
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 15, 12)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 14, 11)
 
     _, entity_id = await ids_from_device_description(
-        hass, Platform.BINARY_SENSOR, doorbell, EVENT_SENSORS[1]
+        hass, Platform.BINARY_SENSOR, doorbell, EVENT_SENSORS[0]
     )
 
     event = Event(
@@ -447,12 +443,12 @@ async def test_binary_sensor_package_detected(
     """Test binary_sensor package detection entity."""
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 15, 15)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 14, 14)
 
     doorbell.smart_detect_settings.object_types.append(SmartDetectObjectType.PACKAGE)
 
     _, entity_id = await ids_from_device_description(
-        hass, Platform.BINARY_SENSOR, doorbell, EVENT_SENSORS[6]
+        hass, Platform.BINARY_SENSOR, doorbell, EVENT_SENSORS[5]
     )
 
     event = Event(
@@ -588,12 +584,12 @@ async def test_binary_sensor_person_detected(
     """Test binary_sensor person detected detection entity."""
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 15, 15)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 14, 14)
 
     doorbell.smart_detect_settings.object_types.append(SmartDetectObjectType.PERSON)
 
     _, entity_id = await ids_from_device_description(
-        hass, Platform.BINARY_SENSOR, doorbell, EVENT_SENSORS[3]
+        hass, Platform.BINARY_SENSOR, doorbell, EVENT_SENSORS[2]
     )
 
     events = async_capture_events(hass, EVENT_STATE_CHANGED)
