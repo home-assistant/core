@@ -57,17 +57,17 @@
       "charging_status": {
         "name": "Charging status",
         "state": {
-          "charging": "Charging",
-          "idle": "Idle",
-          "unknown": "Unknown"
+          "charging": "[%key:common::state::charging%]",
+          "idle": "[%key:common::state::idle%]",
+          "unknown": "[%key:common::state::unknown%]"
         }
       },
       "connector_status": {
         "name": "Connector status",
         "state": {
-          "connected": "Connected",
-          "disconnected": "Disconnected",
-          "unknown": "Unknown"
+          "connected": "[%key:common::state::connected%]",
+          "disconnected": "[%key:common::state::disconnected%]",
+          "unknown": "[%key:common::state::unknown%]"
         }
       },
       "current_l1": {
@@ -147,6 +147,9 @@
     },
     "invalid_date": {
       "message": "Invalid datetime provided {date}"
+    },
+    "no_config_entry": {
+      "message": "No Tibber integration configured"
     },
     "oauth2_implementation_unavailable": {
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"

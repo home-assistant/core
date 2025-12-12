@@ -84,12 +84,17 @@ async def mock_tibber_setup(
     tibber_mock.name = PropertyMock(return_value=title)
     tibber_mock.send_notification = AsyncMock()
     tibber_mock.rt_disconnect = AsyncMock()
+    tibber_mock.get_homes = MagicMock(return_value=[])
 
     session_mock = MagicMock()
     session_mock.async_ensure_token_valid = AsyncMock()
     session_mock.token = {CONF_ACCESS_TOKEN: "test-token"}
 
     implementation_mock = MagicMock()
+
+    data_api_client_mock = MagicMock()
+    data_api_client_mock.get_all_devices = AsyncMock(return_value={})
+    data_api_client_mock.update_devices = AsyncMock(return_value={})
 
     with (
         patch("tibber.Tibber", return_value=tibber_mock),
@@ -100,6 +105,10 @@ async def mock_tibber_setup(
         patch(
             "homeassistant.components.tibber.OAuth2Session",
             return_value=session_mock,
+        ),
+        patch(
+            "homeassistant.components.tibber.coordinator.TibberDataAPICoordinator._async_get_client",
+            return_value=data_api_client_mock,
         ),
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)

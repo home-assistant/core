@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import logging
 
 import aiohttp
@@ -10,7 +10,6 @@ from aiohttp.client_exceptions import ClientError, ClientResponseError
 import tibber
 from tibber import data_api as tibber_data_api
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -24,7 +23,8 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util, ssl as ssl_util
 
-from .const import AUTH_IMPLEMENTATION, DATA_HASS_CONFIG, DOMAIN
+from .const import AUTH_IMPLEMENTATION, DATA_HASS_CONFIG, DOMAIN, TibberConfigEntry
+from .coordinator import TibberDataAPICoordinator
 from .services import async_setup_services
 
 PLATFORMS = [Platform.NOTIFY, Platform.SENSOR]
@@ -34,20 +34,19 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(slots=True)
+@dataclass
 class TibberRuntimeData:
     """Runtime data for Tibber API entries."""
 
     tibber_connection: tibber.Tibber
-    session: OAuth2Session | None = None
+    session: OAuth2Session
+    data_api_coordinator: TibberDataAPICoordinator | None = field(default=None)
     _client: tibber_data_api.TibberDataAPI | None = None
 
     async def async_get_client(
         self, hass: HomeAssistant
     ) -> tibber_data_api.TibberDataAPI:
         """Return an authenticated Tibber Data API client."""
-        if self.session is None:
-            raise ConfigEntryAuthFailed("OAuth session not available")
         await self.session.async_ensure_token_valid()
         token = self.session.token
         access_token = token.get(CONF_ACCESS_TOKEN)
@@ -72,7 +71,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TibberConfigEntry) -> bool:
     """Set up a config entry."""
 
     if AUTH_IMPLEMENTATION not in entry.data:
@@ -128,21 +127,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except ClientError as err:
         raise ConfigEntryNotReady from err
 
-    hass.data[DOMAIN] = TibberRuntimeData(
+    entry.runtime_data = TibberRuntimeData(
         tibber_connection=tibber_connection,
         session=session,
     )
+
+    coordinator = TibberDataAPICoordinator(hass, entry)
+    await coordinator.async_config_entry_first_refresh()
+    entry.runtime_data.data_api_coordinator = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: TibberConfigEntry
+) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(
+    if unload_ok := await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
-    )
-    if unload_ok:
-        if runtime := hass.data.pop(DOMAIN, None):
-            await runtime.tibber_connection.rt_disconnect()
+    ):
+        await config_entry.runtime_data.tibber_connection.rt_disconnect()
     return unload_ok

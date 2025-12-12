@@ -2,29 +2,23 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, cast
+from typing import Any
 
 import aiohttp
 import tibber
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 
-from .const import DOMAIN
-
-if TYPE_CHECKING:
-    from . import TibberRuntimeData
+from .const import TibberConfigEntry
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: TibberConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
 
-    runtime = cast("TibberRuntimeData | None", hass.data.get(DOMAIN))
-    if runtime is None:
-        return {"homes": []}
+    runtime = config_entry.runtime_data
     result: dict[str, Any] = {
         "homes": [
             {
@@ -38,34 +32,34 @@ async def async_get_config_entry_diagnostics(
         ]
     }
 
-    if runtime.session:
-        devices: dict[str, Any] = {}
-        error: str | None = None
-        try:
-            client = await runtime.async_get_client(hass)
-            devices = await client.get_all_devices()
-        except ConfigEntryAuthFailed:
-            error = "Authentication failed"
-        except TimeoutError:
-            error = "Timeout error"
-        except aiohttp.ClientError:
-            error = "Client error"
-        except tibber.InvalidLoginError:
-            error = "Invalid login"
-        except tibber.RetryableHttpExceptionError as err:
-            error = f"Retryable HTTP error ({err.status})"
-        except tibber.FatalHttpExceptionError as err:
-            error = f"Fatal HTTP error ({err.status})"
+    devices: dict[str, Any] = {}
+    error: str | None = None
+    try:
+        coordinator = runtime.data_api_coordinator
+        if coordinator is not None:
+            devices = coordinator.data
+    except ConfigEntryAuthFailed:
+        error = "Authentication failed"
+    except TimeoutError:
+        error = "Timeout error"
+    except aiohttp.ClientError:
+        error = "Client error"
+    except tibber.InvalidLoginError:
+        error = "Invalid login"
+    except tibber.RetryableHttpExceptionError as err:
+        error = f"Retryable HTTP error ({err.status})"
+    except tibber.FatalHttpExceptionError as err:
+        error = f"Fatal HTTP error ({err.status})"
 
-        result["error"] = error
-        result["devices"] = [
-            {
-                "id": device.id,
-                "name": device.name,
-                "brand": device.brand,
-                "model": device.model,
-            }
-            for device in devices.values()
-        ]
+    result["error"] = error
+    result["devices"] = [
+        {
+            "id": device.id,
+            "name": device.name,
+            "brand": device.brand,
+            "model": device.model,
+        }
+        for device in devices.values()
+    ]
 
     return result

@@ -1,6 +1,6 @@
 """Test the Tibber diagnostics."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock
 
 import aiohttp
 import pytest
@@ -9,10 +9,10 @@ import tibber
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.tibber import TibberRuntimeData
 from homeassistant.components.tibber.const import DOMAIN
+from homeassistant.components.tibber.coordinator import TibberDataAPICoordinator
 from homeassistant.components.tibber.diagnostics import (
     async_get_config_entry_diagnostics,
 )
-from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 
@@ -33,31 +33,32 @@ async def test_entry_diagnostics(
 ) -> None:
     """Test config entry diagnostics."""
     tibber_mock = mock_tibber_setup
-    runtime = hass.data[DOMAIN]
-    runtime.session = None
     tibber_mock.get_homes.return_value = []
+
+    config_entry.runtime_data.data_api_coordinator.data = {}
+    config_entry.runtime_data.data_api_coordinator.sensors_by_device = {}
 
     result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
 
     assert result == {
         "homes": [],
+        "error": None,
+        "devices": [],
     }
 
     tibber_mock.get_homes.side_effect = mock_get_homes
 
     result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
 
-    assert result == {
-        "homes": [
-            {
-                "last_data_timestamp": "2016-01-01T12:48:57",
-                "has_active_subscription": True,
-                "has_real_time_consumption": False,
-                "last_cons_data_timestamp": "2016-01-01T12:44:57",
-                "country": "NO",
-            }
-        ],
-    }
+    assert result["homes"] == [
+        {
+            "last_data_timestamp": "2016-01-01T12:48:57",
+            "has_active_subscription": True,
+            "has_real_time_consumption": False,
+            "last_cons_data_timestamp": "2016-01-01T12:44:57",
+            "country": "NO",
+        }
+    ]
 
 
 async def test_data_api_diagnostics_no_runtime(
@@ -65,7 +66,7 @@ async def test_data_api_diagnostics_no_runtime(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
 ) -> None:
-    """Test Data API diagnostics when runtime is not available."""
+    """Test Data API diagnostics when coordinator has no data."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={},
@@ -75,13 +76,22 @@ async def test_data_api_diagnostics_no_runtime(
 
     tibber_mock = MagicMock()
     tibber_mock.get_homes = MagicMock(return_value=[])
-    runtime = TibberRuntimeData(session=None, tibber_connection=tibber_mock)
-    hass.data[DOMAIN] = runtime
+
+    coordinator = MagicMock(spec=TibberDataAPICoordinator)
+    coordinator.data = {}
+    coordinator.sensors_by_device = {}
+
+    runtime = MagicMock(spec=TibberRuntimeData)
+    runtime.tibber_connection = tibber_mock
+    runtime.data_api_coordinator = coordinator
+    config_entry.runtime_data = runtime
 
     result = await async_get_config_entry_diagnostics(hass, config_entry)
 
     assert result == {
         "homes": [],
+        "error": None,
+        "devices": [],
     }
 
 
@@ -98,38 +108,34 @@ async def test_data_api_diagnostics_success(
     )
     config_entry.add_to_hass(hass)
 
-    session = MagicMock()
-    session.async_ensure_token_valid = AsyncMock()
-    session.token = {CONF_ACCESS_TOKEN: "test-token"}
+    tibber_mock = MagicMock()
+    tibber_mock.get_homes = MagicMock(return_value=[])
 
-    client = MagicMock()
-    client.get_all_devices = AsyncMock(
-        return_value={
-            "device-1": create_tibber_device(
-                device_id="device-1",
-                name="Device 1",
-                brand="Tibber",
-                model="Test Model",
-            ),
-            "device-2": create_tibber_device(
-                device_id="device-2",
-                name="Device 2",
-                brand="Tibber",
-                model="Test Model",
-            ),
-        }
-    )
+    devices = {
+        "device-1": create_tibber_device(
+            device_id="device-1",
+            name="Device 1",
+            brand="Tibber",
+            model="Test Model",
+        ),
+        "device-2": create_tibber_device(
+            device_id="device-2",
+            name="Device 2",
+            brand="Tibber",
+            model="Test Model",
+        ),
+    }
 
-    runtime = TibberRuntimeData(session=session, tibber_connection=MagicMock())
-    with patch.object(
-        TibberRuntimeData,
-        "async_get_client",
-        new_callable=AsyncMock,
-        return_value=client,
-    ):
-        hass.data[DOMAIN] = runtime
+    coordinator = MagicMock(spec=TibberDataAPICoordinator)
+    coordinator.data = devices
+    coordinator.sensors_by_device = {}
 
-        result = await async_get_config_entry_diagnostics(hass, config_entry)
+    runtime = MagicMock(spec=TibberRuntimeData)
+    runtime.tibber_connection = tibber_mock
+    runtime.data_api_coordinator = coordinator
+    config_entry.runtime_data = runtime
+
+    result = await async_get_config_entry_diagnostics(hass, config_entry)
 
     assert result["error"] is None
     assert len(result["devices"]) == 2
@@ -171,23 +177,18 @@ async def test_data_api_diagnostics_exceptions(
     )
     config_entry.add_to_hass(hass)
 
-    session = MagicMock()
-    session.async_ensure_token_valid = AsyncMock()
-    session.token = {CONF_ACCESS_TOKEN: "test-token"}
+    tibber_mock = MagicMock()
+    tibber_mock.get_homes = MagicMock(return_value=[])
 
-    client = MagicMock()
-    client.get_all_devices = AsyncMock(side_effect=exception)
+    coordinator = MagicMock(spec=TibberDataAPICoordinator)
+    type(coordinator).data = property(lambda self: (_ for _ in ()).throw(exception))
 
-    runtime = TibberRuntimeData(session=session, tibber_connection=MagicMock())
-    with patch.object(
-        TibberRuntimeData,
-        "async_get_client",
-        new_callable=AsyncMock,
-        return_value=client,
-    ):
-        hass.data[DOMAIN] = runtime
+    runtime = MagicMock(spec=TibberRuntimeData)
+    runtime.tibber_connection = tibber_mock
+    runtime.data_api_coordinator = coordinator
+    config_entry.runtime_data = runtime
 
-        result = await async_get_config_entry_diagnostics(hass, config_entry)
+    result = await async_get_config_entry_diagnostics(hass, config_entry)
 
     assert result["error"] == expected_error
     assert result["devices"] == []

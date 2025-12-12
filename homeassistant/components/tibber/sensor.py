@@ -44,7 +44,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 from homeassistant.util import Throttle, dt as dt_util
 
-from .const import DOMAIN, MANUFACTURER
+from .const import DOMAIN, MANUFACTURER, TibberConfigEntry
 from .coordinator import TibberDataAPICoordinator, TibberDataCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -317,7 +317,7 @@ DATA_API_SENSORS: tuple[SensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: TibberConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Tibber sensor."""
@@ -330,15 +330,12 @@ async def async_setup_entry(
 
 async def _async_setup_graphql_sensors(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: TibberConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Tibber sensor."""
 
-    runtime = hass.data.get(DOMAIN)
-    if runtime is None:
-        raise PlatformNotReady("Tibber runtime is not ready")
-    tibber_connection = runtime.tibber_connection
+    tibber_connection = entry.runtime_data.tibber_connection
 
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
@@ -405,17 +402,14 @@ async def _async_setup_graphql_sensors(
 
 async def _async_setup_data_api_sensors(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: TibberConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors backed by the Tibber Data API."""
 
-    runtime = hass.data.get(DOMAIN)
-    if runtime is None:
-        raise PlatformNotReady("Tibber runtime is not ready")
-    coordinator = TibberDataAPICoordinator(hass, entry, runtime)
-
-    await coordinator.async_config_entry_first_refresh()
+    coordinator = entry.runtime_data.data_api_coordinator
+    if coordinator is None:
+        return
 
     entities: list[TibberDataAPISensor] = []
     api_sensors = {sensor.key: sensor for sensor in DATA_API_SENSORS}
@@ -465,18 +459,11 @@ class TibberDataAPISensor(CoordinatorEntity[TibberDataAPICoordinator], SensorEnt
         )
 
     @property
-    def native_value(
-        self,
-    ) -> StateType:
+    def native_value(self) -> StateType:
         """Return the value reported by the device."""
-        device = self.coordinator.data.get(self._device_id)
-        if device is None:
-            return None
-
-        for sensor in device.sensors:
-            if sensor.id == self.entity_description.key:
-                return sensor.value
-        return None
+        sensors = self.coordinator.sensors_by_device.get(self._device_id, {})
+        sensor = sensors.get(self.entity_description.key)
+        return sensor.value if sensor else None
 
     @property
     def available(self) -> bool:

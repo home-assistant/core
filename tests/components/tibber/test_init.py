@@ -19,6 +19,7 @@ async def test_entry_unload(
 ) -> None:
     """Test unloading the entry."""
     entry = hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, "tibber")
+    assert entry is not None
     assert entry.state == ConfigEntryState.LOADED
 
     await hass.config_entries.async_unload(entry.entry_id)
@@ -33,13 +34,18 @@ async def test_data_api_runtime_creates_client(
 ) -> None:
     """Ensure the data API runtime creates and caches the client."""
     session = MagicMock()
-    session.async_ensure_token_valid = AsyncMock()  # type: ignore[assignment]
+    session.async_ensure_token_valid = AsyncMock()
     session.token = {CONF_ACCESS_TOKEN: "access-token"}
 
-    runtime = TibberRuntimeData(session=session, tibber_connection=MagicMock())
+    tibber_connection = MagicMock()
+    runtime = TibberRuntimeData(
+        session=session,
+        tibber_connection=tibber_connection,
+        data_api_coordinator=None,
+    )
 
     with patch(
-        "homeassistant.components.tibber.__init__.tibber_data_api.TibberDataAPI"
+        "homeassistant.components.tibber.tibber_data_api.TibberDataAPI"
     ) as mock_client_cls:
         mock_client = MagicMock()
         mock_client.set_access_token = MagicMock()
@@ -69,10 +75,14 @@ async def test_data_api_runtime_missing_token_raises(
 ) -> None:
     """Ensure missing tokens trigger reauthentication."""
     session = MagicMock()
-    session.async_ensure_token_valid = AsyncMock()  # type: ignore[assignment]
+    session.async_ensure_token_valid = AsyncMock()
     session.token = {}
 
-    runtime = TibberRuntimeData(session=session, tibber_connection=MagicMock())
+    runtime = TibberRuntimeData(
+        session=session,
+        tibber_connection=MagicMock(),
+        data_api_coordinator=None,
+    )
 
     with pytest.raises(ConfigEntryAuthFailed):
         await runtime.async_get_client(hass)
