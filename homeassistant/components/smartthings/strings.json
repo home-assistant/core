@@ -74,6 +74,9 @@
       }
     },
     "button": {
+      "reset_hood_filter": {
+        "name": "Reset filter"
+      },
       "reset_water_filter": {
         "name": "Reset water filter"
       },
@@ -411,6 +414,9 @@
           "simmer": "Simmer"
         }
       },
+      "hood_filter_usage": {
+        "name": "Filter usage"
+      },
       "infrared_level": {
         "name": "Infrared level"
       },
@@ -531,6 +537,39 @@
       },
       "oven_setpoint": {
         "name": "Setpoint"
+      },
+      "pm10_health_concern": {
+        "name": "PM10 health concern",
+        "state": {
+          "good": "[%key:component::smartthings::entity::sensor::pm25_health_concern::state::good%]",
+          "hazardous": "[%key:component::smartthings::entity::sensor::pm25_health_concern::state::hazardous%]",
+          "moderate": "[%key:component::smartthings::entity::sensor::pm25_health_concern::state::moderate%]",
+          "slightly_unhealthy": "[%key:component::smartthings::entity::sensor::pm25_health_concern::state::slightly_unhealthy%]",
+          "unhealthy": "[%key:component::smartthings::entity::sensor::pm25_health_concern::state::unhealthy%]",
+          "very_unhealthy": "[%key:component::smartthings::entity::sensor::pm25_health_concern::state::very_unhealthy%]"
+        }
+      },
+      "pm1_health_concern": {
+        "name": "PM1 health concern",
+        "state": {
+          "good": "[%key:component::smartthings::entity::sensor::pm25_health_concern::state::good%]",
+          "hazardous": "[%key:component::smartthings::entity::sensor::pm25_health_concern::state::hazardous%]",
+          "moderate": "[%key:component::smartthings::entity::sensor::pm25_health_concern::state::moderate%]",
+          "slightly_unhealthy": "[%key:component::smartthings::entity::sensor::pm25_health_concern::state::slightly_unhealthy%]",
+          "unhealthy": "[%key:component::smartthings::entity::sensor::pm25_health_concern::state::unhealthy%]",
+          "very_unhealthy": "[%key:component::smartthings::entity::sensor::pm25_health_concern::state::very_unhealthy%]"
+        }
+      },
+      "pm25_health_concern": {
+        "name": "PM2.5 health concern",
+        "state": {
+          "good": "Good",
+          "hazardous": "Hazardous",
+          "moderate": "Moderate",
+          "slightly_unhealthy": "Slightly unhealthy",
+          "unhealthy": "Unhealthy",
+          "very_unhealthy": "Very unhealthy"
+        }
       },
       "power_energy": {
         "name": "Power energy"

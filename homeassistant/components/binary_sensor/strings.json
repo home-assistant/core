@@ -1,6 +1,6 @@
 {
   "common": {
-    "trigger_behavior_description_presence": "The behavior of the targeted presence sensors to trigger on.",
+    "trigger_behavior_description_occupancy": "The behavior of the targeted occupancy sensors to trigger on.",
     "trigger_behavior_name": "Behavior"
   },
   "device_automation": {
@@ -336,17 +336,17 @@
       "description": "Triggers after one or more occupancy sensors stop detecting occupancy.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::binary_sensor::common::trigger_behavior_description_presence%]",
+          "description": "[%key:component::binary_sensor::common::trigger_behavior_description_occupancy%]",
           "name": "[%key:component::binary_sensor::common::trigger_behavior_name%]"
         }
       },
       "name": "Occupancy cleared"
     },
     "occupancy_detected": {
-      "description": "Triggers after one ore more occupancy sensors start detecting occupancy.",
+      "description": "Triggers after one or more occupancy sensors start detecting occupancy.",
       "fields": {
         "behavior": {
-          "description": "[%key:component::binary_sensor::common::trigger_behavior_description_presence%]",
+          "description": "[%key:component::binary_sensor::common::trigger_behavior_description_occupancy%]",
           "name": "[%key:component::binary_sensor::common::trigger_behavior_name%]"
         }
       },
