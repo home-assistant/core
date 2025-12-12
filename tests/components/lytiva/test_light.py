@@ -29,7 +29,7 @@ class MockMessage:
         self.payload = payload
 
 
-def trigger_discovery(mock_mqtt_client: MagicMock, topic: str, payload: dict):
+async def trigger_discovery(hass: HomeAssistant, mock_mqtt_client: MagicMock, topic: str, payload: dict):
     """Trigger discovery callback."""
     # Find the discovery callback
     for call in mock_mqtt_client.message_callback_add.call_args_list:
@@ -38,6 +38,7 @@ def trigger_discovery(mock_mqtt_client: MagicMock, topic: str, payload: dict):
             callback = args[1]
             msg = MockMessage(topic, json.dumps(payload).encode())
             callback(mock_mqtt_client, None, msg)
+            await hass.async_block_till_done()
             return
     raise AssertionError("Discovery callback not found")
 
@@ -68,8 +69,7 @@ async def test_light_dimmer_discovery(
         "address": 1,
     }
 
-    trigger_discovery(mock_mqtt_client, "homeassistant/light/dimmer_1/config", payload)
-    await hass.async_block_till_done()
+    await trigger_discovery(hass, mock_mqtt_client, "homeassistant/light/dimmer_1/config", payload)
 
     state = hass.states.get("light.test_dimmer")
     assert state is not None
@@ -89,8 +89,7 @@ async def test_light_dimmer_turn_on(
         "command_topic": "LYT/2/NODE/E/COMMAND",
         "address": 2,
     }
-    trigger_discovery(mock_mqtt_client, "homeassistant/light/dimmer_2/config", payload)
-    await hass.async_block_till_done()
+    await trigger_discovery(hass, mock_mqtt_client, "homeassistant/light/dimmer_2/config", payload)
 
     # Reset mock to clear previous calls
     mock_mqtt_client.publish.reset_mock()
@@ -125,8 +124,7 @@ async def test_light_dimmer_turn_off(
         "command_topic": "LYT/3/NODE/E/COMMAND",
         "address": 3,
     }
-    trigger_discovery(mock_mqtt_client, "homeassistant/light/dimmer_3/config", payload)
-    await hass.async_block_till_done()
+    await trigger_discovery(hass, mock_mqtt_client, "homeassistant/light/dimmer_3/config", payload)
 
     mock_mqtt_client.publish.reset_mock()
 
@@ -159,8 +157,7 @@ async def test_light_cct_discovery(
         "min_mireds": 150,
         "max_mireds": 370,
     }
-    trigger_discovery(mock_mqtt_client, "homeassistant/light/cct_1/config", payload)
-    await hass.async_block_till_done()
+    await trigger_discovery(hass, mock_mqtt_client, "homeassistant/light/cct_1/config", payload)
 
     state = hass.states.get("light.cct_light")
     assert state is not None
@@ -178,8 +175,7 @@ async def test_light_cct_turn_on_with_color_temp(
         "command_topic": "LYT/11/NODE/E/COMMAND",
         "address": 11,
     }
-    trigger_discovery(mock_mqtt_client, "homeassistant/light/cct_2/config", payload)
-    await hass.async_block_till_done()
+    await trigger_discovery(hass, mock_mqtt_client, "homeassistant/light/cct_2/config", payload)
 
     mock_mqtt_client.publish.reset_mock()
 
@@ -215,8 +211,7 @@ async def test_light_rgb_discovery(
         "command_topic": "LYT/20/NODE/E/COMMAND",
         "address": 20,
     }
-    trigger_discovery(mock_mqtt_client, "homeassistant/light/rgb_1/config", payload)
-    await hass.async_block_till_done()
+    await trigger_discovery(hass, mock_mqtt_client, "homeassistant/light/rgb_1/config", payload)
 
     state = hass.states.get("light.rgb_light")
     assert state is not None
@@ -234,8 +229,7 @@ async def test_light_rgb_turn_on_with_color(
         "command_topic": "LYT/21/NODE/E/COMMAND",
         "address": 21,
     }
-    trigger_discovery(mock_mqtt_client, "homeassistant/light/rgb_2/config", payload)
-    await hass.async_block_till_done()
+    await trigger_discovery(hass, mock_mqtt_client, "homeassistant/light/rgb_2/config", payload)
 
     mock_mqtt_client.publish.reset_mock()
 
@@ -269,12 +263,12 @@ async def test_light_status_update(
         "command_topic": "LYT/30/NODE/E/COMMAND",
         "address": 30,
     }
-    trigger_discovery(mock_mqtt_client, "homeassistant/light/dimmer_status/config", payload)
-    await hass.async_block_till_done()
+    await trigger_discovery(hass, mock_mqtt_client, "homeassistant/light/dimmer_status/config", payload)
 
     # Send status update
     status_payload = {"address": 30, "dimming": 75}
     await trigger_status(hass, mock_mqtt_client, "LYT/30/NODE/E/STATUS", status_payload)
+    await hass.async_block_till_done()  # Ensure state is fully updated
 
     # Verify state was updated
     state = hass.states.get("light.status_test")
@@ -302,8 +296,7 @@ async def test_light_device_info(
             "suggested_area": "Living Room",
         },
     }
-    trigger_discovery(mock_mqtt_client, "homeassistant/light/light_device/config", payload)
-    await hass.async_block_till_done()
+    await trigger_discovery(hass, mock_mqtt_client, "homeassistant/light/light_device/config", payload)
 
     state = hass.states.get("light.device_test")
     assert state is not None
@@ -320,8 +313,7 @@ async def test_light_cct_status_update(
         "command_topic": "LYT/50/NODE/E/COMMAND",
         "address": 50,
     }
-    trigger_discovery(mock_mqtt_client, "homeassistant/light/cct_status/config", payload)
-    await hass.async_block_till_done()
+    await trigger_discovery(hass, mock_mqtt_client, "homeassistant/light/cct_status/config", payload)
 
     # Send status with color temp
     status_payload = {
@@ -329,6 +321,7 @@ async def test_light_cct_status_update(
         "cct": {"dimming": 80, "color_temperature": 50},
     }
     await trigger_status(hass, mock_mqtt_client, "LYT/50/NODE/E/STATUS", status_payload)
+    await hass.async_block_till_done()  # Ensure state is fully updated
 
     state = hass.states.get("light.cct_status")
     assert state.state == STATE_ON
@@ -346,13 +339,224 @@ async def test_light_rgb_status_update(
         "command_topic": "LYT/60/NODE/E/COMMAND",
         "address": 60,
     }
-    trigger_discovery(mock_mqtt_client, "homeassistant/light/rgb_status/config", payload)
-    await hass.async_block_till_done()
+    await trigger_discovery(hass, mock_mqtt_client, "homeassistant/light/rgb_status/config", payload)
 
     # Send RGB status
     status_payload = {"address": 60, "rgb": {"r": 100, "g": 150, "b": 200}}
     await trigger_status(hass, mock_mqtt_client, "LYT/60/NODE/E/STATUS", status_payload)
+    await hass.async_block_till_done()  # Ensure state is fully updated
 
     state = hass.states.get("light.rgb_status")
     assert state.state == STATE_ON
     assert state.attributes[ATTR_RGB_COLOR] == (100, 150, 200)
+
+
+async def test_light_fallback_kelvin_conversion(
+    hass: HomeAssistant,
+) -> None:
+    """Test fallback in kelvin conversion functions."""
+    from homeassistant.components.lytiva.light import mireds_to_kelvin, kelvin_to_mireds
+    
+    # Test with zero/invalid values
+    assert mireds_to_kelvin(0) == 2700  # fallback
+    assert mireds_to_kelvin(-10) == 2700  # fallback
+    assert kelvin_to_mireds(0) == 370  # fallback
+    assert kelvin_to_mireds(-10) == 370  # fallback
+    
+    # Test with valid values
+    assert mireds_to_kelvin(250) == 4000
+    assert kelvin_to_mireds(4000) == 250
+
+
+async def test_light_discovery_without_address(
+    hass: HomeAssistant, mock_mqtt_client: MagicMock, setup_integration
+) -> None:
+    """Test light discovery with missing address uses unique_id."""
+    discovery_callback = None
+    for call in mock_mqtt_client.message_callback_add.call_args_list:
+        args, _ = call
+        if "config" in str(args[0]):
+            discovery_callback = args[1]
+            break
+
+    # Discover light without address field
+    payload = {
+        "unique_id": "no_address_light",
+        "name": "No Address Light",
+        "type": "dimmer",
+        "command_topic": "LYT/99/NODE/E/COMMAND",
+        # No address field
+    }
+    msg = MockMessage(
+        "homeassistant/light/no_address_light/config", json.dumps(payload).encode()
+    )
+    discovery_callback(mock_mqtt_client, None, msg)
+    await hass.async_block_till_done()
+
+    # Should use unique_id as address
+    state = hass.states.get("light.no_address_light")
+    assert state is not None
+
+
+async def test_light_string_address(
+    hass: HomeAssistant, mock_mqtt_client: MagicMock, setup_integration
+) -> None:
+    """Test light with string address instead of int."""
+    discovery_callback = None
+    for call in mock_mqtt_client.message_callback_add.call_args_list:
+        args, _ = call
+        if "config" in str(args[0]):
+            discovery_callback = args[1]
+            break
+
+    # Discover light with string address
+    payload = {
+        "unique_id": "string_addr",
+        "name": "String Address",
+        "type": "dimmer",
+        "command_topic": "LYT/STR/NODE/E/COMMAND",
+        "address": "string_address",
+    }
+    msg = MockMessage(
+        "homeassistant/light/string_addr/config", json.dumps(payload).encode()
+    )
+    discovery_callback(mock_mqtt_client, None, msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.string_address")
+    assert state is not None
+
+
+async def test_light_without_device_info(
+    hass: HomeAssistant, mock_mqtt_client: MagicMock, setup_integration
+) -> None:
+    """Test light without device info."""
+    discovery_callback = None
+    for call in mock_mqtt_client.message_callback_add.call_args_list:
+        args, _ = call
+        if "config" in str(args[0]):
+            discovery_callback = args[1]
+            break
+
+    # Discover light without device field
+    payload = {
+        "unique_id": "no_device",
+        "name": "No Device",
+        "type": "dimmer",
+        "command_topic": "LYT/100/NODE/E/COMMAND",
+        "address": 100,
+        # No device field
+    }
+    msg = MockMessage(
+        "homeassistant/light/no_device/config", json.dumps(payload).encode()
+    )
+    discovery_callback(mock_mqtt_client, None, msg)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.no_device")
+    assert state is not None
+
+
+async def test_light_discovery_duplicate_prevention(
+    hass: HomeAssistant, mock_mqtt_client: MagicMock, setup_integration
+) -> None:
+    """Test that duplicate light discovery is prevented."""
+    discovery_callback = None
+    for call in mock_mqtt_client.message_callback_add.call_args_list:
+        args, _ = call
+        if "config" in str(args[0]):
+            discovery_callback = args[1]
+            break
+
+    # Discover light first time
+    payload = {
+        "unique_id": "duplicate_test",
+        "name": "Duplicate Test",
+        "type": "dimmer",
+        "command_topic": "LYT/200/NODE/E/COMMAND",
+        "address": 200,
+    }
+    msg = MockMessage(
+        "homeassistant/light/duplicate_test/config", json.dumps(payload).encode()
+    )
+    discovery_callback(mock_mqtt_client, None, msg)
+    await hass.async_block_till_done()
+
+    # Try to discover same light again
+    discovery_callback(mock_mqtt_client, None, msg)
+    await hass.async_block_till_done()
+
+    # Should only create one entity
+    state = hass.states.get("light.duplicate_test")
+    assert state is not None
+
+
+async def test_light_discovery_exception_handling(
+    hass: HomeAssistant, mock_mqtt_client: MagicMock, setup_integration
+) -> None:
+    """Test exception handling in light discovery."""
+    discovery_callback = None
+    for call in mock_mqtt_client.message_callback_add.call_args_list:
+        args, _ = call
+        if "config" in str(args[0]):
+            discovery_callback = args[1]
+            break
+
+    # Send malformed payload that will cause exception
+    payload = {
+        "unique_id": None,  # This will cause issues
+        "name": "Bad Light",
+    }
+    msg = MockMessage(
+        "homeassistant/light/bad/config", json.dumps(payload).encode()
+    )
+    
+    # Should not crash
+    discovery_callback(mock_mqtt_client, None, msg)
+    await hass.async_block_till_done()
+
+
+async def test_status_message_wrong_address(
+    hass: HomeAssistant, mock_mqtt_client: MagicMock, setup_integration
+) -> None:
+    """Test status message with wrong address is ignored."""
+    # First discover a light
+    discovery_callback = None
+    for call in mock_mqtt_client.message_callback_add.call_args_list:
+        args, _ = call
+        if "config" in str(args[0]):
+            discovery_callback = args[1]
+            break
+
+    payload = {
+        "unique_id": "addr_test",
+        "name": "Address Test",
+        "type": "dimmer",
+        "command_topic": "LYT/300/NODE/E/COMMAND",
+        "address": 300,
+    }
+    msg = MockMessage(
+        "homeassistant/light/addr_test/config", json.dumps(payload).encode()
+    )
+    discovery_callback(mock_mqtt_client, None, msg)
+    await hass.async_block_till_done()
+
+    # Send status for different address
+    status_callback = None
+    for call in mock_mqtt_client.message_callback_add.call_args_list:
+        args, _ = call
+        if "STATUS" in str(args[0]):
+            status_callback = args[1]
+            break
+
+    status_msg = MockMessage(
+        "LYT/999/NODE/E/STATUS",
+        json.dumps({"address": 999, "dimming": 50}).encode()
+    )
+    status_callback(mock_mqtt_client, None, status_msg)
+    await hass.async_block_till_done()
+
+    # Light should still be off (status was ignored)
+    state = hass.states.get("light.address_test")
+    assert state.state == "off"
+

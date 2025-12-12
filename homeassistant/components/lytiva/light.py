@@ -47,14 +47,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry, async_add_e
     register_cb = data.get("register_light_callback")
 
     if register_cb:
-        register_cb(lambda payload: _handle_discovery(hass, entry, payload, async_add_entities))
+        def discovery_callback(payload):
+            """Callback that schedules the async discovery handler."""
+            hass.async_create_task(_handle_discovery(hass, entry, payload, async_add_entities))
+        
+        register_cb(discovery_callback)
         _LOGGER.debug("Lytiva Light: discovery callback registered.")
 
 
 # ---------------------------------------------------------
 #  DISCOVERY HANDLER
 # ---------------------------------------------------------
-def _handle_discovery(hass, entry, payload, async_add_entities):
+async def _handle_discovery(hass, entry, payload, async_add_entities):
+    """Handle discovery of a new light."""
     try:
         uid = payload.get("unique_id") or payload.get("address")
         if uid is None:
@@ -79,8 +84,8 @@ def _handle_discovery(hass, entry, payload, async_add_entities):
         by_uid[uid] = ent
         by_addr[str(ent.address)] = ent
 
-        # safe: schedule add on HA loop
-        hass.add_job(async_add_entities, [ent])
+        # Add entity to Home Assistant
+        async_add_entities([ent])
 
     except Exception:
         _LOGGER.exception("Lytiva Light discovery failed")
