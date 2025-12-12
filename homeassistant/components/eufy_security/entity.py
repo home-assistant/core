@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
+import functools
 import logging
 from typing import Any, Concatenate
 
@@ -23,6 +24,7 @@ def exception_wrap[_EufyEntityT: EufySecurityEntity, **_P, _R](
 ) -> Callable[Concatenate[_EufyEntityT, _P], Coroutine[Any, Any, _R]]:
     """Define a wrapper to catch exceptions and raise HomeAssistant errors."""
 
+    @functools.wraps(async_func)
     async def _wrap(self: _EufyEntityT, /, *args: _P.args, **kwargs: _P.kwargs) -> _R:
         try:
             return await async_func(self, *args, **kwargs)
