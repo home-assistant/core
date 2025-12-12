@@ -113,3 +113,32 @@ async def test_migrate(
     await hass.async_block_till_done()
     entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
     assert entry.state is ConfigEntryState.MIGRATION_ERROR
+
+
+async def test_migrate_v3_to_v4(
+    hass: HomeAssistant,
+    mock_blink_api: MagicMock,
+    mock_blink_auth_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test migration from version 3 to 4 (device_id to hardware_id)."""
+    mock_config_entry.add_to_hass(hass)
+
+    # Set up v3 config entry with device_id
+    data = {**mock_config_entry.data}
+    data.pop("hardware_id", None)
+    data["device_id"] = "Home Assistant"
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        version=3,
+        data=data,
+    )
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.version == 4
+    assert "hardware_id" in entry.data
+    assert "device_id" not in entry.data
+    assert entry.data["hardware_id"] == "Home Assistant"
