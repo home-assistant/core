@@ -22,6 +22,7 @@ class BeoSource:
     NET_RADIO: Final[Source] = Source(name="B&O Radio", id="netRadio")
     SPDIF: Final[Source] = Source(name="Optical", id="spdif")
     TIDAL: Final[Source] = Source(name="Tidal", id="tidal")
+    TV: Final[Source] = Source(name="TV", id="tv")
     UNKNOWN: Final[Source] = Source(name="Unknown Source", id="unknown")
     URI_STREAMER: Final[Source] = Source(name="Audio Streamer", id="uriStreamer")
 
@@ -55,12 +56,13 @@ BEO_REPEAT_TO_HA: dict[str, RepeatMode] = {
 class BeoMediaType(StrEnum):
     """Bang & Olufsen specific media types."""
 
-    FAVOURITE = "favourite"
     DEEZER = "deezer"
+    FAVOURITE = "favourite"
+    OVERLAY_TTS = "overlay_tts"
     RADIO = "radio"
     TIDAL = "tidal"
     TTS = "provider"
-    OVERLAY_TTS = "overlay_tts"
+    TV = "tv"
 
 
 class BeoModel(StrEnum):
