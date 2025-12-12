@@ -241,10 +241,7 @@
     'capabilities': dict({
       'options': list([
         'normal',
-        'vacation',
-        'privacy',
         'no_remote_lock_unlock',
-        'passage',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -282,10 +279,7 @@
       'friendly_name': 'Aqara Smart Lock U200 Operating mode',
       'options': list([
         'normal',
-        'vacation',
-        'privacy',
         'no_remote_lock_unlock',
-        'passage',
       ]),
     }),
     'context': <ANY>,
@@ -684,10 +678,7 @@
     'capabilities': dict({
       'options': list([
         'normal',
-        'vacation',
-        'privacy',
         'no_remote_lock_unlock',
-        'passage',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -725,10 +716,7 @@
       'friendly_name': 'Mock Door Lock Operating mode',
       'options': list([
         'normal',
-        'vacation',
-        'privacy',
         'no_remote_lock_unlock',
-        'passage',
       ]),
     }),
     'context': <ANY>,
@@ -869,10 +857,7 @@
     'capabilities': dict({
       'options': list([
         'normal',
-        'vacation',
-        'privacy',
         'no_remote_lock_unlock',
-        'passage',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -910,10 +895,7 @@
       'friendly_name': 'Mock Door Lock with unbolt Operating mode',
       'options': list([
         'normal',
-        'vacation',
-        'privacy',
         'no_remote_lock_unlock',
-        'passage',
       ]),
     }),
     'context': <ANY>,
@@ -2523,10 +2505,7 @@
     'capabilities': dict({
       'options': list([
         'normal',
-        'vacation',
-        'privacy',
         'no_remote_lock_unlock',
-        'passage',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -2564,10 +2543,7 @@
       'friendly_name': 'Mock Lock Operating mode',
       'options': list([
         'normal',
-        'vacation',
-        'privacy',
         'no_remote_lock_unlock',
-        'passage',
       ]),
     }),
     'context': <ANY>,
@@ -3783,10 +3759,8 @@
     'capabilities': dict({
       'options': list([
         'normal',
-        'vacation',
         'privacy',
         'no_remote_lock_unlock',
-        'passage',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -3824,10 +3798,8 @@
       'friendly_name': 'Secuyou Smart Lock Operating mode',
       'options': list([
         'normal',
-        'vacation',
         'privacy',
         'no_remote_lock_unlock',
-        'passage',
       ]),
     }),
     'context': <ANY>,
