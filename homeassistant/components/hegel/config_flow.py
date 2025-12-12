@@ -5,7 +5,7 @@ import asyncio
 import logging
 import re
 import xml.etree.ElementTree as ET
-from typing import Any, Optional, Tuple
+from typing import Any
 
 import voluptuous as vol
 from homeassistant import config_entries
@@ -195,7 +195,7 @@ class HegelFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_get_unique_id_from_description(
         self, discovery_info: SsdpServiceInfo
-    ) -> Tuple[Optional[str], Optional[str]]:
+    ) -> tuple[str | None, str | None]:
         """Fetch device description.xml to get MAC, UDN, or serialNumber."""
         ssdp_location = getattr(discovery_info, "ssdp_location", "")
         if not ssdp_location:

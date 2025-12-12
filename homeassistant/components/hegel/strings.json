@@ -10,14 +10,25 @@
           "name": "Name",
           "model": "Model"
         }
+      },
+      "reconfigure": {
+        "title": "Reconfigure Hegel amplifier",
+        "description": "Update the connection settings for your Hegel amplifier.",
+        "data": {
+          "host": "Host/IP",
+          "port": "Port",
+          "name": "Name",
+          "model": "Model"
+        }
       }
     },
     "error": {
-      "cannot_connect": "Cannot connect to the amplifier",
-      "already_configured": "This amplifier is already configured"
+      "cannot_connect": "Cannot connect to the amplifier"
     },
     "abort": {
-      "no_host_found": "Could not determine host from discovery information"
+      "already_configured": "This amplifier is already configured",
+      "no_host_found": "Could not determine host from discovery information",
+      "reconfigure_successful": "Configuration updated successfully"
     }
   },
   "entity": {

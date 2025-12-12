@@ -1,0 +1,655 @@
+"""Test the Hegel config flow."""
+
+from unittest.mock import MagicMock
+
+from homeassistant import config_entries
+from homeassistant.components.hegel.const import CONF_MODEL, DEFAULT_PORT, DOMAIN
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
+
+from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
+
+TEST_HOST = "192.168.1.100"
+TEST_PORT = DEFAULT_PORT
+TEST_NAME = "Hegel H190"
+TEST_MODEL = "H190"
+TEST_UNIQUE_ID = "mac:001122334455"
+TEST_MAC = "00:11:22:33:44:55"
+TEST_SERIAL = "SN123456789"
+TEST_UDN = "uuid:12345678-1234-1234-1234-123456789abc"
+TEST_SSDP_LOCATION = f"http://{TEST_HOST}:8080/description.xml"
+
+
+# User Flow Tests
+
+
+async def test_user_flow_success(
+    hass: HomeAssistant,
+    mock_setup_entry: MagicMock,
+    mock_connection_success: MagicMock,
+) -> None:
+    """Test successful manual user flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: TEST_HOST,
+            CONF_PORT: TEST_PORT,
+            CONF_NAME: TEST_NAME,
+            CONF_MODEL: TEST_MODEL,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == TEST_NAME
+    assert result["data"] == {
+        CONF_HOST: TEST_HOST,
+        CONF_PORT: TEST_PORT,
+        CONF_NAME: TEST_NAME,
+        CONF_MODEL: TEST_MODEL,
+    }
+
+
+async def test_user_flow_cannot_connect(
+    hass: HomeAssistant,
+    mock_connection_error: MagicMock,
+) -> None:
+    """Test user flow with connection error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: TEST_HOST,
+            CONF_PORT: TEST_PORT,
+            CONF_NAME: TEST_NAME,
+            CONF_MODEL: TEST_MODEL,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {CONF_HOST: "cannot_connect"}
+
+
+async def test_user_flow_already_configured_via_ssdp(
+    hass: HomeAssistant,
+    mock_connection_success: MagicMock,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test user flow aborts when device discovered via SSDP is already configured."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_UNIQUE_ID,
+        data={CONF_HOST: TEST_HOST, CONF_NAME: TEST_NAME, CONF_MODEL: TEST_MODEL},
+    )
+    entry.add_to_hass(hass)
+
+    aioclient_mock.get(
+        TEST_SSDP_LOCATION,
+        text=f"""<?xml version="1.0"?>
+        <root><device><MAC>{TEST_MAC}</MAC></device></root>""",
+    )
+
+    # Start via SSDP discovery which sets _discovered_data with unique_id
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location=TEST_SSDP_LOCATION,
+            upnp={
+                "presentationURL": f"http://{TEST_HOST}/",
+                "friendlyName": TEST_NAME,
+                "modelName": TEST_MODEL,
+            },
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_user_flow_default_name(
+    hass: HomeAssistant,
+    mock_setup_entry: MagicMock,
+    mock_connection_success: MagicMock,
+) -> None:
+    """Test user flow uses default name when not provided."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: TEST_HOST},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == f"Hegel {TEST_HOST}"
+
+
+# Reconfigure Flow Tests
+
+
+async def test_reconfigure_flow_success(
+    hass: HomeAssistant,
+    mock_setup_entry: MagicMock,
+    mock_connection_success: MagicMock,
+) -> None:
+    """Test successful reconfigure flow."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_UNIQUE_ID,
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_PORT: TEST_PORT,
+            CONF_NAME: TEST_NAME,
+            CONF_MODEL: TEST_MODEL,
+        },
+        title=TEST_NAME,
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    new_host = "192.168.1.200"
+    new_name = "New Hegel Name"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: new_host,
+            CONF_PORT: TEST_PORT,
+            CONF_NAME: new_name,
+            CONF_MODEL: TEST_MODEL,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_HOST] == new_host
+    assert entry.data[CONF_NAME] == new_name
+
+
+async def test_reconfigure_flow_cannot_connect(
+    hass: HomeAssistant,
+    mock_connection_error: MagicMock,
+) -> None:
+    """Test reconfigure flow with connection error."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_UNIQUE_ID,
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_PORT: TEST_PORT,
+            CONF_NAME: TEST_NAME,
+            CONF_MODEL: TEST_MODEL,
+        },
+        title=TEST_NAME,
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.200",
+            CONF_PORT: TEST_PORT,
+            CONF_NAME: TEST_NAME,
+            CONF_MODEL: TEST_MODEL,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {CONF_HOST: "cannot_connect"}
+
+
+async def test_reconfigure_flow_default_name(
+    hass: HomeAssistant,
+    mock_setup_entry: MagicMock,
+    mock_connection_success: MagicMock,
+) -> None:
+    """Test reconfigure flow uses default name when empty."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_UNIQUE_ID,
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_PORT: TEST_PORT,
+            CONF_NAME: TEST_NAME,
+            CONF_MODEL: TEST_MODEL,
+        },
+        title=TEST_NAME,
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    new_host = "192.168.1.200"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: new_host},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_NAME] == f"Hegel {new_host}"
+
+
+# SSDP Discovery Tests
+
+
+async def test_ssdp_discovery_success(
+    hass: HomeAssistant,
+    mock_setup_entry: MagicMock,
+    mock_connection_success: MagicMock,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test successful SSDP discovery with MAC address."""
+    aioclient_mock.get(
+        TEST_SSDP_LOCATION,
+        text=f"""<?xml version="1.0"?>
+        <root>
+            <device>
+                <friendlyName>{TEST_NAME}</friendlyName>
+                <modelName>{TEST_MODEL}</modelName>
+                <MAC>{TEST_MAC}</MAC>
+            </device>
+        </root>""",
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location=TEST_SSDP_LOCATION,
+            upnp={
+                "presentationURL": f"http://{TEST_HOST}/",
+                "friendlyName": TEST_NAME,
+                "modelName": TEST_MODEL,
+            },
+        ),
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: TEST_HOST,
+            CONF_PORT: TEST_PORT,
+            CONF_NAME: TEST_NAME,
+            CONF_MODEL: TEST_MODEL,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_ssdp_discovery_from_ssdp_location(
+    hass: HomeAssistant,
+    mock_connection_success: MagicMock,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test SSDP discovery extracts host from ssdp_location when presentationURL is not available."""
+    aioclient_mock.get(
+        TEST_SSDP_LOCATION,
+        text="""<?xml version="1.0"?>
+        <root><device><friendlyName>Hegel</friendlyName></device></root>""",
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location=TEST_SSDP_LOCATION,
+            upnp={"friendlyName": TEST_NAME, "modelName": TEST_MODEL},
+        ),
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+
+async def test_ssdp_discovery_no_host(hass: HomeAssistant) -> None:
+    """Test SSDP discovery aborts when no host can be determined."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="",
+            upnp={},
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_host_found"
+
+
+async def test_ssdp_discovery_already_configured(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test SSDP discovery aborts when device is already configured."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_UNIQUE_ID,
+        data={CONF_HOST: TEST_HOST, CONF_NAME: TEST_NAME, CONF_MODEL: TEST_MODEL},
+    )
+    entry.add_to_hass(hass)
+
+    aioclient_mock.get(
+        TEST_SSDP_LOCATION,
+        text=f"""<?xml version="1.0"?>
+        <root><device><MAC>{TEST_MAC}</MAC></device></root>""",
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location=TEST_SSDP_LOCATION,
+            upnp={
+                "presentationURL": f"http://{TEST_HOST}/",
+                "friendlyName": TEST_NAME,
+                "modelName": TEST_MODEL,
+            },
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_ssdp_discovery_with_serial_number(
+    hass: HomeAssistant,
+    mock_connection_success: MagicMock,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test SSDP discovery extracts serial number from device description."""
+    aioclient_mock.get(
+        TEST_SSDP_LOCATION,
+        text=f"""<?xml version="1.0"?>
+        <root xmlns="urn:schemas-upnp-org:device-1-0">
+            <device>
+                <friendlyName>{TEST_NAME}</friendlyName>
+                <modelName>{TEST_MODEL}</modelName>
+                <serialNumber>{TEST_SERIAL}</serialNumber>
+            </device>
+        </root>""",
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location=TEST_SSDP_LOCATION,
+            upnp={
+                "presentationURL": f"http://{TEST_HOST}/",
+                "friendlyName": TEST_NAME,
+                "modelName": TEST_MODEL,
+            },
+        ),
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+
+async def test_ssdp_discovery_with_udn(
+    hass: HomeAssistant,
+    mock_connection_success: MagicMock,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test SSDP discovery extracts UDN from device description."""
+    aioclient_mock.get(
+        TEST_SSDP_LOCATION,
+        text=f"""<?xml version="1.0"?>
+        <root xmlns="urn:schemas-upnp-org:device-1-0">
+            <device>
+                <friendlyName>{TEST_NAME}</friendlyName>
+                <modelName>{TEST_MODEL}</modelName>
+                <UDN>{TEST_UDN}</UDN>
+            </device>
+        </root>""",
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location=TEST_SSDP_LOCATION,
+            upnp={
+                "presentationURL": f"http://{TEST_HOST}/",
+                "friendlyName": TEST_NAME,
+                "modelName": TEST_MODEL,
+            },
+        ),
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+
+async def test_ssdp_discovery_no_ssdp_location_for_description(
+    hass: HomeAssistant, mock_connection_success: MagicMock
+) -> None:
+    """Test SSDP discovery proceeds without unique_id when ssdp_location is empty."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="",
+            upnp={
+                "presentationURL": f"http://{TEST_HOST}/",
+                "friendlyName": TEST_NAME,
+                "modelName": TEST_MODEL,
+            },
+        ),
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+
+async def test_ssdp_discovery_description_fetch_error(
+    hass: HomeAssistant,
+    mock_connection_success: MagicMock,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test SSDP discovery proceeds when fetching description.xml fails."""
+    aioclient_mock.get(TEST_SSDP_LOCATION, exc=Exception("Network error"))
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location=TEST_SSDP_LOCATION,
+            upnp={
+                "presentationURL": f"http://{TEST_HOST}/",
+                "friendlyName": TEST_NAME,
+                "modelName": TEST_MODEL,
+            },
+        ),
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+
+async def test_ssdp_discovery_invalid_xml(
+    hass: HomeAssistant,
+    mock_connection_success: MagicMock,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test SSDP discovery proceeds when description.xml is invalid XML."""
+    aioclient_mock.get(TEST_SSDP_LOCATION, text="<invalid xml>")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location=TEST_SSDP_LOCATION,
+            upnp={
+                "presentationURL": f"http://{TEST_HOST}/",
+                "friendlyName": TEST_NAME,
+                "modelName": TEST_MODEL,
+            },
+        ),
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+
+async def test_ssdp_discovery_no_unique_id_info(
+    hass: HomeAssistant,
+    mock_connection_success: MagicMock,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test SSDP discovery proceeds when description.xml has no MAC, serial, or UDN."""
+    aioclient_mock.get(
+        TEST_SSDP_LOCATION,
+        text="""<?xml version="1.0"?>
+        <root xmlns="urn:schemas-upnp-org:device-1-0">
+            <device>
+                <friendlyName>Hegel H190</friendlyName>
+                <modelName>H190</modelName>
+            </device>
+        </root>""",
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location=TEST_SSDP_LOCATION,
+            upnp={
+                "presentationURL": f"http://{TEST_HOST}/",
+                "friendlyName": TEST_NAME,
+                "modelName": TEST_MODEL,
+            },
+        ),
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+
+async def test_ssdp_discovery_unknown_model(
+    hass: HomeAssistant,
+    mock_connection_success: MagicMock,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test SSDP discovery with unknown model falls back to first model in list."""
+    aioclient_mock.get(
+        TEST_SSDP_LOCATION,
+        text="""<?xml version="1.0"?>
+        <root><device><friendlyName>Hegel Unknown</friendlyName></device></root>""",
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location=TEST_SSDP_LOCATION,
+            upnp={
+                "presentationURL": f"http://{TEST_HOST}/",
+                "friendlyName": "Hegel Unknown",
+            },
+        ),
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+
+async def test_ssdp_discovery_with_empty_upnp(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test SSDP discovery when upnp data is empty but ssdp_location has host."""
+    aioclient_mock.get(
+        TEST_SSDP_LOCATION,
+        text="""<?xml version="1.0"?>
+        <root><device><friendlyName>Hegel</friendlyName></device></root>""",
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location=TEST_SSDP_LOCATION,
+            upnp={},
+        ),
+    )
+
+    # Host is extracted from ssdp_location, so flow proceeds to user step
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+
+async def test_ssdp_discovery_no_host_no_location(hass: HomeAssistant) -> None:
+    """Test SSDP discovery aborts when both upnp and ssdp_location are empty."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="",
+            upnp={},
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_host_found"
