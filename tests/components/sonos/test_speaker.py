@@ -1,6 +1,6 @@
 """Tests for common SonosSpeaker behavior."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -189,3 +189,30 @@ async def test_zgs_avtransport_group_speakers(
     await _media_play(hass, "media_player.living_room")
     assert soco_lr.play.call_count == 1
     assert soco_br.play.call_count == 0
+
+
+async def test_async_offline_without_subscription_lock(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    soco: MockSoCo,
+) -> None:
+    """Test unloading entry works when subscription lock was never created.
+
+    This can happen when a speaker is discovered but async_subscribe()
+    was never called (e.g., no activity detected before shutdown).
+    The integration should handle this gracefully during unload.
+    """
+    # Patch async_subscribe to do nothing, simulating the scenario where
+    # the speaker is discovered but no activity triggers subscription setup
+    with patch(
+        "homeassistant.components.sonos.speaker.SonosSpeaker.async_subscribe",
+        new_callable=AsyncMock,
+    ):
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        # Unload should succeed without AssertionError even though
+        # _subscription_lock was never created
+        assert await hass.config_entries.async_unload(config_entry.entry_id)
+        await hass.async_block_till_done()
