@@ -32,8 +32,9 @@ CAPABILITIES = (
     Capability.COLOR_TEMPERATURE,
 )
 
-# Components that should be exposed as light entities
-# (in addition to the main component)
+# Components that should be exposed as light entities, in addition to the main component.
+# This whitelist pattern is consistent with other platforms (e.g., binary_sensor, switch)
+# to prevent unexpected entity creation from components not intended for separate exposure.
 LIGHT_COMPONENTS = {
     "lamp",
     "cookinglight",

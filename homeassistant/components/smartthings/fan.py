@@ -22,8 +22,9 @@ from .entity import SmartThingsEntity
 
 SPEED_RANGE = (1, 3)  # off is not included
 
-# Components that should be exposed as fan entities
-# (in addition to the main component)
+# Components that should be exposed as fan entities, in addition to the main component.
+# Currently empty - only the main component is exposed for fan entities.
+# This whitelist pattern is consistent with other platforms for safety.
 FAN_COMPONENTS: set[str] = set()
 
 
