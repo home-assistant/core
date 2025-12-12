@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensor_with_data[sensor.living_room_humidity-entry]
+# name: test_sensor_with_climate_data[sensor.living_room_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -36,7 +36,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_with_data[sensor.living_room_humidity-state]
+# name: test_sensor_with_climate_data[sensor.living_room_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'humidity',
@@ -52,7 +52,7 @@
     'state': '45.0',
   })
 # ---
-# name: test_sensor_with_data[sensor.living_room_temperature-entry]
+# name: test_sensor_with_climate_data[sensor.living_room_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -92,7 +92,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensor_with_data[sensor.living_room_temperature-state]
+# name: test_sensor_with_climate_data[sensor.living_room_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',

@@ -30,7 +30,7 @@ async def test_sensor_with_climate_data(
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test sensor entities with climate data."""
+    """Test sensor entities are created with climate data."""
     await snapshot_platform(
         hass,
         entity_registry,
