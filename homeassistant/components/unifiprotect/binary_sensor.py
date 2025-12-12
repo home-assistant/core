@@ -377,7 +377,7 @@ SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ),
     ProtectBinaryEntityDescription(
         key="motion_enabled",
-        translation_key="detections_motion",
+        translation_key="motion_detection_enabled",
         icon="mdi:walk",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value="motion_settings.is_enabled",
@@ -385,7 +385,7 @@ SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ),
     ProtectBinaryEntityDescription(
         key="temperature",
-        translation_key="temperature_sensor",
+        translation_key="temperature_sensor_enabled",
         icon="mdi:thermometer",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value="temperature_settings.is_enabled",
@@ -393,7 +393,7 @@ SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ),
     ProtectBinaryEntityDescription(
         key="humidity",
-        translation_key="humidity_sensor",
+        translation_key="humidity_sensor_enabled",
         icon="mdi:water-percent",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value="humidity_settings.is_enabled",
@@ -401,7 +401,7 @@ SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ),
     ProtectBinaryEntityDescription(
         key="light",
-        translation_key="light_sensor",
+        translation_key="light_sensor_enabled",
         icon="mdi:brightness-5",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value="light_settings.is_enabled",
