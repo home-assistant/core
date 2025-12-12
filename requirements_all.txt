@@ -206,7 +206,7 @@ aioaquacell==0.2.0
 aioaseko==1.0.0
 
 # homeassistant.components.asuswrt
-aioasuswrt==1.5.1
+aioasuswrt==1.5.2
 
 # homeassistant.components.husqvarna_automower
 aioautomower==2.7.1
@@ -537,7 +537,7 @@ arris-tg2492lg==2.2.0
 asmog==0.0.6
 
 # homeassistant.components.asuswrt
-asusrouter==1.21.1
+asusrouter==1.21.3
 
 # homeassistant.components.dlna_dmr
 # homeassistant.components.dlna_dms
@@ -648,7 +648,7 @@ bleak==1.0.1
 blebox-uniapi==2.5.0
 
 # homeassistant.components.blink
-blinkpy==0.24.1
+blinkpy==0.25.1
 
 # homeassistant.components.bitcoin
 blockchain==1.4.4
@@ -1090,7 +1090,7 @@ google-nest-sdm==9.1.2
 google-photos-library-api==0.12.1
 
 # homeassistant.components.google_air_quality
-google_air_quality_api==2.0.0
+google_air_quality_api==2.0.2
 
 # homeassistant.components.slide
 # homeassistant.components.slide_local
@@ -1154,7 +1154,7 @@ habiticalib==0.4.6
 habluetooth==5.7.0
 
 # homeassistant.components.hanna
-hanna-cloud==0.0.6
+hanna-cloud==0.0.7
 
 # homeassistant.components.cloud
 hass-nabucasa==1.7.0
@@ -1234,7 +1234,7 @@ ibeacon-ble==1.2.0
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 # homeassistant.components.remote_calendar
-ical==11.1.0
+ical==12.1.1
 
 # homeassistant.components.caldav
 icalendar==6.3.1
@@ -2145,7 +2145,7 @@ pykwb==0.0.8
 pylacrosse==0.4
 
 # homeassistant.components.lamarzocco
-pylamarzocco==2.2.2
+pylamarzocco==2.2.4
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -2285,7 +2285,7 @@ pypaperless==4.1.1
 pypca==0.0.7
 
 # homeassistant.components.lcn
-pypck==0.9.5
+pypck==0.9.7
 
 # homeassistant.components.pglab
 pypglab==0.0.5
@@ -2400,7 +2400,7 @@ pysmappee==0.2.29
 pysmarlaapi==0.9.2
 
 # homeassistant.components.smartthings
-pysmartthings==3.5.0
+pysmartthings==3.5.1
 
 # homeassistant.components.smarty
 pysmarty2==0.10.3
@@ -2557,7 +2557,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==3.10.10
+python-roborock==3.12.2
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.45
