@@ -17,7 +17,10 @@ from homeassistant.components.camera import (
     async_get_mjpeg_stream,
     get_camera_from_entity_id,
 )
-from homeassistant.components.ring.camera import FORCE_REFRESH_INTERVAL
+from homeassistant.components.ring.camera import (
+    FORCE_REFRESH_INTERVAL,
+    _fix_sdp_direction,
+)
 from homeassistant.components.ring.const import SCAN_INTERVAL
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import Platform
@@ -463,3 +466,76 @@ async def test_camera_webrtc(
     assert response
     assert response.get("success") is True
     front_camera_mock.sync_close_webrtc_stream.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("input_sdp", "expected_sdp"),
+    [
+        # recvonly should be changed to sendonly
+        ("v=0\r\na=recvonly\r\n", "v=0\r\na=sendonly\r\n"),
+        # sendrecv should be changed to sendonly
+        ("v=0\r\na=sendrecv\r\n", "v=0\r\na=sendonly\r\n"),
+        # sendonly should remain sendonly
+        ("v=0\r\na=sendonly\r\n", "v=0\r\na=sendonly\r\n"),
+        # inactive should be changed to sendonly
+        ("v=0\r\na=inactive\r\n", "v=0\r\na=sendonly\r\n"),
+        # Multiple media sections should all be fixed
+        (
+            "v=0\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111\r\na=recvonly\r\n"
+            "m=video 9 UDP/TLS/RTP/SAVPF 96\r\na=sendrecv\r\n",
+            "v=0\r\nm=audio 9 UDP/TLS/RTP/SAVPF 111\r\na=sendonly\r\n"
+            "m=video 9 UDP/TLS/RTP/SAVPF 96\r\na=sendonly\r\n",
+        ),
+        # SDP without direction attributes should be unchanged
+        ("v=0\r\nm=video 9 UDP/TLS/RTP/SAVPF 96\r\n", "v=0\r\nm=video 9 UDP/TLS/RTP/SAVPF 96\r\n"),
+    ],
+    ids=[
+        "recvonly_to_sendonly",
+        "sendrecv_to_sendonly",
+        "sendonly_unchanged",
+        "inactive_to_sendonly",
+        "multiple_media_sections",
+        "no_direction",
+    ],
+)
+def test_fix_sdp_direction(input_sdp: str, expected_sdp: str) -> None:
+    """Test SDP direction fix for WebRTC answers."""
+    assert _fix_sdp_direction(input_sdp) == expected_sdp
+
+
+async def test_camera_webrtc_answer_sdp_fixed(
+    hass: HomeAssistant,
+    mock_ring_client: Mock,
+    mock_ring_devices,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test that WebRTC answer SDP direction is fixed."""
+    await setup_platform(hass, Platform.CAMERA)
+    client = await hass_ws_client(hass)
+
+    # Send sdp offer
+    await client.send_json_auto_id(
+        {
+            "type": "camera/webrtc/offer",
+            "entity_id": "camera.front_live_view",
+            "offer": "v=0\r\n",
+        }
+    )
+    response = await client.receive_json()
+    assert response.get("success") is True
+
+    front_camera_mock = mock_ring_devices.get_device(FRONT_DEVICE_ID)
+    on_message = front_camera_mock.generate_async_webrtc_stream.call_args.args[2]
+
+    # Skip session message
+    await client.receive_json()
+
+    # Send answer with recvonly (which browsers reject)
+    on_message(RingWebRtcMessage(answer="v=0\r\na=recvonly\r\n"))
+    response = await client.receive_json()
+    event = response.get("event")
+
+    assert event
+    assert event.get("type") == "answer"
+    # Verify the SDP direction was fixed to sendonly
+    assert event.get("answer") == "v=0\r\na=sendonly\r\n"
