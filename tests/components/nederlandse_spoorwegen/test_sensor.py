@@ -226,10 +226,10 @@ async def test_sensor_with_time_filtering(
     3. The filtering is based on time-only (ignoring date)
     """
     # Create a config entry with a route that has time set to 17:00
-    # At 14:30 UTC (16:30 Amsterdam time), the fixture has trips starting at:
-    # 16:41 - This should be FILTERED OUT (before 17:00)
-    # 17:11, 17:35, 17:41, 18:05, 18:10, 18:14 - These should be INCLUDED
-    # With time=17:00, the first trip should be 17:11 (first at or after 17:00)
+    # The fixture includes trips at the following times:
+    # 16:41 - should be FILTERED OUT (before 17:00)
+    # 17:11, 17:35, 17:41, 18:05, 18:10, 18:14 - should be INCLUDED (at or after 17:00)
+    # With time=17:00, the first included trip should be 17:11 (the first at or after 17:00)
     config_entry = MockConfigEntry(
         title=INTEGRATION_TITLE,
         data={CONF_API_KEY: API_KEY},
