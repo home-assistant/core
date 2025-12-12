@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigSubentry
-from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -158,21 +158,21 @@ async def async_setup_entry(
             subentry.subentry_id
         ]
         coordinator = subentry_runtime_data.coordinator_current_conditions
-        if subentry.subentry_type == "location":
-            async_add_entities(
-                (
-                    AirQualitySensorEntity(
-                        coordinator, description, subentry.subentry_id, subentry
-                    )
-                    for description in AIR_QUALITY_SENSOR_TYPES
-                    if description.exists_fn(coordinator.data)
-                ),
-                config_subentry_id=subentry.subentry_id,
-            )
-
-        if subentry.subentry_type == "forecast":
+        async_add_entities(
+            (
+                AirQualitySensorEntity(
+                    coordinator, description, subentry.subentry_id, subentry
+                )
+                for description in AIR_QUALITY_SENSOR_TYPES
+                if description.exists_fn(coordinator.data)
+            ),
+            config_subentry_id=subentry.subentry_id,
+        )
+        forecast_coordinator = subentry_runtime_data.coordinator_forecast
+        if subentry.data.get("forecast") is True:
             forecast_coordinator = subentry_runtime_data.coordinator_forecast
-            _LOGGER.debug("forecast_coordinator.data %s", forecast_coordinator.data)
+            if forecast_coordinator is None:
+                continue
             async_add_entities(
                 (
                     AirQualityForecastSensorEntity(
@@ -214,7 +214,7 @@ class AirQualitySensorEntity(
             identifiers={
                 (DOMAIN, f"{self.coordinator.config_entry.entry_id}_{subentry_id}")
             },
-            name=subentry.subentry_type,
+            name="Current conditions",
             entry_type=DeviceEntryType.SERVICE,
         )
         if description.translation_placeholders_fn:
@@ -259,12 +259,15 @@ class AirQualityForecastSensorEntity(
         """Set up Air Quality Sensors."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{description.key}_{subentry.data[CONF_LOCATION][CONF_LATITUDE]}_{subentry.data[CONF_LOCATION][CONF_LONGITUDE]}_forecast"
+        self._attr_unique_id = f"{description.key}_{subentry.data[CONF_LATITUDE]}_{subentry.data[CONF_LONGITUDE]}_forecast"
         self._attr_device_info = DeviceInfo(
             identifiers={
-                (DOMAIN, f"{self.coordinator.config_entry.entry_id}_{subentry_id}")
+                (
+                    DOMAIN,
+                    f"{self.coordinator.config_entry.entry_id}_{subentry_id}_forecast",
+                )
             },
-            name=subentry.subentry_type,
+            name="Forecast",
             entry_type=DeviceEntryType.SERVICE,
         )
         if description.translation_placeholders_fn:

@@ -33,24 +33,27 @@ async def async_setup_entry(
     auth = Auth(session, api_key, referrer=referrer)
     client = GoogleAirQualityApi(auth)
     subentries_runtime_data: dict[str, GoogleAirQualitySubEntryRuntimeData] = {}
-    for subentry_id, subentry in entry.subentries.items():
-        if subentry.subentry_type == "location":
-            # nur current conditions
-            subentries_runtime_data[subentry_id] = GoogleAirQualitySubEntryRuntimeData(
-                coordinator_current_conditions=GoogleAirQualityCurrentConditionsCoordinator(
-                    hass, entry, subentry_id, client
-                ),
-                coordinator_forecast=None,
+    for subentry in entry.subentries.values():
+        subentry_runtime_data = GoogleAirQualitySubEntryRuntimeData(
+            coordinator_current_conditions=GoogleAirQualityCurrentConditionsCoordinator(
+                hass,
+                entry,
+                subentry.subentry_id,
+                client,
+            ),
+            coordinator_forecast=None,
+        )
+        if subentry.data.get("forecast"):
+            subentry_runtime_data.coordinator_forecast = (
+                GoogleAirQualityForecastCoordinator(
+                    hass,
+                    entry,
+                    subentry.subentry_id,
+                    client,
+                )
             )
 
-        elif subentry.subentry_type == "forecast":
-            # nur forecast
-            subentries_runtime_data[subentry_id] = GoogleAirQualitySubEntryRuntimeData(
-                coordinator_current_conditions=None,
-                coordinator_forecast=GoogleAirQualityForecastCoordinator(
-                    hass, entry, subentry_id, client
-                ),
-            )
+        subentries_runtime_data[subentry.subentry_id] = subentry_runtime_data
     tasks = []
     for data in subentries_runtime_data.values():
         if data.coordinator_current_conditions is not None:

@@ -45,34 +45,6 @@
     }
   },
   "config_subentries": {
-    "forecast": {
-      "abort": {
-        "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
-        "unable_to_fetch": "[%key:component::google_air_quality::common::unable_to_fetch%]"
-      },
-      "entry_type": "Air quality location",
-      "error": {
-        "no_data_for_location": "Information is unavailable for this location. Please try a different location.",
-        "unknown": "[%key:common::config_flow::error::unknown%]"
-      },
-      "initiate_flow": {
-        "user": "Add forecast"
-      },
-      "step": {
-        "location": {
-          "data": {
-            "location": "[%key:common::config_flow::data::location%]",
-            "name": "[%key:common::config_flow::data::name%]"
-          },
-          "data_description": {
-            "location": "[%key:component::google_air_quality::config::step::user::data_description::location%]",
-            "name": "[%key:component::google_air_quality::config::step::user::data_description::name%]"
-          },
-          "description": "Select the coordinates for which you want to create an entry.",
-          "title": "Air quality data location"
-        }
-      }
-    },
     "location": {
       "abort": {
         "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
@@ -87,6 +59,12 @@
         "user": "Add location"
       },
       "step": {
+        "forecast": {
+          "data": {
+            "forecast": "Enable Forecast",
+            "forecast_time": "Forecast time"
+          }
+        },
         "location": {
           "data": {
             "location": "[%key:common::config_flow::data::location%]",

@@ -28,7 +28,12 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import SectionConfig, section
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.selector import LocationSelector, LocationSelectorConfig
+from homeassistant.helpers.selector import (
+    LocationSelector,
+    LocationSelectorConfig,
+    NumberSelector,
+    NumberSelectorConfig,
+)
 
 from .const import CONF_REFERRER, DOMAIN, SECTION_API_KEY_OPTIONS
 
@@ -220,21 +225,32 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
         user_input: dict[str, Any] | None = None,
     ) -> SubentryFlowResult:
         """Handle the forecast step."""
-        if user_input is not None:
-            title = user_input.pop("name")
+        subentry = self._get_reconfigure_subentry()
+        if user_input:
+            mutable_data = dict(subentry.data)
+            mutable_data.update(
+                {
+                    "forecast": user_input["forecast"],
+                    "forecast_time": user_input["forecast_time"],
+                }
+            )
             return self.async_update_reload_and_abort(
                 self._get_entry(),
                 self._get_reconfigure_subentry(),
-                data=user_input,
-                title=title,
+                data=mutable_data,
+                title=subentry.title,
             )
-
         return self.async_show_form(
             step_id="forecast",
             data_schema=vol.Schema(
                 {
-                    vol.Required("name"): str,
-                    vol.Required("state"): int,
+                    vol.Required(
+                        "forecast", default=subentry.data.get("forecast", False)
+                    ): bool,
+                    vol.Required(
+                        "forecast_time",
+                        default=subentry.data.get("forecast_time", 1),
+                    ): NumberSelector(NumberSelectorConfig(min=1, max=96, step=1)),
                 }
             ),
         )
