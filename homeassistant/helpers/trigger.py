@@ -10,11 +10,12 @@ from dataclasses import dataclass, field
 import functools
 import inspect
 import logging
-from typing import TYPE_CHECKING, Any, Protocol, TypedDict, cast
+from typing import TYPE_CHECKING, Any, Final, Protocol, TypedDict, cast, override
 
 import voluptuous as vol
 
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_ALIAS,
     CONF_ENABLED,
     CONF_ID,
@@ -23,14 +24,20 @@ from homeassistant.const import (
     CONF_SELECTOR,
     CONF_TARGET,
     CONF_VARIABLES,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
     Context,
     HassJob,
+    HassJobType,
     HomeAssistant,
+    State,
     callback,
+    get_hassjob_callable_job_type,
     is_callback,
+    split_entity_id,
 )
 from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.loader import (
@@ -44,9 +51,17 @@ from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.yaml import load_yaml_dict
 
 from . import config_validation as cv, selector
-from .automation import get_absolute_description_key, get_relative_description_key
+from .automation import (
+    get_absolute_description_key,
+    get_relative_description_key,
+    move_options_fields_to_top_level,
+)
 from .integration_platform import async_process_integration_platforms
 from .selector import TargetSelector
+from .target import (
+    TargetStateChangedData,
+    async_track_target_selector_state_change_event,
+)
 from .template import Template
 from .typing import ConfigType, TemplateVarsType
 
@@ -68,6 +83,7 @@ DATA_PLUGGABLE_ACTIONS: HassKey[defaultdict[tuple, PluggableActionsEntry]] = Has
 TRIGGER_DESCRIPTION_CACHE: HassKey[dict[str, dict[str, Any] | None]] = HassKey(
     "trigger_description_cache"
 )
+TRIGGER_DISABLED_TRIGGERS: HassKey[set[str]] = HassKey("trigger_disabled_triggers")
 TRIGGER_PLATFORM_SUBSCRIPTIONS: HassKey[
     list[Callable[[set[str]], Coroutine[Any, Any, None]]]
 ] = HassKey("trigger_platform_subscriptions")
@@ -109,9 +125,27 @@ _TRIGGERS_DESCRIPTION_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant) -> None:
     """Set up the trigger helper."""
+    from homeassistant.components import automation, labs  # noqa: PLC0415
+
     hass.data[TRIGGER_DESCRIPTION_CACHE] = {}
+    hass.data[TRIGGER_DISABLED_TRIGGERS] = set()
     hass.data[TRIGGER_PLATFORM_SUBSCRIPTIONS] = []
     hass.data[TRIGGERS] = {}
+
+    @callback
+    def new_triggers_conditions_listener() -> None:
+        """Handle new_triggers_conditions flag change."""
+        # Invalidate the cache
+        hass.data[TRIGGER_DESCRIPTION_CACHE] = {}
+        hass.data[TRIGGER_DISABLED_TRIGGERS] = set()
+
+    labs.async_listen(
+        hass,
+        automation.DOMAIN,
+        automation.NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
+        new_triggers_conditions_listener,
+    )
+
     await async_process_integration_platforms(
         hass, "trigger", _register_trigger_platform, wait_for_platforms=True
     )
@@ -135,7 +169,12 @@ def async_subscribe_platform_events(
 async def _register_trigger_platform(
     hass: HomeAssistant, integration_domain: str, platform: TriggerProtocol
 ) -> None:
-    """Register a trigger platform."""
+    """Register a trigger platform and notify listeners.
+
+    If the trigger platform does not provide any triggers, or it is disabled,
+    listeners will not be notified.
+    """
+    from homeassistant.components import automation  # noqa: PLC0415
 
     new_triggers: set[str] = set()
 
@@ -144,6 +183,12 @@ async def _register_trigger_platform(
             trigger_key = get_absolute_description_key(integration_domain, trigger_key)
             hass.data[TRIGGERS][trigger_key] = integration_domain
             new_triggers.add(trigger_key)
+        if not new_triggers:
+            _LOGGER.debug(
+                "Integration %s returned no triggers in async_get_triggers",
+                integration_domain,
+            )
+            return
     elif hasattr(platform, "async_validate_trigger_config") or hasattr(
         platform, "TRIGGER_SCHEMA"
     ):
@@ -154,6 +199,10 @@ async def _register_trigger_platform(
             "Integration %s does not provide trigger support, skipping",
             integration_domain,
         )
+        return
+
+    if automation.is_disabled_experimental_trigger(hass, integration_domain):
+        _LOGGER.debug("Triggers for integration %s are disabled", integration_domain)
         return
 
     # We don't use gather here because gather adds additional overhead
@@ -177,6 +226,8 @@ _TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
 
 class Trigger(abc.ABC):
     """Trigger class."""
+
+    _hass: HomeAssistant
 
     @classmethod
     async def async_validate_complete_config(
@@ -212,14 +263,249 @@ class Trigger(abc.ABC):
 
     def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
         """Initialize trigger."""
+        self._hass = hass
+
+    async def async_attach_action(
+        self,
+        action: TriggerAction,
+        action_payload_builder: TriggerActionPayloadBuilder,
+    ) -> CALLBACK_TYPE:
+        """Attach the trigger to an action."""
+
+        @callback
+        def run_action(
+            extra_trigger_payload: dict[str, Any],
+            description: str,
+            context: Context | None = None,
+        ) -> asyncio.Task[Any]:
+            """Run action with trigger variables."""
+
+            payload = action_payload_builder(extra_trigger_payload, description)
+            return self._hass.async_create_task(action(payload, context))
+
+        return await self.async_attach_runner(run_action)
 
     @abc.abstractmethod
-    async def async_attach(
-        self,
-        action: TriggerActionType,
-        trigger_info: TriggerInfo,
+    async def async_attach_runner(
+        self, run_action: TriggerActionRunner
     ) -> CALLBACK_TYPE:
-        """Attach the trigger."""
+        """Attach the trigger to an action runner."""
+
+
+ATTR_BEHAVIOR: Final = "behavior"
+BEHAVIOR_FIRST: Final = "first"
+BEHAVIOR_LAST: Final = "last"
+BEHAVIOR_ANY: Final = "any"
+
+ENTITY_STATE_TRIGGER_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
+    }
+)
+
+ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST = ENTITY_STATE_TRIGGER_SCHEMA.extend(
+    {
+        vol.Required(CONF_OPTIONS): {
+            vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
+                [BEHAVIOR_FIRST, BEHAVIOR_LAST, BEHAVIOR_ANY]
+            ),
+        },
+        vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
+    }
+)
+
+
+class EntityTriggerBase(Trigger):
+    """Trigger for entity state changes."""
+
+    _domain: str
+    _schema: vol.Schema = ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST
+
+    @override
+    @classmethod
+    async def async_validate_config(
+        cls, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
+        return cast(ConfigType, cls._schema(config))
+
+    def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
+        """Initialize the state trigger."""
+        super().__init__(hass, config)
+        if TYPE_CHECKING:
+            assert config.target is not None
+        self._options = config.options or {}
+        self._target = config.target
+
+    def is_valid_transition(self, from_state: State, to_state: State) -> bool:
+        """Check if the origin state is not an expected target states."""
+        return not self.is_valid_state(from_state)
+
+    @abc.abstractmethod
+    def is_valid_state(self, state: State) -> bool:
+        """Check if the new state matches the expected state(s)."""
+
+    def check_all_match(self, entity_ids: set[str]) -> bool:
+        """Check if all entity states match."""
+        return all(
+            self.is_valid_state(state)
+            for entity_id in entity_ids
+            if (state := self._hass.states.get(entity_id)) is not None
+        )
+
+    def check_one_match(self, entity_ids: set[str]) -> bool:
+        """Check that only one entity state matches."""
+        return (
+            sum(
+                self.is_valid_state(state)
+                for entity_id in entity_ids
+                if (state := self._hass.states.get(entity_id)) is not None
+            )
+            == 1
+        )
+
+    def entity_filter(self, entities: set[str]) -> set[str]:
+        """Filter entities of this domain."""
+        return {
+            entity_id
+            for entity_id in entities
+            if split_entity_id(entity_id)[0] == self._domain
+        }
+
+    @override
+    async def async_attach_runner(
+        self, run_action: TriggerActionRunner
+    ) -> CALLBACK_TYPE:
+        """Attach the trigger to an action runner."""
+
+        behavior = self._options.get(ATTR_BEHAVIOR)
+
+        @callback
+        def state_change_listener(
+            target_state_change_data: TargetStateChangedData,
+        ) -> None:
+            """Listen for state changes and call action."""
+            event = target_state_change_data.state_change_event
+            entity_id = event.data["entity_id"]
+            from_state = event.data["old_state"]
+            to_state = event.data["new_state"]
+
+            # The trigger should never fire if the previous state was not a valid state
+            if not from_state or from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+                return
+
+            # The trigger should never fire if the new state is not valid
+            if not to_state or not self.is_valid_state(to_state):
+                return
+
+            # The trigger should never fire if the transition is not valid
+            if not self.is_valid_transition(from_state, to_state):
+                return
+
+            if behavior == BEHAVIOR_LAST:
+                if not self.check_all_match(
+                    target_state_change_data.targeted_entity_ids
+                ):
+                    return
+            elif behavior == BEHAVIOR_FIRST:
+                if not self.check_one_match(
+                    target_state_change_data.targeted_entity_ids
+                ):
+                    return
+
+            run_action(
+                {
+                    ATTR_ENTITY_ID: entity_id,
+                    "from_state": from_state,
+                    "to_state": to_state,
+                },
+                f"state of {entity_id}",
+                event.context,
+            )
+
+        return async_track_target_selector_state_change_event(
+            self._hass, self._target, state_change_listener, self.entity_filter
+        )
+
+
+class EntityStateTriggerBase(EntityTriggerBase):
+    """Trigger for entity state changes."""
+
+    _to_state: str
+
+    def is_valid_state(self, state: State) -> bool:
+        """Check if the new state matches the expected state."""
+        return state.state == self._to_state
+
+
+class ConditionalEntityStateTriggerBase(EntityTriggerBase):
+    """Class for entity state changes where the from state is restricted."""
+
+    _from_states: set[str]
+    _to_states: set[str]
+
+    def is_valid_transition(self, from_state: State, to_state: State) -> bool:
+        """Check if the origin state matches the expected ones."""
+        return from_state.state in self._from_states
+
+    def is_valid_state(self, state: State) -> bool:
+        """Check if the new state matches the expected states."""
+        return state.state in self._to_states
+
+
+class EntityStateAttributeTriggerBase(EntityTriggerBase):
+    """Trigger for entity state attribute changes."""
+
+    _attribute: str
+    _attribute_to_state: str
+
+    def is_valid_state(self, state: State) -> bool:
+        """Check if the new state attribute matches the expected one."""
+        return state.attributes.get(self._attribute) == self._attribute_to_state
+
+
+def make_entity_state_trigger(
+    domain: str, to_state: str
+) -> type[EntityStateTriggerBase]:
+    """Create an entity state trigger class."""
+
+    class CustomTrigger(EntityStateTriggerBase):
+        """Trigger for entity state changes."""
+
+        _domain = domain
+        _to_state = to_state
+
+    return CustomTrigger
+
+
+def make_conditional_entity_state_trigger(
+    domain: str, *, from_states: set[str], to_states: set[str]
+) -> type[ConditionalEntityStateTriggerBase]:
+    """Create a conditional entity state trigger class."""
+
+    class CustomTrigger(ConditionalEntityStateTriggerBase):
+        """Trigger for conditional entity state changes."""
+
+        _domain = domain
+        _from_states = from_states
+        _to_states = to_states
+
+    return CustomTrigger
+
+
+def make_entity_state_attribute_trigger(
+    domain: str, attribute: str, to_state: str
+) -> type[EntityStateAttributeTriggerBase]:
+    """Create an entity state attribute trigger class."""
+
+    class CustomTrigger(EntityStateAttributeTriggerBase):
+        """Trigger for entity state changes."""
+
+        _domain = domain
+        _attribute = attribute
+        _attribute_to_state = to_state
+
+    return CustomTrigger
 
 
 class TriggerProtocol(Protocol):
@@ -257,14 +543,52 @@ class TriggerConfig:
     options: dict[str, Any] | None = None
 
 
-class TriggerActionType(Protocol):
+class TriggerActionRunner(Protocol):
+    """Protocol type for the trigger action runner helper callback."""
+
+    @callback
+    def __call__(
+        self,
+        extra_trigger_payload: dict[str, Any],
+        description: str,
+        context: Context | None = None,
+    ) -> asyncio.Task[Any]:
+        """Define trigger action runner type.
+
+        Returns:
+            A Task that allows awaiting for the action to finish.
+        """
+
+
+class TriggerActionPayloadBuilder(Protocol):
+    """Protocol type for the trigger action payload builder."""
+
+    def __call__(
+        self, extra_trigger_payload: dict[str, Any], description: str
+    ) -> dict[str, Any]:
+        """Define trigger action payload builder type."""
+
+
+class TriggerAction(Protocol):
     """Protocol type for trigger action callback."""
 
     async def __call__(
+        self, run_variables: dict[str, Any], context: Context | None = None
+    ) -> Any:
+        """Define action callback type."""
+
+
+class TriggerActionType(Protocol):
+    """Protocol type for trigger action callback.
+
+    Contrary to TriggerAction, this type supports both sync and async callables.
+    """
+
+    def __call__(
         self,
         run_variables: dict[str, Any],
         context: Context | None = None,
-    ) -> Any:
+    ) -> Coroutine[Any, Any, Any] | Any:
         """Define action callback type."""
 
 
@@ -294,7 +618,7 @@ class PluggableActionsEntry:
     actions: dict[
         object,
         tuple[
-            HassJob[[dict[str, Any], Context | None], Coroutine[Any, Any, None]],
+            HassJob[[dict[str, Any], Context | None], Coroutine[Any, Any, None] | Any],
             dict[str, Any],
         ],
     ] = field(default_factory=dict)
@@ -401,35 +725,22 @@ class PluggableAction:
                 await task
 
 
-def move_top_level_schema_fields_to_options(
-    config: ConfigType, options_schema_dict: dict[vol.Marker, Any]
-) -> ConfigType:
-    """Move top-level fields to options.
-
-    This function is used to help migrating old-style configs to new-style configs.
-    If options is already present, the config is returned as-is.
-    """
-    if CONF_OPTIONS in config:
-        return config
-
-    config = config.copy()
-    options = config.setdefault(CONF_OPTIONS, {})
-
-    # Move top-level fields to options
-    for key_marked in options_schema_dict:
-        key = key_marked.schema
-        if key in config:
-            options[key] = config.pop(key)
-
-    return config
-
-
 async def _async_get_trigger_platform(
     hass: HomeAssistant, trigger_key: str
 ) -> tuple[str, TriggerProtocol]:
+    from homeassistant.components import automation  # noqa: PLC0415
+
     platform_and_sub_type = trigger_key.split(".")
     platform = platform_and_sub_type[0]
     platform = _PLATFORM_ALIASES.get(platform, platform)
+
+    if automation.is_disabled_experimental_trigger(hass, platform):
+        raise vol.Invalid(
+            f"Trigger '{trigger_key}' requires the experimental 'New triggers and "
+            "conditions' feature to be enabled in Home Assistant Labs settings "
+            f"(feature flag: '{automation.NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG}')"
+        )
+
     try:
         integration = await async_get_integration(hass, platform)
     except IntegrationNotFound:
@@ -459,8 +770,10 @@ async def async_validate_trigger_config(
                 raise vol.Invalid(f"Invalid trigger '{trigger_key}' specified")
             conf = await trigger.async_validate_complete_config(hass, conf)
         elif hasattr(platform, "async_validate_trigger_config"):
+            conf = move_options_fields_to_top_level(conf, cv.TRIGGER_BASE_SCHEMA)
             conf = await platform.async_validate_trigger_config(hass, conf)
         else:
+            conf = move_options_fields_to_top_level(conf, cv.TRIGGER_BASE_SCHEMA)
             conf = platform.TRIGGER_SCHEMA(conf)
         config.append(conf)
     return config
@@ -500,7 +813,7 @@ def _trigger_action_wrapper(
     else:
 
         @functools.wraps(action)
-        async def with_vars(
+        def with_vars(
             run_variables: dict[str, Any], context: Context | None = None
         ) -> Any:
             """Wrap action with extra vars."""
@@ -514,6 +827,72 @@ def _trigger_action_wrapper(
         wrapper_func = with_vars
 
     return wrapper_func
+
+
+async def _async_attach_trigger_cls(
+    hass: HomeAssistant,
+    trigger_cls: type[Trigger],
+    trigger_key: str,
+    conf: ConfigType,
+    action: Callable,
+    trigger_info: TriggerInfo,
+) -> CALLBACK_TYPE:
+    """Initialize a new Trigger class and attach it."""
+
+    def action_payload_builder(
+        extra_trigger_payload: dict[str, Any], description: str
+    ) -> dict[str, Any]:
+        """Build action variables."""
+        payload = {
+            "trigger": {
+                **trigger_info["trigger_data"],
+                CONF_PLATFORM: trigger_key,
+                "description": description,
+                **extra_trigger_payload,
+            }
+        }
+        if CONF_VARIABLES in conf:
+            trigger_variables = conf[CONF_VARIABLES]
+            payload.update(trigger_variables.async_render(hass, payload))
+        return payload
+
+    # Wrap sync action so that it is always async.
+    # This simplifies the Trigger action runner interface by always returning a coroutine,
+    # removing the need for integrations to check for the return type when awaiting the action.
+    match get_hassjob_callable_job_type(action):
+        case HassJobType.Executor:
+            original_action = action
+
+            async def wrapped_executor_action(
+                run_variables: dict[str, Any], context: Context | None = None
+            ) -> Any:
+                """Wrap sync action to be called in executor."""
+                return await hass.async_add_executor_job(
+                    original_action, run_variables, context
+                )
+
+            action = wrapped_executor_action
+
+        case HassJobType.Callback:
+            original_action = action
+
+            async def wrapped_callback_action(
+                run_variables: dict[str, Any], context: Context | None = None
+            ) -> Any:
+                """Wrap callback action to be awaitable."""
+                return original_action(run_variables, context)
+
+            action = wrapped_callback_action
+
+    trigger = trigger_cls(
+        hass,
+        TriggerConfig(
+            key=trigger_key,
+            target=conf.get(CONF_TARGET),
+            options=conf.get(CONF_OPTIONS),
+        ),
+    )
+    return await trigger.async_attach_action(action, action_payload_builder)
 
 
 async def async_initialize_triggers(
@@ -555,23 +934,17 @@ async def async_initialize_triggers(
             trigger_data=trigger_data,
         )
 
-        action_wrapper = _trigger_action_wrapper(hass, action, conf)
         if hasattr(platform, "async_get_triggers"):
             trigger_descriptors = await platform.async_get_triggers(hass)
             relative_trigger_key = get_relative_description_key(
                 platform_domain, trigger_key
             )
             trigger_cls = trigger_descriptors[relative_trigger_key]
-            trigger = trigger_cls(
-                hass,
-                TriggerConfig(
-                    key=trigger_key,
-                    target=conf.get(CONF_TARGET),
-                    options=conf.get(CONF_OPTIONS),
-                ),
+            coro = _async_attach_trigger_cls(
+                hass, trigger_cls, trigger_key, conf, action, info
             )
-            coro = trigger.async_attach(action_wrapper, info)
         else:
+            action_wrapper = _trigger_action_wrapper(hass, action, conf)
             coro = platform.async_attach_trigger(hass, conf, action_wrapper, info)
 
         triggers.append(create_eager_task(coro))
@@ -647,6 +1020,8 @@ async def async_get_all_descriptions(
     hass: HomeAssistant,
 ) -> dict[str, dict[str, Any] | None]:
     """Return descriptions (i.e. user documentation) for all triggers."""
+    from homeassistant.components import automation  # noqa: PLC0415
+
     descriptions_cache = hass.data[TRIGGER_DESCRIPTION_CACHE]
 
     triggers = hass.data[TRIGGERS]
@@ -655,7 +1030,9 @@ async def async_get_all_descriptions(
     all_triggers = set(triggers)
     previous_all_triggers = set(descriptions_cache)
     # If the triggers are the same, we can return the cache
-    if previous_all_triggers == all_triggers:
+
+    # mypy complains: Invalid index type "HassKey[set[str]]" for "HassDict"
+    if previous_all_triggers | hass.data[TRIGGER_DISABLED_TRIGGERS] == all_triggers:  # type: ignore[index]
         return descriptions_cache
 
     # Files we loaded for missing descriptions
@@ -693,6 +1070,9 @@ async def async_get_all_descriptions(
     new_descriptions_cache = descriptions_cache.copy()
     for missing_trigger in missing_triggers:
         domain = triggers[missing_trigger]
+        if automation.is_disabled_experimental_trigger(hass, domain):
+            hass.data[TRIGGER_DISABLED_TRIGGERS].add(missing_trigger)
+            continue
 
         if (
             yaml_description := new_triggers_descriptions.get(domain, {}).get(
@@ -707,6 +1087,8 @@ async def async_get_all_descriptions(
             continue
 
         description = {"fields": yaml_description.get("fields", {})}
+        if (target := yaml_description.get("target")) is not None:
+            description["target"] = target
 
         new_descriptions_cache[missing_trigger] = description
 

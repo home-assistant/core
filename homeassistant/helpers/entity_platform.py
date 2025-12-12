@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Coroutine, Iterable
+from collections.abc import Awaitable, Callable, Coroutine, Iterable, Mapping
 from contextvars import ContextVar
 from datetime import timedelta
 from logging import Logger, getLogger
@@ -330,10 +330,18 @@ class EntityPlatform:
                 self.domain,
             )
             learn_more_url = None
-            if self.platform and "custom_components" not in self.platform.__file__:  # type: ignore[attr-defined]
-                learn_more_url = (
-                    f"https://www.home-assistant.io/integrations/{self.platform_name}/"
-                )
+            if self.platform:
+                if "custom_components" in self.platform.__file__:  # type: ignore[attr-defined]
+                    self.logger.warning(
+                        (
+                            "The %s platform module for the %s custom integration does not implement"
+                            " async_setup_platform or setup_platform."
+                        ),
+                        self.platform_name,
+                        self.domain,
+                    )
+                else:
+                    learn_more_url = f"https://www.home-assistant.io/integrations/{self.platform_name}/"
             platform_key = f"platform: {self.platform_name}"
             yaml_example = f"```yaml\n{self.domain}:\n  - {platform_key}\n```"
             async_create_issue(
@@ -1079,6 +1087,9 @@ class EntityPlatform:
         func: str | Callable[..., Any],
         required_features: Iterable[int] | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
+        *,
+        entity_device_classes: Iterable[str | None] | None = None,
+        description_placeholders: Mapping[str, str] | None = None,
     ) -> None:
         """Register an entity service.
 
@@ -1091,12 +1102,14 @@ class EntityPlatform:
             self.hass,
             self.platform_name,
             name,
+            entity_device_classes=entity_device_classes,
             entities=self.domain_platform_entities,
             func=func,
             job_type=None,
             required_features=required_features,
             schema=schema,
             supports_response=supports_response,
+            description_placeholders=description_placeholders,
         )
 
     async def _async_update_entity_states(self) -> None:

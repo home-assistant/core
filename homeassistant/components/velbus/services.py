@@ -34,15 +34,6 @@ from .const import (
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register the velbus services."""
 
-    def check_entry_id(interface: str) -> str:
-        """Check the config_entry for a specific interface."""
-        for config_entry in hass.config_entries.async_entries(DOMAIN):
-            if "port" in config_entry.data and config_entry.data["port"] == interface:
-                return config_entry.entry_id
-        raise vol.Invalid(
-            "The interface provided is not defined as a port in a Velbus integration"
-        )
-
     async def get_config_entry(call: ServiceCall) -> VelbusConfigEntry:
         """Get the config entry for this service call."""
         if CONF_CONFIG_ENTRY in call.data:
@@ -78,7 +69,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         module = entry.runtime_data.controller.get_module(call.data[CONF_ADDRESS])
         if not module:
             raise ServiceValidationError("Module not found")
-        await module.set_memo_text(memo_text.async_render())
+        await module.set_memo_text(memo_text)
 
     async def clear_cache(call: ServiceCall) -> None:
         """Handle a clear cache service call."""
@@ -144,7 +135,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 vol.Required(CONF_ADDRESS): vol.All(
                     vol.Coerce(int), vol.Range(min=0, max=255)
                 ),
-                vol.Optional(CONF_MEMO_TEXT, default=""): cv.template,
+                vol.Optional(CONF_MEMO_TEXT, default=""): cv.string,
             }
         ),
     )
