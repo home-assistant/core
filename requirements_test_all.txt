@@ -2538,6 +2538,9 @@ ttls==1.8.3
 ttn_client==1.2.3
 
 # homeassistant.components.tuya
+tuya-device-handlers==0.0.5
+
+# homeassistant.components.tuya
 tuya-device-sharing-sdk==0.2.6
 
 # homeassistant.components.twentemilieu
