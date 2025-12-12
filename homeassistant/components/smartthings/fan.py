@@ -22,11 +22,6 @@ from .entity import SmartThingsEntity
 
 SPEED_RANGE = (1, 3)  # off is not included
 
-# Components that should be exposed as fan entities, in addition to the main component.
-# Currently empty - only the main component is exposed for fan entities.
-# This whitelist pattern is consistent with other platforms for safety.
-FAN_COMPONENTS: set[str] = set()
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -36,19 +31,17 @@ async def async_setup_entry(
     """Add fans for a config entry."""
     entry_data = entry.runtime_data
     async_add_entities(
-        SmartThingsFan(entry_data.client, device, component)
+        SmartThingsFan(entry_data.client, device)
         for device in entry_data.devices.values()
-        for component in device.status
-        if Capability.SWITCH in device.status[component]
+        if Capability.SWITCH in device.status[MAIN]
         and any(
-            capability in device.status[component]
+            capability in device.status[MAIN]
             for capability in (
                 Capability.FAN_SPEED,
                 Capability.AIR_CONDITIONER_FAN_MODE,
             )
         )
-        and Capability.THERMOSTAT_COOLING_SETPOINT not in device.status[component]
-        and (component == MAIN or component in FAN_COMPONENTS)
+        and Capability.THERMOSTAT_COOLING_SETPOINT not in device.status[MAIN]
     )
 
 
@@ -58,9 +51,7 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
     _attr_name = None
     _attr_speed_count = int_states_in_range(SPEED_RANGE)
 
-    def __init__(
-        self, client: SmartThings, device: FullDevice, component: str = MAIN
-    ) -> None:
+    def __init__(self, client: SmartThings, device: FullDevice) -> None:
         """Init the class."""
         super().__init__(
             client,
@@ -70,7 +61,6 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
                 Capability.FAN_SPEED,
                 Capability.AIR_CONDITIONER_FAN_MODE,
             },
-            component=component,
         )
         self._attr_supported_features = self._determine_features()
 

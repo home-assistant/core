@@ -204,6 +204,3 @@ async def test_availability_at_start(
     """Test unavailable at boot."""
     await setup_integration(hass, mock_config_entry)
     assert hass.states.get("fan.fake_fan").state == STATE_UNAVAILABLE
-
-
-
