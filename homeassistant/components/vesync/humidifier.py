@@ -37,7 +37,7 @@ _LOGGER = logging.getLogger(__name__)
 
 VS_TO_HA_MODE_MAP = {
     VS_HUMIDIFIER_MODE_AUTO: MODE_AUTO,
-    VS_HUMIDIFIER_MODE_HUMIDITY: MODE_AUTO,
+    VS_HUMIDIFIER_MODE_HUMIDITY: VS_HUMIDIFIER_MODE_HUMIDITY,
     VS_HUMIDIFIER_MODE_MANUAL: MODE_NORMAL,
     VS_HUMIDIFIER_MODE_SLEEP: MODE_SLEEP,
 }
@@ -53,7 +53,7 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][VS_COORDINATOR]
 
     @callback
-    def discover(devices):
+    def discover(devices: list[VeSyncBaseDevice]) -> None:
         """Add new devices to platform."""
         _setup_entities(devices, async_add_entities, coordinator)
 
@@ -73,7 +73,7 @@ def _setup_entities(
     devices: list[VeSyncBaseDevice],
     async_add_entities: AddConfigEntryEntitiesCallback,
     coordinator: VeSyncDataCoordinator,
-):
+) -> None:
     """Add humidifier entities."""
     async_add_entities(VeSyncHumidifierHA(dev, coordinator) for dev in devices)
 
@@ -92,6 +92,8 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
     _attr_name = None
 
     _attr_supported_features = HumidifierEntityFeature.MODES
+
+    _attr_translation_key = "vesync"
 
     def __init__(
         self,
@@ -157,7 +159,7 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
             raise HomeAssistantError(
                 f"Invalid mode {mode}. Available modes: {self.available_modes}"
             )
-        if not await self.device.set_humidity_mode(self._get_vs_mode(mode)):
+        if not await self.device.set_mode(self._get_vs_mode(mode)):
             raise HomeAssistantError(self.device.last_response.message)
 
         if mode == MODE_SLEEP:

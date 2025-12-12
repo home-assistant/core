@@ -96,10 +96,10 @@ class TargetSelectorData:
 class SelectedEntities:
     """Class to hold the selected entities."""
 
-    # Entities that were explicitly mentioned.
+    # Entity IDs of entities that were explicitly mentioned.
     referenced: set[str] = dataclasses.field(default_factory=set)
 
-    # Entities that were referenced via device/area/floor/label ID.
+    # Entity IDs of entities that were referenced via device/area/floor/label ID.
     # Should not trigger a warning when they don't exist.
     indirectly_referenced: set[str] = dataclasses.field(default_factory=set)
 
@@ -289,7 +289,7 @@ class TargetStateChangeTracker:
         )
 
         tracked_entities = self._entity_filter(
-            selected.referenced.union(selected.indirectly_referenced)
+            selected.referenced | selected.indirectly_referenced
         )
 
         @callback

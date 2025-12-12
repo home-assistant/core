@@ -1,0 +1,57 @@
+{
+  "endpoint": "https://openapi.tuyaeu.com",
+  "auth_type": 0,
+  "country_code": "49",
+  "app_type": "smartlife",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+
+  "name": "Casa1",
+  "model": "",
+  "category": "cz",
+  "product_id": "ExGgQmjt0SHMdlDZ",
+  "product_name": "PZ003",
+  "online": false,
+  "sub": false,
+  "time_zone": "+01:00",
+  "active_time": "2023-09-18T16:49:48+00:00",
+  "create_time": "2023-09-18T16:49:48+00:00",
+  "update_time": "2023-09-18T21:29:56+00:00",
+  "function": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "countdown_1": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status_range": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "countdown_1": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "switch": false,
+    "countdown_1": 0
+  }
+}

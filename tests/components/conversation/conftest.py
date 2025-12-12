@@ -6,6 +6,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from homeassistant.components import conversation
+from homeassistant.components.conversation import async_get_agent, default_agent
 from homeassistant.components.shopping_list import intent as sl_intent
 from homeassistant.const import MATCH_ALL
 from homeassistant.core import Context, HomeAssistant
@@ -77,5 +78,6 @@ async def init_components(hass: HomeAssistant):
     assert await async_setup_component(hass, "conversation", {conversation.DOMAIN: {}})
 
     # Disable fuzzy matching by default for tests
-    agent = hass.data[conversation.DATA_DEFAULT_ENTITY]
+    agent = async_get_agent(hass)
+    assert isinstance(agent, default_agent.DefaultAgent)
     agent.fuzzy_matching = False

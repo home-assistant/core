@@ -695,6 +695,10 @@ class TemplateConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW
+    options_flow_reloads = True
+
+    MINOR_VERSION = 2
+    VERSION = 1
 
     @callback
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:

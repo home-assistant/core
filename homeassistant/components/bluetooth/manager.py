@@ -120,6 +120,19 @@ class HomeAssistantBluetoothManager(BluetoothManager):
         if service_info := self._all_history.get(address):
             self._async_trigger_matching_discovery(service_info)
 
+    @hass_callback
+    def async_clear_address_from_match_history(self, address: str) -> None:
+        """Clear an address from the integration matcher history.
+
+        This allows future advertisements from this address to trigger discovery
+        even if the advertisement content has changed but the service data UUIDs
+        remain the same.
+
+        Unlike async_rediscover_address, this does not immediately re-trigger
+        discovery with the current advertisement in history.
+        """
+        self._integration_matcher.async_clear_address(address)
+
     def _discover_service_info(self, service_info: BluetoothServiceInfoBleak) -> None:
         matched_domains = self._integration_matcher.match_domains(service_info)
         if self._debug:

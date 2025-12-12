@@ -13,17 +13,25 @@ CONF_OVERRIDE_MQTT_URL = "override_mqtt_url"
 CONF_VERIFY_MQTT_CERTIFICATE = "verify_mqtt_certificate"
 
 SUPPORTED_LIFESPANS = (
+    LifeSpan.AIR_FRESHENER,
     LifeSpan.BLADE,
     LifeSpan.BRUSH,
+    LifeSpan.DUST_BAG,
     LifeSpan.FILTER,
+    LifeSpan.HAND_FILTER,
     LifeSpan.LENS_BRUSH,
-    LifeSpan.SIDE_BRUSH,
-    LifeSpan.UNIT_CARE,
     LifeSpan.ROUND_MOP,
+    LifeSpan.SIDE_BRUSH,
     LifeSpan.STATION_FILTER,
+    LifeSpan.UNIT_CARE,
+    LifeSpan.UV_SANITIZER,
 )
 
-SUPPORTED_STATION_ACTIONS = (StationAction.EMPTY_DUSTBIN,)
+SUPPORTED_STATION_ACTIONS = (
+    StationAction.CLEAN_BASE,
+    StationAction.DRY_MOP,
+    StationAction.EMPTY_DUSTBIN,
+)
 
 LEGACY_SUPPORTED_LIFESPANS = (
     "main_brush",

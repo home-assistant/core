@@ -151,14 +151,12 @@ ECOWITT_SENSORS_MAPPING: Final = {
         key="RAIN_COUNT_MM",
         native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
         device_class=SensorDeviceClass.PRECIPITATION,
-        state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=1,
     ),
     EcoWittSensorTypes.RAIN_COUNT_INCHES: SensorEntityDescription(
         key="RAIN_COUNT_INCHES",
         native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
         device_class=SensorDeviceClass.PRECIPITATION,
-        state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=2,
     ),
     EcoWittSensorTypes.RAIN_RATE_MM: SensorEntityDescription(
@@ -234,6 +232,17 @@ ECOWITT_SENSORS_MAPPING: Final = {
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    EcoWittSensorTypes.DISTANCE_MM: SensorEntityDescription(
+        key="DISTANCE_MM",
+        device_class=SensorDeviceClass.DISTANCE,
+        native_unit_of_measurement=UnitOfLength.MILLIMETERS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    EcoWittSensorTypes.HEAT_COUNT: SensorEntityDescription(
+        key="HEAT_COUNT",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
     EcoWittSensorTypes.PM1: SensorEntityDescription(
         key="PM1",
         device_class=SensorDeviceClass.PM1,
@@ -242,6 +251,7 @@ ECOWITT_SENSORS_MAPPING: Final = {
     ),
     EcoWittSensorTypes.PM4: SensorEntityDescription(
         key="PM4",
+        device_class=SensorDeviceClass.PM4,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -275,16 +285,14 @@ async def async_setup_entry(
             name=sensor.name,
         )
 
-        # Hourly rain doesn't reset to fixed hours, it must be measurement state classes
+        # Only total rain needs state class for long-term statistics
         if sensor.key in (
-            "hrain_piezomm",
-            "hrain_piezo",
-            "hourlyrainmm",
-            "hourlyrainin",
+            "totalrainin",
+            "totalrainmm",
         ):
             description = dataclasses.replace(
                 description,
-                state_class=SensorStateClass.MEASUREMENT,
+                state_class=SensorStateClass.TOTAL_INCREASING,
             )
 
         async_add_entities([EcowittSensorEntity(sensor, description)])

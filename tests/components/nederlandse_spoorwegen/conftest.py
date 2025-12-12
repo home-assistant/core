@@ -8,14 +8,17 @@ import pytest
 
 from homeassistant.components.nederlandse_spoorwegen.const import (
     CONF_FROM,
+    CONF_TIME,
     CONF_TO,
     CONF_VIA,
     DOMAIN,
+    INTEGRATION_TITLE,
+    SUBENTRY_TYPE_ROUTE,
 )
-from homeassistant.config_entries import ConfigSubentryData
+from homeassistant.config_entries import ConfigSubentryDataWithId
 from homeassistant.const import CONF_API_KEY, CONF_NAME
 
-from .const import API_KEY
+from .const import API_KEY, SUBENTRY_ID_1, SUBENTRY_ID_2
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
@@ -39,7 +42,7 @@ def mock_nsapi() -> Generator[AsyncMock]:
             autospec=True,
         ) as mock_nsapi,
         patch(
-            "homeassistant.components.nederlandse_spoorwegen.NSAPI",
+            "homeassistant.components.nederlandse_spoorwegen.coordinator.NSAPI",
             new=mock_nsapi,
         ),
     ):
@@ -54,23 +57,53 @@ def mock_nsapi() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
+def mock_single_trip_nsapi(mock_nsapi: AsyncMock) -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    trips_data = load_json_object_fixture("trip_single.json", DOMAIN)
+    mock_nsapi.get_trips.return_value = [Trip(trip) for trip in trips_data["trips"]]
+    return mock_nsapi
+
+
+@pytest.fixture
+def mock_no_trips_nsapi(mock_nsapi: AsyncMock) -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    mock_nsapi.get_trips.return_value = []
+    return mock_nsapi
+
+
+@pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Mock config entry."""
     return MockConfigEntry(
-        title="Nederlandse Spoorwegen",
+        title=INTEGRATION_TITLE,
         data={CONF_API_KEY: API_KEY},
         domain=DOMAIN,
         subentries_data=[
-            ConfigSubentryData(
+            ConfigSubentryDataWithId(
                 data={
                     CONF_NAME: "To work",
                     CONF_FROM: "Ams",
                     CONF_TO: "Rot",
                     CONF_VIA: "Ht",
+                    CONF_TIME: None,
                 },
-                subentry_type="route",
+                subentry_type=SUBENTRY_TYPE_ROUTE,
                 title="Test Route",
                 unique_id=None,
+                subentry_id=SUBENTRY_ID_1,
+            ),
+            ConfigSubentryDataWithId(
+                data={
+                    CONF_NAME: "To home",
+                    CONF_FROM: "Hag",
+                    CONF_TO: "Utr",
+                    CONF_VIA: None,
+                    CONF_TIME: "08:00",
+                },
+                subentry_type=SUBENTRY_TYPE_ROUTE,
+                title="Test Route",
+                unique_id=None,
+                subentry_id=SUBENTRY_ID_2,
             ),
         ],
     )
