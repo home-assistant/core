@@ -198,14 +198,15 @@ async def test_async_offline_without_subscription_lock(
 ) -> None:
     """Test unloading entry works when subscription lock was never created.
 
-    This can happen when a speaker is discovered but async_subscribe()
+    This can happen when a speaker is discovered but async_setup()
     was never called (e.g., no activity detected before shutdown).
     The integration should handle this gracefully during unload.
     """
-    # Patch async_subscribe to do nothing, simulating the scenario where
-    # the speaker is discovered but no activity triggers subscription setup
+    # Patch async_setup to do nothing, simulating the scenario where
+    # the speaker is discovered but async_setup() never completes
+    # (which would normally call async_subscribe and create the lock)
     with patch(
-        "homeassistant.components.sonos.speaker.SonosSpeaker.async_subscribe",
+        "homeassistant.components.sonos.speaker.SonosSpeaker.async_setup",
         new_callable=AsyncMock,
     ):
         config_entry.add_to_hass(hass)
