@@ -89,6 +89,7 @@ async def test_setup_component_with_webhook(
 
     assert hass.states.get(camera_entity_indoor).state == "streaming"
 
+    # Test outdoor camera events
     assert hass.states.get(camera_entity_outdoor).state == "streaming"
     response = {
         "event_type": "off",
@@ -423,8 +424,19 @@ async def test_service_set_camera_light_invalid_type(
     assert "NACamera <Hall> does not have a floodlight" in excinfo.value.args[0]
 
 
+@pytest.mark.parametrize(
+    ("camera_type", "camera_id", "camera_entity"),
+    [
+        ("NACamera", "12:34:56:00:f1:62", "camera.hall"),
+        ("NOCamera", "12:34:56:10:b9:0e", "camera.front"),
+    ],
+)
 async def test_camera_reconnect_webhook(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    camera_type: str,
+    camera_id: str,
+    camera_entity: str,
 ) -> None:
     """Test webhook event on camera reconnect."""
     fake_post_hits = 0
@@ -470,7 +482,7 @@ async def test_camera_reconnect_webhook(
 
         # Fake camera reconnect
         response = {
-            "push_type": "NACamera-connection",
+            "push_type": f"{camera_type}-connection",
         }
         await simulate_webhook(hass, webhook_id, response)
         await hass.async_block_till_done()
@@ -481,6 +493,30 @@ async def test_camera_reconnect_webhook(
         )
         await hass.async_block_till_done()
         assert fake_post_hits >= calls
+
+        # Real camera disconnect
+        assert hass.states.get(camera_entity).state == "streaming"
+        response = {
+            "event_type": "disconnection",
+            "device_id": camera_id,
+            "camera_id": camera_id,
+            "event_id": "601dce1560abca1ebad9b723",
+            "push_type": f"{camera_type}-disconnection",
+        }
+        await simulate_webhook(hass, webhook_id, response)
+
+        assert hass.states.get(camera_entity).state == "idle"
+
+        response = {
+            "event_type": "connection",
+            "device_id": camera_id,
+            "camera_id": camera_id,
+            "event_id": "646227f1dc0dfa000ec5f350",
+            "push_type": f"{camera_type}-connection",
+        }
+        await simulate_webhook(hass, webhook_id, response)
+
+        assert hass.states.get(camera_entity).state == "streaming"
 
 
 async def test_webhook_person_event(

@@ -27,6 +27,8 @@ from .const import (
     DATA_CAMERAS,
     DATA_EVENTS,
     DOMAIN,
+    EVENT_TYPE_CONNECTION,
+    EVENT_TYPE_DISCONNECTION,
     EVENT_TYPE_LIGHT_MODE,
     EVENT_TYPE_OFF,
     EVENT_TYPE_ON,
@@ -123,7 +125,13 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         """Entity created."""
         await super().async_added_to_hass()
 
-        for event_type in (EVENT_TYPE_LIGHT_MODE, EVENT_TYPE_OFF, EVENT_TYPE_ON):
+        for event_type in (
+            EVENT_TYPE_LIGHT_MODE,
+            EVENT_TYPE_OFF,
+            EVENT_TYPE_ON,
+            EVENT_TYPE_CONNECTION,
+            EVENT_TYPE_DISCONNECTION,
+        ):
             self.async_on_remove(
                 async_dispatcher_connect(
                     self.hass,
