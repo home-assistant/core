@@ -388,6 +388,9 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.OCCUPANCY,
         ufp_required_field="feature_flags.is_doorbell",
         ufp_event_obj="last_ring_event",
+        # Deprecated in 2026.1, scheduled for removal in 2026.2
+        # Use event.doorbell entity instead
+        entity_registry_enabled_default=False,
     ),
     ProtectBinaryEventEntityDescription(
         key="motion",

@@ -187,7 +187,7 @@ async def test_set_chime_paired_doorbells(
     await init_entry(hass, ufp, [camera1, camera2, chime])
 
     chime_entry = entity_registry.async_get("button.test_chime_play_chime")
-    camera_entry = entity_registry.async_get("binary_sensor.test_camera_2_doorbell")
+    camera_entry = entity_registry.async_get("event.test_camera_2_doorbell")
     assert chime_entry is not None
     assert camera_entry is not None
 
@@ -197,7 +197,7 @@ async def test_set_chime_paired_doorbells(
         {
             ATTR_DEVICE_ID: chime_entry.device_id,
             "doorbells": {
-                ATTR_ENTITY_ID: ["binary_sensor.test_camera_1_doorbell"],
+                ATTR_ENTITY_ID: ["event.test_camera_1_doorbell"],
                 ATTR_DEVICE_ID: [camera_entry.device_id],
             },
         },
@@ -207,6 +207,52 @@ async def test_set_chime_paired_doorbells(
     ufp.api.update_device.assert_called_once_with(
         ModelType.CHIME, chime.id, {"cameraIds": sorted([camera1.id, camera2.id])}
     )
+
+
+async def test_set_chime_paired_doorbells_legacy_binary_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    chime: Chime,
+    doorbell: Camera,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test set_chime_paired_doorbells with deprecated binary_sensor entity."""
+
+    ufp.api.update_device = AsyncMock()
+
+    camera1 = doorbell.model_copy()
+    camera1.name = "Test Camera 1"
+
+    await init_entry(hass, ufp, [camera1, chime])
+
+    # Manually enable the deprecated doorbell binary sensor
+    entity_registry.async_update_entity(
+        "binary_sensor.test_camera_1_doorbell", disabled_by=None
+    )
+    await hass.async_block_till_done()
+
+    chime_entry = entity_registry.async_get("button.test_chime_play_chime")
+    assert chime_entry is not None
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_CHIME_PAIRED,
+        {
+            ATTR_DEVICE_ID: chime_entry.device_id,
+            "doorbells": {
+                ATTR_ENTITY_ID: ["binary_sensor.test_camera_1_doorbell"],
+            },
+        },
+        blocking=True,
+    )
+
+    ufp.api.update_device.assert_called_once_with(
+        ModelType.CHIME, chime.id, {"cameraIds": [camera1.id]}
+    )
+
+    assert "Using deprecated doorbell binary sensor entity" in caplog.text
+    assert "binary_sensor.test_camera_1_doorbell" in caplog.text
 
 
 async def test_remove_privacy_zone_no_zone(

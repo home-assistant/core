@@ -638,6 +638,10 @@
       },
       "title": "Ubiquiti Cloud Users are not Supported"
     },
+    "deprecate_doorbell_binary_sensor": {
+      "description": "The doorbell binary sensor has been replaced with a doorbell event entity. The binary sensor was using an incorrect device class (occupancy) since doorbell rings are events, not states.\n\nPlease update your automations to use the corresponding doorbell event entity instead. The event entity will fire a `ring` event when the doorbell is pressed.\n\nBelow are the detected automations or scripts that use one or more of the deprecated entities:\n{items}\nThe above list may be incomplete and it does not include any template usages inside of dashboards. Please update any templates, automations or scripts accordingly.",
+      "title": "Doorbell binary sensor deprecated"
+    },
     "deprecate_hdr_switch": {
       "description": "UniFi Protect v3 added a new state for HDR (auto). As a result, the HDR Mode switch has been replaced with an HDR Mode select, and it is deprecated.\n\nBelow are the detected automations or scripts that use one or more of the deprecated entities:\n{items}\nThe above list may be incomplete and it does not include any template usages inside of dashboards. Please update any templates, automations or scripts accordingly.",
       "title": "HDR Mode switch deprecated"

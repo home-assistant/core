@@ -13,6 +13,7 @@ from uiprotect.exceptions import ClientError
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.event import EventDeviceClass
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_NAME, Platform
 from homeassistant.core import (
     HomeAssistant,
@@ -227,16 +228,30 @@ async def set_chime_paired_doorbells(call: ServiceCall) -> None:
     )
     doorbell_ids: set[str] = set()
     for camera_id in doorbell_refs.referenced | doorbell_refs.indirectly_referenced:
-        doorbell_sensor = entity_registry.async_get(camera_id)
-        assert doorbell_sensor is not None
-        if (
-            doorbell_sensor.platform != DOMAIN
-            or doorbell_sensor.domain != Platform.BINARY_SENSOR
-            or doorbell_sensor.original_device_class
-            != BinarySensorDeviceClass.OCCUPANCY
-        ):
+        doorbell_entity = entity_registry.async_get(camera_id)
+        assert doorbell_entity is not None
+        if doorbell_entity.platform != DOMAIN:
             continue
-        doorbell_mac = _async_unique_id_to_mac(doorbell_sensor.unique_id)
+        # Support both event entity (preferred) and deprecated binary_sensor
+        is_event_entity = (
+            doorbell_entity.domain == Platform.EVENT
+            and doorbell_entity.original_device_class == EventDeviceClass.DOORBELL
+        )
+        is_legacy_binary_sensor = (
+            doorbell_entity.domain == Platform.BINARY_SENSOR
+            and doorbell_entity.original_device_class
+            == BinarySensorDeviceClass.OCCUPANCY
+        )
+        if not is_event_entity and not is_legacy_binary_sensor:
+            continue
+        if is_legacy_binary_sensor:
+            _LOGGER.warning(
+                "Using deprecated doorbell binary sensor entity '%s' in "
+                "set_chime_paired_doorbells service. Please update to use the "
+                "event entity instead. The binary sensor will be removed in 2026.2",
+                camera_id,
+            )
+        doorbell_mac = _async_unique_id_to_mac(doorbell_entity.unique_id)
         camera = instance.bootstrap.get_device_from_mac(doorbell_mac)
         assert camera is not None
         doorbell_ids.add(camera.id)

@@ -111,6 +111,10 @@ async def async_migrate_data(
     async_deprecate_hdr(hass, entry)
     _LOGGER.debug("Completed Migrate: async_deprecate_hdr")
 
+    _LOGGER.debug("Start Migrate: async_deprecate_doorbell_binary_sensor")
+    async_deprecate_doorbell_binary_sensor(hass, entry)
+    _LOGGER.debug("Completed Migrate: async_deprecate_doorbell_binary_sensor")
+
 
 @callback
 def async_deprecate_hdr(hass: HomeAssistant, entry: UFPConfigEntry) -> None:
@@ -127,4 +131,30 @@ def async_deprecate_hdr(hass: HomeAssistant, entry: UFPConfigEntry) -> None:
         entry,
         "2024.10.0",
         {"hdr_switch": {"id": "hdr_mode", "platform": Platform.SWITCH}},
+    )
+
+
+@callback
+def async_deprecate_doorbell_binary_sensor(
+    hass: HomeAssistant, entry: UFPConfigEntry
+) -> None:
+    """Check for usages of doorbell binary sensor and raise repair if it is used.
+
+    The doorbell binary sensor was using the wrong device class (occupancy) since it
+    represents an event, not a state. It has been replaced with a doorbell event entity
+    which properly represents doorbell ring events.
+
+    Added in 2026.1.0
+    """
+
+    create_repair_if_used(
+        hass,
+        entry,
+        "2026.2.0",
+        {
+            "doorbell_binary_sensor": {
+                "id": "doorbell",
+                "platform": Platform.BINARY_SENSOR,
+            }
+        },
     )

@@ -225,3 +225,160 @@ async def test_deprecate_entity_script(
         if i["issue_id"] == "deprecate_hdr_switch":
             issue = i
     assert issue is None
+
+
+async def test_deprecated_doorbell_binary_sensor(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    hass_ws_client: WebSocketGenerator,
+    doorbell: Camera,
+) -> None:
+    """Test doorbell binary sensor deprecation repair does not exist for new installs."""
+
+    await init_entry(hass, ufp, [doorbell])
+
+    await async_process_repairs_platforms(hass)
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    issue = None
+    for i in msg["result"]["issues"]:
+        if i["issue_id"] == "deprecate_doorbell_binary_sensor":
+            issue = i
+    assert issue is None
+
+
+async def test_deprecated_doorbell_binary_sensor_no_automations(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    hass_ws_client: WebSocketGenerator,
+    doorbell: Camera,
+) -> None:
+    """Test doorbell binary sensor deprecation repair without automations."""
+    entity_registry.async_get_or_create(
+        Platform.BINARY_SENSOR,
+        DOMAIN,
+        f"{doorbell.mac}_doorbell",
+        config_entry=ufp.entry,
+    )
+
+    await init_entry(hass, ufp, [doorbell])
+
+    await async_process_repairs_platforms(hass)
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    issue = None
+    for i in msg["result"]["issues"]:
+        if i["issue_id"] == "deprecate_doorbell_binary_sensor":
+            issue = i
+    assert issue is None
+
+
+async def test_deprecate_doorbell_binary_sensor_automation(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    hass_ws_client: WebSocketGenerator,
+    doorbell: Camera,
+) -> None:
+    """Test doorbell binary sensor deprecation repair exists when used in automations."""
+    entry = entity_registry.async_get_or_create(
+        Platform.BINARY_SENSOR,
+        DOMAIN,
+        f"{doorbell.mac}_doorbell",
+        config_entry=ufp.entry,
+    )
+    await _load_automation(hass, entry.entity_id)
+    await init_entry(hass, ufp, [doorbell])
+
+    await async_process_repairs_platforms(hass)
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    issue = None
+    for i in msg["result"]["issues"]:
+        if i["issue_id"] == "deprecate_doorbell_binary_sensor":
+            issue = i
+    assert issue is not None
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value={AUTOMATION_DOMAIN: []},
+    ):
+        await hass.services.async_call(AUTOMATION_DOMAIN, SERVICE_RELOAD, blocking=True)
+
+    await hass.config_entries.async_reload(ufp.entry.entry_id)
+    await hass.async_block_till_done()
+
+    await ws_client.send_json({"id": 2, "type": "repairs/list_issues"})
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    issue = None
+    for i in msg["result"]["issues"]:
+        if i["issue_id"] == "deprecate_doorbell_binary_sensor":
+            issue = i
+    assert issue is None
+
+
+async def test_deprecate_doorbell_binary_sensor_script(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    hass_ws_client: WebSocketGenerator,
+    doorbell: Camera,
+) -> None:
+    """Test doorbell binary sensor deprecation repair exists when used in scripts."""
+    entry = entity_registry.async_get_or_create(
+        Platform.BINARY_SENSOR,
+        DOMAIN,
+        f"{doorbell.mac}_doorbell",
+        config_entry=ufp.entry,
+    )
+    await _load_script(hass, entry.entity_id)
+    await init_entry(hass, ufp, [doorbell])
+
+    await async_process_repairs_platforms(hass)
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    issue = None
+    for i in msg["result"]["issues"]:
+        if i["issue_id"] == "deprecate_doorbell_binary_sensor":
+            issue = i
+    assert issue is not None
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value={SCRIPT_DOMAIN: {}},
+    ):
+        await hass.services.async_call(SCRIPT_DOMAIN, SERVICE_RELOAD, blocking=True)
+
+    await hass.config_entries.async_reload(ufp.entry.entry_id)
+    await hass.async_block_till_done()
+
+    await ws_client.send_json({"id": 2, "type": "repairs/list_issues"})
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    issue = None
+    for i in msg["result"]["issues"]:
+        if i["issue_id"] == "deprecate_doorbell_binary_sensor":
+            issue = i
+    assert issue is None

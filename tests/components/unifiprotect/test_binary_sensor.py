@@ -64,11 +64,11 @@ async def test_binary_sensor_camera_remove(
 
     ufp.api.bootstrap.nvr.system_info.ustorage = None
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 9, 6)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 9, 5)
     await remove_entities(hass, ufp, [doorbell, unadopted_camera])
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 0, 0)
     await adopt_devices(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 9, 6)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 9, 5)
 
 
 async def test_binary_sensor_light_remove(
@@ -136,21 +136,7 @@ async def test_binary_sensor_setup_camera_all(
 
     ufp.api.bootstrap.nvr.system_info.ustorage = None
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 9, 6)
-
-    description = EVENT_SENSORS[0]
-    unique_id, entity_id = await ids_from_device_description(
-        hass, Platform.BINARY_SENSOR, doorbell, description
-    )
-
-    entity = entity_registry.async_get(entity_id)
-    assert entity
-    assert entity.unique_id == unique_id
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_OFF
-    assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 9, 5)
 
     # Is Dark
     description = CAMERA_SENSORS[0]
@@ -286,7 +272,7 @@ async def test_binary_sensor_update_motion(
     """Test binary_sensor motion entity."""
 
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 15, 12)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 15, 11)
 
     _, entity_id = await ids_from_device_description(
         hass, Platform.BINARY_SENSOR, doorbell, EVENT_SENSORS[1]
