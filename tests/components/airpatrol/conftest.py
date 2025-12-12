@@ -7,8 +7,8 @@ from unittest.mock import AsyncMock, patch
 from airpatrol.api import AirPatrolAPI
 import pytest
 
-from homeassistant.components.airpatrol.const import DOMAIN, PLATFORMS
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL, CONF_PASSWORD, Platform
+from homeassistant.components.airpatrol.const import DOMAIN
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -55,23 +55,15 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-async def load_platforms() -> list[Platform]:
-    """Return list of platforms to load."""
-    return PLATFORMS
-
-
-@pytest.fixture
 async def load_integration(
     hass: HomeAssistant,
     get_client: AirPatrolAPI,
     mock_config_entry: MockConfigEntry,
-    load_platforms: list[Platform],
 ) -> MockConfigEntry:
     """Load the integration."""
     mock_config_entry.add_to_hass(hass)
-    with patch("homeassistant.components.airpatrol.PLATFORMS", load_platforms):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
     return mock_config_entry
 
 

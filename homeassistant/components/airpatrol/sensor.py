@@ -59,7 +59,7 @@ async def async_setup_entry(
         AirPatrolSensor(coordinator, unit_id, description)
         for unit_id, unit in units.items()
         for description in SENSOR_DESCRIPTIONS
-        if "climate" in unit
+        if "climate" in unit and unit["climate"] is not None
     )
 
 

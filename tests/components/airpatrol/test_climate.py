@@ -1,7 +1,9 @@
 """Test the AirPatrol climate platform."""
 
+from collections.abc import Generator
 from datetime import timedelta
 from typing import Any
+from unittest.mock import patch
 
 from airpatrol.api import AirPatrolAPI
 from freezegun.api import FrozenDateTimeFactory
@@ -45,6 +47,16 @@ from tests.common import (
 )
 
 
+@pytest.fixture(autouse=True)
+def override_platforms() -> Generator[None]:
+    """Override the platforms to load for airpatrol."""
+    with patch(
+        "homeassistant.components.airpatrol.PLATFORMS",
+        [Platform.CLIMATE],
+    ):
+        yield
+
+
 @pytest.mark.parametrize(
     "climate_data",
     [
@@ -61,10 +73,6 @@ from tests.common import (
         },
         None,
     ],
-)
-@pytest.mark.parametrize(
-    "load_platforms",
-    [[Platform.CLIMATE]],
 )
 async def test_climate_entities(
     hass: HomeAssistant,

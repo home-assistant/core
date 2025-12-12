@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_climate_entities[load_platforms0-None][climate.living_room-entry]
+# name: test_climate_entities[None][climate.living_room-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -51,7 +51,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_climate_entities[load_platforms0-None][climate.living_room-state]
+# name: test_climate_entities[None][climate.living_room-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'fan_modes': list([
@@ -81,7 +81,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_climate_entities[load_platforms0-climate_data0][climate.living_room-entry]
+# name: test_climate_entities[climate_data0][climate.living_room-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -133,7 +133,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_climate_entities[load_platforms0-climate_data0][climate.living_room-state]
+# name: test_climate_entities[climate_data0][climate.living_room-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_humidity': 45.0,
