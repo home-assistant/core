@@ -114,7 +114,7 @@ def _async_camera_entities(
         hass, entry, data, ufp_device
     ):
         # do not enable streaming for package camera
-        # 2 FPS causes a lot of buferring
+        # 2 FPS causes a lot of buffering
         entities.append(
             ProtectCamera(
                 data,
