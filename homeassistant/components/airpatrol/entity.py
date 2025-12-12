@@ -39,6 +39,11 @@ class AirPatrolEntity(CoordinatorEntity[AirPatrolDataUpdateCoordinator]):
         return self.coordinator.data[self._unit_id]
 
     @property
+    def climate_data(self) -> dict[str, Any]:
+        """Return the climate data for this unit."""
+        return self.device_data.get("climate") or {}
+
+    @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return super().available and self._unit_id in self.coordinator.data
+        return super().available and bool(self.climate_data)

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -81,16 +80,6 @@ class AirPatrolSensor(AirPatrolEntity, SensorEntity):
         self._attr_unique_id = (
             f"{coordinator.config_entry.unique_id}-{unit_id}-{description.key}"
         )
-
-    @property
-    def climate_data(self) -> dict[str, Any]:
-        """Return the climate data for this unit."""
-        return self.device_data.get("climate") or {}
-
-    @property
-    def available(self) -> bool:
-        """Return if the sensor is available."""
-        return super().available and bool(self.climate_data)
 
     @property
     def native_value(self) -> float | None:
