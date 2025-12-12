@@ -1,4 +1,4 @@
-"""Provides triggers for input booleans."""
+"""Provides triggers for sirens."""
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -13,5 +13,5 @@ TRIGGERS: dict[str, type[Trigger]] = {
 
 
 async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
-    """Return the triggers for input booleans."""
+    """Return the triggers for sirens."""
     return TRIGGERS

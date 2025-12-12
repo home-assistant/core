@@ -1,4 +1,4 @@
-"""Test input boolean triggers."""
+"""Test siren triggers."""
 
 from collections.abc import Generator
 from unittest.mock import patch
