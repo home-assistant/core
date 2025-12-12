@@ -145,10 +145,10 @@ LEGACY_FIELDS = {
     CONF_CLOUD_COVERAGE_TEMPLATE: CONF_CLOUD_COVERAGE,
     CONF_CONDITION_TEMPLATE: CONF_CONDITION,
     CONF_DEW_POINT_TEMPLATE: CONF_DEW_POINT,
-    CONF_HUMIDITY_TEMPLATE: CONF_HUMIDITY,
     CONF_FORECAST_DAILY_TEMPLATE: CONF_FORECAST_DAILY,
     CONF_FORECAST_HOURLY_TEMPLATE: CONF_FORECAST_HOURLY,
     CONF_FORECAST_TWICE_DAILY_TEMPLATE: CONF_FORECAST_TWICE_DAILY,
+    CONF_HUMIDITY_TEMPLATE: CONF_HUMIDITY,
     CONF_OZONE_TEMPLATE: CONF_OZONE,
     CONF_PRESSURE_TEMPLATE: CONF_PRESSURE,
     CONF_TEMPERATURE_TEMPLATE: CONF_TEMPERATURE,
@@ -218,10 +218,10 @@ WEATHER_CONFIG_ENTRY_SCHEMA = vol.Schema(
         vol.Optional(CONF_CLOUD_COVERAGE): cv.template,
         vol.Required(CONF_CONDITION): cv.template,
         vol.Optional(CONF_DEW_POINT): cv.template,
-        vol.Required(CONF_HUMIDITY): cv.template,
         vol.Optional(CONF_FORECAST_DAILY): cv.template,
         vol.Optional(CONF_FORECAST_HOURLY): cv.template,
         vol.Optional(CONF_FORECAST_TWICE_DAILY): cv.template,
+        vol.Required(CONF_HUMIDITY): cv.template,
         vol.Optional(CONF_OZONE): cv.template,
         vol.Optional(CONF_PRECIPITATION_UNIT): vol.In(DistanceConverter.VALID_UNITS),
         vol.Optional(CONF_PRESSURE): cv.template,
@@ -581,6 +581,12 @@ class StateWeatherEntity(TemplateEntity, AbstractTemplateWeather):
                 self._uv_index_template,
                 on_update=self._update_uv_index,
             )
+        if self._visibility_template:
+            self.add_template_attribute(
+                "_attr_native_visibility",
+                self._visibility_template,
+                on_update=self._update_visibility,
+            )
         if self._wind_bearing_template:
             self.add_template_attribute(
                 "_attr_wind_bearing",
@@ -598,12 +604,6 @@ class StateWeatherEntity(TemplateEntity, AbstractTemplateWeather):
                 "_attr_native_wind_speed",
                 self._wind_speed_template,
                 on_update=self._update_wind_speed,
-            )
-        if self._visibility_template:
-            self.add_template_attribute(
-                "_attr_native_visibility",
-                self._visibility_template,
-                on_update=self._update_visibility,
             )
 
         super()._async_setup_templates()
