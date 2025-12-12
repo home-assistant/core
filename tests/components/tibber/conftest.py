@@ -11,7 +11,9 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.recorder import Recorder
+from homeassistant.components.tibber import TibberRuntimeData
 from homeassistant.components.tibber.const import AUTH_IMPLEMENTATION, DOMAIN
+from homeassistant.components.tibber.coordinator import TibberDataAPICoordinator
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -126,3 +128,46 @@ async def setup_credentials(recorder_mock: Recorder, hass: HomeAssistant) -> Non
         ClientCredential("test-client-id", "test-client-secret"),
         DOMAIN,
     )
+
+
+@pytest.fixture
+def data_api_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Create a Data API Tibber config entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_ACCESS_TOKEN: "token"},
+        unique_id="data-api",
+    )
+    entry.add_to_hass(hass)
+    return entry
+
+
+def create_mock_runtime(
+    async_get_client: AsyncMock | None = None,
+    tibber_connection: MagicMock | None = None,
+    coordinator_data: dict | None = None,
+) -> TibberRuntimeData:
+    """Create a mock TibberRuntimeData.
+
+    Args:
+        async_get_client: Optional async mock for getting the Data API client.
+        tibber_connection: Optional mock for the GraphQL connection.
+        coordinator_data: Optional data dict for the coordinator.
+
+    """
+    session = MagicMock()
+    session.async_ensure_token_valid = AsyncMock()
+    session.token = {CONF_ACCESS_TOKEN: "test-token"}
+
+    coordinator = MagicMock(spec=TibberDataAPICoordinator)
+    coordinator.data = coordinator_data if coordinator_data is not None else {}
+    coordinator.sensors_by_device = {}
+
+    runtime = MagicMock(spec=TibberRuntimeData)
+    runtime.session = session
+    runtime.tibber_connection = tibber_connection or MagicMock()
+    runtime.tibber_connection.get_homes = MagicMock(return_value=[])
+    runtime.data_api_coordinator = coordinator
+    runtime.async_get_client = async_get_client or AsyncMock()
+
+    return runtime

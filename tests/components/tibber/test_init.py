@@ -29,18 +29,15 @@ async def test_entry_unload(
 
 
 @pytest.mark.usefixtures("recorder_mock")
-async def test_data_api_runtime_creates_client(
-    hass: HomeAssistant,
-) -> None:
+async def test_data_api_runtime_creates_client(hass: HomeAssistant) -> None:
     """Ensure the data API runtime creates and caches the client."""
     session = MagicMock()
     session.async_ensure_token_valid = AsyncMock()
     session.token = {CONF_ACCESS_TOKEN: "access-token"}
 
-    tibber_connection = MagicMock()
     runtime = TibberRuntimeData(
         session=session,
-        tibber_connection=tibber_connection,
+        tibber_connection=MagicMock(),
         data_api_coordinator=None,
     )
 
@@ -70,9 +67,7 @@ async def test_data_api_runtime_creates_client(
 
 
 @pytest.mark.usefixtures("recorder_mock")
-async def test_data_api_runtime_missing_token_raises(
-    hass: HomeAssistant,
-) -> None:
+async def test_data_api_runtime_missing_token_raises(hass: HomeAssistant) -> None:
     """Ensure missing tokens trigger reauthentication."""
     session = MagicMock()
     session.async_ensure_token_valid = AsyncMock()

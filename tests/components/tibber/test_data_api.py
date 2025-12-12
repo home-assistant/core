@@ -8,44 +8,19 @@ import aiohttp
 import pytest
 import tibber
 
-from homeassistant.components.tibber import TibberRuntimeData
-from homeassistant.components.tibber.const import DOMAIN
 from homeassistant.components.tibber.coordinator import TibberDataAPICoordinator
 from homeassistant.components.tibber.sensor import (
     TibberDataAPISensor,
     _async_setup_data_api_sensors,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from .conftest import create_tibber_device
+from .conftest import create_mock_runtime, create_tibber_device
 
 from tests.common import MockConfigEntry
-
-
-def _create_mock_runtime(async_get_client: AsyncMock) -> TibberRuntimeData:
-    """Create a mock runtime data."""
-    runtime = MagicMock(spec=TibberRuntimeData)
-    runtime.async_get_client = async_get_client
-    runtime.tibber_connection = MagicMock()
-    runtime.session = MagicMock()
-    runtime.data_api_coordinator = None
-    return runtime
-
-
-@pytest.fixture
-def data_api_entry(hass: HomeAssistant) -> MockConfigEntry:
-    """Create a Data API Tibber config entry."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_ACCESS_TOKEN: "token"},
-        unique_id="data-api",
-    )
-    entry.add_to_hass(hass)
-    return entry
 
 
 async def test_data_api_setup_adds_entities(
@@ -61,7 +36,7 @@ async def test_data_api_setup_adds_entities(
         return_value={"device-id": create_tibber_device(value=83.0)}
     )
     async_get_client = AsyncMock(return_value=client)
-    runtime = _create_mock_runtime(async_get_client)
+    runtime = create_mock_runtime(async_get_client=async_get_client)
 
     data_api_entry.runtime_data = runtime
     data_api_entry.mock_state(hass, ConfigEntryState.SETUP_IN_PROGRESS)
@@ -98,7 +73,7 @@ async def test_data_api_coordinator_first_refresh_failure(
 ) -> None:
     """Ensure network failures during setup raise ConfigEntryNotReady."""
     async_get_client = AsyncMock(side_effect=aiohttp.ClientError("boom"))
-    runtime = _create_mock_runtime(async_get_client)
+    runtime = create_mock_runtime(async_get_client=async_get_client)
     data_api_entry.runtime_data = runtime
 
     coordinator = TibberDataAPICoordinator(hass, data_api_entry)
@@ -114,7 +89,7 @@ async def test_data_api_coordinator_first_refresh_auth_failed(
 ) -> None:
     """Ensure auth failures during setup propagate."""
     async_get_client = AsyncMock(side_effect=ConfigEntryAuthFailed("invalid"))
-    runtime = _create_mock_runtime(async_get_client)
+    runtime = create_mock_runtime(async_get_client=async_get_client)
     data_api_entry.runtime_data = runtime
 
     coordinator = TibberDataAPICoordinator(hass, data_api_entry)
@@ -137,7 +112,7 @@ async def test_data_api_coordinator_update_failures(
 ) -> None:
     """Ensure update failures are wrapped in UpdateFailed."""
     async_get_client = AsyncMock(side_effect=exception)
-    runtime = _create_mock_runtime(async_get_client)
+    runtime = create_mock_runtime(async_get_client=async_get_client)
     data_api_entry.runtime_data = runtime
 
     coordinator = TibberDataAPICoordinator(hass, data_api_entry)
