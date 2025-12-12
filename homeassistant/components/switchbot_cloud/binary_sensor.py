@@ -160,4 +160,3 @@ class SwitchBotCloudBinarySensor(SwitchBotCloudEntity, BinarySensorEntity):
             self.coordinator.data.get(self.entity_description.key)
             == self.entity_description.on_value
         )
-        return
