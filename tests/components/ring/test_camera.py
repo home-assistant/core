@@ -487,7 +487,10 @@ async def test_camera_webrtc(
             "m=video 9 UDP/TLS/RTP/SAVPF 96\r\na=sendonly\r\n",
         ),
         # SDP without direction attributes should be unchanged
-        ("v=0\r\nm=video 9 UDP/TLS/RTP/SAVPF 96\r\n", "v=0\r\nm=video 9 UDP/TLS/RTP/SAVPF 96\r\n"),
+        (
+            "v=0\r\nm=video 9 UDP/TLS/RTP/SAVPF 96\r\n",
+            "v=0\r\nm=video 9 UDP/TLS/RTP/SAVPF 96\r\n",
+        ),
     ],
     ids=[
         "recvonly_to_sendonly",
