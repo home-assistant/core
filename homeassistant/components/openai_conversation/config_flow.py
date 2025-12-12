@@ -76,6 +76,7 @@ from .const import (
     RECOMMENDED_WEB_SEARCH_CONTEXT_SIZE,
     RECOMMENDED_WEB_SEARCH_INLINE_CITATIONS,
     RECOMMENDED_WEB_SEARCH_USER_LOCATION,
+    UNSUPPORTED_CODE_INTERPRETER_MODELS,
     UNSUPPORTED_IMAGE_MODELS,
     UNSUPPORTED_MODELS,
     UNSUPPORTED_WEB_SEARCH_MODELS,
@@ -325,7 +326,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
 
         model = options[CONF_CHAT_MODEL]
 
-        if not model.startswith(("gpt-5-pro", "gpt-5-codex")):
+        if not model.startswith(tuple(UNSUPPORTED_CODE_INTERPRETER_MODELS)):
             step_schema.update(
                 {
                     vol.Optional(
@@ -338,7 +339,11 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             options.pop(CONF_CODE_INTERPRETER)
 
         if model.startswith(("o", "gpt-5")) and not model.startswith("gpt-5-pro"):
-            if model.startswith("gpt-5.1"):
+            if model.startswith("gpt-5.2-pro"):
+                reasoning_options = ["medium", "high", "xhigh"]
+            elif model.startswith("gpt-5.2"):
+                reasoning_options = ["none", "low", "medium", "high", "xhigh"]
+            elif model.startswith("gpt-5.1"):
                 reasoning_options = ["none", "low", "medium", "high"]
             elif model.startswith("gpt-5"):
                 reasoning_options = ["minimal", "low", "medium", "high"]
