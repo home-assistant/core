@@ -27,6 +27,8 @@ from .const import (
     DATA_CAMERAS,
     DATA_EVENTS,
     DOMAIN,
+    EVENT_TYPE_CONNECTION,
+    EVENT_TYPE_DISCONNECTION,
     EVENT_TYPE_LIGHT_MODE,
     EVENT_TYPE_OFF,
     EVENT_TYPE_ON,
@@ -123,7 +125,13 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         """Entity created."""
         await super().async_added_to_hass()
 
-        for event_type in (EVENT_TYPE_LIGHT_MODE, EVENT_TYPE_OFF, EVENT_TYPE_ON):
+        for event_type in (
+            EVENT_TYPE_LIGHT_MODE,
+            EVENT_TYPE_OFF,
+            EVENT_TYPE_ON,
+            EVENT_TYPE_CONNECTION,
+            EVENT_TYPE_DISCONNECTION,
+        ):
             self.async_on_remove(
                 async_dispatcher_connect(
                     self.hass,
@@ -146,12 +154,19 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
             data["home_id"] == self.home.entity_id
             and data["camera_id"] == self.device.entity_id
         ):
-            if data[WEBHOOK_PUSH_TYPE] in ("NACamera-off", "NACamera-disconnection"):
+            if data[WEBHOOK_PUSH_TYPE] in (
+                "NACamera-off",
+                "NOCamera-off",
+                "NACamera-disconnection",
+                "NOCamera-disconnection",
+            ):
                 self._attr_is_streaming = False
                 self._monitoring = False
             elif data[WEBHOOK_PUSH_TYPE] in (
                 "NACamera-on",
+                "NOCamera-on",
                 WEBHOOK_NACAMERA_CONNECTION,
+                "NOCamera-connection",
             ):
                 self._attr_is_streaming = True
                 self._monitoring = True
