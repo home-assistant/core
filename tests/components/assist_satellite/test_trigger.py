@@ -8,7 +8,6 @@ import pytest
 from homeassistant.components.assist_satellite.entity import AssistSatelliteState
 from homeassistant.const import ATTR_LABEL_ID, CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.setup import async_setup_component
 
 from tests.components import (
     StateDescription,
@@ -105,8 +104,6 @@ async def test_assist_satellite_state_trigger_behavior_any(
     states: list[StateDescription],
 ) -> None:
     """Test that the assist satellite state trigger fires when any assist satellite state changes to a specific state."""
-    await async_setup_component(hass, "assist_satellite", {})
-
     other_entity_ids = set(target_assist_satellites) - {entity_id}
 
     # Set all assist satellites, including the tested one, to the initial state
@@ -174,8 +171,6 @@ async def test_assist_satellite_state_trigger_behavior_first(
     states: list[StateDescription],
 ) -> None:
     """Test that the assist satellite state trigger fires when the first assist satellite changes to a specific state."""
-    await async_setup_component(hass, "assist_satellite", {})
-
     other_entity_ids = set(target_assist_satellites) - {entity_id}
 
     # Set all assist satellites, including the tested one, to the initial state
@@ -242,8 +237,6 @@ async def test_assist_satellite_state_trigger_behavior_last(
     states: list[StateDescription],
 ) -> None:
     """Test that the assist_satellite state trigger fires when the last assist_satellite changes to a specific state."""
-    await async_setup_component(hass, "assist_satellite", {})
-
     other_entity_ids = set(target_assist_satellites) - {entity_id}
 
     # Set all assist satellites, including the tested one, to the initial state

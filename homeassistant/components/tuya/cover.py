@@ -33,7 +33,7 @@ class _DPCodePercentageMappingWrapper(DPCodeIntegerWrapper):
         return False
 
     def read_device_status(self, device: CustomerDevice) -> float | None:
-        if (value := self._read_device_status_raw(device)) is None:
+        if (value := device.status.get(self.dpcode)) is None:
             return None
 
         return round(

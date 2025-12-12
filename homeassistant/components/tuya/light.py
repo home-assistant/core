@@ -35,8 +35,8 @@ from .models import (
     DPCodeEnumWrapper,
     DPCodeIntegerWrapper,
     DPCodeJsonWrapper,
-    IntegerTypeData,
 )
+from .type_information import IntegerTypeInformation
 from .util import remap_value
 
 
@@ -53,7 +53,7 @@ class _BrightnessWrapper(DPCodeIntegerWrapper):
 
     def read_device_status(self, device: CustomerDevice) -> Any | None:
         """Return the brightness of this light between 0..255."""
-        if (brightness := self._read_device_status_raw(device)) is None:
+        if (brightness := device.status.get(self.dpcode)) is None:
             return None
 
         # Remap value to our scale
@@ -114,7 +114,7 @@ class _ColorTempWrapper(DPCodeIntegerWrapper):
 
     def read_device_status(self, device: CustomerDevice) -> Any | None:
         """Return the color temperature value in Kelvin."""
-        if (temperature := self._read_device_status_raw(device)) is None:
+        if (temperature := device.status.get(self.dpcode)) is None:
             return None
 
         return color_util.color_temperature_mired_to_kelvin(
@@ -138,24 +138,24 @@ class _ColorTempWrapper(DPCodeIntegerWrapper):
         )
 
 
-DEFAULT_H_TYPE = IntegerTypeData(
+DEFAULT_H_TYPE = IntegerTypeInformation(
     dpcode=DPCode.COLOUR_DATA_HSV, min=1, scale=0, max=360, step=1
 )
-DEFAULT_S_TYPE = IntegerTypeData(
+DEFAULT_S_TYPE = IntegerTypeInformation(
     dpcode=DPCode.COLOUR_DATA_HSV, min=1, scale=0, max=255, step=1
 )
-DEFAULT_V_TYPE = IntegerTypeData(
+DEFAULT_V_TYPE = IntegerTypeInformation(
     dpcode=DPCode.COLOUR_DATA_HSV, min=1, scale=0, max=255, step=1
 )
 
 
-DEFAULT_H_TYPE_V2 = IntegerTypeData(
+DEFAULT_H_TYPE_V2 = IntegerTypeInformation(
     dpcode=DPCode.COLOUR_DATA_HSV, min=1, scale=0, max=360, step=1
 )
-DEFAULT_S_TYPE_V2 = IntegerTypeData(
+DEFAULT_S_TYPE_V2 = IntegerTypeInformation(
     dpcode=DPCode.COLOUR_DATA_HSV, min=1, scale=0, max=1000, step=1
 )
-DEFAULT_V_TYPE_V2 = IntegerTypeData(
+DEFAULT_V_TYPE_V2 = IntegerTypeInformation(
     dpcode=DPCode.COLOUR_DATA_HSV, min=1, scale=0, max=1000, step=1
 )
 
@@ -166,14 +166,6 @@ class _ColorDataWrapper(DPCodeJsonWrapper):
     h_type = DEFAULT_H_TYPE
     s_type = DEFAULT_S_TYPE
     v_type = DEFAULT_V_TYPE
-
-    def read_device_status(self, device: CustomerDevice) -> dict[str, Any] | None:
-        """Read the color data for the dpcode."""
-        if (status_data := self._read_device_status_raw(device)) is None or not (
-            status := json_loads_object(status_data)
-        ):
-            return None
-        return status
 
     def read_hs_color(self, device: CustomerDevice) -> tuple[float, float] | None:
         """Get the HS value from this color data."""
@@ -578,15 +570,15 @@ def _get_color_data_wrapper(
     if function_data := json_loads_object(
         cast(str, color_data_wrapper.type_information.type_data)
     ):
-        color_data_wrapper.h_type = IntegerTypeData(
+        color_data_wrapper.h_type = IntegerTypeInformation(
             dpcode=color_data_wrapper.dpcode,
             **cast(dict, function_data["h"]),
         )
-        color_data_wrapper.s_type = IntegerTypeData(
+        color_data_wrapper.s_type = IntegerTypeInformation(
             dpcode=color_data_wrapper.dpcode,
             **cast(dict, function_data["s"]),
         )
-        color_data_wrapper.v_type = IntegerTypeData(
+        color_data_wrapper.v_type = IntegerTypeInformation(
             dpcode=color_data_wrapper.dpcode,
             **cast(dict, function_data["v"]),
         )

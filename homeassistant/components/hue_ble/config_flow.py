@@ -6,7 +6,7 @@ from enum import Enum
 import logging
 from typing import Any
 
-from HueBLE import HueBleLight
+from HueBLE import ConnectionError, HueBleError, HueBleLight, PairingError
 import voluptuous as vol
 
 from homeassistant.components import bluetooth
@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
-from .const import DOMAIN, URL_PAIRING_MODE
+from .const import DOMAIN, URL_FACTORY_RESET, URL_PAIRING_MODE
 from .light import get_available_color_modes
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,32 +41,22 @@ async def validate_input(hass: HomeAssistant, address: str) -> Error | None:
 
     try:
         light = HueBleLight(ble_device)
-
         await light.connect()
+        get_available_color_modes(light)
+        await light.poll_state()
 
-        if light.authenticated is None:
-            _LOGGER.warning(
-                "Unable to determine if light authenticated, proceeding anyway"
-            )
-        elif not light.authenticated:
-            return Error.INVALID_AUTH
-
-        if not light.connected:
-            return Error.CANNOT_CONNECT
-
-        try:
-            get_available_color_modes(light)
-        except HomeAssistantError:
-            return Error.NOT_SUPPORTED
-
-        _, errors = await light.poll_state()
-        if len(errors) != 0:
-            _LOGGER.warning("Errors raised when connecting to light: %s", errors)
-            return Error.CANNOT_CONNECT
-
-    except Exception:
+    except ConnectionError as e:
+        _LOGGER.exception("Error connecting to light")
+        return (
+            Error.INVALID_AUTH
+            if type(e.__cause__) is PairingError
+            else Error.CANNOT_CONNECT
+        )
+    except HueBleError:
         _LOGGER.exception("Unexpected error validating light connection")
         return Error.UNKNOWN
+    except HomeAssistantError:
+        return Error.NOT_SUPPORTED
     else:
         return None
     finally:
@@ -129,6 +119,7 @@ class HueBleConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_NAME: self._discovery_info.name,
                 CONF_MAC: self._discovery_info.address,
                 "url_pairing_mode": URL_PAIRING_MODE,
+                "url_factory_reset": URL_FACTORY_RESET,
             },
         )
 
