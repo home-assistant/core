@@ -290,7 +290,7 @@ async def test_sensor_with_time_filtering(
     )
 
     # Verify first trip: is AT or after 17:00 (i.e., matching trips are included)
-    # Based on fixture data, first trip at or after 17:00 should be 17:05 or 17:22
+    # Based on fixture data, first trip at or after 17:00 should be 17:11
     assert (hour, minute) >= (17, 0), (
         f"Expected first trip at or after 17:00, got {hour}:{minute:02d}. "
         "This means the window filter is not including trips at/after the configured time."
