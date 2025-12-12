@@ -51,6 +51,11 @@
       "led": {
         "name": "Flashlight"
       }
+    },
+    "switch": {
+      "energy_saving": {
+        "name": "Sleep mode"
+      }
     }
   },
   "exceptions": {
