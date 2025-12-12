@@ -454,18 +454,17 @@ async def test_availability_at_start(
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ks_hood_01001"])
-async def test_hood_multi_component_lights(
+async def test_non_main_components_are_supported(
     hass: HomeAssistant,
     devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that range hood device creates light entities for multiple components."""
+    """Test to check if non-main components are supported."""
     await setup_integration(hass, mock_config_entry)
 
     # The hood device should create a light entity for the lamp component
-    lamp_light = hass.states.get("light.range_hood_lamp")
-    assert lamp_light is not None
+    assert (lamp_light := hass.states.get("light.range_hood_lamp")) is not None
     assert lamp_light.state == STATE_OFF
 
     # Verify the entity is registered with correct unique_id

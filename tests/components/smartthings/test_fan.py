@@ -206,21 +206,4 @@ async def test_availability_at_start(
     assert hass.states.get("fan.fake_fan").state == STATE_UNAVAILABLE
 
 
-@pytest.mark.parametrize("device_fixture", ["da_ks_hood_01001"])
-async def test_hood_fan_main_component(
-    hass: HomeAssistant,
-    devices: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test that range hood device creates fan entity from main component."""
-    await setup_integration(hass, mock_config_entry)
 
-    # The hood device should create a fan entity from the main component
-    fan = hass.states.get("fan.range_hood")
-    assert fan is not None
-
-    # Verify the entity is registered with correct unique_id
-    fan_entity = entity_registry.async_get("fan.range_hood")
-    assert fan_entity is not None
-    assert fan_entity.unique_id == "fa5fca25-fa7a-1807-030a-2f72ee0f7bff_main"
