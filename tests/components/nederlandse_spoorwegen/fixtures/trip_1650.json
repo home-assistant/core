@@ -715,9 +715,7 @@
             "type": "STATION"
           },
           "operator": "NS",
-          "productTypes": [
-            "TRAIN"
-          ],
+          "productTypes": ["TRAIN"],
           "fares": [
             {
               "priceInCents": 1910,
@@ -1567,9 +1565,7 @@
             "type": "STATION"
           },
           "operator": "NS",
-          "productTypes": [
-            "TRAIN"
-          ],
+          "productTypes": ["TRAIN"],
           "fares": [
             {
               "priceInCents": 1910,
@@ -2407,9 +2403,7 @@
             "type": "STATION"
           },
           "operator": "NS",
-          "productTypes": [
-            "TRAIN"
-          ],
+          "productTypes": ["TRAIN"],
           "fares": [
             {
               "priceInCents": 1910,
@@ -3285,9 +3279,7 @@
             "type": "STATION"
           },
           "operator": "NS",
-          "productTypes": [
-            "TRAIN"
-          ],
+          "productTypes": ["TRAIN"],
           "fares": [
             {
               "priceInCents": 1910,
@@ -3988,9 +3980,7 @@
             "type": "STATION"
           },
           "operator": "NS",
-          "productTypes": [
-            "TRAIN"
-          ],
+          "productTypes": ["TRAIN"],
           "fares": [
             {
               "priceInCents": 1900,
