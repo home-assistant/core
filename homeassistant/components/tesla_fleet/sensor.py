@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 from itertools import chain
 from typing import cast
 
@@ -85,13 +85,6 @@ VEHICLE_DESCRIPTIONS: tuple[TeslaFleetSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         entity_registry_enabled_default=False,
-    ),
-    TeslaFleetSensorEntityDescription(
-        key="charge_state_charge_energy_added",
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
-        suggested_display_precision=1,
     ),
     TeslaFleetSensorEntityDescription(
         key="charge_state_charger_power",
@@ -442,6 +435,15 @@ ENERGY_INFO_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
 )
 
 
+CHARGE_ENERGY_DESCRIPTION = TeslaFleetSensorEntityDescription(
+    key="charge_state_charge_energy_added",
+    state_class=SensorStateClass.TOTAL,
+    native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+    device_class=SensorDeviceClass.ENERGY,
+    suggested_display_precision=1,
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TeslaFleetConfigEntry,
@@ -454,6 +456,10 @@ async def async_setup_entry(
                 TeslaFleetVehicleSensorEntity(vehicle, description)
                 for vehicle in entry.runtime_data.vehicles
                 for description in VEHICLE_DESCRIPTIONS
+            ),
+            (  # Add charge energy sensor with dip filtering
+                TeslaFleetChargeEnergySensorEntity(vehicle, CHARGE_ENERGY_DESCRIPTION)
+                for vehicle in entry.runtime_data.vehicles
             ),
             (  # Add vehicles time sensors
                 TeslaFleetVehicleTimeSensorEntity(vehicle, description)
@@ -520,6 +526,54 @@ class TeslaFleetVehicleSensorEntity(TeslaFleetVehicleEntity, RestoreSensor):
             self._attr_native_value = self.entity_description.value_fn(self._value)
         else:
             self._attr_native_value = None
+
+
+class TeslaFleetChargeEnergySensorEntity(TeslaFleetVehicleEntity, RestoreSensor):
+    """Sensor for charge energy added with last_reset handling.
+
+    Uses TOTAL state class with last_reset to properly track energy across
+    charging sessions. When a new charging session starts (value drops
+    significantly), last_reset is updated to indicate a new accumulation period.
+    """
+
+    entity_description: TeslaFleetSensorEntityDescription
+    _attr_last_reset: datetime | None = None
+
+    def __init__(
+        self,
+        data: TeslaFleetVehicleData,
+        description: TeslaFleetSensorEntityDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        self.entity_description = description
+        super().__init__(data, description.key)
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        if (sensor_data := await self.async_get_last_sensor_data()) is not None:
+            self._attr_native_value = sensor_data.native_value
+
+    def _async_update_attrs(self) -> None:
+        """Update the attributes of the sensor with last_reset handling."""
+        if not self.has:
+            self._attr_native_value = None
+            return
+
+        new_value = self.entity_description.value_fn(self._value)
+        current_value = self._attr_native_value
+
+        # Detect new charging session: value drops significantly (< 50% of previous)
+        # This indicates a new charging session has started
+        if (
+            isinstance(current_value, (int, float))
+            and isinstance(new_value, (int, float))
+            and current_value > 0
+            and new_value < current_value * 0.5
+        ):
+            self._attr_last_reset = dt_util.utcnow()
+
+        self._attr_native_value = new_value
 
 
 class TeslaFleetVehicleTimeSensorEntity(TeslaFleetVehicleEntity, SensorEntity):
