@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from ipaddress import ip_network
 import logging
 from types import ModuleType
 
@@ -18,9 +17,7 @@ from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     ATTR_SERVICE,
-    CONF_API_KEY,
     CONF_PLATFORM,
-    CONF_URL,
     Platform,
 )
 from homeassistant.core import (
@@ -86,13 +83,8 @@ from .const import (
     CHAT_ACTION_UPLOAD_VIDEO,
     CHAT_ACTION_UPLOAD_VIDEO_NOTE,
     CHAT_ACTION_UPLOAD_VOICE,
-    CONF_ALLOWED_CHAT_IDS,
     CONF_CONFIG_ENTRY_ID,
-    CONF_PROXY_URL,
-    CONF_TRUSTED_NETWORKS,
-    DEFAULT_TRUSTED_NETWORKS,
     DOMAIN,
-    PARSER_MD,
     PLATFORM_BROADCAST,
     PLATFORM_POLLING,
     PLATFORM_WEBHOOKS,
@@ -117,35 +109,6 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.All(
-            cv.ensure_list,
-            [
-                vol.Schema(
-                    {
-                        vol.Required(CONF_PLATFORM): vol.In(
-                            (PLATFORM_BROADCAST, PLATFORM_POLLING, PLATFORM_WEBHOOKS)
-                        ),
-                        vol.Required(CONF_API_KEY): cv.string,
-                        vol.Required(CONF_ALLOWED_CHAT_IDS): vol.All(
-                            cv.ensure_list, [vol.Coerce(int)]
-                        ),
-                        vol.Optional(ATTR_PARSER, default=PARSER_MD): cv.string,
-                        vol.Optional(CONF_PROXY_URL): cv.string,
-                        # webhooks
-                        vol.Optional(CONF_URL): cv.url,
-                        vol.Optional(
-                            CONF_TRUSTED_NETWORKS, default=DEFAULT_TRUSTED_NETWORKS
-                        ): vol.All(cv.ensure_list, [ip_network]),
-                    }
-                )
-            ],
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
 
 BASE_SERVICE_SCHEMA = vol.Schema(
     {

@@ -17,15 +17,13 @@ from telegram import (
 )
 from telegram.constants import ChatType
 
-from homeassistant.components.telegram_bot import (
+from homeassistant.components.telegram_bot.const import (
     ATTR_PARSER,
     CONF_ALLOWED_CHAT_IDS,
+    CONF_CHAT_ID,
     CONF_TRUSTED_NETWORKS,
     DOMAIN,
     PARSER_MD,
-)
-from homeassistant.components.telegram_bot.const import (
-    CONF_CHAT_ID,
     PLATFORM_BROADCAST,
     PLATFORM_POLLING,
     PLATFORM_WEBHOOKS,
