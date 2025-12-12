@@ -208,9 +208,11 @@ async def test_async_offline_without_subscription_lock(
     # so this creates a speaker in discovered without _subscription_lock being created.
     # Using PropertyMock to only affect this specific test's soco instance.
     with patch.object(
-        type(soco), "play_mode", new_callable=lambda: property(
+        type(soco),
+        "play_mode",
+        new_callable=lambda: property(
             fget=lambda self: (_ for _ in ()).throw(SoCoException("Connection failed"))
-        )
+        ),
     ):
         config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
