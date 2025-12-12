@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+import base64
 from dataclasses import dataclass
-from typing import Any, Literal, Self, cast, overload
+from typing import Any, ClassVar, Self, cast
 
 from tuya_sharing import CustomerDevice
 
@@ -38,6 +39,7 @@ class TypeInformation[T]:
     As provided by the SDK, from `device.function` / `device.status_range`.
     """
 
+    _DPTYPE: ClassVar[DPType]
     dpcode: str
     type_data: str | None = None
 
@@ -52,32 +54,72 @@ class TypeInformation[T]:
         return raw_value
 
     @classmethod
-    def from_json(cls, dpcode: str, type_data: str) -> Self | None:
+    def _from_json(cls, dpcode: str, type_data: str) -> Self | None:
         """Load JSON string and return a TypeInformation object."""
         return cls(dpcode=dpcode, type_data=type_data)
+
+    @classmethod
+    def find_dpcode(
+        cls,
+        device: CustomerDevice,
+        dpcodes: str | tuple[str, ...] | None,
+        *,
+        prefer_function: bool = False,
+    ) -> Self | None:
+        """Find type information for a matching DP code available for this device."""
+        if dpcodes is None:
+            return None
+
+        if not isinstance(dpcodes, tuple):
+            dpcodes = (dpcodes,)
+
+        lookup_tuple = (
+            (device.function, device.status_range)
+            if prefer_function
+            else (device.status_range, device.function)
+        )
+
+        for dpcode in dpcodes:
+            for device_specs in lookup_tuple:
+                if (
+                    (current_definition := device_specs.get(dpcode))
+                    and parse_dptype(current_definition.type) is cls._DPTYPE
+                    and (
+                        type_information := cls._from_json(
+                            dpcode=dpcode, type_data=current_definition.values
+                        )
+                    )
+                ):
+                    return type_information
+
+        return None
 
 
 @dataclass(kw_only=True)
 class BitmapTypeInformation(TypeInformation[int]):
     """Bitmap type information."""
 
+    _DPTYPE = DPType.BITMAP
+
     label: list[str]
 
     @classmethod
-    def from_json(cls, dpcode: str, type_data: str) -> Self | None:
+    def _from_json(cls, dpcode: str, type_data: str) -> Self | None:
         """Load JSON string and return a BitmapTypeInformation object."""
-        if not (parsed := json_loads_object(type_data)):
+        if not (parsed := cast(dict[str, Any] | None, json_loads_object(type_data))):
             return None
         return cls(
             dpcode=dpcode,
             type_data=type_data,
-            **cast(dict[str, list[str]], parsed),
+            label=parsed["label"],
         )
 
 
 @dataclass(kw_only=True)
 class BooleanTypeInformation(TypeInformation[bool]):
     """Boolean type information."""
+
+    _DPTYPE = DPType.BOOLEAN
 
     def process_raw_value(
         self, raw_value: Any | None, device: CustomerDevice
@@ -107,6 +149,8 @@ class BooleanTypeInformation(TypeInformation[bool]):
 class EnumTypeInformation(TypeInformation[str]):
     """Enum type information."""
 
+    _DPTYPE = DPType.ENUM
+
     range: list[str]
 
     def process_raw_value(
@@ -133,7 +177,7 @@ class EnumTypeInformation(TypeInformation[str]):
         return raw_value
 
     @classmethod
-    def from_json(cls, dpcode: str, type_data: str) -> Self | None:
+    def _from_json(cls, dpcode: str, type_data: str) -> Self | None:
         """Load JSON string and return an EnumTypeInformation object."""
         if not (parsed := json_loads_object(type_data)):
             return None
@@ -147,6 +191,8 @@ class EnumTypeInformation(TypeInformation[str]):
 @dataclass(kw_only=True)
 class IntegerTypeInformation(TypeInformation[float]):
     """Integer type information."""
+
+    _DPTYPE = DPType.INTEGER
 
     min: int
     max: int
@@ -223,7 +269,7 @@ class IntegerTypeInformation(TypeInformation[float]):
         return raw_value / (10**self.scale)
 
     @classmethod
-    def from_json(cls, dpcode: str, type_data: str) -> Self | None:
+    def _from_json(cls, dpcode: str, type_data: str) -> Self | None:
         """Load JSON string and return an IntegerTypeInformation object."""
         if not (parsed := cast(dict[str, Any] | None, json_loads_object(type_data))):
             return None
@@ -239,101 +285,38 @@ class IntegerTypeInformation(TypeInformation[float]):
         )
 
 
-_TYPE_INFORMATION_MAPPINGS: dict[DPType, type[TypeInformation]] = {
-    DPType.BITMAP: BitmapTypeInformation,
-    DPType.BOOLEAN: BooleanTypeInformation,
-    DPType.ENUM: EnumTypeInformation,
-    DPType.INTEGER: IntegerTypeInformation,
-    DPType.JSON: TypeInformation,
-    DPType.RAW: TypeInformation,
-    DPType.STRING: TypeInformation,
-}
+@dataclass(kw_only=True)
+class JsonTypeInformation(TypeInformation[dict[str, Any]]):
+    """Json type information."""
+
+    _DPTYPE = DPType.JSON
+
+    def process_raw_value(
+        self, raw_value: Any | None, device: CustomerDevice
+    ) -> dict[str, Any] | None:
+        """Read and process raw value against this type information."""
+        if raw_value is None:
+            return None
+        return json_loads_object(raw_value)
 
 
-@overload
-def find_dpcode(
-    device: CustomerDevice,
-    dpcodes: str | tuple[str, ...] | None,
-    *,
-    prefer_function: bool = False,
-    dptype: Literal[DPType.BITMAP],
-) -> BitmapTypeInformation | None: ...
+@dataclass(kw_only=True)
+class RawTypeInformation(TypeInformation[bytes]):
+    """Raw type information."""
+
+    _DPTYPE = DPType.RAW
+
+    def process_raw_value(
+        self, raw_value: Any | None, device: CustomerDevice
+    ) -> bytes | None:
+        """Read and process raw value against this type information."""
+        if raw_value is None:
+            return None
+        return base64.b64decode(raw_value)
 
 
-@overload
-def find_dpcode(
-    device: CustomerDevice,
-    dpcodes: str | tuple[str, ...] | None,
-    *,
-    prefer_function: bool = False,
-    dptype: Literal[DPType.BOOLEAN],
-) -> BooleanTypeInformation | None: ...
+@dataclass(kw_only=True)
+class StringTypeInformation(TypeInformation[str]):
+    """String type information."""
 
-
-@overload
-def find_dpcode(
-    device: CustomerDevice,
-    dpcodes: str | tuple[str, ...] | None,
-    *,
-    prefer_function: bool = False,
-    dptype: Literal[DPType.ENUM],
-) -> EnumTypeInformation | None: ...
-
-
-@overload
-def find_dpcode(
-    device: CustomerDevice,
-    dpcodes: str | tuple[str, ...] | None,
-    *,
-    prefer_function: bool = False,
-    dptype: Literal[DPType.INTEGER],
-) -> IntegerTypeInformation | None: ...
-
-
-@overload
-def find_dpcode(
-    device: CustomerDevice,
-    dpcodes: str | tuple[str, ...] | None,
-    *,
-    prefer_function: bool = False,
-    dptype: Literal[DPType.JSON, DPType.RAW],
-) -> TypeInformation | None: ...
-
-
-def find_dpcode(
-    device: CustomerDevice,
-    dpcodes: str | tuple[str, ...] | None,
-    *,
-    prefer_function: bool = False,
-    dptype: DPType,
-) -> TypeInformation | None:
-    """Find type information for a matching DP code available for this device."""
-    if not (type_information_cls := _TYPE_INFORMATION_MAPPINGS.get(dptype)):
-        raise NotImplementedError(f"find_dpcode not supported for {dptype}")
-
-    if dpcodes is None:
-        return None
-
-    if not isinstance(dpcodes, tuple):
-        dpcodes = (dpcodes,)
-
-    lookup_tuple = (
-        (device.function, device.status_range)
-        if prefer_function
-        else (device.status_range, device.function)
-    )
-
-    for dpcode in dpcodes:
-        for device_specs in lookup_tuple:
-            if (
-                (current_definition := device_specs.get(dpcode))
-                and parse_dptype(current_definition.type) is dptype
-                and (
-                    type_information := type_information_cls.from_json(
-                        dpcode=dpcode, type_data=current_definition.values
-                    )
-                )
-            ):
-                return type_information
-
-    return None
+    _DPTYPE = DPType.STRING
