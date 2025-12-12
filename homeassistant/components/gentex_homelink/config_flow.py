@@ -39,7 +39,9 @@ class SRPFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """Ask for username and password."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            self._async_abort_entries_match({CONF_EMAIL: user_input[CONF_EMAIL]})
+            await self.async_set_unique_id(user_input[CONF_EMAIL])
+            if self.source != SOURCE_REAUTH:
+                self._abort_if_unique_id_configured()
 
             srp_auth = SRPAuth()
             try:
