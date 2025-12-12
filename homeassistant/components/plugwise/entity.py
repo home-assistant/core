@@ -35,21 +35,21 @@ class PlugwiseEntity(CoordinatorEntity[PlugwiseDataUpdateCoordinator]):
         entry = coordinator.config_entry
         data = coordinator.data[device_id]
 
-        # Determine configuration URL if this is the gateway
+        # Link configuration-URL for the gateway device
         configuration_url = (
             f"http://{entry.data[CONF_HOST]}"
             if device_id == gateway_id and entry
             else None
         )
 
-        # Build connection set
+        # Build connections set
         connections = set()
         if mac := data.get("mac_address"):
             connections.add((CONNECTION_NETWORK_MAC, mac))
         if zigbee_mac := data.get("zigbee_mac_address"):
             connections.add((CONNECTION_ZIGBEE, zigbee_mac))
 
-        # Base device info
+        # Set base device info
         self._attr_device_info = DeviceInfo(
             configuration_url=configuration_url,
             identifiers={(DOMAIN, device_id)},
@@ -62,7 +62,7 @@ class PlugwiseEntity(CoordinatorEntity[PlugwiseDataUpdateCoordinator]):
             hw_version=data.get("hardware"),
         )
 
-        # Add extra info if not the gateway
+        # Add extra info if not the gateway device
         if device_id != gateway_id:
             self._attr_device_info.update(
                 {
