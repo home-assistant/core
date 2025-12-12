@@ -9,8 +9,8 @@ from typing import Any, Concatenate
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from pyeufysecurity import Camera, EufySecurityError, InvalidCredentialsError
 
-from .api import Camera, EufySecurityError, InvalidCredentialsError
 from .const import ATTRIBUTION, DOMAIN
 from .coordinator import EufySecurityCoordinator
 

@@ -11,8 +11,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-
-from .api import (
+from pyeufysecurity import (
     CannotConnectError,
     CaptchaRequiredError,
     EufySecurityAPI,
@@ -21,6 +20,7 @@ from .api import (
     InvalidCredentialsError,
     async_login,
 )
+
 from .const import (
     CONF_API_BASE,
     CONF_CONFIG_ENTRY_MINOR_VERSION,

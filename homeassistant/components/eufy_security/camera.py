@@ -20,8 +20,8 @@ from homeassistant.components.ffmpeg import get_ffmpeg_manager
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from pyeufysecurity import Camera, EufySecurityError
 
-from .api import Camera, EufySecurityError
 from .const import (
     ATTR_HARDWARE_VERSION,
     ATTR_IP_ADDRESS,
