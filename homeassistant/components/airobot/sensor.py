@@ -105,8 +105,8 @@ SENSOR_TYPES: tuple[AirobotSensorEntityDescription, ...] = (
         value_fn=lambda status: status.errors,
     ),
     AirobotSensorEntityDescription(
-        key="last_boot_time",
-        translation_key="last_restart",
+        key="device_uptime",
+        translation_key="device_uptime",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda status: uptime_to_stable_datetime(status.device_uptime),
