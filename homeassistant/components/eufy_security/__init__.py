@@ -46,9 +46,9 @@ async def async_setup_entry(
 
     # Create API instance
     api = EufySecurityAPI(
-        session,
         entry.data[CONF_EMAIL],
         entry.data[CONF_PASSWORD],
+        session,
     )
 
     # Try to restore crypto state from config entry to avoid re-authentication
