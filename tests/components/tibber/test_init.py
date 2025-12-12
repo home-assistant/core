@@ -38,7 +38,6 @@ async def test_data_api_runtime_creates_client(hass: HomeAssistant) -> None:
     runtime = TibberRuntimeData(
         session=session,
         tibber_connection=MagicMock(),
-        data_api_coordinator=None,
     )
 
     with patch(
@@ -76,7 +75,6 @@ async def test_data_api_runtime_missing_token_raises(hass: HomeAssistant) -> Non
     runtime = TibberRuntimeData(
         session=session,
         tibber_connection=MagicMock(),
-        data_api_coordinator=None,
     )
 
     with pytest.raises(ConfigEntryAuthFailed):
