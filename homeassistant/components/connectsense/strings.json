@@ -19,7 +19,8 @@
       }
     },
     "abort": {
-      "already_configured": "This Rebooter Pro is already configured."
+      "already_configured": "This Rebooter Pro is already configured.",
+      "cannot_connect": "Failed to connect to the device."
     },
     "error": {
       "cannot_connect": "Failed to connect. Check the host and try again.",

@@ -289,6 +289,29 @@ class RebooterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         serial = self._zc["serial"]
 
         if user_input is not None:
+            try:
+                if not await _probe_serial_over_https(self.hass, host):
+                    return self.async_show_form(
+                        step_id="zeroconf_confirm",
+                        data_schema=vol.Schema({}),
+                        errors={"base": "cannot_connect"},
+                        description_placeholders={
+                            "serial": serial,
+                            "model": self._zc["model"],
+                        },
+                    )
+            except Exception as exc:
+                _LOGGER.debug("Zeroconf confirm: probe /info failed for %s: %r", host, exc)
+                return self.async_show_form(
+                    step_id="zeroconf_confirm",
+                    data_schema=vol.Schema({}),
+                    errors={"base": "cannot_connect"},
+                    description_placeholders={
+                        "serial": serial,
+                        "model": self._zc["model"],
+                    },
+                )
+
             title = f"{self._zc['model']} {serial}"
             return self.async_create_entry(title=title, data={CONF_HOST: host, **user_input})
 

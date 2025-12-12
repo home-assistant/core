@@ -112,6 +112,7 @@ async def test_zeroconf_duplicate_aborts(hass):
 
 async def test_zeroconf_probe_failure_falls_back(hass):
     host = "rebooter-pro.local"
+    # Probe is only executed on confirm now; it fails and aborts
     with patch.object(config_flow, "_probe_serial_over_https", side_effect=Exception):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -125,6 +126,47 @@ async def test_zeroconf_probe_failure_falls_back(hass):
         assert result["type"] == "form"
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], user_input={})
 
-    assert result2["type"] == "create_entry"
-    assert result2["data"][CONF_HOST] == host
-    assert host in result2["title"]
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_zeroconf_name_serial_probe_failure_aborts(hass):
+    host = "rebooter-pro.local"
+    # Serial in service name, but probe fails -> abort
+    with patch.object(config_flow, "_probe_serial_over_https", return_value=None):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "zeroconf"},
+            data={
+                "hostname": f"{host}.",
+                "properties": {"api": "local", "protocol": "https"},
+                "name": "Rebooter Pro 123456._https._tcp.local.",
+            },
+        )
+        assert result["type"] == "form"
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], user_input={})
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_zeroconf_confirm_reprobes_and_aborts_on_failure(hass):
+    host = "rebooter-pro.local"
+    serial = "123456"
+
+    # Service name provides serial; confirm probe fails
+    with patch.object(config_flow, "_probe_serial_over_https", side_effect=[None]):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "zeroconf"},
+            data={
+                "hostname": f"{host}.",
+                "properties": {"api": "local", "protocol": "https"},
+                "name": f"Rebooter Pro {serial}._https._tcp.local.",
+            },
+        )
+        assert result["type"] == "form"
+        confirm = await hass.config_entries.flow.async_configure(result["flow_id"], user_input={})
+
+    assert confirm["type"] == "form"
+    assert confirm["errors"] == {"base": "cannot_connect"}
