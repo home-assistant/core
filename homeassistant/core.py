@@ -262,6 +262,8 @@ def async_get_hass_or_none() -> HomeAssistant | None:
 
 
 class ReleaseChannel(enum.StrEnum):
+    """Release channel."""
+
     BETA = "beta"
     DEV = "dev"
     NIGHTLY = "nightly"
