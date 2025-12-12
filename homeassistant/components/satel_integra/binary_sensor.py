@@ -118,8 +118,8 @@ class SatelIntegraZoneBinarySensor(SatelIntegraBaseBinarySensor):
 
     def _get_status_from_coordinator(self) -> bool | None:
         """Method to get sensor status from coordinator data."""
-        if self._device_number in self.coordinator.data.zones:
-            return self.coordinator.data.zones[self._device_number] == 1
+        if self._device_number in self.coordinator.zones:
+            return self.coordinator.zones[self._device_number] == 1
 
         return None
 
@@ -129,7 +129,7 @@ class SatelIntegraOutputBinarySensor(SatelIntegraBaseBinarySensor):
 
     def _get_status_from_coordinator(self) -> bool | None:
         """Method to get sensor status from coordinator data."""
-        if self._device_number in self.coordinator.data.outputs:
-            return self.coordinator.data.outputs[self._device_number] == 1
+        if self._device_number in self.coordinator.outputs:
+            return self.coordinator.outputs[self._device_number] == 1
 
         return None

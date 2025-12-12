@@ -1,6 +1,5 @@
 """Coordinator for Satel Integra."""
 
-from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING
 
@@ -30,19 +29,14 @@ type SatelConfigEntry = ConfigEntry[SatelIntegraCoordinator]
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class SatelIntegraData:
-    """Class for Satel Integra data."""
-
-    zones: dict[int, int]
-    outputs: dict[int, int]
-    partitions: dict[AlarmState, list[int]]
-
-
-class SatelIntegraCoordinator(DataUpdateCoordinator[SatelIntegraData]):
+class SatelIntegraCoordinator(DataUpdateCoordinator[None]):
     """Coordinator for Satel Integra."""
 
     controller: AsyncSatel
+
+    zones: dict[int, int] = {}
+    outputs: dict[int, int] = {}
+    partitions: dict[AlarmState, list[int]] = {}
 
     def __init__(self, hass: HomeAssistant, entry: SatelConfigEntry) -> None:
         """Initialize the coordinator."""
@@ -53,8 +47,6 @@ class SatelIntegraCoordinator(DataUpdateCoordinator[SatelIntegraData]):
             name=DOMAIN,
             config_entry=entry,
         )
-
-        self.data = SatelIntegraData(zones={}, outputs={}, partitions={})
 
         host = entry.data[CONF_HOST]
         port = entry.data[CONF_PORT]
@@ -103,30 +95,24 @@ class SatelIntegraCoordinator(DataUpdateCoordinator[SatelIntegraData]):
         """Send status update received from alarm to Home Assistant."""
         _LOGGER.debug("Sending request to update panel state")
 
-        data = self.data
-        data.partitions = self.controller.partition_states
-
-        self.async_set_updated_data(data)
+        self.partitions = self.controller.partition_states
+        self.async_set_updated_data(None)
 
     @callback
     def zones_update_callback(self, status: dict[str, dict[int, int]]):
         """Update zone objects as per notification from the alarm."""
         _LOGGER.debug("Zones callback, status: %s", status)
 
-        data = self.data
-        data.zones = status[ZONES]
-
-        self.async_set_updated_data(data)
+        self.zones = status[ZONES]
+        self.async_set_updated_data(None)
 
     @callback
     def outputs_update_callback(self, status: dict[str, dict[int, int]]):
         """Update zone objects as per notification from the alarm."""
         _LOGGER.debug("Outputs updated callback , status: %s", status)
 
-        data = self.data
-        data.outputs = status["outputs"]
-
-        self.async_set_updated_data(data)
+        self.outputs = status["outputs"]
+        self.async_set_updated_data(None)
 
     async def start_controller(self) -> None:
         """Start controller connection."""
@@ -136,9 +122,6 @@ class SatelIntegraCoordinator(DataUpdateCoordinator[SatelIntegraData]):
 
         if TYPE_CHECKING:
             assert self.config_entry
-
-        # Create a task instead of adding a tracking job, since this task will
-        # run until the connection to satel_integra is closed.
 
         self.config_entry.async_create_background_task(
             self.hass,

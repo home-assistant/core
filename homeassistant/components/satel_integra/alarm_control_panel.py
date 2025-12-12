@@ -115,8 +115,8 @@ class SatelIntegraAlarmPanel(SatelIntegraEntity, AlarmControlPanelEntity):
 
         for satel_state, ha_state in ALARM_STATE_MAP.items():
             if (
-                satel_state in self.coordinator.data.partitions
-                and self._device_number in self.coordinator.data.partitions[satel_state]
+                satel_state in self.coordinator.partitions
+                and self._device_number in self.coordinator.partitions[satel_state]
             ):
                 return ha_state
 
