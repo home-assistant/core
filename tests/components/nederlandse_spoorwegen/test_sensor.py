@@ -285,7 +285,7 @@ async def test_sensor_with_time_filtering(
     # Verify first trip: is NOT before 17:00 (i.e., filtered trips are excluded)
     assert hour >= 17, (
         f"Expected first trip at or after 17:00 Amsterdam time, but got {hour}:{minute:02d}. "
-        "This means trips before the configured time (16:24, 16:34, 16:46, 16:54) "
+        "This means trips before the configured time (16:41, 16:50, 16:59) "
         "were NOT filtered out by the time window filter."
     )
 
