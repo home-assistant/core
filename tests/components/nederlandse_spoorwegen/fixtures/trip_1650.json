@@ -5,7 +5,7 @@
       "idx": 0,
       "uid": "arnu|fromStation=8400058|requestedFromStation=8400058|toStation=8400530|requestedToStation=8400530|viaStation=8400319|plannedFromTime=2025-09-15T16:41:00+02:00|plannedArrivalTime=2025-09-15T18:37:00+02:00|excludeHighSpeedTrains=false|searchForAccessibleTrip=false|localTrainsOnly=false|disabledTransportModalities=BUS,FERRY,TRAM,METRO|travelAssistance=false|tripSummaryHash=2688447243",
       "ctxRecon": "arnu|fromStation=8400058|requestedFromStation=8400058|toStation=8400530|requestedToStation=8400530|viaStation=8400319|plannedFromTime=2025-09-15T16:41:00+02:00|plannedArrivalTime=2025-09-15T18:37:00+02:00|excludeHighSpeedTrains=false|searchForAccessibleTrip=false|localTrainsOnly=false|disabledTransportModalities=BUS,FERRY,TRAM,METRO|travelAssistance=false|tripSummaryHash=2688447243",
-      "sourceCtxRecon": "\u00b6HKI\u00b6T$A=1@O=Amsterdam Centraal@L=1100836@a=128@$A=1@O='s-Hertogenbosch@L=1100879@a=128@$202509121641$202509121735$IC 2961 $$1$$$$$$\u00a7W$A=1@O='s-Hertogenbosch@L=1100879@a=128@$A=1@O='s-Hertogenbosch@L=1100810@a=128@$202509121735$202509121737$$$1$$$$$$\u00a7T$A=1@O='s-Hertogenbosch@L=1100810@a=128@$A=1@O=Breda@L=1101034@a=128@$202509121741$202509121810$IC 3661 $$1$$$$$$\u00a7W$A=1@O=Breda@L=1101034@a=128@$A=1@O=Breda@L=1100942@a=128@$202509121810$202509121812$$$1$$$$$$\u00a7T$A=1@O=Breda@L=1100942@a=128@$A=1@O=Rotterdam Centraal@L=1100726@a=128@$202509121814$202509121837$ICD 1871$$1$$$$$$\u00b6KC\u00b6#VE#2#CF#100#CA#0#CM#0#SICT#0#AM#16465#AM2#0#RT#31#\u00b6KCC\u00b6#VE#0#ERG#261#HIN#390#ECK#9641|9641|9757|9757|0|0|66021|9640|1|0|2|0|0|-2147483648#\u00b6KRCC\u00b6#VE#1#MRTF#",
+      "sourceCtxRecon": "¶HKI¶T$A=1@O=Amsterdam Centraal@L=1100836@a=128@$A=1@O='s-Hertogenbosch@L=1100879@a=128@$202509121641$202509121735$IC 2961 $$1$$$$$$§W$A=1@O='s-Hertogenbosch@L=1100879@a=128@$A=1@O='s-Hertogenbosch@L=1100810@a=128@$202509121735$202509121737$$$1$$$$$$§T$A=1@O='s-Hertogenbosch@L=1100810@a=128@$A=1@O=Breda@L=1101034@a=128@$202509121741$202509121810$IC 3661 $$1$$$$$$§W$A=1@O=Breda@L=1101034@a=128@$A=1@O=Breda@L=1100942@a=128@$202509121810$202509121812$$$1$$$$$$§T$A=1@O=Breda@L=1100942@a=128@$A=1@O=Rotterdam Centraal@L=1100726@a=128@$202509121814$202509121837$ICD 1871$$1$$$$$$¶KC¶#VE#2#CF#100#CA#0#CM#0#SICT#0#AM#16465#AM2#0#RT#31#¶KCC¶#VE#0#ERG#261#HIN#390#ECK#9641|9641|9757|9757|0|0|66021|9640|1|0|2|0|0|-2147483648#¶KRCC¶#VE#1#MRTF#",
       "plannedDurationInMinutes": 116,
       "actualDurationInMinutes": 116,
       "transfers": 2,
@@ -751,9 +751,7 @@
             "type": "STATION"
           },
           "operator": "NS",
-          "productTypes": [
-            "TRAIN"
-          ],
+          "productTypes": ["TRAIN"],
           "fares": [
             {
               "priceInCents": 2010,
@@ -855,7 +853,7 @@
       "idx": 1,
       "uid": "arnu|fromStation=8400058|requestedFromStation=8400058|toStation=8400530|requestedToStation=8400530|viaStation=8400319|plannedFromTime=2025-09-15T16:41:00+02:00|plannedArrivalTime=2025-09-15T18:55:00+02:00|excludeHighSpeedTrains=false|searchForAccessibleTrip=false|localTrainsOnly=false|disabledTransportModalities=BUS,FERRY,TRAM,METRO|travelAssistance=false|tripSummaryHash=3113411372",
       "ctxRecon": "arnu|fromStation=8400058|requestedFromStation=8400058|toStation=8400530|requestedToStation=8400530|viaStation=8400319|plannedFromTime=2025-09-15T16:41:00+02:00|plannedArrivalTime=2025-09-15T18:55:00+02:00|excludeHighSpeedTrains=false|searchForAccessibleTrip=false|localTrainsOnly=false|disabledTransportModalities=BUS,FERRY,TRAM,METRO|travelAssistance=false|tripSummaryHash=3113411372",
-      "sourceCtxRecon": "\u00b6HKI\u00b6T$A=1@O=Amsterdam Centraal@L=1100836@a=128@$A=1@O='s-Hertogenbosch@L=1100879@a=128@$202509121641$202509121735$IC 2961 $$1$$$$$$\u00a7W$A=1@O='s-Hertogenbosch@L=1100879@a=128@$A=1@O='s-Hertogenbosch@L=1100810@a=128@$202509121735$202509121737$$$1$$$$$$\u00a7T$A=1@O='s-Hertogenbosch@L=1100810@a=128@$A=1@O=Breda@L=1101034@a=128@$202509121741$202509121810$IC 3661 $$1$$$$$$\u00a7W$A=1@O=Breda@L=1101034@a=128@$A=1@O=Breda@L=1100828@a=128@$202509121810$202509121814$$$1$$$$$$\u00a7T$A=1@O=Breda@L=1100828@a=128@$A=1@O=Rotterdam Centraal@L=1101035@a=128@$202509121826$202509121855$ECC 9255$$1$$$$$$\u00b6KC\u00b6#VE#2#CF#100#CA#0#CM#0#SICT#0#AM#16465#AM2#0#RT#31#\u00b6KCC\u00b6#VE#0#ERG#45317#HIN#390#ECK#9641|9641|9757|9775|0|0|485|9640|2|0|8|0|0|-2147483648#\u00b6KRCC\u00b6#VE#1#MRTF#",
+      "sourceCtxRecon": "¶HKI¶T$A=1@O=Amsterdam Centraal@L=1100836@a=128@$A=1@O='s-Hertogenbosch@L=1100879@a=128@$202509121641$202509121735$IC 2961 $$1$$$$$$§W$A=1@O='s-Hertogenbosch@L=1100879@a=128@$A=1@O='s-Hertogenbosch@L=1100810@a=128@$202509121735$202509121737$$$1$$$$$$§T$A=1@O='s-Hertogenbosch@L=1100810@a=128@$A=1@O=Breda@L=1101034@a=128@$202509121741$202509121810$IC 3661 $$1$$$$$$§W$A=1@O=Breda@L=1101034@a=128@$A=1@O=Breda@L=1100828@a=128@$202509121810$202509121814$$$1$$$$$$§T$A=1@O=Breda@L=1100828@a=128@$A=1@O=Rotterdam Centraal@L=1101035@a=128@$202509121826$202509121855$ECC 9255$$1$$$$$$¶KC¶#VE#2#CF#100#CA#0#CM#0#SICT#0#AM#16465#AM2#0#RT#31#¶KCC¶#VE#0#ERG#45317#HIN#390#ECK#9641|9641|9757|9775|0|0|485|9640|2|0|8|0|0|-2147483648#¶KRCC¶#VE#1#MRTF#",
       "plannedDurationInMinutes": 134,
       "actualDurationInMinutes": 134,
       "transfers": 2,
@@ -1601,9 +1599,7 @@
             "type": "STATION"
           },
           "operator": "NS, NS Int",
-          "productTypes": [
-            "TRAIN"
-          ],
+          "productTypes": ["TRAIN"],
           "fares": [
             {
               "priceInCents": 2010,
@@ -1705,7 +1701,7 @@
       "idx": 2,
       "uid": "arnu|fromStation=8400058|requestedFromStation=8400058|toStation=8400530|requestedToStation=8400530|viaStation=8400319|plannedFromTime=2025-09-15T17:11:00+02:00|plannedArrivalTime=2025-09-15T19:07:00+02:00|excludeHighSpeedTrains=false|searchForAccessibleTrip=false|localTrainsOnly=false|disabledTransportModalities=BUS,FERRY,TRAM,METRO|travelAssistance=false|tripSummaryHash=538302543",
       "ctxRecon": "arnu|fromStation=8400058|requestedFromStation=8400058|toStation=8400530|requestedToStation=8400530|viaStation=8400319|plannedFromTime=2025-09-15T17:11:00+02:00|plannedArrivalTime=2025-09-15T19:07:00+02:00|excludeHighSpeedTrains=false|searchForAccessibleTrip=false|localTrainsOnly=false|disabledTransportModalities=BUS,FERRY,TRAM,METRO|travelAssistance=false|tripSummaryHash=538302543",
-      "sourceCtxRecon": "\u00b6HKI\u00b6T$A=1@O=Amsterdam Centraal@L=1100836@a=128@$A=1@O='s-Hertogenbosch@L=1100879@a=128@$202509121711$202509121805$IC 2963 $$1$$$$$$\u00a7W$A=1@O='s-Hertogenbosch@L=1100879@a=128@$A=1@O='s-Hertogenbosch@L=1100810@a=128@$202509121805$202509121807$$$1$$$$$$\u00a7T$A=1@O='s-Hertogenbosch@L=1100810@a=128@$A=1@O=Breda@L=1101034@a=128@$202509121811$202509121840$IC 3663 $$1$$$$$$\u00a7W$A=1@O=Breda@L=1101034@a=128@$A=1@O=Breda@L=1100942@a=128@$202509121840$202509121842$$$1$$$$$$\u00a7T$A=1@O=Breda@L=1100942@a=128@$A=1@O=Rotterdam Centraal@L=1100726@a=128@$202509121844$202509121907$ICD 1873$$1$$$$$$\u00b6KC\u00b6#VE#2#CF#100#CA#0#CM#0#SICT#0#AM#16465#AM2#0#RT#31#\u00b6KCC\u00b6#VE#0#ERG#261#HIN#390#ECK#9671|9671|9787|9787|0|0|66021|9642|3|0|2|0|0|-2147483648#\u00b6KRCC\u00b6#VE#1#MRTF#",
+      "sourceCtxRecon": "¶HKI¶T$A=1@O=Amsterdam Centraal@L=1100836@a=128@$A=1@O='s-Hertogenbosch@L=1100879@a=128@$202509121711$202509121805$IC 2963 $$1$$$$$$§W$A=1@O='s-Hertogenbosch@L=1100879@a=128@$A=1@O='s-Hertogenbosch@L=1100810@a=128@$202509121805$202509121807$$$1$$$$$$§T$A=1@O='s-Hertogenbosch@L=1100810@a=128@$A=1@O=Breda@L=1101034@a=128@$202509121811$202509121840$IC 3663 $$1$$$$$$§W$A=1@O=Breda@L=1101034@a=128@$A=1@O=Breda@L=1100942@a=128@$202509121840$202509121842$$$1$$$$$$§T$A=1@O=Breda@L=1100942@a=128@$A=1@O=Rotterdam Centraal@L=1100726@a=128@$202509121844$202509121907$ICD 1873$$1$$$$$$¶KC¶#VE#2#CF#100#CA#0#CM#0#SICT#0#AM#16465#AM2#0#RT#31#¶KCC¶#VE#0#ERG#261#HIN#390#ECK#9671|9671|9787|9787|0|0|66021|9642|3|0|2|0|0|-2147483648#¶KRCC¶#VE#1#MRTF#",
       "plannedDurationInMinutes": 116,
       "actualDurationInMinutes": 116,
       "transfers": 2,
@@ -2439,9 +2435,7 @@
             "type": "STATION"
           },
           "operator": "NS",
-          "productTypes": [
-            "TRAIN"
-          ],
+          "productTypes": ["TRAIN"],
           "fares": [
             {
               "priceInCents": 2010,
@@ -2543,7 +2537,7 @@
       "idx": 3,
       "uid": "arnu|fromStation=8400058|requestedFromStation=8400058|toStation=8400530|requestedToStation=8400530|viaStation=8400319|plannedFromTime=2025-09-15T17:11:00+02:00|plannedArrivalTime=2025-09-15T19:25:00+02:00|excludeHighSpeedTrains=false|searchForAccessibleTrip=false|localTrainsOnly=false|disabledTransportModalities=BUS,FERRY,TRAM,METRO|travelAssistance=false|tripSummaryHash=453282296",
       "ctxRecon": "arnu|fromStation=8400058|requestedFromStation=8400058|toStation=8400530|requestedToStation=8400530|viaStation=8400319|plannedFromTime=2025-09-15T17:11:00+02:00|plannedArrivalTime=2025-09-15T19:25:00+02:00|excludeHighSpeedTrains=false|searchForAccessibleTrip=false|localTrainsOnly=false|disabledTransportModalities=BUS,FERRY,TRAM,METRO|travelAssistance=false|tripSummaryHash=453282296",
-      "sourceCtxRecon": "\u00b6HKI\u00b6T$A=1@O=Amsterdam Centraal@L=1100836@a=128@$A=1@O='s-Hertogenbosch@L=1100879@a=128@$202509121711$202509121805$IC 2963 $$1$$$$$$\u00a7W$A=1@O='s-Hertogenbosch@L=1100879@a=128@$A=1@O='s-Hertogenbosch@L=1101032@a=128@$202509121805$202509121809$$$1$$$$$$\u00a7T$A=1@O='s-Hertogenbosch@L=1101032@a=128@$A=1@O=Utrecht Centraal@L=1100715@a=128@$202509121809$202509121835$IC 3564 $$1$$$$$$\u00a7W$A=1@O=Utrecht Centraal@L=1100715@a=128@$A=1@O=Utrecht Centraal@L=1100680@a=128@$202509121835$202509121839$$$1$$$$$$\u00a7T$A=1@O=Utrecht Centraal@L=1100680@a=128@$A=1@O=Rotterdam Centraal@L=1100690@a=128@$202509121847$202509121925$IC 662  $$1$$$$$$\u00b6KC\u00b6#VE#2#CF#100#CA#0#CM#0#SICT#0#AM#16465#AM2#0#RT#31#\u00b6KCC\u00b6#VE#0#ERG#45317#HIN#460#ECK#9671|9671|9787|9805|0|0|66021|9642|4|0|8|0|0|-2147483648#\u00b6KRCC\u00b6#VE#1#MRTF#",
+      "sourceCtxRecon": "¶HKI¶T$A=1@O=Amsterdam Centraal@L=1100836@a=128@$A=1@O='s-Hertogenbosch@L=1100879@a=128@$202509121711$202509121805$IC 2963 $$1$$$$$$§W$A=1@O='s-Hertogenbosch@L=1100879@a=128@$A=1@O='s-Hertogenbosch@L=1101032@a=128@$202509121805$202509121809$$$1$$$$$$§T$A=1@O='s-Hertogenbosch@L=1101032@a=128@$A=1@O=Utrecht Centraal@L=1100715@a=128@$202509121809$202509121835$IC 3564 $$1$$$$$$§W$A=1@O=Utrecht Centraal@L=1100715@a=128@$A=1@O=Utrecht Centraal@L=1100680@a=128@$202509121835$202509121839$$$1$$$$$$§T$A=1@O=Utrecht Centraal@L=1100680@a=128@$A=1@O=Rotterdam Centraal@L=1100690@a=128@$202509121847$202509121925$IC 662  $$1$$$$$$¶KC¶#VE#2#CF#100#CA#0#CM#0#SICT#0#AM#16465#AM2#0#RT#31#¶KCC¶#VE#0#ERG#45317#HIN#460#ECK#9671|9671|9787|9805|0|0|66021|9642|4|0|8|0|0|-2147483648#¶KRCC¶#VE#1#MRTF#",
       "plannedDurationInMinutes": 134,
       "actualDurationInMinutes": 134,
       "transfers": 2,
@@ -3315,9 +3309,7 @@
             "type": "STATION"
           },
           "operator": "NS",
-          "productTypes": [
-            "TRAIN"
-          ],
+          "productTypes": ["TRAIN"],
           "fares": [
             {
               "priceInCents": 2010,
@@ -3419,7 +3411,7 @@
       "idx": 4,
       "uid": "arnu|fromStation=8400058|requestedFromStation=8400058|toStation=8400530|requestedToStation=8400530|viaStation=8400319|plannedFromTime=2025-09-15T17:11:00+02:00|plannedArrivalTime=2025-09-15T19:45:00+02:00|excludeHighSpeedTrains=false|searchForAccessibleTrip=false|localTrainsOnly=false|disabledTransportModalities=BUS,FERRY,TRAM,METRO|travelAssistance=false|tripSummaryHash=1370510863",
       "ctxRecon": "arnu|fromStation=8400058|requestedFromStation=8400058|toStation=8400530|requestedToStation=8400530|viaStation=8400319|plannedFromTime=2025-09-15T17:11:00+02:00|plannedArrivalTime=2025-09-15T19:45:00+02:00|excludeHighSpeedTrains=false|searchForAccessibleTrip=false|localTrainsOnly=false|disabledTransportModalities=BUS,FERRY,TRAM,METRO|travelAssistance=false|tripSummaryHash=1370510863",
-      "sourceCtxRecon": "\u00b6HKI\u00b6T$A=1@O=Amsterdam Centraal@L=1100836@a=128@$A=1@O=Eindhoven Centraal@L=1100919@a=128@$202509121711$202509121827$IC 2963 $$1$$$$$$\u00a7W$A=1@O=Eindhoven Centraal@L=1100919@a=128@$A=1@O=Eindhoven Centraal@L=1100921@a=128@$202509121827$202509121832$$$1$$$$$$\u00a7T$A=1@O=Eindhoven Centraal@L=1100921@a=128@$A=1@O=Rotterdam Centraal@L=1100726@a=128@$202509121843$202509121945$ICD12469$$1$$$$$$\u00b6KC\u00b6#VE#2#CF#100#CA#0#CM#0#SICT#0#AM#16465#AM2#0#RT#31#\u00b6KCC\u00b6#VE#0#ERG#8451#HIN#460#ECK#9671|9671|9787|9825|0|0|485|9642|5|0|2|0|0|-2147483648#\u00b6KRCC\u00b6#VE#1#MRTF#",
+      "sourceCtxRecon": "¶HKI¶T$A=1@O=Amsterdam Centraal@L=1100836@a=128@$A=1@O=Eindhoven Centraal@L=1100919@a=128@$202509121711$202509121827$IC 2963 $$1$$$$$$§W$A=1@O=Eindhoven Centraal@L=1100919@a=128@$A=1@O=Eindhoven Centraal@L=1100921@a=128@$202509121827$202509121832$$$1$$$$$$§T$A=1@O=Eindhoven Centraal@L=1100921@a=128@$A=1@O=Rotterdam Centraal@L=1100726@a=128@$202509121843$202509121945$ICD12469$$1$$$$$$¶KC¶#VE#2#CF#100#CA#0#CM#0#SICT#0#AM#16465#AM2#0#RT#31#¶KCC¶#VE#0#ERG#8451#HIN#460#ECK#9671|9671|9787|9825|0|0|485|9642|5|0|2|0|0|-2147483648#¶KRCC¶#VE#1#MRTF#",
       "plannedDurationInMinutes": 154,
       "actualDurationInMinutes": 154,
       "transfers": 1,
@@ -4062,6 +4054,6 @@
       ]
     }
   ],
-  "scrollRequestBackwardContext": "3|OB|MT\u00b514\u00b59641\u00b59641\u00b59757\u00b59757\u00b50\u00b50\u00b566021\u00b59640\u00b51\u00b50\u00b52\u00b50\u00b50\u00b5-2147483648\u00b51\u00b52|PDH\u00b52057fa1a8a2d70ebc0520fa0b817ce5d|RD\u00b512122025|RT\u00b5164000|US\u00b50|RS\u00b5INIT",
-  "scrollRequestForwardContext": "3|OF|MT\u00b514\u00b59671\u00b59671\u00b59787\u00b59825\u00b50\u00b50\u00b5485\u00b59642\u00b55\u00b50\u00b52\u00b50\u00b50\u00b5-2147483648\u00b51\u00b52|PDH\u00b52057fa1a8a2d70ebc0520fa0b817ce5d|RD\u00b512122025|RT\u00b5164000|US\u00b50|RS\u00b5INIT"
+  "scrollRequestBackwardContext": "3|OB|MTµ14µ9641µ9641µ9757µ9757µ0µ0µ66021µ9640µ1µ0µ2µ0µ0µ-2147483648µ1µ2|PDHµ2057fa1a8a2d70ebc0520fa0b817ce5d|RDµ12122025|RTµ164000|USµ0|RSµINIT",
+  "scrollRequestForwardContext": "3|OF|MTµ14µ9671µ9671µ9787µ9825µ0µ0µ485µ9642µ5µ0µ2µ0µ0µ-2147483648µ1µ2|PDHµ2057fa1a8a2d70ebc0520fa0b817ce5d|RDµ12122025|RTµ164000|USµ0|RSµINIT"
 }
