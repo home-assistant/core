@@ -6,20 +6,20 @@
       }
     },
     "number": {
-      "spray_quantity": {
-        "default": "mdi:water"
+      "duration": {
+        "default": "mdi:timer"
       },
       "elevation": {
         "default": "mdi:elevation-rise"
       },
-      "volume": {
-        "default": "mdi:volume-high"
-      },
-      "duration": {
-        "default": "mdi:timer"
-      },
       "sensitivity": {
         "default": "mdi:knob"
+      },
+      "spray_quantity": {
+        "default": "mdi:water"
+      },
+      "volume": {
+        "default": "mdi:volume-high"
       }
     },
     "select": {
@@ -33,14 +33,14 @@
       }
     },
     "switch": {
-      "pairing_mode": {
-        "default": "mdi:lock-open"
-      },
       "lock_physical_controls": {
         "default": "mdi:lock-open"
       },
       "mute": {
         "default": "mdi:volume-mute"
+      },
+      "pairing_mode": {
+        "default": "mdi:lock-open"
       },
       "sleep_mode": {
         "default": "mdi:power-sleep"

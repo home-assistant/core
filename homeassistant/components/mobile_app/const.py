@@ -20,6 +20,7 @@ DATA_DEVICES = "devices"
 DATA_STORE = "store"
 DATA_NOTIFY = "notify"
 DATA_PUSH_CHANNEL = "push_channel"
+DATA_PENDING_UPDATES = "pending_updates"
 
 ATTR_APP_DATA = "app_data"
 ATTR_APP_ID = "app_id"
@@ -94,3 +95,5 @@ SCHEMA_APP_DATA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
+
+SENSOR_TYPES = (ATTR_SENSOR_TYPE_BINARY_SENSOR, ATTR_SENSOR_TYPE_SENSOR)

@@ -3,7 +3,7 @@
 from datetime import timedelta
 import http
 import time
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, Mock, patch
 
 from aiohttp import ClientConnectionError, ClientResponseError
 from freezegun.api import FrozenDateTimeFactory
@@ -14,7 +14,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.miele.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
@@ -215,7 +215,7 @@ async def test_setup_all_platforms(
 @pytest.mark.parametrize(
     "side_effect",
     [
-        ClientResponseError("test", "Test"),
+        ClientResponseError(Mock(), Mock()),
         TimeoutError,
     ],
     ids=[
@@ -236,3 +236,19 @@ async def test_load_entry_with_action_error(
 
     assert entry.state is ConfigEntryState.LOADED
     assert mock_miele_client.get_actions.call_count == 5
+
+
+async def test_oauth_implementation_not_available(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test that an unavailable OAuth implementation raises ConfigEntryNotReady."""
+    assert await async_setup_component(hass, "cloud", {})
+
+    with patch(
+        "homeassistant.components.miele.async_get_config_entry_implementation",
+        side_effect=config_entry_oauth2_flow.ImplementationUnavailableError,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY

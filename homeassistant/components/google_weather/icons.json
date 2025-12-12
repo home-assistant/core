@@ -1,0 +1,27 @@
+{
+  "entity": {
+    "sensor": {
+      "cloud_coverage": {
+        "default": "mdi:weather-cloudy"
+      },
+      "precipitation_probability": {
+        "default": "mdi:weather-rainy"
+      },
+      "precipitation_qpf": {
+        "default": "mdi:cup-water"
+      },
+      "thunderstorm_probability": {
+        "default": "mdi:weather-lightning"
+      },
+      "uv_index": {
+        "default": "mdi:weather-sunny-alert"
+      },
+      "visibility": {
+        "default": "mdi:eye"
+      },
+      "weather_condition": {
+        "default": "mdi:card-text-outline"
+      }
+    }
+  }
+}
