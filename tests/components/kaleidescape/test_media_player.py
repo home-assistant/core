@@ -262,7 +262,7 @@ async def test_async_handle_device_volume_events(
         await hass.async_block_till_done()
         assert len(events) == 0
 
-        # Generate 3 SET_VOLUME events to test bad data and debouncing
+        # Generate SET_VOLUME events to test bad data and debouncing
         for value in ("bad", "41", "42"):
             mock_device.dispatcher.send(
                 kaleidescape_const.USER_DEFINED_EVENT,
@@ -294,7 +294,7 @@ async def test_async_handle_device_volume_events(
         # Generate USER_DEFINED_EVENT event
         mock_device.dispatcher.send(
             kaleidescape_const.USER_DEFINED_EVENT,
-            ["custom_action", {"value": "custom_value"}],
+            ["command", "value1", "value2"],
         )
         await hass.async_block_till_done()
 
@@ -319,15 +319,15 @@ async def test_async_handle_device_volume_events(
 
     user_data_events = [d for t, d in events if t == EVENT_TYPE_USER_DEFINED_EVENT]
     assert user_data_events
-    assert user_data_events[-1][CONF_ACTION] == "custom_action"
-    assert user_data_events[-1][CONF_PARAMS] == {"value": "custom_value"}
+    assert user_data_events[-1][CONF_ACTION] == "command"
+    assert user_data_events[-1][CONF_PARAMS] == ["value1", "value2"]
 
 
 @pytest.mark.usefixtures("mock_integration")
-async def test_async_send_volume_level(
+async def test_async_update_volume_level(
     hass: HomeAssistant, mock_device: MagicMock
 ) -> None:
-    """Test async_send_volume_level sends scaled level and updates capabilities."""
+    """Test async_update_volume_level sends scaled level and updates capabilities."""
     expected_caps = (
         kaleidescape_const.VOLUME_CAPABILITIES_SET_VOLUME
         | kaleidescape_const.VOLUME_CAPABILITIES_VOLUME_FEEDBACK
@@ -375,10 +375,10 @@ async def test_async_send_volume_level(
 
 
 @pytest.mark.usefixtures("mock_integration")
-async def test_async_send_volume_muted(
+async def test_async_update_volume_muted(
     hass: HomeAssistant, mock_device: MagicMock
 ) -> None:
-    """Test async_send_volume_muted updates capabilities and sends mute state."""
+    """Test async_update_volume_muted updates capabilities and sends mute state."""
     expected_caps = (
         kaleidescape_const.VOLUME_CAPABILITIES_MUTE_CONTROL
         | kaleidescape_const.VOLUME_CAPABILITIES_MUTE_FEEDBACK
