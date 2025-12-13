@@ -1,5 +1,6 @@
 """Tests for the Teslemetry integration."""
 
+import time
 from unittest.mock import patch
 
 from syrupy.assertion import SnapshotAssertion
@@ -9,18 +10,30 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .const import CONFIG
-
 from tests.common import MockConfigEntry
 
 
 async def setup_platform(
-    hass: HomeAssistant, platforms: list[Platform] | None = None
+    hass: HomeAssistant,
+    platforms: list[Platform] | None = None,
+    expires_at: int | None = None,
 ) -> MockConfigEntry:
     """Set up the Teslemetry platform."""
 
+    if expires_at is None:
+        expires_at = int(time.time()) + 3600
+
     mock_entry = MockConfigEntry(
-        domain=DOMAIN, data=CONFIG, minor_version=2, unique_id="abc-123"
+        domain=DOMAIN,
+        version=2,
+        unique_id="abc-123",
+        data={
+            "token": {
+                "access_token": "test_access_token",
+                "refresh_token": "test_refresh_token",
+                "expires_at": expires_at,
+            },
+        },
     )
     mock_entry.add_to_hass(hass)
 
