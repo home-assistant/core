@@ -11,17 +11,17 @@ from homeassistant.components.kaleidescape.const import (
     DOMAIN,
     SERVICE_ATTR_VOLUME_LEVEL,
     SERVICE_ATTR_VOLUME_MUTED,
-    SERVICE_SEND_VOLUME_LEVEL,
-    SERVICE_SEND_VOLUME_MUTED,
+    SERVICE_UPDATE_VOLUME_LEVEL,
+    SERVICE_UPDATE_VOLUME_MUTED,
 )
 from homeassistant.components.kaleidescape.media_player import (
     ATTR_VOLUME_CAPABILITIES,
     EVENT_DATA_VOLUME_LEVEL,
     EVENT_TYPE_USER_DEFINED_EVENT,
-    EVENT_TYPE_VOLUME_DOWN_PRESSED,
-    EVENT_TYPE_VOLUME_MUTE_PRESSED,
-    EVENT_TYPE_VOLUME_SET_UPDATED,
-    EVENT_TYPE_VOLUME_UP_PRESSED,
+    EVENT_TYPE_VOLUME_DOWN,
+    EVENT_TYPE_VOLUME_MUTE,
+    EVENT_TYPE_VOLUME_SET,
+    EVENT_TYPE_VOLUME_UP,
 )
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.const import (
@@ -239,10 +239,10 @@ async def test_async_handle_device_volume_events(
     def _capture(event):
         events.append((event.event_type, dict(event.data)))
 
-    unsub1 = hass.bus.async_listen(EVENT_TYPE_VOLUME_SET_UPDATED, _capture)
-    unsub2 = hass.bus.async_listen(EVENT_TYPE_VOLUME_UP_PRESSED, _capture)
-    unsub3 = hass.bus.async_listen(EVENT_TYPE_VOLUME_DOWN_PRESSED, _capture)
-    unsub4 = hass.bus.async_listen(EVENT_TYPE_VOLUME_MUTE_PRESSED, _capture)
+    unsub1 = hass.bus.async_listen(EVENT_TYPE_VOLUME_SET, _capture)
+    unsub2 = hass.bus.async_listen(EVENT_TYPE_VOLUME_UP, _capture)
+    unsub3 = hass.bus.async_listen(EVENT_TYPE_VOLUME_DOWN, _capture)
+    unsub4 = hass.bus.async_listen(EVENT_TYPE_VOLUME_MUTE, _capture)
     unsub5 = hass.bus.async_listen(EVENT_TYPE_USER_DEFINED_EVENT, _capture)
 
     try:
@@ -307,13 +307,13 @@ async def test_async_handle_device_volume_events(
 
     # Validate events
     event_types = [e[0] for e in events]
-    assert EVENT_TYPE_VOLUME_SET_UPDATED in event_types
-    assert EVENT_TYPE_VOLUME_UP_PRESSED in event_types
-    assert EVENT_TYPE_VOLUME_DOWN_PRESSED in event_types
-    assert EVENT_TYPE_VOLUME_MUTE_PRESSED in event_types
+    assert EVENT_TYPE_VOLUME_SET in event_types
+    assert EVENT_TYPE_VOLUME_UP in event_types
+    assert EVENT_TYPE_VOLUME_DOWN in event_types
+    assert EVENT_TYPE_VOLUME_MUTE in event_types
     assert EVENT_TYPE_USER_DEFINED_EVENT in event_types
 
-    volume_events = [d for t, d in events if t == EVENT_TYPE_VOLUME_SET_UPDATED]
+    volume_events = [d for t, d in events if t == EVENT_TYPE_VOLUME_SET]
     assert volume_events
     assert volume_events[-1][EVENT_DATA_VOLUME_LEVEL] == 0.42
 
@@ -343,7 +343,7 @@ async def test_async_send_volume_level(
     # Test service call sets capabilities and sends volume level
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SEND_VOLUME_LEVEL,
+        SERVICE_UPDATE_VOLUME_LEVEL,
         {
             ATTR_ENTITY_ID: ENTITY_ID,
             SERVICE_ATTR_VOLUME_LEVEL: 0.42,
@@ -360,7 +360,7 @@ async def test_async_send_volume_level(
     mock_device.set_volume_capabilities.reset_mock()
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SEND_VOLUME_LEVEL,
+        SERVICE_UPDATE_VOLUME_LEVEL,
         {
             ATTR_ENTITY_ID: ENTITY_ID,
             SERVICE_ATTR_VOLUME_LEVEL: 0.43,
@@ -394,7 +394,7 @@ async def test_async_send_volume_muted(
     # Test service call sets capabilities and sends mute state
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SEND_VOLUME_MUTED,
+        SERVICE_UPDATE_VOLUME_MUTED,
         {
             ATTR_ENTITY_ID: ENTITY_ID,
             SERVICE_ATTR_VOLUME_MUTED: True,
@@ -412,7 +412,7 @@ async def test_async_send_volume_muted(
     mock_device.set_volume_capabilities.reset_mock()
     await hass.services.async_call(
         DOMAIN,
-        SERVICE_SEND_VOLUME_MUTED,
+        SERVICE_UPDATE_VOLUME_MUTED,
         {
             ATTR_ENTITY_ID: ENTITY_ID,
             SERVICE_ATTR_VOLUME_MUTED: False,
