@@ -8,7 +8,12 @@ rules:
       light services (turn_on, turn_off, brightness and color_temperature).
   appropriate-polling: done
   brands: done
-  common-modules: done
+  common-modules:
+    status: done
+    comment: >
+      This integration does not fetch data via polling HTTP APIs and is built
+      around an MQTT-driven event model. A centralized DataUpdateCoordinator is
+      not required for MQTT event callbacks that update entities directly.
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done

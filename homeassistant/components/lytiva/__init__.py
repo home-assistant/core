@@ -135,7 +135,7 @@ class LytivaMQTTHandler:
 
     def _on_status(self, client, userdata, message):
         """Handle status messages."""
-        self.hass.async_add_executor_job(
+        self.hass.add_job(
             self._async_handle_status, message
         )
 
