@@ -89,13 +89,13 @@ async def async_setup_entry(
                 vol.Range(min=0.0, max=1.0),
             )
         },
-        "async_send_volume_level",
+        "async_update_volume_level",
     )
 
     platform.async_register_entity_service(
         SERVICE_UPDATE_VOLUME_MUTED,
         {vol.Required(SERVICE_ATTR_VOLUME_MUTED): cv.boolean},
-        "async_send_volume_muted",
+        "async_update_volume_muted",
     )
 
 
@@ -142,7 +142,7 @@ class KaleidescapeMediaPlayer(KaleidescapeEntity, MediaPlayerEntity):
             return
 
         command = params[0]
-        fields = params[1] if len(params) > 1 else None
+        fields = params[1:] if len(params) > 1 else []
 
         _LOGGER.debug(
             "Received USER_DEFINED_EVENT command=%s fields=%s", command, fields
@@ -160,10 +160,7 @@ class KaleidescapeMediaPlayer(KaleidescapeEntity, MediaPlayerEntity):
             case kaleidescape_const.USER_DEFINED_EVENT_SET_VOLUME_LEVEL:
                 self._handle_set_volume_level(fields)
             case _ if command not in kaleidescape_const.VOLUME_EVENTS:
-                self._fire_hass_bus_event(
-                    EVENT_TYPE_USER_DEFINED_EVENT,
-                    {CONF_ACTION: command, CONF_PARAMS: fields},
-                )
+                self._handle_user_defined_event(command, fields)
 
     async def _async_handle_volume_query(self) -> None:
         """Handle volume capabilities query from Kaleidescape app."""
@@ -187,16 +184,24 @@ class KaleidescapeMediaPlayer(KaleidescapeEntity, MediaPlayerEntity):
         self._fire_hass_bus_event(EVENT_TYPE_VOLUME_MUTE, {})
 
     @callback
-    def _handle_set_volume_level(self, volume_level: str | None) -> None:
+    def _handle_set_volume_level(self, fields: list[str]) -> None:
         """Handle volume level set request from Kaleidescape app."""
         try:
-            volume_level_int = int(volume_level or 0)
+            volume_level = int(fields[0])
         except (ValueError, TypeError):
-            _LOGGER.warning("Invalid SET_VOLUME_LEVEL value: %s", volume_level)
+            _LOGGER.warning("Invalid level for SET_VOLUME_LEVEL: %s", fields[0])
             return
 
-        scaled_volume_level = float(max(0, min(100, volume_level_int)) / 100)
+        scaled_volume_level = float(max(0, min(100, volume_level)) / 100)
         self._schedule_debounced_set_volume_event(scaled_volume_level)
+
+    @callback
+    def _handle_user_defined_event(self, command: str, fields: list[str]) -> None:
+        """Handle user defined events."""
+        self._fire_hass_bus_event(
+            EVENT_TYPE_USER_DEFINED_EVENT,
+            {CONF_ACTION: command, CONF_PARAMS: fields},
+        )
 
     @callback
     def _schedule_debounced_set_volume_event(self, volume_level: float) -> None:
@@ -213,7 +218,7 @@ class KaleidescapeMediaPlayer(KaleidescapeEntity, MediaPlayerEntity):
 
         self._debounce_set_volume = self.hass.loop.call_later(DEBOUNCE_TIME, _fire)
 
-    async def async_send_volume_level(self, volume_level: float) -> None:
+    async def async_update_volume_level(self, volume_level: float) -> None:
         """Service call handler to send volume level back to Kaleidescape app."""
         scaled_level = int(max(0, min(100, round(volume_level, 3) * 100)))
 
@@ -226,7 +231,7 @@ class KaleidescapeMediaPlayer(KaleidescapeEntity, MediaPlayerEntity):
 
         await self._device.set_volume_level(scaled_level)
 
-    async def async_send_volume_muted(self, is_volume_muted: bool) -> None:
+    async def async_update_volume_muted(self, is_volume_muted: bool) -> None:
         """Service call handler to send mute state back to Kaleidescape app."""
         await self._async_add_volume_capabilities(
             kaleidescape_const.VOLUME_CAPABILITIES_MUTE_CONTROL
