@@ -58,6 +58,7 @@ class SatelIntegraZonesCoordinator(SatelIntegraBaseCoordinator[dict[int, int]]):
         """Initialize the coordinator."""
         super().__init__(hass, entry, client)
 
+        self.data = {}
         client.zones_update_callback = self.zones_update_callback
 
     @callback
@@ -77,6 +78,7 @@ class SatelIntegraOutputsCoordinator(SatelIntegraBaseCoordinator[dict[int, int]]
         """Initialize the coordinator."""
         super().__init__(hass, entry, client)
 
+        self.data = {}
         client.outputs_update_callback = self.outputs_update_callback
 
     @callback
@@ -98,6 +100,7 @@ class SatelIntegraPartitionsCoordinator(
         """Initialize the coordinator."""
         super().__init__(hass, entry, client)
 
+        self.data = {}
         client.partitions_update_callback = self.partitions_update_callback
 
     @callback
