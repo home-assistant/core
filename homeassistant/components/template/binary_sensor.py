@@ -125,6 +125,8 @@ PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
     }
 )
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_platform(
     hass: HomeAssistant,
@@ -308,6 +310,15 @@ class TriggerBinarySensorEntity(TriggerEntity, AbstractTemplateBinarySensor):
         if self._expire_after is not None and self._expire_after > 0:
             self._expired = True
         self._expiration_trigger: CALLBACK_TYPE | None = None
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Remove expire triggers."""
+        if self._expiration_trigger:
+            _LOGGER.debug("Clean up expire after trigger for %s", self.entity_id)
+            self._expiration_trigger()
+            self._expiration_trigger = None
+            self._expired = False
+        await TriggerEntity.async_will_remove_from_hass(self)
 
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
