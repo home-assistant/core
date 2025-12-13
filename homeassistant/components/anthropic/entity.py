@@ -645,12 +645,14 @@ async def _truncate_to_fit_context(
         messages = _convert_content(working_content[1:])
 
         try:
-            count_response = await client.messages.count_tokens(
-                model=model,
-                system=system_prompt,
-                messages=messages,
-                tools=tools if tools else anthropic.NOT_GIVEN,
-            )
+            count_kwargs: dict[str, Any] = {
+                "model": model,
+                "system": system_prompt,
+                "messages": messages,
+            }
+            if tools:
+                count_kwargs["tools"] = tools
+            count_response = await client.messages.count_tokens(**count_kwargs)
             current_tokens = count_response.input_tokens
         except anthropic.AnthropicError:
             # If counting fails, proceed without truncation
