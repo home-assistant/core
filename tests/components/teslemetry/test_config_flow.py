@@ -1,9 +1,10 @@
 """Test the Teslemetry config flow."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 from urllib.parse import parse_qs, urlparse
 
 import pytest
+from tesla_fleet_api.exceptions import TeslaFleetError
 
 from homeassistant.components.teslemetry.const import (
     AUTHORIZE_URL,
@@ -11,12 +12,12 @@ from homeassistant.components.teslemetry.const import (
     DOMAIN,
     TOKEN_URL,
 )
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from .const import UNIQUE_ID
+from .const import CONFIG_V1, UNIQUE_ID
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -25,6 +26,7 @@ from tests.typing import ClientSessionGenerator
 REDIRECT = "https://example.com/auth/external/callback"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_oauth_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -35,6 +37,12 @@ async def test_oauth_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
+
+    if result["type"] is FlowResultType.FORM:
+        assert result["step_id"] == "pick_implementation"
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"implementation": DOMAIN}
+        )
 
     assert result["type"] is FlowResultType.EXTERNAL_STEP
 
@@ -76,6 +84,7 @@ async def test_oauth_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_reauth(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -93,7 +102,14 @@ async def test_reauth(
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
 
+    # Configure the reauth_confirm step
     result = await hass.config_entries.flow.async_configure(flows[0]["flow_id"], {})
+
+    if result["type"] is FlowResultType.FORM:
+        assert result["step_id"] == "pick_implementation"
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"implementation": DOMAIN}
+        )
 
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -140,6 +156,12 @@ async def test_reauth_account_mismatch(
     flows = hass.config_entries.flow.async_progress()
     result = await hass.config_entries.flow.async_configure(flows[0]["flow_id"], {})
 
+    if result["type"] is FlowResultType.FORM:
+        assert result["step_id"] == "pick_implementation"
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"implementation": DOMAIN}
+        )
+
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -153,7 +175,7 @@ async def test_reauth_account_mismatch(
     aioclient_mock.post(
         TOKEN_URL,
         json={
-            "refresh_token": "test_refresh_token",
+            "refresh_token": "mock-refresh-token",
             "access_token": "test_access_token",
             "type": "Bearer",
             "expires_in": 60,
@@ -161,7 +183,7 @@ async def test_reauth_account_mismatch(
     )
 
     with patch(
-        "homeassistant.components.tesla_fleet.async_setup_entry", return_value=True
+        "homeassistant.components.teslemetry.async_setup_entry", return_value=True
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -189,6 +211,12 @@ async def test_duplicate_unique_id_abort(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
+    if result["type"] is FlowResultType.FORM:
+        assert result["step_id"] == "pick_implementation"
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"implementation": DOMAIN}
+        )
+
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -203,8 +231,8 @@ async def test_duplicate_unique_id_abort(
     aioclient_mock.post(
         TOKEN_URL,
         json={
-            "refresh_token": "test_refresh_token",
-            "access_token": "test_access_token",
+            "refresh_token": "mock-refresh-token",
+            "access_token": "mock-access-token",
             "type": "Bearer",
             "expires_in": 60,
         },
@@ -215,3 +243,85 @@ async def test_duplicate_unique_id_abort(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_migrate_from_v1(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_metadata: AsyncMock,
+) -> None:
+    """Test config migration."""
+
+    aioclient_mock.post(
+        TOKEN_URL,
+        json={
+            "refresh_token": "test_refresh_token",
+            "access_token": "test_access_token",
+            "type": "Bearer",
+            "expires_in": 60,
+        },
+    )
+
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=1,
+        minor_version=1,
+        unique_id=UNIQUE_ID,
+        data=CONFIG_V1,
+    )
+
+    mock_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
+    assert entry.version == 2
+    assert entry.minor_version == 1
+    assert entry.unique_id == UNIQUE_ID
+
+
+async def test_migrate_error_from_v1(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test config migration handles errors."""
+
+    aioclient_mock.post(TOKEN_URL, status=400)
+
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=1,
+        minor_version=1,
+        unique_id=None,
+        data=CONFIG_V1,
+    )
+
+    mock_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR
+
+
+async def test_migrate_error_from_future(
+    hass: HomeAssistant, mock_metadata: AsyncMock
+) -> None:
+    """Test a future version isn't migrated."""
+
+    mock_metadata.side_effect = TeslaFleetError
+
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=3,
+        minor_version=1,
+        unique_id="abc-123",
+        data=CONFIG_V1,
+    )
+
+    mock_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR

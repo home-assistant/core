@@ -1,10 +1,9 @@
-"""Fixtures for Teslemetry."""
+"""Test fixtures for Teslemetry component."""
 
 from __future__ import annotations
 
 from collections.abc import Generator
 from copy import deepcopy
-import time
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -21,12 +20,6 @@ from .const import (
     VEHICLE_DATA,
     WAKE_UP_ONLINE,
 )
-
-
-@pytest.fixture(name="expires_at")
-def mock_expires_at() -> float:
-    """Fixture to set the oauth token expiration time."""
-    return time.time() + 3600
 
 
 @pytest.fixture(autouse=True)
