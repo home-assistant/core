@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import Callable
-from typing import Final
+from typing import Any, Final
 
 from aiohttp import ClientResponseError
 from tesla_fleet_api.const import Scope
@@ -25,7 +25,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, LOGGER
+from .const import CLIENT_ID, DOMAIN, LOGGER, TOKEN_URL
 from .coordinator import (
     TeslemetryEnergyHistoryCoordinator,
     TeslemetryEnergySiteInfoCoordinator,
@@ -295,35 +295,37 @@ async def async_migrate_entry(
         return False
 
     if config_entry.version == 1 and config_entry.minor_version < 2:
-        # Add unique_id to existing entry
-        # Handle both old access_token format and new OAuth token format
-        if "token" in config_entry.data:
-            access_token = config_entry.data["token"]["access_token"]
-        else:
-            access_token = config_entry.data[CONF_ACCESS_TOKEN]
-            # Convert legacy access token to OAuth format
-            oauth_data = {
-                "token": {
-                    "access_token": access_token,
-                    "token_type": "Bearer",
-                }
-            }
-            hass.config_entries.async_update_entry(config_entry, data=oauth_data)
-
-        teslemetry = Teslemetry(
-            session=async_get_clientsession(hass),
-            access_token=access_token,
-        )
+        access_token = config_entry.data[CONF_ACCESS_TOKEN]
+        # Convert legacy access token to OAuth format using migrate endpoint
         try:
-            metadata = await teslemetry.metadata()
-        except TeslaFleetError as e:
-            LOGGER.error(e.message)
+            data = await _migrate_token_to_oauth(hass, access_token)
+        except ClientResponseError as e:
+            LOGGER.error("Failed to migrate token, HTTP error %s", e.status)
             return False
 
         hass.config_entries.async_update_entry(
-            config_entry, unique_id=metadata["uid"], version=1, minor_version=2
+            config_entry, data=data, version=1, minor_version=2
         )
     return True
+
+
+async def _migrate_token_to_oauth(
+    hass: HomeAssistant, access_token: str
+) -> dict[str, Any]:
+    """Migrate legacy access token to OAuth format using Teslemetry migrate endpoint."""
+    session = async_get_clientsession(hass)
+
+    migrate_data = {
+        "grant_type": "migrate",
+        "client_id": CLIENT_ID,
+        "access_token": access_token,
+        "name": hass.config.location_name,
+    }
+
+    async with session.post(TOKEN_URL, data=migrate_data) as response:
+        response.raise_for_status()
+        token_response = await response.json()
+        return {"token": token_response}
 
 
 def create_handle_vehicle_stream(vin: str, coordinator) -> Callable[[dict], None]:
