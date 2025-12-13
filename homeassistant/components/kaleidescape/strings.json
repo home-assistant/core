@@ -75,25 +75,25 @@
     }
   },
   "services": {
-    "send_volume_level": {
-      "description": "Send current volume level to any listening Kaleidescape apps.",
+    "update_volume_level": {
+      "description": "Updates the volume level in listening Kaleidescape apps.",
       "fields": {
-        "level": {
-          "description": "Current volume level from 0.0 (muted) to 1.0 (maximum).",
-          "name": "Volume level"
+        "volume_level": {
+          "description": "[%key:component::media_player::services::volume_set::fields::volume_level::description%]",
+          "name": "[%key:component::media_player::services::volume_set::fields::volume_level::name%]"
         }
       },
-      "name": "Send volume level"
+      "name": "Update volume level"
     },
-    "send_volume_muted": {
-      "description": "Send current mute state to any listening Kaleidescape apps.",
+    "update_volume_muted": {
+      "description": "Updates the mute state in listening Kaleidescape apps.",
       "fields": {
-        "muted": {
-          "description": "Current muted state.",
-          "name": "Volume muted"
+        "is_volume_muted": {
+          "description": "[%key:component::media_player::services::volume_mute::fields::is_volume_muted::description%]",
+          "name": "[%key:component::media_player::services::volume_mute::fields::is_volume_muted::name%]"
         }
       },
-      "name": "Send volume muted"
+      "name": "Update mute state"
     }
   }
 }

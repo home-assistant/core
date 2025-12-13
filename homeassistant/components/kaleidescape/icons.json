@@ -52,10 +52,10 @@
     }
   },
   "services": {
-    "send_volume_level": {
-      "service": "mdi:volume-medium"
+    "update_volume_level": {
+      "service": "mdi:volume-high"
     },
-    "send_volume_muted": {
+    "update_volume_muted": {
       "service": "mdi:volume-mute"
     }
   }

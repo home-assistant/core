@@ -1,11 +1,11 @@
 # Describes the services for the Kaleidescape integration
 
-send_volume_level:
+update_volume_level:
   target:
     entity:
       domain: media_player
   fields:
-    level:
+    volume_level:
       required: true
       example: 0.5
       selector:
@@ -14,12 +14,12 @@ send_volume_level:
           max: 1
           step: 0.01
 
-send_volume_muted:
+update_volume_muted:
   target:
     entity:
       domain: media_player
   fields:
-    muted:
+    is_volume_muted:
       required: true
       example: true
       selector:
