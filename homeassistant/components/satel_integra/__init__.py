@@ -32,7 +32,14 @@ from .const import (
     SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
     SUBENTRY_TYPE_ZONE,
 )
-from .coordinator import SatelConfigEntry, SatelIntegraCoordinator
+from .coordinator import (
+    SatelClient,
+    SatelConfigEntry,
+    SatelIntegraData,
+    SatelIntegraOutputsCoordinator,
+    SatelIntegraPartitionsCoordinator,
+    SatelIntegraZonesCoordinator,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -141,11 +148,20 @@ async def _async_import(hass: HomeAssistant, config: ConfigType) -> None:
 async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> bool:
     """Set up  Satel Integra from a config entry."""
 
-    coordinator = SatelIntegraCoordinator(hass, entry)
-    entry.runtime_data = coordinator
+    client = SatelClient(hass, entry)
 
-    await coordinator.start_controller()
+    coordinator_zones = SatelIntegraZonesCoordinator(hass, entry, client)
+    coordinator_outputs = SatelIntegraOutputsCoordinator(hass, entry, client)
+    coordinator_partitions = SatelIntegraPartitionsCoordinator(hass, entry, client)
 
+    await client.async_setup()
+
+    entry.runtime_data = SatelIntegraData(
+        client=client,
+        coordinator_zones=coordinator_zones,
+        coordinator_outputs=coordinator_outputs,
+        coordinator_partitions=coordinator_partitions,
+    )
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -157,8 +173,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> bo
     """Unloading the Satel platforms."""
 
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        coordinator = entry.runtime_data
-        coordinator.controller.close()
+        runtime_data = entry.runtime_data
+        runtime_data.client.close()
 
     return unload_ok
 

@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_SWITCHABLE_OUTPUT_NUMBER, SUBENTRY_TYPE_SWITCHABLE_OUTPUT
-from .coordinator import SatelConfigEntry, SatelIntegraCoordinator
+from .coordinator import SatelConfigEntry, SatelIntegraOutputsCoordinator
 from .entity import SatelIntegraEntity
 
 
@@ -22,7 +22,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Satel Integra switch devices."""
 
-    controller = config_entry.runtime_data
+    runtime_data = config_entry.runtime_data
 
     switchable_output_subentries = filter(
         lambda entry: entry.subentry_type == SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
@@ -35,7 +35,7 @@ async def async_setup_entry(
         async_add_entities(
             [
                 SatelIntegraSwitch(
-                    controller,
+                    runtime_data.coordinator_outputs,
                     config_entry.entry_id,
                     subentry,
                     switchable_output_num,
@@ -46,12 +46,14 @@ async def async_setup_entry(
         )
 
 
-class SatelIntegraSwitch(SatelIntegraEntity, SwitchEntity):
+class SatelIntegraSwitch(
+    SatelIntegraEntity[SatelIntegraOutputsCoordinator], SwitchEntity
+):
     """Representation of an Satel Integra switch."""
 
     def __init__(
         self,
-        controller: SatelIntegraCoordinator,
+        coordinator: SatelIntegraOutputsCoordinator,
         config_entry_id: str,
         subentry: ConfigSubentry,
         device_number: int,
@@ -59,7 +61,7 @@ class SatelIntegraSwitch(SatelIntegraEntity, SwitchEntity):
     ) -> None:
         """Initialize the switch."""
         super().__init__(
-            controller,
+            coordinator,
             config_entry_id,
             subentry,
             device_number,
@@ -79,23 +81,19 @@ class SatelIntegraSwitch(SatelIntegraEntity, SwitchEntity):
 
     def _get_status_from_coordinator(self) -> bool | None:
         """Method to get sensor status from coordinator data."""
-        if self._device_number in self.coordinator.outputs:
-            return self.coordinator.outputs[self._device_number] == 1
+        if self._device_number in self.coordinator.data:
+            return self.coordinator.data[self._device_number] == 1
 
         return None
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        await self.coordinator.controller.set_output(
-            self._code, self._device_number, True
-        )
+        await self._client.controller.set_output(self._code, self._device_number, True)
         self._attr_is_on = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        await self.coordinator.controller.set_output(
-            self._code, self._device_number, False
-        )
+        await self._client.controller.set_output(self._code, self._device_number, False)
         self._attr_is_on = False
         self.async_write_ha_state()

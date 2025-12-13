@@ -1,142 +1,108 @@
 """Coordinator for Satel Integra."""
 
-import logging
-from typing import TYPE_CHECKING
+from __future__ import annotations
 
-from satel_integra.satel_integra import AlarmState, AsyncSatel
+from dataclasses import dataclass
+import logging
+
+from satel_integra.satel_integra import AlarmState
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import (
-    CONF_OUTPUT_NUMBER,
-    CONF_PARTITION_NUMBER,
-    CONF_SWITCHABLE_OUTPUT_NUMBER,
-    CONF_ZONE_NUMBER,
-    DOMAIN,
-    SUBENTRY_TYPE_OUTPUT,
-    SUBENTRY_TYPE_PARTITION,
-    SUBENTRY_TYPE_SWITCHABLE_OUTPUT,
-    SUBENTRY_TYPE_ZONE,
-    ZONES,
-)
-
-type SatelConfigEntry = ConfigEntry[SatelIntegraCoordinator]
+from .common import SatelClient
+from .const import ZONES
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class SatelIntegraCoordinator(DataUpdateCoordinator[None]):
-    """Coordinator for Satel Integra."""
+@dataclass
+class SatelIntegraData:
+    """Data for the satel_integra integration."""
 
-    controller: AsyncSatel
+    client: SatelClient
+    coordinator_zones: SatelIntegraZonesCoordinator
+    coordinator_outputs: SatelIntegraOutputsCoordinator
+    coordinator_partitions: SatelIntegraPartitionsCoordinator
 
-    zones: dict[int, int] = {}
-    outputs: dict[int, int] = {}
-    partitions: dict[AlarmState, list[int]] = {}
 
-    def __init__(self, hass: HomeAssistant, entry: SatelConfigEntry) -> None:
-        """Initialize the coordinator."""
+type SatelConfigEntry = ConfigEntry[SatelIntegraData]
+
+
+class SatelIntegraBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
+    """DataUpdateCoordinator base class for Satel Integra."""
+
+    config_entry: SatelConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, entry: SatelConfigEntry, client: SatelClient
+    ) -> None:
+        """Initialize the base coordinator."""
+        self.client = client
 
         super().__init__(
             hass,
             _LOGGER,
-            name=DOMAIN,
             config_entry=entry,
+            name=f"{entry.unique_id} {self.__class__.__name__}",
         )
 
-        host = entry.data[CONF_HOST]
-        port = entry.data[CONF_PORT]
 
-        # Make sure we initialize the Satel controller with the configured entries to monitor
-        partitions = [
-            subentry.data[CONF_PARTITION_NUMBER]
-            for subentry in entry.subentries.values()
-            if subentry.subentry_type == SUBENTRY_TYPE_PARTITION
-        ]
+class SatelIntegraZonesCoordinator(SatelIntegraBaseCoordinator[dict[int, int]]):
+    """DataUpdateCoordinatot to handle zone updates."""
 
-        zones = [
-            subentry.data[CONF_ZONE_NUMBER]
-            for subentry in entry.subentries.values()
-            if subentry.subentry_type == SUBENTRY_TYPE_ZONE
-        ]
+    def __init__(
+        self, hass: HomeAssistant, entry: SatelConfigEntry, client: SatelClient
+    ) -> None:
+        """Initialize the coordinator."""
+        super().__init__(hass, entry, client)
 
-        outputs = [
-            subentry.data[CONF_OUTPUT_NUMBER]
-            for subentry in entry.subentries.values()
-            if subentry.subentry_type == SUBENTRY_TYPE_OUTPUT
-        ]
-
-        switchable_outputs = [
-            subentry.data[CONF_SWITCHABLE_OUTPUT_NUMBER]
-            for subentry in entry.subentries.values()
-            if subentry.subentry_type == SUBENTRY_TYPE_SWITCHABLE_OUTPUT
-        ]
-
-        monitored_outputs = outputs + switchable_outputs
-
-        self.controller = AsyncSatel(
-            host, port, hass.loop, zones, monitored_outputs, partitions
-        )
-
-        @callback
-        def _close(*_):
-            self.controller.close()
-
-        entry.async_on_unload(
-            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close)
-        )
-
-    @callback
-    def alarm_status_update_callback(self):
-        """Send status update received from alarm to Home Assistant."""
-        _LOGGER.debug("Sending request to update panel state")
-
-        self.partitions = self.controller.partition_states
-        self.async_set_updated_data(None)
+        client.zones_update_callback = self.zones_update_callback
 
     @callback
     def zones_update_callback(self, status: dict[str, dict[int, int]]):
         """Update zone objects as per notification from the alarm."""
         _LOGGER.debug("Zones callback, status: %s", status)
 
-        self.zones = status[ZONES]
-        self.async_set_updated_data(None)
+        self.async_set_updated_data(status[ZONES])
+
+
+class SatelIntegraOutputsCoordinator(SatelIntegraBaseCoordinator[dict[int, int]]):
+    """DataUpdateCoordinator to handle output updates."""
+
+    def __init__(
+        self, hass: HomeAssistant, entry: SatelConfigEntry, client: SatelClient
+    ) -> None:
+        """Initialize the coordinator."""
+        super().__init__(hass, entry, client)
+
+        client.outputs_update_callback = self.outputs_update_callback
 
     @callback
     def outputs_update_callback(self, status: dict[str, dict[int, int]]):
         """Update zone objects as per notification from the alarm."""
-        _LOGGER.debug("Outputs updated callback , status: %s", status)
+        _LOGGER.debug("Outputs callback, status: %s", status)
 
-        self.outputs = status["outputs"]
-        self.async_set_updated_data(None)
+        self.async_set_updated_data(status["outputs"])
 
-    async def start_controller(self) -> None:
-        """Start controller connection."""
-        result = await self.controller.connect()
-        if not result:
-            raise ConfigEntryNotReady("Controller failed to connect")
 
-        if TYPE_CHECKING:
-            assert self.config_entry
+class SatelIntegraPartitionsCoordinator(
+    SatelIntegraBaseCoordinator[dict[AlarmState, list[int]]]
+):
+    """DataUpdateCoordinator to handle partition state updates."""
 
-        self.config_entry.async_create_background_task(
-            self.hass,
-            self.controller.keep_alive(),
-            f"satel_integra.{self.config_entry.entry_id}.keep_alive",
-            eager_start=False,
-        )
+    def __init__(
+        self, hass: HomeAssistant, entry: SatelConfigEntry, client: SatelClient
+    ) -> None:
+        """Initialize the coordinator."""
+        super().__init__(hass, entry, client)
 
-        self.config_entry.async_create_background_task(
-            self.hass,
-            self.controller.monitor_status(
-                self.alarm_status_update_callback,
-                self.zones_update_callback,
-                self.outputs_update_callback,
-            ),
-            f"satel_integra.{self.config_entry.entry_id}.monitor_status",
-            eager_start=False,
-        )
+        client.partitions_update_callback = self.partitions_update_callback
+
+    @callback
+    def partitions_update_callback(self):
+        """Update zone objects as per notification from the alarm."""
+        _LOGGER.debug("Sending request to update panel state")
+
+        self.async_set_updated_data(self.client.controller.partition_states)

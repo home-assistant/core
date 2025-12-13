@@ -19,7 +19,12 @@ from .const import (
     SUBENTRY_TYPE_OUTPUT,
     SUBENTRY_TYPE_ZONE,
 )
-from .coordinator import SatelConfigEntry, SatelIntegraCoordinator
+from .coordinator import (
+    SatelConfigEntry,
+    SatelIntegraBaseCoordinator,
+    SatelIntegraOutputsCoordinator,
+    SatelIntegraZonesCoordinator,
+)
 from .entity import SatelIntegraEntity
 
 
@@ -30,7 +35,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Satel Integra binary sensor devices."""
 
-    coordinator = config_entry.runtime_data
+    runtime_data = config_entry.runtime_data
 
     zone_subentries = filter(
         lambda entry: entry.subentry_type == SUBENTRY_TYPE_ZONE,
@@ -44,7 +49,7 @@ async def async_setup_entry(
         async_add_entities(
             [
                 SatelIntegraZoneBinarySensor(
-                    coordinator,
+                    runtime_data.coordinator_zones,
                     config_entry.entry_id,
                     subentry,
                     zone_num,
@@ -66,7 +71,7 @@ async def async_setup_entry(
         async_add_entities(
             [
                 SatelIntegraOutputBinarySensor(
-                    coordinator,
+                    runtime_data.coordinator_outputs,
                     config_entry.entry_id,
                     subentry,
                     output_num,
@@ -77,12 +82,14 @@ async def async_setup_entry(
         )
 
 
-class SatelIntegraBaseBinarySensor(SatelIntegraEntity, BinarySensorEntity):
+class SatelIntegraBaseBinarySensor[_CoordinatorT: SatelIntegraBaseCoordinator](
+    SatelIntegraEntity[_CoordinatorT], BinarySensorEntity
+):
     """Base binary sensor for Satel Integra."""
 
     def __init__(
         self,
-        coordinator: SatelIntegraCoordinator,
+        coordinator: _CoordinatorT,
         config_entry_id: str,
         subentry: ConfigSubentry,
         device_number: int,
@@ -113,23 +120,27 @@ class SatelIntegraBaseBinarySensor(SatelIntegraEntity, BinarySensorEntity):
         """Method to get sensor status from coordinator data."""
 
 
-class SatelIntegraZoneBinarySensor(SatelIntegraBaseBinarySensor):
+class SatelIntegraZoneBinarySensor(
+    SatelIntegraBaseBinarySensor[SatelIntegraZonesCoordinator]
+):
     """Representation of an Satel Integra binary sensor for zones."""
 
     def _get_status_from_coordinator(self) -> bool | None:
         """Method to get sensor status from coordinator data."""
-        if self._device_number in self.coordinator.zones:
-            return self.coordinator.zones[self._device_number] == 1
+        if self._device_number in self.coordinator.data:
+            return self.coordinator.data[self._device_number] == 1
 
         return None
 
 
-class SatelIntegraOutputBinarySensor(SatelIntegraBaseBinarySensor):
+class SatelIntegraOutputBinarySensor(
+    SatelIntegraBaseBinarySensor[SatelIntegraOutputsCoordinator]
+):
     """Representation of an Satel Integra binary sensor for outputs."""
 
     def _get_status_from_coordinator(self) -> bool | None:
         """Method to get sensor status from coordinator data."""
-        if self._device_number in self.coordinator.outputs:
-            return self.coordinator.outputs[self._device_number] == 1
+        if self._device_number in self.coordinator.data:
+            return self.coordinator.data[self._device_number] == 1
 
         return None
