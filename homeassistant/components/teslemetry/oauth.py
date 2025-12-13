@@ -37,6 +37,7 @@ class TeslemetryImplementation(
         data: dict = {
             "name": self.hass.config.location_name,
         }
+        data.update(super().extra_authorize_data)
         return data
 
     @property
