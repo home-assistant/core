@@ -15,7 +15,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
-from homeassistant.const import CONF_ACTION, CONF_PARAMS
+from homeassistant.const import CONF_COMMAND, CONF_PARAMS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -188,8 +188,8 @@ class KaleidescapeMediaPlayer(KaleidescapeEntity, MediaPlayerEntity):
         """Handle volume level set request from Kaleidescape app."""
         try:
             volume_level = int(fields[0])
-        except (ValueError, TypeError):
-            _LOGGER.warning("Invalid level for SET_VOLUME_LEVEL: %s", fields[0])
+        except (IndexError, ValueError, TypeError):
+            _LOGGER.warning("Invalid level for SET_VOLUME_LEVEL: %s", fields)
             return
 
         scaled_volume_level = float(max(0, min(100, volume_level)) / 100)
@@ -200,7 +200,7 @@ class KaleidescapeMediaPlayer(KaleidescapeEntity, MediaPlayerEntity):
         """Handle user defined events."""
         self._fire_hass_bus_event(
             EVENT_TYPE_USER_DEFINED_EVENT,
-            {CONF_ACTION: command, CONF_PARAMS: fields},
+            {CONF_COMMAND: command, CONF_PARAMS: fields},
         )
 
     @callback
