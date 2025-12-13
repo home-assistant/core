@@ -240,7 +240,7 @@ async def async_setup_entry(
     firmware_check_delay = check_time - delta_midnight
     if firmware_check_delay < timedelta(0):
         firmware_check_delay += timedelta(days=1)
-    _LOGGER.error(
+    _LOGGER.debug(
         "Scheduling first Reolink %s firmware check in %s",
         host.api.nvr_name,
         firmware_check_delay,
