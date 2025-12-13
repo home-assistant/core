@@ -699,6 +699,13 @@ class AnthropicBaseLLMEntity(Entity):
         client = self.entry.runtime_data
         model = options.get(CONF_CHAT_MODEL, DEFAULT[CONF_CHAT_MODEL])
         max_tokens = options.get(CONF_MAX_TOKENS, DEFAULT[CONF_MAX_TOKENS])
+        thinking_budget = options.get(
+            CONF_THINKING_BUDGET, DEFAULT[CONF_THINKING_BUDGET]
+        )
+        thinking_enabled = (
+            not model.startswith(tuple(NON_THINKING_MODELS))
+            and thinking_budget >= MIN_THINKING_BUDGET
+        )
 
         system = chat_log.content[0]
         if not isinstance(system, conversation.SystemContent):
@@ -741,8 +748,9 @@ class AnthropicBaseLLMEntity(Entity):
         filtered_content = _filter_content_by_age(
             chat_log.content, CONVERSATION_MAX_AGE_HOURS
         )
+        output_tokens = max_tokens + thinking_budget if thinking_enabled else max_tokens
         filtered_content = await _truncate_to_fit_context(
-            client, model, system_prompt, filtered_content, tools, max_tokens
+            client, model, system_prompt, filtered_content, tools, output_tokens
         )
 
         messages = _convert_content(filtered_content[1:])
@@ -755,13 +763,7 @@ class AnthropicBaseLLMEntity(Entity):
             stream=True,
         )
 
-        thinking_budget = options.get(
-            CONF_THINKING_BUDGET, DEFAULT[CONF_THINKING_BUDGET]
-        )
-        if (
-            not model.startswith(tuple(NON_THINKING_MODELS))
-            and thinking_budget >= MIN_THINKING_BUDGET
-        ):
+        if thinking_enabled:
             model_args["thinking"] = ThinkingConfigEnabledParam(
                 type="enabled", budget_tokens=thinking_budget
             )
