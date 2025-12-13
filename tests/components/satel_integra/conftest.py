@@ -36,7 +36,7 @@ def mock_satel() -> Generator[AsyncMock]:
     """Override the satel test."""
     with (
         patch(
-            "homeassistant.components.satel_integra.coordinator.AsyncSatel",
+            "homeassistant.components.satel_integra.common.AsyncSatel",
             autospec=True,
         ) as mock_client,
         patch(
