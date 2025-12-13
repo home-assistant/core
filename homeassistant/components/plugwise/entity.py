@@ -79,7 +79,6 @@ class PlugwiseEntity(CoordinatorEntity[PlugwiseDataUpdateCoordinator]):
             and super().available
         )
 
-
     @property
     def device(self) -> GwEntityData:
         """Return data for this device."""
