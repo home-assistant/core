@@ -61,7 +61,9 @@ FIXTURE_USER_INPUT_OPTIONS = {
 async def test_show_set_form(hass: HomeAssistant) -> None:
     """Test that the setup form is served."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=None
+        DOMAIN,
+        context=config_entries.ConfigFlowContext(source=config_entries.SOURCE_USER),
+        data=None,
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -76,7 +78,9 @@ async def test_urlize_plain_host(
     host = "192.168.100.1"
     user_input = {**FIXTURE_USER_INPUT, CONF_URL: host}
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=user_input
+        DOMAIN,
+        context=config_entries.ConfigFlowContext(source=config_entries.SOURCE_USER),
+        data=user_input,
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -108,7 +112,7 @@ async def test_already_configured(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
+        context=config_entries.ConfigFlowContext(source=config_entries.SOURCE_USER),
         data=FIXTURE_USER_INPUT,
     )
 
@@ -231,7 +235,7 @@ async def test_login_error(
     )
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
+        context=config_entries.ConfigFlowContext(source=config_entries.SOURCE_USER),
         data={**FIXTURE_USER_INPUT, **fixture_override},
     )
 
@@ -261,7 +265,7 @@ async def test_success(hass: HomeAssistant, login_requests_mock, scheme: str) ->
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
+            context=config_entries.ConfigFlowContext(source=config_entries.SOURCE_USER),
             data=user_input,
         )
         await hass.async_block_till_done()
@@ -332,7 +336,7 @@ async def test_ssdp(
 ) -> None:
     """Test SSDP discovery initiates config properly."""
     url = FIXTURE_USER_INPUT[CONF_URL][:-1]  # strip trailing slash for appending port
-    context = {"source": config_entries.SOURCE_SSDP}
+    context = config_entries.ConfigFlowContext(source=config_entries.SOURCE_SSDP)
     login_requests_mock.request(**requests_mock_request_kwargs)
     service_info = SsdpServiceInfo(
         ssdp_usn="mock_usn",

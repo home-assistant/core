@@ -126,6 +126,8 @@ async def test_ingress_host(
         ("v1.0.0beta-5"),
         ("v1.0.0-RC2"),
         ("v0.1.0"),
+        ("v1.9.0"),
+        ("v2.0.0beta-2"),
     ],
 )
 async def test_flow_version_error(

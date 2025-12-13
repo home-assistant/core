@@ -17,7 +17,9 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorStateClass,
 )
-from homeassistant.components.sensor.recorder import compile_statistics
+from homeassistant.components.sensor.recorder import (  # pylint: disable=hass-component-root-import
+    compile_statistics,
+)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,

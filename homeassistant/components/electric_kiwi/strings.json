@@ -1,60 +1,60 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "connection_error": "[%key:common::config_flow::error::cannot_connect%]",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "missing_credentials": "[%key:common::config_flow::abort::oauth2_missing_credentials%]",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]"
+    },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    },
     "step": {
       "pick_implementation": {
-        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]",
         "data": {
           "implementation": "[%key:common::config_flow::data::implementation%]"
         },
         "data_description": {
           "implementation": "[%key:common::config_flow::description::implementation%]"
-        }
+        },
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
       },
       "reauth_confirm": {
-        "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "The Electric Kiwi integration needs to re-authenticate your account"
+        "description": "The Electric Kiwi integration needs to re-authenticate your account",
+        "title": "[%key:common::config_flow::title::reauth%]"
       }
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
-      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
-      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "missing_credentials": "[%key:common::config_flow::abort::oauth2_missing_credentials%]",
-      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
-      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
-      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
-      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
-      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
-      "connection_error": "[%key:common::config_flow::error::cannot_connect%]"
-    },
-    "create_entry": {
-      "default": "[%key:common::config_flow::create_entry::authenticated%]"
     }
   },
   "entity": {
+    "select": { "hop_selector": { "name": "Hour of free power" } },
     "sensor": {
-      "hop_free_power_start": {
-        "name": "Hour of free power start"
-      },
       "hop_free_power_end": {
         "name": "Hour of free power end"
       },
-      "total_running_balance": {
-        "name": "Total running balance"
+      "hop_free_power_start": {
+        "name": "Hour of free power start"
       },
-      "total_current_balance": {
-        "name": "Total current balance"
+      "hop_power_savings": {
+        "name": "Hour of power savings"
       },
       "next_billing_date": {
         "name": "Next billing date"
       },
-      "hop_power_savings": {
-        "name": "Hour of power savings"
+      "total_current_balance": {
+        "name": "Total current balance"
+      },
+      "total_running_balance": {
+        "name": "Total running balance"
       }
-    },
-    "select": { "hop_selector": { "name": "Hour of free power" } }
+    }
   }
 }

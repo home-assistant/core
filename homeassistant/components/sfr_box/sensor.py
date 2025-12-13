@@ -12,7 +12,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS,
     EntityCategory,
@@ -21,14 +20,14 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
-from .coordinator import SFRDataUpdateCoordinator
-from .models import DomainData
+from .coordinator import SFRConfigEntry
+from .entity import SFRCoordinatorEntity
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -50,14 +49,14 @@ DSL_SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription[DslInfo], ...] = (
         key="counter",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        translation_key="dsl_counter",
+        translation_key="dsl_connect_count",
         value_fn=lambda x: x.counter,
     ),
     SFRBoxSensorEntityDescription[DslInfo](
         key="crc",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        translation_key="dsl_crc",
+        translation_key="dsl_crc_error_count",
         value_fn=lambda x: x.crc,
     ),
     SFRBoxSensorEntityDescription[DslInfo](
@@ -127,7 +126,6 @@ DSL_SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription[DslInfo], ...] = (
             "loss_of_signal",
             "loss_of_power",
             "loss_of_signal_quality",
-            "unknown",
         ],
         translation_key="dsl_line_status",
         value_fn=lambda x: _value_to_option(x.line_status),
@@ -147,7 +145,6 @@ DSL_SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription[DslInfo], ...] = (
             "g_993_channel_analysis",
             "g_993_message_exchange",
             "showtime",
-            "unknown",
         ],
         translation_key="dsl_training",
         value_fn=lambda x: _value_to_option(x.training),
@@ -163,10 +160,9 @@ SYSTEM_SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription[SystemInfo], ...] = (
             "adsl",
             "ftth",
             "gprs",
-            "unknown",
         ],
         translation_key="net_infra",
-        value_fn=lambda x: x.net_infra,
+        value_fn=lambda x: _value_to_option(x.net_infra),
     ),
     SFRBoxSensorEntityDescription[SystemInfo](
         key="alimvoltage",
@@ -198,18 +194,17 @@ WAN_SENSOR_TYPES: tuple[SFRBoxSensorEntityDescription[WanInfo], ...] = (
             "adsl_routed",
             "ftth_routed",
             "grps_ppp",
-            "unknown",
         ],
         translation_key="wan_mode",
-        value_fn=lambda x: x.mode.replace("/", "_"),
+        value_fn=lambda x: _value_to_option(x.mode),
     ),
 )
 
 
 def _value_to_option(value: str | None) -> str | None:
-    if value is None:
-        return value
-    return value.lower().replace(" ", "_").replace(".", "_")
+    if value is None or value == "Unknown":
+        return None
+    return value.lower().replace(" ", "_").replace(".", "_").replace("/", "_")
 
 
 def _get_temperature(value: float | None) -> float | None:
@@ -220,11 +215,11 @@ def _get_temperature(value: float | None) -> float | None:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SFRConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensors."""
-    data: DomainData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
     system_info = data.system.data
     if TYPE_CHECKING:
         assert system_info is not None
@@ -246,31 +241,12 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class SFRBoxSensor[_T](CoordinatorEntity[SFRDataUpdateCoordinator[_T]], SensorEntity):
+class SFRBoxSensor[_T](SFRCoordinatorEntity[_T], SensorEntity):
     """SFR Box sensor."""
 
     entity_description: SFRBoxSensorEntityDescription[_T]
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        coordinator: SFRDataUpdateCoordinator[_T],
-        description: SFRBoxSensorEntityDescription,
-        system_info: SystemInfo,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        self._attr_unique_id = (
-            f"{system_info.mac_addr}_{coordinator.name}_{description.key}"
-        )
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, system_info.mac_addr)},
-        )
 
     @property
     def native_value(self) -> StateType:
         """Return the native value of the device."""
-        if self.coordinator.data is None:
-            return None
         return self.entity_description.value_fn(self.coordinator.data)
