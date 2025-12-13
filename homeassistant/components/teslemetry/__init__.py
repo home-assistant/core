@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Callable
 import time
-from typing import Any, Final
+from typing import Final
 
 from aiohttp import ClientResponseError
 from tesla_fleet_api.const import Scope
@@ -315,7 +315,7 @@ async def async_migrate_entry(
 
 async def _migrate_token_to_oauth(
     hass: HomeAssistant, access_token: str
-) -> dict[str, Any]:
+) -> dict[str, str]:
     """Migrate legacy access token to OAuth format using Teslemetry migrate endpoint."""
     session = async_get_clientsession(hass)
 
