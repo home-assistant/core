@@ -58,6 +58,7 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
                 CoffeeBoiler, machine.dashboard.config[WidgetType.CM_COFFEE_BOILER]
             ).target_temperature
         ),
+        bt_offline_mode=True,
     ),
     LaMarzoccoNumberEntityDescription(
         key="steam_temp",
@@ -78,6 +79,7 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
             lambda coordinator: coordinator.device.dashboard.model_name
             in (ModelName.GS3_AV, ModelName.GS3_MP)
         ),
+        bt_offline_mode=True,
     ),
     LaMarzoccoNumberEntityDescription(
         key="smart_standby_time",
@@ -96,6 +98,7 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
             )
         ),
         native_value_fn=lambda machine: machine.schedule.smart_wake_up_sleep.smart_stand_by_minutes,
+        bt_offline_mode=True,
     ),
     LaMarzoccoNumberEntityDescription(
         key="preinfusion_off",
@@ -226,13 +229,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up number entities."""
     coordinator = entry.runtime_data.config_coordinator
-    entities: list[NumberEntity] = [
-        LaMarzoccoNumberEntity(coordinator, description)
+
+    async_add_entities(
+        LaMarzoccoNumberEntity(
+            coordinator, description, entry.runtime_data.bluetooth_coordinator
+        )
         for description in ENTITIES
         if description.supported_fn(coordinator)
-    ]
-
-    async_add_entities(entities)
+    )
 
 
 class LaMarzoccoNumberEntity(LaMarzoccoEntity, NumberEntity):

@@ -34,6 +34,7 @@ from homeassistant.components.shelly.utils import (
     get_release_url,
     get_rpc_channel_name,
     get_rpc_input_triggers,
+    get_rpc_sub_device_name,
     is_block_momentary_input,
     mac_address_from_name,
 )
@@ -319,3 +320,53 @@ async def test_shelly_receiver_get() -> None:
 
     ws_server.websocket_handler.assert_awaited_once_with(mock_request)
     assert response == "test_response"
+
+
+@pytest.mark.parametrize(
+    ("key", "expected"),
+    [
+        ("switch:0", "Test name Output 0"),
+        ("switch:1", "Test name Output 1"),
+        ("cover:0", "Test name Cover 0"),
+        ("light:0", "Test name Light 0"),
+        ("rgb:0", "Test name RGB light 0"),
+        ("rgbw:1", "Test name RGBW light 1"),
+        ("cct:0", "Test name CCT light 0"),
+        ("em1:0", "Test name Energy Meter 0"),
+    ],
+)
+async def test_get_rpc_sub_device_name(
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    key: str,
+    expected: str,
+) -> None:
+    """Test get RPC sub-device name."""
+    # Ensure the key has no custom name set
+    config = {key: {"name": None}}
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    assert get_rpc_sub_device_name(mock_rpc_device, key) == expected
+
+
+async def test_get_rpc_sub_device_name_with_custom_name(
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test get RPC sub-device name with custom name."""
+    config = {"switch:0": {"name": "My Custom Output"}}
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    assert get_rpc_sub_device_name(mock_rpc_device, "switch:0") == "My Custom Output"
+
+
+async def test_get_rpc_sub_device_name_with_emeter_phase(
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test get RPC sub-device name with emeter phase."""
+    config = {"em:0": {"name": None}}
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    assert get_rpc_sub_device_name(mock_rpc_device, "em:0", "A") == "Test name Phase A"
+    assert get_rpc_sub_device_name(mock_rpc_device, "em:0", "B") == "Test name Phase B"
