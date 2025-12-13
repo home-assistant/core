@@ -1125,6 +1125,12 @@
       "integration_type": "virtual",
       "supported_by": "opower"
     },
+    "connectsense": {
+      "name": "ConnectSense",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "constructa": {
       "name": "Constructa",
       "integration_type": "virtual",

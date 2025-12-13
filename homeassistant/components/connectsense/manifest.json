@@ -1,0 +1,18 @@
+{
+  "domain": "connectsense",
+  "name": "ConnectSense",
+  "codeowners": ["@JonathanWitthoeft"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/connectsense",
+  "iot_class": "local_polling",
+  "loggers": ["connectsense"],
+  "quality_scale": "bronze",
+  "requirements": ["rebooterpro-async==0.1.0"],
+  "zeroconf": [
+    {
+      "type": "_https._tcp.local.",
+      "name": "reboote*",
+      "properties": { "api": "local", "protocol": "https" }
+    }
+  ]
+}

@@ -640,6 +640,16 @@ ZEROCONF = {
             },
         },
     ],
+    "_https._tcp.local.": [
+        {
+            "domain": "connectsense",
+            "name": "reboote*",
+            "properties": {
+                "api": "local",
+                "protocol": "https",
+            },
+        },
+    ],
     "_hue._tcp.local.": [
         {
             "domain": "hue",

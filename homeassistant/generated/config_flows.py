@@ -127,6 +127,7 @@ FLOWS = {
         "color_extractor",
         "comelit",
         "compit",
+        "connectsense",
         "control4",
         "cookidoo",
         "coolmaster",
