@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from systembridgemodels.media_directories import MediaDirectory
-from systembridgemodels.media_files import MediaFile, MediaFiles
-from systembridgemodels.media_get_files import MediaGetFiles
+from systembridgeconnector.models.media_directories import MediaDirectory
+from systembridgeconnector.models.media_files import MediaFile, MediaFiles
+from systembridgeconnector.models.media_get_files import MediaGetFiles
 
 from homeassistant.components.media_player import MediaClass
 from homeassistant.components.media_source import (
