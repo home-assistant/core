@@ -12,11 +12,13 @@ from bring_api import (
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.bring import async_setup_entry
 from homeassistant.components.bring.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    ConfigEntryDisabler,
+    ConfigEntryState,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import UUID
@@ -52,11 +54,11 @@ async def test_load_unload(
 
 
 @pytest.mark.parametrize(
-    ("exception", "status"),
+    ("exception", "status", "reauth_triggered"),
     [
-        (BringRequestException, ConfigEntryState.SETUP_RETRY),
-        (BringAuthException, ConfigEntryState.SETUP_ERROR),
-        (BringParseException, ConfigEntryState.SETUP_RETRY),
+        (BringRequestException, ConfigEntryState.SETUP_RETRY, False),
+        (BringAuthException, ConfigEntryState.SETUP_ERROR, True),
+        (BringParseException, ConfigEntryState.SETUP_RETRY, False),
     ],
 )
 async def test_init_failure(
@@ -64,6 +66,7 @@ async def test_init_failure(
     mock_bring_client: AsyncMock,
     status: ConfigEntryState,
     exception: Exception,
+    reauth_triggered: bool,
     bring_config_entry: MockConfigEntry,
 ) -> None:
     """Test an initialization error on integration load."""
@@ -71,28 +74,14 @@ async def test_init_failure(
     await setup_integration(hass, bring_config_entry)
     assert bring_config_entry.state == status
 
-
-@pytest.mark.parametrize(
-    ("exception", "expected"),
-    [
-        (BringRequestException, ConfigEntryNotReady),
-        (BringAuthException, ConfigEntryAuthFailed),
-        (BringParseException, ConfigEntryNotReady),
-    ],
-)
-async def test_init_exceptions(
-    hass: HomeAssistant,
-    mock_bring_client: AsyncMock,
-    exception: Exception,
-    expected: Exception,
-    bring_config_entry: MockConfigEntry,
-) -> None:
-    """Test an initialization error on integration load."""
-    bring_config_entry.add_to_hass(hass)
-    mock_bring_client.login.side_effect = exception
-
-    with pytest.raises(expected):
-        await async_setup_entry(hass, bring_config_entry)
+    assert (
+        any(
+            flow
+            for flow in hass.config_entries.flow.async_progress()
+            if flow["context"]["source"] == SOURCE_REAUTH
+        )
+        is reauth_triggered
+    )
 
 
 @pytest.mark.parametrize("exception", [BringRequestException, BringParseException])
