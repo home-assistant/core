@@ -755,6 +755,25 @@ class AnthropicBaseLLMEntity(Entity):
 
         messages = _convert_content(filtered_content[1:])
 
+        # Add cache_control to the last content block to cache the full conversation
+        if messages:
+            last_msg = messages[-1]
+            last_msg_content = last_msg["content"]
+            if isinstance(last_msg_content, str):
+                # Convert string content to list with cache_control
+                last_msg["content"] = [
+                    TextBlockParam(
+                        type="text",
+                        text=last_msg_content,
+                        cache_control={"type": "ephemeral"},
+                    )
+                ]
+            elif isinstance(last_msg_content, list) and last_msg_content:
+                # Add cache_control to the last block in the list
+                last_block = last_msg_content[-1]
+                if isinstance(last_block, dict):
+                    last_block["cache_control"] = {"type": "ephemeral"}
+
         model_args = MessageCreateParamsStreaming(
             model=model,
             messages=messages,
