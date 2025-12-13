@@ -38,7 +38,7 @@ def cfupdate_flow() -> Generator[MagicMock]:
 
 @pytest.fixture
 def location_info() -> Generator[None]:
-    """Mock the CloudflareUpdater for easier testing."""
+    """Mock the LocationInfo for easier testing."""
     with patch(
         LOCATION_PATCH_TARGET,
         return_value=LocationInfo(
