@@ -1763,7 +1763,7 @@ async def test_flow_preview(
 )
 @pytest.mark.usefixtures("start_ha")
 async def test_trigger_expire_after(hass: HomeAssistant) -> None:
-    """Test conditional trigger entity works."""
+    """Test trigger binary sensor with expire_after configuration."""
     state = hass.states.get("binary_sensor.enough_name")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
