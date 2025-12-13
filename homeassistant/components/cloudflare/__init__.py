@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall
 
 from .const import DOMAIN, SERVICE_UPDATE_RECORDS
 from .coordinator import CloudflareConfigEntry, CloudflareCoordinator
@@ -13,12 +13,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: CloudflareConfigEntry) -
     entry.runtime_data = CloudflareCoordinator(hass, entry)
     await entry.runtime_data.async_config_entry_first_refresh()
 
-    @callback
-    def _callback() -> None:
-        """Records updated callback."""
-
     # Since we are not using coordinator for data reads, we need to add dummy listener
-    entry.async_on_unload(entry.runtime_data.async_add_listener(_callback, None))
+    entry.async_on_unload(entry.runtime_data.async_add_listener(lambda: None))
 
     async def update_records_service(_: ServiceCall) -> None:
         """Set up service for manual trigger."""
