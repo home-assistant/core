@@ -21,7 +21,6 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
@@ -29,6 +28,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import HegelConfigEntry
 from .const import CONF_MODEL, DOMAIN, HEARTBEAT_TIMEOUT_MINUTES, MODEL_INPUTS
 from .coordinator import HegelSlowPollCoordinator
 
@@ -39,7 +39,7 @@ PARALLEL_UPDATES = 1
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: HegelConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Hegel media player from a config entry."""
@@ -87,13 +87,6 @@ async def async_setup_entry(
 
     async_add_entities([media])
 
-    # Store entities for unload if desired
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        "client": client,
-        "entities": [media],
-        "coordinator": coordinator,
-    }
-
 
 class HegelMediaPlayer(CoordinatorEntity[HegelSlowPollCoordinator], MediaPlayerEntity):
     """Hegel amplifier entity using CoordinatorEntity for convenience."""
@@ -102,7 +95,7 @@ class HegelMediaPlayer(CoordinatorEntity[HegelSlowPollCoordinator], MediaPlayerE
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: HegelConfigEntry,
         name: str,
         client: HegelClient,
         source_map: dict[int, str],
@@ -377,8 +370,3 @@ class HegelMediaPlayer(CoordinatorEntity[HegelSlowPollCoordinator], MediaPlayerE
             with contextlib.suppress(asyncio.CancelledError):
                 await self._connected_watcher_task
 
-        # stop client manager
-        try:
-            await self._client.stop()
-        except (HegelConnectionError, OSError) as err:
-            _LOGGER.debug("Error while stopping Hegel client: %s", err)

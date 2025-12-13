@@ -9,12 +9,12 @@ from hegel_ip_client.exceptions import HegelConnectionError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, Platform
+from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 
-from .const import DEFAULT_PORT, DOMAIN
+from .const import DOMAIN
 
 PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER]
 _LOGGER = logging.getLogger(__name__)
@@ -35,7 +35,7 @@ SEND_COMMAND_SCHEMA = vol.Schema(
 async def async_setup_entry(hass: HomeAssistant, entry: HegelConfigEntry) -> bool:
     """Set up the Hegel integration."""
     host = entry.data[CONF_HOST]
-    port = entry.data.get(CONF_PORT, DEFAULT_PORT)
+    port = entry.data[CONF_PORT]
 
     # Create and test client connection
     client = HegelClient(host, port)
@@ -54,6 +54,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: HegelConfigEntry) -> boo
 
     # Store client in runtime_data
     entry.runtime_data = client
+
+    async def _async_close_client(event):
+        await client.stop()
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_close_client)
+    )
 
     # Forward setup to supported platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

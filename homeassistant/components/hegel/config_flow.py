@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import re
 from typing import Any
 
 from aiohttp import ClientError, ClientTimeout
@@ -43,8 +42,11 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             entry_data = {**self._discovered_data, **user_input}
 
+            if CONF_PORT not in entry_data:
+                entry_data[CONF_PORT] = DEFAULT_PORT
+
             host = str(entry_data[CONF_HOST])
-            port = entry_data.get(CONF_PORT, DEFAULT_PORT)
+            port = int(entry_data[CONF_PORT])
 
             try:
                 await asyncio.wait_for(asyncio.open_connection(host, port), timeout=2.0)
@@ -215,12 +217,6 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.debug("Failed to fetch device description: %s", err)
             return None, None
 
-        # Try MAC regex
-        mac_match = re.search(r"([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})", text)
-        if mac_match:
-            mac = mac_match.group(0).lower()
-            return f"mac:{mac.replace(':', '')}", mac
-
         # Parse XML for serialNumber or UDN
         try:
             root = ET.fromstring(text)
@@ -243,8 +239,8 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
             if serial:
                 return f"serial:{serial}", None
             if udn:
-                # use udn as stable id if mac/serial absent
                 return f"udn:{udn}", None
+
         except ET.ParseError as err:
             _LOGGER.debug("Failed to parse device description XML: %s", err)
 
