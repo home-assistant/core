@@ -79,7 +79,7 @@
     },
     "aemet": {
       "name": "AEMET OpenData",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -95,7 +95,7 @@
     },
     "aftership": {
       "name": "AfterShip",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -119,7 +119,7 @@
     },
     "airnow": {
       "name": "AirNow",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -151,7 +151,7 @@
           "name": "Airthings"
         },
         "airthings_ble": {
-          "integration_type": "hub",
+          "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_polling",
           "name": "Airthings BLE"
@@ -160,7 +160,7 @@
     },
     "airtouch4": {
       "name": "AirTouch 4",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -276,7 +276,7 @@
     },
     "amberelectric": {
       "name": "Amber Electric",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -323,7 +323,7 @@
     },
     "android_ip_webcam": {
       "name": "Android IP Webcam",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -359,7 +359,7 @@
     },
     "anthemav": {
       "name": "Anthem A/V Receivers",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -505,7 +505,7 @@
     },
     "arcam_fmj": {
       "name": "Arcam FMJ Receivers",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -569,7 +569,7 @@
     },
     "atag": {
       "name": "Atag",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -608,7 +608,7 @@
       }
     },
     "aurora": {
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -620,7 +620,7 @@
     },
     "aussie_broadband": {
       "name": "Aussie Broadband",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -663,7 +663,7 @@
     },
     "baf": {
       "name": "Big Ass Fans",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -680,7 +680,7 @@
     },
     "balboa": {
       "name": "Balboa Spa Client",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -738,7 +738,7 @@
     },
     "blebox": {
       "name": "BleBox devices",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -778,13 +778,13 @@
     },
     "bluemaestro": {
       "name": "BlueMaestro",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
     "bluesound": {
       "name": "Bluesound",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -865,7 +865,7 @@
     },
     "brottsplatskartan": {
       "name": "Brottsplatskartan",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -928,7 +928,7 @@
     },
     "buienradar": {
       "name": "Buienradar",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -939,7 +939,7 @@
     },
     "caldav": {
       "name": "CalDAV",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -963,7 +963,7 @@
       "iot_class": "local_polling"
     },
     "cert_expiry": {
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -1039,7 +1039,7 @@
     },
     "cloudflare": {
       "name": "Cloudflare",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_push",
       "single_config_entry": true
@@ -1063,7 +1063,7 @@
     },
     "coinbase": {
       "name": "Coinbase",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -1279,7 +1279,7 @@
           "name": "Denon Network Receivers"
         },
         "denonavr": {
-          "integration_type": "hub",
+          "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_push",
           "name": "Denon AVR Network Receivers"
@@ -3982,19 +3982,19 @@
       "name": "Microsoft",
       "integrations": {
         "azure_data_explorer": {
-          "integration_type": "hub",
+          "integration_type": "service",
           "config_flow": true,
           "iot_class": "cloud_push",
           "name": "Azure Data Explorer"
         },
         "azure_devops": {
-          "integration_type": "hub",
+          "integration_type": "service",
           "config_flow": true,
           "iot_class": "cloud_polling",
           "name": "Azure DevOps"
         },
         "azure_event_hub": {
-          "integration_type": "hub",
+          "integration_type": "service",
           "config_flow": true,
           "iot_class": "cloud_push",
           "name": "Azure Event Hub"
