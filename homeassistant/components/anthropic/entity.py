@@ -3,6 +3,7 @@
 import base64
 from collections.abc import AsyncGenerator, Callable, Iterable
 from dataclasses import dataclass, field
+from datetime import timedelta
 import json
 from mimetypes import guess_file_type
 from pathlib import Path
@@ -70,6 +71,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, llm
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
+from homeassistant.util.dt import utcnow
 
 from . import AnthropicConfigEntry
 from .const import (
@@ -84,10 +86,13 @@ from .const import (
     CONF_WEB_SEARCH_REGION,
     CONF_WEB_SEARCH_TIMEZONE,
     CONF_WEB_SEARCH_USER_LOCATION,
+    CONTEXT_BUFFER_TOKENS,
+    CONVERSATION_MAX_AGE_HOURS,
     DEFAULT,
     DOMAIN,
     LOGGER,
     MIN_THINKING_BUDGET,
+    MODEL_CONTEXT_WINDOW,
     NON_THINKING_MODELS,
 )
 
@@ -568,6 +573,100 @@ def _create_token_stats(
     }
 
 
+def _find_turn_boundaries(
+    content: list[conversation.Content],
+) -> list[tuple[int, int]]:
+    """Find start and end indices of complete conversation turns.
+
+    A turn starts with UserContent and includes all subsequent
+    AssistantContent and ToolResultContent until the next UserContent.
+    Returns list of (start_index, end_index) tuples, with exclusive end.
+    SystemContent at index 0 is never included.
+    """
+    turns: list[tuple[int, int]] = []
+    current_turn_start: int | None = None
+
+    for i, item in enumerate(content):
+        if isinstance(item, conversation.SystemContent):
+            continue
+        if isinstance(item, conversation.UserContent):
+            if current_turn_start is not None:
+                turns.append((current_turn_start, i))
+            current_turn_start = i
+
+    if current_turn_start is not None:
+        turns.append((current_turn_start, len(content)))
+
+    return turns
+
+
+def _filter_content_by_age(
+    content: list[conversation.Content],
+    max_age_hours: int,
+) -> list[conversation.Content]:
+    """Filter out content older than max_age_hours, keeping complete turns."""
+    if len(content) <= 1:
+        return content
+
+    cutoff_time = utcnow() - timedelta(hours=max_age_hours)
+    turns = _find_turn_boundaries(content)
+
+    if not turns:
+        return content
+
+    filtered: list[conversation.Content] = [content[0]]
+    for start_idx, end_idx in turns:
+        turn_content = content[start_idx:end_idx]
+        newest_in_turn = max(c.created for c in turn_content)
+        if newest_in_turn >= cutoff_time:
+            filtered.extend(turn_content)
+
+    return filtered
+
+
+async def _truncate_to_fit_context(
+    client: anthropic.AsyncAnthropic,
+    model: str,
+    system_prompt: list[TextBlockParam],
+    content: list[conversation.Content],
+    tools: list[ToolUnionParam],
+    max_tokens: int,
+) -> list[conversation.Content]:
+    """Truncate oldest turns until content fits within context limit.
+
+    Never truncates SystemContent or the most recent turn.
+    """
+    target_input_tokens = MODEL_CONTEXT_WINDOW - max_tokens - CONTEXT_BUFFER_TOKENS
+
+    working_content = list(content)
+    turns = _find_turn_boundaries(working_content)
+
+    while len(turns) > 1:
+        messages = _convert_content(working_content[1:])
+
+        try:
+            count_response = await client.messages.count_tokens(
+                model=model,
+                system=system_prompt,
+                messages=messages,
+                tools=tools if tools else anthropic.NOT_GIVEN,
+            )
+            current_tokens = count_response.input_tokens
+        except anthropic.AnthropicError:
+            # If counting fails, proceed without truncation
+            break
+
+        if current_tokens <= target_input_tokens:
+            break
+
+        # Remove the oldest turn
+        oldest_turn_start, oldest_turn_end = turns[0]
+        del working_content[oldest_turn_start:oldest_turn_end]
+        turns = _find_turn_boundaries(working_content)
+
+    return working_content
+
+
 class AnthropicBaseLLMEntity(Entity):
     """Anthropic base LLM entity."""
 
@@ -595,38 +694,24 @@ class AnthropicBaseLLMEntity(Entity):
     ) -> None:
         """Generate an answer for the chat log."""
         options = self.subentry.data
+        client = self.entry.runtime_data
+        model = options.get(CONF_CHAT_MODEL, DEFAULT[CONF_CHAT_MODEL])
+        max_tokens = options.get(CONF_MAX_TOKENS, DEFAULT[CONF_MAX_TOKENS])
 
         system = chat_log.content[0]
         if not isinstance(system, conversation.SystemContent):
             raise TypeError("First message must be a system message")
-        messages = _convert_content(chat_log.content[1:])
 
-        model = options.get(CONF_CHAT_MODEL, DEFAULT[CONF_CHAT_MODEL])
-
-        model_args = MessageCreateParamsStreaming(
-            model=model,
-            messages=messages,
-            max_tokens=options.get(CONF_MAX_TOKENS, DEFAULT[CONF_MAX_TOKENS]),
-            system=system.content,
-            stream=True,
-        )
-
-        thinking_budget = options.get(
-            CONF_THINKING_BUDGET, DEFAULT[CONF_THINKING_BUDGET]
-        )
-        if (
-            not model.startswith(tuple(NON_THINKING_MODELS))
-            and thinking_budget >= MIN_THINKING_BUDGET
-        ):
-            model_args["thinking"] = ThinkingConfigEnabledParam(
-                type="enabled", budget_tokens=thinking_budget
+        # System prompt with caching enabled
+        system_prompt: list[TextBlockParam] = [
+            TextBlockParam(
+                type="text",
+                text=system.content,
+                cache_control={"type": "ephemeral"},
             )
-        else:
-            model_args["thinking"] = ThinkingConfigDisabledParam(type="disabled")
-            model_args["temperature"] = options.get(
-                CONF_TEMPERATURE, DEFAULT[CONF_TEMPERATURE]
-            )
+        ]
 
+        # Build tools early (needed for token counting)
         tools: list[ToolUnionParam] = []
         if chat_log.llm_api:
             tools = [
@@ -649,6 +734,40 @@ class AnthropicBaseLLMEntity(Entity):
                     "timezone": options.get(CONF_WEB_SEARCH_TIMEZONE, ""),
                 }
             tools.append(web_search)
+
+        # Filter out old content and truncate to fit context window
+        filtered_content = _filter_content_by_age(
+            chat_log.content, CONVERSATION_MAX_AGE_HOURS
+        )
+        filtered_content = await _truncate_to_fit_context(
+            client, model, system_prompt, filtered_content, tools, max_tokens
+        )
+
+        messages = _convert_content(filtered_content[1:])
+
+        model_args = MessageCreateParamsStreaming(
+            model=model,
+            messages=messages,
+            max_tokens=max_tokens,
+            system=system_prompt,
+            stream=True,
+        )
+
+        thinking_budget = options.get(
+            CONF_THINKING_BUDGET, DEFAULT[CONF_THINKING_BUDGET]
+        )
+        if (
+            not model.startswith(tuple(NON_THINKING_MODELS))
+            and thinking_budget >= MIN_THINKING_BUDGET
+        ):
+            model_args["thinking"] = ThinkingConfigEnabledParam(
+                type="enabled", budget_tokens=thinking_budget
+            )
+        else:
+            model_args["thinking"] = ThinkingConfigDisabledParam(type="disabled")
+            model_args["temperature"] = options.get(
+                CONF_TEMPERATURE, DEFAULT[CONF_TEMPERATURE]
+            )
 
         # Handle attachments by adding them to the last user message
         last_content = chat_log.content[-1]
@@ -694,10 +813,6 @@ class AnthropicBaseLLMEntity(Entity):
                     type="auto",
                 )
 
-                if isinstance(model_args["system"], str):
-                    model_args["system"] = [
-                        TextBlockParam(type="text", text=model_args["system"])
-                    ]
                 model_args["system"].append(  # type: ignore[union-attr]
                     TextBlockParam(
                         type="text",
@@ -719,9 +834,11 @@ class AnthropicBaseLLMEntity(Entity):
             )
 
         if tools:
+            # Add cache_control to last tool for efficient caching
+            last_tool = tools[-1]
+            if isinstance(last_tool, dict):
+                last_tool["cache_control"] = {"type": "ephemeral"}
             model_args["tools"] = tools
-
-        client = self.entry.runtime_data
 
         # To prevent infinite loops, we limit the number of iterations
         for _iteration in range(MAX_TOOL_ITERATIONS):
