@@ -172,7 +172,7 @@ class PlexMediaSearchResult:
             media = self.media
             if isinstance(media, plexapi.playqueue.PlayQueue) and len(media.items) > 0:
                 media = media.items[0]
-            return getattr(media, "viewOffset", 0)
+            return media.viewOffset
         return 0
 
     @property
