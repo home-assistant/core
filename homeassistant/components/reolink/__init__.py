@@ -6,6 +6,7 @@ import asyncio
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 import logging
+from random import uniform
 from time import time
 from typing import Any
 
@@ -34,6 +35,7 @@ from .const import (
     BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL,
     CONF_BC_ONLY,
     CONF_BC_PORT,
+    CONF_FIRMWARE_CHECK_TIME,
     CONF_SUPPORTS_PRIVACY_MODE,
     CONF_USE_HTTPS,
     DOMAIN,
@@ -138,9 +140,6 @@ async def async_setup_entry(
         }
         hass.config_entries.async_update_entry(config_entry, data=data)
 
-    # retrieve the firmware store to keep track of the last time the firmware was checked
-    firmware_store = get_store(hass, f"{config_entry.entry_id}_firmware")
-
     min_timeout = host.api.timeout * (RETRY_ATTEMPTS + 2)
     update_timeout = max(min_timeout, min_timeout * host.api.num_cameras / 10)
 
@@ -197,7 +196,6 @@ async def async_setup_entry(
                 ) from err
             finally:
                 host.starting = False
-                await firmware_store.async_save(datetime.now(UTC).isoformat())
 
     device_coordinator = DataUpdateCoordinator(
         hass,
@@ -225,19 +223,24 @@ async def async_setup_entry(
         await firmware_coordinator.async_refresh()
         host.cancel_first_firmware_check = None
 
+    # get update time from config entry
+    check_time_sec = config_entry.data.get(CONF_FIRMWARE_CHECK_TIME)
+    if check_time_sec is None:
+        check_time_sec = uniform(0, 86400)
+        data = {
+            **config_entry.data,
+            CONF_FIRMWARE_CHECK_TIME: check_time_sec,
+        }
+        hass.config_entries.async_update_entry(config_entry, data=data)
+
     # If camera WAN blocked, firmware check fails and takes long, do not prevent setup
-    firmware_check_delay: int | timedelta = 5
-    last_check = await firmware_store.async_load()
-    if last_check is not None:
-        firmware_check_delay = FIRMWARE_UPDATE_INTERVAL - (
-            datetime.now(UTC) - datetime.fromisoformat(last_check)
-        )
-        if (
-            firmware_check_delay < timedelta(0)
-            or firmware_check_delay > FIRMWARE_UPDATE_INTERVAL
-        ):
-            firmware_check_delay = 5
-    _LOGGER.debug(
+    now = datetime.now(UTC)
+    check_time = timedelta(seconds=check_time_sec)
+    delta_midnight = now - now.replace(hour=0, minute=0, second=0, microsecond=0)
+    firmware_check_delay = check_time - delta_midnight
+    if firmware_check_delay < timedelta(0):
+        firmware_check_delay += timedelta(days=1)
+    _LOGGER.error(
         "Scheduling first Reolink %s firmware check in %s",
         host.api.nvr_name,
         firmware_check_delay,
