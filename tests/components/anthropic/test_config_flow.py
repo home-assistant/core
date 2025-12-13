@@ -358,6 +358,10 @@ async def test_model_list(
     assert options["step_id"] == "advanced"
     assert options["data_schema"].schema["chat_model"].config["options"] == [
         {
+            "label": "Claude Opus 4.5",
+            "value": "claude-opus-4-5",
+        },
+        {
             "label": "Claude Haiku 4.5",
             "value": "claude-haiku-4-5",
         },
@@ -379,11 +383,11 @@ async def test_model_list(
         },
         {
             "label": "Claude Sonnet 3.7",
-            "value": "claude-3-7-sonnet",
+            "value": "claude-3-7-sonnet-latest",
         },
         {
             "label": "Claude Haiku 3.5",
-            "value": "claude-3-5-haiku",
+            "value": "claude-3-5-haiku-latest",
         },
         {
             "label": "Claude Haiku 3",

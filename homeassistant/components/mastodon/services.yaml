@@ -9,6 +9,7 @@ post:
       required: true
       selector:
         text:
+          multiline: true
     visibility:
       selector:
         select:
