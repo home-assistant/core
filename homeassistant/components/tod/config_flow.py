@@ -23,23 +23,20 @@ from .const import (
     CONF_BEFORE_TIME,
     DOMAIN,
     KIND_FIXED,
-    KIND_SUNRISE,
-    KIND_SUNSET,
+    TodKind,
 )
 
 _KIND_SELECTOR = selector.SelectSelector(
     selector.SelectSelectorConfig(
-        options=[KIND_FIXED, KIND_SUNRISE, KIND_SUNSET],
+        options=list(TodKind),
         mode=selector.SelectSelectorMode.DROPDOWN,
     )
 )
 _TIME_SELECTOR = selector.TimeSelector()
 _OFFSET_SELECTOR = selector.NumberSelector(
     selector.NumberSelectorConfig(
-        min=-600,
-        max=600,
         step=1,
-        unit_of_measurement="min",
+        unit_of_measurement="minutes",
         mode=selector.NumberSelectorMode.BOX,
     )
 )

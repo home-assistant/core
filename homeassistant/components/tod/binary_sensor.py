@@ -41,14 +41,13 @@ from .const import (
     CONF_BEFORE_OFFSET,
     CONF_BEFORE_OFFSET_MIN,
     CONF_BEFORE_TIME,
+    TodKind,
 )
 
 SunEventType = Literal["sunrise", "sunset"]
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_AFTER = "after"
-ATTR_BEFORE = "before"
 ATTR_NEXT_UPDATE = "next_update"
 
 PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
@@ -76,20 +75,8 @@ async def async_setup_entry(
     opts = dict(config_entry.options)
 
     try:
-        after, after_offset = _parse_side_from_options(
-            opts,
-            kind_key=CONF_AFTER_KIND,
-            time_key=CONF_AFTER_TIME,
-            offset_min_key=CONF_AFTER_OFFSET_MIN,
-            side_label=ATTR_AFTER,
-        )
-        before, before_offset = _parse_side_from_options(
-            opts,
-            kind_key=CONF_BEFORE_KIND,
-            time_key=CONF_BEFORE_TIME,
-            offset_min_key=CONF_BEFORE_OFFSET_MIN,
-            side_label=ATTR_BEFORE,
-        )
+        after, after_offset = _parse_boundary_from_options(opts, CONF_AFTER)
+        before, before_offset = _parse_boundary_from_options(opts, CONF_BEFORE)
     except KeyError as exc:
         _LOGGER.error("TOD entry missing required option %s; cannot set up", exc)
         return
@@ -129,30 +116,35 @@ def _is_sun_event(sun_event: time | SunEventType) -> TypeGuard[SunEventType]:
     return sun_event in (SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET)
 
 
-def _parse_side_from_options(
-    opts: dict[str, Any],
-    kind_key: str,
-    time_key: str,
-    offset_min_key: str,
-    side_label: str,
-) -> tuple[time | SunEventType, timedelta]:
-    """Parse either a fixed time or a sun event + minutes offset from options."""
-    kind = opts.get(kind_key)
+def _keys_for_boundary(boundary: str) -> tuple[str, str, str]:
+    """Return (kind_key, time_key, offset_min_key) for a boundary."""
+    if boundary == CONF_AFTER:
+        return CONF_AFTER_KIND, CONF_AFTER_TIME, CONF_AFTER_OFFSET_MIN
+    if boundary == CONF_BEFORE:
+        return CONF_BEFORE_KIND, CONF_BEFORE_TIME, CONF_BEFORE_OFFSET_MIN
+    raise ValueError(f"Unknown boundary {boundary!r}")
 
-    if not kind or kind == "fixed":
+
+def _parse_boundary_from_options(
+    opts: dict[str, Any],
+    boundary: str,
+) -> tuple[time | str, timedelta]:
+    """Parse either a fixed time or a sun event + minutes offset from options for `boundary`."""
+    kind_key, time_key, offset_min_key = _keys_for_boundary(boundary)
+    kind = opts.get(kind_key, TodKind.FIXED)
+
+    if kind is TodKind.FIXED:
         return cv.time(opts[time_key]), timedelta(0)
 
-    try:
-        offset_min = int(opts.get(offset_min_key, 0))
-    except (TypeError, ValueError):
-        offset_min = 0
+    if kind is TodKind.SUNRISE:
+        offset = int(opts.get(offset_min_key, 0) or 0)
+        return SUN_EVENT_SUNRISE, timedelta(minutes=offset)
 
-    if kind in (SUN_EVENT_SUNRISE, "sunrise"):
-        return SUN_EVENT_SUNRISE, timedelta(minutes=offset_min)
-    if kind in (SUN_EVENT_SUNSET, "sunset"):
-        return SUN_EVENT_SUNSET, timedelta(minutes=offset_min)
+    if kind is TodKind.SUNSET:
+        offset = int(opts.get(offset_min_key, 0) or 0)
+        return SUN_EVENT_SUNSET, timedelta(minutes=offset)
 
-    _LOGGER.warning("Unknown %s_kind %r; defaulting to 00:00 fixed", side_label, kind)
+    _LOGGER.warning("Unknown %s_kind %r; defaulting to 00:00 fixed", boundary, kind)
     return time(0, 0), timedelta(0)
 
 
@@ -167,9 +159,9 @@ class TodSensor(BinarySensorEntity):
     def __init__(
         self,
         name: str,
-        after: time | SunEventType,
+        after: time,
         after_offset: timedelta,
-        before: time | SunEventType,
+        before: time,
         before_offset: timedelta,
         unique_id: str | None,
     ) -> None:
@@ -194,8 +186,8 @@ class TodSensor(BinarySensorEntity):
         """Return the state attributes of the sensor."""
         if time_zone := dt_util.get_default_time_zone():
             return {
-                ATTR_AFTER: self._time_after.astimezone(time_zone).isoformat(),
-                ATTR_BEFORE: self._time_before.astimezone(time_zone).isoformat(),
+                CONF_AFTER: self._time_after.astimezone(time_zone).isoformat(),
+                CONF_BEFORE: self._time_before.astimezone(time_zone).isoformat(),
                 ATTR_NEXT_UPDATE: self._next_update.astimezone(time_zone).isoformat(),
             }
         return None

@@ -1,5 +1,9 @@
 """Constants for the Times of the Day integration."""
 
+from enum import StrEnum
+
+from homeassistant.const import SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
+
 DOMAIN = "tod"
 
 CONF_AFTER_KIND = "after_kind"
@@ -12,5 +16,11 @@ CONF_BEFORE_OFFSET = "before_offset"
 CONF_BEFORE_OFFSET_MIN = "before_offset_min"
 
 KIND_FIXED = "fixed"
-KIND_SUNRISE = "sunrise"
-KIND_SUNSET = "sunset"
+
+
+class TodKind(StrEnum):
+    """Possible kinds of after/before values."""
+
+    FIXED = KIND_FIXED
+    SUNRISE = SUN_EVENT_SUNRISE
+    SUNSET = SUN_EVENT_SUNSET

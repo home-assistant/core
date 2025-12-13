@@ -5,23 +5,32 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.tod.const import DOMAIN
+from homeassistant.components.tod.const import (
+    CONF_AFTER_KIND,
+    CONF_AFTER_OFFSET_MIN,
+    CONF_AFTER_TIME,
+    CONF_BEFORE_KIND,
+    CONF_BEFORE_OFFSET_MIN,
+    CONF_BEFORE_TIME,
+    DOMAIN,
+    KIND_FIXED,
+    TodKind,
+)
+from homeassistant.const import (
+    CONF_AFTER,
+    CONF_BEFORE,
+    CONF_NAME,
+    CONF_UNIQUE_ID,
+    SUN_EVENT_SUNRISE,
+    SUN_EVENT_SUNSET,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry, get_schema_suggested_value
 
 AFTER_FIXED = "after_fixed"
-AFTER_KIND = "after_kind"
-AFTER_TIME = "after_time"
-AFTER_OFFSET_MIN = "after_offset_min"
-
 BEFORE_FIXED = "before_fixed"
-BEFORE_KIND = "before_kind"
-BEFORE_TIME = "before_time"
-BEFORE_OFFSET_MIN = "before_offset_min"
-
-KIND_FIXED = "fixed"
 KIND_SUNRISE = "sunrise"
 KIND_SUNSET = "sunset"
 
@@ -39,8 +48,8 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
         result["flow_id"],
         {
             "name": "My tod",
-            AFTER_KIND: KIND_FIXED,
-            BEFORE_KIND: KIND_FIXED,
+            CONF_AFTER_KIND: KIND_FIXED,
+            CONF_BEFORE_KIND: KIND_FIXED,
         },
     )
     assert result["type"] is FlowResultType.FORM
@@ -48,7 +57,7 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {AFTER_TIME: "10:00"},
+        {CONF_AFTER_TIME: "10:00"},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == BEFORE_FIXED
@@ -59,7 +68,7 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {BEFORE_TIME: "18:00"},
+            {CONF_BEFORE_TIME: "18:00"},
         )
         await hass.async_block_till_done()
 
@@ -68,12 +77,12 @@ async def test_config_flow(hass: HomeAssistant, platform) -> None:
     assert result["data"] == {}
     assert result["options"] == {
         "name": "My tod",
-        AFTER_KIND: KIND_FIXED,
-        AFTER_TIME: "10:00",
-        AFTER_OFFSET_MIN: 0,
-        BEFORE_KIND: KIND_FIXED,
-        BEFORE_TIME: "18:00",
-        BEFORE_OFFSET_MIN: 0,
+        CONF_AFTER_KIND: KIND_FIXED,
+        CONF_AFTER_TIME: "10:00",
+        CONF_AFTER_OFFSET_MIN: 0,
+        CONF_BEFORE_KIND: KIND_FIXED,
+        CONF_BEFORE_TIME: "18:00",
+        CONF_BEFORE_OFFSET_MIN: 0,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -92,12 +101,12 @@ async def test_options(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         options={
             "name": "My tod",
-            AFTER_KIND: KIND_FIXED,
-            AFTER_TIME: "10:00",
-            AFTER_OFFSET_MIN: 0,
-            BEFORE_KIND: KIND_FIXED,
-            BEFORE_TIME: "18:05",
-            BEFORE_OFFSET_MIN: 0,
+            CONF_AFTER_KIND: KIND_FIXED,
+            CONF_AFTER_TIME: "10:00",
+            CONF_AFTER_OFFSET_MIN: 0,
+            CONF_BEFORE_KIND: KIND_FIXED,
+            CONF_BEFORE_TIME: "18:05",
+            CONF_BEFORE_OFFSET_MIN: 0,
         },
         title="My tod",
     )
@@ -110,46 +119,46 @@ async def test_options(hass: HomeAssistant) -> None:
     assert result["step_id"] == "init"
     schema = result["data_schema"].schema
     assert get_schema_suggested_value(schema, "name") == "My tod"
-    assert get_schema_suggested_value(schema, AFTER_KIND) == KIND_FIXED
-    assert get_schema_suggested_value(schema, BEFORE_KIND) == KIND_FIXED
+    assert get_schema_suggested_value(schema, CONF_AFTER_KIND) == KIND_FIXED
+    assert get_schema_suggested_value(schema, CONF_BEFORE_KIND) == KIND_FIXED
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
             "name": "My tod",
-            AFTER_KIND: KIND_FIXED,
-            BEFORE_KIND: KIND_FIXED,
+            CONF_AFTER_KIND: KIND_FIXED,
+            CONF_BEFORE_KIND: KIND_FIXED,
         },
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == AFTER_FIXED
 
     schema = result["data_schema"].schema
-    assert get_schema_suggested_value(schema, AFTER_TIME) == "10:00"
+    assert get_schema_suggested_value(schema, CONF_AFTER_TIME) == "10:00"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={AFTER_TIME: "10:00"},
+        user_input={CONF_AFTER_TIME: "10:00"},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == BEFORE_FIXED
 
     schema = result["data_schema"].schema
-    assert get_schema_suggested_value(schema, BEFORE_TIME) == "18:05"
+    assert get_schema_suggested_value(schema, CONF_BEFORE_TIME) == "18:05"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={BEFORE_TIME: "17:05"},
+        user_input={CONF_BEFORE_TIME: "17:05"},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "name": "My tod",
-        AFTER_KIND: KIND_FIXED,
-        AFTER_TIME: "10:00",
-        AFTER_OFFSET_MIN: 0,
-        BEFORE_KIND: KIND_FIXED,
-        BEFORE_TIME: "17:05",
-        BEFORE_OFFSET_MIN: 0,
+        CONF_AFTER_KIND: KIND_FIXED,
+        CONF_AFTER_TIME: "10:00",
+        CONF_AFTER_OFFSET_MIN: 0,
+        CONF_BEFORE_KIND: KIND_FIXED,
+        CONF_BEFORE_TIME: "17:05",
+        CONF_BEFORE_OFFSET_MIN: 0,
     }
 
     assert config_entry.data == {}
@@ -183,8 +192,8 @@ async def test_config_flow_create_fixed_times(hass: HomeAssistant, platform) -> 
         result["flow_id"],
         {
             "name": "My tod",
-            AFTER_KIND: KIND_FIXED,
-            BEFORE_KIND: KIND_FIXED,
+            CONF_AFTER_KIND: KIND_FIXED,
+            CONF_BEFORE_KIND: KIND_FIXED,
         },
     )
     assert result["type"] is FlowResultType.FORM
@@ -193,7 +202,7 @@ async def test_config_flow_create_fixed_times(hass: HomeAssistant, platform) -> 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            AFTER_TIME: "10:00",
+            CONF_AFTER_TIME: "10:00",
         },
     )
     assert result["type"] is FlowResultType.FORM
@@ -206,7 +215,7 @@ async def test_config_flow_create_fixed_times(hass: HomeAssistant, platform) -> 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                BEFORE_TIME: "18:00",
+                CONF_BEFORE_TIME: "18:00",
             },
         )
         await hass.async_block_till_done()
@@ -217,12 +226,12 @@ async def test_config_flow_create_fixed_times(hass: HomeAssistant, platform) -> 
 
     assert result["options"] == {
         "name": "My tod",
-        AFTER_KIND: KIND_FIXED,
-        AFTER_TIME: "10:00",
-        AFTER_OFFSET_MIN: 0,
-        BEFORE_KIND: KIND_FIXED,
-        BEFORE_TIME: "18:00",
-        BEFORE_OFFSET_MIN: 0,
+        CONF_AFTER_KIND: KIND_FIXED,
+        CONF_AFTER_TIME: "10:00",
+        CONF_AFTER_OFFSET_MIN: 0,
+        CONF_BEFORE_KIND: KIND_FIXED,
+        CONF_BEFORE_TIME: "18:00",
+        CONF_BEFORE_OFFSET_MIN: 0,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -240,12 +249,12 @@ async def test_options_flow_fixed_to_fixed(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         options={
             "name": "My tod",
-            AFTER_KIND: KIND_FIXED,
-            AFTER_TIME: "10:00",
-            AFTER_OFFSET_MIN: 0,
-            BEFORE_KIND: KIND_FIXED,
-            BEFORE_TIME: "18:05",
-            BEFORE_OFFSET_MIN: 0,
+            CONF_AFTER_KIND: KIND_FIXED,
+            CONF_AFTER_TIME: "10:00",
+            CONF_AFTER_OFFSET_MIN: 0,
+            CONF_BEFORE_KIND: KIND_FIXED,
+            CONF_BEFORE_TIME: "18:05",
+            CONF_BEFORE_OFFSET_MIN: 0,
         },
         title="My tod",
     )
@@ -259,46 +268,46 @@ async def test_options_flow_fixed_to_fixed(hass: HomeAssistant) -> None:
 
     schema = result["data_schema"].schema
     assert get_schema_suggested_value(schema, "name") == "My tod"
-    assert get_schema_suggested_value(schema, AFTER_KIND) == KIND_FIXED
-    assert get_schema_suggested_value(schema, BEFORE_KIND) == KIND_FIXED
+    assert get_schema_suggested_value(schema, CONF_AFTER_KIND) == KIND_FIXED
+    assert get_schema_suggested_value(schema, CONF_BEFORE_KIND) == KIND_FIXED
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
             "name": "My tod",
-            AFTER_KIND: KIND_FIXED,
-            BEFORE_KIND: KIND_FIXED,
+            CONF_AFTER_KIND: KIND_FIXED,
+            CONF_BEFORE_KIND: KIND_FIXED,
         },
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == AFTER_FIXED
 
     schema = result["data_schema"].schema
-    assert get_schema_suggested_value(schema, AFTER_TIME) == "10:00"
+    assert get_schema_suggested_value(schema, CONF_AFTER_TIME) == "10:00"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={AFTER_TIME: "10:00"},
+        user_input={CONF_AFTER_TIME: "10:00"},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == BEFORE_FIXED
 
     schema = result["data_schema"].schema
-    assert get_schema_suggested_value(schema, BEFORE_TIME) == "18:05"
+    assert get_schema_suggested_value(schema, CONF_BEFORE_TIME) == "18:05"
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={BEFORE_TIME: "17:05"},
+        user_input={CONF_BEFORE_TIME: "17:05"},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         "name": "My tod",
-        AFTER_KIND: KIND_FIXED,
-        AFTER_TIME: "10:00",
-        AFTER_OFFSET_MIN: 0,
-        BEFORE_KIND: KIND_FIXED,
-        BEFORE_TIME: "17:05",
-        BEFORE_OFFSET_MIN: 0,
+        CONF_AFTER_KIND: KIND_FIXED,
+        CONF_AFTER_TIME: "10:00",
+        CONF_AFTER_OFFSET_MIN: 0,
+        CONF_BEFORE_KIND: KIND_FIXED,
+        CONF_BEFORE_TIME: "17:05",
+        CONF_BEFORE_OFFSET_MIN: 0,
     }
 
     assert config_entry.data == {}
