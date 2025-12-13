@@ -3,8 +3,6 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from python_overseerr import RequestCount
-
 from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
@@ -13,9 +11,10 @@ from homeassistant.components.sensor import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import REQUESTS
+from .const import ISSUES, REQUESTS
 from .coordinator import OverseerrConfigEntry, OverseerrCoordinator
 from .entity import OverseerrEntity
+from .models import OverseerrData
 
 PARALLEL_UPDATES = 0
 
@@ -24,7 +23,7 @@ PARALLEL_UPDATES = 0
 class OverseerrSensorEntityDescription(SensorEntityDescription):
     """Describes Overseerr config sensor entity."""
 
-    value_fn: Callable[[RequestCount], int]
+    value_fn: Callable[[OverseerrData], int]
 
 
 SENSORS: tuple[OverseerrSensorEntityDescription, ...] = (
@@ -32,43 +31,79 @@ SENSORS: tuple[OverseerrSensorEntityDescription, ...] = (
         key="total_requests",
         native_unit_of_measurement=REQUESTS,
         state_class=SensorStateClass.TOTAL,
-        value_fn=lambda count: count.total,
+        value_fn=lambda data: data.requests.total,
     ),
     OverseerrSensorEntityDescription(
         key="movie_requests",
         native_unit_of_measurement=REQUESTS,
         state_class=SensorStateClass.TOTAL,
-        value_fn=lambda count: count.movie,
+        value_fn=lambda data: data.requests.movie,
     ),
     OverseerrSensorEntityDescription(
         key="tv_requests",
         native_unit_of_measurement=REQUESTS,
         state_class=SensorStateClass.TOTAL,
-        value_fn=lambda count: count.tv,
+        value_fn=lambda data: data.requests.tv,
     ),
     OverseerrSensorEntityDescription(
         key="pending_requests",
         native_unit_of_measurement=REQUESTS,
         state_class=SensorStateClass.TOTAL,
-        value_fn=lambda count: count.pending,
+        value_fn=lambda data: data.requests.pending,
     ),
     OverseerrSensorEntityDescription(
         key="declined_requests",
         native_unit_of_measurement=REQUESTS,
         state_class=SensorStateClass.TOTAL,
-        value_fn=lambda count: count.declined,
+        value_fn=lambda data: data.requests.declined,
     ),
     OverseerrSensorEntityDescription(
         key="processing_requests",
         native_unit_of_measurement=REQUESTS,
         state_class=SensorStateClass.TOTAL,
-        value_fn=lambda count: count.processing,
+        value_fn=lambda data: data.requests.processing,
     ),
     OverseerrSensorEntityDescription(
         key="available_requests",
         native_unit_of_measurement=REQUESTS,
         state_class=SensorStateClass.TOTAL,
-        value_fn=lambda count: count.available,
+        value_fn=lambda data: data.requests.available,
+    ),
+    OverseerrSensorEntityDescription(
+        key="total_issues",
+        native_unit_of_measurement=ISSUES,
+        state_class=SensorStateClass.TOTAL,
+        value_fn=lambda data: data.issues.total,
+    ),
+    OverseerrSensorEntityDescription(
+        key="open_issues",
+        native_unit_of_measurement=ISSUES,
+        state_class=SensorStateClass.TOTAL,
+        value_fn=lambda data: data.issues.open,
+    ),
+    OverseerrSensorEntityDescription(
+        key="closed_issues",
+        native_unit_of_measurement=ISSUES,
+        state_class=SensorStateClass.TOTAL,
+        value_fn=lambda data: data.issues.closed,
+    ),
+    OverseerrSensorEntityDescription(
+        key="video_issues",
+        native_unit_of_measurement=ISSUES,
+        state_class=SensorStateClass.TOTAL,
+        value_fn=lambda data: data.issues.video,
+    ),
+    OverseerrSensorEntityDescription(
+        key="audio_issues",
+        native_unit_of_measurement=ISSUES,
+        state_class=SensorStateClass.TOTAL,
+        value_fn=lambda data: data.issues.audio,
+    ),
+    OverseerrSensorEntityDescription(
+        key="subtitle_issues",
+        native_unit_of_measurement=ISSUES,
+        state_class=SensorStateClass.TOTAL,
+        value_fn=lambda data: data.issues.subtitles,
     ),
 )
 

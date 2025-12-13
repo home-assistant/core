@@ -8,6 +8,7 @@ DOMAIN = "overseerr"
 LOGGER = logging.getLogger(__package__)
 
 REQUESTS = "requests"
+ISSUES = "issues"
 
 ATTR_STATUS = "status"
 ATTR_SORT_ORDER = "sort_order"
@@ -22,6 +23,10 @@ REGISTERED_NOTIFICATIONS = (
     | NotificationType.REQUEST_AVAILABLE
     | NotificationType.REQUEST_PROCESSING_FAILED
     | NotificationType.REQUEST_AUTOMATICALLY_APPROVED
+    | NotificationType.ISSUE_REPORTED
+    | NotificationType.ISSUE_COMMENTED
+    | NotificationType.ISSUE_RESOLVED
+    | NotificationType.ISSUE_REOPENED
 )
 JSON_PAYLOAD = (
     '"{\\"notification_type\\":\\"{{notification_type}}\\",\\"subject\\":\\"{{subject}'
