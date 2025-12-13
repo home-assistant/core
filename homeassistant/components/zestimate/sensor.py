@@ -107,13 +107,13 @@ class ZestimateDataSensor(SensorEntity):
         attributes["address"] = self.address
         return attributes
 
-    def update(self):
+    def update(self) -> None:
         """Get the latest data and update the states."""
 
         try:
             response = requests.get(_RESOURCE, params=self.params, timeout=5)
             data = response.content.decode("utf-8")
-            data_dict = xmltodict.parse(data).get(ZESTIMATE)
+            data_dict = xmltodict.parse(data)[ZESTIMATE]
             error_code = int(data_dict["message"]["code"])
             if error_code != 0:
                 _LOGGER.error("The API returned: %s", data_dict["message"]["text"])

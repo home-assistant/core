@@ -1,6 +1,6 @@
 """Test the Remote Calendar config flow."""
 
-from httpx import ConnectError, Response, UnsupportedProtocol
+from httpx import HTTPError, InvalidURL, Response, TimeoutException
 import pytest
 import respx
 
@@ -75,17 +75,19 @@ async def test_form_import_webcal(hass: HomeAssistant, ics_content: str) -> None
 
 
 @pytest.mark.parametrize(
-    ("side_effect"),
+    ("side_effect", "base_error"),
     [
-        ConnectError("Connection failed"),
-        UnsupportedProtocol("Unsupported protocol"),
+        (TimeoutException("Connection timed out"), "timeout_connect"),
+        (HTTPError("Connection failed"), "cannot_connect"),
+        (InvalidURL("Unsupported protocol"), "cannot_connect"),
     ],
 )
 @respx.mock
-async def test_form_inavild_url(
+async def test_form_invalid_url(
     hass: HomeAssistant,
     side_effect: Exception,
     ics_content: str,
+    base_error: str,
 ) -> None:
     """Test we get the import form."""
     result = await hass.config_entries.flow.async_init(
@@ -102,7 +104,7 @@ async def test_form_inavild_url(
         },
     )
     assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result2["errors"] == {"base": base_error}
     respx.get(CALENDER_URL).mock(
         return_value=Response(
             status_code=200,

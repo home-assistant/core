@@ -50,7 +50,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
 
 from . import services
-from .const import DOMAIN as HEOS_DOMAIN
+from .const import DOMAIN
 from .coordinator import HeosConfigEntry, HeosCoordinator
 
 PARALLEL_UPDATES = 0
@@ -71,6 +71,7 @@ BASE_SUPPORTED_FEATURES = (
 
 PLAY_STATE_TO_STATE = {
     None: MediaPlayerState.IDLE,
+    PlayState.UNKNOWN: MediaPlayerState.IDLE,
     PlayState.PLAY: MediaPlayerState.PLAYING,
     PlayState.STOP: MediaPlayerState.IDLE,
     PlayState.PAUSE: MediaPlayerState.PAUSED,
@@ -150,7 +151,7 @@ def catch_action_error[**_P, _R](
                 return await func(*args, **kwargs)
             except (HeosError, ValueError) as ex:
                 raise HomeAssistantError(
-                    translation_domain=HEOS_DOMAIN,
+                    translation_domain=DOMAIN,
                     translation_key="action_error",
                     translation_placeholders={"action": action, "error": str(ex)},
                 ) from ex
@@ -178,7 +179,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         manufacturer = model_parts[0] if len(model_parts) == 2 else "HEOS"
         model = model_parts[1] if len(model_parts) == 2 else player.model
         self._attr_device_info = DeviceInfo(
-            identifiers={(HEOS_DOMAIN, str(player.player_id))},
+            identifiers={(DOMAIN, str(player.player_id))},
             manufacturer=manufacturer,
             model=model,
             name=player.name,
@@ -214,7 +215,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
             for member_id in player_ids
             if (
                 entity_id := entity_registry.async_get_entity_id(
-                    Platform.MEDIA_PLAYER, HEOS_DOMAIN, str(member_id)
+                    Platform.MEDIA_PLAYER, DOMAIN, str(member_id)
                 )
             )
         ]
@@ -294,7 +295,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
     ) -> None:
         """Play a piece of media."""
         if heos_source.is_media_uri(media_id):
-            media, data = heos_source.from_media_uri(media_id)
+            media, _data = heos_source.from_media_uri(media_id)
             if not isinstance(media, MediaItem):
                 raise ValueError(f"Invalid media id '{media_id}'")
             await self._player.play_media(
@@ -378,7 +379,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
                 return
 
         raise ServiceValidationError(
-            translation_domain=HEOS_DOMAIN,
+            translation_domain=DOMAIN,
             translation_key="unknown_source",
             translation_placeholders={"source": source},
         )
@@ -405,7 +406,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         """Set group volume level."""
         if self._player.group_id is None:
             raise ServiceValidationError(
-                translation_domain=HEOS_DOMAIN,
+                translation_domain=DOMAIN,
                 translation_key="entity_not_grouped",
                 translation_placeholders={"entity_id": self.entity_id},
             )
@@ -418,7 +419,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         """Turn group volume down for media player."""
         if self._player.group_id is None:
             raise ServiceValidationError(
-                translation_domain=HEOS_DOMAIN,
+                translation_domain=DOMAIN,
                 translation_key="entity_not_grouped",
                 translation_placeholders={"entity_id": self.entity_id},
             )
@@ -429,7 +430,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         """Turn group volume up for media player."""
         if self._player.group_id is None:
             raise ServiceValidationError(
-                translation_domain=HEOS_DOMAIN,
+                translation_domain=DOMAIN,
                 translation_key="entity_not_grouped",
                 translation_placeholders={"entity_id": self.entity_id},
             )
@@ -445,13 +446,13 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
             entity_entry = entity_registry.async_get(entity_id)
             if entity_entry is None:
                 raise ServiceValidationError(
-                    translation_domain=HEOS_DOMAIN,
+                    translation_domain=DOMAIN,
                     translation_key="entity_not_found",
                     translation_placeholders={"entity_id": entity_id},
                 )
-            if entity_entry.platform != HEOS_DOMAIN:
+            if entity_entry.platform != DOMAIN:
                 raise ServiceValidationError(
-                    translation_domain=HEOS_DOMAIN,
+                    translation_domain=DOMAIN,
                     translation_key="not_heos_media_player",
                     translation_placeholders={"entity_id": entity_id},
                 )
@@ -609,7 +610,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
 
     async def _async_browse_heos_media(self, media_content_id: str) -> BrowseMedia:
         """Browse a HEOS media item."""
-        media, data = heos_source.from_media_uri(media_content_id)
+        media, _data = heos_source.from_media_uri(media_content_id)
         browse_media = _media_to_browse_media(media)
         try:
             browse_result = await self.coordinator.heos.browse_media(media)
@@ -647,7 +648,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         if media_source.is_media_source_id(media_content_id):
             return await self._async_browse_media_source(media_content_id)
         raise ServiceValidationError(
-            translation_domain=HEOS_DOMAIN,
+            translation_domain=DOMAIN,
             translation_key="unsupported_media_content_id",
             translation_placeholders={"media_content_id": media_content_id},
         )

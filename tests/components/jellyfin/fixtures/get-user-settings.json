@@ -1,5 +1,5 @@
 {
-  "Id": "string",
+  "Id": "USER-UUID",
   "ViewType": "string",
   "SortBy": "string",
   "IndexBy": "string",

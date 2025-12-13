@@ -77,6 +77,7 @@ class UpdateStatisticsMetadataTask(RecorderTask):
     on_done: Callable[[], None] | None
     statistic_id: str
     new_statistic_id: str | None | UndefinedType
+    new_unit_class: str | None | UndefinedType
     new_unit_of_measurement: str | None | UndefinedType
 
     def run(self, instance: Recorder) -> None:
@@ -85,6 +86,7 @@ class UpdateStatisticsMetadataTask(RecorderTask):
             instance,
             self.statistic_id,
             self.new_statistic_id,
+            self.new_unit_class,
             self.new_unit_of_measurement,
         )
         if self.on_done:
@@ -317,13 +319,18 @@ class SynchronizeTask(RecorderTask):
     """Ensure all pending data has been committed."""
 
     # commit_before is the default
-    event: asyncio.Event
+    future: asyncio.Future
 
     def run(self, instance: Recorder) -> None:
         """Handle the task."""
         # Does not use a tracked task to avoid
         # blocking shutdown if the recorder is broken
-        instance.hass.loop.call_soon_threadsafe(self.event.set)
+        instance.hass.loop.call_soon_threadsafe(self._set_result_if_not_done)
+
+    def _set_result_if_not_done(self) -> None:
+        """Set the result if not done."""
+        if not self.future.done():
+            self.future.set_result(None)
 
 
 @dataclass(slots=True)

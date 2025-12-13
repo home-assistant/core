@@ -4,40 +4,55 @@ from __future__ import annotations
 
 from typing import Any
 
-from pyuptimerobot import UptimeRobotAuthenticationException, UptimeRobotException
+from pyuptimerobot import (
+    UptimeRobotAuthenticationException,
+    UptimeRobotException,
+    UptimeRobotMonitor,
+)
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import API_ATTR_OK, DOMAIN, LOGGER
-from .coordinator import UptimeRobotDataUpdateCoordinator
+from .const import API_ATTR_OK, DOMAIN
+from .coordinator import UptimeRobotConfigEntry
 from .entity import UptimeRobotEntity
+from .utils import new_device_listener
+
+# Limit the number of parallel updates to 1
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: UptimeRobotConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the UptimeRobot switches."""
-    coordinator: UptimeRobotDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
-        UptimeRobotSwitch(
-            coordinator,
-            SwitchEntityDescription(
-                key=str(monitor.id),
-                device_class=SwitchDeviceClass.SWITCH,
-            ),
-            monitor=monitor,
-        )
-        for monitor in coordinator.data
-    )
+    coordinator = entry.runtime_data
+
+    def _add_new_entities(new_monitors: list[UptimeRobotMonitor]) -> None:
+        """Add entities for new monitors."""
+        entities = [
+            UptimeRobotSwitch(
+                coordinator,
+                SwitchEntityDescription(
+                    key=str(monitor.id),
+                    device_class=SwitchDeviceClass.SWITCH,
+                ),
+                monitor=monitor,
+            )
+            for monitor in new_monitors
+        ]
+        if entities:
+            async_add_entities(entities)
+
+    entry.async_on_unload(new_device_listener(coordinator, _add_new_entities))
 
 
 class UptimeRobotSwitch(UptimeRobotEntity, SwitchEntity):
@@ -55,16 +70,21 @@ class UptimeRobotSwitch(UptimeRobotEntity, SwitchEntity):
         try:
             response = await self.api.async_edit_monitor(**kwargs)
         except UptimeRobotAuthenticationException:
-            LOGGER.debug("API authentication error, calling reauth")
             self.coordinator.config_entry.async_start_reauth(self.hass)
             return
         except UptimeRobotException as exception:
-            LOGGER.error("API exception: %s", exception)
-            return
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="api_exception",
+                translation_placeholders={"error": repr(exception)},
+            ) from exception
 
         if response.status != API_ATTR_OK:
-            LOGGER.error("API exception: %s", response.error.message, exc_info=True)
-            return
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="api_exception",
+                translation_placeholders={"error": response.error.message},
+            )
 
         await self.coordinator.async_request_refresh()
 

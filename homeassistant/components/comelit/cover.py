@@ -11,9 +11,11 @@ from homeassistant.components.cover import CoverDeviceClass, CoverEntity, CoverS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import ObjectClassType
 from .coordinator import ComelitConfigEntry, ComelitSerialBridge
+from .entity import ComelitBridgeBaseEntity
+from .utils import bridge_api_call, new_device_listener
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -28,19 +30,25 @@ async def async_setup_entry(
 
     coordinator = cast(ComelitSerialBridge, config_entry.runtime_data)
 
-    async_add_entities(
-        ComelitCoverEntity(coordinator, device, config_entry.entry_id)
-        for device in coordinator.data[COVER].values()
+    def _add_new_entities(new_devices: list[ObjectClassType], dev_type: str) -> None:
+        """Add entities for new monitors."""
+        entities = [
+            ComelitCoverEntity(coordinator, device, config_entry.entry_id)
+            for device in coordinator.data[dev_type].values()
+            if device in new_devices
+        ]
+        if entities:
+            async_add_entities(entities)
+
+    config_entry.async_on_unload(
+        new_device_listener(coordinator, _add_new_entities, COVER)
     )
 
 
-class ComelitCoverEntity(
-    CoordinatorEntity[ComelitSerialBridge], RestoreEntity, CoverEntity
-):
+class ComelitCoverEntity(ComelitBridgeBaseEntity, RestoreEntity, CoverEntity):
     """Cover device."""
 
     _attr_device_class = CoverDeviceClass.SHUTTER
-    _attr_has_entity_name = True
     _attr_name = None
 
     def __init__(
@@ -50,16 +58,9 @@ class ComelitCoverEntity(
         config_entry_entry_id: str,
     ) -> None:
         """Init cover entity."""
-        self._api = coordinator.api
-        self._device = device
-        super().__init__(coordinator)
-        # Use config_entry.entry_id as base for unique_id
-        # because no serial number or mac is available
-        self._attr_unique_id = f"{config_entry_entry_id}-{device.index}"
-        self._attr_device_info = coordinator.platform_device_info(device, device.type)
+        super().__init__(coordinator, device, config_entry_entry_id)
         # Device doesn't provide a status so we assume UNKNOWN at first startup
         self._last_action: int | None = None
-        self._last_state: str | None = None
 
     def _current_action(self, action: str) -> bool:
         """Return the current cover action."""
@@ -77,16 +78,10 @@ class ComelitCoverEntity(
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
 
-        if self._last_state in [None, "unknown"]:
-            return None
-
-        if self.device_status != STATE_COVER.index("stopped"):
-            return False
-
         if self._last_action:
             return self._last_action == STATE_COVER.index("closing")
 
-        return self._last_state == CoverState.CLOSED
+        return None
 
     @property
     def is_closing(self) -> bool:
@@ -98,10 +93,10 @@ class ComelitCoverEntity(
         """Return if the cover is opening."""
         return self._current_action("opening")
 
+    @bridge_api_call
     async def _cover_set_state(self, action: int, state: int) -> None:
         """Set desired cover state."""
-        self._last_state = self.state
-        await self._api.set_device_status(COVER, self._device.index, action)
+        await self.coordinator.api.set_device_status(COVER, self._device.index, action)
         self.coordinator.data[COVER][self._device.index].status = state
         self.async_write_ha_state()
 
@@ -126,5 +121,10 @@ class ComelitCoverEntity(
 
         await super().async_added_to_hass()
 
-        if last_state := await self.async_get_last_state():
-            self._last_state = last_state.state
+        if (state := await self.async_get_last_state()) is not None:
+            if state.state == CoverState.CLOSED:
+                self._last_action = STATE_COVER.index(CoverState.CLOSING)
+            if state.state == CoverState.OPEN:
+                self._last_action = STATE_COVER.index(CoverState.OPENING)
+
+            self._attr_is_closed = state.state == CoverState.CLOSED

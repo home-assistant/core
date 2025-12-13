@@ -95,6 +95,7 @@ ATTR_PSEUDO = "pseudo"
 ATTR_SCHEDULE_ID = "schedule_id"
 ATTR_SCHEDULE_NAME = "schedule_name"
 ATTR_SELECTED_SCHEDULE = "selected_schedule"
+ATTR_SELECTED_SCHEDULE_ID = "selected_schedule_id"
 ATTR_TARGET_TEMPERATURE = "target_temperature"
 ATTR_TIME_PERIOD = "time_period"
 
@@ -126,6 +127,9 @@ EVENT_TYPE_ALARM_STARTED = "alarm_started"
 EVENT_TYPE_DOOR_TAG_BIG_MOVE = "tag_big_move"
 EVENT_TYPE_DOOR_TAG_OPEN = "tag_open"
 EVENT_TYPE_DOOR_TAG_SMALL_MOVE = "tag_small_move"
+# Generic events
+EVENT_TYPE_CONNECTION = "connection"
+EVENT_TYPE_DISCONNECTION = "disconnection"
 EVENT_TYPE_OFF = "off"
 EVENT_TYPE_ON = "on"
 

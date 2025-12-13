@@ -130,3 +130,139 @@ speed_limit:
           min: 1000
           max: 9999
           mode: box
+
+add_charge_schedule:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          filter:
+            integration: teslemetry
+    days_of_week:
+      required: true
+      selector:
+        select:
+          options:
+            - monday
+            - tuesday
+            - wednesday
+            - thursday
+            - friday
+            - saturday
+            - sunday
+          multiple: true
+          translation_key: days_of_week
+    enable:
+      required: true
+      selector:
+        boolean:
+    location:
+      required: false
+      example: '{"latitude": -27.9699373, "longitude": 153.4081865}'
+      selector:
+        location:
+          radius: false
+    start_time:
+      required: false
+      selector:
+        time:
+    end_time:
+      required: false
+      selector:
+        time:
+    one_time:
+      required: false
+      selector:
+        boolean:
+    id:
+      required: false
+      selector:
+        number:
+          min: 1
+          mode: box
+    name:
+      required: false
+      selector:
+        text:
+
+remove_charge_schedule:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          filter:
+            integration: teslemetry
+    id:
+      required: true
+      selector:
+        number:
+          min: 1
+          mode: box
+
+add_precondition_schedule:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          filter:
+            integration: teslemetry
+    days_of_week:
+      required: true
+      selector:
+        select:
+          options:
+            - monday
+            - tuesday
+            - wednesday
+            - thursday
+            - friday
+            - saturday
+            - sunday
+          multiple: true
+          translation_key: days_of_week
+    enable:
+      required: true
+      selector:
+        boolean:
+    location:
+      required: false
+      example: '{"latitude": -27.9699373, "longitude": 153.4081865}'
+      selector:
+        location:
+          radius: false
+    precondition_time:
+      required: true
+      selector:
+        time:
+    id:
+      required: false
+      selector:
+        number:
+          min: 1
+          mode: box
+    one_time:
+      required: false
+      selector:
+        boolean:
+    name:
+      required: false
+      selector:
+        text:
+
+remove_precondition_schedule:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          filter:
+            integration: teslemetry
+    id:
+      required: true
+      selector:
+        number:
+          min: 1
+          mode: box

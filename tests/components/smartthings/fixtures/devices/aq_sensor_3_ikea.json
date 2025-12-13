@@ -1,0 +1,77 @@
+{
+  "items": [
+    {
+      "deviceId": "e44d4e5c-45ea-498f-a653-f5d0c3d97bb8",
+      "name": "humidity-temp-dust-tvoc",
+      "label": "aq-sensor-3-ikea",
+      "manufacturerName": "SmartThingsCommunity",
+      "presentationId": "a39f5e57-c861-3904-9567-acda80b7cf2d",
+      "deviceManufacturerCode": "IKEA of Sweden",
+      "locationId": "9fbc89a0-5c32-494d-9a49-68186d6a5387",
+      "ownerId": "d051c4c5-8ccb-47b9-87ee-7ebb99694b9f",
+      "roomId": "f5ce3177-e0a6-4415-8496-bafa1611ee62",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "temperatureMeasurement",
+              "version": 1
+            },
+            {
+              "id": "relativeHumidityMeasurement",
+              "version": 1
+            },
+            {
+              "id": "fineDustSensor",
+              "version": 1
+            },
+            {
+              "id": "airQualityHealthConcern",
+              "version": 1
+            },
+            {
+              "id": "tvocMeasurement",
+              "version": 1
+            },
+            {
+              "id": "firmwareUpdate",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "AirQualityDetector",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        }
+      ],
+      "createTime": "2025-03-19T19:48:39.571Z",
+      "parentDeviceId": "5616f552-5bae-4a1f-94b3-9eb2673a1b28",
+      "profile": {
+        "id": "0720a973-6923-39d4-8991-3aaed6edf5d5"
+      },
+      "zigbee": {
+        "eui": "0CAE5FFFFECE4328",
+        "networkId": "846B",
+        "driverId": "9bee78b3-204e-4118-8265-8767f9152c49",
+        "executingLocally": true,
+        "hubId": "5616f552-5bae-4a1f-94b3-9eb2673a1b28",
+        "provisioningState": "PROVISIONED"
+      },
+      "type": "ZIGBEE",
+      "restrictionTier": 0,
+      "allowed": null,
+      "executionContext": "LOCAL",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}

@@ -55,7 +55,6 @@ async def test_media_player_noscope(
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     mock_metadata: AsyncMock,
-    mock_legacy: AsyncMock,
 ) -> None:
     """Tests that the media player entities are correct without required scope."""
 

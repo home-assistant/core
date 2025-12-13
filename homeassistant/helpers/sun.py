@@ -31,8 +31,8 @@ def get_astral_location(
     hass: HomeAssistant,
 ) -> tuple[astral.location.Location, astral.Elevation]:
     """Get an astral location for the current Home Assistant configuration."""
-    from astral import LocationInfo  # pylint: disable=import-outside-toplevel
-    from astral.location import Location  # pylint: disable=import-outside-toplevel
+    from astral import LocationInfo  # noqa: PLC0415
+    from astral.location import Location  # noqa: PLC0415
 
     latitude = hass.config.latitude
     longitude = hass.config.longitude

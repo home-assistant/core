@@ -1,0 +1,116 @@
+{
+  "endpoint": "https://apigw.tuyaus.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": true,
+  "name": "Spot 1",
+  "category": "cz",
+  "product_id": "nx8rv6jpe1tsnffk",
+  "product_name": "Smart plug",
+  "online": true,
+  "sub": false,
+  "time_zone": "-04:00",
+  "active_time": "2025-06-21T17:03:23+00:00",
+  "create_time": "2025-06-21T17:03:23+00:00",
+  "update_time": "2025-06-21T17:03:23+00:00",
+  "function": {
+    "switch_1": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "countdown_1": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "relay_status": {
+      "type": "Enum",
+      "value": {
+        "range": ["power_off", "power_on", "last"]
+      }
+    },
+    "light_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["relay", "pos", "none"]
+      }
+    },
+    "child_lock": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "cycle_time": {
+      "type": "String",
+      "value": {}
+    },
+    "random_time": {
+      "type": "String",
+      "value": {}
+    },
+    "switch_inching": {
+      "type": "String",
+      "value": {}
+    }
+  },
+  "status_range": {
+    "switch_1": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "countdown_1": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "relay_status": {
+      "type": "Enum",
+      "value": {
+        "range": ["power_off", "power_on", "last"]
+      }
+    },
+    "light_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["relay", "pos", "none"]
+      }
+    },
+    "child_lock": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "cycle_time": {
+      "type": "String",
+      "value": {}
+    },
+    "random_time": {
+      "type": "String",
+      "value": {}
+    },
+    "switch_inching": {
+      "type": "String",
+      "value": {}
+    }
+  },
+  "status": {
+    "switch_1": false,
+    "countdown_1": 0,
+    "relay_status": "last",
+    "light_mode": "relay",
+    "child_lock": false,
+    "cycle_time": "",
+    "random_time": "",
+    "switch_inching": ""
+  },
+  "set_up": true,
+  "support_local": true
+}

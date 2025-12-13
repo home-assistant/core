@@ -1,0 +1,145 @@
+{
+  "entity": {
+    "climate": {
+      "climate": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "manual": "mdi:hand-back-right",
+              "off": "mdi:hvac-off",
+              "schedule": "mdi:calendar-clock"
+            }
+          }
+        }
+      }
+    },
+    "fan": {
+      "air_purifier": {
+        "default": "mdi:air-purifier",
+        "state": {
+          "off": "mdi:air-purifier-off"
+        },
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "mdi:auto-mode",
+              "level_1": "mdi:fan-speed-1",
+              "level_2": "mdi:fan-speed-2",
+              "level_3": "mdi:fan-speed-3",
+              "pet": "mdi:paw",
+              "sleep": "mdi:power-sleep"
+            }
+          }
+        }
+      },
+      "fan": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "baby": "mdi:baby-face-outline",
+              "natural": "mdi:leaf",
+              "normal": "mdi:fan",
+              "sleep": "mdi:power-sleep"
+            }
+          }
+        }
+      }
+    },
+    "humidifier": {
+      "evaporative_humidifier": {
+        "state_attributes": {
+          "mode": {
+            "state": {
+              "auto": "mdi:autorenew",
+              "drying_filter": "mdi:water-remove",
+              "high": "mdi:water-plus",
+              "low": "mdi:water-outline",
+              "medium": "mdi:water",
+              "quiet": "mdi:volume-off",
+              "sleep": "mdi:weather-night",
+              "target_humidity": "mdi:target"
+            }
+          }
+        }
+      }
+    },
+    "light": {
+      "light": {
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "alarm": "mdi:alarm-light",
+              "autumn": "mdi:leaf-maple",
+              "breathing": "mdi:heart-pulse",
+              "cherry_blossom": "mdi:flower-outline",
+              "christmas": "mdi:string-lights",
+              "colorful": "mdi:looks",
+              "cool": "mdi:emoticon-cool-outline",
+              "dream": "mdi:sleep",
+              "dynamic": "mdi:palette",
+              "energy": "mdi:run",
+              "fade": "mdi:water-opacity",
+              "fireworks": "mdi:firework",
+              "flashing": "mdi:flash",
+              "flickering": "mdi:led-strip-variant",
+              "flow": "mdi:pulse",
+              "forest": "mdi:forest",
+              "game": "mdi:gamepad-variant-outline",
+              "halloween": "mdi:halloween",
+              "heartbeat": "mdi:heart-pulse",
+              "lightning": "mdi:flash-outline",
+              "meditation": "mdi:meditation",
+              "modern": "mdi:school-outline",
+              "movie": "mdi:popcorn",
+              "mystery": "mdi:alien-outline",
+              "new_year": "mdi:glass-wine",
+              "ocean": "mdi:waves",
+              "party": "mdi:party-popper",
+              "rainbow": "mdi:looks",
+              "relax": "mdi:coffee",
+              "rock": "mdi:guitar-electric",
+              "romance": "mdi:heart-outline",
+              "rose": "mdi:flower",
+              "sleep": "mdi:power-sleep",
+              "smooth": "mdi:led-strip-variant",
+              "starlight": "mdi:creation",
+              "starlit_sky": "mdi:weather-night",
+              "strobe": "mdi:led-strip-variant",
+              "sunrise": "mdi:weather-sunset-up",
+              "sunset": "mdi:weather-sunset",
+              "valentine_day": "mdi:emoticon-kiss-outline",
+              "vitality": "mdi:parachute",
+              "waves": "mdi:waves"
+            }
+          }
+        }
+      }
+    },
+    "sensor": {
+      "light_level": {
+        "default": "mdi:brightness-7",
+        "state": {
+          "1": "mdi:brightness-1",
+          "2": "mdi:brightness-1",
+          "3": "mdi:brightness-2",
+          "4": "mdi:brightness-3",
+          "5": "mdi:brightness-4",
+          "6": "mdi:brightness-5",
+          "7": "mdi:brightness-5",
+          "8": "mdi:brightness-6",
+          "9": "mdi:brightness-6",
+          "10": "mdi:brightness-7"
+        }
+      },
+      "water_level": {
+        "default": "mdi:water-percent",
+        "state": {
+          "empty": "mdi:water-off",
+          "high": "mdi:water-check",
+          "low": "mdi:water-outline",
+          "medium": "mdi:water"
+        }
+      }
+    }
+  }
+}

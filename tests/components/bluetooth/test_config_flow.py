@@ -56,6 +56,7 @@ async def test_options_flow_disabled_not_setup(
     response = await ws_client.receive_json()
     assert response["result"][0]["supports_options"] is False
     await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
 
 
 @pytest.mark.usefixtures("macos_adapter")
@@ -396,6 +397,7 @@ async def test_options_flow_linux(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_PASSIVE] is False
     await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
 
 
 @pytest.mark.usefixtures(
@@ -425,6 +427,7 @@ async def test_options_flow_disabled_macos(
     response = await ws_client.receive_json()
     assert response["result"][0]["supports_options"] is False
     await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
 
 
 @pytest.mark.usefixtures(
@@ -457,6 +460,7 @@ async def test_options_flow_enabled_linux(
     response = await ws_client.receive_json()
     assert response["result"][0]["supports_options"] is True
     await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
 
 
 @pytest.mark.usefixtures(
@@ -487,6 +491,8 @@ async def test_options_flow_remote_adapter(hass: HomeAssistant) -> None:
     result = await hass.config_entries.options.async_init(entry.entry_id)
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "remote_adapters_not_supported"
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
 
 
 @pytest.mark.usefixtures(
@@ -514,6 +520,8 @@ async def test_options_flow_local_no_passive_support(hass: HomeAssistant) -> Non
     result = await hass.config_entries.options.async_init(entry.entry_id)
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "local_adapters_no_passive_support"
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
 
 
 @pytest.mark.usefixtures("one_adapter")

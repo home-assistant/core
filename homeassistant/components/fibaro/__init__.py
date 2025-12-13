@@ -12,7 +12,7 @@ from pyfibaro.fibaro_client import (
     FibaroClient,
     FibaroConnectFailed,
 )
-from pyfibaro.fibaro_data_helper import read_rooms
+from pyfibaro.fibaro_data_helper import find_master_devices, read_rooms
 from pyfibaro.fibaro_device import DeviceModel
 from pyfibaro.fibaro_device_manager import FibaroDeviceManager
 from pyfibaro.fibaro_info import InfoModel
@@ -176,35 +176,18 @@ class FibaroController:
             platform = Platform.LIGHT
         return platform
 
-    def _create_device_info(
-        self, device: DeviceModel, devices: list[DeviceModel]
-    ) -> None:
-        """Create the device info. Unrooted entities are directly shown below the home center."""
+    def _create_device_info(self, main_device: DeviceModel) -> None:
+        """Create the device info for a main device."""
 
-        # The home center is always id 1 (z-wave primary controller)
-        if device.parent_fibaro_id <= 1:
-            return
-
-        master_entity: DeviceModel | None = None
-        if device.parent_fibaro_id == 1:
-            master_entity = device
-        else:
-            for parent in devices:
-                if parent.fibaro_id == device.parent_fibaro_id:
-                    master_entity = parent
-        if master_entity is None:
-            _LOGGER.error("Parent with id %s not found", device.parent_fibaro_id)
-            return
-
-        if "zwaveCompany" in master_entity.properties:
-            manufacturer = master_entity.properties.get("zwaveCompany")
+        if "zwaveCompany" in main_device.properties:
+            manufacturer = main_device.properties.get("zwaveCompany")
         else:
             manufacturer = None
 
-        self._device_infos[master_entity.fibaro_id] = DeviceInfo(
-            identifiers={(DOMAIN, master_entity.fibaro_id)},
+        self._device_infos[main_device.fibaro_id] = DeviceInfo(
+            identifiers={(DOMAIN, main_device.fibaro_id)},
             manufacturer=manufacturer,
-            name=master_entity.name,
+            name=main_device.name,
             via_device=(DOMAIN, self.hub_serial),
         )
 
@@ -228,6 +211,10 @@ class FibaroController:
         """Return list of scenes."""
         return self._scenes
 
+    def get_all_devices(self) -> list[DeviceModel]:
+        """Return list of all fibaro devices."""
+        return self._fibaro_device_manager.get_devices()
+
     def read_fibaro_info(self) -> InfoModel:
         """Return the general info about the hub."""
         return self._fibaro_info
@@ -239,6 +226,10 @@ class FibaroController:
     def _read_devices(self) -> None:
         """Read and process the device list."""
         devices = self._fibaro_device_manager.get_devices()
+
+        for main_device in find_master_devices(devices):
+            self._create_device_info(main_device)
+
         self._device_map = {}
         last_climate_parent = None
         last_endpoint = None
@@ -258,7 +249,6 @@ class FibaroController:
                 if platform is None:
                     continue
                 device.unique_id_str = f"{slugify(self.hub_serial)}.{device.fibaro_id}"
-                self._create_device_info(device, devices)
                 self._device_map[device.fibaro_id] = device
                 _LOGGER.debug(
                     "%s (%s, %s) -> %s %s",

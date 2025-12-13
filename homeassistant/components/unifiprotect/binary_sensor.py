@@ -39,6 +39,7 @@ from .entity import (
 )
 
 _KEY_DOOR = "door"
+PARALLEL_UPDATES = 0
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -65,14 +66,12 @@ MOUNT_DEVICE_CLASS_MAP = {
 CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ProtectBinaryEntityDescription(
         key="dark",
-        name="Is dark",
-        icon="mdi:brightness-6",
+        translation_key="is_dark",
         ufp_value="is_dark",
     ),
     ProtectBinaryEntityDescription(
         key="ssh",
-        name="SSH enabled",
-        icon="mdi:lock",
+        translation_key="ssh_enabled",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value="is_ssh_enabled",
@@ -80,8 +79,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ),
     ProtectBinaryEntityDescription(
         key="status_light",
-        name="Status light on",
-        icon="mdi:led-on",
+        translation_key="status_light",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_required_field="feature_flags.has_led_status",
         ufp_value="led_settings.is_enabled",
@@ -89,8 +87,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ),
     ProtectBinaryEntityDescription(
         key="hdr_mode",
-        name="HDR mode",
-        icon="mdi:brightness-7",
+        translation_key="hdr_mode",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_required_field="feature_flags.has_hdr",
         ufp_value="hdr_mode",
@@ -98,8 +95,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ),
     ProtectBinaryEntityDescription(
         key="high_fps",
-        name="High FPS",
-        icon="mdi:video-high-definition",
+        translation_key="high_fps",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_required_field="feature_flags.has_highfps",
         ufp_value="is_high_fps_enabled",
@@ -107,8 +103,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ),
     ProtectBinaryEntityDescription(
         key="system_sounds",
-        name="System sounds",
-        icon="mdi:speaker",
+        translation_key="system_sounds",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_required_field="has_speaker",
         ufp_value="speaker_settings.are_system_sounds_enabled",
@@ -117,47 +112,41 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ),
     ProtectBinaryEntityDescription(
         key="osd_name",
-        name="Overlay: show name",
-        icon="mdi:fullscreen",
+        translation_key="overlay_show_name",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value="osd_settings.is_name_enabled",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
         key="osd_date",
-        name="Overlay: show date",
-        icon="mdi:fullscreen",
+        translation_key="overlay_show_date",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value="osd_settings.is_date_enabled",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
         key="osd_logo",
-        name="Overlay: show logo",
-        icon="mdi:fullscreen",
+        translation_key="overlay_show_logo",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value="osd_settings.is_logo_enabled",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
         key="osd_bitrate",
-        name="Overlay: show bitrate",
-        icon="mdi:fullscreen",
+        translation_key="overlay_show_nerd_mode",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value="osd_settings.is_debug_enabled",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
         key="motion_enabled",
-        name="Detections: motion",
-        icon="mdi:run-fast",
+        translation_key="detections_motion",
         ufp_value="recording_settings.enable_motion_detection",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
         key="smart_person",
-        name="Detections: person",
-        icon="mdi:walk",
+        translation_key="detections_person",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_required_field="can_detect_person",
         ufp_value="is_person_detection_on",
@@ -165,8 +154,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ),
     ProtectBinaryEntityDescription(
         key="smart_vehicle",
-        name="Detections: vehicle",
-        icon="mdi:car",
+        translation_key="detections_vehicle",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_required_field="can_detect_vehicle",
         ufp_value="is_vehicle_detection_on",
@@ -174,8 +162,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ),
     ProtectBinaryEntityDescription(
         key="smart_animal",
-        name="Detections: animal",
-        icon="mdi:paw",
+        translation_key="detections_animal",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_required_field="can_detect_animal",
         ufp_value="is_animal_detection_on",
@@ -183,8 +170,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ),
     ProtectBinaryEntityDescription(
         key="smart_package",
-        name="Detections: package",
-        icon="mdi:package-variant-closed",
+        translation_key="detections_package",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_required_field="can_detect_package",
         ufp_value="is_package_detection_on",
@@ -192,8 +178,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ),
     ProtectBinaryEntityDescription(
         key="smart_licenseplate",
-        name="Detections: license plate",
-        icon="mdi:car",
+        translation_key="detections_license_plate",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_required_field="can_detect_license_plate",
         ufp_value="is_license_plate_detection_on",
@@ -201,8 +186,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ),
     ProtectBinaryEntityDescription(
         key="smart_smoke",
-        name="Detections: smoke",
-        icon="mdi:fire",
+        translation_key="detections_smoke",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_required_field="can_detect_smoke",
         ufp_value="is_smoke_detection_on",
@@ -210,8 +194,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ),
     ProtectBinaryEntityDescription(
         key="smart_cmonx",
-        name="Detections: CO",
-        icon="mdi:molecule-co",
+        translation_key="detections_co_alarm",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_required_field="can_detect_co",
         ufp_value="is_co_detection_on",
@@ -219,8 +202,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ),
     ProtectBinaryEntityDescription(
         key="smart_siren",
-        name="Detections: siren",
-        icon="mdi:alarm-bell",
+        translation_key="detections_siren",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_required_field="can_detect_siren",
         ufp_value="is_siren_detection_on",
@@ -228,8 +210,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ),
     ProtectBinaryEntityDescription(
         key="smart_baby_cry",
-        name="Detections: baby cry",
-        icon="mdi:cradle",
+        translation_key="detections_baby_cry",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_required_field="can_detect_baby_cry",
         ufp_value="is_baby_cry_detection_on",
@@ -237,8 +218,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ),
     ProtectBinaryEntityDescription(
         key="smart_speak",
-        name="Detections: speaking",
-        icon="mdi:account-voice",
+        translation_key="detections_speaking",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_required_field="can_detect_speaking",
         ufp_value="is_speaking_detection_on",
@@ -246,8 +226,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ),
     ProtectBinaryEntityDescription(
         key="smart_bark",
-        name="Detections: barking",
-        icon="mdi:dog",
+        translation_key="detections_barking",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_required_field="can_detect_bark",
         ufp_value="is_bark_detection_on",
@@ -255,8 +234,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ),
     ProtectBinaryEntityDescription(
         key="smart_car_alarm",
-        name="Detections: car alarm",
-        icon="mdi:car",
+        translation_key="detections_car_alarm",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_required_field="can_detect_car_alarm",
         ufp_value="is_car_alarm_detection_on",
@@ -264,8 +242,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ),
     ProtectBinaryEntityDescription(
         key="smart_car_horn",
-        name="Detections: car horn",
-        icon="mdi:bugle",
+        translation_key="detections_car_horn",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_required_field="can_detect_car_horn",
         ufp_value="is_car_horn_detection_on",
@@ -273,8 +250,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ),
     ProtectBinaryEntityDescription(
         key="smart_glass_break",
-        name="Detections: glass break",
-        icon="mdi:glass-fragile",
+        translation_key="detections_glass_break",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_required_field="can_detect_glass_break",
         ufp_value="is_glass_break_detection_on",
@@ -282,8 +258,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ),
     ProtectBinaryEntityDescription(
         key="track_person",
-        name="Tracking: person",
-        icon="mdi:walk",
+        translation_key="tracking_person",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_required_field="feature_flags.is_ptz",
         ufp_value="is_person_tracking_enabled",
@@ -294,28 +269,24 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
 LIGHT_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ProtectBinaryEntityDescription(
         key="dark",
-        name="Is dark",
-        icon="mdi:brightness-6",
+        translation_key="is_dark",
         ufp_value="is_dark",
     ),
     ProtectBinaryEntityDescription(
         key="motion",
-        name="Motion detected",
         device_class=BinarySensorDeviceClass.MOTION,
         ufp_value="is_pir_motion_detected",
     ),
     ProtectBinaryEntityDescription(
         key="light",
-        name="Flood light",
-        icon="mdi:spotlight-beam",
+        translation_key="flood_light",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value="is_light_on",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
         key="ssh",
-        name="SSH enabled",
-        icon="mdi:lock",
+        translation_key="ssh_enabled",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value="is_ssh_enabled",
@@ -323,8 +294,7 @@ LIGHT_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ),
     ProtectBinaryEntityDescription(
         key="status_light",
-        name="Status light on",
-        icon="mdi:led-on",
+        translation_key="status_light",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value="light_device_settings.is_indicator_enabled",
         ufp_perm=PermRequired.NO_WRITE,
@@ -336,7 +306,7 @@ LIGHT_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
 MOUNTABLE_SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ProtectBinaryEntityDescription(
         key=_KEY_DOOR,
-        name="Contact",
+        translation_key="contact",
         device_class=BinarySensorDeviceClass.DOOR,
         ufp_value="is_opened",
         ufp_enabled="is_contact_sensor_enabled",
@@ -346,74 +316,65 @@ MOUNTABLE_SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
 SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ProtectBinaryEntityDescription(
         key="leak",
-        name="Leak",
         device_class=BinarySensorDeviceClass.MOISTURE,
         ufp_value="is_leak_detected",
         ufp_enabled="is_leak_sensor_enabled",
     ),
     ProtectBinaryEntityDescription(
         key="battery_low",
-        name="Battery low",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value="battery_status.is_low",
     ),
     ProtectBinaryEntityDescription(
         key="motion",
-        name="Motion detected",
         device_class=BinarySensorDeviceClass.MOTION,
         ufp_value="is_motion_detected",
         ufp_enabled="is_motion_sensor_enabled",
     ),
     ProtectBinaryEntityDescription(
         key="tampering",
-        name="Tampering detected",
         device_class=BinarySensorDeviceClass.TAMPER,
         ufp_value="is_tampering_detected",
     ),
     ProtectBinaryEntityDescription(
         key="status_light",
-        name="Status light on",
-        icon="mdi:led-on",
+        translation_key="status_light",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value="led_settings.is_enabled",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
         key="motion_enabled",
-        name="Motion detection",
-        icon="mdi:walk",
+        translation_key="detections_motion",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value="motion_settings.is_enabled",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
         key="temperature",
-        name="Temperature sensor",
-        icon="mdi:thermometer",
+        translation_key="temperature_sensor",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value="temperature_settings.is_enabled",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
         key="humidity",
-        name="Humidity sensor",
-        icon="mdi:water-percent",
+        translation_key="humidity_sensor",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value="humidity_settings.is_enabled",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
         key="light",
-        name="Light sensor",
-        icon="mdi:brightness-5",
+        translation_key="light_sensor",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value="light_settings.is_enabled",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
         key="alarm",
-        name="Alarm sound detection",
+        translation_key="alarm_sound_detection",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value="alarm_settings.is_enabled",
         ufp_perm=PermRequired.NO_WRITE,
@@ -423,31 +384,27 @@ SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
 EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
     ProtectBinaryEventEntityDescription(
         key="doorbell",
-        name="Doorbell",
+        translation_key="doorbell",
         device_class=BinarySensorDeviceClass.OCCUPANCY,
-        icon="mdi:doorbell-video",
         ufp_required_field="feature_flags.is_doorbell",
         ufp_event_obj="last_ring_event",
     ),
     ProtectBinaryEventEntityDescription(
         key="motion",
-        name="Motion",
         device_class=BinarySensorDeviceClass.MOTION,
         ufp_enabled="is_motion_detection_on",
         ufp_event_obj="last_motion_event",
     ),
     ProtectBinaryEventEntityDescription(
         key="smart_obj_any",
-        name="Object detected",
-        icon="mdi:eye",
+        translation_key="object_detected",
         ufp_required_field="feature_flags.has_smart_detect",
         ufp_event_obj="last_smart_detect_event",
         entity_registry_enabled_default=False,
     ),
     ProtectBinaryEventEntityDescription(
         key="smart_obj_person",
-        name="Person detected",
-        icon="mdi:walk",
+        translation_key="person_detected",
         ufp_obj_type=SmartDetectObjectType.PERSON,
         ufp_required_field="can_detect_person",
         ufp_enabled="is_person_detection_on",
@@ -455,8 +412,7 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
     ),
     ProtectBinaryEventEntityDescription(
         key="smart_obj_vehicle",
-        name="Vehicle detected",
-        icon="mdi:car",
+        translation_key="vehicle_detected",
         ufp_obj_type=SmartDetectObjectType.VEHICLE,
         ufp_required_field="can_detect_vehicle",
         ufp_enabled="is_vehicle_detection_on",
@@ -464,8 +420,7 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
     ),
     ProtectBinaryEventEntityDescription(
         key="smart_obj_animal",
-        name="Animal detected",
-        icon="mdi:paw",
+        translation_key="animal_detected",
         ufp_obj_type=SmartDetectObjectType.ANIMAL,
         ufp_required_field="can_detect_animal",
         ufp_enabled="is_animal_detection_on",
@@ -473,8 +428,7 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
     ),
     ProtectBinaryEventEntityDescription(
         key="smart_obj_package",
-        name="Package detected",
-        icon="mdi:package-variant-closed",
+        translation_key="package_detected",
         entity_registry_enabled_default=False,
         ufp_obj_type=SmartDetectObjectType.PACKAGE,
         ufp_required_field="can_detect_package",
@@ -483,16 +437,14 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
     ),
     ProtectBinaryEventEntityDescription(
         key="smart_audio_any",
-        name="Audio object detected",
-        icon="mdi:eye",
+        translation_key="audio_object_detected",
         ufp_required_field="feature_flags.has_smart_detect",
         ufp_event_obj="last_smart_audio_detect_event",
         entity_registry_enabled_default=False,
     ),
     ProtectBinaryEventEntityDescription(
         key="smart_audio_smoke",
-        name="Smoke alarm detected",
-        icon="mdi:fire",
+        translation_key="smoke_alarm_detected",
         ufp_obj_type=SmartDetectObjectType.SMOKE,
         ufp_required_field="can_detect_smoke",
         ufp_enabled="is_smoke_detection_on",
@@ -500,8 +452,7 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
     ),
     ProtectBinaryEventEntityDescription(
         key="smart_audio_cmonx",
-        name="CO alarm detected",
-        icon="mdi:molecule-co",
+        translation_key="co_alarm_detected",
         ufp_required_field="can_detect_co",
         ufp_enabled="is_co_detection_on",
         ufp_event_obj="last_cmonx_detect_event",
@@ -509,8 +460,7 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
     ),
     ProtectBinaryEventEntityDescription(
         key="smart_audio_siren",
-        name="Siren detected",
-        icon="mdi:alarm-bell",
+        translation_key="siren_detected",
         ufp_obj_type=SmartDetectObjectType.SIREN,
         ufp_required_field="can_detect_siren",
         ufp_enabled="is_siren_detection_on",
@@ -518,8 +468,7 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
     ),
     ProtectBinaryEventEntityDescription(
         key="smart_audio_baby_cry",
-        name="Baby cry detected",
-        icon="mdi:cradle",
+        translation_key="baby_cry_detected",
         ufp_obj_type=SmartDetectObjectType.BABY_CRY,
         ufp_required_field="can_detect_baby_cry",
         ufp_enabled="is_baby_cry_detection_on",
@@ -527,8 +476,7 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
     ),
     ProtectBinaryEventEntityDescription(
         key="smart_audio_speak",
-        name="Speaking detected",
-        icon="mdi:account-voice",
+        translation_key="speaking_detected",
         ufp_obj_type=SmartDetectObjectType.SPEAK,
         ufp_required_field="can_detect_speaking",
         ufp_enabled="is_speaking_detection_on",
@@ -536,8 +484,7 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
     ),
     ProtectBinaryEventEntityDescription(
         key="smart_audio_bark",
-        name="Barking detected",
-        icon="mdi:dog",
+        translation_key="barking_detected",
         ufp_obj_type=SmartDetectObjectType.BARK,
         ufp_required_field="can_detect_bark",
         ufp_enabled="is_bark_detection_on",
@@ -545,8 +492,7 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
     ),
     ProtectBinaryEventEntityDescription(
         key="smart_audio_car_alarm",
-        name="Car alarm detected",
-        icon="mdi:car",
+        translation_key="car_alarm_detected",
         ufp_obj_type=SmartDetectObjectType.BURGLAR,
         ufp_required_field="can_detect_car_alarm",
         ufp_enabled="is_car_alarm_detection_on",
@@ -554,8 +500,7 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
     ),
     ProtectBinaryEventEntityDescription(
         key="smart_audio_car_horn",
-        name="Car horn detected",
-        icon="mdi:bugle",
+        translation_key="car_horn_detected",
         ufp_obj_type=SmartDetectObjectType.CAR_HORN,
         ufp_required_field="can_detect_car_horn",
         ufp_enabled="is_car_horn_detection_on",
@@ -563,8 +508,7 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
     ),
     ProtectBinaryEventEntityDescription(
         key="smart_audio_glass_break",
-        name="Glass break detected",
-        icon="mdi:glass-fragile",
+        translation_key="glass_break_detected",
         ufp_obj_type=SmartDetectObjectType.GLASS_BREAK,
         ufp_required_field="can_detect_glass_break",
         ufp_enabled="is_glass_break_detection_on",
@@ -575,15 +519,13 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
 DOORLOCK_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ProtectBinaryEntityDescription(
         key="battery_low",
-        name="Battery low",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value="battery_status.is_low",
     ),
     ProtectBinaryEntityDescription(
         key="status_light",
-        name="Status light on",
-        icon="mdi:led-on",
+        translation_key="status_light",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value="led_settings.is_enabled",
         ufp_perm=PermRequired.NO_WRITE,
@@ -593,8 +535,7 @@ DOORLOCK_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
 VIEWER_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ProtectBinaryEntityDescription(
         key="ssh",
-        name="SSH enabled",
-        icon="mdi:lock",
+        translation_key="ssh_enabled",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value="is_ssh_enabled",
@@ -680,7 +621,7 @@ class ProtectDiskBinarySensor(ProtectNVREntity, BinarySensorEntity):
         available = self.data.last_update_success
 
         # should not be possible since it would require user to
-        # _downgrade_ to make ustorage disppear
+        # _downgrade_ to make ustorage disappear
         assert self.device.system_info.ustorage is not None
         for disk in self.device.system_info.ustorage.disks:
             if disk.slot == slot:

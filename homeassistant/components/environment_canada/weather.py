@@ -115,7 +115,7 @@ class ECWeatherEntity(
         """Initialize Environment Canada weather."""
         super().__init__(coordinator)
         self.ec_data = coordinator.ec_data
-        self._attr_attribution = self.ec_data.metadata["attribution"]
+        self._attr_attribution = self.ec_data.metadata.attribution
         self._attr_translation_key = "forecast"
         self._attr_unique_id = _calculate_unique_id(
             coordinator.config_entry.unique_id, False

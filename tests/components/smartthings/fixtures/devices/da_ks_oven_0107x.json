@@ -1,0 +1,238 @@
+{
+  "items": [
+    {
+      "deviceId": "199d7863-ad04-793d-176d-658f10062575",
+      "name": "Samsung Oven",
+      "label": "Kitchen oven",
+      "manufacturerName": "Samsung Electronics",
+      "presentationId": "DA-KS-OVEN-0107X",
+      "deviceManufacturerCode": "Samsung Electronics",
+      "locationId": "beea82e4-8799-4757-ac70-591d76b2b248",
+      "ownerId": "6feed944-1d03-0a9f-3262-060ec4f9797d",
+      "roomId": "f8a4ac44-7f5d-4a73-a6be-189076ec0307",
+      "deviceTypeName": "Samsung OCF Oven",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "ocf",
+              "version": 1
+            },
+            {
+              "id": "execute",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            },
+            {
+              "id": "remoteControlStatus",
+              "version": 1
+            },
+            {
+              "id": "ovenSetpoint",
+              "version": 1
+            },
+            {
+              "id": "ovenMode",
+              "version": 1
+            },
+            {
+              "id": "ovenOperatingState",
+              "version": 1
+            },
+            {
+              "id": "temperatureMeasurement",
+              "version": 1
+            },
+            {
+              "id": "samsungce.doorState",
+              "version": 1
+            },
+            {
+              "id": "samsungce.definedRecipe",
+              "version": 1
+            },
+            {
+              "id": "samsungce.deviceIdentification",
+              "version": 1
+            },
+            {
+              "id": "samsungce.driverVersion",
+              "version": 1
+            },
+            {
+              "id": "samsungce.kitchenDeviceIdentification",
+              "version": 1
+            },
+            {
+              "id": "samsungce.kitchenDeviceDefaults",
+              "version": 1
+            },
+            {
+              "id": "samsungce.ovenMode",
+              "version": 1
+            },
+            {
+              "id": "samsungce.ovenOperatingState",
+              "version": 1
+            },
+            {
+              "id": "samsungce.meatProbe",
+              "version": 1
+            },
+            {
+              "id": "samsungce.lamp",
+              "version": 1
+            },
+            {
+              "id": "samsungce.kitchenModeSpecification",
+              "version": 1
+            },
+            {
+              "id": "samsungce.kidsLock",
+              "version": 1
+            },
+            {
+              "id": "samsungce.softwareUpdate",
+              "version": 1
+            },
+            {
+              "id": "samsungce.waterReservoir",
+              "version": 1
+            },
+            {
+              "id": "samsungce.ovenDrainageRequirement",
+              "version": 1
+            },
+            {
+              "id": "samsungce.quickControl",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledCapabilities",
+              "version": 1
+            },
+            {
+              "id": "sec.diagnosticsInformation",
+              "version": 1
+            },
+            {
+              "id": "sec.wifiConfiguration",
+              "version": 1
+            },
+            {
+              "id": "sec.calmConnectionCare",
+              "version": 1
+            },
+            {
+              "id": "samsungce.softwareVersion",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Oven",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        },
+        {
+          "id": "cavity-01",
+          "label": "cavity-01",
+          "capabilities": [
+            {
+              "id": "ovenSetpoint",
+              "version": 1
+            },
+            {
+              "id": "ovenMode",
+              "version": 1
+            },
+            {
+              "id": "ovenOperatingState",
+              "version": 1
+            },
+            {
+              "id": "temperatureMeasurement",
+              "version": 1
+            },
+            {
+              "id": "samsungce.ovenMode",
+              "version": 1
+            },
+            {
+              "id": "samsungce.ovenOperatingState",
+              "version": 1
+            },
+            {
+              "id": "samsungce.definedRecipe",
+              "version": 1
+            },
+            {
+              "id": "samsungce.kitchenDeviceDefaults",
+              "version": 1
+            },
+            {
+              "id": "custom.ovenCavityStatus",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledCapabilities",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Other",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        }
+      ],
+      "createTime": "2025-06-25T15:25:14.789Z",
+      "profile": {
+        "id": "5136fb87-83ab-3b57-a298-178a371d03c2"
+      },
+      "ocf": {
+        "ocfDeviceType": "oic.d.oven",
+        "name": "Samsung Oven",
+        "specVersion": "core.1.1.0",
+        "verticalDomainSpecVersion": "1.2.1",
+        "manufacturerName": "Samsung Electronics",
+        "modelNumber": "TP1X_DA-KS-OVEN-0107X|40456741|50030018001611400A00000000000000",
+        "platformVersion": "DAWIT 3.0",
+        "platformOS": "TizenRT 3.1",
+        "hwVersion": "Realtek",
+        "firmwareVersion": "AKS-WW-TP1-22-OVEN-1_40250221",
+        "vendorId": "DA-KS-OVEN-0107X",
+        "vendorResourceClientServerVersion": "Realtek Release 3.1.240221",
+        "lastSignupTime": "2025-06-25T15:25:10.258442968Z",
+        "transferCandidate": false,
+        "additionalAuthCodeRequired": false
+      },
+      "type": "OCF",
+      "restrictionTier": 0,
+      "allowed": [],
+      "indoorMap": {
+        "coordinates": [71.0, 40.0, 178.0],
+        "rotation": [0.0, 180.0, 0.0],
+        "visible": true,
+        "data": {
+          "expressionType": "both_2d_3d",
+          "lastHideTime": "0",
+          "lastUpdateTime": "1763171338982",
+          "lightingGroupId": "00000000-0000-0000-0000-000000000000"
+        }
+      },
+      "executionContext": "CLOUD",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}

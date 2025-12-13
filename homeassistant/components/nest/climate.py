@@ -267,8 +267,6 @@ class ThermostatEntity(ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        if hvac_mode not in self.hvac_modes:
-            raise ValueError(f"Unsupported hvac_mode '{hvac_mode}'")
         api_mode = THERMOSTAT_INV_MODE_MAP[hvac_mode]
         trait = self._device.traits[ThermostatModeTrait.NAME]
         try:

@@ -17,14 +17,14 @@ from . import (
     HCI1_SOURCE_ADDRESS,
     NON_CONNECTABLE_REMOTE_SOURCE_ADDRESS,
     FakeScanner,
+    patch_bleak_backend_type,
 )
 
 
 @pytest.fixture(name="disable_bluez_manager_socket", autouse=True, scope="package")
 def disable_bluez_manager_socket():
     """Mock the bluez manager socket."""
-    with patch.object(bleak_manager, "get_global_bluez_manager_with_timeout"):
-        yield
+    bleak_manager.get_global_bluez_manager_with_timeout._has_dbus_socket = False
 
 
 @pytest.fixture(name="disable_dbus_socket", autouse=True, scope="package")
@@ -89,7 +89,7 @@ def mock_operating_system_90():
 def macos_adapter() -> Generator[None]:
     """Fixture that mocks the macos adapter."""
     with (
-        patch("bleak.get_platform_scanner_backend_type"),
+        patch_bleak_backend_type(),
         patch(
             "homeassistant.components.bluetooth.platform.system",
             return_value="Darwin",

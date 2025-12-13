@@ -6,7 +6,7 @@
     'area_id': None,
     'capabilities': dict({
       'max_temp': 65.0,
-      'min_temp': 40.0,
+      'min_temp': 35.0,
       'operation_list': list([
         'eco',
         'off',
@@ -35,6 +35,7 @@
     'original_name': None,
     'platform': 'bsblan',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <WaterHeaterEntityFeature: 3>,
     'translation_key': None,
     'unique_id': '00:80:41:19:69:90',
@@ -47,7 +48,7 @@
       'current_temperature': 48.5,
       'friendly_name': 'BSB-LAN',
       'max_temp': 65.0,
-      'min_temp': 40.0,
+      'min_temp': 35.0,
       'operation_list': list([
         'eco',
         'off',

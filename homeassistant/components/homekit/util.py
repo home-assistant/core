@@ -17,6 +17,7 @@ import voluptuous as vol
 
 from homeassistant.components import (
     binary_sensor,
+    input_number,
     media_player,
     persistent_notification,
     sensor,
@@ -62,9 +63,15 @@ from .const import (
     CONF_LINKED_BATTERY_CHARGING_SENSOR,
     CONF_LINKED_BATTERY_SENSOR,
     CONF_LINKED_DOORBELL_SENSOR,
+    CONF_LINKED_FILTER_CHANGE_INDICATION,
+    CONF_LINKED_FILTER_LIFE_LEVEL,
     CONF_LINKED_HUMIDITY_SENSOR,
     CONF_LINKED_MOTION_SENSOR,
     CONF_LINKED_OBSTRUCTION_SENSOR,
+    CONF_LINKED_PM25_SENSOR,
+    CONF_LINKED_TEMPERATURE_SENSOR,
+    CONF_LINKED_VALVE_DURATION,
+    CONF_LINKED_VALVE_END_TIME,
     CONF_LOW_BATTERY_THRESHOLD,
     CONF_MAX_FPS,
     CONF_MAX_HEIGHT,
@@ -98,6 +105,8 @@ from .const import (
     FEATURE_PLAY_STOP,
     FEATURE_TOGGLE_MUTE,
     MAX_NAME_LENGTH,
+    TYPE_AIR_PURIFIER,
+    TYPE_FAN,
     TYPE_FAUCET,
     TYPE_OUTLET,
     TYPE_SHOWER,
@@ -106,6 +115,7 @@ from .const import (
     TYPE_VALVE,
     VIDEO_CODEC_COPY,
     VIDEO_CODEC_H264_OMX,
+    VIDEO_CODEC_H264_QSV,
     VIDEO_CODEC_H264_V4L2M2M,
     VIDEO_CODEC_LIBX264,
 )
@@ -124,6 +134,7 @@ MAX_PORT = 65535
 VALID_VIDEO_CODECS = [
     VIDEO_CODEC_LIBX264,
     VIDEO_CODEC_H264_OMX,
+    VIDEO_CODEC_H264_QSV,
     VIDEO_CODEC_H264_V4L2M2M,
     AUDIO_CODEC_COPY,
 ]
@@ -187,6 +198,27 @@ HUMIDIFIER_SCHEMA = BASIC_INFO_SCHEMA.extend(
     {vol.Optional(CONF_LINKED_HUMIDITY_SENSOR): cv.entity_domain(sensor.DOMAIN)}
 )
 
+FAN_SCHEMA = BASIC_INFO_SCHEMA.extend(
+    {
+        vol.Optional(CONF_TYPE, default=TYPE_FAN): vol.All(
+            cv.string,
+            vol.In(
+                (
+                    TYPE_FAN,
+                    TYPE_AIR_PURIFIER,
+                )
+            ),
+        ),
+        vol.Optional(CONF_LINKED_HUMIDITY_SENSOR): cv.entity_domain(sensor.DOMAIN),
+        vol.Optional(CONF_LINKED_PM25_SENSOR): cv.entity_domain(sensor.DOMAIN),
+        vol.Optional(CONF_LINKED_TEMPERATURE_SENSOR): cv.entity_domain(sensor.DOMAIN),
+        vol.Optional(CONF_LINKED_FILTER_CHANGE_INDICATION): cv.entity_domain(
+            binary_sensor.DOMAIN
+        ),
+        vol.Optional(CONF_LINKED_FILTER_LIFE_LEVEL): cv.entity_domain(sensor.DOMAIN),
+    }
+)
+
 COVER_SCHEMA = BASIC_INFO_SCHEMA.extend(
     {
         vol.Optional(CONF_LINKED_OBSTRUCTION_SENSOR): cv.entity_domain(
@@ -237,7 +269,9 @@ SWITCH_TYPE_SCHEMA = BASIC_INFO_SCHEMA.extend(
                     TYPE_VALVE,
                 )
             ),
-        )
+        ),
+        vol.Optional(CONF_LINKED_VALVE_DURATION): cv.entity_domain(input_number.DOMAIN),
+        vol.Optional(CONF_LINKED_VALVE_END_TIME): cv.entity_domain(sensor.DOMAIN),
     }
 )
 
@@ -248,6 +282,12 @@ SENSOR_SCHEMA = BASIC_INFO_SCHEMA.extend(
     }
 )
 
+VALVE_SCHEMA = BASIC_INFO_SCHEMA.extend(
+    {
+        vol.Optional(CONF_LINKED_VALVE_DURATION): cv.entity_domain(input_number.DOMAIN),
+        vol.Optional(CONF_LINKED_VALVE_END_TIME): cv.entity_domain(sensor.DOMAIN),
+    }
+)
 
 HOMEKIT_CHAR_TRANSLATIONS = {
     0: " ",  # nul
@@ -325,8 +365,14 @@ def validate_entity_config(values: dict) -> dict[str, dict]:
         elif domain == "cover":
             config = COVER_SCHEMA(config)
 
+        elif domain == "fan":
+            config = FAN_SCHEMA(config)
+
         elif domain == "sensor":
             config = SENSOR_SCHEMA(config)
+
+        elif domain == "valve":
+            config = VALVE_SCHEMA(config)
 
         else:
             config = BASIC_INFO_SCHEMA(config)
@@ -448,7 +494,7 @@ def temperature_to_states(temperature: float, unit: str) -> float:
 
 
 def density_to_air_quality(density: float) -> int:
-    """Map PM2.5 µg/m3 density to HomeKit AirQuality level."""
+    """Map PM2.5 μg/m3 density to HomeKit AirQuality level."""
     if density <= 9:  # US AQI 0-50 (HomeKit: Excellent)
         return 1
     if density <= 35.4:  # US AQI 51-100 (HomeKit: Good)
@@ -461,7 +507,7 @@ def density_to_air_quality(density: float) -> int:
 
 
 def density_to_air_quality_pm10(density: float) -> int:
-    """Map PM10 µg/m3 density to HomeKit AirQuality level."""
+    """Map PM10 μg/m3 density to HomeKit AirQuality level."""
     if density <= 54:  # US AQI 0-50 (HomeKit: Excellent)
         return 1
     if density <= 154:  # US AQI 51-100 (HomeKit: Good)
@@ -474,7 +520,7 @@ def density_to_air_quality_pm10(density: float) -> int:
 
 
 def density_to_air_quality_nitrogen_dioxide(density: float) -> int:
-    """Map nitrogen dioxide µg/m3 to HomeKit AirQuality level."""
+    """Map nitrogen dioxide μg/m3 to HomeKit AirQuality level."""
     if density <= 30:
         return 1
     if density <= 60:
@@ -487,7 +533,7 @@ def density_to_air_quality_nitrogen_dioxide(density: float) -> int:
 
 
 def density_to_air_quality_voc(density: float) -> int:
-    """Map VOCs µg/m3 to HomeKit AirQuality level.
+    """Map VOCs μg/m3 to HomeKit AirQuality level.
 
     The VOC mappings use the IAQ guidelines for Europe released by the WHO (World Health Organization).
     Referenced from Sensirion_Gas_Sensors_SGP3x_TVOC_Concept.pdf

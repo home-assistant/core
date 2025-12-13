@@ -5,6 +5,7 @@ from http import HTTPStatus
 import pathlib
 import socket
 
+from _pytest.compat import get_real_func
 from aiohttp import web
 import pytest
 import pytest_socket
@@ -83,7 +84,10 @@ async def test_evict_faked_translations_assumptions(hass: HomeAssistant) -> None
     If this test fails, the evict_faked_translations may need to be updated.
     """
     integration = mock_integration(hass, MockModule("test"), built_in=True)
-    assert integration.file_path == pathlib.Path("")
+    assert integration.file_path == pathlib.Path("homeassistant/components/test")
+
+    integration = mock_integration(hass, MockModule("test"), built_in=False)
+    assert integration.file_path == pathlib.Path("custom_components/test")
 
 
 async def test_evict_faked_translations(hass: HomeAssistant, translations_once) -> None:
@@ -100,7 +104,7 @@ async def test_evict_faked_translations(hass: HomeAssistant, translations_once) 
 
     # The evict_faked_translations fixture has module scope, so we set it up and
     # tear it down manually
-    real_func = evict_faked_translations.__pytest_wrapped__.obj
+    real_func = get_real_func(evict_faked_translations)
     gen: Generator = real_func(translations_once)
 
     # Set up the evict_faked_translations fixture

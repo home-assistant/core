@@ -5,30 +5,19 @@ import logging
 
 from aiohttp import ClientError, ClientResponseError, web
 from pypoint import PointSession
-import voluptuous as vol
 
 from homeassistant.components import webhook
-from homeassistant.components.application_credentials import (
-    ClientCredential,
-    async_import_client_credential,
-)
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
-    CONF_WEBHOOK_ID,
-    Platform,
-)
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_WEBHOOK_ID, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import (
-    aiohttp_client,
-    config_entry_oauth2_flow,
-    config_validation as cv,
+from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
+    OAuth2Session,
+    async_get_config_entry_implementation,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType
 
 from . import api
 from .const import CONF_WEBHOOK_URL, DOMAIN, EVENT_RECEIVED, SIGNAL_WEBHOOK
@@ -40,59 +29,6 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 type PointConfigEntry = ConfigEntry[PointDataUpdateCoordinator]
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_CLIENT_ID): cv.string,
-                vol.Required(CONF_CLIENT_SECRET): cv.string,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Minut Point component."""
-    if DOMAIN not in config:
-        return True
-
-    conf = config[DOMAIN]
-
-    async_create_issue(
-        hass,
-        HOMEASSISTANT_DOMAIN,
-        f"deprecated_yaml_{DOMAIN}",
-        breaks_in_ha_version="2025.4.0",
-        is_fixable=False,
-        issue_domain=DOMAIN,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-        translation_placeholders={
-            "domain": DOMAIN,
-            "integration_title": "Point",
-        },
-    )
-
-    if not hass.config_entries.async_entries(DOMAIN):
-        await async_import_client_credential(
-            hass,
-            DOMAIN,
-            ClientCredential(
-                conf[CONF_CLIENT_ID],
-                conf[CONF_CLIENT_SECRET],
-            ),
-        )
-
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
-            )
-        )
-
-    return True
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: PointConfigEntry) -> bool:
     """Set up Minut Point from a config entry."""
@@ -100,12 +36,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: PointConfigEntry) -> boo
     if "auth_implementation" not in entry.data:
         raise ConfigEntryAuthFailed("Authentication failed. Please re-authenticate.")
 
-    implementation = (
-        await config_entry_oauth2_flow.async_get_config_entry_implementation(
-            hass, entry
-        )
-    )
-    session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
+    try:
+        implementation = await async_get_config_entry_implementation(hass, entry)
+    except ImplementationUnavailableError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="oauth2_implementation_unavailable",
+        ) from err
+    session = OAuth2Session(hass, entry, implementation)
     auth = api.AsyncConfigEntryAuth(
         aiohttp_client.async_get_clientsession(hass), session
     )

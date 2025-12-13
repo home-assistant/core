@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from pyezviz.exceptions import HTTPError, InvalidHost, PyEzvizError
+from pyezvizapi.exceptions import HTTPError, InvalidHost, PyEzvizError
 
 from homeassistant.components import ffmpeg
 from homeassistant.components.camera import Camera, CameraEntityFeature

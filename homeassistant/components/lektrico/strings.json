@@ -1,45 +1,45 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
     "step": {
       "user": {
-        "description": "Set required parameters to connect to your device",
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "device_name": "[%key:common::config_flow::data::name%]"
-        }
+          "device_name": "[%key:common::config_flow::data::name%]",
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "description": "Set required parameters to connect to your device"
       },
       "zeroconf_confirm": {
         "description": "Do you want to add the Lektrico Charger with serial number `{serial_number}` to Home Assistant?",
         "title": "Discovered Lektrico Charger device"
       }
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   },
   "entity": {
     "binary_sensor": {
-      "state_e_activated": {
-        "name": "EV error"
+      "contactor_failure": {
+        "name": "Relay contacts welded"
       },
-      "overtemp": {
-        "name": "Thermal throttling"
+      "cp_diode_failure": {
+        "name": "EV diode short"
       },
       "critical_temp": {
         "name": "Overheating"
       },
-      "overcurrent": {
-        "name": "Overcurrent"
-      },
       "meter_fault": {
         "name": "Metering error"
       },
-      "undervoltage": {
-        "name": "Undervoltage"
+      "overcurrent": {
+        "name": "Overcurrent"
+      },
+      "overtemp": {
+        "name": "Thermal throttling"
       },
       "overvoltage": {
         "name": "Overvoltage"
@@ -47,11 +47,11 @@
       "rcd_error": {
         "name": "RCD error"
       },
-      "cp_diode_failure": {
-        "name": "EV diode short"
+      "state_e_activated": {
+        "name": "EV error"
       },
-      "contactor_failure": {
-        "name": "Relay contacts welded"
+      "undervoltage": {
+        "name": "Undervoltage"
       }
     },
     "button": {
@@ -60,14 +60,17 @@
       },
       "charge_stop": {
         "name": "Charge stop"
+      },
+      "charging_schedule_override": {
+        "name": "Charging schedule override"
       }
     },
     "number": {
-      "led_max_brightness": {
-        "name": "LED brightness"
-      },
       "dynamic_limit": {
         "name": "Dynamic limit"
+      },
+      "led_max_brightness": {
+        "name": "LED brightness"
       }
     },
     "select": {
@@ -75,63 +78,18 @@
         "name": "Load balancing mode",
         "state": {
           "disabled": "[%key:common::state::disabled%]",
-          "power": "Power",
+          "green": "Green",
           "hybrid": "Hybrid",
-          "green": "Green"
+          "power": "Power"
         }
       }
     },
     "sensor": {
-      "state": {
-        "name": "State",
-        "state": {
-          "available": "Available",
-          "charging": "[%key:common::state::charging%]",
-          "connected": "[%key:common::state::connected%]",
-          "error": "Error",
-          "locked": "[%key:common::state::locked%]",
-          "need_auth": "Waiting for authentication",
-          "paused": "[%key:common::state::paused%]",
-          "paused_by_scheduler": "Paused by scheduler",
-          "updating_firmware": "Updating firmware"
-        }
-      },
-      "charging_time": {
-        "name": "Charging time"
-      },
-      "lifetime_energy": {
-        "name": "Lifetime energy"
-      },
-      "installation_current": {
-        "name": "Installation current"
-      },
-      "limit_reason": {
-        "name": "Limit reason",
-        "state": {
-          "no_limit": "No limit",
-          "installation_current": "Installation current",
-          "user_limit": "User limit",
-          "dynamic_limit": "Dynamic limit",
-          "schedule": "Schedule",
-          "em_offline": "EM offline",
-          "em": "EM",
-          "ocpp": "OCPP",
-          "overtemperature": "Overtemperature",
-          "switching_phases": "Switching phases",
-          "1p_charging_disabled": "1p charging disabled"
-        }
-      },
       "breaker_current": {
         "name": "Breaker current"
       },
-      "voltage_l1": {
-        "name": "Voltage L1"
-      },
-      "voltage_l2": {
-        "name": "Voltage L2"
-      },
-      "voltage_l3": {
-        "name": "Voltage L3"
+      "charging_time": {
+        "name": "Charging time"
       },
       "current_l1": {
         "name": "Current L1"
@@ -142,14 +100,27 @@
       "current_l3": {
         "name": "Current L3"
       },
-      "power_l1": {
-        "name": "Power L1"
+      "installation_current": {
+        "name": "Installation current"
       },
-      "power_l2": {
-        "name": "Power L2"
+      "lifetime_energy": {
+        "name": "Lifetime energy"
       },
-      "power_l3": {
-        "name": "Power L3"
+      "limit_reason": {
+        "name": "Limit reason",
+        "state": {
+          "1p_charging_disabled": "1P charging disabled",
+          "dynamic_limit": "Dynamic limit",
+          "em": "EM",
+          "em_offline": "EM offline",
+          "installation_current": "Installation current",
+          "no_limit": "No limit",
+          "ocpp": "OCPP",
+          "overtemperature": "Overtemperature",
+          "schedule": "Schedule",
+          "switching_phases": "Switching phases",
+          "user_limit": "User limit"
+        }
       },
       "pf_l1": {
         "name": "Power factor L1"
@@ -159,6 +130,38 @@
       },
       "pf_l3": {
         "name": "Power factor L3"
+      },
+      "power_l1": {
+        "name": "Power L1"
+      },
+      "power_l2": {
+        "name": "Power L2"
+      },
+      "power_l3": {
+        "name": "Power L3"
+      },
+      "state": {
+        "name": "State",
+        "state": {
+          "available": "Available",
+          "charging": "[%key:common::state::charging%]",
+          "connected": "[%key:common::state::connected%]",
+          "error": "[%key:common::state::error%]",
+          "locked": "[%key:common::state::locked%]",
+          "need_auth": "Waiting for authentication",
+          "paused": "[%key:common::state::paused%]",
+          "paused_by_scheduler": "Paused by scheduler",
+          "updating_firmware": "Updating firmware"
+        }
+      },
+      "voltage_l1": {
+        "name": "Voltage L1"
+      },
+      "voltage_l2": {
+        "name": "Voltage L2"
+      },
+      "voltage_l3": {
+        "name": "Voltage L3"
       }
     },
     "switch": {

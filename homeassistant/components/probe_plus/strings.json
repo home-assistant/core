@@ -1,0 +1,54 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    },
+    "error": {
+      "device_not_found": "Device could not be found.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "flow_title": "{name}",
+    "step": {
+      "bluetooth_confirm": {
+        "description": "[%key:component::bluetooth::config::step::bluetooth_confirm::description%]"
+      },
+      "user": {
+        "data": {
+          "address": "[%key:common::config_flow::data::device%]"
+        },
+        "data_description": {
+          "address": "Select BLE probe you want to set up"
+        },
+        "description": "[%key:component::bluetooth::config::step::user::description%]"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "probe_battery": {
+        "name": "Probe battery"
+      },
+      "probe_rssi": {
+        "name": "Probe RSSI"
+      },
+      "probe_temperature": {
+        "name": "Probe temperature"
+      },
+      "probe_voltage": {
+        "name": "Probe voltage"
+      },
+      "relay_battery": {
+        "name": "Relay battery"
+      },
+      "relay_voltage": {
+        "name": "Relay voltage"
+      }
+    }
+  },
+  "exceptions": {
+    "no_bleak_scanner": {
+      "message": "No compatible Bluetooth scanner found."
+    }
+  }
+}

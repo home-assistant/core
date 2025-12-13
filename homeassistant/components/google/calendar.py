@@ -37,7 +37,6 @@ from homeassistant.components.calendar import (
     extract_offset,
     is_offset_reached,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_ENTITIES, CONF_NAME, CONF_OFFSET
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
@@ -52,7 +51,6 @@ from . import (
     CONF_SEARCH,
     CONF_TRACK,
     DEFAULT_CONF_OFFSET,
-    DOMAIN,
     YAML_DEVICES,
     get_calendar_info,
     load_config,
@@ -60,8 +58,6 @@ from . import (
 )
 from .api import get_feature_access
 from .const import (
-    DATA_SERVICE,
-    DATA_STORE,
     EVENT_END_DATE,
     EVENT_END_DATETIME,
     EVENT_IN,
@@ -72,6 +68,7 @@ from .const import (
     FeatureAccess,
 )
 from .coordinator import CalendarQueryUpdateCoordinator, CalendarSyncUpdateCoordinator
+from .store import GoogleConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -109,7 +106,7 @@ class GoogleCalendarEntityDescription(CalendarEntityDescription):
 
 def _get_entity_descriptions(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: GoogleConfigEntry,
     calendar_item: Calendar,
     calendar_info: Mapping[str, Any],
 ) -> list[GoogleCalendarEntityDescription]:
@@ -202,12 +199,12 @@ def _get_entity_descriptions(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: GoogleConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the google calendar platform."""
-    calendar_service = hass.data[DOMAIN][config_entry.entry_id][DATA_SERVICE]
-    store = hass.data[DOMAIN][config_entry.entry_id][DATA_STORE]
+    calendar_service = config_entry.runtime_data.service
+    store = config_entry.runtime_data.store
     try:
         result = await calendar_service.async_list_calendars()
     except ApiException as err:
@@ -233,7 +230,7 @@ async def async_setup_entry(
             calendar_info = calendars[calendar_id]
         else:
             calendar_info = get_calendar_info(
-                hass, calendar_item.dict(exclude_unset=True)
+                hass, calendar_item.model_dump(exclude_unset=True)
             )
             new_calendars.append(calendar_info)
 
@@ -470,7 +467,7 @@ class GoogleCalendarEntity(
         else:
             start = DateOrDatetime(date=dtstart)
             end = DateOrDatetime(date=dtend)
-        event = Event.parse_obj(
+        event = Event.model_validate(
             {
                 EVENT_SUMMARY: kwargs[EVENT_SUMMARY],
                 "start": start,
@@ -541,7 +538,7 @@ async def async_create_event(entity: GoogleCalendarEntity, call: ServiceCall) ->
 
     if EVENT_IN in call.data:
         if EVENT_IN_DAYS in call.data[EVENT_IN]:
-            now = datetime.now()
+            now = datetime.now().date()
 
             start_in = now + timedelta(days=call.data[EVENT_IN][EVENT_IN_DAYS])
             end_in = start_in + timedelta(days=1)
@@ -550,7 +547,7 @@ async def async_create_event(entity: GoogleCalendarEntity, call: ServiceCall) ->
             end = DateOrDatetime(date=end_in)
 
         elif EVENT_IN_WEEKS in call.data[EVENT_IN]:
-            now = datetime.now()
+            now = datetime.now().date()
 
             start_in = now + timedelta(weeks=call.data[EVENT_IN][EVENT_IN_WEEKS])
             end_in = start_in + timedelta(days=1)

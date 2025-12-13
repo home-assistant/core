@@ -1,8 +1,17 @@
 """Const for LIFX."""
 
+from __future__ import annotations
+
 import logging
+from typing import TYPE_CHECKING
+
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from .manager import LIFXManager
 
 DOMAIN = "lifx"
+DATA_LIFX_MANAGER: HassKey[LIFXManager] = HassKey(DOMAIN)
 
 TARGET_ANY = "00:00:00:00:00:00"
 
@@ -59,9 +68,9 @@ INFRARED_BRIGHTNESS_VALUES_MAP = {
     32767: "50%",
     65535: "100%",
 }
-DATA_LIFX_MANAGER = "lifx_manager"
 
 LIFX_CEILING_PRODUCT_IDS = {176, 177, 201, 202}
+LIFX_128ZONE_CEILING_PRODUCT_IDS = {201, 202}
 
 _LOGGER = logging.getLogger(__package__)
 

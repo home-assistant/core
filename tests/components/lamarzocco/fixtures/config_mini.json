@@ -1,124 +1,284 @@
 {
-  "version": "v1",
-  "preinfusionModesAvailable": ["ByDoseType"],
-  "machineCapabilities": [
-    {
-      "family": "LINEA",
-      "groupsNumber": 1,
-      "coffeeBoilersNumber": 1,
-      "hasCupWarmer": false,
-      "steamBoilersNumber": 1,
-      "teaDosesNumber": 1,
-      "machineModes": ["BrewingMode", "StandBy"],
-      "schedulingType": "smartWakeUpSleep"
-    }
-  ],
-  "machine_sn": "Sn01239157",
-  "machine_hw": "0",
-  "isPlumbedIn": false,
-  "isBackFlushEnabled": false,
-  "standByTime": 0,
-  "tankStatus": true,
-  "settings": [],
-  "recipes": [
-    {
-      "id": "Recipe1",
-      "dose_mode": "Mass",
-      "recipe_doses": [
-        { "id": "A", "target": 32 },
-        { "id": "B", "target": 45 }
-      ]
-    }
-  ],
-  "recipeAssignment": [
-    {
-      "dose_index": "DoseA",
-      "recipe_id": "Recipe1",
-      "recipe_dose": "A",
-      "group": "Group1"
-    }
-  ],
-  "groupCapabilities": [
-    {
-      "capabilities": {
-        "groupType": "AV_Group",
-        "groupNumber": "Group1",
-        "boilerId": "CoffeeBoiler1",
-        "hasScale": false,
-        "hasFlowmeter": false,
-        "numberOfDoses": 1
-      },
-      "doses": [
-        {
-          "groupNumber": "Group1",
-          "doseIndex": "DoseA",
-          "doseType": "MassType",
-          "stopTarget": 32
-        }
-      ],
-      "doseMode": { "groupNumber": "Group1", "brewingType": "ManualType" }
-    }
-  ],
-  "machineMode": "StandBy",
-  "teaDoses": { "DoseA": { "doseIndex": "DoseA", "stopTarget": 0 } },
-  "scale": {
-    "connected": true,
-    "address": "44:b7:d0:74:5f:90",
-    "name": "LMZ-123A45",
-    "battery": 64
-  },
-  "boilers": [
-    { "id": "SteamBoiler", "isEnabled": false, "target": 0, "current": 0 },
-    { "id": "CoffeeBoiler1", "isEnabled": true, "target": 89, "current": 42 }
-  ],
-  "boilerTargetTemperature": { "SteamBoiler": 0, "CoffeeBoiler1": 89 },
-  "preinfusionMode": {
-    "Group1": {
-      "groupNumber": "Group1",
-      "preinfusionStyle": "PreinfusionByDoseType"
-    }
-  },
-  "preinfusionSettings": {
-    "mode": "TypeB",
-    "Group1": [
+  "serialNumber": "LM012345",
+  "type": "CoffeeMachine",
+  "name": "LM012345",
+  "location": null,
+  "modelCode": "LINEAMINI",
+  "modelName": "LINEA MINI",
+  "connected": true,
+  "connectionDate": 1742683649814,
+  "offlineMode": false,
+  "requireFirmwareUpdate": false,
+  "availableFirmwareUpdate": true,
+  "coffeeStation": {
+    "id": "a59cd870-dc75-428f-b73e-e5a247c6db73",
+    "name": "My coffee station",
+    "coffeeMachine": {
+      "serialNumber": "LM012345",
+      "type": "CoffeeMachine",
+      "name": null,
+      "location": null,
+      "modelCode": "LINEAMINI",
+      "modelName": "LINEA MINI",
+      "connected": true,
+      "connectionDate": 1742683649814,
+      "offlineMode": false,
+      "requireFirmwareUpdate": false,
+      "availableFirmwareUpdate": true,
+      "imageUrl": "https://lion.lamarzocco.io/img/thing-model/list/lineamini/lineamini-1-c-nero_op.png",
+      "bleAuthToken": null
+    },
+    "grinders": [],
+    "accessories": [
       {
-        "mode": "TypeA",
-        "groupNumber": "Group1",
-        "doseType": "Continuous",
-        "preWetTime": 2,
-        "preWetHoldTime": 3
-      },
-      {
-        "mode": "TypeB",
-        "groupNumber": "Group1",
-        "doseType": "Continuous",
-        "preWetTime": 0,
-        "preWetHoldTime": 3
+        "type": "ScaleAcaiaLunar",
+        "name": "LMZ-123A12",
+        "connected": false,
+        "batteryLevel": null,
+        "imageUrl": null
       }
     ]
   },
-  "wakeUpSleepEntries": [
+  "imageUrl": "https://lion.lamarzocco.io/img/thing-model/detail/lineamini/lineamini-1-c-nero_op.png",
+  "bleAuthToken": null,
+  "widgets": [
     {
-      "id": "T6aLl42",
-      "days": [
-        "monday",
-        "tuesday",
-        "wednesday",
-        "thursday",
-        "friday",
-        "saturday",
-        "sunday"
-      ],
-      "steam": false,
-      "enabled": false,
-      "timeOn": "24:0",
-      "timeOff": "24:0"
+      "code": "CMMachineStatus",
+      "index": 1,
+      "output": {
+        "status": "StandBy",
+        "availableModes": ["BrewingMode", "StandBy"],
+        "mode": "StandBy",
+        "nextStatus": null,
+        "brewingStartTime": null
+      },
+      "tutorialUrl": null
+    },
+    {
+      "code": "CMCoffeeBoiler",
+      "index": 1,
+      "output": {
+        "status": "StandBy",
+        "enabled": true,
+        "enabledSupported": false,
+        "targetTemperature": 90.0,
+        "targetTemperatureMin": 80,
+        "targetTemperatureMax": 100,
+        "targetTemperatureStep": 0.1,
+        "readyStartTime": null
+      },
+      "tutorialUrl": null
+    },
+    {
+      "code": "CMSteamBoilerTemperature",
+      "index": 1,
+      "output": {
+        "status": "Off",
+        "enabled": false,
+        "enabledSupported": true,
+        "targetTemperature": 0.0,
+        "targetTemperatureSupported": false,
+        "targetTemperatureMin": 95,
+        "targetTemperatureMax": 140,
+        "targetTemperatureStep": 0.1,
+        "readyStartTime": null
+      },
+      "tutorialUrl": null
+    },
+    {
+      "code": "CMPreExtraction",
+      "index": 1,
+      "output": {
+        "availableModes": ["PreBrewing", "Disabled"],
+        "mode": "Disabled",
+        "times": {
+          "In": {
+            "seconds": 2.0,
+            "secondsMin": {
+              "PreBrewing": 2,
+              "PreInfusion": 2
+            },
+            "secondsMax": {
+              "PreBrewing": 9,
+              "PreInfusion": 9
+            },
+            "secondsStep": {
+              "PreBrewing": 0.1,
+              "PreInfusion": 0.1
+            }
+          },
+          "Out": {
+            "seconds": 3.0,
+            "secondsMin": {
+              "PreBrewing": 1,
+              "PreInfusion": 1
+            },
+            "secondsMax": {
+              "PreBrewing": 9,
+              "PreInfusion": 25
+            },
+            "secondsStep": {
+              "PreBrewing": 0.1,
+              "PreInfusion": 0.1
+            }
+          }
+        }
+      },
+      "tutorialUrl": null
+    },
+    {
+      "code": "CMPreBrewing",
+      "index": 1,
+      "output": {
+        "availableModes": ["PreBrewing", "Disabled"],
+        "mode": "Disabled",
+        "times": {
+          "PreBrewing": [
+            {
+              "doseIndex": "ByGroup",
+              "seconds": {
+                "Out": 3.0,
+                "In": 2.0
+              },
+              "secondsMin": {
+                "Out": 1,
+                "In": 1
+              },
+              "secondsMax": {
+                "Out": 9,
+                "In": 9
+              },
+              "secondsStep": {
+                "Out": 0.1,
+                "In": 0.1
+              }
+            }
+          ]
+        },
+        "doseIndexSupported": false
+      },
+      "tutorialUrl": "https://www.lamarzocco.com/it/en/app/support/brewing-features/#gs3-av-linea-micra-linea-mini-home"
+    },
+    {
+      "code": "CMBrewByWeightDoses",
+      "index": 1,
+      "output": {
+        "scaleConnected": false,
+        "availableModes": ["Continuous"],
+        "mode": "Continuous",
+        "doses": {
+          "Dose1": {
+            "dose": 34.5,
+            "doseMin": 5,
+            "doseMax": 100,
+            "doseStep": 0.1
+          },
+          "Dose2": {
+            "dose": 17.5,
+            "doseMin": 5,
+            "doseMax": 100,
+            "doseStep": 0.1
+          }
+        }
+      },
+      "tutorialUrl": "http://lamarzocco.com/it/en/app/support/brew-by-weight"
+    },
+    {
+      "code": "CMBackFlush",
+      "index": 1,
+      "output": {
+        "lastCleaningStartTime": 1742731776135,
+        "status": "Off"
+      },
+      "tutorialUrl": "http://lamarzocco.com/it/en/app/support/cleaning-and-backflush/#linea-mini"
+    },
+    {
+      "code": "ThingScale",
+      "index": 2,
+      "output": {
+        "name": "LMZ-123A12",
+        "connected": false,
+        "batteryLevel": 0.0,
+        "calibrationRequired": false
+      },
+      "tutorialUrl": "http://lamarzocco.com/it/en/app/support/training-scale-location/#linea-mini"
     }
   ],
-  "smartStandBy": { "mode": "LastBrewing", "minutes": 10, "enabled": true },
-  "clock": "2024-08-31T14:47:45",
-  "firmwareVersions": [
-    { "name": "machine_firmware", "fw_version": "2.12" },
-    { "name": "gateway_firmware", "fw_version": "v3.6-rc4" }
-  ]
+  "invalidWidgets": [
+    {
+      "code": "CMMachineGroupStatus",
+      "index": 1,
+      "output": null,
+      "tutorialUrl": null
+    },
+    {
+      "code": "CMSteamBoilerLevel",
+      "index": 1,
+      "output": null,
+      "tutorialUrl": null
+    },
+    {
+      "code": "CMGroupDoses",
+      "index": 1,
+      "output": null,
+      "tutorialUrl": null
+    },
+    {
+      "code": "CMPreInfusionEnable",
+      "index": 1,
+      "output": null,
+      "tutorialUrl": null
+    },
+    {
+      "code": "CMPreInfusion",
+      "index": 1,
+      "output": null,
+      "tutorialUrl": "http://lamarzocco.com/it/en/app/support/brewing-features/#commercial"
+    },
+    {
+      "code": "CMCupWarmer",
+      "index": 1,
+      "output": null,
+      "tutorialUrl": null
+    },
+    {
+      "code": "CMHotWaterDose",
+      "index": 1,
+      "output": null,
+      "tutorialUrl": null
+    },
+    {
+      "code": "CMAutoFlush",
+      "index": 1,
+      "output": null,
+      "tutorialUrl": null
+    },
+    {
+      "code": "CMRinseFlush",
+      "index": 1,
+      "output": null,
+      "tutorialUrl": null
+    },
+    {
+      "code": "CMSteamFlush",
+      "index": 1,
+      "output": null,
+      "tutorialUrl": null
+    },
+    {
+      "code": "CMNoWater",
+      "index": 1,
+      "output": {
+        "allarm": false
+      },
+      "tutorialUrl": null
+    },
+    {
+      "code": "ThingScale",
+      "index": 1,
+      "output": null,
+      "tutorialUrl": "http://lamarzocco.com/it/en/app/support/training-scale-location/#linea-mini"
+    }
+  ],
+  "runningCommands": []
 }

@@ -28,6 +28,7 @@ from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.trigger_template_entity import (
     CONF_AVAILABILITY,
     TEMPLATE_SENSOR_BASE_SCHEMA,
+    ValueTemplate,
 )
 from homeassistant.helpers.typing import ConfigType
 
@@ -43,7 +44,9 @@ SENSOR_SCHEMA = vol.Schema(
         vol.Optional(CONF_ATTRIBUTE): cv.string,
         vol.Optional(CONF_INDEX, default=0): cv.positive_int,
         vol.Required(CONF_SELECT): cv.string,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_VALUE_TEMPLATE): vol.All(
+            cv.template, ValueTemplate.from_template
+        ),
     }
 )
 
@@ -75,7 +78,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         scan_interval: timedelta = resource_config.get(
             CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
         )
-        coordinator = ScrapeCoordinator(hass, None, rest, scan_interval)
+        coordinator = ScrapeCoordinator(
+            hass, None, rest, resource_config, scan_interval
+        )
 
         sensors: list[ConfigType] = resource_config.get(SENSOR_DOMAIN, [])
         if sensors:
@@ -105,13 +110,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> bo
         hass,
         entry,
         rest,
+        rest_config,
         DEFAULT_SCAN_INTERVAL,
     )
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     return True
 
@@ -119,11 +124,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ScrapeConfigEntry) -> bo
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Scrape config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle options update."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_remove_config_entry_device(

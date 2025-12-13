@@ -6,8 +6,8 @@ from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
-from pyezviz.constants import SupportExt
-from pyezviz.exceptions import (
+from pyezvizapi.constants import SupportExt
+from pyezvizapi.exceptions import (
     EzvizAuthTokenExpired,
     EzvizAuthVerificationCode,
     HTTPError,

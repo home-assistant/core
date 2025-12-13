@@ -22,14 +22,16 @@ from .entity import (
     PermRequired,
     ProtectDeviceEntity,
     ProtectEntityDescription,
-    ProtectSetableKeysMixin,
+    ProtectSettableKeysMixin,
     T,
     async_all_device_entities,
 )
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
-class ProtectTextEntityDescription(ProtectSetableKeysMixin[T], TextEntityDescription):
+class ProtectTextEntityDescription(ProtectSettableKeysMixin[T], TextEntityDescription):
     """Describes UniFi Protect Text entity."""
 
 
@@ -46,7 +48,7 @@ async def _set_doorbell_message(obj: Camera, message: str) -> None:
 CAMERA: tuple[ProtectTextEntityDescription, ...] = (
     ProtectTextEntityDescription(
         key="doorbell",
-        name="Doorbell",
+        translation_key="doorbell",
         entity_category=EntityCategory.CONFIG,
         ufp_value_fn=_get_doorbell_current,
         ufp_set_method_fn=_set_doorbell_message,

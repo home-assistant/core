@@ -291,7 +291,7 @@ async def test_media_player_play_media(
     )
     mock_api.send_launch_app_command.assert_called_with("tv.twitch.android.app")
 
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError, match="Channel must be numeric: abc"):
         await hass.services.async_call(
             "media_player",
             "play_media",
@@ -303,7 +303,7 @@ async def test_media_player_play_media(
             blocking=True,
         )
 
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError, match="Invalid media type: music"):
         await hass.services.async_call(
             "media_player",
             "play_media",
@@ -355,6 +355,7 @@ async def test_browse_media(
         "children_media_class": "app",
         "can_play": False,
         "can_expand": True,
+        "can_search": False,
         "thumbnail": None,
         "not_shown": 0,
         "children": [
@@ -366,6 +367,7 @@ async def test_browse_media(
                 "children_media_class": None,
                 "can_play": False,
                 "can_expand": False,
+                "can_search": False,
                 "thumbnail": "https://www.youtube.com/icon.png",
             },
             {
@@ -376,6 +378,7 @@ async def test_browse_media(
                 "children_media_class": None,
                 "can_play": False,
                 "can_expand": False,
+                "can_search": False,
                 "thumbnail": "",
             },
         ],

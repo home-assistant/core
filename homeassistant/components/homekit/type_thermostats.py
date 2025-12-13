@@ -167,6 +167,8 @@ HC_HASS_TO_HOMEKIT_FAN_STATE = {
     HVACAction.COOLING: FAN_STATE_ACTIVE,
     HVACAction.DRYING: FAN_STATE_ACTIVE,
     HVACAction.FAN: FAN_STATE_ACTIVE,
+    HVACAction.PREHEATING: FAN_STATE_IDLE,
+    HVACAction.DEFROSTING: FAN_STATE_IDLE,
 }
 
 HEAT_COOL_DEADBAND = 5
@@ -866,7 +868,7 @@ def _get_target_temperature(state: State, unit: str) -> float | None:
 
 def _get_current_temperature(state: State, unit: str) -> float | None:
     """Calculate the current temperature from a state."""
-    target_temp = state.attributes.get(ATTR_CURRENT_TEMPERATURE)
-    if isinstance(target_temp, (int, float)):
-        return temperature_to_homekit(target_temp, unit)
+    current_temp = state.attributes.get(ATTR_CURRENT_TEMPERATURE)
+    if isinstance(current_temp, (int, float)):
+        return temperature_to_homekit(current_temp, unit)
     return None

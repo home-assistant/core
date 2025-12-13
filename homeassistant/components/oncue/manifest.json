@@ -1,16 +1,10 @@
 {
   "domain": "oncue",
   "name": "Oncue by Kohler",
-  "codeowners": ["@bdraco", "@peterager"],
-  "config_flow": true,
-  "dhcp": [
-    {
-      "hostname": "kohlergen*",
-      "macaddress": "00146F*"
-    }
-  ],
+  "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/oncue",
+  "integration_type": "system",
   "iot_class": "cloud_polling",
-  "loggers": ["aiooncue"],
-  "requirements": ["aiooncue==0.3.9"]
+  "quality_scale": "legacy",
+  "requirements": []
 }

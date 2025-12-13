@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN as FIRESERVICEROTA_DOMAIN
+from .const import DOMAIN
 from .coordinator import (
     FireServiceConfigEntry,
     FireServiceRotaClient,
@@ -122,7 +122,7 @@ class ResponseSwitch(SwitchEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                f"{FIRESERVICEROTA_DOMAIN}_{self._entry_id}_update",
+                f"{DOMAIN}_{self._entry_id}_update",
                 self.client_update,
             )
         )

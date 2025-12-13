@@ -37,7 +37,7 @@ from .entity import (
     PermRequired,
     ProtectDeviceEntity,
     ProtectEntityDescription,
-    ProtectSetableKeysMixin,
+    ProtectSettableKeysMixin,
     T,
     async_all_device_entities,
 )
@@ -45,6 +45,7 @@ from .utils import async_get_light_motion_current
 
 _LOGGER = logging.getLogger(__name__)
 _KEY_LIGHT_MOTION = "light_motion"
+PARALLEL_UPDATES = 0
 
 HDR_MODES = [
     {"id": "always", "name": "Always On"},
@@ -106,7 +107,7 @@ DEVICE_CLASS_LCD_MESSAGE: Final = "unifiprotect__lcd_message"
 
 @dataclass(frozen=True, kw_only=True)
 class ProtectSelectEntityDescription(
-    ProtectSetableKeysMixin[T], SelectEntityDescription
+    ProtectSettableKeysMixin[T], SelectEntityDescription
 ):
     """Describes UniFi Protect Select entity."""
 
@@ -193,8 +194,7 @@ async def _set_liveview(obj: Viewer, liveview_id: str) -> None:
 CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
     ProtectSelectEntityDescription(
         key="recording_mode",
-        name="Recording mode",
-        icon="mdi:video-outline",
+        translation_key="recording_mode",
         entity_category=EntityCategory.CONFIG,
         ufp_options=DEVICE_RECORDING_MODES,
         ufp_enum_type=RecordingMode,
@@ -204,8 +204,7 @@ CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
     ),
     ProtectSelectEntityDescription(
         key="infrared",
-        name="Infrared mode",
-        icon="mdi:circle-opacity",
+        translation_key="infrared_mode",
         entity_category=EntityCategory.CONFIG,
         ufp_required_field="feature_flags.has_led_ir",
         ufp_options=INFRARED_MODES,
@@ -216,8 +215,7 @@ CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
     ),
     ProtectSelectEntityDescription[Camera](
         key="doorbell_text",
-        name="Doorbell text",
-        icon="mdi:card-text",
+        translation_key="doorbell_text",
         entity_category=EntityCategory.CONFIG,
         device_class=DEVICE_CLASS_LCD_MESSAGE,
         ufp_required_field="feature_flags.has_lcd_screen",
@@ -228,8 +226,7 @@ CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
     ),
     ProtectSelectEntityDescription(
         key="chime_type",
-        name="Chime type",
-        icon="mdi:bell",
+        translation_key="chime_type",
         entity_category=EntityCategory.CONFIG,
         ufp_required_field="feature_flags.has_chime",
         ufp_options=CHIME_TYPES,
@@ -240,8 +237,7 @@ CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
     ),
     ProtectSelectEntityDescription(
         key="hdr_mode",
-        name="HDR mode",
-        icon="mdi:brightness-7",
+        translation_key="hdr_mode",
         entity_category=EntityCategory.CONFIG,
         ufp_required_field="feature_flags.has_hdr",
         ufp_options=HDR_MODES,
@@ -254,8 +250,7 @@ CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
 LIGHT_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
     ProtectSelectEntityDescription[Light](
         key=_KEY_LIGHT_MOTION,
-        name="Light mode",
-        icon="mdi:spotlight",
+        translation_key="light_mode",
         entity_category=EntityCategory.CONFIG,
         ufp_options=MOTION_MODE_TO_LIGHT_MODE,
         ufp_value_fn=async_get_light_motion_current,
@@ -264,8 +259,7 @@ LIGHT_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
     ),
     ProtectSelectEntityDescription[Light](
         key="paired_camera",
-        name="Paired camera",
-        icon="mdi:cctv",
+        translation_key="paired_camera",
         entity_category=EntityCategory.CONFIG,
         ufp_value="camera_id",
         ufp_options_fn=_get_paired_camera_options,
@@ -277,8 +271,7 @@ LIGHT_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
 SENSE_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
     ProtectSelectEntityDescription(
         key="mount_type",
-        name="Mount type",
-        icon="mdi:screwdriver",
+        translation_key="mount_type",
         entity_category=EntityCategory.CONFIG,
         ufp_options=MOUNT_TYPES,
         ufp_enum_type=MountType,
@@ -288,8 +281,7 @@ SENSE_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
     ),
     ProtectSelectEntityDescription[Sensor](
         key="paired_camera",
-        name="Paired camera",
-        icon="mdi:cctv",
+        translation_key="paired_camera",
         entity_category=EntityCategory.CONFIG,
         ufp_value="camera_id",
         ufp_options_fn=_get_paired_camera_options,
@@ -301,8 +293,7 @@ SENSE_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
 DOORLOCK_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
     ProtectSelectEntityDescription[Doorlock](
         key="paired_camera",
-        name="Paired camera",
-        icon="mdi:cctv",
+        translation_key="paired_camera",
         entity_category=EntityCategory.CONFIG,
         ufp_value="camera_id",
         ufp_options_fn=_get_paired_camera_options,
@@ -314,8 +305,7 @@ DOORLOCK_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
 VIEWER_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
     ProtectSelectEntityDescription[Viewer](
         key="viewer",
-        name="Liveview",
-        icon="mdi:view-dashboard",
+        translation_key="liveview",
         entity_category=None,
         ufp_options_fn=_get_viewer_options,
         ufp_value_fn=_get_viewer_current,

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from pyrainbird.exceptions import RainbirdApiException, RainbirdDeviceBusyException
 import voluptuous as vol
@@ -91,7 +92,7 @@ class RainBirdSwitch(CoordinatorEntity[RainbirdUpdateCoordinator], SwitchEntity)
         """Return state attributes."""
         return {"zone": self._zone}
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         try:
             await self.coordinator.controller.irrigate_zone(
@@ -111,7 +112,7 @@ class RainBirdSwitch(CoordinatorEntity[RainbirdUpdateCoordinator], SwitchEntity)
         self.async_write_ha_state()
         await self.coordinator.async_request_refresh()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         try:
             await self.coordinator.controller.stop_irrigation()

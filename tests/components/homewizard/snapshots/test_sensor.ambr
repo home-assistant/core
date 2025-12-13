@@ -21,7 +21,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -31,7 +30,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '1.00',
     'via_device_id': None,
   })
@@ -66,6 +64,7 @@
     'original_name': 'Battery cycles',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'cycles',
     'unique_id': 'HWE-P1_5c2fafabcdef_cycles',
@@ -108,7 +107,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -118,7 +116,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '1.00',
     'via_device_id': None,
   })
@@ -147,12 +144,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_current_a',
@@ -197,7 +198,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -207,7 +207,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '1.00',
     'via_device_id': None,
   })
@@ -236,12 +235,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy export',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_kwh',
@@ -286,7 +289,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -296,7 +298,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '1.00',
     'via_device_id': None,
   })
@@ -325,12 +326,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy import',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_kwh',
@@ -375,7 +380,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -385,7 +389,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '1.00',
     'via_device_id': None,
   })
@@ -414,12 +417,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'Frequency',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_frequency_hz',
@@ -464,7 +471,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -474,7 +480,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '1.00',
     'via_device_id': None,
   })
@@ -512,6 +517,7 @@
     'original_name': 'Power',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_w',
@@ -556,7 +562,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -566,7 +571,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '1.00',
     'via_device_id': None,
   })
@@ -604,6 +608,7 @@
     'original_name': 'State of charge',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'state_of_charge_pct',
     'unique_id': 'HWE-P1_5c2fafabcdef_state_of_charge_pct',
@@ -648,7 +653,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -658,7 +662,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '1.00',
     'via_device_id': None,
   })
@@ -691,6 +694,7 @@
     'original_name': 'Uptime',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'uptime',
     'unique_id': 'HWE-P1_5c2fafabcdef_uptime',
@@ -733,7 +737,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -743,7 +746,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '1.00',
     'via_device_id': None,
   })
@@ -772,12 +774,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_v',
@@ -822,7 +828,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -832,7 +837,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '1.00',
     'via_device_id': None,
   })
@@ -867,6 +871,7 @@
     'original_name': 'Wi-Fi RSSI',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_rssi',
     'unique_id': 'HWE-P1_5c2fafabcdef_wifi_rssi',
@@ -910,7 +915,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -920,7 +924,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '1.00',
     'via_device_id': None,
   })
@@ -953,6 +956,7 @@
     'original_name': 'Wi-Fi SSID',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_ssid',
     'unique_id': 'HWE-P1_5c2fafabcdef_wifi_ssid',
@@ -994,7 +998,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -1004,7 +1007,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -1033,12 +1035,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.APPARENT_POWER: 'apparent_power'>,
     'original_icon': None,
     'original_name': 'Apparent power',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_apparent_power_va',
@@ -1083,7 +1089,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -1093,7 +1098,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -1122,12 +1126,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_current_a',
@@ -1172,7 +1180,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -1182,7 +1189,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -1211,12 +1217,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy export',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_kwh',
@@ -1261,7 +1271,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -1271,7 +1280,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -1300,12 +1308,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy import',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_kwh',
@@ -1350,7 +1362,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -1360,7 +1371,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -1389,12 +1399,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'Frequency',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_frequency_hz',
@@ -1439,7 +1453,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -1449,7 +1462,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -1487,6 +1499,7 @@
     'original_name': 'Power',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_w',
@@ -1531,7 +1544,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -1541,7 +1553,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -1576,6 +1587,7 @@
     'original_name': 'Power factor',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_factor',
@@ -1620,7 +1632,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -1630,7 +1641,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -1659,12 +1669,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
     'original_icon': None,
     'original_name': 'Reactive power',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_reactive_power_var',
@@ -1709,7 +1723,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -1719,7 +1732,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -1748,12 +1760,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_v',
@@ -1798,7 +1814,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -1808,7 +1823,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -1841,6 +1855,7 @@
     'original_name': 'Wi-Fi SSID',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_ssid',
     'unique_id': 'HWE-P1_5c2fafabcdef_wifi_ssid',
@@ -1882,7 +1897,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -1892,7 +1906,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -1927,6 +1940,7 @@
     'original_name': 'Wi-Fi strength',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_strength',
     'unique_id': 'HWE-P1_5c2fafabcdef_wifi_strength',
@@ -1970,7 +1984,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -1980,7 +1993,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -2009,12 +2021,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.APPARENT_POWER: 'apparent_power'>,
     'original_icon': None,
     'original_name': 'Apparent power',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_apparent_power_va',
@@ -2059,7 +2075,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -2069,7 +2084,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -2098,12 +2112,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.APPARENT_POWER: 'apparent_power'>,
     'original_icon': None,
     'original_name': 'Apparent power phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_apparent_power_phase_va',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_apparent_power_l1_va',
@@ -2148,7 +2166,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -2158,7 +2175,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -2187,12 +2203,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.APPARENT_POWER: 'apparent_power'>,
     'original_icon': None,
     'original_name': 'Apparent power phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_apparent_power_phase_va',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_apparent_power_l2_va',
@@ -2237,7 +2257,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -2247,7 +2266,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -2276,12 +2294,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.APPARENT_POWER: 'apparent_power'>,
     'original_icon': None,
     'original_name': 'Apparent power phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_apparent_power_phase_va',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_apparent_power_l3_va',
@@ -2326,7 +2348,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -2336,7 +2357,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -2365,12 +2385,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_current_a',
@@ -2415,7 +2439,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -2425,7 +2448,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -2454,12 +2476,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l1_a',
@@ -2504,7 +2530,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -2514,7 +2539,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -2543,12 +2567,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l2_a',
@@ -2593,7 +2621,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -2603,7 +2630,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -2632,12 +2658,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l3_a',
@@ -2682,7 +2712,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -2692,7 +2721,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -2721,12 +2749,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy export',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_kwh',
@@ -2771,7 +2803,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -2781,7 +2812,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -2810,12 +2840,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy import',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_kwh',
@@ -2860,7 +2894,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -2870,7 +2903,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -2899,12 +2931,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'Frequency',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_frequency_hz',
@@ -2949,7 +2985,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -2959,7 +2994,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -2997,6 +3031,7 @@
     'original_name': 'Power',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_w',
@@ -3041,7 +3076,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -3051,7 +3085,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -3086,6 +3119,7 @@
     'original_name': 'Power factor phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_factor_phase',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_factor_l1',
@@ -3130,7 +3164,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -3140,7 +3173,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -3175,6 +3207,7 @@
     'original_name': 'Power factor phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_factor_phase',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_factor_l2',
@@ -3219,7 +3252,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -3229,7 +3261,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -3264,6 +3295,7 @@
     'original_name': 'Power factor phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_factor_phase',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_factor_l3',
@@ -3308,7 +3340,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -3318,7 +3349,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -3356,6 +3386,7 @@
     'original_name': 'Power phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l1_w',
@@ -3400,7 +3431,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -3410,7 +3440,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -3448,6 +3477,7 @@
     'original_name': 'Power phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l2_w',
@@ -3492,7 +3522,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -3502,7 +3531,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -3540,6 +3568,7 @@
     'original_name': 'Power phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l3_w',
@@ -3584,7 +3613,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -3594,7 +3622,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -3623,12 +3650,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
     'original_icon': None,
     'original_name': 'Reactive power',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_reactive_power_var',
@@ -3673,7 +3704,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -3683,7 +3713,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -3712,12 +3741,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
     'original_icon': None,
     'original_name': 'Reactive power phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_reactive_power_phase_var',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_reactive_power_l1_var',
@@ -3762,7 +3795,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -3772,7 +3804,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -3801,12 +3832,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
     'original_icon': None,
     'original_name': 'Reactive power phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_reactive_power_phase_var',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_reactive_power_l2_var',
@@ -3851,7 +3886,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -3861,7 +3895,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -3890,12 +3923,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
     'original_icon': None,
     'original_name': 'Reactive power phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_reactive_power_phase_var',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_reactive_power_l3_var',
@@ -3940,7 +3977,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -3950,7 +3986,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -3979,12 +4014,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l1_v',
@@ -4029,7 +4068,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -4039,7 +4077,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -4068,12 +4105,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l2_v',
@@ -4118,7 +4159,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -4128,7 +4168,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -4157,12 +4196,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l3_v',
@@ -4207,7 +4250,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -4217,7 +4259,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -4250,6 +4291,7 @@
     'original_name': 'Wi-Fi SSID',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_ssid',
     'unique_id': 'HWE-P1_5c2fafabcdef_wifi_ssid',
@@ -4291,7 +4333,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -4301,7 +4342,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -4336,6 +4376,7 @@
     'original_name': 'Wi-Fi strength',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_strength',
     'unique_id': 'HWE-P1_5c2fafabcdef_wifi_strength',
@@ -4379,7 +4420,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -4389,7 +4429,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -4416,12 +4455,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Average demand',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_average_w',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_average_w',
@@ -4465,7 +4508,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -4475,7 +4517,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -4504,12 +4545,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l1_a',
@@ -4554,7 +4599,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -4564,7 +4608,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -4593,12 +4636,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l2_a',
@@ -4643,7 +4690,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -4653,7 +4699,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -4682,12 +4727,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l3_a',
@@ -4732,7 +4781,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -4742,7 +4790,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -4775,6 +4822,7 @@
     'original_name': 'DSMR version',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dsmr_version',
     'unique_id': 'HWE-P1_5c2fafabcdef_smr_version',
@@ -4816,7 +4864,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -4826,7 +4873,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -4855,12 +4901,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy export',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_kwh',
@@ -4905,7 +4955,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -4915,7 +4964,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -4944,12 +4992,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy export tariff 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t1_kwh',
@@ -4994,7 +5046,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -5004,7 +5055,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -5033,12 +5083,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy export tariff 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t2_kwh',
@@ -5083,7 +5137,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -5093,7 +5146,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -5122,12 +5174,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy export tariff 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t3_kwh',
@@ -5172,7 +5228,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -5182,7 +5237,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -5211,12 +5265,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy export tariff 4',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t4_kwh',
@@ -5261,7 +5319,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -5271,7 +5328,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -5300,12 +5356,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy import',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_kwh',
@@ -5350,7 +5410,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -5360,7 +5419,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -5389,12 +5447,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy import tariff 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t1_kwh',
@@ -5439,7 +5501,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -5449,7 +5510,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -5478,12 +5538,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy import tariff 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t2_kwh',
@@ -5528,7 +5592,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -5538,7 +5601,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -5567,12 +5629,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy import tariff 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t3_kwh',
@@ -5617,7 +5683,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -5627,7 +5692,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -5656,12 +5720,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy import tariff 4',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t4_kwh',
@@ -5706,7 +5774,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -5716,7 +5783,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -5745,12 +5811,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'Frequency',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_frequency_hz',
@@ -5795,7 +5865,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -5805,7 +5874,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -5838,6 +5906,7 @@
     'original_name': 'Long power failures detected',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'long_power_fail_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_long_power_fail_count',
@@ -5879,7 +5948,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -5889,7 +5957,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -5916,12 +5983,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Peak demand current month',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'monthly_power_peak_w',
     'unique_id': 'HWE-P1_5c2fafabcdef_monthly_power_peak_w',
@@ -5965,7 +6036,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -5975,7 +6045,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -6013,6 +6082,7 @@
     'original_name': 'Power',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_w',
@@ -6057,7 +6127,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -6067,7 +6136,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -6100,6 +6168,7 @@
     'original_name': 'Power failures detected',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'any_power_fail_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_any_power_fail_count',
@@ -6141,7 +6210,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -6151,7 +6219,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -6189,6 +6256,7 @@
     'original_name': 'Power phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l1_w',
@@ -6233,7 +6301,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -6243,7 +6310,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -6281,6 +6347,7 @@
     'original_name': 'Power phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l2_w',
@@ -6325,7 +6392,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -6335,7 +6401,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -6373,6 +6438,7 @@
     'original_name': 'Power phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l3_w',
@@ -6417,7 +6483,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -6427,7 +6492,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -6460,6 +6524,7 @@
     'original_name': 'Smart meter identifier',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'unique_meter_id',
     'unique_id': 'HWE-P1_5c2fafabcdef_unique_meter_id',
@@ -6501,7 +6566,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -6511,7 +6575,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -6544,6 +6607,7 @@
     'original_name': 'Smart meter model',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'meter_model',
     'unique_id': 'HWE-P1_5c2fafabcdef_meter_model',
@@ -6585,7 +6649,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -6595,7 +6658,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -6635,6 +6697,7 @@
     'original_name': 'Tariff',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_tariff',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_tariff',
@@ -6683,7 +6746,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -6693,7 +6755,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -6722,12 +6783,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Total water usage',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_liter_m3',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_liter_m3',
@@ -6772,7 +6837,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -6782,7 +6846,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -6811,12 +6874,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l1_v',
@@ -6861,7 +6928,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -6871,7 +6937,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -6900,12 +6965,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l2_v',
@@ -6950,7 +7019,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -6960,7 +7028,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -6989,12 +7056,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l3_v',
@@ -7039,7 +7110,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -7049,7 +7119,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -7082,6 +7151,7 @@
     'original_name': 'Voltage sags detected phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_sag_phase_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_voltage_sag_l1_count',
@@ -7123,7 +7193,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -7133,7 +7202,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -7166,6 +7234,7 @@
     'original_name': 'Voltage sags detected phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_sag_phase_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_voltage_sag_l2_count',
@@ -7207,7 +7276,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -7217,7 +7285,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -7250,6 +7317,7 @@
     'original_name': 'Voltage sags detected phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_sag_phase_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_voltage_sag_l3_count',
@@ -7291,7 +7359,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -7301,7 +7368,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -7334,6 +7400,7 @@
     'original_name': 'Voltage swells detected phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_swell_phase_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_voltage_swell_l1_count',
@@ -7375,7 +7442,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -7385,7 +7451,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -7418,6 +7483,7 @@
     'original_name': 'Voltage swells detected phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_swell_phase_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_voltage_swell_l2_count',
@@ -7459,7 +7525,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -7469,7 +7534,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -7502,6 +7566,7 @@
     'original_name': 'Voltage swells detected phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_swell_phase_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_voltage_swell_l3_count',
@@ -7543,7 +7608,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -7553,7 +7617,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -7588,6 +7651,7 @@
     'original_name': 'Water usage',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_liter_lpm',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_liter_lpm',
@@ -7631,7 +7695,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -7641,7 +7704,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -7674,6 +7736,7 @@
     'original_name': 'Wi-Fi SSID',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_ssid',
     'unique_id': 'HWE-P1_5c2fafabcdef_wifi_ssid',
@@ -7715,7 +7778,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -7725,7 +7787,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -7760,6 +7821,7 @@
     'original_name': 'Wi-Fi strength',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_strength',
     'unique_id': 'HWE-P1_5c2fafabcdef_wifi_strength',
@@ -7799,7 +7861,6 @@
         'gas_meter_G001',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -7809,7 +7870,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'gas_meter_G001',
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': <ANY>,
   })
@@ -7838,12 +7898,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.GAS: 'gas'>,
     'original_icon': None,
     'original_name': 'Gas',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'homewizard_gas_meter_G001',
@@ -7884,7 +7948,6 @@
         'heat_meter_H001',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -7894,7 +7957,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'heat_meter_H001',
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': <ANY>,
   })
@@ -7923,12 +7985,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'homewizard_heat_meter_H001',
@@ -7969,7 +8035,6 @@
         'inlet_heat_meter_IH001',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -7979,7 +8044,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'inlet_heat_meter_IH001',
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': <ANY>,
   })
@@ -8014,6 +8078,7 @@
     'original_name': None,
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'homewizard_inlet_heat_meter_IH001',
@@ -8053,7 +8118,6 @@
         'warm_water_meter_WW001',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -8063,7 +8127,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'warm_water_meter_WW001',
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': <ANY>,
   })
@@ -8092,12 +8155,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Water',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'homewizard_warm_water_meter_WW001',
@@ -8138,7 +8205,6 @@
         'water_meter_W001',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -8148,7 +8214,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'water_meter_W001',
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': <ANY>,
   })
@@ -8177,12 +8242,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Water',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'homewizard_water_meter_W001',
@@ -8227,7 +8296,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -8237,7 +8305,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -8264,12 +8331,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Average demand',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_average_w',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_average_w',
@@ -8313,7 +8384,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -8323,7 +8393,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -8352,12 +8421,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l1_a',
@@ -8402,7 +8475,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -8412,7 +8484,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -8441,12 +8512,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l2_a',
@@ -8491,7 +8566,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -8501,7 +8575,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -8530,12 +8603,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l3_a',
@@ -8580,7 +8657,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -8590,7 +8666,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -8623,6 +8698,7 @@
     'original_name': 'DSMR version',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dsmr_version',
     'unique_id': 'HWE-P1_5c2fafabcdef_smr_version',
@@ -8664,7 +8740,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -8674,7 +8749,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -8703,12 +8777,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy export',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_kwh',
@@ -8753,7 +8831,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -8763,7 +8840,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -8792,12 +8868,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy export tariff 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t1_kwh',
@@ -8842,7 +8922,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -8852,7 +8931,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -8881,12 +8959,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy export tariff 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t2_kwh',
@@ -8931,7 +9013,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -8941,7 +9022,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -8970,12 +9050,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy export tariff 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t3_kwh',
@@ -9020,7 +9104,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -9030,7 +9113,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -9059,12 +9141,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy export tariff 4',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t4_kwh',
@@ -9109,7 +9195,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -9119,7 +9204,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -9148,12 +9232,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy import',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_kwh',
@@ -9198,7 +9286,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -9208,7 +9295,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -9237,12 +9323,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy import tariff 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t1_kwh',
@@ -9287,7 +9377,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -9297,7 +9386,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -9326,12 +9414,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy import tariff 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t2_kwh',
@@ -9376,7 +9468,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -9386,7 +9477,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -9415,12 +9505,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy import tariff 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t3_kwh',
@@ -9465,7 +9559,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -9475,7 +9568,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -9504,12 +9596,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy import tariff 4',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t4_kwh',
@@ -9554,7 +9650,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -9564,7 +9659,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -9593,12 +9687,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'Frequency',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_frequency_hz',
@@ -9643,7 +9741,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -9653,7 +9750,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -9686,6 +9782,7 @@
     'original_name': 'Long power failures detected',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'long_power_fail_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_long_power_fail_count',
@@ -9727,7 +9824,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -9737,7 +9833,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -9764,12 +9859,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Peak demand current month',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'monthly_power_peak_w',
     'unique_id': 'HWE-P1_5c2fafabcdef_monthly_power_peak_w',
@@ -9813,7 +9912,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -9823,7 +9921,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -9861,6 +9958,7 @@
     'original_name': 'Power',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_w',
@@ -9905,7 +10003,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -9915,7 +10012,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -9948,6 +10044,7 @@
     'original_name': 'Power failures detected',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'any_power_fail_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_any_power_fail_count',
@@ -9989,7 +10086,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -9999,7 +10095,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -10037,6 +10132,7 @@
     'original_name': 'Power phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l1_w',
@@ -10081,7 +10177,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -10091,7 +10186,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -10129,6 +10223,7 @@
     'original_name': 'Power phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l2_w',
@@ -10173,7 +10268,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -10183,7 +10277,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -10221,6 +10314,7 @@
     'original_name': 'Power phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l3_w',
@@ -10265,7 +10359,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -10275,7 +10368,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -10308,6 +10400,7 @@
     'original_name': 'Smart meter identifier',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'unique_meter_id',
     'unique_id': 'HWE-P1_5c2fafabcdef_unique_meter_id',
@@ -10349,7 +10442,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -10359,7 +10451,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -10392,6 +10483,7 @@
     'original_name': 'Smart meter model',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'meter_model',
     'unique_id': 'HWE-P1_5c2fafabcdef_meter_model',
@@ -10433,7 +10525,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -10443,7 +10534,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -10483,6 +10573,7 @@
     'original_name': 'Tariff',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_tariff',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_tariff',
@@ -10531,7 +10622,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -10541,7 +10631,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -10570,12 +10659,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Total water usage',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_liter_m3',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_liter_m3',
@@ -10620,7 +10713,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -10630,7 +10722,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -10659,12 +10750,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l1_v',
@@ -10709,7 +10804,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -10719,7 +10813,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -10748,12 +10841,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l2_v',
@@ -10798,7 +10895,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -10808,7 +10904,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -10837,12 +10932,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l3_v',
@@ -10887,7 +10986,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -10897,7 +10995,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -10930,6 +11027,7 @@
     'original_name': 'Voltage sags detected phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_sag_phase_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_voltage_sag_l1_count',
@@ -10971,7 +11069,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -10981,7 +11078,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -11014,6 +11110,7 @@
     'original_name': 'Voltage sags detected phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_sag_phase_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_voltage_sag_l2_count',
@@ -11055,7 +11152,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -11065,7 +11161,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -11098,6 +11193,7 @@
     'original_name': 'Voltage sags detected phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_sag_phase_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_voltage_sag_l3_count',
@@ -11139,7 +11235,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -11149,7 +11244,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -11182,6 +11276,7 @@
     'original_name': 'Voltage swells detected phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_swell_phase_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_voltage_swell_l1_count',
@@ -11223,7 +11318,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -11233,7 +11327,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -11266,6 +11359,7 @@
     'original_name': 'Voltage swells detected phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_swell_phase_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_voltage_swell_l2_count',
@@ -11307,7 +11401,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -11317,7 +11410,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -11350,6 +11442,7 @@
     'original_name': 'Voltage swells detected phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_swell_phase_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_voltage_swell_l3_count',
@@ -11391,7 +11484,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -11401,7 +11493,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -11436,6 +11527,7 @@
     'original_name': 'Water usage',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_liter_lpm',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_liter_lpm',
@@ -11479,7 +11571,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -11489,7 +11580,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -11522,6 +11612,7 @@
     'original_name': 'Wi-Fi SSID',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_ssid',
     'unique_id': 'HWE-P1_5c2fafabcdef_wifi_ssid',
@@ -11563,7 +11654,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -11573,7 +11663,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -11608,6 +11697,7 @@
     'original_name': 'Wi-Fi strength',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_strength',
     'unique_id': 'HWE-P1_5c2fafabcdef_wifi_strength',
@@ -11647,7 +11737,6 @@
         'gas_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -11657,7 +11746,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'gas_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': <ANY>,
   })
@@ -11686,12 +11774,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.GAS: 'gas'>,
     'original_icon': None,
     'original_name': 'Gas',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'homewizard_gas_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
@@ -11732,7 +11824,6 @@
         'heat_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -11742,7 +11833,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'heat_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': <ANY>,
   })
@@ -11771,12 +11861,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'homewizard_heat_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
@@ -11817,7 +11911,6 @@
         'inlet_heat_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -11827,7 +11920,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'inlet_heat_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': <ANY>,
   })
@@ -11862,6 +11954,7 @@
     'original_name': None,
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'homewizard_inlet_heat_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
@@ -11901,7 +11994,6 @@
         'warm_water_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -11911,7 +12003,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'warm_water_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': <ANY>,
   })
@@ -11940,12 +12031,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Water',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'homewizard_warm_water_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
@@ -11986,7 +12081,6 @@
         'water_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -11996,7 +12090,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'water_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': <ANY>,
   })
@@ -12025,12 +12118,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Water',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'homewizard_water_meter_\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00',
@@ -12075,7 +12172,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -12085,7 +12181,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -12112,12 +12207,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
     'original_name': 'Average demand',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_average_w',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_average_w',
@@ -12161,7 +12260,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -12171,7 +12269,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -12200,12 +12297,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l1_a',
@@ -12250,7 +12351,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -12260,7 +12360,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -12289,12 +12388,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l2_a',
@@ -12339,7 +12442,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -12349,7 +12451,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -12378,12 +12479,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l3_a',
@@ -12428,7 +12533,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -12438,7 +12542,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -12467,12 +12570,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy export',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_kwh',
@@ -12492,7 +12599,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unavailable',
   })
 # ---
 # name: test_sensors[HWE-P1-zero-values-entity_ids1][sensor.device_energy_export_tariff_1:device-registry]
@@ -12517,7 +12624,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -12527,7 +12633,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -12556,12 +12661,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy export tariff 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t1_kwh',
@@ -12581,7 +12690,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unavailable',
   })
 # ---
 # name: test_sensors[HWE-P1-zero-values-entity_ids1][sensor.device_energy_export_tariff_2:device-registry]
@@ -12606,7 +12715,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -12616,7 +12724,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -12645,12 +12752,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy export tariff 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t2_kwh',
@@ -12670,7 +12781,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unavailable',
   })
 # ---
 # name: test_sensors[HWE-P1-zero-values-entity_ids1][sensor.device_energy_export_tariff_3:device-registry]
@@ -12695,7 +12806,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -12705,7 +12815,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -12734,12 +12843,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy export tariff 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t3_kwh',
@@ -12759,7 +12872,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unavailable',
   })
 # ---
 # name: test_sensors[HWE-P1-zero-values-entity_ids1][sensor.device_energy_export_tariff_4:device-registry]
@@ -12784,7 +12897,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -12794,7 +12906,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -12823,12 +12934,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy export tariff 4',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_t4_kwh',
@@ -12848,7 +12963,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unavailable',
   })
 # ---
 # name: test_sensors[HWE-P1-zero-values-entity_ids1][sensor.device_energy_import:device-registry]
@@ -12873,7 +12988,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -12883,7 +12997,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -12912,12 +13025,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy import',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_kwh',
@@ -12937,7 +13054,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unavailable',
   })
 # ---
 # name: test_sensors[HWE-P1-zero-values-entity_ids1][sensor.device_energy_import_tariff_1:device-registry]
@@ -12962,7 +13079,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -12972,7 +13088,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -13001,12 +13116,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy import tariff 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t1_kwh',
@@ -13026,7 +13145,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unavailable',
   })
 # ---
 # name: test_sensors[HWE-P1-zero-values-entity_ids1][sensor.device_energy_import_tariff_2:device-registry]
@@ -13051,7 +13170,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -13061,7 +13179,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -13090,12 +13207,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy import tariff 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t2_kwh',
@@ -13115,7 +13236,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unavailable',
   })
 # ---
 # name: test_sensors[HWE-P1-zero-values-entity_ids1][sensor.device_energy_import_tariff_3:device-registry]
@@ -13140,7 +13261,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -13150,7 +13270,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -13179,12 +13298,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy import tariff 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t3_kwh',
@@ -13204,7 +13327,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unavailable',
   })
 # ---
 # name: test_sensors[HWE-P1-zero-values-entity_ids1][sensor.device_energy_import_tariff_4:device-registry]
@@ -13229,7 +13352,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -13239,7 +13361,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -13268,12 +13389,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy import tariff 4',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_tariff_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_t4_kwh',
@@ -13293,7 +13418,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unavailable',
   })
 # ---
 # name: test_sensors[HWE-P1-zero-values-entity_ids1][sensor.device_frequency:device-registry]
@@ -13318,7 +13443,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -13328,7 +13452,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -13357,12 +13480,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'Frequency',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_frequency_hz',
@@ -13407,7 +13534,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -13417,7 +13543,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -13450,6 +13575,7 @@
     'original_name': 'Long power failures detected',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'long_power_fail_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_long_power_fail_count',
@@ -13491,7 +13617,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -13501,7 +13626,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -13539,6 +13663,7 @@
     'original_name': 'Power',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_w',
@@ -13583,7 +13708,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -13593,7 +13717,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -13626,6 +13749,7 @@
     'original_name': 'Power failures detected',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'any_power_fail_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_any_power_fail_count',
@@ -13667,7 +13791,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -13677,7 +13800,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -13715,6 +13837,7 @@
     'original_name': 'Power phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l1_w',
@@ -13759,7 +13882,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -13769,7 +13891,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -13807,6 +13928,7 @@
     'original_name': 'Power phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l2_w',
@@ -13851,7 +13973,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -13861,7 +13982,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -13899,6 +14019,7 @@
     'original_name': 'Power phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l3_w',
@@ -13943,7 +14064,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -13953,7 +14073,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -13982,12 +14101,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Total water usage',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_liter_m3',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_liter_m3',
@@ -14032,7 +14155,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -14042,7 +14164,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -14071,12 +14192,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l1_v',
@@ -14121,7 +14246,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -14131,7 +14255,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -14160,12 +14283,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l2_v',
@@ -14210,7 +14337,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -14220,7 +14346,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -14249,12 +14374,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l3_v',
@@ -14299,7 +14428,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -14309,7 +14437,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -14342,6 +14469,7 @@
     'original_name': 'Voltage sags detected phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_sag_phase_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_voltage_sag_l1_count',
@@ -14383,7 +14511,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -14393,7 +14520,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -14426,6 +14552,7 @@
     'original_name': 'Voltage sags detected phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_sag_phase_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_voltage_sag_l2_count',
@@ -14467,7 +14594,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -14477,7 +14603,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -14510,6 +14635,7 @@
     'original_name': 'Voltage sags detected phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_sag_phase_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_voltage_sag_l3_count',
@@ -14551,7 +14677,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -14561,7 +14686,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -14594,6 +14718,7 @@
     'original_name': 'Voltage swells detected phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_swell_phase_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_voltage_swell_l1_count',
@@ -14635,7 +14760,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -14645,7 +14769,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -14678,6 +14801,7 @@
     'original_name': 'Voltage swells detected phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_swell_phase_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_voltage_swell_l2_count',
@@ -14719,7 +14843,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -14729,7 +14852,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -14762,6 +14884,7 @@
     'original_name': 'Voltage swells detected phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'voltage_swell_phase_count',
     'unique_id': 'HWE-P1_5c2fafabcdef_voltage_swell_l3_count',
@@ -14803,7 +14926,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -14813,7 +14935,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -14848,6 +14969,7 @@
     'original_name': 'Water usage',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_liter_lpm',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_liter_lpm',
@@ -14891,7 +15013,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -14901,7 +15022,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -14934,6 +15054,7 @@
     'original_name': 'Wi-Fi SSID',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_ssid',
     'unique_id': 'HWE-P1_5c2fafabcdef_wifi_ssid',
@@ -14975,7 +15096,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -14985,7 +15105,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.19',
     'via_device_id': None,
   })
@@ -15020,6 +15139,7 @@
     'original_name': 'Wi-Fi strength',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_strength',
     'unique_id': 'HWE-P1_5c2fafabcdef_wifi_strength',
@@ -15063,7 +15183,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -15073,7 +15192,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.03',
     'via_device_id': None,
   })
@@ -15102,12 +15220,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy export',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_kwh',
@@ -15127,7 +15249,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unavailable',
   })
 # ---
 # name: test_sensors[HWE-SKT-11-entity_ids2][sensor.device_energy_import:device-registry]
@@ -15152,7 +15274,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -15162,7 +15283,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.03',
     'via_device_id': None,
   })
@@ -15191,12 +15311,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy import',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_kwh',
@@ -15241,7 +15365,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -15251,7 +15374,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.03',
     'via_device_id': None,
   })
@@ -15289,6 +15411,7 @@
     'original_name': 'Power',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_w',
@@ -15333,7 +15456,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -15343,7 +15465,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.03',
     'via_device_id': None,
   })
@@ -15381,6 +15502,7 @@
     'original_name': 'Power phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l1_w',
@@ -15425,7 +15547,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -15435,7 +15556,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.03',
     'via_device_id': None,
   })
@@ -15468,6 +15588,7 @@
     'original_name': 'Wi-Fi SSID',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_ssid',
     'unique_id': 'HWE-P1_5c2fafabcdef_wifi_ssid',
@@ -15509,7 +15630,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -15519,7 +15639,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.03',
     'via_device_id': None,
   })
@@ -15554,6 +15673,7 @@
     'original_name': 'Wi-Fi strength',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_strength',
     'unique_id': 'HWE-P1_5c2fafabcdef_wifi_strength',
@@ -15597,7 +15717,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -15607,7 +15726,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.07',
     'via_device_id': None,
   })
@@ -15636,12 +15754,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.APPARENT_POWER: 'apparent_power'>,
     'original_icon': None,
     'original_name': 'Apparent power',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_apparent_power_va',
@@ -15686,7 +15808,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -15696,7 +15817,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.07',
     'via_device_id': None,
   })
@@ -15725,12 +15845,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_current_a',
@@ -15775,7 +15899,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -15785,7 +15908,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.07',
     'via_device_id': None,
   })
@@ -15814,12 +15936,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy export',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_kwh',
@@ -15864,7 +15990,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -15874,7 +15999,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.07',
     'via_device_id': None,
   })
@@ -15903,12 +16027,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy import',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_kwh',
@@ -15953,7 +16081,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -15963,7 +16090,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.07',
     'via_device_id': None,
   })
@@ -15992,12 +16118,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'Frequency',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_frequency_hz',
@@ -16042,7 +16172,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -16052,7 +16181,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.07',
     'via_device_id': None,
   })
@@ -16090,6 +16218,7 @@
     'original_name': 'Power',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_w',
@@ -16134,7 +16263,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -16144,7 +16272,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.07',
     'via_device_id': None,
   })
@@ -16179,6 +16306,7 @@
     'original_name': 'Power factor',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_factor',
@@ -16223,7 +16351,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -16233,7 +16360,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.07',
     'via_device_id': None,
   })
@@ -16271,6 +16397,7 @@
     'original_name': 'Power phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l1_w',
@@ -16315,7 +16442,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -16325,7 +16451,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.07',
     'via_device_id': None,
   })
@@ -16354,12 +16479,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
     'original_icon': None,
     'original_name': 'Reactive power',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_reactive_power_var',
@@ -16404,7 +16533,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -16414,7 +16542,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.07',
     'via_device_id': None,
   })
@@ -16443,12 +16570,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_v',
@@ -16493,7 +16624,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -16503,7 +16633,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.07',
     'via_device_id': None,
   })
@@ -16536,6 +16665,7 @@
     'original_name': 'Wi-Fi SSID',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_ssid',
     'unique_id': 'HWE-P1_5c2fafabcdef_wifi_ssid',
@@ -16577,7 +16707,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -16587,7 +16716,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '4.07',
     'via_device_id': None,
   })
@@ -16622,6 +16750,7 @@
     'original_name': 'Wi-Fi strength',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_strength',
     'unique_id': 'HWE-P1_5c2fafabcdef_wifi_strength',
@@ -16665,7 +16794,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -16675,7 +16803,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '2.03',
     'via_device_id': None,
   })
@@ -16704,12 +16831,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Total water usage',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_liter_m3',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_liter_m3',
@@ -16754,7 +16885,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -16764,7 +16894,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '2.03',
     'via_device_id': None,
   })
@@ -16799,6 +16928,7 @@
     'original_name': 'Water usage',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_liter_lpm',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_liter_lpm',
@@ -16842,7 +16972,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -16852,7 +16981,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '2.03',
     'via_device_id': None,
   })
@@ -16885,6 +17013,7 @@
     'original_name': 'Wi-Fi SSID',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_ssid',
     'unique_id': 'HWE-P1_5c2fafabcdef_wifi_ssid',
@@ -16926,7 +17055,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -16936,7 +17064,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '2.03',
     'via_device_id': None,
   })
@@ -16971,6 +17098,7 @@
     'original_name': 'Wi-Fi strength',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_strength',
     'unique_id': 'HWE-P1_5c2fafabcdef_wifi_strength',
@@ -17014,7 +17142,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -17024,7 +17151,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -17053,12 +17179,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.APPARENT_POWER: 'apparent_power'>,
     'original_icon': None,
     'original_name': 'Apparent power',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_apparent_power_va',
@@ -17103,7 +17233,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -17113,7 +17242,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -17142,12 +17270,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_current_a',
@@ -17192,7 +17324,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -17202,7 +17333,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -17231,12 +17361,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy export',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_kwh',
@@ -17281,7 +17415,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -17291,7 +17424,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -17320,12 +17452,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy import',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_kwh',
@@ -17370,7 +17506,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -17380,7 +17515,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -17409,12 +17543,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'Frequency',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_frequency_hz',
@@ -17459,7 +17597,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -17469,7 +17606,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -17507,6 +17643,7 @@
     'original_name': 'Power',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_w',
@@ -17551,7 +17688,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -17561,7 +17697,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -17596,6 +17731,7 @@
     'original_name': 'Power factor',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_factor',
@@ -17640,7 +17776,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -17650,7 +17785,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -17679,12 +17813,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
     'original_icon': None,
     'original_name': 'Reactive power',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_reactive_power_var',
@@ -17729,7 +17867,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -17739,7 +17876,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -17768,12 +17904,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_v',
@@ -17818,7 +17958,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -17828,7 +17967,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -17861,6 +17999,7 @@
     'original_name': 'Wi-Fi SSID',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_ssid',
     'unique_id': 'HWE-P1_5c2fafabcdef_wifi_ssid',
@@ -17902,7 +18041,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -17912,7 +18050,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -17947,6 +18084,7 @@
     'original_name': 'Wi-Fi strength',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_strength',
     'unique_id': 'HWE-P1_5c2fafabcdef_wifi_strength',
@@ -17990,7 +18128,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -18000,7 +18137,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -18029,12 +18165,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.APPARENT_POWER: 'apparent_power'>,
     'original_icon': None,
     'original_name': 'Apparent power',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_apparent_power_va',
@@ -18079,7 +18219,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -18089,7 +18228,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -18118,12 +18256,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.APPARENT_POWER: 'apparent_power'>,
     'original_icon': None,
     'original_name': 'Apparent power phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_apparent_power_phase_va',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_apparent_power_l1_va',
@@ -18168,7 +18310,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -18178,7 +18319,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -18207,12 +18347,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.APPARENT_POWER: 'apparent_power'>,
     'original_icon': None,
     'original_name': 'Apparent power phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_apparent_power_phase_va',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_apparent_power_l2_va',
@@ -18257,7 +18401,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -18267,7 +18410,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -18296,12 +18438,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.APPARENT_POWER: 'apparent_power'>,
     'original_icon': None,
     'original_name': 'Apparent power phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_apparent_power_phase_va',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_apparent_power_l3_va',
@@ -18346,7 +18492,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -18356,7 +18501,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -18385,12 +18529,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_current_a',
@@ -18435,7 +18583,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -18445,7 +18592,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -18474,12 +18620,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l1_a',
@@ -18524,7 +18674,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -18534,7 +18683,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -18563,12 +18711,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l2_a',
@@ -18613,7 +18765,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -18623,7 +18774,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -18652,12 +18802,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
     'original_icon': None,
     'original_name': 'Current phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_current_phase_a',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_current_l3_a',
@@ -18702,7 +18856,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -18712,7 +18865,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -18741,12 +18893,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy export',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_export_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_export_kwh',
@@ -18791,7 +18947,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -18801,7 +18956,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -18830,12 +18984,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
     'original_name': 'Energy import',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'total_energy_import_kwh',
     'unique_id': 'HWE-P1_5c2fafabcdef_total_power_import_kwh',
@@ -18880,7 +19038,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -18890,7 +19047,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -18919,12 +19075,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.FREQUENCY: 'frequency'>,
     'original_icon': None,
     'original_name': 'Frequency',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_frequency_hz',
@@ -18969,7 +19129,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -18979,7 +19138,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -19017,6 +19175,7 @@
     'original_name': 'Power',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_w',
@@ -19061,7 +19220,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -19071,7 +19229,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -19106,6 +19263,7 @@
     'original_name': 'Power factor phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_factor_phase',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_factor_l1',
@@ -19150,7 +19308,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -19160,7 +19317,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -19195,6 +19351,7 @@
     'original_name': 'Power factor phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_factor_phase',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_factor_l2',
@@ -19239,7 +19396,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -19249,7 +19405,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -19284,6 +19439,7 @@
     'original_name': 'Power factor phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_factor_phase',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_factor_l3',
@@ -19328,7 +19484,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -19338,7 +19493,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -19376,6 +19530,7 @@
     'original_name': 'Power phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l1_w',
@@ -19420,7 +19575,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -19430,7 +19584,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -19468,6 +19621,7 @@
     'original_name': 'Power phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l2_w',
@@ -19512,7 +19666,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -19522,7 +19675,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -19560,6 +19712,7 @@
     'original_name': 'Power phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_power_phase_w',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_power_l3_w',
@@ -19604,7 +19757,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -19614,7 +19766,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -19643,12 +19794,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
     'original_icon': None,
     'original_name': 'Reactive power',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'HWE-P1_5c2fafabcdef_active_reactive_power_var',
@@ -19693,7 +19848,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -19703,7 +19857,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -19732,12 +19885,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
     'original_icon': None,
     'original_name': 'Reactive power phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_reactive_power_phase_var',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_reactive_power_l1_var',
@@ -19782,7 +19939,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -19792,7 +19948,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -19821,12 +19976,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
     'original_icon': None,
     'original_name': 'Reactive power phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_reactive_power_phase_var',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_reactive_power_l2_var',
@@ -19871,7 +20030,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -19881,7 +20039,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -19910,12 +20067,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.REACTIVE_POWER: 'reactive_power'>,
     'original_icon': None,
     'original_name': 'Reactive power phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_reactive_power_phase_var',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_reactive_power_l3_var',
@@ -19960,7 +20121,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -19970,7 +20130,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -19999,12 +20158,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage phase 1',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l1_v',
@@ -20049,7 +20212,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -20059,7 +20221,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -20088,12 +20249,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage phase 2',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l2_v',
@@ -20138,7 +20303,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -20148,7 +20312,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -20177,12 +20340,16 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
     'original_name': 'Voltage phase 3',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'active_voltage_phase_v',
     'unique_id': 'HWE-P1_5c2fafabcdef_active_voltage_l3_v',
@@ -20227,7 +20394,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -20237,7 +20403,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -20270,6 +20435,7 @@
     'original_name': 'Wi-Fi SSID',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_ssid',
     'unique_id': 'HWE-P1_5c2fafabcdef_wifi_ssid',
@@ -20311,7 +20477,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -20321,7 +20486,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '3.06',
     'via_device_id': None,
   })
@@ -20356,6 +20520,7 @@
     'original_name': 'Wi-Fi strength',
     'platform': 'homewizard',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_strength',
     'unique_id': 'HWE-P1_5c2fafabcdef_wifi_strength',

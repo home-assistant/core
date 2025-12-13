@@ -10,7 +10,7 @@ from aiounifi.models.device import DeviceState
 from aiounifi.models.message import MessageKey
 from freezegun.api import FrozenDateTimeFactory, freeze_time
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
@@ -55,6 +55,7 @@ WIRED_CLIENT = {
     "wired-rx_bytes-r": 1234000000,
     "wired-tx_bytes-r": 5678000000,
     "uptime": 1600094505,
+    "wired_rate_mbps": 1000,
 }
 WIRELESS_CLIENT = {
     "is_wired": False,
@@ -542,6 +543,42 @@ async def test_bandwidth_sensors(
     assert hass.states.get("sensor.wired_client_tx")
 
 
+@pytest.mark.parametrize("client_payload", [[WIRED_CLIENT]])
+@pytest.mark.usefixtures("config_entry_setup")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_wired_client_speed_sensor(
+    hass: HomeAssistant,
+    mock_websocket_message: WebsocketMessageMock,
+    client_payload: list[dict[str, Any]],
+) -> None:
+    """Verify that wired client speed sensor is working as expected."""
+    # Verify sensor is created and has correct state
+    assert hass.states.get("sensor.wired_client_link_speed").state == "1000"
+
+    # Verify state update
+    wired_client = deepcopy(client_payload[0])
+    wired_client["wired_rate_mbps"] = 2500
+
+    mock_websocket_message(message=MessageKey.CLIENT, data=wired_client)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.wired_client_link_speed").state == "2500"
+
+    # Verify sensor is unavailable when client disconnects
+    new_time = dt_util.utcnow()
+    wired_client["last_seen"] = dt_util.as_timestamp(new_time)
+
+    mock_websocket_message(message=MessageKey.CLIENT, data=wired_client)
+    await hass.async_block_till_done()
+
+    new_time += timedelta(seconds=(DEFAULT_DETECTION_TIME + 1))
+    with freeze_time(new_time):
+        async_fire_time_changed(hass, new_time)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.wired_client_link_speed").state == STATE_UNAVAILABLE
+
+
 @pytest.mark.parametrize(
     "config_entry_options",
     [{CONF_ALLOW_BANDWIDTH_SENSORS: True, CONF_ALLOW_UPTIME_SENSORS: True}],
@@ -555,9 +592,10 @@ async def test_remove_sensors(
     client_payload: list[dict[str, Any]],
 ) -> None:
     """Verify removing of clients work as expected."""
-    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 6
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 7
     assert hass.states.get("sensor.wired_client_rx")
     assert hass.states.get("sensor.wired_client_tx")
+    assert hass.states.get("sensor.wired_client_link_speed")
     assert hass.states.get("sensor.wired_client_uptime")
     assert hass.states.get("sensor.wireless_client_rx")
     assert hass.states.get("sensor.wireless_client_tx")
@@ -570,6 +608,7 @@ async def test_remove_sensors(
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 3
     assert hass.states.get("sensor.wired_client_rx") is None
     assert hass.states.get("sensor.wired_client_tx") is None
+    assert hass.states.get("sensor.wired_client_link_speed") is None
     assert hass.states.get("sensor.wired_client_uptime") is None
     assert hass.states.get("sensor.wireless_client_rx")
     assert hass.states.get("sensor.wireless_client_tx")
@@ -1042,9 +1081,9 @@ async def test_bandwidth_port_sensors(
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 6
 
     # Verify sensor state
-    assert hass.states.get("sensor.mock_name_port_1_rx").state == "0.00921"
-    assert hass.states.get("sensor.mock_name_port_1_tx").state == "0.04089"
-    assert hass.states.get("sensor.mock_name_port_2_rx").state == "0.01229"
+    assert hass.states.get("sensor.mock_name_port_1_rx").state == "0.009208"
+    assert hass.states.get("sensor.mock_name_port_1_tx").state == "0.040888"
+    assert hass.states.get("sensor.mock_name_port_2_rx").state == "0.012288"
     assert hass.states.get("sensor.mock_name_port_2_tx").state == "0.02892"
 
     # Verify state update
@@ -1055,8 +1094,8 @@ async def test_bandwidth_port_sensors(
     mock_websocket_message(message=MessageKey.DEVICE, data=device_1)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.mock_name_port_1_rx").state == "27648.00000"
-    assert hass.states.get("sensor.mock_name_port_1_tx").state == "63128.00000"
+    assert hass.states.get("sensor.mock_name_port_1_rx").state == "27648.0"
+    assert hass.states.get("sensor.mock_name_port_1_tx").state == "63128.0"
 
     # Disable option
     options = config_entry_options.copy()

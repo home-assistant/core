@@ -21,11 +21,10 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TPLinkConfigEntry, legacy_device_id
-from .const import DOMAIN, UNIT_MAPPING
+from .const import UNIT_MAPPING
 from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import (
     CoordinatedTPLinkModuleEntity,
@@ -161,14 +160,6 @@ class TPLinkClimateEntity(CoordinatedTPLinkModuleEntity, ClimateEntity):
             await self._thermostat_module.set_state(True)
         elif hvac_mode is HVACMode.OFF:
             await self._thermostat_module.set_state(False)
-        else:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="unsupported_mode",
-                translation_placeholders={
-                    "mode": hvac_mode,
-                },
-            )
 
     @async_refresh_after
     async def async_turn_on(self) -> None:
@@ -190,15 +181,14 @@ class TPLinkClimateEntity(CoordinatedTPLinkModuleEntity, ClimateEntity):
             HVACMode.HEAT if self._thermostat_module.state else HVACMode.OFF
         )
 
-        if (
-            self._thermostat_module.mode not in STATE_TO_ACTION
-            and self._attr_hvac_action is not HVACAction.OFF
-        ):
-            _LOGGER.warning(
-                "Unknown thermostat state, defaulting to OFF: %s",
-                self._thermostat_module.mode,
-            )
-            self._attr_hvac_action = HVACAction.OFF
+        if self._thermostat_module.mode not in STATE_TO_ACTION:
+            # Report a warning on the first non-default unknown mode
+            if self._attr_hvac_action is not HVACAction.OFF:
+                _LOGGER.warning(
+                    "Unknown thermostat state, defaulting to OFF: %s",
+                    self._thermostat_module.mode,
+                )
+                self._attr_hvac_action = HVACAction.OFF
             return True
 
         self._attr_hvac_action = STATE_TO_ACTION[self._thermostat_module.mode]

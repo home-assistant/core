@@ -89,7 +89,23 @@
               "version": 1
             },
             {
+              "id": "samsungce.sensingOnSuspendMode",
+              "version": 1
+            },
+            {
               "id": "samsungce.softwareUpdate",
+              "version": 1
+            },
+            {
+              "id": "samsungce.softwareVersion",
+              "version": 1
+            },
+            {
+              "id": "samsungce.ehsBoosterHeater",
+              "version": 1
+            },
+            {
+              "id": "samsungce.ehsDiverterValve",
               "version": 1
             },
             {
@@ -111,6 +127,10 @@
             {
               "id": "samsungce.toggleSwitch",
               "version": 1
+            },
+            {
+              "id": "samsungce.systemAirConditionerReservation",
+              "version": 1
             }
           ],
           "categories": [
@@ -118,7 +138,8 @@
               "name": "AirConditioner",
               "categoryType": "manufacturer"
             }
-          ]
+          ],
+          "optional": false
         },
         {
           "id": "INDOOR",
@@ -141,7 +162,15 @@
               "version": 1
             },
             {
+              "id": "custom.disabledCapabilities",
+              "version": 1
+            },
+            {
               "id": "custom.thermostatSetpointControl",
+              "version": 1
+            },
+            {
+              "id": "samsungce.ehsDefrostMode",
               "version": 1
             },
             {
@@ -159,6 +188,10 @@
             {
               "id": "samsungce.toggleSwitch",
               "version": 1
+            },
+            {
+              "id": "samsungce.systemAirConditionerReservation",
+              "version": 1
             }
           ],
           "categories": [
@@ -166,13 +199,14 @@
               "name": "Other",
               "categoryType": "manufacturer"
             }
-          ]
+          ],
+          "optional": false
         }
       ],
       "createTime": "2023-08-02T14:32:26.006Z",
       "parentDeviceId": "1f98ebd0-ac48-d802-7f62-12592d8286b7",
       "profile": {
-        "id": "54b9789f-2c8c-310d-9e14-9a84903c792b"
+        "id": "89782721-6841-3ef6-a699-28e069d28b8b"
       },
       "ocf": {
         "ocfDeviceType": "oic.d.airconditioner",
@@ -184,12 +218,13 @@
         "platformVersion": "4.0",
         "platformOS": "Tizen",
         "hwVersion": "",
-        "firmwareVersion": "20240611.1",
+        "firmwareVersion": "20250317.1",
         "vendorId": "DA-SAC-EHS-000001-SUB",
-        "vendorResourceClientServerVersion": "3.2.20",
+        "vendorResourceClientServerVersion": "4.0.54",
         "lastSignupTime": "2023-08-02T14:32:25.282882Z",
-        "transferCandidate": false,
-        "additionalAuthCodeRequired": false
+        "transferCandidate": true,
+        "additionalAuthCodeRequired": false,
+        "modelCode": ""
       },
       "type": "OCF",
       "restrictionTier": 0,

@@ -97,22 +97,6 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
     @property
     def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the device."""
-        # State attributes can be removed in 2025.3
-        attr = {
-            "location_id": self._location.location_id,
-            "partition": self._partition_id,
-            "ac_loss": self._location.ac_loss,
-            "low_battery": self._location.low_battery,
-            "cover_tampered": self._location.is_cover_tampered(),
-            "triggered_source": None,
-            "triggered_zone": None,
-        }
-
-        if self._partition_id == 1:
-            attr["location_name"] = self.device.name
-        else:
-            attr["location_name"] = f"{self.device.name} partition {self._partition_id}"
-
         state: AlarmControlPanelState | None = None
         if self._partition.arming_state.is_disarmed():
             state = AlarmControlPanelState.DISARMED
@@ -128,17 +112,12 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
             state = AlarmControlPanelState.ARMING
         elif self._partition.arming_state.is_disarming():
             state = AlarmControlPanelState.DISARMING
-        elif self._partition.arming_state.is_triggered_police():
+        elif (
+            self._partition.arming_state.is_triggered_police()
+            or self._partition.arming_state.is_triggered_fire()
+            or self._partition.arming_state.is_triggered_gas()
+        ):
             state = AlarmControlPanelState.TRIGGERED
-            attr["triggered_source"] = "Police/Medical"
-        elif self._partition.arming_state.is_triggered_fire():
-            state = AlarmControlPanelState.TRIGGERED
-            attr["triggered_source"] = "Fire/Smoke"
-        elif self._partition.arming_state.is_triggered_gas():
-            state = AlarmControlPanelState.TRIGGERED
-            attr["triggered_source"] = "Carbon Monoxide"
-
-        self._attr_extra_state_attributes = attr
 
         return state
 

@@ -7,6 +7,13 @@ DOMAIN_EVENT = f"{DOMAIN}_event"
 
 DEFAULT_NAME = "Music Assistant"
 
+# Schema version where mandatory authentication was added to the MA webserver
+AUTH_SCHEMA_VERSION = 28
+# Schema version where hassio discovery support was added
+HASSIO_DISCOVERY_SCHEMA_VERSION = 28
+
+CONF_TOKEN = "token"
+
 ATTR_IS_GROUP = "is_group"
 ATTR_GROUP_MEMBERS = "group_members"
 ATTR_GROUP_PARENTS = "group_parents"
@@ -26,7 +33,6 @@ ATTR_OFFSET = "offset"
 ATTR_ORDER_BY = "order_by"
 ATTR_ALBUM_TYPE = "album_type"
 ATTR_ALBUM_ARTISTS_ONLY = "album_artists_only"
-ATTR_CONFIG_ENTRY_ID = "config_entry_id"
 ATTR_URI = "uri"
 ATTR_IMAGE = "image"
 ATTR_VERSION = "version"
@@ -65,6 +71,11 @@ ATTR_BIT_DEPTH = "bit_depth"
 ATTR_STREAM_TITLE = "stream_title"
 ATTR_PROVIDER = "provider"
 ATTR_ITEM_ID = "item_id"
+ATTR_EXPLICIT = "explicit"
+ATTR_BITRATE = "bit_rate"
+ATTR_DISCART_IMAGE = "discart_image"
+ATTR_FANART_IMAGE = "fanart_image"
 
+ATTR_CONF_EXPOSE_PLAYER_TO_HA = "expose_player_to_ha"
 
 LOGGER = logging.getLogger(__package__)

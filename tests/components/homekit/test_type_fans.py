@@ -14,7 +14,13 @@ from homeassistant.components.fan import (
     DOMAIN as FAN_DOMAIN,
     FanEntityFeature,
 )
-from homeassistant.components.homekit.const import ATTR_VALUE, PROP_MIN_STEP
+from homeassistant.components.homekit.accessories import HomeDriver
+from homeassistant.components.homekit.const import (
+    ATTR_VALUE,
+    CHAR_CONFIGURED_NAME,
+    PROP_MIN_STEP,
+    SERV_SWITCH,
+)
 from homeassistant.components.homekit.type_fans import Fan
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -603,7 +609,7 @@ async def test_fan_restore(
 
 
 async def test_fan_multiple_preset_modes(
-    hass: HomeAssistant, hk_driver, events: list[Event]
+    hass: HomeAssistant, hk_driver: HomeDriver, events: list[Event]
 ) -> None:
     """Test fan with multiple preset modes."""
     entity_id = "fan.demo"
@@ -623,6 +629,9 @@ async def test_fan_multiple_preset_modes(
 
     assert acc.preset_mode_chars["auto"].value == 1
     assert acc.preset_mode_chars["smart"].value == 0
+    switch_service = acc.get_service(SERV_SWITCH)
+    configured_name_char = switch_service.get_characteristic(CHAR_CONFIGURED_NAME)
+    assert configured_name_char.value == "auto"
 
     acc.run()
     await hass.async_block_till_done()
