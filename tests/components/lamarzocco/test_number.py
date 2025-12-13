@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import MagicMock
 
 from pylamarzocco.const import (
+    DoseMode,
     ModelName,
     PreExtractionMode,
     SmartStandByType,
@@ -13,7 +14,6 @@ from pylamarzocco.exceptions import RequestNotSuccessful
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.lamarzocco.select import DOSE_MODE_HA_TO_LM
 from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
@@ -27,6 +27,11 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from . import async_init_integration
 
 from tests.common import MockConfigEntry
+
+DOSE_MODE_HA_TO_LM = {
+    "dose1": DoseMode.DOSE_1,
+    "dose2": DoseMode.DOSE_2,
+}
 
 
 @pytest.mark.parametrize(
