@@ -3,7 +3,10 @@
   "name": "Dialogflow",
   "codeowners": [],
   "config_flow": true,
-  "dependencies": ["webhook"],
+  "dependencies": [
+    "webhook"
+  ],
   "documentation": "https://www.home-assistant.io/integrations/dialogflow",
+  "integration_type": "service",
   "iot_class": "cloud_push"
 }
