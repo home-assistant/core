@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Callable
+import time
 from typing import Any, Final
 
 from aiohttp import ClientResponseError
@@ -291,10 +292,11 @@ async def async_migrate_entry(
     hass: HomeAssistant, config_entry: TeslemetryConfigEntry
 ) -> bool:
     """Migrate config entry."""
-    if config_entry.version > 1:
+    if config_entry.version > 2:
+        # This means the user has downgraded from a future version
         return False
 
-    if config_entry.version == 1 and config_entry.minor_version < 2:
+    if config_entry.version == 1:
         access_token = config_entry.data[CONF_ACCESS_TOKEN]
         # Convert legacy access token to OAuth format using migrate endpoint
         try:
@@ -304,7 +306,9 @@ async def async_migrate_entry(
             return False
 
         hass.config_entries.async_update_entry(
-            config_entry, data=data, version=1, minor_version=2
+            config_entry,
+            data=data,
+            version=2,
         )
     return True
 
@@ -324,8 +328,12 @@ async def _migrate_token_to_oauth(
 
     async with session.post(TOKEN_URL, data=migrate_data) as response:
         response.raise_for_status()
-        token_response = await response.json()
-        return {"token": token_response}
+        new_token = await response.json()
+
+        new_token["expires_in"] = int(new_token["expires_in"])
+        new_token["expires_at"] = time.time() + new_token["expires_in"]
+
+        return {"token": new_token}
 
 
 def create_handle_vehicle_stream(vin: str, coordinator) -> Callable[[dict], None]:
