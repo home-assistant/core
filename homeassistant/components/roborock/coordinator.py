@@ -45,7 +45,7 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 # Roborock devices have a known issue where they go offline for a short period
 # around 3AM local time for ~1 minute and reset both the local connection
-# and MQTT connection. To avoid log spam, we will avoid failures refreshing
+# and MQTT connection. To avoid log spam, we will avoid reporting failures refreshing
 # data until this duration has passed.
 MIN_UNAVAILABLE_DURATION = timedelta(minutes=2)
 
