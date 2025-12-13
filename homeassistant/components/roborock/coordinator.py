@@ -43,6 +43,12 @@ from .models import DeviceState
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
+# Roborock devices have a known issue where they go offline for a short period
+# around 3AM local time for ~1 minute and reset both the local connection
+# and MQTT connection. To avoid log spam, we will avoid reporting failures refreshing
+# data until this duration has passed.
+MIN_UNAVAILABLE_DURATION = timedelta(minutes=2)
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -102,6 +108,9 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState]):
         # Keep track of last attempt to refresh maps/rooms to know when to try again.
         self._last_home_update_attempt: datetime
         self.last_home_update: datetime | None = None
+        # Tracks the last successful update to control when we report failure
+        # to the base class. This is reset on successful data update.
+        self._last_update_success_time: datetime | None = None
 
     @cached_property
     def dock_device_info(self) -> DeviceInfo:
@@ -169,7 +178,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState]):
             self.last_home_update = dt_util.utcnow()
 
     async def _verify_api(self) -> None:
-        """Verify that the api is reachable. If it is not, switch clients."""
+        """Verify that the api is reachable."""
         if self._device.is_connected:
             if self._device.is_local_connected:
                 async_delete_issue(
@@ -217,26 +226,27 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState]):
         try:
             # Update device props and standard api information
             await self._update_device_prop()
+        except UpdateFailed:
+            if self._should_suppress_update_failure():
+                _LOGGER.debug(
+                    "Suppressing update failure until unavailable duration passed"
+                )
+                return self.data
+            raise
 
-            # If the vacuum is currently cleaning and it has been IMAGE_CACHE_INTERVAL
-            # since the last map update, you can update the map.
-            new_status = self.properties_api.status
-            if (
-                new_status.in_cleaning
-                and (dt_util.utcnow() - self._last_home_update_attempt)
-                > IMAGE_CACHE_INTERVAL
-            ) or self.last_update_state != new_status.state_name:
-                self._last_home_update_attempt = dt_util.utcnow()
-                try:
-                    await self.update_map()
-                except HomeAssistantError as err:
-                    _LOGGER.debug("Failed to update map: %s", err)
-        except RoborockException as ex:
-            _LOGGER.debug("Failed to update data: %s", ex)
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="update_data_fail",
-            ) from ex
+        # If the vacuum is currently cleaning and it has been IMAGE_CACHE_INTERVAL
+        # since the last map update, you can update the map.
+        new_status = self.properties_api.status
+        if (
+            new_status.in_cleaning
+            and (dt_util.utcnow() - self._last_home_update_attempt)
+            > IMAGE_CACHE_INTERVAL
+        ) or self.last_update_state != new_status.state_name:
+            self._last_home_update_attempt = dt_util.utcnow()
+            try:
+                await self.update_map()
+            except HomeAssistantError as err:
+                _LOGGER.debug("Failed to update map: %s", err)
 
         if self.properties_api.status.in_cleaning:
             if self._device.is_local_connected:
@@ -248,12 +258,31 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState]):
         else:
             self.update_interval = V1_CLOUD_NOT_CLEANING_INTERVAL
         self.last_update_state = self.properties_api.status.state_name
+        self._last_update_success_time = dt_util.utcnow()
+        _LOGGER.debug("Data update successful %s", self._last_update_success_time)
         return DeviceState(
             status=self.properties_api.status,
             dnd_timer=self.properties_api.dnd,
             consumable=self.properties_api.consumables,
             clean_summary=self.properties_api.clean_summary,
         )
+
+    def _should_suppress_update_failure(self) -> bool:
+        """Determine if we should suppress update failure reporting.
+
+        We suppress reporting update failures until a minimum duration has
+        passed since the last successful update. This is used to avoid reporting
+        the device as unavailable for short periods, a known issue.
+
+        The intent is to apply to routine background state refreshes and not
+        other failures such as the first update or map updates.
+        """
+        if self._last_update_success_time is None:
+            # Never had a successful update, do not suppress
+            return False
+        failure_duration = dt_util.utcnow() - self._last_update_success_time
+        _LOGGER.debug("Update failure duration: %s", failure_duration)
+        return failure_duration < MIN_UNAVAILABLE_DURATION
 
     async def get_routines(self) -> list[HomeDataScene]:
         """Get routines."""
