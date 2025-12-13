@@ -69,6 +69,7 @@ from .const import (
     ATTR_PASSWORD,
     ATTR_QUESTION,
     ATTR_REACTION,
+    ATTR_REPLY_TO_MSGID,
     ATTR_RESIZE_KEYBOARD,
     ATTR_SHOW_ALERT,
     ATTR_STICKER_ID,
@@ -165,14 +166,17 @@ BASE_SERVICE_SCHEMA = vol.Schema(
         vol.Optional(ATTR_TIMEOUT): cv.positive_int,
         vol.Optional(ATTR_MESSAGE_TAG): cv.string,
         vol.Optional(ATTR_MESSAGE_THREAD_ID): vol.Coerce(int),
-    },
-    extra=vol.ALLOW_EXTRA,
+    }
 )
 
 SERVICE_SCHEMA_SEND_MESSAGE = vol.All(
     cv.deprecated(ATTR_TIMEOUT),
     BASE_SERVICE_SCHEMA.extend(
-        {vol.Required(ATTR_MESSAGE): cv.string, vol.Optional(ATTR_TITLE): cv.string}
+        {
+            vol.Required(ATTR_MESSAGE): cv.string,
+            vol.Optional(ATTR_TITLE): cv.string,
+            vol.Optional(ATTR_REPLY_TO_MSGID): vol.Coerce(int),
+        }
     ),
 )
 
@@ -250,12 +254,18 @@ SERVICE_SCHEMA_SEND_POLL = vol.All(
 
 SERVICE_SCHEMA_EDIT_MESSAGE = vol.All(
     cv.deprecated(ATTR_TIMEOUT),
-    SERVICE_SCHEMA_BASE_SEND_FILE.extend(
+    vol.Schema(
         {
+            vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
+            vol.Optional(ATTR_TITLE): cv.string,
+            vol.Required(ATTR_MESSAGE): cv.string,
             vol.Required(ATTR_MESSAGEID): vol.Any(
                 cv.positive_int, vol.All(cv.string, "last")
             ),
             vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
+            vol.Optional(ATTR_PARSER): cv.string,
+            vol.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
+            vol.Optional(ATTR_DISABLE_WEB_PREV): cv.boolean,
         }
     ),
 )

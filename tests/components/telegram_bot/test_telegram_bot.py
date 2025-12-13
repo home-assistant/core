@@ -158,7 +158,6 @@ async def test_polling_platform_init(
         (
             SERVICE_SEND_LOCATION,
             {
-                ATTR_MESSAGE: "test_message",
                 ATTR_MESSAGE_THREAD_ID: "123",
                 ATTR_LONGITUDE: "1.123",
                 ATTR_LATITUDE: "1.123",
@@ -1505,7 +1504,6 @@ async def test_set_message_reaction(
             SERVICE_SEND_LOCATION,
             {
                 ATTR_TARGET: 654321,
-                ATTR_MESSAGE: "test_message",
                 ATTR_MESSAGE_THREAD_ID: "123",
                 ATTR_LONGITUDE: "1.123",
                 ATTR_LATITUDE: "1.123",
