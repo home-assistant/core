@@ -6,6 +6,8 @@ a valid calendar object.
 """
 
 import logging
+import re
+from datetime import date, timedelta
 
 from ical.calendar import Calendar
 from ical.calendar_stream import IcsCalendarStream
@@ -21,6 +23,24 @@ class InvalidIcsException(Exception):
     """Exception to indicate that the ICS content is invalid."""
 
 
+def _fix_same_day_dtend(ics: str) -> str:
+    """Fix same-day DTEND all-day events by adjusting DTEND to next day."""
+    def fix_date(match):
+        date_str = match.group(1)
+        try:
+            year, month, day = int(date_str[:4]), int(date_str[4:6]), int(date_str[6:8])
+            next_day = date(year, month, day) + timedelta(days=1)
+            return f"DTSTART;VALUE=DATE:{date_str}\nDTEND;VALUE=DATE:{next_day:%Y%m%d}"
+        except (ValueError, OverflowError):
+            return match.group(0)
+    
+    return re.sub(
+        r'DTSTART;VALUE=DATE:(\d{8})\s*\r?\n\s*DTEND;VALUE=DATE:\1',
+        fix_date,
+        ics
+    )
+
+
 def _compat_calendar_from_ics(ics: str) -> Calendar:
     """Parse the ICS content and return a Calendar object.
 
@@ -28,9 +48,13 @@ def _compat_calendar_from_ics(ics: str) -> Calendar:
     loop while loading packages or parsing the ICS content for large calendars.
 
     It uses the `enable_compat_mode` context manager to fix known issues with
-    calendar providers that return invalid calendars.
+    calendar providers that return invalid calendars, and also fixes same-day
+    DTEND issues at parse time.
     """
-    with enable_compat_mode(ics) as compat_ics:
+    # Fix same-day DTEND issues before parsing
+    fixed_ics = _fix_same_day_dtend(ics)
+    
+    with enable_compat_mode(fixed_ics) as compat_ics:
         return IcsCalendarStream.calendar_from_ics(compat_ics)
 
 

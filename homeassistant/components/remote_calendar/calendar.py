@@ -57,17 +57,6 @@ class RemoteCalendarEntity(
         if self._timeline is None:
             return None
         now = dt_util.now()
-        
-        # Fallback for same-day DTEND all-day events bug
-        # Only check all-day events where DTSTART == DTEND
-        today = now.date()
-        for event in self._timeline:
-            # Only handle all-day events (date objects without time) with same-day DTEND
-            if (not hasattr(event.dtstart, 'hour') and 
-                event.dtstart == event.dtend and 
-                event.dtstart == today):
-                return _get_calendar_event(event)
-        
         events = self._timeline.active_after(now)
         if event := next(events, None):
             return _get_calendar_event(event)
