@@ -34,7 +34,7 @@ VS_HUMIDIFIER_MODE_SLEEP = "sleep"
 
 VS_FAN_MODE_AUTO = "auto"
 VS_FAN_MODE_SLEEP = "sleep"
-VS_FAN_MODE_ADVANCED_SLEEP = "advancedSleep"
+VS_FAN_MODE_ADVANCED_SLEEP = "advancedsleep"
 VS_FAN_MODE_TURBO = "turbo"
 VS_FAN_MODE_PET = "pet"
 VS_FAN_MODE_MANUAL = "manual"

@@ -139,7 +139,7 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
                 [
                     mode.value.lower()
                     for mode in self.device.modes
-                    if mode in VS_FAN_MODE_PRESET_LIST_HA
+                    if mode.lower() in VS_FAN_MODE_PRESET_LIST_HA
                 ]
             )
         return []
@@ -147,8 +147,8 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
     @property
     def preset_mode(self) -> str | None:
         """Get the current preset mode."""
-        if self.device.state.mode in VS_FAN_MODE_PRESET_LIST_HA:
-            return self.device.state.mode
+        if self.device.state.mode.lower() in VS_FAN_MODE_PRESET_LIST_HA:
+            return self.device.state.mode.lower()
         return None
 
     @property
