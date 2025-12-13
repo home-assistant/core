@@ -103,6 +103,8 @@ class OAuth2FlowHandler(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauth on failure."""
+        self._oauth_impl = TeslemetryImplementation(self.hass)
+        self.async_register_implementation(self.hass, self._oauth_impl)
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -114,4 +116,5 @@ class OAuth2FlowHandler(
                 step_id="reauth_confirm",
                 description_placeholders={"name": "Teslemetry"},
             )
+
         return await super().async_step_user()
