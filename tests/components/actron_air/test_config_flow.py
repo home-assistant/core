@@ -219,7 +219,6 @@ async def test_reauth_flow_wrong_account(
     """Test reauthentication flow with wrong account."""
     # Create an existing config entry
     mock_config_entry.add_to_hass(hass)
-    existing_entry = mock_config_entry
 
     # Mock the API to return a different user ID
     mock_actron_api.get_user_info = AsyncMock(
