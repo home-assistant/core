@@ -23,7 +23,12 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from . import FritzDeviceSwitchMock, set_devices, setup_config_entry
+from . import (
+    FritzDeviceSwitchMock,
+    FritzEntityBaseMock,
+    set_devices,
+    setup_config_entry,
+)
 from .const import CONF_FAKE_NAME, MOCK_CONFIG
 
 from tests.common import async_fire_time_changed, snapshot_platform
@@ -39,9 +44,18 @@ async def test_setup(
 ) -> None:
     """Test setup of platform."""
     device = FritzDeviceSwitchMock()
+    trigger = FritzEntityBaseMock()
+    trigger.ain = "trg1234 56789"
+    trigger.name = "fake_trigger"
+
     with patch("homeassistant.components.fritzbox.PLATFORMS", [Platform.SWITCH]):
         entry = await setup_config_entry(
-            hass, MOCK_CONFIG[DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
+            hass,
+            MOCK_CONFIG[DOMAIN][CONF_DEVICES][0],
+            # ENTITY_ID,
+            device=device,
+            fritz=fritz,
+            trigger=trigger,
         )
     assert entry.state is ConfigEntryState.LOADED
 
@@ -174,3 +188,37 @@ async def test_discover_new_device(hass: HomeAssistant, fritz: Mock) -> None:
 
     state = hass.states.get(f"{SWITCH_DOMAIN}.new_switch")
     assert state
+
+
+async def test_activate_trigger(hass: HomeAssistant, fritz: Mock) -> None:
+    """Test activating a FRITZ! trigger."""
+    trigger = FritzEntityBaseMock()
+    await setup_config_entry(
+        hass,
+        MOCK_CONFIG[DOMAIN][CONF_DEVICES][0],
+        ENTITY_ID,
+        fritz=fritz,
+        trigger=trigger,
+    )
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID}, True
+    )
+    assert fritz().set_trigger_active.call_count == 1
+
+
+async def test_dectivate_trigger(hass: HomeAssistant, fritz: Mock) -> None:
+    """Test dectivating a FRITZ! trigger."""
+    trigger = FritzEntityBaseMock()
+    await setup_config_entry(
+        hass,
+        MOCK_CONFIG[DOMAIN][CONF_DEVICES][0],
+        ENTITY_ID,
+        fritz=fritz,
+        trigger=trigger,
+    )
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
+    )
+    assert fritz().set_trigger_inactive.call_count == 1

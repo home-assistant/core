@@ -25,6 +25,7 @@ async def setup_config_entry(
     device: Mock | None = None,
     fritz: Mock | None = None,
     template: Mock | None = None,
+    trigger: Mock | None = None,
 ) -> MockConfigEntry:
     """Do setup of a MockConfigEntry."""
     entry = MockConfigEntry(
@@ -38,6 +39,9 @@ async def setup_config_entry(
 
     if template is not None and fritz is not None:
         fritz().get_templates.return_value = [template]
+
+    if trigger is not None and fritz is not None:
+        fritz().get_triggers.return_value = [trigger]
 
     await hass.config_entries.async_setup(entry.entry_id)
     if device is not None:
