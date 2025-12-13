@@ -28,6 +28,7 @@ class OAuth2FlowHandler(
     """Config flow to handle Teslemetry OAuth2 authentication."""
 
     DOMAIN = DOMAIN
+    VERSION = 2
 
     def __init__(self) -> None:
         """Initialize config flow."""
