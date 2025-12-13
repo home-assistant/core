@@ -127,9 +127,9 @@ _API_STATE_VALUE = {
     "Paused": "paused",
     "Resuming": "resuming",
     "Finishing": "finishing",
-    "Offline": "closed",
+    "Offline": "offline",
     "Error": "error",
-    "Offline after error": "closed_with_error",
+    "Offline after error": "offline_after_error",
     "Transferring file to SD": "transferring_file",
 }
 
