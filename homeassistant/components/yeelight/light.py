@@ -63,6 +63,7 @@ from .device import YeelightDevice
 from .entity import YeelightEntity
 
 _LOGGER = logging.getLogger(__name__)
+_EXAMPLES_URL = "https://yeelight.readthedocs.io/en/stable/flow.html"
 
 ATTR_MINUTES = "minutes"
 ATTR_KELVIN = "kelvin"
@@ -384,7 +385,8 @@ def _async_setup_services(hass: HomeAssistant):
         SERVICE_SCHEMA_START_FLOW,
         _async_start_flow,
         description_placeholders={
-            "flow_objects_urls": "https://yeelight.readthedocs.io/en/stable/yeelight.html#flow-objects"
+            "examples_url": _EXAMPLES_URL,
+            "flow_objects_urls": "https://yeelight.readthedocs.io/en/stable/yeelight.html#flow-objects",
         },
     )
     platform.async_register_entity_service(
@@ -402,9 +404,7 @@ def _async_setup_services(hass: HomeAssistant):
         SERVICE_SET_COLOR_FLOW_SCENE,
         SERVICE_SCHEMA_SET_COLOR_FLOW_SCENE,
         _async_set_color_flow_scene,
-        description_placeholders={
-            "examples_url": "https://yeelight.readthedocs.io/en/stable/flow.html"
-        },
+        description_placeholders={"examples_url": _EXAMPLES_URL},
     )
     platform.async_register_entity_service(
         SERVICE_SET_AUTO_DELAY_OFF_SCENE,

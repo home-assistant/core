@@ -14,7 +14,7 @@
     },
     "step": {
       "confirm": {
-        "description": "Do you want to set up {name} ({mac})?. Make sure the light is [made discoverable to voice assistants]({url_pairing_mode})."
+        "description": "Do you want to set up {name} ({mac})?. Make sure the light is [made discoverable to voice assistants]({url_pairing_mode}) or has been [factory reset]({url_factory_reset})."
       }
     }
   }

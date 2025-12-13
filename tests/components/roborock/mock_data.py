@@ -14,6 +14,7 @@ from roborock.data import (
     NetworkInfo,
     S7Status,
     UserData,
+    ValleyElectricityTimer,
 )
 from vacuum_map_parser_base.config.image_config import ImageConfig
 from vacuum_map_parser_base.map_data import ImageData
@@ -1065,6 +1066,16 @@ CONSUMABLE = Consumable.from_dict(
 DND_TIMER = DnDTimer.from_dict(
     {
         "start_hour": 22,
+        "start_minute": 0,
+        "end_hour": 7,
+        "end_minute": 0,
+        "enabled": 1,
+    }
+)
+
+VALLEY_ELECTRICITY_TIMER = ValleyElectricityTimer.from_dict(
+    {
+        "start_hour": 23,
         "start_minute": 0,
         "end_hour": 7,
         "end_minute": 0,

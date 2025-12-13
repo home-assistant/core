@@ -5,6 +5,7 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 from uiprotect import NvrError, ProtectApiClient
 from uiprotect.api import DEVICE_UPDATE_INTERVAL
 from uiprotect.data import NVR, Bootstrap, CloudAccount, Light
@@ -42,6 +43,30 @@ def mock_user_can_write_nvr(request: pytest.FixtureRequest, ufp: MockUFPFixture)
         yield mock_can_write
     finally:
         object.__setattr__(ufp.api.bootstrap.nvr, "can_write", original_can_write)
+
+
+async def test_setup_creates_nvr_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    ufp: MockUFPFixture,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test that setup creates the NVR device before loading platforms.
+
+    This ensures that via_device references from camera/sensor entities
+    to the NVR device work correctly.
+    """
+    await hass.config_entries.async_setup(ufp.entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert ufp.entry.state is ConfigEntryState.LOADED
+
+    # Verify NVR device was created
+    nvr = ufp.api.bootstrap.nvr
+    nvr_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, nvr.mac)},
+    )
+    assert nvr_device == snapshot
 
 
 async def test_setup(hass: HomeAssistant, ufp: MockUFPFixture) -> None:
