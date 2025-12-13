@@ -227,14 +227,7 @@ async def test_reauth_flow_wrong_account(
     )
 
     # Start the reauth flow
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": existing_entry.entry_id,
-        },
-        data=existing_entry.data,
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
 
     # Should show the reauth confirmation form
     assert result["type"] is FlowResultType.FORM
@@ -247,9 +240,6 @@ async def test_reauth_flow_wrong_account(
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "user"
     assert result["progress_action"] == "wait_for_authorization"
-
-    # Wait for the progress to complete
-    await hass.async_block_till_done()
 
     # Continue the flow after progress is done
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
