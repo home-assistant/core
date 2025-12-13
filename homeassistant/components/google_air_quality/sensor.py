@@ -214,7 +214,7 @@ class AirQualitySensorEntity(
             identifiers={
                 (DOMAIN, f"{self.coordinator.config_entry.entry_id}_{subentry_id}")
             },
-            name="Current conditions",
+            name=subentry.title,
             entry_type=DeviceEntryType.SERVICE,
         )
         if description.translation_placeholders_fn:

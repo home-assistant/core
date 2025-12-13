@@ -175,9 +175,7 @@ class GoogleAirQualityConfigFlow(ConfigFlow, domain=DOMAIN):
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
-        return {
-            "location": LocationSubentryFlowHandler,
-        }
+        return {"location": LocationSubentryFlowHandler}
 
 
 class LocationSubentryFlowHandler(ConfigSubentryFlow):
@@ -188,13 +186,14 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
         user_input: dict[str, Any] | None = None,
     ) -> SubentryFlowResult:
         """Handle the location step."""
-        _LOGGER.debug("current conditions")
         if self._get_entry().state != ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
 
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] = {}
         if user_input is not None:
+            if _is_location_already_configured(self.hass, user_input[CONF_LOCATION]):
+                return self.async_abort(reason="already_configured")
             api: GoogleAirQualityApi = self._get_entry().runtime_data.api
             if await _validate_input(user_input, api, errors, description_placeholders):
                 return self.async_create_entry(

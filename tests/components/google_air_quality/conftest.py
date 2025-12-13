@@ -45,7 +45,7 @@ def mock_subentries() -> list[ConfigSubentryDataWithId]:
                 CONF_LONGITUDE: 20.1,
             },
             subentry_type="location",
-            title="Home",
+            title="Current conditions",
             subentry_id="home-subentry-id",
             unique_id=None,
         )

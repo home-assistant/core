@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensor_snapshot[sensor.home_carbon_monoxide-entry]
+# name: test_sensor_snapshot[sensor.current_conditions_carbon_monoxide-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -14,7 +14,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.home_carbon_monoxide',
+    'entity_id': 'sensor.current_conditions_carbon_monoxide',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -36,24 +36,24 @@
     'unit_of_measurement': 'ppm',
   })
 # ---
-# name: test_sensor_snapshot[sensor.home_carbon_monoxide-state]
+# name: test_sensor_snapshot[sensor.current_conditions_carbon_monoxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Google Air Quality',
       'device_class': 'carbon_monoxide',
-      'friendly_name': 'Home Carbon monoxide',
+      'friendly_name': 'Current conditions Carbon monoxide',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'ppm',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.home_carbon_monoxide',
+    'entity_id': 'sensor.current_conditions_carbon_monoxide',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.26902',
   })
 # ---
-# name: test_sensor_snapshot[sensor.home_lqi_de_category-entry]
+# name: test_sensor_snapshot[sensor.current_conditions_lqi_de_category-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -74,7 +74,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.home_lqi_de_category',
+    'entity_id': 'sensor.current_conditions_lqi_de_category',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -96,12 +96,12 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_snapshot[sensor.home_lqi_de_category-state]
+# name: test_sensor_snapshot[sensor.current_conditions_lqi_de_category-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Google Air Quality',
       'device_class': 'enum',
-      'friendly_name': 'Home LQI (DE) category',
+      'friendly_name': 'Current conditions LQI (DE) category',
       'options': list([
         'very_good_air_quality',
         'good_air_quality',
@@ -111,14 +111,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.home_lqi_de_category',
+    'entity_id': 'sensor.current_conditions_lqi_de_category',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'good_air_quality',
   })
 # ---
-# name: test_sensor_snapshot[sensor.home_lqi_de_dominant_pollutant-entry]
+# name: test_sensor_snapshot[sensor.current_conditions_lqi_de_dominant_pollutant-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -138,7 +138,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.home_lqi_de_dominant_pollutant',
+    'entity_id': 'sensor.current_conditions_lqi_de_dominant_pollutant',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -160,12 +160,12 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_snapshot[sensor.home_lqi_de_dominant_pollutant-state]
+# name: test_sensor_snapshot[sensor.current_conditions_lqi_de_dominant_pollutant-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Google Air Quality',
       'device_class': 'enum',
-      'friendly_name': 'Home LQI (DE) dominant pollutant',
+      'friendly_name': 'Current conditions LQI (DE) dominant pollutant',
       'options': list([
         'no2',
         'o3',
@@ -174,14 +174,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.home_lqi_de_dominant_pollutant',
+    'entity_id': 'sensor.current_conditions_lqi_de_dominant_pollutant',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'no2',
   })
 # ---
-# name: test_sensor_snapshot[sensor.home_nitrogen_dioxide-entry]
+# name: test_sensor_snapshot[sensor.current_conditions_nitrogen_dioxide-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -196,7 +196,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.home_nitrogen_dioxide',
+    'entity_id': 'sensor.current_conditions_nitrogen_dioxide',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -218,23 +218,23 @@
     'unit_of_measurement': 'ppb',
   })
 # ---
-# name: test_sensor_snapshot[sensor.home_nitrogen_dioxide-state]
+# name: test_sensor_snapshot[sensor.current_conditions_nitrogen_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Google Air Quality',
-      'friendly_name': 'Home Nitrogen dioxide',
+      'friendly_name': 'Current conditions Nitrogen dioxide',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'ppb',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.home_nitrogen_dioxide',
+    'entity_id': 'sensor.current_conditions_nitrogen_dioxide',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '14.18',
   })
 # ---
-# name: test_sensor_snapshot[sensor.home_ozone-entry]
+# name: test_sensor_snapshot[sensor.current_conditions_ozone-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -249,7 +249,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.home_ozone',
+    'entity_id': 'sensor.current_conditions_ozone',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -271,23 +271,23 @@
     'unit_of_measurement': 'ppb',
   })
 # ---
-# name: test_sensor_snapshot[sensor.home_ozone-state]
+# name: test_sensor_snapshot[sensor.current_conditions_ozone-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Google Air Quality',
-      'friendly_name': 'Home Ozone',
+      'friendly_name': 'Current conditions Ozone',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'ppb',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.home_ozone',
+    'entity_id': 'sensor.current_conditions_ozone',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '24.94',
   })
 # ---
-# name: test_sensor_snapshot[sensor.home_pm10-entry]
+# name: test_sensor_snapshot[sensor.current_conditions_pm10-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -302,7 +302,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.home_pm10',
+    'entity_id': 'sensor.current_conditions_pm10',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -324,24 +324,24 @@
     'unit_of_measurement': 'μg/m³',
   })
 # ---
-# name: test_sensor_snapshot[sensor.home_pm10-state]
+# name: test_sensor_snapshot[sensor.current_conditions_pm10-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Google Air Quality',
       'device_class': 'pm10',
-      'friendly_name': 'Home PM10',
+      'friendly_name': 'Current conditions PM10',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.home_pm10',
+    'entity_id': 'sensor.current_conditions_pm10',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '21.95',
   })
 # ---
-# name: test_sensor_snapshot[sensor.home_pm2_5-entry]
+# name: test_sensor_snapshot[sensor.current_conditions_pm2_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -356,7 +356,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.home_pm2_5',
+    'entity_id': 'sensor.current_conditions_pm2_5',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -378,24 +378,24 @@
     'unit_of_measurement': 'μg/m³',
   })
 # ---
-# name: test_sensor_snapshot[sensor.home_pm2_5-state]
+# name: test_sensor_snapshot[sensor.current_conditions_pm2_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Google Air Quality',
       'device_class': 'pm25',
-      'friendly_name': 'Home PM2.5',
+      'friendly_name': 'Current conditions PM2.5',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.home_pm2_5',
+    'entity_id': 'sensor.current_conditions_pm2_5',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10.6',
   })
 # ---
-# name: test_sensor_snapshot[sensor.home_sulphur_dioxide-entry]
+# name: test_sensor_snapshot[sensor.current_conditions_sulphur_dioxide-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -410,7 +410,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.home_sulphur_dioxide',
+    'entity_id': 'sensor.current_conditions_sulphur_dioxide',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -432,23 +432,23 @@
     'unit_of_measurement': 'ppb',
   })
 # ---
-# name: test_sensor_snapshot[sensor.home_sulphur_dioxide-state]
+# name: test_sensor_snapshot[sensor.current_conditions_sulphur_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Google Air Quality',
-      'friendly_name': 'Home Sulphur dioxide',
+      'friendly_name': 'Current conditions Sulphur dioxide',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'ppb',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.home_sulphur_dioxide',
+    'entity_id': 'sensor.current_conditions_sulphur_dioxide',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.2',
   })
 # ---
-# name: test_sensor_snapshot[sensor.home_uaqi_category-entry]
+# name: test_sensor_snapshot[sensor.current_conditions_uaqi_category-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -469,7 +469,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.home_uaqi_category',
+    'entity_id': 'sensor.current_conditions_uaqi_category',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -491,12 +491,12 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_snapshot[sensor.home_uaqi_category-state]
+# name: test_sensor_snapshot[sensor.current_conditions_uaqi_category-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Google Air Quality',
       'device_class': 'enum',
-      'friendly_name': 'Home UAQI category',
+      'friendly_name': 'Current conditions UAQI category',
       'options': list([
         'excellent_air_quality',
         'good_air_quality',
@@ -506,14 +506,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.home_uaqi_category',
+    'entity_id': 'sensor.current_conditions_uaqi_category',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'excellent_air_quality',
   })
 # ---
-# name: test_sensor_snapshot[sensor.home_uaqi_dominant_pollutant-entry]
+# name: test_sensor_snapshot[sensor.current_conditions_uaqi_dominant_pollutant-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -535,7 +535,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.home_uaqi_dominant_pollutant',
+    'entity_id': 'sensor.current_conditions_uaqi_dominant_pollutant',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -557,12 +557,12 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_snapshot[sensor.home_uaqi_dominant_pollutant-state]
+# name: test_sensor_snapshot[sensor.current_conditions_uaqi_dominant_pollutant-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Google Air Quality',
       'device_class': 'enum',
-      'friendly_name': 'Home UAQI dominant pollutant',
+      'friendly_name': 'Current conditions UAQI dominant pollutant',
       'options': list([
         'co',
         'no2',
@@ -573,14 +573,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.home_uaqi_dominant_pollutant',
+    'entity_id': 'sensor.current_conditions_uaqi_dominant_pollutant',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'o3',
   })
 # ---
-# name: test_sensor_snapshot[sensor.home_universal_air_quality_index-entry]
+# name: test_sensor_snapshot[sensor.current_conditions_universal_air_quality_index-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -595,7 +595,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.home_universal_air_quality_index',
+    'entity_id': 'sensor.current_conditions_universal_air_quality_index',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -617,16 +617,16 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_snapshot[sensor.home_universal_air_quality_index-state]
+# name: test_sensor_snapshot[sensor.current_conditions_universal_air_quality_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Google Air Quality',
       'device_class': 'aqi',
-      'friendly_name': 'Home Universal Air Quality Index',
+      'friendly_name': 'Current conditions Universal Air Quality Index',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.home_universal_air_quality_index',
+    'entity_id': 'sensor.current_conditions_universal_air_quality_index',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
