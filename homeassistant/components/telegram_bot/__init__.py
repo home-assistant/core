@@ -110,6 +110,8 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
 BASE_SERVICE_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
