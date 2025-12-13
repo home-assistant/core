@@ -24,9 +24,16 @@ async def async_setup_entry(
     """Set up the calendar platform for entity."""
     coordinator = entry.runtime_data.mealplan_coordinator
 
+    supported_mealplan_entry_types = [
+        MealplanEntryType.BREAKFAST,
+        MealplanEntryType.DINNER,
+        MealplanEntryType.LUNCH,
+        MealplanEntryType.SIDE,
+    ]
+
     async_add_entities(
         MealieMealplanCalendarEntity(coordinator, entry_type)
-        for entry_type in MealplanEntryType
+        for entry_type in supported_mealplan_entry_types
     )
 
 
