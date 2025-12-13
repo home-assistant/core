@@ -4,45 +4,43 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
-import logging
 from datetime import timedelta
+import logging
 from typing import Any
 
 from hegel_ip_client import (
-    apply_state_changes,
     COMMANDS,
     HegelClient,
+    apply_state_changes,
     parse_reply_message,
 )
 from hegel_ip_client.exceptions import HegelConnectionError
 
-from homeassistant.components.media_player import MediaPlayerEntity
-from homeassistant.components.media_player.const import MediaPlayerEntityFeature
+from homeassistant.components.media_player import (
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+    MediaPlayerState,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON
+from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    CONF_MODEL,
-    DOMAIN,
-    HEARTBEAT_TIMEOUT_MINUTES,
-    MODEL_INPUTS,
-    SLOW_POLL_INTERVAL,
-)
+from .const import CONF_MODEL, DOMAIN, HEARTBEAT_TIMEOUT_MINUTES, MODEL_INPUTS
+from .coordinator import HegelSlowPollCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Hegel media player from a config entry."""
     host = entry.data[CONF_HOST]
@@ -97,43 +95,7 @@ async def async_setup_entry(
     }
 
 
-class HegelSlowPollCoordinator(DataUpdateCoordinator):
-    """Very slow fallback polling coordinator."""
-
-    def __init__(
-        self, hass: HomeAssistant, client: HegelClient, shared_state: dict
-    ) -> None:
-        """Initialize the slow poll coordinator."""
-        super().__init__(
-            hass,
-            _LOGGER,
-            name="HegelSlowPoll",
-            update_interval=timedelta(seconds=SLOW_POLL_INTERVAL),
-        )
-        self._client = client
-        self._state = shared_state
-
-    async def _async_update_data(self) -> dict[str, Any]:
-        """Periodically poll the amplifier to keep state in sync as a fallback."""
-        for cmd in [
-            COMMANDS["power_query"],
-            COMMANDS["volume_query"],
-            COMMANDS["mute_query"],
-            COMMANDS["input_query"],
-        ]:
-            try:
-                update = await self._client.send(cmd, expect_reply=True, timeout=3.0)
-                if update and update.has_changes():
-                    apply_state_changes(
-                        self._state, update, logger=_LOGGER, source="poll"
-                    )
-            except (HegelConnectionError, TimeoutError, OSError) as err:
-                _LOGGER.error("Slow poll failed: %s", err)
-                raise UpdateFailed(str(err)) from err
-        return self._state
-
-
-class HegelMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
+class HegelMediaPlayer(CoordinatorEntity[HegelSlowPollCoordinator], MediaPlayerEntity):
     """Hegel amplifier entity using CoordinatorEntity for convenience."""
 
     _attr_should_poll = False
@@ -160,7 +122,6 @@ class HegelMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         self._state = state
         self._mac = mac
         self._unique_id = unique_id
-        self._coordinator = coordinator
 
         # supported features
         self._attr_supported_features = (
@@ -177,7 +138,8 @@ class HegelMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         self._attr_has_entity_name = True
 
         # Background tasks
-        self._connected_watcher_task: asyncio.Task | None = None
+        self._connected_watcher_task: asyncio.Task[None] | None = None
+        self._push_task: asyncio.Task[None] | None = None
 
         # register push handler (schedule coroutine)
         # the client expects a synchronous callable; schedule a coroutine safely
@@ -185,7 +147,6 @@ class HegelMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
             self._push_task = asyncio.create_task(self._async_handle_push(msg))
 
         self._client.add_push_callback(push_handler)
-        self._push_task: asyncio.Task | None = None
 
         # start a watcher task to refresh state on reconnect
         self._connected_watcher_task = asyncio.create_task(self._connected_watcher())
@@ -227,14 +188,16 @@ class HegelMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         return f"hegel_{self._entry.entry_id}"
 
     @property
-    def device_info(self) -> dict[str, Any]:
+    def device_info(self) -> DeviceInfo:
         """Return device information for this entity."""
-        info = {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self._attr_name,
-            "manufacturer": "Hegel",
-            "model": self._entry.data.get(CONF_MODEL),
-        }
+        unique_id = str(self.unique_id)
+
+        info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            name=self._attr_name,
+            manufacturer="Hegel",
+            model=self._entry.data.get(CONF_MODEL),
+        )
         if self._mac:
             info["connections"] = {(CONNECTION_NETWORK_MAC, self._mac)}
         return info
@@ -262,7 +225,7 @@ class HegelMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         try:
             while True:
                 # wait for connection
-                _LOGGER.debug("Watcher: waiting for connection event...")
+                _LOGGER.debug("Watcher: waiting for connection event")
                 await conn_event.wait()
                 _LOGGER.debug("Hegel client connected — refreshing state")
                 # immediately notify HA that we're available again
@@ -274,7 +237,7 @@ class HegelMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
                     _LOGGER.debug("Reconnect refresh failed: %s", e)
 
                 # wait until disconnected before looping (to avoid spamming refresh)
-                _LOGGER.debug("Watcher: waiting for disconnection...")
+                _LOGGER.debug("Watcher: waiting for disconnection")
                 while conn_event.is_set():
                     await asyncio.sleep(0.5)
                 _LOGGER.debug("Watcher: disconnected, notifying HA")
@@ -289,12 +252,12 @@ class HegelMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     async def _refresh_state(self) -> None:
         """Query the amplifier for the main values and update state dict."""
         try:
-            for cmd in [
+            for cmd in (
                 COMMANDS["power_query"],
                 COMMANDS["volume_query"],
                 COMMANDS["mute_query"],
                 COMMANDS["input_query"],
-            ]:
+            ):
                 try:
                     update = await self._client.send(
                         cmd, expect_reply=True, timeout=3.0
@@ -325,9 +288,9 @@ class HegelMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
         return is_available
 
     @property
-    def state(self) -> str | None:
+    def state(self) -> MediaPlayerState | None:
         """Return the current state of the media player."""
-        return STATE_ON if self._state.get("power") else STATE_OFF
+        return MediaPlayerState.ON if self._state.get("power") else MediaPlayerState.OFF
 
     @property
     def volume_level(self) -> float | None:

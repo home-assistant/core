@@ -7,7 +7,7 @@ import logging
 import re
 from typing import Any
 
-import aiohttp
+from aiohttp import ClientError, ClientTimeout
 import defusedxml.ElementTree as ET
 import voluptuous as vol
 
@@ -43,7 +43,7 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             entry_data = {**self._discovered_data, **user_input}
 
-            host = entry_data[CONF_HOST]
+            host = str(entry_data[CONF_HOST])
             port = entry_data.get(CONF_PORT, DEFAULT_PORT)
 
             try:
@@ -68,7 +68,6 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
                     data=entry_data,
                 )
 
-        # Build form schema
         schema = vol.Schema(
             {
                 vol.Required(
@@ -93,9 +92,9 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
         reconfigure_entry = self._get_reconfigure_entry()
 
         if user_input is not None:
-            self._host = user_input[CONF_HOST]
+            self._host = str(user_input[CONF_HOST])
             self._port = user_input.get(CONF_PORT, DEFAULT_PORT)
-            self._model = user_input.get(CONF_MODEL)
+            self._model = str(user_input[CONF_MODEL])
 
             # Test connection
             try:
@@ -138,7 +137,7 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
         # Pre-populate with current values
         self._host = reconfigure_entry.data[CONF_HOST]
         self._port = reconfigure_entry.data.get(CONF_PORT, DEFAULT_PORT)
-        self._model = reconfigure_entry.data.get(CONF_MODEL)
+        self._model = str(reconfigure_entry.data.get(CONF_MODEL, ""))
 
         return self.async_show_form(
             step_id="reconfigure",
@@ -208,9 +207,11 @@ class HegelConfigFlow(ConfigFlow, domain=DOMAIN):
 
         session = async_get_clientsession(self.hass)
         try:
-            async with session.get(ssdp_location, timeout=5) as resp:
+            async with session.get(
+                ssdp_location, timeout=ClientTimeout(total=5)
+            ) as resp:
                 text = await resp.text()
-        except (TimeoutError, aiohttp.ClientError, OSError) as err:
+        except (TimeoutError, ClientError, OSError) as err:
             _LOGGER.debug("Failed to fetch device description: %s", err)
             return None, None
 

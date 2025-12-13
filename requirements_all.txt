@@ -1184,6 +1184,9 @@ hdate[astral]==1.1.2
 # homeassistant.components.heatmiser
 heatmiserV3==2.0.4
 
+# homeassistant.components.hegel
+hegel-ip-client==0.1.2
+
 # homeassistant.components.here_travel_time
 here-routing==1.2.0
 

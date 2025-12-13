@@ -4,14 +4,14 @@ from __future__ import annotations
 
 import logging
 
-import voluptuous as vol
-
 from hegel_ip_client import HegelClient
 from hegel_ip_client.exceptions import HegelConnectionError
+import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryNotReady
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 
 from .const import DEFAULT_PORT, DOMAIN

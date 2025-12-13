@@ -1,32 +1,32 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "title": "Connect to Hegel amplifier",
-        "description": "Enter the host/IP of your Hegel amplifier to set it up.",
-        "data": {
-          "host": "Host/IP",
-          "port": "Port",
-          "model": "Model"
-        }
-      },
-      "reconfigure": {
-        "title": "Reconfigure Hegel amplifier",
-        "description": "Update the connection settings for your Hegel amplifier.",
-        "data": {
-          "host": "Host/IP",
-          "port": "Port",
-          "model": "Model"
-        }
-      }
-    },
-    "error": {
-      "cannot_connect": "Cannot connect to the amplifier"
-    },
     "abort": {
       "already_configured": "This amplifier is already configured",
       "no_host_found": "Could not determine host from discovery information",
       "reconfigure_successful": "Configuration updated successfully"
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to the amplifier"
+    },
+    "step": {
+      "reconfigure": {
+        "data": {
+          "host": "Host/IP",
+          "model": "Model",
+          "port": "Port"
+        },
+        "description": "Update the connection settings for your Hegel amplifier.",
+        "title": "Reconfigure Hegel amplifier"
+      },
+      "user": {
+        "data": {
+          "host": "Host/IP",
+          "model": "Model",
+          "port": "Port"
+        },
+        "description": "Enter the host/IP of your Hegel amplifier to set it up.",
+        "title": "Connect to Hegel amplifier"
+      }
     }
   },
   "entity": {
@@ -36,10 +36,17 @@
       }
     }
   },
-  "device": {
-    "hegel": {
-      "name": "Hegel Amplifier",
-      "manufacturer": "Hegel"
+  "services": {
+    "send_command": {
+      "description": "Sends a raw command to the Hegel amplifier for advanced control.",
+      "fields": {
+        "command": {
+          "description": "Raw command to send to the amplifier (e.g., \"-p.1\" for power on, \"-v.50\" for volume 50%)",
+          "example": "-p.1",
+          "name": "Command"
+        }
+      },
+      "name": "Send Raw Command"
     }
   }
 }

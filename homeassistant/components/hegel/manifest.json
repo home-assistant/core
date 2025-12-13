@@ -1,27 +1,18 @@
 {
   "domain": "hegel",
   "name": "Hegel Amplifier",
-  "version": "0.1.0",
-  "documentation": "https://www.home-assistant.io/integrations/hegel/",
-  "requirements": ["hegel-ip-client==0.1.2"],
-  "codeowners": [
-    "@boazca"
-  ],
-  "iot_class": "local_push",
-  "icon": "mdi:audio-video",
+  "codeowners": ["@boazca"],
   "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/hegel/",
   "integration_type": "device",
+  "iot_class": "local_push",
+  "loggers": ["homeassistant.components.hegel"],
   "quality_scale": "silver",
-  "ha_platforms": [
-    "media_player"
-  ],
-  "loggers": [
-    "homeassistant.components.hegel"
-  ],
+  "requirements": ["hegel-ip-client==0.1.2"],
   "ssdp": [
     {
-      "manufacturer": "Hegel",
-      "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1"
+      "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
+      "manufacturer": "Hegel"
     }
   ]
 }
