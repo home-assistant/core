@@ -400,11 +400,11 @@
           "name": "Entity ID(s)"
         },
         "method_name": {
-          "description": "The name of the API method to call. Refer to the Z-Wave Command Class API documentation (https://zwave-js.github.io/node-zwave-js/#/api/CCs/index) for available methods.",
+          "description": "The name of the API method to call. Refer to the Z-Wave Command Class API documentation ({api_docs_url}) for available methods.",
           "name": "Method name"
         },
         "parameters": {
-          "description": "A list of parameters to pass to the API method. Refer to the Z-Wave Command Class API documentation (https://zwave-js.github.io/node-zwave-js/#/api/CCs/index) for parameters.",
+          "description": "A list of parameters to pass to the API method. Refer to the Z-Wave Command Class API documentation ({api_docs_url}) for parameters.",
           "name": "Parameters"
         }
       },

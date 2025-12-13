@@ -46,7 +46,7 @@
           "ws_path": "WebSocket path"
         },
         "data_description": {
-          "advanced_options": "Enable and select **Next** to set advanced options.",
+          "advanced_options": "Enable and select **Submit** to set advanced options.",
           "broker": "The hostname or IP address of your MQTT broker.",
           "certificate": "The custom CA certificate file to validate your MQTT brokers certificate.",
           "client_cert": "The client certificate to authenticate against your MQTT broker.",
@@ -1562,8 +1562,7 @@
   },
   "triggers": {
     "_": {
-      "description": "When a specific message is received on a given MQTT topic.",
-      "description_configured": "When an MQTT message has been received",
+      "description": "Triggers after a specific message is received on a given MQTT topic.",
       "fields": {
         "payload": {
           "description": "The payload to trigger on.",
@@ -1574,7 +1573,7 @@
           "name": "Topic"
         }
       },
-      "name": "MQTT"
+      "name": "MQTT message received"
     }
   }
 }
