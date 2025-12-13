@@ -29,16 +29,16 @@
   "entity": {
     "switch": {
       "away_mode": {
-        "name": "Away Mode"
+        "name": "Away mode"
       },
       "continuous_fan": {
-        "name": "Continuous Fan"
+        "name": "Continuous fan"
       },
       "quiet_mode": {
-        "name": "Quiet Mode"
+        "name": "Quiet mode"
       },
       "turbo_mode": {
-        "name": "Turbo Mode"
+        "name": "Turbo mode"
       }
     }
   }

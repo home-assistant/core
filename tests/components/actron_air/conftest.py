@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -48,8 +48,39 @@ def mock_actron_api() -> Generator[AsyncMock]:
         # Mock refresh token property
         api.refresh_token_value = "test_refresh_token"
 
-        # Mock other API methods that might be used
-        api.get_systems = AsyncMock(return_value=[])
-        api.get_status = AsyncMock(return_value=None)
+        # Mock get_ac_systems
+        api.get_ac_systems = AsyncMock(
+            return_value=[{"serial": "123456", "name": "Test System"}]
+        )
+
+        # Mock state manager
+        api.state_manager = MagicMock()
+        status = api.state_manager.get_status.return_value
+        status.master_info.live_temp_c = 22.0
+        status.ac_system.system_name = "Test System"
+        status.ac_system.serial_number = "123456"
+        status.ac_system.master_wc_model = "Test Model"
+        status.ac_system.master_wc_firmware_version = "1.0.0"
+        status.remote_zone_info = []
+        status.min_temp = 16
+        status.max_temp = 30
+        status.aircon_system.mode = "OFF"
+        status.fan_mode = "LOW"
+        status.set_point = 24
+        status.room_temp = 25
+        status.is_on = False
+
+        # Mock user_aircon_settings for the switch platform
+        settings = status.user_aircon_settings
+        settings.away_mode = False
+        settings.continuous_fan_enabled = False
+        settings.quiet_mode_enabled = False
+        settings.turbo_enabled = False
+        settings.turbo_supported = True
+
+        settings.set_away_mode = AsyncMock()
+        settings.set_continuous_mode = AsyncMock()
+        settings.set_quiet_mode = AsyncMock()
+        settings.set_turbo_mode = AsyncMock()
 
         yield api
