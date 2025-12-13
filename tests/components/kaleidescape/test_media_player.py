@@ -26,7 +26,7 @@ from homeassistant.components.kaleidescape.media_player import (
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    CONF_ACTION,
+    CONF_COMMAND,
     CONF_PARAMS,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
@@ -319,7 +319,7 @@ async def test_async_handle_device_volume_events(
 
     user_data_events = [d for t, d in events if t == EVENT_TYPE_USER_DEFINED_EVENT]
     assert user_data_events
-    assert user_data_events[-1][CONF_ACTION] == "command"
+    assert user_data_events[-1][CONF_COMMAND] == "command"
     assert user_data_events[-1][CONF_PARAMS] == ["value1", "value2"]
 
 
