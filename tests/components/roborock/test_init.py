@@ -2,7 +2,7 @@
 
 import pathlib
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from roborock import (
@@ -10,6 +10,7 @@ from roborock import (
     RoborockInvalidUserAgreement,
     RoborockNoUserAgreement,
 )
+from roborock.exceptions import RoborockException
 
 from homeassistant.components.roborock.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -26,13 +27,41 @@ from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator
 
 
-async def test_unload_entry(hass: HomeAssistant, setup_entry: MockConfigEntry) -> None:
-    """Test unloading roboorck integration."""
+async def test_unload_entry(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    device_manager: AsyncMock,
+) -> None:
+    """Test unloading roborock integration."""
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert setup_entry.state is ConfigEntryState.LOADED
+
+    assert device_manager.get_devices.called
+    assert not device_manager.close.called
+
+    # Unload the config entry and verify that the device manager is closed
     assert await hass.config_entries.async_unload(setup_entry.entry_id)
     await hass.async_block_till_done()
     assert setup_entry.state is ConfigEntryState.NOT_LOADED
+
+    assert device_manager.close.called
+
+
+async def test_home_assistant_stop(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    device_manager: AsyncMock,
+) -> None:
+    """Test shutting down Home Assistant."""
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert setup_entry.state is ConfigEntryState.LOADED
+
+    assert not device_manager.close.called
+
+    # Perform Home Assistant stop and verify that device manager is closed
+    await hass.async_stop()
+
+    assert device_manager.close.called
 
 
 async def test_reauth_started(
@@ -302,3 +331,71 @@ async def test_cloud_api_repair(
     await hass.async_block_till_done()
 
     assert len(issue_registry.issues) == 0
+
+
+@pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
+async def test_zeo_device_fails_setup(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    device_registry: DeviceRegistry,
+    fake_devices: list[FakeDevice],
+) -> None:
+    """Simulate an error while setting up a zeo device."""
+    # We have a single zeo device in the test setup. Find it then set it to fail.
+    zeo_device = next(
+        (device for device in fake_devices if device.zeo is not None),
+        None,
+    )
+    assert zeo_device is not None
+    zeo_device.zeo.query_values.side_effect = RoborockException("Simulated Zeo failure")
+
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    assert mock_roborock_entry.state is ConfigEntryState.LOADED
+
+    # The current behavior is that we do not add the Zeo device if it fails to setup
+    found_devices = device_registry.devices.get_devices_for_config_entry_id(
+        mock_roborock_entry.entry_id
+    )
+    assert {device.name for device in found_devices} == {
+        "Roborock S7 MaxV",
+        "Roborock S7 MaxV Dock",
+        "Roborock S7 2",
+        "Roborock S7 2 Dock",
+        "Dyad Pro",
+        # Zeo device is missing
+    }
+
+
+@pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
+async def test_dyad_device_fails_setup(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    device_registry: DeviceRegistry,
+    fake_devices: list[FakeDevice],
+) -> None:
+    """Simulate an error while setting up a dyad device."""
+    # We have a single dyad device in the test setup. Find it then set it to fail.
+    dyad_device = next(
+        (device for device in fake_devices if device.dyad is not None),
+        None,
+    )
+    assert dyad_device is not None
+    dyad_device.dyad.query_values.side_effect = RoborockException(
+        "Simulated Dyad failure"
+    )
+
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    assert mock_roborock_entry.state is ConfigEntryState.LOADED
+
+    # The current behavior is that we do not add the Dyad device if it fails to setup
+    found_devices = device_registry.devices.get_devices_for_config_entry_id(
+        mock_roborock_entry.entry_id
+    )
+    assert {device.name for device in found_devices} == {
+        "Roborock S7 MaxV",
+        "Roborock S7 MaxV Dock",
+        "Roborock S7 2",
+        "Roborock S7 2 Dock",
+        # Dyad device is missing
+        "Zeo One",
+    }
