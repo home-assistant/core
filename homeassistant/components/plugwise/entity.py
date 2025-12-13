@@ -27,11 +27,11 @@ class PlugwiseEntity(CoordinatorEntity[PlugwiseDataUpdateCoordinator]):
         """Initialise the gateway."""
         super().__init__(coordinator)
         self._dev_id = device_id
-        self.device = coordinator.data[device_id]
 
         api = coordinator.api
         gateway_id = api.gateway_id
         entry = coordinator.config_entry
+        device = coordinator.data[device_id]
 
         # Link configuration-URL for the gateway device
         configuration_url = (
@@ -42,9 +42,9 @@ class PlugwiseEntity(CoordinatorEntity[PlugwiseDataUpdateCoordinator]):
 
         # Build connections set
         connections = set()
-        if mac := self.device.get("mac_address"):
+        if mac := device.get("mac_address"):
             connections.add((CONNECTION_NETWORK_MAC, mac))
-        if zigbee_mac := self.device.get("zigbee_mac_address"):
+        if zigbee_mac := device.get("zigbee_mac_address"):
             connections.add((CONNECTION_ZIGBEE, zigbee_mac))
 
         # Set base device info
@@ -52,19 +52,19 @@ class PlugwiseEntity(CoordinatorEntity[PlugwiseDataUpdateCoordinator]):
             configuration_url=configuration_url,
             identifiers={(DOMAIN, device_id)},
             connections=connections,
-            manufacturer=self.device.get("vendor"),
-            model=self.device.get("model"),
-            model_id=self.device.get("model_id"),
+            manufacturer=device.get("vendor"),
+            model=device.get("model"),
+            model_id=device.get("model_id"),
             name=api.smile.name,
-            sw_version=self.device.get("firmware"),
-            hw_version=self.device.get("hardware"),
+            sw_version=device.get("firmware"),
+            hw_version=device.get("hardware"),
         )
 
         # Add extra info if not the gateway device
         if device_id != gateway_id:
             self._attr_device_info.update(
                 {
-                    ATTR_NAME: self.device.get(ATTR_NAME),
+                    ATTR_NAME: device.get(ATTR_NAME),
                     ATTR_VIA_DEVICE: (DOMAIN, gateway_id),
                 }
             )
@@ -77,3 +77,9 @@ class PlugwiseEntity(CoordinatorEntity[PlugwiseDataUpdateCoordinator]):
             and (AVAILABLE not in self.device or self.device[AVAILABLE] is True)
             and super().available
         )
+
+
+    @property
+    def device(self) -> GwEntityData:
+        """Return data for this device."""
+        return self.coordinator.data[self._dev_id]
