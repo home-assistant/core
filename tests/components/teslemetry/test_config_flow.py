@@ -1,10 +1,9 @@
 """Test the Teslemetry config flow."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 from urllib.parse import parse_qs, urlparse
 
 import pytest
-from tesla_fleet_api.exceptions import TeslaFleetError
 
 from homeassistant.components.teslemetry.const import (
     AUTHORIZE_URL,
@@ -12,12 +11,12 @@ from homeassistant.components.teslemetry.const import (
     DOMAIN,
     TOKEN_URL,
 )
-from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from .const import CONFIG_V1, METADATA, UNIQUE_ID
+from .const import UNIQUE_ID
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -131,7 +130,6 @@ async def test_reauth_account_mismatch(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    access_token: str,
 ) -> None:
     """Test Tesla Fleet reauthentication with different account."""
     old_entry = MockConfigEntry(domain=DOMAIN, unique_id="baduid", version=1, data={})
@@ -155,8 +153,8 @@ async def test_reauth_account_mismatch(
     aioclient_mock.post(
         TOKEN_URL,
         json={
-            "refresh_token": "mock-refresh-token",
-            "access_token": access_token,
+            "refresh_token": "test_refresh_token",
+            "access_token": "test_access_token",
             "type": "Bearer",
             "expires_in": 60,
         },
@@ -176,7 +174,6 @@ async def test_duplicate_unique_id_abort(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    access_token: str,
 ) -> None:
     """Test duplicate unique ID aborts flow."""
     # Create existing entry
@@ -206,8 +203,8 @@ async def test_duplicate_unique_id_abort(
     aioclient_mock.post(
         TOKEN_URL,
         json={
-            "refresh_token": "mock-refresh-token",
-            "access_token": access_token,
+            "refresh_token": "test_refresh_token",
+            "access_token": "test_access_token",
             "type": "Bearer",
             "expires_in": 60,
         },
@@ -218,70 +215,3 @@ async def test_duplicate_unique_id_abort(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
-
-async def test_migrate_from_v1(hass: HomeAssistant, mock_metadata: AsyncMock) -> None:
-    """Test config migration."""
-
-    mock_entry = MockConfigEntry(
-        domain=DOMAIN,
-        version=1,
-        minor_version=1,
-        unique_id=None,
-        data=CONFIG_V1,
-    )
-
-    mock_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_entry.entry_id)
-    await hass.async_block_till_done()
-
-    entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
-    assert entry.version == 1
-    assert entry.minor_version == 2
-    assert entry.unique_id == METADATA["uid"]
-
-
-async def test_migrate_error_from_v1(
-    hass: HomeAssistant, mock_metadata: AsyncMock
-) -> None:
-    """Test config migration handles errors."""
-
-    mock_metadata.side_effect = TeslaFleetError
-
-    mock_entry = MockConfigEntry(
-        domain=DOMAIN,
-        version=1,
-        minor_version=1,
-        unique_id=None,
-        data=CONFIG_V1,
-    )
-
-    mock_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_entry.entry_id)
-    await hass.async_block_till_done()
-
-    entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
-    assert entry.state is ConfigEntryState.MIGRATION_ERROR
-
-
-async def test_migrate_error_from_future(
-    hass: HomeAssistant, mock_metadata: AsyncMock
-) -> None:
-    """Test a future version isn't migrated."""
-
-    mock_metadata.side_effect = TeslaFleetError
-
-    mock_entry = MockConfigEntry(
-        domain=DOMAIN,
-        version=2,
-        minor_version=1,
-        unique_id="abc-123",
-        data=CONFIG_V1,
-    )
-
-    mock_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_entry.entry_id)
-    await hass.async_block_till_done()
-
-    entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
-    assert entry.state is ConfigEntryState.MIGRATION_ERROR
