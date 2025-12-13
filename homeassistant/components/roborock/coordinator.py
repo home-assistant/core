@@ -222,10 +222,21 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState]):
             # since the last map update, you can update the map.
             new_status = self.properties_api.status
             if (
-                new_status.in_cleaning
-                and (dt_util.utcnow() - self._last_home_update_attempt)
-                > IMAGE_CACHE_INTERVAL
-            ) or self.last_update_state != new_status.state_name:
+                (
+                    new_status.in_cleaning
+                    and (dt_util.utcnow() - self._last_home_update_attempt)
+                    > IMAGE_CACHE_INTERVAL
+                )
+                or self.last_update_state != new_status.state_name
+                or (
+                    self.properties_api.maps.current_map
+                    and self.properties_api.home.home_map_content
+                    and self.properties_api.home.home_map_content.get(
+                        self.properties_api.maps.current_map
+                    )
+                    is None
+                )
+            ):
                 self._last_home_update_attempt = dt_util.utcnow()
                 try:
                     await self.update_map()
