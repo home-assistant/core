@@ -29,45 +29,31 @@
   "entity": {
     "sensor": {
       "clean_filter": {
-        "name": "Clean Filter"
+        "name": "Clean filter"
       },
       "compressor_chasing_temperature": {
-        "name": "Compressor Chasing Temperature"
+        "name": "Compressor chasing temperature"
       },
       "compressor_coil_inlet_temperature": {
-        "name": "Compressor Coil Inlet Temperature"
+        "name": "Compressor coil inlet temperature"
       },
       "compressor_live_temperature": {
-        "name": "Compressor Live Temperature"
+        "name": "Compressor live temperature"
       },
       "compressor_mode": {
-        "name": "Compressor Mode"
+        "name": "Compressor mode"
       },
       "compressor_power": {
-        "name": "Compressor Power"
+        "name": "Compressor power"
       },
       "compressor_speed": {
-        "name": "Compressor Speed"
+        "name": "Compressor speed"
       },
       "defrost_mode": {
-        "name": "Defrost Mode"
+        "name": "Defrost mode"
       },
       "outdoor_temperature": {
-        "name": "Outdoor Temperature"
-      }
-    },
-    "switch": {
-      "away_mode": {
-        "name": "Away Mode"
-      },
-      "continuous_fan": {
-        "name": "Continuous Fan"
-      },
-      "quiet_mode": {
-        "name": "Quiet Mode"
-      },
-      "turbo_mode": {
-        "name": "Turbo Mode"
+        "name": "Outdoor temperature"
       }
     }
   }
