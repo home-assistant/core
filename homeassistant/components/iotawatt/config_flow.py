@@ -19,8 +19,10 @@ from .const import CONNECTION_ERRORS, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str, str]:
-    """Validate the user input allows us to connect."""
+async def validate_input(
+    hass: HomeAssistant, data: dict[str, str]
+) -> tuple[dict[str, str], str | None]:
+    """Validate user input and return any errors plus a device identifier."""
     iotawatt = Iotawatt(
         "",
         data[CONF_HOST],
@@ -31,15 +33,15 @@ async def validate_input(hass: HomeAssistant, data: dict[str, str]) -> dict[str,
     try:
         is_connected = await iotawatt.connect()
     except CONNECTION_ERRORS:
-        return {"base": "cannot_connect"}
+        return {"base": "cannot_connect"}, None
     except Exception:
         _LOGGER.exception("Unexpected exception")
-        return {"base": "unknown"}
+        return {"base": "unknown"}, None
 
     if not is_connected:
-        return {"base": "invalid_auth"}
+        return {"base": "invalid_auth"}, None
 
-    return {}
+    return {}, getattr(iotawatt, "_macAddress", None)
 
 
 class IOTaWattConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -66,7 +68,13 @@ class IOTaWattConfigFlow(ConfigFlow, domain=DOMAIN):
         if not user_input:
             return self.async_show_form(step_id="user", data_schema=schema)
 
-        if not (errors := await validate_input(self.hass, user_input)):
+        errors, unique_id = await validate_input(self.hass, user_input)
+        if not errors:
+            if unique_id is None:
+                return self.async_show_form(
+                    step_id="user", data_schema=schema, errors={"base": "unknown"}
+                )
+            await self._async_register_unique_id(unique_id, user_input[CONF_HOST])
             return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
 
         if errors == {"base": "invalid_auth"}:
@@ -97,12 +105,23 @@ class IOTaWattConfigFlow(ConfigFlow, domain=DOMAIN):
 
         data = {**self._data, **user_input}
 
-        if errors := await validate_input(self.hass, data):
+        errors, unique_id = await validate_input(self.hass, data)
+        if errors:
             return self.async_show_form(
                 step_id="auth", data_schema=data_schema, errors=errors
             )
 
+        if unique_id is None:
+            return self.async_show_form(
+                step_id="auth", data_schema=data_schema, errors={"base": "unknown"}
+            )
+        await self._async_register_unique_id(unique_id, data[CONF_HOST])
         return self.async_create_entry(title=data[CONF_HOST], data=data)
+
+    async def _async_register_unique_id(self, unique_id: str, host: str) -> None:
+        """Set the config entry unique ID and abort if already configured."""
+        await self.async_set_unique_id(unique_id)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
 
 class CannotConnect(HomeAssistantError):
