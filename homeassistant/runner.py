@@ -227,7 +227,7 @@ def _async_loop_exception_handler(
     if source_traceback := context.get("source_traceback"):
         stack_summary = "".join(traceback.format_list(source_traceback))
         logger.error(
-            "Error doing job: %s (%s): %s",
+            "Error doing job: %s (task: %s): %s",
             context["message"],
             context.get("task"),
             stack_summary,
@@ -236,7 +236,7 @@ def _async_loop_exception_handler(
         return
 
     logger.error(
-        "Error doing job: %s (%s)",
+        "Error doing job: %s (task: %s)",
         context["message"],
         context.get("task"),
         **kwargs,  # type: ignore[arg-type]
