@@ -71,14 +71,23 @@
       "breakfast": {
         "name": "Breakfast"
       },
+      "dessert": {
+        "name": "Dessert"
+      },
       "dinner": {
         "name": "Dinner"
+      },
+      "drink": {
+        "name": "Drink"
       },
       "lunch": {
         "name": "Lunch"
       },
       "side": {
         "name": "Side"
+      },
+      "snack": {
+        "name": "Snack"
       }
     },
     "sensor": {
