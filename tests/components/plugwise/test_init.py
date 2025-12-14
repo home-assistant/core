@@ -131,7 +131,6 @@ async def test_coordinator_connect_exceptions(
     mock_smile_anna.connect.side_effect = side_effect
     coordinator = PlugwiseDataUpdateCoordinator(
         hass,
-        cooldown=0,
         config_entry=mock_config_entry,
     )
     with pytest.raises(expected_raise):
