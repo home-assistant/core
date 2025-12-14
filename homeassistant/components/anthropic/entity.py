@@ -268,45 +268,14 @@ def _convert_content(
                         redacted_thinking_block
                     )
             if content.content:
-                current_index = 0
-                for detail in (
-                    content.native.citation_details
-                    if isinstance(content.native, ContentDetails)
-                    else [CitationDetails(length=len(content.content))]
-                ):
-                    if detail.index > current_index:
-                        # Add text block for any text without citations
-                        messages[-1]["content"].append(  # type: ignore[union-attr]
-                            TextBlockParam(
-                                type="text",
-                                text=content.content[current_index : detail.index],
-                            )
-                        )
-                    messages[-1]["content"].append(  # type: ignore[union-attr]
-                        TextBlockParam(
-                            type="text",
-                            text=content.content[
-                                detail.index : detail.index + detail.length
-                            ],
-                            citations=detail.citations,
-                        )
-                        if detail.citations
-                        else TextBlockParam(
-                            type="text",
-                            text=content.content[
-                                detail.index : detail.index + detail.length
-                            ],
-                        )
+                # Don't include citations when replaying - encrypted_index references
+                # become invalid across API requests
+                messages[-1]["content"].append(  # type: ignore[union-attr]
+                    TextBlockParam(
+                        type="text",
+                        text=content.content,
                     )
-                    current_index = detail.index + detail.length
-                if current_index < len(content.content):
-                    # Add text block for any remaining text without citations
-                    messages[-1]["content"].append(  # type: ignore[union-attr]
-                        TextBlockParam(
-                            type="text",
-                            text=content.content[current_index:],
-                        )
-                    )
+                )
             if content.tool_calls:
                 messages[-1]["content"].extend(  # type: ignore[union-attr]
                     [
