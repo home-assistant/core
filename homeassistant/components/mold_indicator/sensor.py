@@ -315,11 +315,6 @@ class MoldIndicator(SensorEntity):
 
         # Return an error if the sensor change its state to Unknown.
         if state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
-            _LOGGER.error(
-                "Unable to parse temperature sensor %s with state: %s",
-                state.entity_id,
-                state.state,
-            )
             return None
 
         if (temp := util.convert(state.state, float)) is None:
@@ -352,11 +347,6 @@ class MoldIndicator(SensorEntity):
 
         # Return an error if the sensor change its state to Unknown.
         if state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
-            _LOGGER.error(
-                "Unable to parse humidity sensor %s, state: %s",
-                state.entity_id,
-                state.state,
-            )
             return None
 
         if (hum := util.convert(state.state, float)) is None:
