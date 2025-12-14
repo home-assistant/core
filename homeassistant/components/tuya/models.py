@@ -2,19 +2,19 @@
 
 from __future__ import annotations
 
-import base64
 from typing import Any, Self
 
 from tuya_sharing import CustomerDevice
 
-from homeassistant.util.json import json_loads
-
-from .const import DPType
 from .type_information import (
+    BitmapTypeInformation,
+    BooleanTypeInformation,
     EnumTypeInformation,
     IntegerTypeInformation,
+    JsonTypeInformation,
+    RawTypeInformation,
+    StringTypeInformation,
     TypeInformation,
-    find_dpcode,
 )
 
 
@@ -46,13 +46,6 @@ class DPCodeWrapper(DeviceWrapper):
         """Init DPCodeWrapper."""
         self.dpcode = dpcode
 
-    def _read_device_status_raw(self, device: CustomerDevice) -> Any | None:
-        """Read the raw device status for the DPCode.
-
-        Private helper method for `read_device_status`.
-        """
-        return device.status.get(self.dpcode)
-
     def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
         """Convert a Home Assistant value back to a raw device value.
 
@@ -79,7 +72,7 @@ class DPCodeWrapper(DeviceWrapper):
 class DPCodeTypeInformationWrapper[T: TypeInformation](DPCodeWrapper):
     """Base DPCode wrapper with Type Information."""
 
-    DPTYPE: DPType
+    _DPTYPE: type[T]
     type_information: T
 
     def __init__(self, dpcode: str, type_information: T) -> None:
@@ -90,7 +83,7 @@ class DPCodeTypeInformationWrapper[T: TypeInformation](DPCodeWrapper):
     def read_device_status(self, device: CustomerDevice) -> Any | None:
         """Read the device value for the dpcode."""
         return self.type_information.process_raw_value(
-            self._read_device_status_raw(device), device
+            device.status.get(self.dpcode), device
         )
 
     @classmethod
@@ -102,8 +95,8 @@ class DPCodeTypeInformationWrapper[T: TypeInformation](DPCodeWrapper):
         prefer_function: bool = False,
     ) -> Self | None:
         """Find and return a DPCodeTypeInformationWrapper for the given DP codes."""
-        if type_information := find_dpcode(  # type: ignore[call-overload]
-            device, dpcodes, dptype=cls.DPTYPE, prefer_function=prefer_function
+        if type_information := cls._DPTYPE.find_dpcode(
+            device, dpcodes, prefer_function=prefer_function
         ):
             return cls(
                 dpcode=type_information.dpcode, type_information=type_information
@@ -111,27 +104,13 @@ class DPCodeTypeInformationWrapper[T: TypeInformation](DPCodeWrapper):
         return None
 
 
-class DPCodeBase64Wrapper(DPCodeTypeInformationWrapper[TypeInformation]):
-    """Wrapper to extract information from a RAW/binary value."""
-
-    DPTYPE = DPType.RAW
-
-    def read_bytes(self, device: CustomerDevice) -> bytes | None:
-        """Read the device value for the dpcode."""
-        if (raw_value := self._read_device_status_raw(device)) is None or (
-            len(decoded := base64.b64decode(raw_value)) == 0
-        ):
-            return None
-        return decoded
-
-
-class DPCodeBooleanWrapper(DPCodeTypeInformationWrapper[TypeInformation]):
+class DPCodeBooleanWrapper(DPCodeTypeInformationWrapper[BooleanTypeInformation]):
     """Simple wrapper for boolean values.
 
     Supports True/False only.
     """
 
-    DPTYPE = DPType.BOOLEAN
+    _DPTYPE = BooleanTypeInformation
 
     def _convert_value_to_raw_value(
         self, device: CustomerDevice, value: Any
@@ -144,22 +123,16 @@ class DPCodeBooleanWrapper(DPCodeTypeInformationWrapper[TypeInformation]):
         raise ValueError(f"Invalid boolean value `{value}`")
 
 
-class DPCodeJsonWrapper(DPCodeTypeInformationWrapper[TypeInformation]):
+class DPCodeJsonWrapper(DPCodeTypeInformationWrapper[JsonTypeInformation]):
     """Wrapper to extract information from a JSON value."""
 
-    DPTYPE = DPType.JSON
-
-    def read_json(self, device: CustomerDevice) -> Any | None:
-        """Read the device value for the dpcode."""
-        if (raw_value := self._read_device_status_raw(device)) is None:
-            return None
-        return json_loads(raw_value)
+    _DPTYPE = JsonTypeInformation
 
 
 class DPCodeEnumWrapper(DPCodeTypeInformationWrapper[EnumTypeInformation]):
     """Simple wrapper for EnumTypeInformation values."""
 
-    DPTYPE = DPType.ENUM
+    _DPTYPE = EnumTypeInformation
 
     def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
         """Convert a Home Assistant value back to a raw device value."""
@@ -175,7 +148,7 @@ class DPCodeEnumWrapper(DPCodeTypeInformationWrapper[EnumTypeInformation]):
 class DPCodeIntegerWrapper(DPCodeTypeInformationWrapper[IntegerTypeInformation]):
     """Simple wrapper for IntegerTypeInformation values."""
 
-    DPTYPE = DPType.INTEGER
+    _DPTYPE = IntegerTypeInformation
 
     def __init__(self, dpcode: str, type_information: IntegerTypeInformation) -> None:
         """Init DPCodeIntegerWrapper."""
@@ -195,10 +168,16 @@ class DPCodeIntegerWrapper(DPCodeTypeInformationWrapper[IntegerTypeInformation])
         )
 
 
-class DPCodeStringWrapper(DPCodeTypeInformationWrapper[TypeInformation]):
+class DPCodeRawWrapper(DPCodeTypeInformationWrapper[RawTypeInformation]):
+    """Wrapper to extract information from a RAW/binary value."""
+
+    _DPTYPE = RawTypeInformation
+
+
+class DPCodeStringWrapper(DPCodeTypeInformationWrapper[StringTypeInformation]):
     """Wrapper to extract information from a STRING value."""
 
-    DPTYPE = DPType.STRING
+    _DPTYPE = StringTypeInformation
 
 
 class DPCodeBitmapBitWrapper(DPCodeWrapper):
@@ -211,7 +190,7 @@ class DPCodeBitmapBitWrapper(DPCodeWrapper):
 
     def read_device_status(self, device: CustomerDevice) -> bool | None:
         """Read the device value for the dpcode."""
-        if (raw_value := self._read_device_status_raw(device)) is None:
+        if (raw_value := device.status.get(self.dpcode)) is None:
             return None
         return (raw_value & (1 << self._mask)) != 0
 
@@ -225,7 +204,7 @@ class DPCodeBitmapBitWrapper(DPCodeWrapper):
     ) -> Self | None:
         """Find and return a DPCodeBitmapBitWrapper for the given DP codes."""
         if (
-            type_information := find_dpcode(device, dpcodes, dptype=DPType.BITMAP)
+            type_information := BitmapTypeInformation.find_dpcode(device, dpcodes)
         ) and bitmap_key in type_information.label:
             return cls(
                 type_information.dpcode, type_information.label.index(bitmap_key)
