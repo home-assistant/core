@@ -321,7 +321,7 @@ class MoldIndicator(SensorEntity):
         _LOGGER.debug("Dewpoint: %f %s", self._dewpoint, UnitOfTemperature.CELSIUS)
 
     def _calc_moldindicator(self) -> None:
-        """Calculate the humidity at the (cold) calibration point."""
+        """Calculate the mold indicator value."""
         if TYPE_CHECKING:
             assert self._outdoor_temp and self._indoor_temp and self._dewpoint
 
@@ -332,7 +332,6 @@ class MoldIndicator(SensorEntity):
                 self._calib_factor,
             )
             self._attr_native_value = None
-            self._attr_available = False
             self._crit_temp = None
             return
 
