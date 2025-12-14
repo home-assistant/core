@@ -31,6 +31,7 @@ from homeassistant.core import (
     Event,
     EventStateChangedData,
     HomeAssistant,
+    State,
     callback,
 )
 from homeassistant.helpers import config_validation as cv
@@ -208,50 +209,72 @@ class MoldIndicator(SensorEntity):
     @callback
     def _async_setup_sensor(self) -> None:
         """Set up the sensor and start tracking state changes."""
-
-        @callback
-        def mold_indicator_sensors_state_listener(
-            event: Event[EventStateChangedData],
-        ) -> None:
-            """Handle for state changes for dependent sensors."""
-            _LOGGER.debug(
-                "Sensor state change for %s that had old state %s and new state %s",
-                event.data["entity_id"],
-                event.data["old_state"],
-                event.data["new_state"],
-            )
-
-            self._update_state()
-
-            if self._preview_callback:
-                calculated_state = self._async_calculate_state()
-                self._preview_callback(
-                    calculated_state.state, calculated_state.attributes
-                )
-            # only write state to the state machine if we are not in preview mode
-            else:
-                self.async_write_ha_state()
-
         self.async_on_remove(
             async_track_state_change_event(
-                self.hass, list(self._entities), mold_indicator_sensors_state_listener
+                self.hass,
+                list(self._entities),
+                self._async_mold_indicator_sensor_state_listener,
             )
         )
 
-        # Read initial state and calculate
-        self._update_state()
+        # Replay current state of source entities
+        for entity_id in self._entities:
+            state = self.hass.states.get(entity_id)
+            state_event: Event[EventStateChangedData] = Event(
+                "", {"entity_id": entity_id, "new_state": state, "old_state": None}
+            )
+            self._async_mold_indicator_sensor_state_listener(
+                state_event, update_state=False
+            )
+
+        self._recalculate()
 
         if self._preview_callback:
             calculated_state = self._async_calculate_state()
             self._preview_callback(calculated_state.state, calculated_state.attributes)
 
     @callback
-    def _update_state(self) -> None:
-        """Update sensor values and recalculate mold indicator."""
-        self._indoor_temp = self._get_temperature_value(self._indoor_temp_sensor)
-        self._outdoor_temp = self._get_temperature_value(self._outdoor_temp_sensor)
-        self._indoor_hum = self._get_humidity_value(self._indoor_humidity_sensor)
+    def _async_mold_indicator_sensor_state_listener(
+        self, event: Event[EventStateChangedData], update_state: bool = True
+    ) -> None:
+        """Handle state changes for dependent sensors."""
+        entity_id = event.data["entity_id"]
+        new_state = event.data["new_state"]
 
+        _LOGGER.debug(
+            "Sensor state change for %s that had old state %s and new state %s",
+            entity_id,
+            event.data["old_state"],
+            new_state,
+        )
+
+        self._update_sensor_value(entity_id, new_state)
+
+        if not update_state:
+            return
+
+        self._recalculate()
+
+        if self._preview_callback:
+            calculated_state = self._async_calculate_state()
+            self._preview_callback(calculated_state.state, calculated_state.attributes)
+        # only write state to the state machine if we are not in preview mode
+        else:
+            self.async_write_ha_state()
+
+    @callback
+    def _update_sensor_value(self, entity_id: str, state: State | None) -> None:
+        """Update a single sensor's cached value from state."""
+        if entity_id == self._indoor_temp_sensor:
+            self._indoor_temp = self._get_temperature_from_state(state)
+        elif entity_id == self._outdoor_temp_sensor:
+            self._outdoor_temp = self._get_temperature_from_state(state)
+        elif entity_id == self._indoor_humidity_sensor:
+            self._indoor_hum = self._get_humidity_from_state(state)
+
+    @callback
+    def _recalculate(self) -> None:
+        """Recalculate mold indicator from cached sensor values."""
         # Check if all sensors are available
         if None in (self._indoor_temp, self._indoor_hum, self._outdoor_temp):
             self._attr_available = False
@@ -265,18 +288,16 @@ class MoldIndicator(SensorEntity):
         self._calc_moldindicator()
         self._attr_available = self._attr_native_value is not None
 
-    def _get_sensor_value(
+    def _get_value_from_state(
         self,
-        entity_id: str,
+        state: State | None,
         validator: Callable[[float, str | None], float | None],
     ) -> float | None:
-        """Get and validate a sensor value."""
-        if (state := self.hass.states.get(entity_id)) is None:
-            _LOGGER.debug("Sensor %s not found", entity_id)
+        """Get and validate a sensor value from state."""
+        if state is None:
             return None
 
         if state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
-            _LOGGER.debug("Sensor %s state is %s", entity_id, state.state)
             return None
 
         if (value := util.convert(state.state, float)) is None:
@@ -284,25 +305,25 @@ class MoldIndicator(SensorEntity):
 
         return validator(value, state.attributes.get(ATTR_UNIT_OF_MEASUREMENT))
 
-    def _get_temperature_value(self, entity_id: str) -> float | None:
-        """Get temperature sensor value in Celsius."""
+    def _get_temperature_from_state(self, state: State | None) -> float | None:
+        """Get temperature value in Celsius from state."""
 
         def validate_temperature(value: float, unit: str | None) -> float | None:
             if unit not in UnitOfTemperature:
                 return None
             return TemperatureConverter.convert(value, unit, UnitOfTemperature.CELSIUS)
 
-        return self._get_sensor_value(entity_id, validate_temperature)
+        return self._get_value_from_state(state, validate_temperature)
 
-    def _get_humidity_value(self, entity_id: str) -> float | None:
-        """Get humidity sensor value."""
+    def _get_humidity_from_state(self, state: State | None) -> float | None:
+        """Get humidity value from state."""
 
         def validate_humidity(value: float, unit: str | None) -> float | None:
             if unit != PERCENTAGE or not 0 <= value <= 100:
                 return None
             return value
 
-        return self._get_sensor_value(entity_id, validate_humidity)
+        return self._get_value_from_state(state, validate_humidity)
 
     def _calc_dewpoint(self) -> None:
         """Calculate the dewpoint for the indoor air."""
