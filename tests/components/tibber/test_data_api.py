@@ -11,7 +11,7 @@ import tibber
 from homeassistant.components.tibber.coordinator import TibberDataAPICoordinator
 from homeassistant.components.tibber.sensor import (
     TibberDataAPISensor,
-    _async_setup_data_api_sensors,
+    _setup_data_api_sensors,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -50,7 +50,7 @@ async def test_data_api_setup_adds_entities(
     def async_add_entities(entities: list[TibberDataAPISensor]) -> None:
         added_entities.extend(entities)
 
-    await _async_setup_data_api_sensors(hass, data_api_entry, async_add_entities)
+    _setup_data_api_sensors(data_api_entry, async_add_entities)
 
     assert async_get_client.await_count == 2
     client.get_all_devices.assert_awaited_once()

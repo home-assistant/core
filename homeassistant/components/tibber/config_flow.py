@@ -121,8 +121,6 @@ class TibberConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         reauth_entry = self._get_reauth_entry()
         self._access_token = reauth_entry.data.get(CONF_LEGACY_ACCESS_TOKEN)
         self._title = reauth_entry.title
-        # if reauth_entry.unique_id is not None:
-        #     await self.async_set_unique_id(reauth_entry.unique_id)
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(

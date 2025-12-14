@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
 import datetime
 from datetime import timedelta
@@ -310,10 +309,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Tibber sensor."""
 
-    await asyncio.gather(
-        _async_setup_data_api_sensors(hass, entry, async_add_entities),
-        _async_setup_graphql_sensors(hass, entry, async_add_entities),
-    )
+    _setup_data_api_sensors(entry, async_add_entities)
+    await _async_setup_graphql_sensors(hass, entry, async_add_entities)
 
 
 async def _async_setup_graphql_sensors(
@@ -388,8 +385,7 @@ async def _async_setup_graphql_sensors(
     async_add_entities(entities)
 
 
-async def _async_setup_data_api_sensors(
-    hass: HomeAssistant,
+def _setup_data_api_sensors(
     entry: TibberConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
