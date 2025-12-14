@@ -272,9 +272,11 @@ class MoldIndicator(SensorEntity):
     ) -> float | None:
         """Get and validate a sensor value."""
         if (state := self.hass.states.get(entity_id)) is None:
+            _LOGGER.debug("Sensor %s not found", entity_id)
             return None
 
         if state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+            _LOGGER.debug("Sensor %s state is %s", entity_id, state.state)
             return None
 
         if (value := util.convert(state.state, float)) is None:
