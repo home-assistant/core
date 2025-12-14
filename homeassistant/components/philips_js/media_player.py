@@ -421,7 +421,7 @@ class PhilipsTVMediaPlayer(PhilipsJsEntity, MediaPlayerEntity):
         try:
             if media_content_type == MediaType.APP and media_content_id:
                 return await self._tv.getApplicationIcon(media_content_id)
-            if media_content_type == MediaType.CHANNEL and media_content_id:                
+            if media_content_type == MediaType.CHANNEL and media_content_id:
                 _, _, channel_id = media_content_id.partition("/")
                 return await self._tv.getChannelLogo(channel_id or media_content_id)
         except ConnectionFailure:
