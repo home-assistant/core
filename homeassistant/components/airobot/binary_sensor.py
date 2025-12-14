@@ -34,7 +34,7 @@ BINARY_SENSOR_TYPES: tuple[AirobotBinarySensorEntityDescription, ...] = (
         translation_key="window_open_detected",
         device_class=BinarySensorDeviceClass.WINDOW,
         value_fn=lambda status: status.status_flags.window_open_detected,
-        entity_registry_enabled_default=False,  # No functionality yet
+        entity_registry_enabled_default=False,
     ),
     AirobotBinarySensorEntityDescription(
         key="heating",
