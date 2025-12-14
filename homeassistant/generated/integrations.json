@@ -2224,7 +2224,7 @@
     },
     "frontier_silicon": {
       "name": "Frontier Silicon",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -2380,7 +2380,7 @@
     },
     "glances": {
       "name": "Glances",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
     },
