@@ -81,10 +81,7 @@ class SatelIntegraSwitch(
 
     def _get_status_from_coordinator(self) -> bool | None:
         """Method to get sensor status from coordinator data."""
-        if self._device_number in self.coordinator.data:
-            return self.coordinator.data[self._device_number] == 1
-
-        return None
+        return self.coordinator.data.get(self._device_number)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""

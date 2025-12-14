@@ -49,7 +49,7 @@ class SatelIntegraBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         )
 
 
-class SatelIntegraZonesCoordinator(SatelIntegraBaseCoordinator[dict[int, int]]):
+class SatelIntegraZonesCoordinator(SatelIntegraBaseCoordinator[dict[int, bool]]):
     """DataUpdateCoordinatot to handle zone updates."""
 
     def __init__(
@@ -66,10 +66,12 @@ class SatelIntegraZonesCoordinator(SatelIntegraBaseCoordinator[dict[int, int]]):
         """Update zone objects as per notification from the alarm."""
         _LOGGER.debug("Zones callback, status: %s", status)
 
-        self.async_set_updated_data(status[ZONES])
+        update_data = {zone: value == 1 for zone, value in status[ZONES].items()}
+
+        self.async_set_updated_data(update_data)
 
 
-class SatelIntegraOutputsCoordinator(SatelIntegraBaseCoordinator[dict[int, int]]):
+class SatelIntegraOutputsCoordinator(SatelIntegraBaseCoordinator[dict[int, bool]]):
     """DataUpdateCoordinator to handle output updates."""
 
     def __init__(
@@ -86,7 +88,9 @@ class SatelIntegraOutputsCoordinator(SatelIntegraBaseCoordinator[dict[int, int]]
         """Update zone objects as per notification from the alarm."""
         _LOGGER.debug("Outputs callback, status: %s", status)
 
-        self.async_set_updated_data(status["outputs"])
+        update_data = {zone: value == 1 for zone, value in status["outputs"].items()}
+
+        self.async_set_updated_data(update_data)
 
 
 class SatelIntegraPartitionsCoordinator(
