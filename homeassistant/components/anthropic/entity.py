@@ -595,16 +595,6 @@ class AnthropicBaseLLMEntity(Entity):
     ) -> None:
         """Generate an answer for the chat log."""
         options = self.subentry.data
-        client = self.entry.runtime_data
-        model = options.get(CONF_CHAT_MODEL, DEFAULT[CONF_CHAT_MODEL])
-        max_tokens = options.get(CONF_MAX_TOKENS, DEFAULT[CONF_MAX_TOKENS])
-        thinking_budget = options.get(
-            CONF_THINKING_BUDGET, DEFAULT[CONF_THINKING_BUDGET]
-        )
-        thinking_enabled = (
-            not model.startswith(tuple(NON_THINKING_MODELS))
-            and thinking_budget >= MIN_THINKING_BUDGET
-        )
 
         system = chat_log.content[0]
         if not isinstance(system, conversation.SystemContent):
@@ -619,7 +609,51 @@ class AnthropicBaseLLMEntity(Entity):
             )
         ]
 
-        # Build tools early (needed for token counting)
+        messages = _convert_content(chat_log.content[1:])
+
+        # Add cache_control to the last message to cache the conversation history
+        if messages:
+            last_msg = messages[-1]
+            last_msg_content = last_msg["content"]
+            if isinstance(last_msg_content, str):
+                last_msg["content"] = [
+                    TextBlockParam(
+                        type="text",
+                        text=last_msg_content,
+                        cache_control={"type": "ephemeral"},
+                    )
+                ]
+            elif isinstance(last_msg_content, list) and last_msg_content:
+                last_block = last_msg_content[-1]
+                if isinstance(last_block, dict):
+                    last_block["cache_control"] = {"type": "ephemeral"}
+
+        model = options.get(CONF_CHAT_MODEL, DEFAULT[CONF_CHAT_MODEL])
+
+        model_args = MessageCreateParamsStreaming(
+            model=model,
+            messages=messages,
+            max_tokens=options.get(CONF_MAX_TOKENS, DEFAULT[CONF_MAX_TOKENS]),
+            system=system_prompt,
+            stream=True,
+        )
+
+        thinking_budget = options.get(
+            CONF_THINKING_BUDGET, DEFAULT[CONF_THINKING_BUDGET]
+        )
+        if (
+            not model.startswith(tuple(NON_THINKING_MODELS))
+            and thinking_budget >= MIN_THINKING_BUDGET
+        ):
+            model_args["thinking"] = ThinkingConfigEnabledParam(
+                type="enabled", budget_tokens=thinking_budget
+            )
+        else:
+            model_args["thinking"] = ThinkingConfigDisabledParam(type="disabled")
+            model_args["temperature"] = options.get(
+                CONF_TEMPERATURE, DEFAULT[CONF_TEMPERATURE]
+            )
+
         tools: list[ToolUnionParam] = []
         if chat_log.llm_api:
             tools = [
@@ -642,45 +676,6 @@ class AnthropicBaseLLMEntity(Entity):
                     "timezone": options.get(CONF_WEB_SEARCH_TIMEZONE, ""),
                 }
             tools.append(web_search)
-
-        messages = _convert_content(chat_log.content[1:])
-
-        # Add cache_control to the last content block to cache the full conversation
-        if messages:
-            last_msg = messages[-1]
-            last_msg_content = last_msg["content"]
-            if isinstance(last_msg_content, str):
-                # Convert string content to list with cache_control
-                last_msg["content"] = [
-                    TextBlockParam(
-                        type="text",
-                        text=last_msg_content,
-                        cache_control={"type": "ephemeral"},
-                    )
-                ]
-            elif isinstance(last_msg_content, list) and last_msg_content:
-                # Add cache_control to the last block in the list
-                last_block = last_msg_content[-1]
-                if isinstance(last_block, dict):
-                    last_block["cache_control"] = {"type": "ephemeral"}
-
-        model_args = MessageCreateParamsStreaming(
-            model=model,
-            messages=messages,
-            max_tokens=max_tokens,
-            system=system_prompt,
-            stream=True,
-        )
-
-        if thinking_enabled:
-            model_args["thinking"] = ThinkingConfigEnabledParam(
-                type="enabled", budget_tokens=thinking_budget
-            )
-        else:
-            model_args["thinking"] = ThinkingConfigDisabledParam(type="disabled")
-            model_args["temperature"] = options.get(
-                CONF_TEMPERATURE, DEFAULT[CONF_TEMPERATURE]
-            )
 
         # Handle attachments by adding them to the last user message
         last_content = chat_log.content[-1]
@@ -752,6 +747,8 @@ class AnthropicBaseLLMEntity(Entity):
             if isinstance(last_tool, dict):
                 last_tool["cache_control"] = {"type": "ephemeral"}
             model_args["tools"] = tools
+
+        client = self.entry.runtime_data
 
         # To prevent infinite loops, we limit the number of iterations
         for _iteration in range(MAX_TOOL_ITERATIONS):
