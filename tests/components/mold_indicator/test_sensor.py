@@ -95,7 +95,7 @@ async def test_invalidcalib(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     moldind = hass.states.get("sensor.mold_indicator")
     assert moldind
-    assert moldind.state == "unavailable"
+    assert moldind.state == STATE_UNAVAILABLE
     assert moldind.attributes.get(ATTR_DEWPOINT) is None
     assert moldind.attributes.get(ATTR_CRITICAL_TEMP) is None
 
@@ -131,7 +131,7 @@ async def test_invalidhum(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     moldind = hass.states.get("sensor.mold_indicator")
     assert moldind
-    assert moldind.state == "unavailable"
+    assert moldind.state == STATE_UNAVAILABLE
     assert moldind.attributes.get(ATTR_DEWPOINT) is None
     assert moldind.attributes.get(ATTR_CRITICAL_TEMP) is None
 
@@ -141,7 +141,7 @@ async def test_invalidhum(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     moldind = hass.states.get("sensor.mold_indicator")
     assert moldind
-    assert moldind.state == "unavailable"
+    assert moldind.state == STATE_UNAVAILABLE
     assert moldind.attributes.get(ATTR_DEWPOINT) is None
     assert moldind.attributes.get(ATTR_CRITICAL_TEMP) is None
 
@@ -153,7 +153,7 @@ async def test_invalidhum(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     moldind = hass.states.get("sensor.mold_indicator")
     assert moldind
-    assert moldind.state == "unavailable"
+    assert moldind.state == STATE_UNAVAILABLE
     assert moldind.attributes.get(ATTR_DEWPOINT) is None
     assert moldind.attributes.get(ATTR_CRITICAL_TEMP) is None
 
@@ -223,7 +223,7 @@ async def test_unknown_sensor(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     moldind = hass.states.get("sensor.mold_indicator")
     assert moldind
-    assert moldind.state == "unavailable"
+    assert moldind.state == STATE_UNAVAILABLE
     assert moldind.attributes.get(ATTR_DEWPOINT) is None
     assert moldind.attributes.get(ATTR_CRITICAL_TEMP) is None
 
@@ -238,7 +238,7 @@ async def test_unknown_sensor(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     moldind = hass.states.get("sensor.mold_indicator")
     assert moldind
-    assert moldind.state == "unavailable"
+    assert moldind.state == STATE_UNAVAILABLE
     assert moldind.attributes.get(ATTR_DEWPOINT) is None
     assert moldind.attributes.get(ATTR_CRITICAL_TEMP) is None
 
@@ -253,7 +253,7 @@ async def test_unknown_sensor(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     moldind = hass.states.get("sensor.mold_indicator")
     assert moldind
-    assert moldind.state == "unavailable"
+    assert moldind.state == STATE_UNAVAILABLE
     assert moldind.attributes.get(ATTR_DEWPOINT) is None
     assert moldind.attributes.get(ATTR_CRITICAL_TEMP) is None
 
@@ -345,7 +345,7 @@ async def test_unavailable_sensor_recovery(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     moldind = hass.states.get("sensor.mold_indicator")
     assert moldind
-    assert moldind.state == "unavailable"
+    assert moldind.state == STATE_UNAVAILABLE
     assert moldind.attributes.get(ATTR_DEWPOINT) is None
     assert moldind.attributes.get(ATTR_CRITICAL_TEMP) is None
 
@@ -404,7 +404,7 @@ async def test_all_sensors_unavailable_recovery(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     moldind = hass.states.get("sensor.mold_indicator")
     assert moldind
-    assert moldind.state == "unavailable"
+    assert moldind.state == STATE_UNAVAILABLE
 
     # Recover all sensors one by one
     hass.states.async_set(
@@ -413,7 +413,7 @@ async def test_all_sensors_unavailable_recovery(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     moldind = hass.states.get("sensor.mold_indicator")
     assert moldind
-    assert moldind.state == "unavailable"  # Still unavailable, needs all sensors
+    assert moldind.state == STATE_UNAVAILABLE  # Still unavailable, needs all sensors
 
     hass.states.async_set(
         "test.outdoortemp", "10", {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS}
@@ -421,7 +421,7 @@ async def test_all_sensors_unavailable_recovery(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     moldind = hass.states.get("sensor.mold_indicator")
     assert moldind
-    assert moldind.state == "unavailable"  # Still unavailable, needs humidity
+    assert moldind.state == STATE_UNAVAILABLE  # Still unavailable, needs humidity
 
     hass.states.async_set(
         "test.indoorhumidity", "50", {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE}
