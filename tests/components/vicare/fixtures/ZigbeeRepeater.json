@@ -1,0 +1,143 @@
+{
+  "data": [
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "zigbee-################",
+      "feature": "device.identification",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "triggered": {
+          "type": "boolean",
+          "value": false
+        }
+      },
+      "timestamp": "2025-10-05T14:18:37.089Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/zigbee-################/features/device.identification"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "zigbee-################",
+      "feature": "device.messages.status.raw",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "entries": {
+          "type": "array",
+          "value": []
+        }
+      },
+      "timestamp": "2025-10-05T14:18:37.089Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/zigbee-################/features/device.messages.status.raw"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {
+        "setName": {
+          "isExecutable": true,
+          "name": "setName",
+          "params": {
+            "name": {
+              "constraints": {
+                "maxLength": 40,
+                "minLength": 1,
+                "regEx": "^[\\p{L}0-9]+( [\\p{L}0-9]+)*$"
+              },
+              "required": true,
+              "type": "string"
+            }
+          },
+          "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/zigbee-################/features/device.name/commands/setName"
+        }
+      },
+      "deviceId": "zigbee-################",
+      "feature": "device.name",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "name": {
+          "type": "string",
+          "value": "OG Repeater"
+        }
+      },
+      "timestamp": "2025-10-05T14:18:37.089Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/zigbee-################/features/device.name"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "zigbee-################",
+      "feature": "device.zigbee.lqi",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "strength": {
+          "type": "number",
+          "unit": "percent",
+          "value": 46
+        }
+      },
+      "timestamp": "2025-10-06T11:06:23.603Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/zigbee-################/features/device.zigbee.lqi"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "zigbee-################",
+      "feature": "device.zigbee.parent.id",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "value": {
+          "type": "string",
+          "value": "################"
+        }
+      },
+      "timestamp": "2025-10-06T11:05:13.499Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/zigbee-################/features/device.zigbee.parent.id"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "zigbee-################",
+      "feature": "device.zigbee.parent.rx",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "value": {
+          "type": "number",
+          "unit": "",
+          "value": 125
+        }
+      },
+      "timestamp": "2025-10-06T11:07:24.638Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/zigbee-################/features/device.zigbee.parent.rx"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "zigbee-################",
+      "feature": "device.zigbee.parent.tx",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "value": {
+          "type": "number",
+          "unit": "",
+          "value": 122
+        }
+      },
+      "timestamp": "2025-10-06T11:06:23.603Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/zigbee-################/features/device.zigbee.parent.tx"
+    }
+  ]
+}

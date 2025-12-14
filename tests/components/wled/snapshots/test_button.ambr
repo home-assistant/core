@@ -70,7 +70,6 @@
         'aabbccddeeff',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'WLED',
@@ -80,7 +79,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': '0.14.4',
     'via_device_id': None,
   })

@@ -1,5 +1,14 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_failed_existing": "Could not update the config entry, please remove the integration and set it up again.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
     "step": {
       "user": {
         "data": {
@@ -7,15 +16,6 @@
           "password": "[%key:common::config_flow::data::password%]"
         }
       }
-    },
-    "error": {
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reauth_failed_existing": "Could not update the config entry, please remove the integration and set it up again."
     }
   },
   "entity": {
@@ -82,14 +82,14 @@
       }
     },
     "switch": {
+      "live_tracking": {
+        "name": "Live tracking"
+      },
       "tracker_buzzer": {
         "name": "Tracker buzzer"
       },
       "tracker_led": {
         "name": "Tracker LED"
-      },
-      "live_tracking": {
-        "name": "Live tracking"
       }
     }
   }

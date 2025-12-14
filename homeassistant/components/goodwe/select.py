@@ -54,17 +54,24 @@ async def async_setup_entry(
         # Inverter model does not support this setting
         _LOGGER.debug("Could not read inverter operation mode")
     else:
-        async_add_entities(
-            [
-                InverterOperationModeEntity(
-                    device_info,
-                    OPERATION_MODE,
-                    inverter,
-                    [v for k, v in _MODE_TO_OPTION.items() if k in supported_modes],
-                    _MODE_TO_OPTION[active_mode],
-                )
-            ]
-        )
+        active_mode_option = _MODE_TO_OPTION.get(active_mode)
+        if active_mode_option is not None:
+            async_add_entities(
+                [
+                    InverterOperationModeEntity(
+                        device_info,
+                        OPERATION_MODE,
+                        inverter,
+                        [v for k, v in _MODE_TO_OPTION.items() if k in supported_modes],
+                        active_mode_option,
+                    )
+                ]
+            )
+        else:
+            _LOGGER.warning(
+                "Active mode %s not found in Goodwe Inverter Operation Mode Entity. Skipping entity creation",
+                active_mode,
+            )
 
 
 class InverterOperationModeEntity(SelectEntity):

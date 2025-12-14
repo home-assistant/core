@@ -15,14 +15,19 @@ from .const import POLLING_INTERVAL, ULTRAHEAT_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
+type UltraheatConfigEntry = ConfigEntry[UltraheatCoordinator]
+
 
 class UltraheatCoordinator(DataUpdateCoordinator[HeatMeterResponse]):
     """Coordinator for getting data from the ultraheat api."""
 
-    config_entry: ConfigEntry
+    config_entry: UltraheatConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, api: HeatMeterService
+        self,
+        hass: HomeAssistant,
+        config_entry: UltraheatConfigEntry,
+        api: HeatMeterService,
     ) -> None:
         """Initialize my coordinator."""
         super().__init__(

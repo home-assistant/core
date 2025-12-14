@@ -18,12 +18,10 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTRIBUTION, DOMAIN, MANUFACTURER, MODEL
+from .coordinator import MeteoclimaticUpdateCoordinator
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -119,7 +117,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Meteoclimatic sensor platform."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: MeteoclimaticUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
         [MeteoclimaticSensor(coordinator, description) for description in SENSOR_TYPES],
@@ -127,13 +125,17 @@ async def async_setup_entry(
     )
 
 
-class MeteoclimaticSensor(CoordinatorEntity, SensorEntity):
+class MeteoclimaticSensor(
+    CoordinatorEntity[MeteoclimaticUpdateCoordinator], SensorEntity
+):
     """Representation of a Meteoclimatic sensor."""
 
     _attr_attribution = ATTRIBUTION
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, description: SensorEntityDescription
+        self,
+        coordinator: MeteoclimaticUpdateCoordinator,
+        description: SensorEntityDescription,
     ) -> None:
         """Initialize the Meteoclimatic sensor."""
         super().__init__(coordinator)

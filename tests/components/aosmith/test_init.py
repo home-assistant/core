@@ -56,6 +56,7 @@ async def test_config_entry_not_ready_get_energy_use_data_error(
             mode_pending=False,
             setpoint_pending=False,
             has_vacation_mode=True,
+            supports_hot_water_plus=False,
         )
     ]
 

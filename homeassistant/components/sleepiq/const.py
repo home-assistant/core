@@ -4,6 +4,8 @@ DATA_SLEEPIQ = "data_sleepiq"
 DOMAIN = "sleepiq"
 
 ACTUATOR = "actuator"
+CORE_CLIMATE_TIMER = "core_climate_timer"
+CORE_CLIMATE = "core_climate"
 BED = "bed"
 FIRMNESS = "firmness"
 ICON_EMPTY = "mdi:bed-empty"
@@ -15,6 +17,8 @@ FOOT_WARMING_TIMER = "foot_warming_timer"
 FOOT_WARMER = "foot_warmer"
 ENTITY_TYPES = {
     ACTUATOR: "Position",
+    CORE_CLIMATE_TIMER: "Core Climate Timer",
+    CORE_CLIMATE: "Core Climate",
     FIRMNESS: "Firmness",
     PRESSURE: "Pressure",
     IS_IN_BED: "Is In Bed",

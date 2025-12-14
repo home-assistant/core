@@ -1,0 +1,143 @@
+{
+  "endpoint": "https://apigw.tuyaus.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "mesa",
+  "category": "sjz",
+  "product_id": "ftbc8rp8ipksdfpv",
+  "product_name": "geniodesk",
+  "online": true,
+  "sub": false,
+  "time_zone": "-03:00",
+  "active_time": "2025-06-16T19:48:57+00:00",
+  "create_time": "2025-06-16T19:48:57+00:00",
+  "update_time": "2025-06-22T21:26:09+00:00",
+  "function": {
+    "up_down": {
+      "type": "Enum",
+      "value": {
+        "range": ["up", "down", "stop"]
+      }
+    },
+    "level": {
+      "type": "Enum",
+      "value": {
+        "range": ["level_1", "level_2", "level_3", "level_4"]
+      }
+    },
+    "child_lock": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "height": {
+      "type": "Integer",
+      "value": {
+        "unit": "cm",
+        "min": 66,
+        "max": 131,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "height_inch": {
+      "type": "Integer",
+      "value": {
+        "max": 520,
+        "min": 250,
+        "scale": 1,
+        "step": 1,
+        "unit": "inch"
+      }
+    },
+    "metric_inch_flag": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "percent_high": {
+      "type": "Integer",
+      "value": {
+        "max": 100,
+        "min": 0,
+        "scale": 0,
+        "step": 1,
+        "unit": ""
+      }
+    },
+    "clock_time": {
+      "type": "Integer",
+      "value": {
+        "max": 150,
+        "min": 30,
+        "scale": 0,
+        "step": 30,
+        "unit": "min"
+      }
+    },
+    "clock_flag": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status_range": {
+    "up_down": {
+      "type": "Enum",
+      "value": {
+        "range": ["up", "down", "stop"]
+      }
+    },
+    "work_state": {
+      "type": "Enum",
+      "value": {
+        "range": ["up", "down", "stop"]
+      }
+    },
+    "level": {
+      "type": "Enum",
+      "value": {
+        "range": ["level_1", "level_2", "level_3", "level_4"]
+      }
+    },
+    "child_lock": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "fault": {
+      "type": "Raw",
+      "value": {
+        "label": ["ov_cr", "motor_fault"],
+        "maxlen": 2
+      }
+    },
+    "height": {
+      "type": "Integer",
+      "value": {
+        "unit": "cm",
+        "min": 66,
+        "max": 131,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "flag": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status": {
+    "up_down": "stop",
+    "work_state": "stop",
+    "level": "level_1",
+    "child_lock": false,
+    "fault": 0,
+    "height": 77,
+    "height_inch": 250,
+    "metric_inch_flag": true,
+    "percent_high": 0,
+    "flag": false,
+    "clock_time": 30,
+    "clock_flag": false
+  },
+  "set_up": false,
+  "support_local": true
+}

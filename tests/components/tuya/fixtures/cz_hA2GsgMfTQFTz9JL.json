@@ -1,0 +1,54 @@
+{
+  "endpoint": "https://apigw.tuyaus.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": true,
+  "name": "Spot 4",
+  "category": "cz",
+  "product_id": "hA2GsgMfTQFTz9JL",
+  "product_name": "Mini Smart Socket",
+  "online": true,
+  "sub": false,
+  "time_zone": "-04:00",
+  "active_time": "2025-06-19T17:17:15+00:00",
+  "create_time": "2025-06-19T17:17:15+00:00",
+  "update_time": "2025-06-19T17:17:15+00:00",
+  "function": {
+    "switch_1": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "countdown_1": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status_range": {
+    "switch_1": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "countdown_1": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "switch_1": false,
+    "countdown_1": 0
+  },
+  "set_up": true,
+  "support_local": true
+}

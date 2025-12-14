@@ -21,7 +21,7 @@ from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
-from .services import register_services
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,7 +81,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 ex,
             )
 
-    register_services(hass)
+    async_setup_services(hass)
 
     hass.async_create_task(
         async_load_platform(hass, Platform.BINARY_SENSOR, DOMAIN, {}, config)

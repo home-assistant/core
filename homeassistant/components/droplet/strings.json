@@ -1,0 +1,46 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "confirm": {
+        "data": {
+          "code": "[%key:component::droplet::config::step::user::data::code%]"
+        },
+        "data_description": {
+          "code": "[%key:component::droplet::config::step::user::data_description::code%]"
+        },
+        "description": "Enter pairing code to connect to {device_name}.",
+        "title": "Confirm association"
+      },
+      "user": {
+        "data": {
+          "code": "Pairing code",
+          "ip_address": "[%key:common::config_flow::data::ip%]"
+        },
+        "data_description": {
+          "code": "Code from the Droplet app",
+          "ip_address": "Droplet's IP address"
+        },
+        "description": "Manually enter Droplet's connection details.",
+        "title": "Configure Droplet integration"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "current_flow_rate": { "name": "Flow rate" },
+      "server_connectivity": { "name": "Server status" },
+      "signal_quality": { "name": "Signal quality" }
+    }
+  },
+  "exceptions": {
+    "connection_error": {
+      "message": "Disconnected from Droplet"
+    }
+  }
+}

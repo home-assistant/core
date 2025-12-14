@@ -8,8 +8,8 @@ import pytest
 from spotifyaio.models import (
     Album,
     Artist,
-    ArtistResponse,
     Devices,
+    FollowedArtistResponse,
     NewReleasesResponse,
     NewReleasesResponseInner,
     PlaybackState,
@@ -138,7 +138,7 @@ def mock_spotify() -> Generator[AsyncMock]:
             getattr(client, method).return_value = obj.from_json(
                 load_fixture(fixture, DOMAIN)
             )
-        client.get_followed_artists.return_value = ArtistResponse.from_json(
+        client.get_followed_artists.return_value = FollowedArtistResponse.from_json(
             load_fixture("followed_artists.json", DOMAIN)
         ).artists.items
         client.get_new_releases.return_value = NewReleasesResponse.from_json(

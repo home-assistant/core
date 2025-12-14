@@ -6,8 +6,9 @@ import logging
 from typing import Any
 
 from uiprotect.data import Light, ModelType, ProtectAdoptableDeviceModel
+from uiprotect.data.devices import LightDeviceSettings
 
-from homeassistant.components.light import ColorMode, LightEntity
+from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -15,6 +16,7 @@ from .data import ProtectDeviceType, UFPConfigEntry
 from .entity import ProtectDeviceEntity
 
 _LOGGER = logging.getLogger(__name__)
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -71,10 +73,36 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        _LOGGER.debug("Turning on light")
-        await self.device.api.set_light_is_led_force_on(self.device.id, True)
+        brightness = kwargs.get(ATTR_BRIGHTNESS)
+        led_level: int | None = None
+        if brightness is not None:
+            led_level = hass_to_unifi_brightness(brightness)
+            _LOGGER.debug(
+                "Turning on light with brightness %s (led_level=%s)",
+                brightness,
+                led_level,
+            )
+        else:
+            _LOGGER.debug("Turning on light")
+
+        await self.device.api.update_light_public(
+            self.device.id,
+            is_light_force_enabled=True,
+            light_device_settings=(
+                LightDeviceSettings(
+                    is_indicator_enabled=self.device.light_device_settings.is_indicator_enabled,
+                    led_level=led_level,
+                    pir_duration=self.device.light_device_settings.pir_duration,
+                    pir_sensitivity=self.device.light_device_settings.pir_sensitivity,
+                )
+                if led_level is not None
+                else None
+            ),
+        )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         _LOGGER.debug("Turning off light")
-        await self.device.api.set_light_is_led_force_on(self.device.id, False)
+        await self.device.api.update_light_public(
+            self.device.id, is_light_force_enabled=False
+        )

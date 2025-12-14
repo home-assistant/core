@@ -9,7 +9,6 @@ CONF_COORDINATOR = "coordinator"
 
 SERVICE_ADD_PRODUCT_TO_CART = "add_product"
 
-ATTR_CONFIG_ENTRY_ID = "config_entry_id"
 ATTR_PRODUCT_ID = "product_id"
 ATTR_PRODUCT_NAME = "product_name"
 ATTR_AMOUNT = "amount"

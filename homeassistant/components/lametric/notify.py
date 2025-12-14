@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from demetriek import (
     AlarmSound,
@@ -24,8 +24,8 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.enum import try_parse_enum
 
-from .const import CONF_CYCLES, CONF_ICON_TYPE, CONF_PRIORITY, CONF_SOUND, DOMAIN
-from .coordinator import LaMetricDataUpdateCoordinator
+from .const import CONF_CYCLES, CONF_ICON_TYPE, CONF_PRIORITY, CONF_SOUND
+from .coordinator import LaMetricConfigEntry
 
 
 async def async_get_service(
@@ -36,10 +36,12 @@ async def async_get_service(
     """Get the LaMetric notification service."""
     if discovery_info is None:
         return None
-    coordinator: LaMetricDataUpdateCoordinator = hass.data[DOMAIN][
+    entry: LaMetricConfigEntry | None = hass.config_entries.async_get_entry(
         discovery_info["entry_id"]
-    ]
-    return LaMetricNotificationService(coordinator.lametric)
+    )
+    if TYPE_CHECKING:
+        assert entry is not None
+    return LaMetricNotificationService(entry.runtime_data.lametric)
 
 
 class LaMetricNotificationService(BaseNotificationService):

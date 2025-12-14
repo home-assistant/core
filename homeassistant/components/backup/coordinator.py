@@ -8,10 +8,6 @@ from datetime import datetime
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.backup import (
-    async_subscribe_events,
-    async_subscribe_platform_events,
-)
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, LOGGER
@@ -56,8 +52,8 @@ class BackupDataUpdateCoordinator(DataUpdateCoordinator[BackupCoordinatorData]):
             update_interval=None,
         )
         self.unsubscribe: list[Callable[[], None]] = [
-            async_subscribe_events(hass, self._on_event),
-            async_subscribe_platform_events(hass, self._on_event),
+            backup_manager.async_subscribe_events(self._on_event),
+            backup_manager.async_subscribe_platform_events(self._on_event),
         ]
 
         self.backup_manager = backup_manager

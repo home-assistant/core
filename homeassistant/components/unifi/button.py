@@ -11,11 +11,11 @@ import secrets
 from typing import TYPE_CHECKING, Any
 
 import aiounifi
-from aiounifi.interfaces.api_handlers import ItemEvent
+from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
 from aiounifi.interfaces.devices import Devices
 from aiounifi.interfaces.ports import Ports
 from aiounifi.interfaces.wlans import Wlans
-from aiounifi.models.api import ApiItemT
+from aiounifi.models.api import ApiItem
 from aiounifi.models.device import (
     Device,
     DevicePowerCyclePortRequest,
@@ -35,7 +35,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import UnifiConfigEntry
 from .entity import (
-    HandlerT,
     UnifiEntity,
     UnifiEntityDescription,
     async_device_available_fn,
@@ -81,7 +80,7 @@ async def async_regenerate_password_control_fn(
 
 
 @dataclass(frozen=True, kw_only=True)
-class UnifiButtonEntityDescription(
+class UnifiButtonEntityDescription[HandlerT: APIHandler, ApiItemT: ApiItem](
     ButtonEntityDescription, UnifiEntityDescription[HandlerT, ApiItemT]
 ):
     """Class describing UniFi button entity."""
@@ -143,7 +142,9 @@ async def async_setup_entry(
     )
 
 
-class UnifiButtonEntity(UnifiEntity[HandlerT, ApiItemT], ButtonEntity):
+class UnifiButtonEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
+    UnifiEntity[HandlerT, ApiItemT], ButtonEntity
+):
     """Base representation of a UniFi button."""
 
     entity_description: UnifiButtonEntityDescription[HandlerT, ApiItemT]

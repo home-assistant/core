@@ -3,7 +3,8 @@
 from socket import gaierror
 from unittest.mock import patch
 
-from pyasuswrt import AsusWrtError
+from asusrouter import AsusRouterError
+from asusrouter.modules.identity import AsusDevice
 import pytest
 
 from homeassistant.components.asuswrt.const import (
@@ -128,7 +129,11 @@ async def test_user_http(
     assert flow_result["type"] is FlowResultType.FORM
     assert flow_result["step_id"] == "user"
 
-    connect_http.return_value.mac = unique_id
+    connect_http.return_value.async_get_identity.return_value = AsusDevice(
+        mac=unique_id,
+        model="FAKE_MODEL",
+        firmware="FAKE_FIRMWARE",
+    )
 
     # test with all provided
     result = await hass.config_entries.flow.async_configure(
@@ -297,7 +302,7 @@ async def test_on_connect_legacy_failed(
 @pytest.mark.parametrize(
     ("side_effect", "error"),
     [
-        (AsusWrtError, "cannot_connect"),
+        (AsusRouterError, "cannot_connect"),
         (TypeError, "unknown"),
         (None, "cannot_connect"),
     ],
@@ -311,7 +316,7 @@ async def test_on_connect_http_failed(
         context={"source": SOURCE_USER, "show_advanced_options": True},
     )
 
-    connect_http.return_value.is_connected = False
+    connect_http.return_value.connected = False
     connect_http.return_value.async_connect.side_effect = side_effect
 
     result = await hass.config_entries.flow.async_configure(

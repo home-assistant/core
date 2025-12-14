@@ -1,23 +1,23 @@
 {
   "entity": {
     "switch": {
-      "watering": {
-        "default": "mdi:water"
-      },
       "pause": {
         "default": "mdi:pause-circle-outline"
+      },
+      "watering": {
+        "default": "mdi:water"
       }
     }
   },
   "services": {
-    "set_watering_time": {
-      "service": "mdi:timer"
-    },
     "set_pause_time": {
       "service": "mdi:timer-pause"
     },
     "set_trigger": {
       "service": "mdi:gesture-tap-button"
+    },
+    "set_watering_time": {
+      "service": "mdi:timer"
     }
   }
 }

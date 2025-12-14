@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 
 from pyvesync import VeSync
@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import UPDATE_INTERVAL
+from .const import UPDATE_INTERVAL, UPDATE_INTERVAL_ENERGY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,6 +20,7 @@ class VeSyncDataCoordinator(DataUpdateCoordinator[None]):
     """Class representing data coordinator for VeSync devices."""
 
     config_entry: ConfigEntry
+    update_time: datetime | None = None
 
     def __init__(
         self, hass: HomeAssistant, config_entry: ConfigEntry, manager: VeSync
@@ -35,15 +36,21 @@ class VeSyncDataCoordinator(DataUpdateCoordinator[None]):
             update_interval=timedelta(seconds=UPDATE_INTERVAL),
         )
 
+    def should_update_energy(self) -> bool:
+        """Test if specified update interval has been exceeded."""
+        if self.update_time is None:
+            return True
+
+        return datetime.now() - self.update_time >= timedelta(
+            seconds=UPDATE_INTERVAL_ENERGY
+        )
+
     async def _async_update_data(self) -> None:
         """Fetch data from API endpoint."""
 
-        return await self.hass.async_add_executor_job(self.update_data_all)
+        await self._manager.update_all_devices()
 
-    def update_data_all(self) -> None:
-        """Update all the devices."""
-
-        # Using `update_all_devices` instead of `update` to avoid fetching device list every time.
-        self._manager.update_all_devices()
-        # Vesync updates energy on applicable devices every 6 hours
-        self._manager.update_energy()
+        if self.should_update_energy():
+            self.update_time = datetime.now()
+            for outlet in self._manager.devices.outlets:
+                await outlet.update_energy()

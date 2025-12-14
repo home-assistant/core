@@ -12,7 +12,7 @@ import hass_nabucasa
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components import assist_pipeline, stt
+from homeassistant.components import assist_pipeline, conversation, stt
 from homeassistant.components.assist_pipeline.const import (
     BYTES_PER_CHUNK,
     CONF_DEBUG_RECORDING_DIR,
@@ -116,7 +116,7 @@ async def test_pipeline_from_audio_stream_legacy(
     await client.send_json_auto_id(
         {
             "type": "assist_pipeline/pipeline/create",
-            "conversation_engine": "homeassistant",
+            "conversation_engine": conversation.HOME_ASSISTANT_AGENT,
             "conversation_language": "en-US",
             "language": "en",
             "name": "test_name",
@@ -184,7 +184,7 @@ async def test_pipeline_from_audio_stream_entity(
     await client.send_json_auto_id(
         {
             "type": "assist_pipeline/pipeline/create",
-            "conversation_engine": "homeassistant",
+            "conversation_engine": conversation.HOME_ASSISTANT_AGENT,
             "conversation_language": "en-US",
             "language": "en",
             "name": "test_name",
@@ -252,7 +252,7 @@ async def test_pipeline_from_audio_stream_no_stt(
     await client.send_json_auto_id(
         {
             "type": "assist_pipeline/pipeline/create",
-            "conversation_engine": "homeassistant",
+            "conversation_engine": conversation.HOME_ASSISTANT_AGENT,
             "conversation_language": "en-US",
             "language": "en",
             "name": "test_name",

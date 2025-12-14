@@ -17,7 +17,6 @@
         'echo_test_serial_number',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Amazon',
@@ -27,7 +26,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'echo_test_serial_number',
-    'suggested_area': None,
     'sw_version': 'echo_test_software_version',
     'via_device_id': None,
   })

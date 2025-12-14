@@ -1,0 +1,15 @@
+{
+  "NAME": "Pool Device",
+  "SERIAL_NUMBER": "TEST123456789",
+  "DEVICE_ID": "TEST123456789_DEVICE",
+  "MODEL": "POOL DOSE",
+  "MODEL_ID": "PDPR1H1HAW100",
+  "OWNERID": "GBL00001ENDUSERS",
+  "GROUPNAME": "Pool Device",
+  "FW_VERSION": "1.30",
+  "SW_VERSION": "2.10",
+  "API_VERSION": "v1/",
+  "FW_CODE": "539187",
+  "MAC": "",
+  "IP": "192.168.1.100"
+}

@@ -10,6 +10,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import discovery_flow, json as json_helper
 from homeassistant.helpers.discovery_flow import DiscoveryKey
+from homeassistant.util import json as json_util
 
 
 @pytest.fixture
@@ -151,6 +152,6 @@ def test_discovery_key_serialize_deserialize(key: str | tuple[str]) -> None:
     )
     serialized = json_helper.json_dumps(discovery_key_1)
     assert (
-        discovery_flow.DiscoveryKey.from_json_dict(json_helper.json_loads(serialized))
+        discovery_flow.DiscoveryKey.from_json_dict(json_util.json_loads(serialized))
         == discovery_key_1
     )

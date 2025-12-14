@@ -1,0 +1,60 @@
+{
+  "name": "Kitchen Blinds",
+  "category": "cl",
+  "product_id": "zah67ekd",
+  "product_name": "AM43拉绳电机-Zigbee",
+  "online": true,
+  "function": {
+    "control": {
+      "type": "Enum",
+      "value": { "range": ["open", "stop", "close", "continue"] }
+    },
+    "percent_control": {
+      "type": "Integer",
+      "value": { "unit": "%", "min": 0, "max": 100, "scale": 0, "step": 1 }
+    },
+    "control_back_mode": {
+      "type": "Enum",
+      "value": { "range": ["forward", "back"] }
+    }
+  },
+  "status_range": {
+    "control": {
+      "type": "Enum",
+      "value": { "range": ["open", "stop", "close", "continue"] }
+    },
+    "percent_control": {
+      "type": "Integer",
+      "value": { "unit": "%", "min": 0, "max": 100, "scale": 0, "step": 1 }
+    },
+    "percent_state": {
+      "type": "Integer",
+      "value": { "unit": "%", "min": 0, "max": 100, "scale": 0, "step": 1 }
+    },
+    "control_back_mode": {
+      "type": "Enum",
+      "value": { "range": ["forward", "back"] }
+    },
+    "work_state": {
+      "type": "Enum",
+      "value": { "range": ["opening", "closing"] }
+    },
+    "situation_set": {
+      "type": "Enum",
+      "value": { "range": ["fully_open", "fully_close"] }
+    },
+    "fault": {
+      "type": "Bitmap",
+      "value": { "label": ["motor_fault"] }
+    }
+  },
+  "status": {
+    "control": "stop",
+    "percent_control": 100,
+    "percent_state": 52,
+    "control_back_mode": "forward",
+    "work_state": "closing",
+    "situation_set": "fully_open",
+    "fault": 0
+  }
+}

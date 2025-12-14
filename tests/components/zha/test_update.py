@@ -1,11 +1,13 @@
 """Test ZHA firmware updates."""
 
+from collections.abc import Callable, Coroutine
 from unittest.mock import AsyncMock, PropertyMock, call, patch
 
 import pytest
 from zha.application.platforms.update import (
     FirmwareUpdateEntity as ZhaFirmwareUpdateEntity,
 )
+from zigpy.device import Device
 from zigpy.exceptions import DeliveryError
 from zigpy.ota import OtaImagesResult, OtaImageWithMetadata
 import zigpy.ota.image as firmware
@@ -47,6 +49,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from .common import find_entity_id, update_attribute_cache
@@ -72,7 +75,7 @@ def update_platform_only():
 
 async def setup_test_data(
     hass: HomeAssistant,
-    zigpy_device_mock,
+    zigpy_device_mock: Callable[..., Device],
     skip_attribute_plugs=False,
     file_not_found=False,
 ):
@@ -156,15 +159,14 @@ async def setup_test_data(
         )
     )
     zha_device_proxy: ZHADeviceProxy = gateway_proxy.get_device_proxy(zigpy_device.ieee)
-    zha_device_proxy.device.async_update_sw_build_id(installed_fw_version)
 
     return zha_device_proxy, cluster, fw_image, installed_fw_version
 
 
 async def test_firmware_update_notification_from_zigpy(
     hass: HomeAssistant,
-    setup_zha,
-    zigpy_device_mock,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
 ) -> None:
     """Test ZHA update platform - firmware update notification."""
     await setup_zha()
@@ -206,8 +208,8 @@ async def test_firmware_update_notification_from_zigpy(
 
 async def test_firmware_update_notification_from_service_call(
     hass: HomeAssistant,
-    setup_zha,
-    zigpy_device_mock,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
 ) -> None:
     """Test ZHA update platform - firmware update manual check."""
     await setup_zha()
@@ -294,8 +296,8 @@ def make_packet(zigpy_device, cluster, cmd_name: str, **kwargs):
 @patch("zigpy.device.AFTER_OTA_ATTR_READ_DELAY", 0.01)
 async def test_firmware_update_success(
     hass: HomeAssistant,
-    setup_zha,
-    zigpy_device_mock,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
 ) -> None:
     """Test ZHA update platform - firmware update success."""
     await setup_zha()
@@ -336,7 +338,7 @@ async def test_firmware_update_success(
 
     async def endpoint_reply(cluster, sequence, data, **kwargs):
         if cluster == general.Ota.cluster_id:
-            hdr, cmd = ota_cluster.deserialize(data)
+            _hdr, cmd = ota_cluster.deserialize(data)
             if isinstance(cmd, general.Ota.ImageNotifyCommand):
                 zha_device.device.device.packet_received(
                     make_packet(
@@ -491,8 +493,8 @@ async def test_firmware_update_success(
 
 async def test_firmware_update_raises(
     hass: HomeAssistant,
-    setup_zha,
-    zigpy_device_mock,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
 ) -> None:
     """Test ZHA update platform - firmware update raises."""
     await setup_zha()
@@ -532,7 +534,7 @@ async def test_firmware_update_raises(
 
     async def endpoint_reply(cluster, sequence, data, **kwargs):
         if cluster == general.Ota.cluster_id:
-            hdr, cmd = ota_cluster.deserialize(data)
+            _hdr, cmd = ota_cluster.deserialize(data)
             if isinstance(cmd, general.Ota.ImageNotifyCommand):
                 zha_device.device.device.packet_received(
                     make_packet(
@@ -587,8 +589,8 @@ async def test_firmware_update_raises(
 async def test_update_release_notes(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    setup_zha,
-    zigpy_device_mock,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
 ) -> None:
     """Test ZHA update platform release notes."""
     await setup_zha()
@@ -643,3 +645,26 @@ async def test_update_release_notes(
         assert "Some lengthy release notes" in result["result"]
         assert OTA_MESSAGE_RELIABILITY in result["result"]
         assert OTA_MESSAGE_BATTERY_POWERED in result["result"]
+
+
+async def test_update_version_sync_device_registry(
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test firmware version syncing between the ZHA device and Home Assistant."""
+    await setup_zha()
+    zha_device, _, _, _ = await setup_test_data(hass, zigpy_device_mock)
+
+    zha_device.device.async_update_firmware_version("0x12345678")
+    reg_device = device_registry.async_get_device(
+        identifiers={("zha", str(zha_device.device.ieee))}
+    )
+    assert reg_device.sw_version == "0x12345678"
+
+    zha_device.device.async_update_firmware_version("0xabcd1234")
+    reg_device = device_registry.async_get_device(
+        identifiers={("zha", str(zha_device.device.ieee))}
+    )
+    assert reg_device.sw_version == "0xabcd1234"

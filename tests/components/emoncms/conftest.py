@@ -43,6 +43,8 @@ FLOW_RESULT = {
 
 SENSOR_NAME = "emoncms@1.1.1.1"
 
+UNIQUE_ID = "123-53535292"
+
 
 @pytest.fixture
 def config_entry() -> MockConfigEntry:
@@ -65,7 +67,7 @@ def config_entry_unique_id() -> MockConfigEntry:
         domain=DOMAIN,
         title=SENSOR_NAME,
         data=FLOW_RESULT_SECOND_URL,
-        unique_id="123-53535292",
+        unique_id=UNIQUE_ID,
     )
 
 
@@ -121,5 +123,5 @@ async def emoncms_client() -> AsyncGenerator[AsyncMock]:
     ):
         client = mock_client.return_value
         client.async_request.return_value = {"success": True, "message": FEEDS}
-        client.async_get_uuid.return_value = "123-53535292"
+        client.async_get_uuid.return_value = UNIQUE_ID
         yield client

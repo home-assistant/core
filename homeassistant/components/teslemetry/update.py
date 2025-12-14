@@ -39,7 +39,7 @@ async def async_setup_entry(
 
     async_add_entities(
         TeslemetryVehiclePollingUpdateEntity(vehicle, entry.runtime_data.scopes)
-        if vehicle.api.pre2021 or vehicle.firmware < "2024.44.25"
+        if vehicle.poll or vehicle.firmware < "2024.44.25"
         else TeslemetryStreamingUpdateEntity(vehicle, entry.runtime_data.scopes)
         for vehicle in entry.runtime_data.vehicles
     )
@@ -237,7 +237,7 @@ class TeslemetryStreamingUpdateEntity(
         if self._download_percentage > 1 and self._download_percentage < 100:
             self._attr_in_progress = True
             self._attr_update_percentage = self._download_percentage
-        elif self._install_percentage > 1:
+        elif self._install_percentage > 10:
             self._attr_in_progress = True
             self._attr_update_percentage = self._install_percentage
         else:

@@ -406,7 +406,7 @@ def ws_expose_entity(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Expose an entity to an assistant."""
-    entity_ids: str = msg["entity_ids"]
+    entity_ids: list[str] = msg["entity_ids"]
 
     if blocked := next(
         (

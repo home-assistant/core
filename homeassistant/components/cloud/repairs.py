@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any
 
+from hass_nabucasa.payments_api import SubscriptionInfo
 import voluptuous as vol
 
 from homeassistant.components.repairs import (
@@ -26,7 +26,7 @@ MAX_RETRIES = 60  # This allows for 10 minutes of retries
 @callback
 def async_manage_legacy_subscription_issue(
     hass: HomeAssistant,
-    subscription_info: dict[str, Any],
+    subscription_info: SubscriptionInfo,
 ) -> None:
     """Manage the legacy subscription issue.
 
@@ -50,7 +50,7 @@ class LegacySubscriptionRepairFlow(RepairsFlow):
     """Handler for an issue fixing flow."""
 
     wait_task: asyncio.Task | None = None
-    _data: dict[str, Any] | None = None
+    _data: SubscriptionInfo | None = None
 
     async def async_step_init(self, _: None = None) -> FlowResult:
         """Handle the first step of a fix flow."""

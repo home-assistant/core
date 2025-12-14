@@ -14,9 +14,6 @@ from .types import MCPServerConfigEntry
 __all__ = [
     "CONFIG_SCHEMA",
     "DOMAIN",
-    "async_setup",
-    "async_setup_entry",
-    "async_unload_entry",
 ]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)

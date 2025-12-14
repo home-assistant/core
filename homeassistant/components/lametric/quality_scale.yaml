@@ -17,7 +17,7 @@ rules:
       Entities of this integration does not explicitly subscribe to events.
   entity-unique-id: done
   has-entity-name: done
-  runtime-data: todo
+  runtime-data: done
   test-before-configure: done
   test-before-setup: done
   unique-config-entry: done
@@ -33,6 +33,7 @@ rules:
   parallel-updates: todo
   reauthentication-flow: done
   test-coverage: done
+
   # Gold
   devices: done
   diagnostics: done

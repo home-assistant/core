@@ -7,68 +7,80 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "incorrect_api_key": "Invalid API key for selected account",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_station": "Could not find a station with the specified name",
       "more_stations": "Found multiple stations with the specified name",
-      "no_trains": "No train found",
-      "incorrect_api_key": "Invalid API key for selected account"
+      "no_trains": "No train found"
     },
     "step": {
       "initial": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
-          "to": "To station",
+          "filter_product": "Filter by product description",
           "from": "From station",
           "time": "Time (optional)",
-          "weekday": "Days",
-          "filter_product": "Filter by product description"
+          "to": "To station",
+          "weekday": "Days"
         },
         "data_description": {
-          "time": "Set time to search specifically at this time of day, must be exact time as scheduled train departure",
-          "filter_product": "To filter by product description add the phrase here to match"
-        }
-      },
-      "select_stations": {
-        "description": "More than one station was found with the provided name, select the correct ones from the provided lists",
-        "data": {
-          "to": "To station",
-          "from": "From station"
+          "filter_product": "To filter by product description add the phrase here to match",
+          "time": "Set time to search specifically at this time of day, must be exact time as scheduled train departure"
         }
       },
       "reauth_confirm": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]"
         }
-      }
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
+      },
+      "select_stations": {
         "data": {
-          "filter_product": "[%key:component::trafikverket_train::config::step::initial::data::filter_product%]"
+          "from": "From station",
+          "to": "To station"
         },
-        "data_description": {
-          "filter_product": "[%key:component::trafikverket_train::config::step::initial::data_description::filter_product%]"
-        }
-      }
-    }
-  },
-  "selector": {
-    "weekday": {
-      "options": {
-        "mon": "[%key:common::time::monday%]",
-        "tue": "[%key:common::time::tuesday%]",
-        "wed": "[%key:common::time::wednesday%]",
-        "thu": "[%key:common::time::thursday%]",
-        "fri": "[%key:common::time::friday%]",
-        "sat": "[%key:common::time::saturday%]",
-        "sun": "[%key:common::time::sunday%]"
+        "description": "More than one station was found with the provided name, select the correct ones from the provided lists"
       }
     }
   },
   "entity": {
     "sensor": {
+      "actual_time": {
+        "name": "Actual time",
+        "state_attributes": {
+          "product_filter": {
+            "name": "[%key:component::trafikverket_train::entity::sensor::departure_time::state_attributes::product_filter::name%]"
+          }
+        }
+      },
+      "cancelled": {
+        "name": "Cancelled",
+        "state_attributes": {
+          "product_filter": {
+            "name": "[%key:component::trafikverket_train::entity::sensor::departure_time::state_attributes::product_filter::name%]"
+          }
+        }
+      },
+      "delayed_time": {
+        "name": "Delayed time",
+        "state_attributes": {
+          "product_filter": {
+            "name": "[%key:component::trafikverket_train::entity::sensor::departure_time::state_attributes::product_filter::name%]"
+          }
+        }
+      },
+      "departure_state": {
+        "name": "Departure state",
+        "state": {
+          "canceled": "Cancelled",
+          "delayed": "Delayed",
+          "on_time": "On time"
+        },
+        "state_attributes": {
+          "product_filter": {
+            "name": "[%key:component::trafikverket_train::entity::sensor::departure_time::state_attributes::product_filter::name%]"
+          }
+        }
+      },
       "departure_time": {
         "name": "Departure time",
         "state_attributes": {
@@ -93,37 +105,8 @@
           }
         }
       },
-      "departure_state": {
-        "name": "Departure state",
-        "state": {
-          "on_time": "On time",
-          "delayed": "Delayed",
-          "canceled": "Cancelled"
-        },
-        "state_attributes": {
-          "product_filter": {
-            "name": "[%key:component::trafikverket_train::entity::sensor::departure_time::state_attributes::product_filter::name%]"
-          }
-        }
-      },
-      "cancelled": {
-        "name": "Cancelled",
-        "state_attributes": {
-          "product_filter": {
-            "name": "[%key:component::trafikverket_train::entity::sensor::departure_time::state_attributes::product_filter::name%]"
-          }
-        }
-      },
-      "delayed_time": {
-        "name": "Delayed time",
-        "state_attributes": {
-          "product_filter": {
-            "name": "[%key:component::trafikverket_train::entity::sensor::departure_time::state_attributes::product_filter::name%]"
-          }
-        }
-      },
-      "planned_time": {
-        "name": "Planned time",
+      "deviation": {
+        "name": "Deviation",
         "state_attributes": {
           "product_filter": {
             "name": "[%key:component::trafikverket_train::entity::sensor::departure_time::state_attributes::product_filter::name%]"
@@ -138,14 +121,6 @@
           }
         }
       },
-      "actual_time": {
-        "name": "Actual time",
-        "state_attributes": {
-          "product_filter": {
-            "name": "[%key:component::trafikverket_train::entity::sensor::departure_time::state_attributes::product_filter::name%]"
-          }
-        }
-      },
       "other_info": {
         "name": "Other information",
         "state_attributes": {
@@ -154,13 +129,38 @@
           }
         }
       },
-      "deviation": {
-        "name": "Deviation",
+      "planned_time": {
+        "name": "Planned time",
         "state_attributes": {
           "product_filter": {
             "name": "[%key:component::trafikverket_train::entity::sensor::departure_time::state_attributes::product_filter::name%]"
           }
         }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "filter_product": "[%key:component::trafikverket_train::config::step::initial::data::filter_product%]"
+        },
+        "data_description": {
+          "filter_product": "[%key:component::trafikverket_train::config::step::initial::data_description::filter_product%]"
+        }
+      }
+    }
+  },
+  "selector": {
+    "weekday": {
+      "options": {
+        "fri": "[%key:common::time::friday%]",
+        "mon": "[%key:common::time::monday%]",
+        "sat": "[%key:common::time::saturday%]",
+        "sun": "[%key:common::time::sunday%]",
+        "thu": "[%key:common::time::thursday%]",
+        "tue": "[%key:common::time::tuesday%]",
+        "wed": "[%key:common::time::wednesday%]"
       }
     }
   }

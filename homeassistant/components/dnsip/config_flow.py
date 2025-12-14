@@ -14,7 +14,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_NAME, CONF_PORT
 from homeassistant.core import callback
@@ -165,13 +165,16 @@ class DnsIPConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class DnsIPOptionsFlowHandler(OptionsFlow):
+class DnsIPOptionsFlowHandler(OptionsFlowWithReload):
     """Handle a option config flow for dnsip integration."""
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the options."""
+        if self.config_entry.data[CONF_HOSTNAME] == DEFAULT_HOSTNAME:
+            return self.async_abort(reason="no_options")
+
         errors = {}
         if user_input is not None:
             resolver = user_input.get(CONF_RESOLVER, DEFAULT_RESOLVER)

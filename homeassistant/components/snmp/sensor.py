@@ -8,13 +8,13 @@ from struct import unpack
 
 from pyasn1.codec.ber import decoder
 from pysnmp.error import PySnmpError
-import pysnmp.hlapi.asyncio as hlapi
-from pysnmp.hlapi.asyncio import (
+import pysnmp.hlapi.v3arch.asyncio as hlapi
+from pysnmp.hlapi.v3arch.asyncio import (
     CommunityData,
     Udp6TransportTarget,
     UdpTransportTarget,
     UsmUserData,
-    getCmd,
+    get_cmd,
 )
 from pysnmp.proto.rfc1902 import Opaque
 from pysnmp.proto.rfc1905 import NoSuchObject
@@ -134,7 +134,7 @@ async def async_setup_platform(
 
     try:
         # Try IPv4 first.
-        target = UdpTransportTarget((host, port), timeout=DEFAULT_TIMEOUT)
+        target = await UdpTransportTarget.create((host, port), timeout=DEFAULT_TIMEOUT)
     except PySnmpError:
         # Then try IPv6.
         try:
@@ -159,7 +159,7 @@ async def async_setup_platform(
         auth_data = CommunityData(community, mpModel=SNMP_VERSIONS[version])
 
     request_args = await async_create_request_cmd_args(hass, auth_data, target, baseoid)
-    get_result = await getCmd(*request_args)
+    get_result = await get_cmd(*request_args)
     errindication, _, _, _ = get_result
 
     if errindication and not accept_errors:
@@ -217,7 +217,7 @@ class SnmpSensor(ManualTriggerSensorEntity):
                 self.entity_id, variables, STATE_UNKNOWN
             )
 
-        self._attr_native_value = value
+        self._set_native_value_with_possible_timestamp(value)
         self._process_manual_data(variables)
 
 
@@ -235,7 +235,7 @@ class SnmpData:
     async def async_update(self):
         """Get the latest data from the remote SNMP capable host."""
 
-        get_result = await getCmd(*self._request_args)
+        get_result = await get_cmd(*self._request_args)
         errindication, errstatus, errindex, restable = get_result
 
         if errindication and not self._accept_errors:

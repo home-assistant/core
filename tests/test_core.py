@@ -49,7 +49,6 @@ from homeassistant.core import (
     callback,
     get_release_channel,
 )
-from homeassistant.core_config import Config
 from homeassistant.exceptions import (
     HomeAssistantError,
     InvalidEntityFormatError,
@@ -64,12 +63,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.read_only_dict import ReadOnlyDict
 
-from .common import (
-    async_capture_events,
-    async_mock_service,
-    help_test_all,
-    import_and_test_deprecated_alias,
-)
+from .common import async_capture_events, async_mock_service
 
 PST = dt_util.get_time_zone("America/Los_Angeles")
 
@@ -1847,7 +1841,7 @@ async def test_services_call_return_response_requires_blocking(
             return_response=True,
         )
     assert str(exc.value) == (
-        "A non blocking action call with argument blocking=False "
+        "A non-blocking action call with argument blocking=False "
         "can't be used together with argument return_response=True"
     )
 
@@ -3017,16 +3011,6 @@ async def test_cancel_shutdown_job(hass: HomeAssistant) -> None:
     cancel()
     await hass.async_stop()
     assert not evt.is_set()
-
-
-def test_all() -> None:
-    """Test module.__all__ is correctly set."""
-    help_test_all(ha)
-
-
-def test_deprecated_config(caplog: pytest.LogCaptureFixture) -> None:
-    """Test deprecated Config class."""
-    import_and_test_deprecated_alias(caplog, ha, "Config", Config, "2025.11")
 
 
 def test_one_time_listener_repr(hass: HomeAssistant) -> None:

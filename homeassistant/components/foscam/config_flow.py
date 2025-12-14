@@ -2,8 +2,8 @@
 
 from typing import Any
 
-from libpyfoscam import FoscamCamera
-from libpyfoscam.foscam import (
+from libpyfoscamcgi import FoscamCamera
+from libpyfoscamcgi.foscamcgi import (
     ERROR_FOSCAM_AUTH,
     ERROR_FOSCAM_UNAVAILABLE,
     FOSCAM_SUCCESS,
@@ -26,7 +26,7 @@ from .const import CONF_RTSP_PORT, CONF_STREAM, DOMAIN, LOGGER
 STREAMS = ["Main", "Sub"]
 
 DEFAULT_PORT = 88
-DEFAULT_RTSP_PORT = 554
+DEFAULT_RTSP_PORT = 88
 
 
 DATA_SCHEMA = vol.Schema(

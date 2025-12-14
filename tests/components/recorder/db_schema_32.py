@@ -414,10 +414,9 @@ class States(Base):  # type: ignore[misc,valid-type]
     @staticmethod
     def from_event(event: Event) -> States:
         """Create object from a state_changed event."""
-        entity_id = event.data["entity_id"]
         state: State | None = event.data.get("new_state")
         dbstate = States(
-            entity_id=entity_id,
+            entity_id=None,
             attributes=None,
             context_id=event.context.id,
             context_user_id=event.context.user_id,

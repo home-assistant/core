@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import functools
 import logging
 from typing import Any
@@ -91,15 +90,6 @@ class ZhaCover(ZHAEntity, CoverEntity):
         self._attr_supported_features = features
 
     @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return entity specific state attributes."""
-        state = self.entity_data.entity.state
-        return {
-            "target_lift_position": state.get("target_lift_position"),
-            "target_tilt_position": state.get("target_tilt_position"),
-        }
-
-    @property
     def is_closed(self) -> bool | None:
         """Return True if the cover is closed."""
         return self.entity_data.entity.is_closed
@@ -185,8 +175,4 @@ class ZhaCover(ZHAEntity, CoverEntity):
             return
 
         # Same as `light`, some entity state is not derived from ZCL attributes
-        self.entity_data.entity.restore_external_state_attributes(
-            state=state.state,
-            target_lift_position=state.attributes.get("target_lift_position"),
-            target_tilt_position=state.attributes.get("target_tilt_position"),
-        )
+        self.entity_data.entity.restore_external_state_attributes(state=state.state)

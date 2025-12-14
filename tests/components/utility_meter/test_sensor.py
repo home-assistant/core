@@ -1888,10 +1888,12 @@ async def test_bad_offset(hass: HomeAssistant) -> None:
 
 
 def test_calculate_adjustment_invalid_new_state(
+    hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that calculate_adjustment method returns None if the new state is invalid."""
     mock_sensor = UtilityMeterSensor(
+        hass,
         cron_pattern=None,
         delta_values=False,
         meter_offset=DEFAULT_OFFSET,

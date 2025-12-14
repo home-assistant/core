@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from aiosenz import MODE_AUTO, Thermostat
+from httpx import RequestError
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -12,30 +13,30 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import SENZDataUpdateCoordinator
+from . import SENZConfigEntry, SENZDataUpdateCoordinator
 from .const import DOMAIN
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SENZConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the SENZ climate entities from a config entry."""
-    coordinator: SENZDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         SENZClimate(thermostat, coordinator) for thermostat in coordinator.data.values()
     )
 
 
-class SENZClimate(CoordinatorEntity, ClimateEntity):
+class SENZClimate(CoordinatorEntity[SENZDataUpdateCoordinator], ClimateEntity):
     """Representation of a SENZ climate entity."""
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
@@ -82,7 +83,7 @@ class SENZClimate(CoordinatorEntity, ClimateEntity):
     @property
     def available(self) -> bool:
         """Return True if the thermostat is available."""
-        return self._thermostat.online
+        return super().available and self._thermostat.online
 
     @property
     def hvac_mode(self) -> HVACMode:
@@ -98,14 +99,32 @@ class SENZClimate(CoordinatorEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        if hvac_mode == HVACMode.AUTO:
-            await self._thermostat.auto()
-        else:
-            await self._thermostat.manual()
+        try:
+            if hvac_mode == HVACMode.AUTO:
+                await self._thermostat.auto()
+            else:
+                await self._thermostat.manual()
+        except RequestError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_attribute_error",
+                translation_placeholders={
+                    "attribute": "hvac mode",
+                },
+            ) from err
         await self.coordinator.async_request_refresh()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temp: float = kwargs[ATTR_TEMPERATURE]
-        await self._thermostat.manual(temp)
+        try:
+            await self._thermostat.manual(temp)
+        except RequestError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_attribute_error",
+                translation_placeholders={
+                    "attribute": "target temperature",
+                },
+            ) from err
         await self.coordinator.async_request_refresh()

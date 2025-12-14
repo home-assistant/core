@@ -14,7 +14,9 @@ announce:
     media_id:
       required: false
       selector:
-        text:
+        media:
+          accept:
+            - audio/*
     preannounce:
       required: false
       default: true
@@ -23,7 +25,9 @@ announce:
     preannounce_media_id:
       required: false
       selector:
-        text:
+        media:
+          accept:
+            - audio/*
 start_conversation:
   target:
     entity:
@@ -40,7 +44,9 @@ start_conversation:
     start_media_id:
       required: false
       selector:
-        text:
+        media:
+          accept:
+            - audio/*
     extra_system_prompt:
       required: false
       selector:
@@ -53,16 +59,19 @@ start_conversation:
     preannounce_media_id:
       required: false
       selector:
-        text:
+        media:
+          accept:
+            - audio/*
 ask_question:
   fields:
     entity_id:
       required: true
       selector:
         entity:
-          domain: assist_satellite
-          supported_features:
-            - assist_satellite.AssistSatelliteEntityFeature.START_CONVERSATION
+          filter:
+            domain: assist_satellite
+            supported_features:
+              - assist_satellite.AssistSatelliteEntityFeature.START_CONVERSATION
     question:
       required: false
       example: "What kind of music would you like to play?"
@@ -72,7 +81,9 @@ ask_question:
     question_media_id:
       required: false
       selector:
-        text:
+        media:
+          accept:
+            - audio/*
     preannounce:
       required: false
       default: true
@@ -81,8 +92,24 @@ ask_question:
     preannounce_media_id:
       required: false
       selector:
-        text:
+        media:
+          accept:
+            - audio/*
     answers:
       required: false
       selector:
         object:
+          label_field: sentences
+          description_field: id
+          multiple: true
+          translation_key: answers
+          fields:
+            id:
+              required: true
+              selector:
+                text:
+            sentences:
+              required: true
+              selector:
+                text:
+                  multiple: true

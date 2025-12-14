@@ -4,6 +4,7 @@ import asyncio
 from typing import Any
 from unittest.mock import AsyncMock
 
+from bosch_alarm_mode2.const import PANEL_FAMILY, PanelModel
 import pytest
 
 from homeassistant.components.bosch_alarm.const import DOMAIN
@@ -22,7 +23,7 @@ async def test_form_user(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_panel: AsyncMock,
-    model_name: str,
+    panel_model: PanelModel,
     serial_number: str,
     config_flow_data: dict[str, Any],
 ) -> None:
@@ -45,13 +46,13 @@ async def test_form_user(
         config_flow_data,
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"Bosch {model_name}"
+    assert result["title"] == f"Bosch {panel_model.name}"
     assert (
         result["data"]
         == {
             CONF_HOST: "1.1.1.1",
             CONF_PORT: 7700,
-            CONF_MODEL: model_name,
+            CONF_MODEL: panel_model.name,
         }
         | config_flow_data
     )
@@ -211,7 +212,7 @@ async def test_dhcp_can_finish(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_panel: AsyncMock,
-    model_name: str,
+    panel_model: PanelModel,
     serial_number: str,
     config_flow_data: dict[str, Any],
 ) -> None:
@@ -237,12 +238,12 @@ async def test_dhcp_can_finish(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"Bosch {model_name}"
+    assert result["title"] == f"Bosch {panel_model.name}"
     assert result["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_MAC: "34:ea:34:b4:3b:5a",
         CONF_PORT: 7700,
-        CONF_MODEL: model_name,
+        CONF_MODEL: panel_model.name,
         **config_flow_data,
     }
 
@@ -258,7 +259,7 @@ async def test_dhcp_exceptions(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_panel: AsyncMock,
-    model_name: str,
+    panel_model: PanelModel,
     serial_number: str,
     config_flow_data: dict[str, Any],
     exception: Exception,
@@ -316,7 +317,7 @@ async def test_dhcp_discovery_if_panel_setup_config_flow(
     mock_config_entry: MockConfigEntry,
     mock_panel: AsyncMock,
     serial_number: str,
-    model_name: str,
+    panel_model: PanelModel,
     config_flow_data: dict[str, Any],
 ) -> None:
     """Test DHCP discovery doesn't fail if a different panel was set up via config flow."""
@@ -346,12 +347,12 @@ async def test_dhcp_discovery_if_panel_setup_config_flow(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"Bosch {model_name}"
+    assert result["title"] == f"Bosch {panel_model.name}"
     assert result["data"] == {
         CONF_HOST: "4.5.6.7",
         CONF_MAC: "34:ea:34:b4:3b:5a",
         CONF_PORT: 7700,
-        CONF_MODEL: model_name,
+        CONF_MODEL: panel_model.name,
         **config_flow_data,
     }
     assert mock_config_entry.unique_id == serial_number
@@ -395,7 +396,7 @@ async def test_dhcp_updates_mac(
     mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_panel: AsyncMock,
-    model_name: str,
+    panel_model: PanelModel,
     serial_number: str,
     config_flow_data: dict[str, Any],
 ) -> None:
@@ -424,7 +425,7 @@ async def test_reauth_flow_success(
     mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_panel: AsyncMock,
-    model_name: str,
+    panel_model: PanelModel,
     serial_number: str,
     config_flow_data: dict[str, Any],
 ) -> None:
@@ -459,7 +460,7 @@ async def test_reauth_flow_error(
     mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_panel: AsyncMock,
-    model_name: str,
+    panel_model: PanelModel,
     serial_number: str,
     config_flow_data: dict[str, Any],
     exception: Exception,
@@ -494,7 +495,7 @@ async def test_reconfig_flow(
     mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_panel: AsyncMock,
-    model_name: str,
+    panel_model: PanelModel,
     serial_number: str,
     config_flow_data: dict[str, Any],
 ) -> None:
@@ -529,7 +530,7 @@ async def test_reconfig_flow(
     assert mock_config_entry.data == {
         CONF_HOST: "1.1.1.1",
         CONF_PORT: 7700,
-        CONF_MODEL: model_name,
+        CONF_MODEL: panel_model.name,
         **config_flow_data,
     }
 
@@ -540,7 +541,7 @@ async def test_reconfig_flow_incorrect_model(
     mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_panel: AsyncMock,
-    model_name: str,
+    panel_model: PanelModel,
     serial_number: str,
     config_flow_data: dict[str, Any],
 ) -> None:
@@ -556,7 +557,7 @@ async def test_reconfig_flow_incorrect_model(
         },
     )
 
-    mock_panel.model = "Solution 3000"
+    mock_panel.model = PanelModel("Solution 3000", family=PANEL_FAMILY.SOLUTION)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"

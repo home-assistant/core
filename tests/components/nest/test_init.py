@@ -20,6 +20,7 @@ from google_nest_sdm.exceptions import (
     AuthException,
     ConfigurationException,
     SubscriberException,
+    SubscriberTimeoutException,
 )
 import pytest
 
@@ -110,19 +111,27 @@ async def test_setup_configuration_failure(
     assert "Subscription misconfigured. Expected subscriber_id" in caplog.text
 
 
-@pytest.mark.parametrize("subscriber_side_effect", [SubscriberException()])
+@pytest.mark.parametrize(
+    ("subscriber_side_effect", "expected_log_message"),
+    [
+        (SubscriberException(), "Subscriber error:"),
+        (SubscriberTimeoutException(), "Subscriber timed out"),
+    ],
+)
 async def test_setup_subscriber_failure(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     setup_base_platform,
+    expected_log_message: str,
 ) -> None:
-    """Test configuration error."""
+    """Test subscriber error handling (SubscriberException and SubscriberTimeoutException)."""
     await setup_base_platform()
-    assert "Subscriber error:" in caplog.text
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.SETUP_RETRY
+
+    assert expected_log_message in caplog.text
 
 
 async def test_setup_device_manager_failure(
@@ -137,7 +146,7 @@ async def test_setup_device_manager_failure(
     ):
         await setup_base_platform()
 
-    assert "Device manager error:" in caplog.text
+    assert "Error communicating with the Device Access API" in caplog.text
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
@@ -211,7 +220,7 @@ async def test_subscriber_auth_failure(
     assert flows[0]["step_id"] == "reauth_confirm"
 
 
-@pytest.mark.parametrize("subscriber_side_effect", [(ConfigurationException())])
+@pytest.mark.parametrize("subscriber_side_effect", [ConfigurationException()])
 async def test_subscriber_configuration_failure(
     hass: HomeAssistant,
     error_caplog: pytest.LogCaptureFixture,

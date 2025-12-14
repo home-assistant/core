@@ -15,7 +15,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
@@ -138,7 +138,7 @@ class GoogleCloudConfigFlow(ConfigFlow, domain=DOMAIN):
         return GoogleCloudOptionsFlowHandler()
 
 
-class GoogleCloudOptionsFlowHandler(OptionsFlow):
+class GoogleCloudOptionsFlowHandler(OptionsFlowWithReload):
     """Google Cloud options flow."""
 
     async def async_step_init(

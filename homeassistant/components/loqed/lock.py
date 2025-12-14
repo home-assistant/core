@@ -6,12 +6,10 @@ import logging
 from typing import Any
 
 from homeassistant.components.lock import LockEntity, LockEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import LoqedDataCoordinator
-from .const import DOMAIN
+from .coordinator import LoqedConfigEntry, LoqedDataCoordinator
 from .entity import LoqedEntity
 
 WEBHOOK_API_ENDPOINT = "/api/loqed/webhook"
@@ -21,13 +19,11 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: LoqedConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Loqed lock platform."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-
-    async_add_entities([LoqedLock(coordinator)])
+    async_add_entities([LoqedLock(entry.runtime_data)])
 
 
 class LoqedLock(LoqedEntity, LockEntity):

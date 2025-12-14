@@ -52,7 +52,6 @@
         '11',
         '12',
       ]),
-      'raw_value': 12.0,
     }),
     'context': <ANY>,
     'entity_id': 'select.28_111111111111_temperature_resolution',

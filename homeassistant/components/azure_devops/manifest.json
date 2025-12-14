@@ -4,7 +4,8 @@
   "codeowners": ["@timmo001"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/azure_devops",
+  "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["aioazuredevops"],
-  "requirements": ["aioazuredevops==2.2.1"]
+  "requirements": ["aioazuredevops==2.2.2"]
 }

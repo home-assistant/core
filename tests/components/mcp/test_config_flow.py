@@ -11,6 +11,7 @@ import respx
 from homeassistant import config_entries
 from homeassistant.components.mcp.const import (
     CONF_AUTHORIZATION_URL,
+    CONF_SCOPE,
     CONF_TOKEN_URL,
     DOMAIN,
 )
@@ -42,9 +43,11 @@ OAUTH_SERVER_METADATA_RESPONSE = httpx.Response(
         {
             "authorization_endpoint": OAUTH_AUTHORIZE_URL,
             "token_endpoint": OAUTH_TOKEN_URL,
+            "scopes_supported": ["read", "write"],
         }
     ),
 )
+SCOPES = ["read", "write"]
 CALLBACK_PATH = "/auth/external/callback"
 OAUTH_CALLBACK_URL = f"https://example.com{CALLBACK_PATH}"
 OAUTH_CODE = "abcd"
@@ -53,6 +56,7 @@ OAUTH_TOKEN_PAYLOAD = {
     "access_token": "mock-access-token",
     "type": "Bearer",
     "expires_in": 60,
+    "scope": " ".join(SCOPES),
 }
 
 
@@ -295,6 +299,7 @@ async def perform_oauth_flow(
     result: config_entries.ConfigFlowResult,
     authorize_url: str = OAUTH_AUTHORIZE_URL,
     token_url: str = OAUTH_TOKEN_URL,
+    scopes: list[str] | None = None,
 ) -> config_entries.ConfigFlowResult:
     """Perform the common steps of the OAuth flow.
 
@@ -307,10 +312,13 @@ async def perform_oauth_flow(
             "redirect_uri": OAUTH_CALLBACK_URL,
         },
     )
+    scope_param = ""
+    if scopes:
+        scope_param = "&scope=" + "+".join(scopes)
     assert result["url"] == (
         f"{authorize_url}?response_type=code&client_id={CLIENT_ID}"
         f"&redirect_uri={OAUTH_CALLBACK_URL}"
-        f"&state={state}"
+        f"&state={state}{scope_param}"
     )
 
     client = await hass_client_no_auth()
@@ -327,9 +335,14 @@ async def perform_oauth_flow(
 
 
 @pytest.mark.parametrize(
-    ("oauth_server_metadata_response", "expected_authorize_url", "expected_token_url"),
+    (
+        "oauth_server_metadata_response",
+        "expected_authorize_url",
+        "expected_token_url",
+        "scopes",
+    ),
     [
-        (OAUTH_SERVER_METADATA_RESPONSE, OAUTH_AUTHORIZE_URL, OAUTH_TOKEN_URL),
+        (OAUTH_SERVER_METADATA_RESPONSE, OAUTH_AUTHORIZE_URL, OAUTH_TOKEN_URL, SCOPES),
         (
             httpx.Response(
                 status_code=200,
@@ -342,11 +355,13 @@ async def perform_oauth_flow(
             ),
             f"{MCP_SERVER_BASE_URL}/authorize-path",
             f"{MCP_SERVER_BASE_URL}/token-path",
+            None,
         ),
         (
             httpx.Response(status_code=404),
             f"{MCP_SERVER_BASE_URL}/authorize",
             f"{MCP_SERVER_BASE_URL}/token",
+            None,
         ),
     ],
     ids=(
@@ -367,6 +382,7 @@ async def test_authentication_flow(
     oauth_server_metadata_response: httpx.Response,
     expected_authorize_url: str,
     expected_token_url: str,
+    scopes: list[str] | None,
 ) -> None:
     """Test for an OAuth authentication flow for an MCP server."""
 
@@ -405,6 +421,7 @@ async def test_authentication_flow(
         result,
         authorize_url=expected_authorize_url,
         token_url=expected_token_url,
+        scopes=scopes,
     )
 
     # Client now accepts credentials
@@ -423,6 +440,7 @@ async def test_authentication_flow(
         CONF_URL: MCP_SERVER_URL,
         CONF_AUTHORIZATION_URL: expected_authorize_url,
         CONF_TOKEN_URL: expected_token_url,
+        CONF_SCOPE: scopes,
     }
     assert token
     token.pop("expires_at")
@@ -536,6 +554,7 @@ async def test_authentication_flow_server_failure_abort(
         aioclient_mock,
         hass_client_no_auth,
         result,
+        scopes=SCOPES,
     )
 
     # Client fails with an error
@@ -591,6 +610,7 @@ async def test_authentication_flow_server_missing_tool_capabilities(
         aioclient_mock,
         hass_client_no_auth,
         result,
+        scopes=SCOPES,
     )
 
     # Client can now authenticate
@@ -628,7 +648,9 @@ async def test_reauth_flow(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    result = await perform_oauth_flow(hass, aioclient_mock, hass_client_no_auth, result)
+    result = await perform_oauth_flow(
+        hass, aioclient_mock, hass_client_no_auth, result, scopes=SCOPES
+    )
 
     # Verify we can connect to the server
     response = Mock()
@@ -648,6 +670,7 @@ async def test_reauth_flow(
         CONF_URL: MCP_SERVER_URL,
         CONF_AUTHORIZATION_URL: OAUTH_AUTHORIZE_URL,
         CONF_TOKEN_URL: OAUTH_TOKEN_URL,
+        CONF_SCOPE: ["read", "write"],
     }
     assert token
     token.pop("expires_at")

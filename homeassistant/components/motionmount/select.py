@@ -36,6 +36,7 @@ class MotionMountPresets(MotionMountEntity, SelectEntity):
 
     _attr_should_poll = True
     _attr_translation_key = "motionmount_preset"
+    _name_to_index: dict[str, int]
 
     def __init__(
         self,
@@ -50,8 +51,12 @@ class MotionMountPresets(MotionMountEntity, SelectEntity):
 
     def _update_options(self, presets: list[motionmount.Preset]) -> None:
         """Convert presets to select options."""
-        options = [f"{preset.index}: {preset.name}" for preset in presets]
-        options.insert(0, WALL_PRESET_NAME)
+        # Ordered list of options (wall first, then presets)
+        options = [WALL_PRESET_NAME] + [preset.name for preset in presets]
+
+        # Build mapping name → index (wall = 0)
+        self._name_to_index = {WALL_PRESET_NAME: 0}
+        self._name_to_index.update({preset.name: preset.index for preset in presets})
 
         self._attr_options = options
 
@@ -123,7 +128,10 @@ class MotionMountPresets(MotionMountEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Set the new option."""
-        index = int(option[:1])
+        index = self._name_to_index.get(option)
+        if index is None:
+            raise HomeAssistantError(f"Unknown preset selected: {option}")
+
         try:
             await self.mm.go_to_preset(index)
         except (TimeoutError, socket.gaierror) as ex:

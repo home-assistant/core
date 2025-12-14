@@ -14,5 +14,5 @@
   "documentation": "https://www.home-assistant.io/integrations/wmspro",
   "integration_type": "hub",
   "iot_class": "local_polling",
-  "requirements": ["pywmspro==0.2.2"]
+  "requirements": ["pywmspro==0.3.2"]
 }

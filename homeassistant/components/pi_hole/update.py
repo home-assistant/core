@@ -21,9 +21,9 @@ from .entity import PiHoleEntity
 class PiHoleUpdateEntityDescription(UpdateEntityDescription):
     """Describes PiHole update entity."""
 
-    installed_version: Callable[[dict], str | None] = lambda api: None
-    latest_version: Callable[[dict], str | None] = lambda api: None
-    has_update: Callable[[dict], bool | None] = lambda api: None
+    installed_version: Callable[[Hole], str | None] = lambda api: None
+    latest_version: Callable[[Hole], str | None] = lambda api: None
+    has_update: Callable[[Hole], bool | None] = lambda api: None
     release_base_url: str | None = None
     title: str | None = None
 
@@ -34,9 +34,9 @@ UPDATE_ENTITY_TYPES: tuple[PiHoleUpdateEntityDescription, ...] = (
         translation_key="core_update_available",
         title="Pi-hole Core",
         entity_category=EntityCategory.DIAGNOSTIC,
-        installed_version=lambda versions: versions.get("core_current"),
-        latest_version=lambda versions: versions.get("core_latest"),
-        has_update=lambda versions: versions.get("core_update"),
+        installed_version=lambda api: api.core_current,
+        latest_version=lambda api: api.core_latest,
+        has_update=lambda api: api.core_update,
         release_base_url="https://github.com/pi-hole/pi-hole/releases/tag",
     ),
     PiHoleUpdateEntityDescription(
@@ -44,9 +44,9 @@ UPDATE_ENTITY_TYPES: tuple[PiHoleUpdateEntityDescription, ...] = (
         translation_key="web_update_available",
         title="Pi-hole Web interface",
         entity_category=EntityCategory.DIAGNOSTIC,
-        installed_version=lambda versions: versions.get("web_current"),
-        latest_version=lambda versions: versions.get("web_latest"),
-        has_update=lambda versions: versions.get("web_update"),
+        installed_version=lambda api: api.web_current,
+        latest_version=lambda api: api.web_latest,
+        has_update=lambda api: api.web_update,
         release_base_url="https://github.com/pi-hole/AdminLTE/releases/tag",
     ),
     PiHoleUpdateEntityDescription(
@@ -54,9 +54,9 @@ UPDATE_ENTITY_TYPES: tuple[PiHoleUpdateEntityDescription, ...] = (
         translation_key="ftl_update_available",
         title="Pi-hole FTL DNS",
         entity_category=EntityCategory.DIAGNOSTIC,
-        installed_version=lambda versions: versions.get("FTL_current"),
-        latest_version=lambda versions: versions.get("FTL_latest"),
-        has_update=lambda versions: versions.get("FTL_update"),
+        installed_version=lambda api: api.ftl_current,
+        latest_version=lambda api: api.ftl_latest,
+        has_update=lambda api: api.ftl_update,
         release_base_url="https://github.com/pi-hole/FTL/releases/tag",
     ),
 )
@@ -108,15 +108,15 @@ class PiHoleUpdateEntity(PiHoleEntity, UpdateEntity):
     def installed_version(self) -> str | None:
         """Version installed and in use."""
         if isinstance(self.api.versions, dict):
-            return self.entity_description.installed_version(self.api.versions)
+            return self.entity_description.installed_version(self.api)
         return None
 
     @property
     def latest_version(self) -> str | None:
         """Latest version available for install."""
         if isinstance(self.api.versions, dict):
-            if self.entity_description.has_update(self.api.versions):
-                return self.entity_description.latest_version(self.api.versions)
+            if self.entity_description.has_update(self.api):
+                return self.entity_description.latest_version(self.api)
             return self.installed_version
         return None
 

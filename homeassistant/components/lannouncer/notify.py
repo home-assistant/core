@@ -14,9 +14,11 @@ from homeassistant.components.notify import (
     BaseNotificationService,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+DOMAIN = "lannouncer"
 
 ATTR_METHOD = "method"
 ATTR_METHOD_DEFAULT = "speak"
@@ -40,6 +42,22 @@ def get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> LannouncerNotificationService:
     """Get the Lannouncer notification service."""
+
+    @callback
+    def _async_create_issue() -> None:
+        """Create issue for removed integration."""
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "integration_removed",
+            is_fixable=False,
+            breaks_in_ha_version="2026.3.0",
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="integration_removed",
+        )
+
+    hass.add_job(_async_create_issue)
+
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
 

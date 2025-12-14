@@ -1,27 +1,22 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "title": "[%key:common::config_flow::data::location%]",
-        "description": "Instituto Portugu\u00eas do Mar e Atmosfera",
-        "data": {
-          "name": "[%key:common::config_flow::data::name%]",
-          "latitude": "[%key:common::config_flow::data::latitude%]",
-          "longitude": "[%key:common::config_flow::data::longitude%]",
-          "mode": "[%key:common::config_flow::data::mode%]"
-        }
-      }
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
     },
     "error": {
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
-    }
-  },
-  "system_health": {
-    "info": {
-      "api_endpoint_reachable": "IPMA API endpoint reachable"
+    "step": {
+      "user": {
+        "data": {
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]",
+          "mode": "[%key:common::config_flow::data::mode%]",
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "description": "Instituto Portugu\u00eas do Mar e Atmosfera",
+        "title": "[%key:common::config_flow::data::location%]"
+      }
     }
   },
   "entity": {
@@ -35,12 +30,17 @@
       "weather_alert": {
         "name": "Weather Alert",
         "state": {
-          "red": "Red",
-          "yellow": "Yellow",
+          "green": "Green",
           "orange": "Orange",
-          "green": "Green"
+          "red": "Red",
+          "yellow": "Yellow"
         }
       }
+    }
+  },
+  "system_health": {
+    "info": {
+      "api_endpoint_reachable": "IPMA API endpoint reachable"
     }
   }
 }

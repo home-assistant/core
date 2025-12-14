@@ -1,0 +1,42 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Bubbelbad",
+  "category": "pc",
+  "product_id": "t2afic7i3v1bwhfp",
+  "product_name": "Garden Spike(EU)",
+  "online": true,
+  "sub": false,
+  "time_zone": "+01:00",
+  "active_time": "2022-02-02T15:10:03+00:00",
+  "create_time": "2022-02-02T15:10:03+00:00",
+  "update_time": "2022-02-02T15:10:03+00:00",
+  "function": {
+    "switch_1": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_2": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status_range": {
+    "switch_1": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_2": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status": {
+    "switch_1": true,
+    "switch_2": true
+  },
+  "set_up": true,
+  "support_local": true
+}

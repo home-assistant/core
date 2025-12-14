@@ -51,11 +51,11 @@
       "torch": {
         "default": "mdi:white-balance-sunny"
       },
-      "whitebalance_lock": {
-        "default": "mdi:white-balance-auto"
-      },
       "video_recording": {
         "default": "mdi:record-rec"
+      },
+      "whitebalance_lock": {
+        "default": "mdi:white-balance-auto"
       }
     }
   }

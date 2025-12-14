@@ -21,7 +21,6 @@
         'online_with_doorsense',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'August Home Inc.',
@@ -31,7 +30,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': 'online_with_doorsense Name',
     'sw_version': 'undefined-4.3.0-1.8.14',
     'via_device_id': None,
   })

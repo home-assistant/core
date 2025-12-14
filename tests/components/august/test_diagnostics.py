@@ -25,7 +25,7 @@ async def test_diagnostics(
     )
     doorbell_one = await _mock_doorbell_from_fixture(hass, "get_doorbell.json")
 
-    entry, _ = await _create_august_api_with_devices(hass, [lock_one, doorbell_one])
+    entry, _, _ = await _create_august_api_with_devices(hass, [lock_one, doorbell_one])
     diag = await get_diagnostics_for_config_entry(hass, hass_client, entry)
 
     assert diag == snapshot

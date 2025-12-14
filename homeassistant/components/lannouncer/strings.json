@@ -1,0 +1,8 @@
+{
+  "issues": {
+    "integration_removed": {
+      "description": "The LANnouncer Android app is no longer available, so this integration has been deprecated and will be removed in a future release.\n\nTo resolve this issue:\n1. Remove the LANnouncer integration from your `configuration.yaml`.\n2. Restart the Home Assistant instance.\n\nAfter removal, this issue will disappear.",
+      "title": "LANnouncer integration is deprecated"
+    }
+  }
+}

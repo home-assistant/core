@@ -8,5 +8,6 @@
   "integration_type": "service",
   "iot_class": "local_polling",
   "requirements": ["python-otbr-api==2.7.0", "pyroute2==0.7.5"],
+  "single_config_entry": true,
   "zeroconf": ["_meshcop._udp.local."]
 }

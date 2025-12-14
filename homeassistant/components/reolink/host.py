@@ -38,6 +38,7 @@ from .const import (
     BATTERY_ALL_WAKE_UPDATE_INTERVAL,
     BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL,
     BATTERY_WAKE_UPDATE_INTERVAL,
+    CONF_BC_ONLY,
     CONF_BC_PORT,
     CONF_SUPPORTS_PRIVACY_MODE,
     CONF_USE_HTTPS,
@@ -97,6 +98,7 @@ class ReolinkHost:
             timeout=DEFAULT_TIMEOUT,
             aiohttp_get_session_callback=get_aiohttp_session,
             bc_port=config.get(CONF_BC_PORT, DEFAULT_BC_PORT),
+            bc_only=config.get(CONF_BC_ONLY, False),
         )
 
         self.last_wake: defaultdict[int, float] = defaultdict(float)
@@ -220,7 +222,7 @@ class ReolinkHost:
         enable_onvif = None
         enable_rtmp = None
 
-        if not self._api.rtsp_enabled:
+        if not self._api.rtsp_enabled and self._api.supported(None, "RTSP"):
             _LOGGER.debug(
                 "RTSP is disabled on %s, trying to enable it", self._api.nvr_name
             )
@@ -232,7 +234,11 @@ class ReolinkHost:
             )
             enable_onvif = True
 
-        if not self._api.rtmp_enabled and self._api.protocol == "rtmp":
+        if (
+            not self._api.rtmp_enabled
+            and self._api.protocol == "rtmp"
+            and not self._api.baichuan_only
+        ):
             _LOGGER.debug(
                 "RTMP is disabled on %s, trying to enable it", self._api.nvr_name
             )
@@ -416,6 +422,8 @@ class ReolinkHost:
                     "name": self._api.nvr_name,
                     "base_url": self._base_url,
                     "network_link": "https://my.home-assistant.io/redirect/network/",
+                    "example_ip": "192.168.1.10",
+                    "example_url": "http://192.168.1.10:8123",
                 },
             )
 
@@ -430,6 +438,8 @@ class ReolinkHost:
                     translation_placeholders={
                         "base_url": self._base_url,
                         "network_link": "https://my.home-assistant.io/redirect/network/",
+                        "example_ip": "192.168.1.10",
+                        "example_url": "http://192.168.1.10:8123",
                     },
                 )
             else:

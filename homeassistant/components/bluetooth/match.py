@@ -68,12 +68,17 @@ class IntegrationMatchHistory:
     manufacturer_data: bool
     service_data: set[str]
     service_uuids: set[str]
+    name: str
 
 
 def seen_all_fields(
-    previous_match: IntegrationMatchHistory, advertisement_data: AdvertisementData
+    previous_match: IntegrationMatchHistory,
+    advertisement_data: AdvertisementData,
+    name: str,
 ) -> bool:
     """Return if we have seen all fields."""
+    if previous_match.name != name:
+        return False
     if not previous_match.manufacturer_data and advertisement_data.manufacturer_data:
         return False
     if advertisement_data.service_data and (
@@ -122,10 +127,11 @@ class IntegrationMatcher:
         device = service_info.device
         advertisement_data = service_info.advertisement
         connectable = service_info.connectable
+        name = service_info.name
         matched = self._matched_connectable if connectable else self._matched
         matched_domains: set[str] = set()
         if (previous_match := matched.get(device.address)) and seen_all_fields(
-            previous_match, advertisement_data
+            previous_match, advertisement_data, name
         ):
             # We have seen all fields so we can skip the rest of the matchers
             return matched_domains
@@ -140,11 +146,13 @@ class IntegrationMatcher:
             )
             previous_match.service_data |= set(advertisement_data.service_data)
             previous_match.service_uuids |= set(advertisement_data.service_uuids)
+            previous_match.name = name
         else:
             matched[device.address] = IntegrationMatchHistory(
                 manufacturer_data=bool(advertisement_data.manufacturer_data),
                 service_data=set(advertisement_data.service_data),
                 service_uuids=set(advertisement_data.service_uuids),
+                name=name,
             )
         return matched_domains
 

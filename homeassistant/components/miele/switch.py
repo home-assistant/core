@@ -7,7 +7,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any, Final, cast
 
-import aiohttp
+from aiohttp import ClientResponseError
 from pymiele import MieleDevice
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
@@ -165,7 +165,8 @@ class MieleSwitch(MieleEntity, SwitchEntity):
         """Set switch to mode."""
         try:
             await self.api.send_action(self._device_id, mode)
-        except aiohttp.ClientError as err:
+        except ClientResponseError as err:
+            _LOGGER.debug("Error setting switch state for %s: %s", self.entity_id, err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="set_state_error",
@@ -197,7 +198,8 @@ class MielePowerSwitch(MieleSwitch):
         """Set switch to mode."""
         try:
             await self.api.send_action(self._device_id, mode)
-        except aiohttp.ClientError as err:
+        except ClientResponseError as err:
+            _LOGGER.debug("Error setting switch state for %s: %s", self.entity_id, err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="set_state_error",

@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[event.test_air_conditioner_notification-entry]
+# name: test_event_entities[air_conditioner][event.test_air_conditioner_notification-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -38,7 +38,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[event.test_air_conditioner_notification-state]
+# name: test_event_entities[air_conditioner][event.test_air_conditioner_notification-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'event_type': None,

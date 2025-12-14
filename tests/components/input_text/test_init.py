@@ -81,16 +81,21 @@ async def async_set_value(hass: HomeAssistant, entity_id: str, value: str) -> No
     )
 
 
-async def test_config(hass: HomeAssistant) -> None:
-    """Test config."""
-    invalid_configs = [
+@pytest.mark.parametrize(
+    "invalid_config",
+    [
         None,
-        {},
         {"name with space": None},
-        {"test_1": {"min": 50, "max": 50}},
-    ]
-    for cfg in invalid_configs:
-        assert not await async_setup_component(hass, DOMAIN, {DOMAIN: cfg})
+        {"test_1": {"min": 51, "max": 50}},
+        {"test_1": {"min": -1, "max": 100}},
+        {"test_1": {"min": 0, "max": 256}},
+        {"test_1": {"min": 0, "max": 3, "initial": "aaaaa"}},
+    ],
+)
+async def test_config(hass: HomeAssistant, invalid_config) -> None:
+    """Test config."""
+
+    assert not await async_setup_component(hass, DOMAIN, {DOMAIN: invalid_config})
 
 
 async def test_set_value(hass: HomeAssistant) -> None:

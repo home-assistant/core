@@ -1,9 +1,10 @@
 """Constants for the Assist pipeline integration."""
 
+from pathlib import Path
+
 DOMAIN = "assist_pipeline"
 
 DATA_CONFIG = f"{DOMAIN}.config"
-DATA_MIGRATIONS = f"{DOMAIN}_migrations"
 
 DEFAULT_PIPELINE_TIMEOUT = 60 * 5  # seconds
 
@@ -24,3 +25,5 @@ SAMPLES_PER_CHUNK = SAMPLE_RATE // (1000 // MS_PER_CHUNK)  # 10 ms @ 16Khz
 BYTES_PER_CHUNK = SAMPLES_PER_CHUNK * SAMPLE_WIDTH * SAMPLE_CHANNELS  # 16-bit
 
 OPTION_PREFERRED = "preferred"
+
+ACKNOWLEDGE_PATH = Path(__file__).parent / "acknowledge.mp3"

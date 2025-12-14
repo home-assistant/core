@@ -20,7 +20,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up numbers for device."""
-    if entry.runtime_data.data.device.supports_state():
+    if entry.runtime_data.data.device.supports_led_brightness():
         async_add_entities([HWEnergyNumberEntity(entry.runtime_data)])
 
 

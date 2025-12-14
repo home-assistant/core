@@ -1,0 +1,66 @@
+{
+  "items": [
+    {
+      "deviceId": "d830b46f-f094-4560-b8c3-7690032fdb4c",
+      "name": "generic-ef00-v1",
+      "label": "Gas Detector",
+      "manufacturerName": "SmartThingsCommunity",
+      "presentationId": "d4b88195-fd5b-39d3-ac6f-7070655f08ab",
+      "deviceManufacturerCode": "_TZE284_chbyv06x",
+      "locationId": "7139bb09-31e3-4fad-bf03-b9ad02e57b41",
+      "ownerId": "00126705-d35b-27ee-d18b-17620d9929e7",
+      "roomId": "5adccb3a-8ae7-41c0-bc58-7ba80ff78a18",
+      "components": [
+        {
+          "id": "main",
+          "label": "Detector",
+          "capabilities": [
+            {
+              "id": "gasDetector",
+              "version": 1
+            },
+            {
+              "id": "momentary",
+              "version": 1
+            },
+            {
+              "id": "signalStrength",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Siren",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        }
+      ],
+      "createTime": "2025-05-25T04:55:42.440Z",
+      "profile": {
+        "id": "1d34dd9d-6840-3df6-a6d0-5d9f4a4af2e1"
+      },
+      "zigbee": {
+        "eui": "A4C138C524A5BC8D",
+        "networkId": "1575",
+        "driverId": "bc7fd1bc-eb00-4b7f-8977-172acf823508",
+        "executingLocally": true,
+        "hubId": "0afe704f-eabb-4e4d-8333-6c73903e4f84",
+        "provisioningState": "DRIVER_SWITCH",
+        "fingerprintType": "ZIGBEE_GENERIC",
+        "fingerprintId": "GenericEF00"
+      },
+      "type": "ZIGBEE",
+      "restrictionTier": 0,
+      "allowed": null,
+      "executionContext": "LOCAL",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}

@@ -310,6 +310,73 @@ async def test_webhook_handle_get_config(
     assert expected_dict == json
 
 
+async def test_webhook_handle_get_config_with_cloudhook_and_active_subscription(
+    hass: HomeAssistant,
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
+    webhook_client: TestClient,
+) -> None:
+    """Test get_config returns cloudhook_url when there's an active subscription."""
+    webhook_id = create_registrations[1]["webhook_id"]
+    webhook_url = f"/api/webhook/{webhook_id}"
+
+    # Get the config entry and add cloudhook_url to it
+    config_entry = hass.config_entries.async_entries(DOMAIN)[1]
+    hass.config_entries.async_update_entry(
+        config_entry,
+        data={**config_entry.data, "cloudhook_url": "https://hooks.nabu.casa/test"},
+    )
+
+    with (
+        patch(
+            "homeassistant.components.cloud.async_active_subscription",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.cloud.async_remote_ui_url",
+            return_value="https://remote.ui.url",
+        ),
+    ):
+        resp = await webhook_client.post(webhook_url, json={"type": "get_config"})
+        assert resp.status == HTTPStatus.OK
+        json_resp = await resp.json()
+
+        # Cloudhook should be in response
+        assert "cloudhook_url" in json_resp
+        assert json_resp["cloudhook_url"] == "https://hooks.nabu.casa/test"
+        # Remote UI should also be in response
+        assert "remote_ui_url" in json_resp
+
+
+async def test_webhook_handle_get_config_with_cloudhook_no_subscription(
+    hass: HomeAssistant,
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
+    webhook_client: TestClient,
+) -> None:
+    """Test get_config doesn't return cloudhook_url without active subscription."""
+    webhook_id = create_registrations[1]["webhook_id"]
+    webhook_url = f"/api/webhook/{webhook_id}"
+
+    # Get the config entry and add cloudhook_url to it
+    config_entry = hass.config_entries.async_entries(DOMAIN)[1]
+    hass.config_entries.async_update_entry(
+        config_entry,
+        data={**config_entry.data, "cloudhook_url": "https://hooks.nabu.casa/test"},
+    )
+
+    with patch(
+        "homeassistant.components.cloud.async_active_subscription",
+        return_value=False,
+    ):
+        resp = await webhook_client.post(webhook_url, json={"type": "get_config"})
+        assert resp.status == HTTPStatus.OK
+        json_resp = await resp.json()
+
+        # Cloudhook should NOT be in response even though it exists in config entry
+        assert "cloudhook_url" not in json_resp
+        # Remote UI should also not be in response
+        assert "remote_ui_url" not in json_resp
+
+
 async def test_webhook_returns_error_incorrect_json(
     create_registrations: tuple[dict[str, Any], dict[str, Any]],
     webhook_client: TestClient,

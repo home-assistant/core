@@ -204,7 +204,10 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add an solarEdge entry."""
-    # Add the needed sensors to hass
+    # Add sensor entities only if API key is configured
+    if DATA_API_CLIENT not in entry.runtime_data:
+        return
+
     api = entry.runtime_data[DATA_API_CLIENT]
     sensor_factory = SolarEdgeSensorFactory(hass, entry, entry.data[CONF_SITE_ID], api)
     for service in sensor_factory.all_services:

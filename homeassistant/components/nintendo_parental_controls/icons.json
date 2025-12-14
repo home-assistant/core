@@ -1,0 +1,7 @@
+{
+  "services": {
+    "add_bonus_time": {
+      "service": "mdi:timer-plus-outline"
+    }
+  }
+}

@@ -1143,10 +1143,10 @@ CUSTOM_ISSUE_TRACKER = "https://blablabla.com"
         ("hue", "homeassistant.components.hue.sensor", CORE_ISSUE_TRACKER_HUE),
         ("hue", None, CORE_ISSUE_TRACKER_HUE),
         ("bla_built_in", None, CORE_ISSUE_TRACKER_BUILT_IN),
-        # Integration domain is not currently deduced from module
-        (None, "homeassistant.components.hue.sensor", CORE_ISSUE_TRACKER),
+        (None, "homeassistant.components.hue.sensor", CORE_ISSUE_TRACKER_HUE),
         ("hue", "homeassistant.components.mqtt.sensor", CORE_ISSUE_TRACKER_HUE),
         # Loaded custom integration with known issue tracker
+        (None, "custom_components.bla_custom.sensor", CUSTOM_ISSUE_TRACKER),
         ("bla_custom", "custom_components.bla_custom.sensor", CUSTOM_ISSUE_TRACKER),
         ("bla_custom", None, CUSTOM_ISSUE_TRACKER),
         # Loaded custom integration without known issue tracker
@@ -1155,6 +1155,7 @@ CUSTOM_ISSUE_TRACKER = "https://blablabla.com"
         ("bla_custom_no_tracker", None, None),
         ("hue", "custom_components.bla.sensor", None),
         # Unloaded custom integration with known issue tracker
+        (None, "custom_components.bla_custom_not_loaded.sensor", CUSTOM_ISSUE_TRACKER),
         ("bla_custom_not_loaded", None, CUSTOM_ISSUE_TRACKER),
         # Unloaded custom integration without known issue tracker
         ("bla_custom_not_loaded_no_tracker", None, None),
@@ -1218,8 +1219,7 @@ async def test_async_get_issue_tracker(
         ("hue", "homeassistant.components.hue.sensor", CORE_ISSUE_TRACKER_HUE),
         ("hue", None, CORE_ISSUE_TRACKER_HUE),
         ("bla_built_in", None, CORE_ISSUE_TRACKER_BUILT_IN),
-        # Integration domain is not currently deduced from module
-        (None, "homeassistant.components.hue.sensor", CORE_ISSUE_TRACKER),
+        (None, "homeassistant.components.hue.sensor", CORE_ISSUE_TRACKER_HUE),
         ("hue", "homeassistant.components.mqtt.sensor", CORE_ISSUE_TRACKER_HUE),
         # Custom integration with known issue tracker - can't find it without hass
         ("bla_custom", "custom_components.bla_custom.sensor", None),

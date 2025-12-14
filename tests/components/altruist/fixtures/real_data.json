@@ -1,0 +1,38 @@
+[
+  {
+    "value_type": "signal",
+    "value": "-48"
+  },
+  {
+    "value_type": "SDS_P1",
+    "value": "0.1"
+  },
+  {
+    "value_type": "SDS_P2",
+    "value": "0.23"
+  },
+  {
+    "value_type": "BME280_humidity",
+    "value": "54.94141"
+  },
+  {
+    "value_type": "BME280_temperature",
+    "value": "22.95313"
+  },
+  {
+    "value_type": "BME280_pressure",
+    "value": "99978.16"
+  },
+  {
+    "value_type": "PCBA_noiseMax",
+    "value": "60"
+  },
+  {
+    "value_type": "PCBA_noiseAvg",
+    "value": "51"
+  },
+  {
+    "value_type": "GC",
+    "value": "15.2"
+  }
+]

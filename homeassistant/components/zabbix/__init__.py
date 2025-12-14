@@ -13,7 +13,7 @@ from urllib.parse import urljoin
 
 import voluptuous as vol
 from zabbix_utils import ItemValue, Sender, ZabbixAPI
-from zabbix_utils.exceptions import APIRequestError
+from zabbix_utils.exceptions import APIRequestError, ProcessingError
 
 from homeassistant.const import (
     CONF_HOST,
@@ -43,6 +43,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 CONF_PUBLISH_STATES_HOST = "publish_states_host"
+CONF_PUBLISH_STRING_STATES = "publish_string_states"
 
 DEFAULT_SSL = False
 DEFAULT_PATH = "zabbix"
@@ -67,6 +68,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
                 vol.Optional(CONF_USERNAME): cv.string,
                 vol.Optional(CONF_PUBLISH_STATES_HOST): cv.string,
+                vol.Optional(CONF_PUBLISH_STRING_STATES, default=False): cv.boolean,
             }
         )
     },
@@ -85,6 +87,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     password = conf.get(CONF_PASSWORD)
 
     publish_states_host = conf.get(CONF_PUBLISH_STATES_HOST)
+    publish_string_states = conf[CONF_PUBLISH_STRING_STATES]
 
     entities_filter = convert_include_exclude_filter(conf)
 
@@ -107,6 +110,28 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.data[DOMAIN] = zapi
 
+    def update_metrics(
+        metrics: list[ItemValue],
+        item_type: str,
+        keys: set[str],
+        key_values: dict[str, float | str],
+    ):
+        keys_count = len(keys)
+        keys.update(key_values)
+        if len(keys) > keys_count:
+            discovery = [{"{#KEY}": key} for key in keys]
+            metric = ItemValue(
+                publish_states_host,
+                f"homeassistant.{item_type}s_discovery",
+                json.dumps(discovery),
+            )
+            metrics.append(metric)
+        for key, value in key_values.items():
+            metric = ItemValue(
+                publish_states_host, f"homeassistant.{item_type}[{key}]", value
+            )
+            metrics.append(metric)
+
     def event_to_metrics(
         event: Event, float_keys: set[str], string_keys: set[str]
     ) -> list[ItemValue] | None:
@@ -119,8 +144,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if not entities_filter(entity_id):
             return None
 
-        floats = {}
-        strings = {}
+        floats: dict[str, float | str] = {}
+        strings: dict[str, float | str] = {}
         try:
             _state_as_value = float(state.state)
             floats[entity_id] = _state_as_value
@@ -129,7 +154,8 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 _state_as_value = float(state_helper.state_as_number(state))
                 floats[entity_id] = _state_as_value
             except ValueError:
-                strings[entity_id] = state.state
+                if publish_string_states:
+                    strings[entity_id] = str(state.state)
 
         for key, value in state.attributes.items():
             # For each value we try to cast it as float
@@ -141,28 +167,18 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
             except (ValueError, TypeError):
                 float_value = None
             if float_value is None or not math.isfinite(float_value):
-                strings[attribute_id] = str(value)
+                # Don't store string attributes for now
+                pass
             else:
                 floats[attribute_id] = float_value
 
-        metrics = []
-        float_keys_count = len(float_keys)
-        float_keys.update(floats)
-        if len(float_keys) != float_keys_count:
-            floats_discovery = [{"{#KEY}": float_key} for float_key in float_keys]
-            metric = ItemValue(
-                publish_states_host,
-                "homeassistant.floats_discovery",
-                json.dumps(floats_discovery),
-            )
-            metrics.append(metric)
-        for key, value in floats.items():
-            metric = ItemValue(
-                publish_states_host, f"homeassistant.float[{key}]", value
-            )
-            metrics.append(metric)
+        metrics: list[ItemValue] = []
+        update_metrics(metrics, "float", float_keys, floats)
 
-        string_keys.update(strings)
+        if not publish_string_states:
+            return metrics
+
+        update_metrics(metrics, "string", string_keys, strings)
         return metrics
 
     if publish_states_host:
@@ -266,6 +282,8 @@ class ZabbixThread(threading.Thread):
                     if not self.write_errors:
                         _LOGGER.error("Write error: %s", err)
                     self.write_errors += len(metrics)
+            except ProcessingError as prerr:
+                _LOGGER.error("Error writing to Zabbix: %s", prerr)
 
     def run(self) -> None:
         """Process incoming events."""

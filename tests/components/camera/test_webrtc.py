@@ -8,7 +8,6 @@ import pytest
 from webrtc_models import RTCIceCandidate, RTCIceCandidateInit, RTCIceServer
 
 from homeassistant.components.camera import (
-    DATA_ICE_SERVERS,
     Camera,
     CameraWebRTCProvider,
     StreamType,
@@ -17,10 +16,10 @@ from homeassistant.components.camera import (
     WebRTCError,
     WebRTCMessage,
     WebRTCSendMessage,
-    async_register_ice_servers,
     async_register_webrtc_provider,
     get_camera_from_entity_id,
 )
+from homeassistant.components.web_rtc import async_register_ice_servers
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.core_config import async_process_ha_core_config
@@ -102,89 +101,6 @@ async def test_async_register_webrtc_provider_camera_not_loaded(
 
 
 @pytest.mark.usefixtures("mock_test_webrtc_cameras")
-async def test_async_register_ice_server(
-    hass: HomeAssistant,
-) -> None:
-    """Test registering an ICE server."""
-    # Clear any existing ICE servers
-    hass.data[DATA_ICE_SERVERS].clear()
-
-    called = 0
-
-    @callback
-    def get_ice_servers() -> list[RTCIceServer]:
-        nonlocal called
-        called += 1
-        return [
-            RTCIceServer(urls="stun:example.com"),
-            RTCIceServer(urls="turn:example.com"),
-        ]
-
-    unregister = async_register_ice_servers(hass, get_ice_servers)
-    assert not called
-
-    camera = get_camera_from_entity_id(hass, "camera.async")
-    config = camera.async_get_webrtc_client_configuration()
-
-    assert config.configuration.ice_servers == [
-        RTCIceServer(urls="stun:example.com"),
-        RTCIceServer(urls="turn:example.com"),
-    ]
-    assert called == 1
-
-    # register another ICE server
-    called_2 = 0
-
-    @callback
-    def get_ice_servers_2() -> list[RTCIceServer]:
-        nonlocal called_2
-        called_2 += 1
-        return [
-            RTCIceServer(
-                urls=["stun:example2.com", "turn:example2.com"],
-                username="user",
-                credential="pass",
-            )
-        ]
-
-    unregister_2 = async_register_ice_servers(hass, get_ice_servers_2)
-
-    config = camera.async_get_webrtc_client_configuration()
-    assert config.configuration.ice_servers == [
-        RTCIceServer(urls="stun:example.com"),
-        RTCIceServer(urls="turn:example.com"),
-        RTCIceServer(
-            urls=["stun:example2.com", "turn:example2.com"],
-            username="user",
-            credential="pass",
-        ),
-    ]
-    assert called == 2
-    assert called_2 == 1
-
-    # unregister the first ICE server
-
-    unregister()
-
-    config = camera.async_get_webrtc_client_configuration()
-    assert config.configuration.ice_servers == [
-        RTCIceServer(
-            urls=["stun:example2.com", "turn:example2.com"],
-            username="user",
-            credential="pass",
-        ),
-    ]
-    assert called == 2
-    assert called_2 == 2
-
-    # unregister the second ICE server
-    unregister_2()
-
-    config = camera.async_get_webrtc_client_configuration()
-    assert config.configuration.ice_servers == []
-
-
-@pytest.mark.usefixtures("mock_test_webrtc_cameras")
 async def test_ws_get_client_config(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
@@ -205,8 +121,8 @@ async def test_ws_get_client_config(
             "iceServers": [
                 {
                     "urls": [
-                        "stun:stun.home-assistant.io:80",
                         "stun:stun.home-assistant.io:3478",
+                        "stun:stun.home-assistant.io:80",
                     ]
                 },
             ],
@@ -238,8 +154,8 @@ async def test_ws_get_client_config(
             "iceServers": [
                 {
                     "urls": [
-                        "stun:stun.home-assistant.io:80",
                         "stun:stun.home-assistant.io:3478",
+                        "stun:stun.home-assistant.io:80",
                     ]
                 },
                 {

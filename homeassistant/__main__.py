@@ -187,36 +187,42 @@ def main() -> int:
 
     from . import config, runner  # noqa: PLC0415
 
-    safe_mode = config.safe_mode_enabled(config_dir)
+    # Ensure only one instance runs per config directory
+    with runner.ensure_single_execution(config_dir) as single_execution_lock:
+        # Check if another instance is already running
+        if single_execution_lock.exit_code is not None:
+            return single_execution_lock.exit_code
 
-    runtime_conf = runner.RuntimeConfig(
-        config_dir=config_dir,
-        verbose=args.verbose,
-        log_rotate_days=args.log_rotate_days,
-        log_file=args.log_file,
-        log_no_color=args.log_no_color,
-        skip_pip=args.skip_pip,
-        skip_pip_packages=args.skip_pip_packages,
-        recovery_mode=args.recovery_mode,
-        debug=args.debug,
-        open_ui=args.open_ui,
-        safe_mode=safe_mode,
-    )
+        safe_mode = config.safe_mode_enabled(config_dir)
 
-    fault_file_name = os.path.join(config_dir, FAULT_LOG_FILENAME)
-    with open(fault_file_name, mode="a", encoding="utf8") as fault_file:
-        faulthandler.enable(fault_file)
-        exit_code = runner.run(runtime_conf)
-        faulthandler.disable()
+        runtime_conf = runner.RuntimeConfig(
+            config_dir=config_dir,
+            verbose=args.verbose,
+            log_rotate_days=args.log_rotate_days,
+            log_file=args.log_file,
+            log_no_color=args.log_no_color,
+            skip_pip=args.skip_pip,
+            skip_pip_packages=args.skip_pip_packages,
+            recovery_mode=args.recovery_mode,
+            debug=args.debug,
+            open_ui=args.open_ui,
+            safe_mode=safe_mode,
+        )
 
-    # It's possible for the fault file to disappear, so suppress obvious errors
-    with suppress(FileNotFoundError):
-        if os.path.getsize(fault_file_name) == 0:
-            os.remove(fault_file_name)
+        fault_file_name = os.path.join(config_dir, FAULT_LOG_FILENAME)
+        with open(fault_file_name, mode="a", encoding="utf8") as fault_file:
+            faulthandler.enable(fault_file)
+            exit_code = runner.run(runtime_conf)
+            faulthandler.disable()
 
-    check_threads()
+        # It's possible for the fault file to disappear, so suppress obvious errors
+        with suppress(FileNotFoundError):
+            if os.path.getsize(fault_file_name) == 0:
+                os.remove(fault_file_name)
 
-    return exit_code
+        check_threads()
+
+        return exit_code
 
 
 if __name__ == "__main__":

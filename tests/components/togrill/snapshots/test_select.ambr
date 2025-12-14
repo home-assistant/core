@@ -1,0 +1,901 @@
+# serializer version: 1
+# name: test_setup[no_data][select.probe_1_grill_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'none',
+        'beef',
+        'veal',
+        'lamb',
+        'pork',
+        'turkey',
+        'chicken',
+        'sausage',
+        'fish',
+        'hamburger',
+        'bbq_smoke',
+        'hot_smoke',
+        'cold_smoke',
+        'mark_a',
+        'mark_b',
+        'mark_c',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.probe_1_grill_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Grill type',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'grill_type',
+    'unique_id': '00000000-0000-0000-0000-000000000001_grill_type_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[no_data][select.probe_1_grill_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Probe 1 Grill type',
+      'options': list([
+        'none',
+        'beef',
+        'veal',
+        'lamb',
+        'pork',
+        'turkey',
+        'chicken',
+        'sausage',
+        'fish',
+        'hamburger',
+        'bbq_smoke',
+        'hot_smoke',
+        'cold_smoke',
+        'mark_a',
+        'mark_b',
+        'mark_c',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.probe_1_grill_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'none',
+  })
+# ---
+# name: test_setup[no_data][select.probe_1_taste-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'none',
+        'rare',
+        'medium_rare',
+        'medium',
+        'medium_well',
+        'well_done',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.probe_1_taste',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Taste',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'taste',
+    'unique_id': '00000000-0000-0000-0000-000000000001_taste_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[no_data][select.probe_1_taste-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Probe 1 Taste',
+      'options': list([
+        'none',
+        'rare',
+        'medium_rare',
+        'medium',
+        'medium_well',
+        'well_done',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.probe_1_taste',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'none',
+  })
+# ---
+# name: test_setup[no_data][select.probe_2_grill_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'none',
+        'beef',
+        'veal',
+        'lamb',
+        'pork',
+        'turkey',
+        'chicken',
+        'sausage',
+        'fish',
+        'hamburger',
+        'bbq_smoke',
+        'hot_smoke',
+        'cold_smoke',
+        'mark_a',
+        'mark_b',
+        'mark_c',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.probe_2_grill_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Grill type',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'grill_type',
+    'unique_id': '00000000-0000-0000-0000-000000000001_grill_type_2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[no_data][select.probe_2_grill_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Probe 2 Grill type',
+      'options': list([
+        'none',
+        'beef',
+        'veal',
+        'lamb',
+        'pork',
+        'turkey',
+        'chicken',
+        'sausage',
+        'fish',
+        'hamburger',
+        'bbq_smoke',
+        'hot_smoke',
+        'cold_smoke',
+        'mark_a',
+        'mark_b',
+        'mark_c',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.probe_2_grill_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'none',
+  })
+# ---
+# name: test_setup[no_data][select.probe_2_taste-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'none',
+        'rare',
+        'medium_rare',
+        'medium',
+        'medium_well',
+        'well_done',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.probe_2_taste',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Taste',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'taste',
+    'unique_id': '00000000-0000-0000-0000-000000000001_taste_2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[no_data][select.probe_2_taste-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Probe 2 Taste',
+      'options': list([
+        'none',
+        'rare',
+        'medium_rare',
+        'medium',
+        'medium_well',
+        'well_done',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.probe_2_taste',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'none',
+  })
+# ---
+# name: test_setup[probes_with_different_data][select.probe_1_grill_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'none',
+        'beef',
+        'veal',
+        'lamb',
+        'pork',
+        'turkey',
+        'chicken',
+        'sausage',
+        'fish',
+        'hamburger',
+        'bbq_smoke',
+        'hot_smoke',
+        'cold_smoke',
+        'mark_a',
+        'mark_b',
+        'mark_c',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.probe_1_grill_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Grill type',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'grill_type',
+    'unique_id': '00000000-0000-0000-0000-000000000001_grill_type_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[probes_with_different_data][select.probe_1_grill_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Probe 1 Grill type',
+      'options': list([
+        'none',
+        'beef',
+        'veal',
+        'lamb',
+        'pork',
+        'turkey',
+        'chicken',
+        'sausage',
+        'fish',
+        'hamburger',
+        'bbq_smoke',
+        'hot_smoke',
+        'cold_smoke',
+        'mark_a',
+        'mark_b',
+        'mark_c',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.probe_1_grill_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'beef',
+  })
+# ---
+# name: test_setup[probes_with_different_data][select.probe_1_taste-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'none',
+        'rare',
+        'medium_rare',
+        'medium',
+        'medium_well',
+        'well_done',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.probe_1_taste',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Taste',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'taste',
+    'unique_id': '00000000-0000-0000-0000-000000000001_taste_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[probes_with_different_data][select.probe_1_taste-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Probe 1 Taste',
+      'options': list([
+        'none',
+        'rare',
+        'medium_rare',
+        'medium',
+        'medium_well',
+        'well_done',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.probe_1_taste',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'none',
+  })
+# ---
+# name: test_setup[probes_with_different_data][select.probe_2_grill_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'none',
+        'beef',
+        'veal',
+        'lamb',
+        'pork',
+        'turkey',
+        'chicken',
+        'sausage',
+        'fish',
+        'hamburger',
+        'bbq_smoke',
+        'hot_smoke',
+        'cold_smoke',
+        'mark_a',
+        'mark_b',
+        'mark_c',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.probe_2_grill_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Grill type',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'grill_type',
+    'unique_id': '00000000-0000-0000-0000-000000000001_grill_type_2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[probes_with_different_data][select.probe_2_grill_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Probe 2 Grill type',
+      'options': list([
+        'none',
+        'beef',
+        'veal',
+        'lamb',
+        'pork',
+        'turkey',
+        'chicken',
+        'sausage',
+        'fish',
+        'hamburger',
+        'bbq_smoke',
+        'hot_smoke',
+        'cold_smoke',
+        'mark_a',
+        'mark_b',
+        'mark_c',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.probe_2_grill_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'none',
+  })
+# ---
+# name: test_setup[probes_with_different_data][select.probe_2_taste-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'none',
+        'rare',
+        'medium_rare',
+        'medium',
+        'medium_well',
+        'well_done',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.probe_2_taste',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Taste',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'taste',
+    'unique_id': '00000000-0000-0000-0000-000000000001_taste_2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[probes_with_different_data][select.probe_2_taste-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Probe 2 Taste',
+      'options': list([
+        'none',
+        'rare',
+        'medium_rare',
+        'medium',
+        'medium_well',
+        'well_done',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.probe_2_taste',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'none',
+  })
+# ---
+# name: test_setup[probes_with_unknown_data][select.probe_1_grill_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'none',
+        'beef',
+        'veal',
+        'lamb',
+        'pork',
+        'turkey',
+        'chicken',
+        'sausage',
+        'fish',
+        'hamburger',
+        'bbq_smoke',
+        'hot_smoke',
+        'cold_smoke',
+        'mark_a',
+        'mark_b',
+        'mark_c',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.probe_1_grill_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Grill type',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'grill_type',
+    'unique_id': '00000000-0000-0000-0000-000000000001_grill_type_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[probes_with_unknown_data][select.probe_1_grill_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Probe 1 Grill type',
+      'options': list([
+        'none',
+        'beef',
+        'veal',
+        'lamb',
+        'pork',
+        'turkey',
+        'chicken',
+        'sausage',
+        'fish',
+        'hamburger',
+        'bbq_smoke',
+        'hot_smoke',
+        'cold_smoke',
+        'mark_a',
+        'mark_b',
+        'mark_c',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.probe_1_grill_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'none',
+  })
+# ---
+# name: test_setup[probes_with_unknown_data][select.probe_1_taste-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'none',
+        'rare',
+        'medium_rare',
+        'medium',
+        'medium_well',
+        'well_done',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.probe_1_taste',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Taste',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'taste',
+    'unique_id': '00000000-0000-0000-0000-000000000001_taste_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[probes_with_unknown_data][select.probe_1_taste-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Probe 1 Taste',
+      'options': list([
+        'none',
+        'rare',
+        'medium_rare',
+        'medium',
+        'medium_well',
+        'well_done',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.probe_1_taste',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'none',
+  })
+# ---
+# name: test_setup[probes_with_unknown_data][select.probe_2_grill_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'none',
+        'beef',
+        'veal',
+        'lamb',
+        'pork',
+        'turkey',
+        'chicken',
+        'sausage',
+        'fish',
+        'hamburger',
+        'bbq_smoke',
+        'hot_smoke',
+        'cold_smoke',
+        'mark_a',
+        'mark_b',
+        'mark_c',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.probe_2_grill_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Grill type',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'grill_type',
+    'unique_id': '00000000-0000-0000-0000-000000000001_grill_type_2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[probes_with_unknown_data][select.probe_2_grill_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Probe 2 Grill type',
+      'options': list([
+        'none',
+        'beef',
+        'veal',
+        'lamb',
+        'pork',
+        'turkey',
+        'chicken',
+        'sausage',
+        'fish',
+        'hamburger',
+        'bbq_smoke',
+        'hot_smoke',
+        'cold_smoke',
+        'mark_a',
+        'mark_b',
+        'mark_c',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.probe_2_grill_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'none',
+  })
+# ---
+# name: test_setup[probes_with_unknown_data][select.probe_2_taste-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'none',
+        'rare',
+        'medium_rare',
+        'medium',
+        'medium_well',
+        'well_done',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.probe_2_taste',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Taste',
+    'platform': 'togrill',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'taste',
+    'unique_id': '00000000-0000-0000-0000-000000000001_taste_2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[probes_with_unknown_data][select.probe_2_taste-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Probe 2 Taste',
+      'options': list([
+        'none',
+        'rare',
+        'medium_rare',
+        'medium',
+        'medium_well',
+        'well_done',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.probe_2_taste',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'none',
+  })
+# ---

@@ -1,0 +1,175 @@
+{
+  "endpoint": "https://openapi.tuyaeu.com",
+  "auth_type": 0,
+  "country_code": "61",
+  "app_type": "tuyaSmart",
+  "mqtt_connected": null,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Genio Nebula & Blue Star Projector",
+  "model": "I003879",
+  "category": "xktyd",
+  "product_id": "3djw12ln4xtvv8eq",
+  "product_name": "Genio Nebula & Blue Star Projector",
+  "online": true,
+  "sub": false,
+  "time_zone": "+10:30",
+  "active_time": "2021-11-17T11:32:03+00:00",
+  "create_time": "2021-11-17T11:32:03+00:00",
+  "update_time": "2021-12-18T14:27:33+00:00",
+  "function": {
+    "switch_led": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "colour_data": {
+      "type": "Json",
+      "value": {}
+    },
+    "countdown": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "mic_music_data": {
+      "type": "String",
+      "value": {
+        "maxlen": "255"
+      }
+    },
+    "star_work_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["manual", "scene", "music"]
+      }
+    },
+    "colour_switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "laser_switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "laser_bright": {
+      "type": "Integer",
+      "value": {
+        "min": 10,
+        "max": 1000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "star_control_data": {
+      "type": "Raw",
+      "value": {}
+    },
+    "star_scene_data": {
+      "type": "Raw",
+      "value": {}
+    },
+    "fan_switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "fan_speed": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 1,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status_range": {
+    "switch_led": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "colour_data": {
+      "type": "Json",
+      "value": {}
+    },
+    "countdown": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "mic_music_data": {
+      "type": "String",
+      "value": {
+        "maxlen": "255"
+      }
+    },
+    "star_work_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["manual", "scene", "music"]
+      }
+    },
+    "colour_switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "laser_switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "laser_bright": {
+      "type": "Integer",
+      "value": {
+        "min": 10,
+        "max": 1000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "star_scene_data": {
+      "type": "Raw",
+      "value": {}
+    },
+    "fan_switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "fan_speed": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 1,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "switch_led": true,
+    "colour_data": {
+      "h": 0,
+      "s": 0,
+      "v": 1000
+    },
+    "countdown": 0,
+    "mic_music_data": "000002013232",
+    "star_work_mode": "manual",
+    "colour_switch": true,
+    "laser_switch": true,
+    "laser_bright": 1000,
+    "star_scene_data": "AAQBAAABALQD6APoAQMyAQPoATI=",
+    "fan_switch": true,
+    "fan_speed": 100
+  }
+}

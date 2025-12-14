@@ -4,7 +4,6 @@ from unittest.mock import AsyncMock, patch
 
 from bimmer_connected.models import MyBMWRemoteServiceError
 from bimmer_connected.vehicle.remote_services import RemoteServices
-from freezegun import freeze_time
 import pytest
 import respx
 from syrupy.assertion import SnapshotAssertion
@@ -27,7 +26,7 @@ from tests.common import snapshot_platform
 from tests.components.recorder.common import async_wait_recording_done
 
 
-@freeze_time("2023-06-22 10:30:00+00:00")
+@pytest.mark.freeze_time("2023-06-22 10:30:00+00:00")
 @pytest.mark.usefixtures("bmw_fixture")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_entity_state_attrs(

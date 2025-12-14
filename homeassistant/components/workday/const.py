@@ -11,7 +11,7 @@ LOGGER = logging.getLogger(__package__)
 ALLOWED_DAYS = [*WEEKDAYS, "holiday"]
 
 DOMAIN = "workday"
-PLATFORMS = [Platform.BINARY_SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.CALENDAR]
 
 CONF_PROVINCE = "province"
 CONF_WORKDAYS = "workdays"

@@ -1,7 +1,8 @@
 """Configuration for SSDP tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+import socket
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from async_upnp_client.server import UpnpServer
 from async_upnp_client.ssdp_listener import SsdpListener
@@ -29,7 +30,10 @@ async def disabled_upnp_server():
     with (
         patch("homeassistant.components.ssdp.server.UpnpServer.async_start"),
         patch("homeassistant.components.ssdp.server.UpnpServer.async_stop"),
-        patch("homeassistant.components.ssdp.server._async_find_next_available_port"),
+        patch(
+            "homeassistant.components.ssdp.server._async_find_next_available_port",
+            return_value=(40000, MagicMock(spec_set=socket.socket)),
+        ),
     ):
         yield UpnpServer
 

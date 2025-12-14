@@ -20,7 +20,7 @@ from tests.common import MockConfigEntry
 DHCP_DISCOVERY = DhcpServiceInfo(
     ip="1.1.1.1",
     hostname="KNC1-W-00000214",
-    macaddress="aa:bb:cc:dd:ee:ff",
+    macaddress="aabbccddeeff",
 )
 
 

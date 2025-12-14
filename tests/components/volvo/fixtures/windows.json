@@ -1,0 +1,22 @@
+{
+  "frontLeftWindow": {
+    "value": "CLOSED",
+    "timestamp": "2024-12-30T14:28:12.202Z"
+  },
+  "frontRightWindow": {
+    "value": "CLOSED",
+    "timestamp": "2024-12-30T14:28:12.202Z"
+  },
+  "rearLeftWindow": {
+    "value": "CLOSED",
+    "timestamp": "2024-12-30T14:28:12.202Z"
+  },
+  "rearRightWindow": {
+    "value": "CLOSED",
+    "timestamp": "2024-12-30T14:28:12.202Z"
+  },
+  "sunroof": {
+    "value": "UNSPECIFIED",
+    "timestamp": "2024-12-30T14:28:12.202Z"
+  }
+}

@@ -1,0 +1,84 @@
+name: Restrict task creation
+
+# yamllint disable-line rule:truthy
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  check-authorization:
+    runs-on: ubuntu-latest
+    # Only run if this is a Task issue type (from the issue form)
+    if: github.event.issue.type.name == 'Task'
+    steps:
+      - name: Check if user is authorized
+        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
+        with:
+          script: |
+            const issueAuthor = context.payload.issue.user.login;
+
+            // First check if user is an organization member
+            try {
+              await github.rest.orgs.checkMembershipForUser({
+                org: 'home-assistant',
+                username: issueAuthor
+              });
+              console.log(`✅ ${issueAuthor} is an organization member`);
+              return; // Authorized, no need to check further
+            } catch (error) {
+              console.log(`ℹ️ ${issueAuthor} is not an organization member, checking codeowners...`);
+            }
+
+            // If not an org member, check if they're a codeowner
+            try {
+              // Fetch CODEOWNERS file from the repository
+              const { data: codeownersFile } = await github.rest.repos.getContent({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                path: 'CODEOWNERS',
+                ref: 'dev'
+              });
+
+              // Decode the content (it's base64 encoded)
+              const codeownersContent = Buffer.from(codeownersFile.content, 'base64').toString('utf-8');
+
+              // Check if the issue author is mentioned in CODEOWNERS
+              // GitHub usernames in CODEOWNERS are prefixed with @
+              if (codeownersContent.includes(`@${issueAuthor}`)) {
+                console.log(`✅ ${issueAuthor} is a integration code owner`);
+                return; // Authorized
+              }
+            } catch (error) {
+              console.error('Error checking CODEOWNERS:', error);
+            }
+
+            // If we reach here, user is not authorized
+            console.log(`❌ ${issueAuthor} is not authorized to create Task issues`);
+
+            // Close the issue with a comment
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `Hi @${issueAuthor}, thank you for your contribution!\n\n` +
+                    `Task issues are restricted to Open Home Foundation staff, authorized contributors, and integration code owners.\n\n` +
+                    `If you would like to:\n` +
+                    `- Report a bug: Please use the [bug report form](https://github.com/home-assistant/core/issues/new?template=bug_report.yml)\n` +
+                    `- Request a feature: Please submit to [Feature Requests](https://github.com/orgs/home-assistant/discussions)\n\n` +
+                    `If you believe you should have access to create Task issues, please contact the maintainers.`
+            });
+
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              state: 'closed'
+            });
+
+            // Add a label to indicate this was auto-closed
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: ['auto-closed']
+            });

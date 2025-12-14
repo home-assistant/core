@@ -45,7 +45,7 @@
       'installed_version': '2023.38.6',
       'latest_version': '2023.44.30.4',
       'release_summary': None,
-      'release_url': None,
+      'release_url': 'https://stats.tessie.com/versions/2023.44.30.4',
       'skipped_version': None,
       'supported_features': <UpdateEntityFeature: 5>,
       'title': None,

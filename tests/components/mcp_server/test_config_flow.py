@@ -16,7 +16,7 @@ from homeassistant.data_entry_flow import FlowResultType
     "params",
     [
         {},
-        {CONF_LLM_HASS_API: "assist"},
+        {CONF_LLM_HASS_API: ["assist"]},
     ],
 )
 async def test_form(
@@ -38,4 +38,33 @@ async def test_form(
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "Assist"
     assert len(mock_setup_entry.mock_calls) == 1
-    assert result["data"] == {CONF_LLM_HASS_API: "assist"}
+    assert result["data"] == {CONF_LLM_HASS_API: ["assist"]}
+
+
+@pytest.mark.parametrize(
+    ("params", "errors"),
+    [
+        ({CONF_LLM_HASS_API: []}, {CONF_LLM_HASS_API: "llm_api_required"}),
+    ],
+)
+async def test_form_errors(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    params: dict[str, Any],
+    errors: dict[str, str],
+) -> None:
+    """Test we get the errors on invalid user input."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == FlowResultType.FORM
+    assert not result["errors"]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        params,
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == errors

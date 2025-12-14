@@ -101,7 +101,7 @@ async def test_sensors_io_series_4(hass: HomeAssistant) -> None:
 
     toothbrush_sensor = hass.states.get("sensor.io_series_4_48be_brushing_mode")
     toothbrush_sensor_attrs = toothbrush_sensor.attributes
-    assert toothbrush_sensor.state == "gum care"
+    assert toothbrush_sensor.state == "gum_care"
     assert (
         toothbrush_sensor_attrs[ATTR_FRIENDLY_NAME] == "IO Series 4 48BE Brushing mode"
     )
@@ -133,7 +133,7 @@ async def test_sensors_io_series_4(hass: HomeAssistant) -> None:
 
     toothbrush_sensor = hass.states.get("sensor.io_series_4_48be_brushing_mode")
     # Sleepy devices should keep their state over time
-    assert toothbrush_sensor.state == "gum care"
+    assert toothbrush_sensor.state == "gum_care"
     toothbrush_sensor_attrs = toothbrush_sensor.attributes
     assert toothbrush_sensor_attrs[ATTR_ASSUMED_STATE] is True
 

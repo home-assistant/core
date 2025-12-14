@@ -9,11 +9,11 @@
       }
     },
     "sensor": {
-      "estimated_distance": {
-        "default": "mdi:signal-distance-variant"
-      },
       "estimated_broadcast_interval": {
         "default": "mdi:timer-sync-outline"
+      },
+      "estimated_distance": {
+        "default": "mdi:signal-distance-variant"
       }
     }
   }

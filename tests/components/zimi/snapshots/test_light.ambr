@@ -1,0 +1,38 @@
+# serializer version: 1
+# name: test_dimmer_entity
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'brightness': 0,
+      'color_mode': <ColorMode.BRIGHTNESS: 'brightness'>,
+      'friendly_name': 'Light Controller Test Entity Name',
+      'supported_color_modes': list([
+        <ColorMode.BRIGHTNESS: 'brightness'>,
+      ]),
+      'supported_features': <LightEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.light_controller_test_entity_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_light_entity
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'color_mode': <ColorMode.ONOFF: 'onoff'>,
+      'friendly_name': 'Light Controller Test Entity Name',
+      'supported_color_modes': list([
+        <ColorMode.ONOFF: 'onoff'>,
+      ]),
+      'supported_features': <LightEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'light.light_controller_test_entity_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

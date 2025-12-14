@@ -549,7 +549,14 @@ async def test_get_action_capabilities(
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
-    ) == [{"type": "boolean", "name": "refresh_all_values", "optional": True}]
+    ) == [
+        {
+            "type": "boolean",
+            "name": "refresh_all_values",
+            "optional": True,
+            "required": False,
+        }
+    ]
 
     # Test ping
     capabilities = await device_action.async_get_action_capabilities(
@@ -608,10 +615,15 @@ async def test_get_action_capabilities(
             "type": "select",
         },
         {"name": "property", "required": True, "type": "string"},
-        {"name": "property_key", "optional": True, "type": "string"},
-        {"name": "endpoint", "optional": True, "type": "string"},
+        {"name": "property_key", "optional": True, "required": False, "type": "string"},
+        {"name": "endpoint", "optional": True, "required": False, "type": "string"},
         {"name": "value", "required": True, "type": "string"},
-        {"type": "boolean", "name": "wait_for_result", "optional": True},
+        {
+            "type": "boolean",
+            "name": "wait_for_result",
+            "optional": True,
+            "required": False,
+        },
     ]
 
     # Test enumerated type param
@@ -771,7 +783,7 @@ async def test_get_action_capabilities_meter_triggers(
 
     assert voluptuous_serialize.convert(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
-    ) == [{"type": "string", "name": "value", "optional": True}]
+    ) == [{"type": "string", "name": "value", "optional": True, "required": False}]
 
 
 async def test_failure_scenarios(

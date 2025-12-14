@@ -9,9 +9,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
-from . import services
 from .const import DOMAIN
 from .coordinator import HeosConfigEntry, HeosCoordinator
+from .services import async_setup_services
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
@@ -22,7 +22,7 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the HEOS component."""
-    services.register(hass)
+    async_setup_services(hass)
     return True
 
 

@@ -1,0 +1,98 @@
+# serializer version: 1
+# name: test_setup[sensor.sleep_as_android_alarm_label-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.sleep_as_android_alarm_label',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Alarm label',
+    'platform': 'sleep_as_android',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <SleepAsAndroidSensor.ALARM_LABEL: 'alarm_label'>,
+    'unique_id': '01JRD840SAZ55DGXBD78PTQ4EF_alarm_label',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[sensor.sleep_as_android_alarm_label-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Sleep as Android Alarm label',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sleep_as_android_alarm_label',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'label',
+  })
+# ---
+# name: test_setup[sensor.sleep_as_android_next_alarm-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.sleep_as_android_next_alarm',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Next alarm',
+    'platform': 'sleep_as_android',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <SleepAsAndroidSensor.NEXT_ALARM: 'next_alarm'>,
+    'unique_id': '01JRD840SAZ55DGXBD78PTQ4EF_next_alarm',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_setup[sensor.sleep_as_android_next_alarm-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Sleep as Android Next alarm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.sleep_as_android_next_alarm',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2020-02-26T12:21:00+00:00',
+  })
+# ---

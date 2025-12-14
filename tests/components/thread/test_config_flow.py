@@ -3,6 +3,8 @@
 from ipaddress import ip_address
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components import thread
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -56,14 +58,18 @@ async def test_import(hass: HomeAssistant) -> None:
     assert config_entry.unique_id is None
 
 
-async def test_import_then_zeroconf(hass: HomeAssistant) -> None:
-    """Test the import flow."""
+@pytest.mark.parametrize("source", ["import", "user"])
+async def test_single_instance_allowed_zeroconf(
+    hass: HomeAssistant,
+    source: str,
+) -> None:
+    """Test zeroconf single instance allowed abort reason."""
     with patch(
         "homeassistant.components.thread.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
-            thread.DOMAIN, context={"source": "import"}
+            thread.DOMAIN, context={"source": source}
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -77,7 +83,7 @@ async def test_import_then_zeroconf(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "single_instance_allowed"
     assert len(mock_setup_entry.mock_calls) == 0
 
 
@@ -152,8 +158,45 @@ async def test_zeroconf_setup_onboarding(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_zeroconf_then_import(hass: HomeAssistant) -> None:
-    """Test the import flow."""
+@pytest.mark.parametrize(
+    ("first_source", "second_source"), [("import", "user"), ("user", "import")]
+)
+async def test_import_and_user(
+    hass: HomeAssistant,
+    first_source: str,
+    second_source: str,
+) -> None:
+    """Test single instance allowed for user and import."""
+    with patch(
+        "homeassistant.components.thread.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            thread.DOMAIN, context={"source": first_source}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert len(mock_setup_entry.mock_calls) == 1
+
+    with patch(
+        "homeassistant.components.thread.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            thread.DOMAIN, context={"source": second_source}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "single_instance_allowed"
+    assert len(mock_setup_entry.mock_calls) == 0
+
+
+@pytest.mark.parametrize("source", ["import", "user"])
+async def test_zeroconf_then_import_user(
+    hass: HomeAssistant,
+    source: str,
+) -> None:
+    """Test single instance allowed abort reason for import/user flow."""
     result = await hass.config_entries.flow.async_init(
         thread.DOMAIN, context={"source": "zeroconf"}, data=TEST_ZEROCONF_RECORD
     )
@@ -169,9 +212,37 @@ async def test_zeroconf_then_import(hass: HomeAssistant) -> None:
         return_value=True,
     ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
-            thread.DOMAIN, context={"source": "import"}
+            thread.DOMAIN, context={"source": source}
         )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "single_instance_allowed"
     assert len(mock_setup_entry.mock_calls) == 0
+
+
+@pytest.mark.parametrize("source", ["import", "user"])
+async def test_zeroconf_in_progress_then_import_user(
+    hass: HomeAssistant,
+    source: str,
+) -> None:
+    """Test priority (import/user) flow with zeroconf flow in progress."""
+    result = await hass.config_entries.flow.async_init(
+        thread.DOMAIN, context={"source": "zeroconf"}, data=TEST_ZEROCONF_RECORD
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
+
+    with patch(
+        "homeassistant.components.thread.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            thread.DOMAIN, context={"source": source}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_setup_entry.call_count == 1
+
+    flows_in_progress = hass.config_entries.flow.async_progress()
+    assert len(flows_in_progress) == 0

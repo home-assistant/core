@@ -13,7 +13,9 @@ from aioimmich.server.models import (
     ImmichServerAbout,
     ImmichServerStatistics,
     ImmichServerStorage,
+    ImmichServerVersionCheck,
 )
+from awesomeversion import AwesomeVersion
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL
@@ -33,6 +35,7 @@ class ImmichData:
     server_about: ImmichServerAbout
     server_storage: ImmichServerStorage
     server_usage: ImmichServerStatistics | None
+    server_version_check: ImmichServerVersionCheck | None
 
 
 type ImmichConfigEntry = ConfigEntry[ImmichDataUpdateCoordinator]
@@ -71,9 +74,16 @@ class ImmichDataUpdateCoordinator(DataUpdateCoordinator[ImmichData]):
                 if self.is_admin
                 else None
             )
+            server_version_check = (
+                await self.api.server.async_get_version_check()
+                if AwesomeVersion(server_about.version) >= AwesomeVersion("v1.134.0")
+                else None
+            )
         except ImmichUnauthorizedError as err:
             raise ConfigEntryAuthFailed from err
         except CONNECT_ERRORS as err:
             raise UpdateFailed from err
 
-        return ImmichData(server_about, server_storage, server_usage)
+        return ImmichData(
+            server_about, server_storage, server_usage, server_version_check
+        )

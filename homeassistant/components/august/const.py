@@ -1,5 +1,7 @@
 """Constants for August devices."""
 
+from yalexs.const import Brand
+
 from homeassistant.const import Platform
 
 DEFAULT_TIMEOUT = 25
@@ -8,6 +10,8 @@ CONF_ACCESS_TOKEN_CACHE_FILE = "access_token_cache_file"
 CONF_BRAND = "brand"
 CONF_LOGIN_METHOD = "login_method"
 CONF_INSTALL_ID = "install_id"
+
+DEFAULT_AUGUST_BRAND = Brand.YALE_AUGUST
 
 VERIFICATION_CODE_KEY = "verification_code"
 
