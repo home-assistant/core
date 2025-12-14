@@ -1,0 +1,21 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "not_implemented": "This integration can only be set up via discovery."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "Invalid authentication. Ensure the light is [made discoverable to voice assistants]({url_pairing_mode}).",
+      "no_scanners": "No Bluetooth scanners are available to search for the light.",
+      "not_found": "The light was not found.",
+      "not_supported": "The light is not a supported model.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "confirm": {
+        "description": "Do you want to set up {name} ({mac})?. Make sure the light is [made discoverable to voice assistants]({url_pairing_mode}) or has been [factory reset]({url_factory_reset})."
+      }
+    }
+  }
+}

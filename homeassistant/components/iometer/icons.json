@@ -21,8 +21,8 @@
         "default": "mdi:eye",
         "state": {
           "entered": "mdi:lock-open",
-          "pending": "mdi:lock-clock",
           "missing": "mdi:lock",
+          "pending": "mdi:lock-clock",
           "unknown": "mdi:help"
         }
       },

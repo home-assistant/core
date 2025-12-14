@@ -3,20 +3,25 @@
 from typing import Any
 from unittest.mock import AsyncMock
 
+from habiticalib import HabiticaUserResponse
 import pytest
 
 from homeassistant.components.habitica.const import (
     CONF_API_USER,
+    CONF_PARTY_MEMBER,
     DEFAULT_URL,
     DOMAIN,
     SECTION_DANGER_ZONE,
     SECTION_REAUTH_API_KEY,
     SECTION_REAUTH_LOGIN,
 )
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import (
+    SOURCE_USER,
+    ConfigEntryDisabler,
+    ConfigSubentry,
+)
 from homeassistant.const import (
     CONF_API_KEY,
-    CONF_NAME,
     CONF_PASSWORD,
     CONF_URL,
     CONF_USERNAME,
@@ -27,7 +32,7 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import ERROR_BAD_REQUEST, ERROR_NOT_AUTHORIZED
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_load_fixture
 
 TEST_API_USER = "a380546a-94be-4b8e-8a0b-23e0d5c03303"
 TEST_API_KEY = "cd0e5985-17de-4b4f-849e-5d506c5e4382"
@@ -88,7 +93,6 @@ async def test_form_login(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> N
         result["flow_id"],
         user_input=MOCK_DATA_LOGIN_STEP,
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test-user"
@@ -96,7 +100,6 @@ async def test_form_login(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> N
         CONF_API_USER: TEST_API_USER,
         CONF_API_KEY: TEST_API_KEY,
         CONF_URL: DEFAULT_URL,
-        CONF_NAME: "test-user",
         CONF_VERIFY_SSL: True,
     }
     assert result["result"].unique_id == TEST_API_USER
@@ -151,7 +154,6 @@ async def test_form_login_errors(
         CONF_API_USER: TEST_API_USER,
         CONF_API_KEY: TEST_API_KEY,
         CONF_URL: DEFAULT_URL,
-        CONF_NAME: "test-user",
         CONF_VERIFY_SSL: True,
     }
     assert result["result"].unique_id == TEST_API_USER
@@ -211,7 +213,6 @@ async def test_form_advanced(hass: HomeAssistant, mock_setup_entry: AsyncMock) -
         result["flow_id"],
         user_input=MOCK_DATA_ADVANCED_STEP,
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test-user"
@@ -219,7 +220,6 @@ async def test_form_advanced(hass: HomeAssistant, mock_setup_entry: AsyncMock) -
         CONF_API_USER: TEST_API_USER,
         CONF_API_KEY: TEST_API_KEY,
         CONF_URL: DEFAULT_URL,
-        CONF_NAME: "test-user",
         CONF_VERIFY_SSL: True,
     }
     assert result["result"].unique_id == TEST_API_USER
@@ -275,7 +275,6 @@ async def test_form_advanced_errors(
         CONF_API_USER: TEST_API_USER,
         CONF_API_KEY: TEST_API_KEY,
         CONF_URL: DEFAULT_URL,
-        CONF_NAME: "test-user",
         CONF_VERIFY_SSL: True,
     }
     assert result["result"].unique_id == TEST_API_USER
@@ -333,8 +332,6 @@ async def test_flow_reauth(
         result["flow_id"],
         user_input,
     )
-
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
@@ -404,8 +401,6 @@ async def test_flow_reauth_errors(
         result["flow_id"], user_input
     )
 
-    await hass.async_block_till_done()
-
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": text_error}
 
@@ -416,8 +411,6 @@ async def test_flow_reauth_errors(
         result["flow_id"],
         user_input=USER_INPUT_REAUTH_API_KEY,
     )
-
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
@@ -451,8 +444,6 @@ async def test_flow_reauth_unique_id_mismatch(hass: HomeAssistant) -> None:
         USER_INPUT_REAUTH_LOGIN,
     )
 
-    await hass.async_block_till_done()
-
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unique_id_mismatch"
 
@@ -473,8 +464,6 @@ async def test_flow_reconfigure(
         result["flow_id"],
         USER_INPUT_RECONFIGURE,
     )
-
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
@@ -512,8 +501,6 @@ async def test_flow_reconfigure_errors(
         USER_INPUT_RECONFIGURE,
     )
 
-    await hass.async_block_till_done()
-
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": text_error}
 
@@ -524,8 +511,6 @@ async def test_flow_reconfigure_errors(
         user_input=USER_INPUT_RECONFIGURE,
     )
 
-    await hass.async_block_till_done()
-
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert config_entry.data[CONF_API_KEY] == "cd0e5985-17de-4b4f-849e-5d506c5e4382"
@@ -533,3 +518,140 @@ async def test_flow_reconfigure_errors(
     assert config_entry.data[CONF_VERIFY_SSL] is True
 
     assert len(hass.config_entries.async_entries()) == 1
+
+
+@pytest.mark.usefixtures("habitica")
+async def test_add_party_member_flow(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test add party member subentry flow."""
+
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, "party_member"),
+        context={"source": SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={CONF_PARTY_MEMBER: "ffce870c-3ff3-4fa4-bad1-87612e52b8e7"},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    subentry_id = list(config_entry.subentries)[0]
+    assert config_entry.subentries == {
+        subentry_id: ConfigSubentry(
+            data={},
+            subentry_id=subentry_id,
+            subentry_type="party_member",
+            title="test-partymember-displayname",
+            unique_id="ffce870c-3ff3-4fa4-bad1-87612e52b8e7",
+        )
+    }
+
+
+@pytest.mark.usefixtures("habitica")
+async def test_add_party_member_already_configured(
+    hass: HomeAssistant,
+    config_entry_with_subentry: MockConfigEntry,
+) -> None:
+    """Test add party member subentry flow abort when already configured."""
+
+    config_entry_with_subentry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry_with_subentry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry_with_subentry.entry_id, "party_member"),
+        context={"source": SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={CONF_PARTY_MEMBER: "ffce870c-3ff3-4fa4-bad1-87612e52b8e7"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("habitica")
+async def test_add_party_member_already_configured_as_entry(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test add party member subentry flow abort when already configured entry."""
+
+    MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="ffce870c-3ff3-4fa4-bad1-87612e52b8e7",
+    ).add_to_hass(hass)
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, "party_member"),
+        context={"source": SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={CONF_PARTY_MEMBER: "ffce870c-3ff3-4fa4-bad1-87612e52b8e7"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured_as_entry"
+
+
+async def test_add_party_member_not_in_a_party(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    habitica: AsyncMock,
+) -> None:
+    """Test add party member subentry flow abort when user is not in a party."""
+    habitica.get_user.return_value = HabiticaUserResponse.from_json(
+        await async_load_fixture(hass, "user_no_party.json", DOMAIN)
+    )
+
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, "party_member"),
+        context={"source": SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "not_in_a_party"
+
+
+@pytest.mark.usefixtures("habitica")
+async def test_add_party_member_entry_disabled(hass: HomeAssistant) -> None:
+    """Test we abort add party member subentry flow when the main config entry is disabled."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="ffce870c-3ff3-4fa4-bad1-87612e52b8e7",
+        disabled_by=ConfigEntryDisabler.USER,
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, "party_member"),
+        context={"source": SOURCE_USER},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "config_entry_disabled"

@@ -121,17 +121,30 @@ async def test_volume_down(
     player_mocks.player_data.player.volume.assert_called_once_with(level=9)
 
 
+@pytest.mark.parametrize(
+    ("input", "url"),
+    [
+        ("input1", "url1"),
+        ("input2", "url2"),
+        ("input3", "url3"),
+        ("4", "url4"),
+    ],
+)
 async def test_select_input_source(
-    hass: HomeAssistant, setup_config_entry: None, player_mocks: PlayerMocks
+    hass: HomeAssistant,
+    setup_config_entry: None,
+    player_mocks: PlayerMocks,
+    input: str,
+    url: str,
 ) -> None:
     """Test the media player select input source."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_SELECT_SOURCE,
-        {ATTR_ENTITY_ID: "media_player.player_name1111", ATTR_INPUT_SOURCE: "input1"},
+        {ATTR_ENTITY_ID: "media_player.player_name1111", ATTR_INPUT_SOURCE: input},
     )
 
-    player_mocks.player_data.player.play_url.assert_called_once_with("url1")
+    player_mocks.player_data.player.play_url.assert_called_once_with(url)
 
 
 async def test_select_preset_source(

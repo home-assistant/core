@@ -26,6 +26,7 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from .const import DEFAULT_NAME, DOMAIN
 
@@ -71,6 +72,7 @@ REAUTH_SCHEMA = vol.Schema(
         ),
     }
 )
+PLACEHOLDER = {"example_url": "https://example.com:8000/path"}
 
 
 async def validate_input(hass: HomeAssistant, user_input: dict[str, Any]) -> None:
@@ -96,6 +98,8 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     MINOR_VERSION = 1
+
+    _hassio_discovery: HassioServiceInfo | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -131,6 +135,7 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
                 STEP_USER_DATA_SCHEMA, user_input
             ),
             errors=errors,
+            description_placeholders=PLACEHOLDER,
         )
 
     async def async_step_reauth(
@@ -208,6 +213,64 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
                 STEP_USER_DATA_SCHEMA,
                 suggested_values,
             ),
-            description_placeholders={CONF_NAME: reconfig_entry.data[CONF_USERNAME]},
+            description_placeholders={
+                CONF_NAME: reconfig_entry.data[CONF_USERNAME],
+                **PLACEHOLDER,
+            },
             errors=errors,
+        )
+
+    async def async_step_hassio(
+        self, discovery_info: HassioServiceInfo
+    ) -> ConfigFlowResult:
+        """Prepare configuration for pyLoad add-on.
+
+        This flow is triggered by the discovery component.
+        """
+        url = URL(discovery_info.config[CONF_URL]).human_repr()
+        self._async_abort_entries_match({CONF_URL: url})
+        await self.async_set_unique_id(discovery_info.uuid)
+        self._abort_if_unique_id_configured(updates={CONF_URL: url})
+        discovery_info.config[CONF_URL] = url
+        self._hassio_discovery = discovery_info
+        return await self.async_step_hassio_confirm()
+
+    async def async_step_hassio_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm Supervisor discovery."""
+        assert self._hassio_discovery
+        errors: dict[str, str] = {}
+
+        data = {**self._hassio_discovery.config, CONF_VERIFY_SSL: False}
+
+        if user_input is not None:
+            data.update(user_input)
+
+        try:
+            await validate_input(self.hass, data)
+        except (CannotConnect, ParserError):
+            _LOGGER.debug("Cannot connect", exc_info=True)
+            errors["base"] = "cannot_connect"
+        except InvalidAuth:
+            errors["base"] = "invalid_auth"
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
+        else:
+            if user_input is None:
+                self._set_confirm_only()
+                return self.async_show_form(
+                    step_id="hassio_confirm",
+                    description_placeholders=self._hassio_discovery.config,
+                )
+            return self.async_create_entry(title=self._hassio_discovery.slug, data=data)
+
+        return self.async_show_form(
+            step_id="hassio_confirm",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=REAUTH_SCHEMA, suggested_values=data
+            ),
+            description_placeholders=self._hassio_discovery.config,
+            errors=errors if user_input is not None else None,
         )

@@ -73,6 +73,13 @@ STEP_MODBUS_DATA_SCHEMA = vol.Schema(
 )
 
 
+STEP_MODBUS_PLACEHOLDERS = {
+    "tcp": "tcp://[HOST]:[PORT]",
+    "serial": "serial://[LOCAL DEVICE]",
+    "rfc2217": "rfc2217://[HOST]:[PORT]",
+}
+
+
 class FieldError(Exception):
     """Field with invalid data."""
 
@@ -183,7 +190,9 @@ class NibeHeatPumpConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the modbus step."""
         if user_input is None:
             return self.async_show_form(
-                step_id="modbus", data_schema=STEP_MODBUS_DATA_SCHEMA
+                step_id="modbus",
+                data_schema=STEP_MODBUS_DATA_SCHEMA,
+                description_placeholders=STEP_MODBUS_PLACEHOLDERS,
             )
 
         errors = {}
@@ -200,7 +209,10 @@ class NibeHeatPumpConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(title=title, data=data)
 
         return self.async_show_form(
-            step_id="modbus", data_schema=STEP_MODBUS_DATA_SCHEMA, errors=errors
+            step_id="modbus",
+            data_schema=STEP_MODBUS_DATA_SCHEMA,
+            errors=errors,
+            description_placeholders=STEP_MODBUS_PLACEHOLDERS,
         )
 
     async def async_step_nibegw(

@@ -1,0 +1,80 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: Integration does not register custom actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: Integration does not register custom actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: Integration does not explicitly subscribe to events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver tier
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: Modbus TCP does not require authentication.
+  test-coverage: done
+
+  # Gold tier
+  devices: done
+  diagnostics: done
+  discovery:
+    status: exempt
+    comment: Device uses generic Espressif hardware with no unique identifying information (MAC OUI or hostname) that would distinguish it from other Espressif-based devices on the network.
+  discovery-update-info:
+    status: exempt
+    comment: Device cannot be discovered and the Modbus TCP API does not provide MAC address or other unique network identifiers needed to update connection information.
+  docs-data-update: done
+  docs-examples: todo
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices:
+    status: exempt
+    comment: Integration controls a single device; no dynamic device discovery needed.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: done
+  repair-issues:
+    status: exempt
+    comment: This integration doesn't have any cases where raising an issue is needed.
+  stale-devices:
+    status: exempt
+    comment: Integration controls a single device; no dynamic device discovery needed.
+
+  # Platinum
+  async-dependency: todo
+  inject-websession:
+    status: exempt
+    comment: Integration uses Modbus TCP protocol and does not make HTTP requests.
+  strict-typing: todo

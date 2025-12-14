@@ -1,0 +1,246 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "4-433",
+  "category": "tdq",
+  "product_id": "cq1p0nt0a4rixnex",
+  "product_name": "4-433",
+  "online": false,
+  "sub": false,
+  "time_zone": "+02:00",
+  "active_time": "2025-06-12T16:57:13+00:00",
+  "create_time": "2025-06-12T16:57:13+00:00",
+  "update_time": "2025-06-12T16:57:13+00:00",
+  "function": {
+    "switch_1": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_2": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_3": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_4": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "countdown_1": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "countdown_2": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "countdown_3": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "countdown_4": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "relay_status": {
+      "type": "Enum",
+      "value": {
+        "range": ["0", "1", "2"]
+      }
+    },
+    "random_time": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "cycle_time": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "switch_inching": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "switch_type": {
+      "type": "Enum",
+      "value": {
+        "range": ["flip", "sync", "button"]
+      }
+    },
+    "switch_interlock": {
+      "type": "Raw",
+      "value": {}
+    },
+    "remote_add": {
+      "type": "Raw",
+      "value": {}
+    },
+    "remote_list": {
+      "type": "Raw",
+      "value": {}
+    }
+  },
+  "status_range": {
+    "switch_1": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_2": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_3": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "switch_4": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "countdown_1": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "countdown_2": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "countdown_3": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "countdown_4": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "test_bit": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "max": 5,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "relay_status": {
+      "type": "Enum",
+      "value": {
+        "range": ["0", "1", "2"]
+      }
+    },
+    "random_time": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "cycle_time": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "switch_inching": {
+      "type": "String",
+      "value": {
+        "maxlen": 255
+      }
+    },
+    "switch_type": {
+      "type": "Enum",
+      "value": {
+        "range": ["flip", "sync", "button"]
+      }
+    },
+    "switch_interlock": {
+      "type": "Raw",
+      "value": {}
+    },
+    "remote_add": {
+      "type": "Raw",
+      "value": {}
+    },
+    "remote_list": {
+      "type": "Raw",
+      "value": {}
+    }
+  },
+  "status": {
+    "switch_1": false,
+    "switch_2": false,
+    "switch_3": false,
+    "switch_4": true,
+    "countdown_1": 0,
+    "countdown_2": 0,
+    "countdown_3": 0,
+    "countdown_4": 0,
+    "test_bit": 0,
+    "relay_status": 2,
+    "random_time": "",
+    "cycle_time": "",
+    "switch_inching": "AQAjAwAeBAACBgAC",
+    "switch_type": "button",
+    "switch_interlock": "",
+    "remote_add": "AAA=",
+    "remote_list": "AA=="
+  },
+  "set_up": true,
+  "support_local": true
+}

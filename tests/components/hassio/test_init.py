@@ -72,6 +72,7 @@ def mock_all(
     addon_stats: AsyncMock,
     addon_changelog: AsyncMock,
     resolution_info: AsyncMock,
+    jobs_info: AsyncMock,
 ) -> None:
     """Mock all setup requests."""
     aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
@@ -232,7 +233,7 @@ async def test_setup_api_ping(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 18
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 20
     assert get_core_info(hass)["version_latest"] == "1.0.0"
     assert is_hassio(hass)
 
@@ -252,9 +253,7 @@ async def test_setup_api_panel(
         "component_name": "custom",
         "icon": None,
         "title": None,
-        "url_path": "hassio",
-        "require_admin": True,
-        "config_panel_domain": None,
+        "default_visible": True,
         "config": {
             "_panel_custom": {
                 "embed_iframe": True,
@@ -263,6 +262,9 @@ async def test_setup_api_panel(
                 "trust_external": False,
             }
         },
+        "url_path": "hassio",
+        "require_admin": True,
+        "config_panel_domain": None,
     }
 
 
@@ -279,7 +281,7 @@ async def test_setup_api_push_api_data(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 18
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 20
     assert not aioclient_mock.mock_calls[0][2]["ssl"]
     assert aioclient_mock.mock_calls[0][2]["port"] == 9999
     assert "watchdog" not in aioclient_mock.mock_calls[0][2]
@@ -300,7 +302,7 @@ async def test_setup_api_push_api_data_server_host(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 18
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 20
     assert not aioclient_mock.mock_calls[0][2]["ssl"]
     assert aioclient_mock.mock_calls[0][2]["port"] == 9999
     assert not aioclient_mock.mock_calls[0][2]["watchdog"]
@@ -321,7 +323,7 @@ async def test_setup_api_push_api_data_default(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 18
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 20
     assert not aioclient_mock.mock_calls[0][2]["ssl"]
     assert aioclient_mock.mock_calls[0][2]["port"] == 8123
     refresh_token = aioclient_mock.mock_calls[0][2]["refresh_token"]
@@ -402,7 +404,7 @@ async def test_setup_api_existing_hassio_user(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 18
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 20
     assert not aioclient_mock.mock_calls[0][2]["ssl"]
     assert aioclient_mock.mock_calls[0][2]["port"] == 8123
     assert aioclient_mock.mock_calls[0][2]["refresh_token"] == token.token
@@ -421,7 +423,7 @@ async def test_setup_core_push_config(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 18
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 20
     assert aioclient_mock.mock_calls[1][2]["timezone"] == "testzone"
 
     with patch("homeassistant.util.dt.set_default_time_zone"):
@@ -445,7 +447,7 @@ async def test_setup_hassio_no_additional_data(
         await hass.async_block_till_done()
 
     assert result
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 18
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 20
     assert aioclient_mock.mock_calls[-1][3]["Authorization"] == "Bearer 123456"
 
 
@@ -527,14 +529,14 @@ async def test_service_calls(
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 22
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 24
     assert aioclient_mock.mock_calls[-1][2] == "test"
 
     await hass.services.async_call("hassio", "host_shutdown", {})
     await hass.services.async_call("hassio", "host_reboot", {})
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 24
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 26
 
     await hass.services.async_call("hassio", "backup_full", {})
     await hass.services.async_call(
@@ -549,7 +551,7 @@ async def test_service_calls(
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 26
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 28
     assert aioclient_mock.mock_calls[-1][2] == {
         "name": "2021-11-13 03:48:00",
         "homeassistant": True,
@@ -574,7 +576,7 @@ async def test_service_calls(
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 28
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 30
     assert aioclient_mock.mock_calls[-1][2] == {
         "addons": ["test"],
         "folders": ["ssl"],
@@ -593,7 +595,7 @@ async def test_service_calls(
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 29
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 31
     assert aioclient_mock.mock_calls[-1][2] == {
         "name": "backup_name",
         "location": "backup_share",
@@ -609,7 +611,7 @@ async def test_service_calls(
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 30
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 32
     assert aioclient_mock.mock_calls[-1][2] == {
         "name": "2021-11-13 03:48:00",
         "location": None,
@@ -628,7 +630,7 @@ async def test_service_calls(
     )
     await hass.async_block_till_done()
 
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 32
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 34
     assert aioclient_mock.mock_calls[-1][2] == {
         "name": "2021-11-13 11:48:00",
         "location": None,
@@ -922,7 +924,7 @@ async def test_coordinator_updates(
         supervisor_client.refresh_updates.assert_not_called()
 
     async_fire_time_changed(hass, dt_util.now() + timedelta(minutes=20))
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     # Scheduled refresh, no update refresh call
     supervisor_client.refresh_updates.assert_not_called()
@@ -944,7 +946,7 @@ async def test_coordinator_updates(
     async_fire_time_changed(
         hass, dt_util.now() + timedelta(seconds=REQUEST_REFRESH_DELAY)
     )
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     supervisor_client.refresh_updates.assert_called_once()
 
     supervisor_client.refresh_updates.reset_mock()
@@ -1074,7 +1076,7 @@ async def test_setup_hardware_integration(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert result
-    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 18
+    assert aioclient_mock.call_count + len(supervisor_client.mock_calls) == 20
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -1098,7 +1100,9 @@ def test_deprecated_function_is_hassio(
         (
             "homeassistant.components.hassio",
             logging.WARNING,
-            "is_hassio is a deprecated function which will be removed in HA Core 2025.11. Use homeassistant.helpers.hassio.is_hassio instead",
+            "The deprecated function is_hassio was called. It will be "
+            "removed in HA Core 2025.11. Use homeassistant.helpers"
+            ".hassio.is_hassio instead",
         )
     ]
 
@@ -1114,7 +1118,9 @@ def test_deprecated_function_get_supervisor_ip(
         (
             "homeassistant.helpers.hassio",
             logging.WARNING,
-            "get_supervisor_ip is a deprecated function which will be removed in HA Core 2025.11. Use homeassistant.helpers.hassio.get_supervisor_ip instead",
+            "The deprecated function get_supervisor_ip was called. It will "
+            "be removed in HA Core 2025.11. Use homeassistant.helpers"
+            ".hassio.get_supervisor_ip instead",
         )
     ]
 
@@ -1156,10 +1162,6 @@ def test_deprecated_constants(
         ("rpi2", "deprecated_os_armv7"),
     ],
 )
-@pytest.mark.parametrize(
-    "arch",
-    ["armv7"],
-)
 async def test_deprecated_installation_issue_os_armv7(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
@@ -1171,13 +1173,6 @@ async def test_deprecated_installation_issue_os_armv7(
     with (
         patch.dict(os.environ, MOCK_ENVIRON),
         patch(
-            "homeassistant.components.homeassistant.async_get_system_info",
-            return_value={
-                "installation_type": "Home Assistant OS",
-                "arch": "armv7",
-            },
-        ),
-        patch(
             "homeassistant.components.hassio._is_32_bit",
             return_value=True,
         ),
@@ -1185,7 +1180,8 @@ async def test_deprecated_installation_issue_os_armv7(
             "homeassistant.components.hassio.get_os_info", return_value={"board": board}
         ),
         patch(
-            "homeassistant.components.hassio.get_info", return_value={"hassos": True}
+            "homeassistant.components.hassio.get_info",
+            return_value={"hassos": True, "arch": "armv7"},
         ),
         patch("homeassistant.components.hardware.async_setup", return_value=True),
     ):
@@ -1239,13 +1235,6 @@ async def test_deprecated_installation_issue_32bit_os(
     with (
         patch.dict(os.environ, MOCK_ENVIRON),
         patch(
-            "homeassistant.components.homeassistant.async_get_system_info",
-            return_value={
-                "installation_type": "Home Assistant OS",
-                "arch": arch,
-            },
-        ),
-        patch(
             "homeassistant.components.hassio._is_32_bit",
             return_value=True,
         ),
@@ -1254,7 +1243,8 @@ async def test_deprecated_installation_issue_32bit_os(
             return_value={"board": "rpi3-64"},
         ),
         patch(
-            "homeassistant.components.hassio.get_info", return_value={"hassos": True}
+            "homeassistant.components.hassio.get_info",
+            return_value={"hassos": True, "arch": arch},
         ),
         patch("homeassistant.components.hardware.async_setup", return_value=True),
     ):
@@ -1306,13 +1296,6 @@ async def test_deprecated_installation_issue_32bit_supervised(
     with (
         patch.dict(os.environ, MOCK_ENVIRON),
         patch(
-            "homeassistant.components.homeassistant.async_get_system_info",
-            return_value={
-                "installation_type": "Home Assistant Supervised",
-                "arch": arch,
-            },
-        ),
-        patch(
             "homeassistant.components.hassio._is_32_bit",
             return_value=True,
         ),
@@ -1321,7 +1304,8 @@ async def test_deprecated_installation_issue_32bit_supervised(
             return_value={"board": "rpi3-64"},
         ),
         patch(
-            "homeassistant.components.hassio.get_info", return_value={"hassos": None}
+            "homeassistant.components.hassio.get_info",
+            return_value={"hassos": None, "arch": arch},
         ),
         patch("homeassistant.components.hardware.async_setup", return_value=True),
     ):
@@ -1377,13 +1361,6 @@ async def test_deprecated_installation_issue_64bit_supervised(
     with (
         patch.dict(os.environ, MOCK_ENVIRON),
         patch(
-            "homeassistant.components.homeassistant.async_get_system_info",
-            return_value={
-                "installation_type": "Home Assistant Supervised",
-                "arch": arch,
-            },
-        ),
-        patch(
             "homeassistant.components.hassio._is_32_bit",
             return_value=False,
         ),
@@ -1392,7 +1369,8 @@ async def test_deprecated_installation_issue_64bit_supervised(
             return_value={"board": "generic-x86-64"},
         ),
         patch(
-            "homeassistant.components.hassio.get_info", return_value={"hassos": None}
+            "homeassistant.components.hassio.get_info",
+            return_value={"hassos": None, "arch": arch},
         ),
         patch("homeassistant.components.hardware.async_setup", return_value=True),
     ):
@@ -1446,13 +1424,6 @@ async def test_deprecated_installation_issue_supported_board(
     with (
         patch.dict(os.environ, MOCK_ENVIRON),
         patch(
-            "homeassistant.components.homeassistant.async_get_system_info",
-            return_value={
-                "installation_type": "Home Assistant OS",
-                "arch": "aarch64",
-            },
-        ),
-        patch(
             "homeassistant.components.hassio._is_32_bit",
             return_value=False,
         ),
@@ -1460,7 +1431,8 @@ async def test_deprecated_installation_issue_supported_board(
             "homeassistant.components.hassio.get_os_info", return_value={"board": board}
         ),
         patch(
-            "homeassistant.components.hassio.get_info", return_value={"hassos": True}
+            "homeassistant.components.hassio.get_info",
+            return_value={"hassos": True, "arch": "aarch64"},
         ),
     ):
         assert await async_setup_component(hass, "homeassistant", {})

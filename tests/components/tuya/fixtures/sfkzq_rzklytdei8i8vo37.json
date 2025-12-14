@@ -1,0 +1,100 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "balkonbew\u00e4sserung",
+  "category": "sfkzq",
+  "product_id": "rzklytdei8i8vo37",
+  "product_name": "Smart Water Timer",
+  "online": true,
+  "sub": false,
+  "time_zone": "+02:00",
+  "active_time": "2025-04-29T17:45:56+00:00",
+  "create_time": "2025-04-29T17:45:56+00:00",
+  "update_time": "2025-04-29T17:45:56+00:00",
+  "function": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "weather_delay": {
+      "type": "Enum",
+      "value": {
+        "range": ["cancel", "24h", "48h", "72h"]
+      }
+    },
+    "countdown": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "cycle_time": {
+      "type": "String",
+      "value": {}
+    }
+  },
+  "status_range": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "battery_percentage": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "weather_delay": {
+      "type": "Enum",
+      "value": {
+        "range": ["cancel", "24h", "48h", "72h"]
+      }
+    },
+    "countdown": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "work_state": {
+      "type": "Enum",
+      "value": {
+        "range": ["auto", "manual", "idle"]
+      }
+    },
+    "use_time_one": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "switch": false,
+    "battery_percentage": 90,
+    "weather_delay": "cancel",
+    "countdown": 0,
+    "work_state": "idle",
+    "use_time_one": 52
+  },
+  "set_up": true,
+  "support_local": true
+}

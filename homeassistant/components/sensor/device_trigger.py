@@ -32,6 +32,7 @@ from . import ATTR_STATE_CLASS, DOMAIN, SensorDeviceClass
 
 DEVICE_CLASS_NONE = "none"
 
+CONF_ABSOLUTE_HUMIDITY = "absolute_humidity"
 CONF_APPARENT_POWER = "apparent_power"
 CONF_AQI = "aqi"
 CONF_AREA = "area"
@@ -63,6 +64,7 @@ CONF_PH = "ph"
 CONF_PM1 = "pm1"
 CONF_PM10 = "pm10"
 CONF_PM25 = "pm25"
+CONF_PM4 = "pm4"
 CONF_POWER = "power"
 CONF_POWER_FACTOR = "power_factor"
 CONF_PRECIPITATION = "precipitation"
@@ -75,6 +77,7 @@ CONF_SOUND_PRESSURE = "sound_pressure"
 CONF_SPEED = "speed"
 CONF_SULPHUR_DIOXIDE = "sulphur_dioxide"
 CONF_TEMPERATURE = "temperature"
+CONF_TEMPERATURE_DELTA = "temperature_delta"
 CONF_VALUE = "value"
 CONF_VOLATILE_ORGANIC_COMPOUNDS = "volatile_organic_compounds"
 CONF_VOLATILE_ORGANIC_COMPOUNDS_PARTS = "volatile_organic_compounds_parts"
@@ -87,6 +90,7 @@ CONF_WIND_DIRECTION = "wind_direction"
 CONF_WIND_SPEED = "wind_speed"
 
 ENTITY_TRIGGERS = {
+    SensorDeviceClass.ABSOLUTE_HUMIDITY: [{CONF_TYPE: CONF_ABSOLUTE_HUMIDITY}],
     SensorDeviceClass.APPARENT_POWER: [{CONF_TYPE: CONF_APPARENT_POWER}],
     SensorDeviceClass.AQI: [{CONF_TYPE: CONF_AQI}],
     SensorDeviceClass.AREA: [{CONF_TYPE: CONF_AREA}],
@@ -121,6 +125,7 @@ ENTITY_TRIGGERS = {
     SensorDeviceClass.PM1: [{CONF_TYPE: CONF_PM1}],
     SensorDeviceClass.PM10: [{CONF_TYPE: CONF_PM10}],
     SensorDeviceClass.PM25: [{CONF_TYPE: CONF_PM25}],
+    SensorDeviceClass.PM4: [{CONF_TYPE: CONF_PM4}],
     SensorDeviceClass.POWER: [{CONF_TYPE: CONF_POWER}],
     SensorDeviceClass.POWER_FACTOR: [{CONF_TYPE: CONF_POWER_FACTOR}],
     SensorDeviceClass.PRECIPITATION: [{CONF_TYPE: CONF_PRECIPITATION}],
@@ -135,6 +140,7 @@ ENTITY_TRIGGERS = {
     SensorDeviceClass.SPEED: [{CONF_TYPE: CONF_SPEED}],
     SensorDeviceClass.SULPHUR_DIOXIDE: [{CONF_TYPE: CONF_SULPHUR_DIOXIDE}],
     SensorDeviceClass.TEMPERATURE: [{CONF_TYPE: CONF_TEMPERATURE}],
+    SensorDeviceClass.TEMPERATURE_DELTA: [{CONF_TYPE: CONF_TEMPERATURE_DELTA}],
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: [
         {CONF_TYPE: CONF_VOLATILE_ORGANIC_COMPOUNDS}
     ],
@@ -159,6 +165,7 @@ TRIGGER_SCHEMA = vol.All(
             vol.Required(CONF_ENTITY_ID): cv.entity_id_or_uuid,
             vol.Required(CONF_TYPE): vol.In(
                 [
+                    CONF_ABSOLUTE_HUMIDITY,
                     CONF_APPARENT_POWER,
                     CONF_AQI,
                     CONF_AREA,
@@ -190,6 +197,7 @@ TRIGGER_SCHEMA = vol.All(
                     CONF_PM1,
                     CONF_PM10,
                     CONF_PM25,
+                    CONF_PM4,
                     CONF_POWER,
                     CONF_POWER_FACTOR,
                     CONF_PRECIPITATION,
@@ -202,6 +210,7 @@ TRIGGER_SCHEMA = vol.All(
                     CONF_SPEED,
                     CONF_SULPHUR_DIOXIDE,
                     CONF_TEMPERATURE,
+                    CONF_TEMPERATURE_DELTA,
                     CONF_VOLATILE_ORGANIC_COMPOUNDS,
                     CONF_VOLATILE_ORGANIC_COMPOUNDS_PARTS,
                     CONF_VOLTAGE,

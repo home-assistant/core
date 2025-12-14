@@ -7,12 +7,12 @@
       "user": {
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
-          "time_zone": "Timezone",
-          "time_format": "Time format"
+          "time_format": "Time format",
+          "time_zone": "Timezone"
         },
         "data_description": {
-          "time_zone": "Select timezone from list",
-          "time_format": "Select a pre-defined format from the list or define your own format."
+          "time_format": "Select a pre-defined format from the list or define your own format.",
+          "time_zone": "Select timezone from list"
         }
       }
     }

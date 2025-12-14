@@ -3,11 +3,11 @@
     "_": {
       "default": "mdi:button-pointer"
     },
-    "restart": {
-      "default": "mdi:restart"
-    },
     "identify": {
       "default": "mdi:crosshairs-question"
+    },
+    "restart": {
+      "default": "mdi:restart"
     },
     "update": {
       "default": "mdi:package-up"

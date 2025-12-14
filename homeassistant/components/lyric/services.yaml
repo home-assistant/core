@@ -1,7 +1,5 @@
 set_hold_time:
   target:
-    device:
-      integration: lyric
     entity:
       integration: lyric
       domain: climate

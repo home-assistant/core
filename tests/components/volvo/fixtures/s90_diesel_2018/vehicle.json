@@ -1,0 +1,16 @@
+{
+  "vin": "YV1ABCDEFG1234567",
+  "modelYear": 2018,
+  "gearbox": "AUTOMATIC",
+  "fuelType": "DIESEL",
+  "externalColour": "Electric Silver",
+  "images": {
+    "exteriorImageUrl": "",
+    "internalImageUrl": ""
+  },
+  "descriptions": {
+    "model": "S90",
+    "upholstery": "null",
+    "steering": "RIGHT"
+  }
+}

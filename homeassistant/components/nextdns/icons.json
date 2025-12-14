@@ -10,16 +10,16 @@
       "blocked_queries_ratio": {
         "default": "mdi:dns"
       },
-      "doh_queries": {
-        "default": "mdi:dns"
-      },
-      "doh_queries_ratio": {
-        "default": "mdi:dns"
-      },
       "doh3_queries": {
         "default": "mdi:dns"
       },
       "doh3_queries_ratio": {
+        "default": "mdi:dns"
+      },
+      "doh_queries": {
+        "default": "mdi:dns"
+      },
+      "doh_queries_ratio": {
         "default": "mdi:dns"
       },
       "doq_queries": {
@@ -49,11 +49,11 @@
       "ipv6_queries_ratio": {
         "default": "mdi:ip"
       },
-      "relayed_queries": {
-        "default": "mdi:dns"
-      },
       "not_validated_queries": {
         "default": "mdi:lock-alert"
+      },
+      "relayed_queries": {
+        "default": "mdi:dns"
       },
       "tcp_queries": {
         "default": "mdi:dns"
@@ -78,38 +78,8 @@
       }
     },
     "switch": {
-      "block_page": {
-        "default": "mdi:web-cancel"
-      },
-      "cache_boost": {
-        "default": "mdi:memory"
-      },
-      "cname_flattening": {
-        "default": "mdi:tournament"
-      },
       "anonymized_ecs": {
         "default": "mdi:incognito"
-      },
-      "logs": {
-        "default": "mdi:file-document-outline"
-      },
-      "web3": {
-        "default": "mdi:web"
-      },
-      "dns_rebinding_protection": {
-        "default": "mdi:dns"
-      },
-      "google_safe_browsing": {
-        "default": "mdi:google"
-      },
-      "typosquatting_protection": {
-        "default": "mdi:keyboard-outline"
-      },
-      "safesearch": {
-        "default": "mdi:search-web"
-      },
-      "youtube_restricted_mode": {
-        "default": "mdi:youtube"
       },
       "block_9gag": {
         "default": "mdi:file-gif-box"
@@ -129,6 +99,9 @@
       "block_dailymotion": {
         "default": "mdi:movie-search-outline"
       },
+      "block_dating": {
+        "default": "mdi:candelabra"
+      },
       "block_discord": {
         "default": "mdi:message-text"
       },
@@ -143,6 +116,9 @@
       },
       "block_fortnite": {
         "default": "mdi:tank"
+      },
+      "block_gambling": {
+        "default": "mdi:slot-machine"
       },
       "block_google_chat": {
         "default": "mdi:forum"
@@ -174,11 +150,23 @@
       "block_netflix": {
         "default": "mdi:netflix"
       },
+      "block_online_gaming": {
+        "default": "mdi:gamepad-variant"
+      },
+      "block_page": {
+        "default": "mdi:web-cancel"
+      },
       "block_pinterest": {
         "default": "mdi:pinterest"
       },
+      "block_piracy": {
+        "default": "mdi:pirate"
+      },
       "block_playstation_network": {
         "default": "mdi:sony-playstation"
+      },
+      "block_porn": {
+        "default": "mdi:movie-off"
       },
       "block_primevideo": {
         "default": "mdi:filmstrip"
@@ -197,6 +185,9 @@
       },
       "block_snapchat": {
         "default": "mdi:snapchat"
+      },
+      "block_social_networks": {
+        "default": "mdi:facebook"
       },
       "block_spotify": {
         "default": "mdi:spotify"
@@ -222,6 +213,9 @@
       "block_twitter": {
         "default": "mdi:twitter"
       },
+      "block_video_streaming": {
+        "default": "mdi:video-wireless-outline"
+      },
       "block_vimeo": {
         "default": "mdi:vimeo"
       },
@@ -240,26 +234,32 @@
       "block_zoom": {
         "default": "mdi:video"
       },
-      "block_dating": {
-        "default": "mdi:candelabra"
+      "cache_boost": {
+        "default": "mdi:memory"
       },
-      "block_gambling": {
-        "default": "mdi:slot-machine"
+      "cname_flattening": {
+        "default": "mdi:tournament"
       },
-      "block_online_gaming": {
-        "default": "mdi:gamepad-variant"
+      "dns_rebinding_protection": {
+        "default": "mdi:dns"
       },
-      "block_piracy": {
-        "default": "mdi:pirate"
+      "google_safe_browsing": {
+        "default": "mdi:google"
       },
-      "block_porn": {
-        "default": "mdi:movie-off"
+      "logs": {
+        "default": "mdi:file-document-outline"
       },
-      "block_social_networks": {
-        "default": "mdi:facebook"
+      "safesearch": {
+        "default": "mdi:search-web"
       },
-      "block_video_streaming": {
-        "default": "mdi:video-wireless-outline"
+      "typosquatting_protection": {
+        "default": "mdi:keyboard-outline"
+      },
+      "web3": {
+        "default": "mdi:web"
+      },
+      "youtube_restricted_mode": {
+        "default": "mdi:youtube"
       }
     }
   }

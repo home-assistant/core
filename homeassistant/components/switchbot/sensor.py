@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import switchbot
+from switchbot import HumidifierWaterLevel
 from switchbot.const.air_purifier import AirQualityLevel
 
 from homeassistant.components.bluetooth import async_last_service_info
@@ -24,8 +26,10 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
 from .entity import SwitchbotEntity
 
@@ -66,7 +70,6 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     "lightLevel": SensorEntityDescription(
         key="lightLevel",
         translation_key="light_level",
-        native_unit_of_measurement="Level",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "humidity": SensorEntityDescription(
@@ -117,6 +120,12 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
     ),
+    "water_level": SensorEntityDescription(
+        key="water_level",
+        translation_key="water_level",
+        device_class=SensorDeviceClass.ENUM,
+        options=HumidifierWaterLevel.get_levels(),
+    ),
 }
 
 
@@ -127,13 +136,22 @@ async def async_setup_entry(
 ) -> None:
     """Set up Switchbot sensor based on a config entry."""
     coordinator = entry.runtime_data
-    entities = [
-        SwitchBotSensor(coordinator, sensor)
-        for sensor in coordinator.device.parsed_data
-        if sensor in SENSOR_TYPES
-    ]
-    entities.append(SwitchbotRSSISensor(coordinator, "rssi"))
-    async_add_entities(entities)
+    sensor_entities: list[SensorEntity] = []
+    if isinstance(coordinator.device, switchbot.SwitchbotRelaySwitch2PM):
+        sensor_entities.extend(
+            SwitchBotSensor(coordinator, sensor, channel)
+            for channel in range(1, coordinator.device.channel + 1)
+            for sensor in coordinator.device.get_parsed_data(channel)
+            if sensor in SENSOR_TYPES
+        )
+    else:
+        sensor_entities.extend(
+            SwitchBotSensor(coordinator, sensor)
+            for sensor in coordinator.device.parsed_data
+            if sensor in SENSOR_TYPES
+        )
+    sensor_entities.append(SwitchbotRSSISensor(coordinator, "rssi"))
+    async_add_entities(sensor_entities)
 
 
 class SwitchBotSensor(SwitchbotEntity, SensorEntity):
@@ -143,12 +161,26 @@ class SwitchBotSensor(SwitchbotEntity, SensorEntity):
         self,
         coordinator: SwitchbotDataUpdateCoordinator,
         sensor: str,
+        channel: int | None = None,
     ) -> None:
         """Initialize the Switchbot sensor."""
         super().__init__(coordinator)
         self._sensor = sensor
-        self._attr_unique_id = f"{coordinator.base_unique_id}-{sensor}"
+        self._channel = channel
         self.entity_description = SENSOR_TYPES[sensor]
+
+        if channel:
+            self._attr_unique_id = f"{coordinator.base_unique_id}-{sensor}-{channel}"
+            self._attr_device_info = DeviceInfo(
+                identifiers={
+                    (DOMAIN, f"{coordinator.base_unique_id}-channel-{channel}")
+                },
+                manufacturer="SwitchBot",
+                model_id="RelaySwitch2PM",
+                name=f"{coordinator.device_name} Channel {channel}",
+            )
+        else:
+            self._attr_unique_id = f"{coordinator.base_unique_id}-{sensor}"
 
     @property
     def native_value(self) -> str | int | None:

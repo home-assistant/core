@@ -1,17 +1,24 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "no_sites_found": "No sites found which the user can manage.",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unsupported_controller": "Omada controller version not supported."
+    },
     "step": {
-      "user": {
+      "reauth_confirm": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
         },
-        "data_description": {
-          "host": "URL of the management interface of your TP-Link Omada controller."
-        },
-        "description": "Enter the connection details for the Omada controller. Cloud controllers aren't supported."
+        "description": "The provided credentials have stopped working. Please update them.",
+        "title": "Update TP-Link Omada credentials"
       },
       "site": {
         "data": {
@@ -19,28 +26,56 @@
         },
         "title": "Choose which site(s) to manage"
       },
-      "reauth_confirm": {
+      "user": {
         "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
-        "title": "Update TP-Link Omada credentials",
-        "description": "The provided credentials have stopped working. Please update them."
+        "data_description": {
+          "host": "URL of the management interface of your TP-Link Omada controller."
+        },
+        "description": "Enter the connection details for the Omada controller. Cloud controllers aren't supported."
       }
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unsupported_controller": "Omada controller version not supported.",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "no_sites_found": "No sites found which the user can manage."
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "entity": {
+    "binary_sensor": {
+      "lan_status": {
+        "name": "Port {port_name} LAN status"
+      },
+      "online_detection": {
+        "name": "Port {port_name} online detection"
+      },
+      "poe_delivery": {
+        "name": "Port {port_name} PoE delivery"
+      },
+      "wan_link": {
+        "name": "Port {port_name} Internet link"
+      }
+    },
+    "sensor": {
+      "cpu_usage": {
+        "name": "CPU usage"
+      },
+      "device_status": {
+        "name": "Device status",
+        "state": {
+          "adopt_failed": "Adopt failed",
+          "connected": "[%key:common::state::connected%]",
+          "disconnected": "[%key:common::state::disconnected%]",
+          "error": "[%key:common::state::error%]",
+          "heartbeat_missed": "Heartbeat missed",
+          "isolated": "Isolated",
+          "managed_externally": "Managed externally",
+          "pending": "Pending"
+        }
+      },
+      "mem_usage": {
+        "name": "Memory usage"
+      }
+    },
     "switch": {
       "poe_control": {
         "name": "Port {port_name} PoE"
@@ -51,53 +86,18 @@
       "wan_connect_ipv6": {
         "name": "Port {port_name} Internet connected (IPv6)"
       }
-    },
-    "binary_sensor": {
-      "wan_link": {
-        "name": "Port {port_name} Internet link"
-      },
-      "online_detection": {
-        "name": "Port {port_name} online detection"
-      },
-      "lan_status": {
-        "name": "Port {port_name} LAN status"
-      },
-      "poe_delivery": {
-        "name": "Port {port_name} PoE delivery"
-      }
-    },
-    "sensor": {
-      "device_status": {
-        "name": "Device status",
-        "state": {
-          "error": "[%key:common::state::error%]",
-          "disconnected": "[%key:common::state::disconnected%]",
-          "connected": "[%key:common::state::connected%]",
-          "pending": "Pending",
-          "heartbeat_missed": "Heartbeat missed",
-          "isolated": "Isolated",
-          "adopt_failed": "Adopt failed",
-          "managed_externally": "Managed externally"
-        }
-      },
-      "cpu_usage": {
-        "name": "CPU usage"
-      },
-      "mem_usage": {
-        "name": "Memory usage"
-      }
     }
   },
   "services": {
     "reconnect_client": {
-      "name": "Reconnect wireless client",
       "description": "Tries to get wireless client to reconnect to Omada network.",
       "fields": {
         "mac": {
-          "name": "MAC address",
-          "description": "MAC address of the device."
+          "description": "MAC address of the device.",
+          "name": "MAC address"
         }
-      }
+      },
+      "name": "Reconnect wireless client"
     }
   }
 }

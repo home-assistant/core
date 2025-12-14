@@ -1,0 +1,320 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Gengske 💡 ",
+  "category": "dj",
+  "product_id": "zav1pa32pyxray78",
+  "product_name": "Ceiling Light RGBTW",
+  "online": true,
+  "sub": false,
+  "time_zone": "+01:00",
+  "active_time": "2025-05-28T20:00:48+00:00",
+  "create_time": "2025-05-28T20:00:48+00:00",
+  "update_time": "2025-05-28T20:00:48+00:00",
+  "function": {
+    "switch_led": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "work_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["white", "colour", "scene", "music"]
+      }
+    },
+    "bright_value_v2": {
+      "type": "Integer",
+      "value": {
+        "min": 10,
+        "scale": 0,
+        "unit": "",
+        "max": 1000,
+        "step": 1
+      }
+    },
+    "temp_value_v2": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "scale": 0,
+        "unit": "",
+        "max": 1000,
+        "step": 1
+      }
+    },
+    "colour_data_v2": {
+      "type": "Json",
+      "value": {
+        "h": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 360,
+          "step": 1
+        },
+        "s": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 1000,
+          "step": 1
+        },
+        "v": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 1000,
+          "step": 1
+        }
+      }
+    },
+    "scene_data_v2": {
+      "type": "Json",
+      "value": {
+        "h": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 360,
+          "step": 1
+        },
+        "s": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 255,
+          "step": 1
+        },
+        "v": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 255,
+          "step": 1
+        }
+      }
+    },
+    "countdown_1": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "control_data": {
+      "type": "Json",
+      "value": {
+        "change_mode": {
+          "range": ["direct", "gradient"]
+        },
+        "bright": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 1000,
+          "step": 1
+        },
+        "temperature": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 1000,
+          "step": 1
+        },
+        "h": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 360,
+          "step": 1
+        },
+        "s": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 255,
+          "step": 1
+        },
+        "v": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 255,
+          "step": 1
+        }
+      }
+    }
+  },
+  "status_range": {
+    "switch_led": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "work_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["white", "colour", "scene", "music"]
+      }
+    },
+    "bright_value_v2": {
+      "type": "Integer",
+      "value": {
+        "min": 10,
+        "scale": 0,
+        "unit": "",
+        "max": 1000,
+        "step": 1
+      }
+    },
+    "temp_value_v2": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "scale": 0,
+        "unit": "",
+        "max": 1000,
+        "step": 1
+      }
+    },
+    "colour_data_v2": {
+      "type": "Json",
+      "value": {
+        "h": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 360,
+          "step": 1
+        },
+        "s": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 1000,
+          "step": 1
+        },
+        "v": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 1000,
+          "step": 1
+        }
+      }
+    },
+    "scene_data_v2": {
+      "type": "Json",
+      "value": {
+        "h": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 360,
+          "step": 1
+        },
+        "s": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 255,
+          "step": 1
+        },
+        "v": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 255,
+          "step": 1
+        }
+      }
+    },
+    "countdown_1": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "control_data": {
+      "type": "Json",
+      "value": {
+        "change_mode": {
+          "range": ["direct", "gradient"]
+        },
+        "bright": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 1000,
+          "step": 1
+        },
+        "temperature": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 1000,
+          "step": 1
+        },
+        "h": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 360,
+          "step": 1
+        },
+        "s": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 255,
+          "step": 1
+        },
+        "v": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 255,
+          "step": 1
+        }
+      }
+    }
+  },
+  "status": {
+    "switch_led": false,
+    "work_mode": "colour",
+    "bright_value_v2": 1000,
+    "temp_value_v2": 380,
+    "colour_data_v2": {
+      "h": 0,
+      "s": 1000,
+      "v": 102
+    },
+    "scene_data_v2": {
+      "scene_num": 1,
+      "scene_units": [
+        {
+          "bright": 200,
+          "h": 0,
+          "s": 0,
+          "temperature": 0,
+          "unit_change_mode": "static",
+          "unit_gradient_duration": 13,
+          "unit_switch_duration": 14,
+          "v": 0
+        }
+      ]
+    },
+    "countdown_1": 0,
+    "control_data": ""
+  },
+  "set_up": true,
+  "support_local": true
+}

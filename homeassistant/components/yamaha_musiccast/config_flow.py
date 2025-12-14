@@ -6,13 +6,13 @@ import logging
 from typing import Any
 from urllib.parse import urlparse
 
-from aiohttp import ClientConnectorError
+from aiohttp import ClientConnectorError, DummyCookieJar
 from aiomusiccast import MusicCastConnectionException, MusicCastDevice
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
     ATTR_UPNP_SERIAL,
@@ -50,7 +50,7 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
 
         try:
             info = await MusicCastDevice.get_device_info(
-                host, async_get_clientsession(self.hass)
+                host, async_create_clientsession(self.hass, cookie_jar=DummyCookieJar())
             )
         except (MusicCastConnectionException, ClientConnectorError):
             errors["base"] = "cannot_connect"
@@ -89,7 +89,8 @@ class MusicCastFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle ssdp discoveries."""
         if not await MusicCastDevice.check_yamaha_ssdp(
-            discovery_info.ssdp_location, async_get_clientsession(self.hass)
+            discovery_info.ssdp_location,
+            async_create_clientsession(self.hass, cookie_jar=DummyCookieJar()),
         ):
             return self.async_abort(reason="yxc_control_url_missing")
 

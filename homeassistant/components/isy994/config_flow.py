@@ -18,7 +18,7 @@ from homeassistant.config_entries import (
     SOURCE_IGNORE,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
@@ -143,7 +143,7 @@ class Isy994ConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(
         config_entry: IsyConfigEntry,
-    ) -> OptionsFlow:
+    ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()
 
@@ -177,6 +177,9 @@ class Isy994ConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=_data_schema(self.discovered_conf),
             errors=errors,
+            description_placeholders={
+                "sample_ip": "http://192.168.10.100:80",
+            },
         )
 
     async def _async_set_unique_id_or_update(
@@ -302,7 +305,10 @@ class Isy994ConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_HOST: existing_data[CONF_HOST],
         }
         return self.async_show_form(
-            description_placeholders={CONF_HOST: existing_data[CONF_HOST]},
+            description_placeholders={
+                CONF_HOST: existing_data[CONF_HOST],
+                "sample_ip": "http://192.168.10.100:80",
+            },
             step_id="reauth_confirm",
             data_schema=vol.Schema(
                 {
@@ -316,7 +322,7 @@ class Isy994ConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class OptionsFlowHandler(OptionsFlow):
+class OptionsFlowHandler(OptionsFlowWithReload):
     """Handle a option flow for ISY/IoX."""
 
     async def async_step_init(
@@ -347,7 +353,13 @@ class OptionsFlowHandler(OptionsFlow):
             }
         )
 
-        return self.async_show_form(step_id="init", data_schema=options_schema)
+        return self.async_show_form(
+            step_id="init",
+            data_schema=options_schema,
+            description_placeholders={
+                "sample_ip": "http://192.168.10.100:80",
+            },
+        )
 
 
 class InvalidHost(HomeAssistantError):

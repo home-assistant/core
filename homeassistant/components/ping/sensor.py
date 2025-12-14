@@ -10,7 +10,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EntityCategory, UnitOfTime
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -70,6 +70,27 @@ SENSORS: tuple[PingSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda result: result.data.get("min"),
         has_fn=lambda result: "min" in result.data,
+    ),
+    PingSensorEntityDescription(
+        key="jitter",
+        translation_key="jitter",
+        native_unit_of_measurement=UnitOfTime.MILLISECONDS,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.DURATION,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda result: result.data.get("jitter"),
+        has_fn=lambda result: "jitter" in result.data,
+    ),
+    PingSensorEntityDescription(
+        key="loss",
+        translation_key="loss",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda result: result.data.get("loss"),
+        has_fn=lambda result: "loss" in result.data,
     ),
 )
 

@@ -1,0 +1,224 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Front right Lighting trap",
+  "category": "dj",
+  "product_id": "oe0cpnjg",
+  "product_name": "Smart Lighting",
+  "online": true,
+  "sub": true,
+  "time_zone": "+01:00",
+  "active_time": "2023-10-03T13:23:20+00:00",
+  "create_time": "2023-10-03T13:23:20+00:00",
+  "update_time": "2023-10-03T13:23:20+00:00",
+  "function": {
+    "switch_led": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "work_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["white", "colour", "music"]
+      }
+    },
+    "bright_value_v2": {
+      "type": "Integer",
+      "value": {
+        "min": 10,
+        "max": 1000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temp_value_v2": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "max": 1000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "colour_data_v2": {
+      "type": "Json",
+      "value": {
+        "h": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 360,
+          "step": 1
+        },
+        "s": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 1000,
+          "step": 1
+        },
+        "v": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 1000,
+          "step": 1
+        }
+      }
+    },
+    "music_data": {
+      "type": "Json",
+      "value": {
+        "change_mode": {
+          "range": ["direct", "gradient"]
+        },
+        "bright": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 1000,
+          "step": 1
+        },
+        "temperature": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 1000,
+          "step": 1
+        },
+        "h": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 360,
+          "step": 1
+        },
+        "s": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 255,
+          "step": 1
+        },
+        "v": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 255,
+          "step": 1
+        }
+      }
+    }
+  },
+  "status_range": {
+    "switch_led": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "work_mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["white", "colour", "music"]
+      }
+    },
+    "bright_value_v2": {
+      "type": "Integer",
+      "value": {
+        "min": 10,
+        "max": 1000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temp_value_v2": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "max": 1000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "colour_data_v2": {
+      "type": "Json",
+      "value": {
+        "h": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 360,
+          "step": 1
+        },
+        "s": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 1000,
+          "step": 1
+        },
+        "v": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 1000,
+          "step": 1
+        }
+      }
+    },
+    "music_data": {
+      "type": "Json",
+      "value": {
+        "change_mode": {
+          "range": ["direct", "gradient"]
+        },
+        "bright": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 1000,
+          "step": 1
+        },
+        "temperature": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 1000,
+          "step": 1
+        },
+        "h": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 360,
+          "step": 1
+        },
+        "s": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 255,
+          "step": 1
+        },
+        "v": {
+          "min": 0,
+          "scale": 0,
+          "unit": "",
+          "max": 255,
+          "step": 1
+        }
+      }
+    }
+  },
+  "status": {
+    "switch_led": false,
+    "work_mode": "colour",
+    "bright_value_v2": 1000,
+    "temp_value_v2": 985,
+    "colour_data_v2": "",
+    "music_data": ""
+  },
+  "set_up": false,
+  "support_local": true
+}

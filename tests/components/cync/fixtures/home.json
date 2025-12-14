@@ -1,0 +1,76 @@
+{
+  "name": "My Home",
+  "home_id": 1000,
+  "rooms": [
+    {
+      "name": "Bedroom",
+      "room_id": 1100,
+      "home_id": 1000,
+      "groups": [],
+      "devices": [
+        {
+          "name": "Bedroom Lamp",
+          "is_online": true,
+          "wifi_connected": true,
+          "device_id": 1101,
+          "mesh_device_id": 10001,
+          "home_id": 1000,
+          "device_type_id": 137,
+          "device_type": "LIGHT",
+          "mac_address": "ABCDEF123456",
+          "product_id": "product123",
+          "authorize_code": "abcd_code",
+          "is_on": true,
+          "brightness": 80,
+          "color_temp": 20
+        }
+      ]
+    },
+    {
+      "name": "Office",
+      "room_id": 1200,
+      "home_id": 1000,
+      "groups": [
+        {
+          "name": "Office Lamp",
+          "group_id": 1110,
+          "home_id": 1000,
+          "devices": [
+            {
+              "name": "Lamp Bulb 1",
+              "is_online": true,
+              "wifi_connected": false,
+              "device_id": 1111,
+              "mesh_device_id": 10002,
+              "home_id": 1000,
+              "device_type_id": 137,
+              "device_type": "LIGHT",
+              "mac_address": "654321ABCDEF",
+              "product_id": "product123",
+              "authorize_code": "abcd_code",
+              "is_on": true,
+              "brightness": 90,
+              "color_temp": 254,
+              "rgb": [120, 145, 180]
+            },
+            {
+              "name": "Lamp Bulb 2",
+              "is_online": false,
+              "wifi_connected": false,
+              "device_id": 1112,
+              "mesh_device_id": 10003,
+              "home_id": 1000,
+              "device_type_id": 137,
+              "device_type": "LIGHT",
+              "mac_address": "FEDCBA654321",
+              "product_id": "product123",
+              "authorize_code": "abcd_code"
+            }
+          ]
+        }
+      ],
+      "devices": []
+    }
+  ],
+  "global_devices": []
+}

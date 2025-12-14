@@ -52,7 +52,7 @@ DATA_SCHEMA = vol.Schema(
 
 
 class TransmissionFlowHandler(ConfigFlow, domain=DOMAIN):
-    """Handle Tansmission config flow."""
+    """Handle Transmission config flow."""
 
     VERSION = 1
     MINOR_VERSION = 2

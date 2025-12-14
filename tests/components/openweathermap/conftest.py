@@ -17,14 +17,17 @@ from pyopenweathermap import (
 from pyopenweathermap.client.owm_abstract_client import OWMClient
 import pytest
 
-from homeassistant.components.openweathermap.const import DEFAULT_LANGUAGE, DOMAIN
+from homeassistant.components.openweathermap.const import (
+    DEFAULT_LANGUAGE,
+    DEFAULT_NAME,
+    DOMAIN,
+)
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LANGUAGE,
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_MODE,
-    CONF_NAME,
 )
 
 from tests.common import MockConfigEntry, patch
@@ -50,7 +53,6 @@ def mock_config_entry(mode: str) -> MockConfigEntry:
             CONF_API_KEY: API_KEY,
             CONF_LATITUDE: LATITUDE,
             CONF_LONGITUDE: LONGITUDE,
-            CONF_NAME: NAME,
         },
         options={
             CONF_MODE: mode,
@@ -59,6 +61,7 @@ def mock_config_entry(mode: str) -> MockConfigEntry:
         entry_id="test",
         version=5,
         unique_id=f"{LATITUDE}-{LONGITUDE}",
+        title=DEFAULT_NAME,
     )
 
 
@@ -77,8 +80,8 @@ def owm_client_mock() -> Generator[AsyncMock]:
         cloud_coverage=75,
         visibility=10000,
         wind_speed=9.83,
+        wind_gust=11.81,
         wind_bearing=199,
-        wind_gust=None,
         rain={"1h": 1.21},
         snow=None,
         condition=WeatherCondition(

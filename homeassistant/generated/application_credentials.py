@@ -4,8 +4,12 @@ To update, run python3 -m script.hassfest
 """
 
 APPLICATION_CREDENTIALS = [
+    "aladdin_connect",
+    "august",
+    "ekeybionyx",
     "electric_kiwi",
     "fitbit",
+    "gentex_homelink",
     "geocaching",
     "google",
     "google_assistant_sdk",
@@ -35,6 +39,7 @@ APPLICATION_CREDENTIALS = [
     "spotify",
     "tesla_fleet",
     "twitch",
+    "volvo",
     "weheat",
     "withings",
     "xbox",

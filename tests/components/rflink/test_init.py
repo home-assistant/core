@@ -547,7 +547,7 @@ async def test_unique_id(
     }
 
     # setup mocking rflink module
-    event_callback, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch)
+    _event_callback, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch)
 
     humidity_entry = entity_registry.async_get("sensor.humidity_device")
     assert humidity_entry
@@ -569,7 +569,7 @@ async def test_enable_debug_logs(
     config = {DOMAIN: {CONF_HOST: "10.10.0.1", CONF_PORT: 1234}}
 
     # setup mocking rflink module
-    _, mock_create, _, _ = await mock_rflink(hass, config, domain, monkeypatch)
+    _, _mock_create, _, _ = await mock_rflink(hass, config, domain, monkeypatch)
 
     logging.getLogger("rflink").setLevel(logging.DEBUG)
     hass.bus.async_fire(EVENT_LOGGING_CHANGED)

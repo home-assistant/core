@@ -1,8 +1,10 @@
 """Test ZHA lock."""
 
+from collections.abc import Callable, Coroutine
 from unittest.mock import patch
 
 import pytest
+from zigpy.device import Device
 from zigpy.profiles import zha
 from zigpy.zcl import Cluster
 from zigpy.zcl.clusters import closures, general
@@ -36,7 +38,11 @@ def lock_platform_only():
         yield
 
 
-async def test_lock(hass: HomeAssistant, setup_zha, zigpy_device_mock) -> None:
+async def test_lock(
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
+) -> None:
     """Test ZHA lock platform."""
 
     await setup_zha()

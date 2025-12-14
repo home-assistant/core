@@ -36,6 +36,7 @@ DEFAULT_CONFIG = {
     "fn": ["Test", "Beer", "Milk", "Four", None],
     "hn": "tasmota_49A3BC-0956",
     "if": 0,  # iFan
+    "cam": 0,  # webcam
     "lk": 1,  # RGB + white channels linked to a single light
     "mac": "00000049A3BC",
     "md": "Sonoff Basic",

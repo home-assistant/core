@@ -8,7 +8,7 @@ import logging
 
 from letpot.deviceclient import LetPotDeviceClient
 from letpot.exceptions import LetPotAuthenticationException, LetPotException
-from letpot.models import AuthenticationInfo, LetPotDevice, LetPotDeviceStatus
+from letpot.models import LetPotDevice, LetPotDeviceStatus
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -34,8 +34,8 @@ class LetPotDeviceCoordinator(DataUpdateCoordinator[LetPotDeviceStatus]):
         self,
         hass: HomeAssistant,
         config_entry: LetPotConfigEntry,
-        info: AuthenticationInfo,
         device: LetPotDevice,
+        device_client: LetPotDeviceClient,
     ) -> None:
         """Initialize coordinator."""
         super().__init__(
@@ -45,9 +45,8 @@ class LetPotDeviceCoordinator(DataUpdateCoordinator[LetPotDeviceStatus]):
             name=f"LetPot {device.serial_number}",
             update_interval=timedelta(minutes=10),
         )
-        self._info = info
         self.device = device
-        self.device_client = LetPotDeviceClient(info, device.serial_number)
+        self.device_client = device_client
 
     def _handle_status_update(self, status: LetPotDeviceStatus) -> None:
         """Distribute status update to entities."""
@@ -56,7 +55,9 @@ class LetPotDeviceCoordinator(DataUpdateCoordinator[LetPotDeviceStatus]):
     async def _async_setup(self) -> None:
         """Set up subscription for coordinator."""
         try:
-            await self.device_client.subscribe(self._handle_status_update)
+            await self.device_client.subscribe(
+                self.device.serial_number, self._handle_status_update
+            )
         except LetPotAuthenticationException as exc:
             raise ConfigEntryAuthFailed from exc
 
@@ -64,7 +65,7 @@ class LetPotDeviceCoordinator(DataUpdateCoordinator[LetPotDeviceStatus]):
         """Request an update from the device and wait for a status update or timeout."""
         try:
             async with asyncio.timeout(REQUEST_UPDATE_TIMEOUT):
-                await self.device_client.get_current_status()
+                await self.device_client.get_current_status(self.device.serial_number)
         except LetPotException as exc:
             raise UpdateFailed(exc) from exc
 

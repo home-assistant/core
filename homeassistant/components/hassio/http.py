@@ -70,7 +70,7 @@ PATHS_ADMIN = re.compile(
     r"|backups/new/upload"
     r"|audio/logs(/follow|/boots/-?\d+(/follow)?)?"
     r"|cli/logs(/follow|/boots/-?\d+(/follow)?)?"
-    r"|core/logs(/follow|/boots/-?\d+(/follow)?)?"
+    r"|core/logs(/latest|/follow|/boots/-?\d+(/follow)?)?"
     r"|dns/logs(/follow|/boots/-?\d+(/follow)?)?"
     r"|host/logs(/follow|/boots(/-?\d+(/follow)?)?)?"
     r"|multicast/logs(/follow|/boots/-?\d+(/follow)?)?"

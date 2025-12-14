@@ -1,0 +1,6 @@
+{
+  "domain": "zbox_hub",
+  "name": "Z-Box Hub",
+  "integration_type": "virtual",
+  "supported_by": "fibaro"
+}

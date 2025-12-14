@@ -9,6 +9,7 @@ from dataclasses import fields
 import datetime
 from io import SEEK_END, BytesIO
 import logging
+import math
 from threading import Event
 from typing import Any, Self, cast
 
@@ -46,12 +47,12 @@ from .fmp4utils import read_init
 from .hls import HlsStreamOutput
 
 _LOGGER = logging.getLogger(__name__)
-NEGATIVE_INF = float("-inf")
+NEGATIVE_INF = -math.inf
 
 
 def redact_av_error_string(err: av.FFmpegError) -> str:
     """Return an error string with credentials redacted from the url."""
-    parts = [str(err.type), err.strerror]  # type: ignore[attr-defined]
+    parts = [err.strerror or ""]
     if err.filename:
         parts.append(redact_credentials(err.filename))
     return ", ".join(parts)
@@ -222,7 +223,7 @@ class StreamMuxer:
             format=SEGMENT_CONTAINER_FORMAT,
             container_options=container_options,
         )
-        output_vstream = container.add_stream(template=input_vstream)
+        output_vstream = container.add_stream_from_template(input_vstream)
         # Check if audio is requested
         output_astream = None
         if input_astream:
@@ -230,8 +231,8 @@ class StreamMuxer:
                 self._audio_bsf_context = av.BitStreamFilterContext(
                     self._audio_bsf, input_astream
                 )
-            output_astream = container.add_stream(template=input_astream)
-        return container, output_vstream, output_astream  # type: ignore[return-value]
+            output_astream = container.add_stream_from_template(input_astream)
+        return container, output_vstream, output_astream
 
     def reset(self, video_dts: int) -> None:
         """Initialize a new stream segment."""
@@ -259,6 +260,7 @@ class StreamMuxer:
         if packet.stream == self._input_video_stream:
             if (
                 packet.is_keyframe
+                and packet.dts
                 and (packet.dts - self._segment_start_dts) * packet.time_base
                 >= self._stream_settings.min_segment_duration
             ):
@@ -330,6 +332,7 @@ class StreamMuxer:
         playback issues in some clients.
         """
         # Part durations should not exceed the part target duration
+        assert packet.dts is not None
         adjusted_dts = min(
             packet.dts,
             self._part_start_dts
@@ -458,7 +461,7 @@ class TimestampValidator:
         """Validate the packet timestamp based on ordering within the stream."""
         # Discard packets missing DTS. Terminate if too many are missing.
         if packet.dts is None:
-            if self._missing_dts >= MAX_MISSING_DTS:  # type: ignore[unreachable]
+            if self._missing_dts >= MAX_MISSING_DTS:
                 raise StreamWorkerError(
                     f"No dts in {MAX_MISSING_DTS + 1} consecutive packets"
                 )
@@ -576,7 +579,7 @@ def stream_worker(
         audio_stream = None
     # Some audio streams do not have a profile and throw errors when remuxing
     if audio_stream and audio_stream.profile is None:
-        audio_stream = None  # type: ignore[unreachable]
+        audio_stream = None
     # Disable ll-hls for hls inputs
     if container.format.name == "hls":
         for field in fields(StreamSettings):
@@ -625,6 +628,7 @@ def stream_worker(
         # adjustment, it does not filter out the case where the duration below is
         # 0 and both the first_keyframe and next_video_packet end up with the same
         # dts. Use "or 1" to deal with this.
+        assert next_video_packet.dts is not None
         start_dts = next_video_packet.dts - (next_video_packet.duration or 1)
         first_keyframe.dts = first_keyframe.pts = start_dts
     except StreamWorkerError:

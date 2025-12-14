@@ -17,6 +17,8 @@ from .const import DEFAULT_RETRY_COUNT, DEFAULT_RETRY_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
+type ToloConfigEntry = ConfigEntry[ToloSaunaUpdateCoordinator]
+
 
 class ToloSaunaData(NamedTuple):
     """Compound class for reflecting full state (status and info) of a TOLO Sauna."""
@@ -28,9 +30,9 @@ class ToloSaunaData(NamedTuple):
 class ToloSaunaUpdateCoordinator(DataUpdateCoordinator[ToloSaunaData]):
     """DataUpdateCoordinator for TOLO Sauna."""
 
-    config_entry: ConfigEntry
+    config_entry: ToloConfigEntry
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ToloConfigEntry) -> None:
         """Initialize ToloSaunaUpdateCoordinator."""
         self.client = ToloClient(
             address=entry.data[CONF_HOST],

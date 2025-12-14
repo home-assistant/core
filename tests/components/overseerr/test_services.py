@@ -7,13 +7,13 @@ from python_overseerr import OverseerrConnectionError
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.overseerr.const import (
-    ATTR_CONFIG_ENTRY_ID,
     ATTR_REQUESTED_BY,
     ATTR_SORT_ORDER,
     ATTR_STATUS,
     DOMAIN,
 )
 from homeassistant.components.overseerr.services import SERVICE_GET_REQUESTS
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 

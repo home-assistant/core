@@ -2,6 +2,7 @@
 
 from homeassistant.components.media_player import MediaClass, MediaType
 from homeassistant.components.media_source import const, models
+from homeassistant.core import HomeAssistant
 
 
 async def test_browse_media_as_dict() -> None:
@@ -68,3 +69,18 @@ async def test_media_source_default_name() -> None:
     """Test MediaSource uses domain as default name."""
     source = models.MediaSource(const.DOMAIN)
     assert source.name == const.DOMAIN
+
+
+async def test_media_source_item_media_source_id(hass: HomeAssistant) -> None:
+    """Test MediaSourceItem media_source_id property."""
+    # Test with domain and identifier
+    item = models.MediaSourceItem(hass, "test_domain", "test/identifier", None)
+    assert item.media_source_id == "media-source://test_domain/test/identifier"
+
+    # Test with domain only
+    item = models.MediaSourceItem(hass, "test_domain", "", None)
+    assert item.media_source_id == "media-source://test_domain"
+
+    # Test with no domain (root)
+    item = models.MediaSourceItem(hass, None, "", None)
+    assert item.media_source_id == "media-source://"

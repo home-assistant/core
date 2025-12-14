@@ -148,6 +148,15 @@ async def async_setup_entry(
                             source_type={dev_type}, idx=dev_id, name=name
                         )
 
+        # Skip rooms with no audio/video sources
+        if not sources:
+            _LOGGER.debug(
+                "Skipping room '%s' (ID: %s) - no audio/video sources found",
+                room.get("name"),
+                room_id,
+            )
+            continue
+
         try:
             hidden = room["roomHidden"]
             entity_list.append(

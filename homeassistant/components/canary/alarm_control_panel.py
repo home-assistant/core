@@ -31,7 +31,7 @@ async def async_setup_entry(
         for location_id, location in coordinator.data["locations"].items()
     ]
 
-    async_add_entities(alarms, True)
+    async_add_entities(alarms)
 
 
 class CanaryAlarm(

@@ -1,4 +1,4 @@
-"""Support for Google Assistant SDK."""
+"""Services for the Google Assistant SDK integration."""
 
 from __future__ import annotations
 

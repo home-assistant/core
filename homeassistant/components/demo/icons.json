@@ -11,19 +11,19 @@
               "on_low": "mdi:fan-chevron-down"
             }
           },
+          "swing_horizontal_mode": {
+            "state": {
+              "auto": "mdi:compare-horizontal",
+              "off": "mdi:arrow-oscillating-off",
+              "rangefull": "mdi:pan-horizontal"
+            }
+          },
           "swing_mode": {
             "state": {
               "1": "mdi:numeric-1",
               "2": "mdi:numeric-2",
               "3": "mdi:numeric-3",
               "auto": "mdi:arrow-oscillating",
-              "off": "mdi:arrow-oscillating-off"
-            }
-          },
-          "swing_horizontal_mode": {
-            "state": {
-              "rangefull": "mdi:pan-horizontal",
-              "auto": "mdi:compare-horizontal",
               "off": "mdi:arrow-oscillating-off"
             }
           }
@@ -37,9 +37,9 @@
             "default": "mdi:circle-medium",
             "state": {
               "auto": "mdi:fan-auto",
+              "on": "mdi:power",
               "sleep": "mdi:bed",
-              "smart": "mdi:brain",
-              "on": "mdi:power"
+              "smart": "mdi:brain"
             }
           }
         }
@@ -57,14 +57,14 @@
       }
     },
     "number": {
-      "volume": {
-        "default": "mdi:volume-high"
-      },
       "pwm": {
         "default": "mdi:square-wave"
       },
       "range": {
         "default": "mdi:square-wave"
+      },
+      "volume": {
+        "default": "mdi:volume-high"
       }
     },
     "select": {

@@ -1,10 +1,9 @@
 """Tests for the fan module."""
 
 from contextlib import nullcontext
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
-import requests_mock
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.fan import ATTR_PRESET_MODE, DOMAIN as FAN_DOMAIN
@@ -16,6 +15,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from .common import ALL_DEVICE_NAMES, ENTITY_FAN, mock_devices_response
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 NoException = nullcontext()
 
@@ -27,13 +27,13 @@ async def test_fan_state(
     config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    requests_mock: requests_mock.Mocker,
+    aioclient_mock: AiohttpClientMocker,
     device_name: str,
 ) -> None:
     """Test the resulting setup state is as expected for the platform."""
 
     # Configure the API devices call for device_name
-    mock_devices_response(requests_mock, device_name)
+    mock_devices_response(aioclient_mock, device_name)
 
     # setup platform - only including the named device
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -61,20 +61,23 @@ async def test_fan_state(
 @pytest.mark.parametrize(
     ("action", "command"),
     [
-        (SERVICE_TURN_ON, "pyvesync.vesyncfan.VeSyncTowerFan.turn_on"),
-        (SERVICE_TURN_OFF, "pyvesync.vesyncfan.VeSyncTowerFan.turn_off"),
+        (SERVICE_TURN_ON, "pyvesync.devices.vesyncfan.VeSyncTowerFan.turn_on"),
+        (SERVICE_TURN_OFF, "pyvesync.devices.vesyncfan.VeSyncTowerFan.turn_off"),
     ],
 )
 async def test_turn_on_off_success(
     hass: HomeAssistant,
     fan_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
     action: str,
     command: str,
 ) -> None:
     """Test turn_on and turn_off method."""
 
+    mock_devices_response(aioclient_mock, "SmartTowerFan")
+
     with (
-        patch(command, return_value=True) as method_mock,
+        patch(command, new_callable=AsyncMock, return_value=True) as method_mock,
     ):
         with patch(
             "homeassistant.components.vesync.fan.VeSyncFanHA.schedule_update_ha_state"
@@ -94,8 +97,14 @@ async def test_turn_on_off_success(
 @pytest.mark.parametrize(
     ("action", "command"),
     [
-        (SERVICE_TURN_ON, "pyvesync.vesyncfan.VeSyncTowerFan.turn_on"),
-        (SERVICE_TURN_OFF, "pyvesync.vesyncfan.VeSyncTowerFan.turn_off"),
+        (
+            SERVICE_TURN_ON,
+            "pyvesync.base_devices.vesyncbasedevice.VeSyncBaseToggleDevice.turn_on",
+        ),
+        (
+            SERVICE_TURN_OFF,
+            "pyvesync.base_devices.vesyncbasedevice.VeSyncBaseToggleDevice.turn_off",
+        ),
     ],
 )
 async def test_turn_on_off_raises_error(
@@ -129,19 +138,33 @@ async def test_turn_on_off_raises_error(
     ("api_response", "expectation"),
     [(True, NoException), (False, pytest.raises(HomeAssistantError))],
 )
+@pytest.mark.parametrize(
+    ("preset_mode", "patch_target"),
+    [
+        ("normal", "pyvesync.devices.vesyncfan.VeSyncTowerFan.set_normal_mode"),
+        (
+            "advancedSleep",
+            "pyvesync.devices.vesyncfan.VeSyncTowerFan.set_advanced_sleep_mode",
+        ),
+        ("turbo", "pyvesync.devices.vesyncfan.VeSyncTowerFan.set_turbo_mode"),
+        ("auto", "pyvesync.devices.vesyncfan.VeSyncTowerFan.set_auto_mode"),
+    ],
+)
 async def test_set_preset_mode(
     hass: HomeAssistant,
     fan_config_entry: MockConfigEntry,
     api_response: bool,
     expectation,
+    preset_mode: str,
+    patch_target: str,
 ) -> None:
     """Test handling of value in set_preset_mode method. Does this via turn on as it increases test coverage."""
 
-    # If VeSyncTowerFan.normal_mode fails (returns False), then HomeAssistantError is raised
+    # If VeSyncTowerFan.mode fails (returns False), then HomeAssistantError is raised
     with (
         expectation,
         patch(
-            "pyvesync.vesyncfan.VeSyncTowerFan.normal_mode",
+            patch_target,
             return_value=api_response,
         ) as method_mock,
     ):
@@ -151,7 +174,52 @@ async def test_set_preset_mode(
             await hass.services.async_call(
                 FAN_DOMAIN,
                 SERVICE_TURN_ON,
-                {ATTR_ENTITY_ID: ENTITY_FAN, ATTR_PRESET_MODE: "normal"},
+                {ATTR_ENTITY_ID: ENTITY_FAN, ATTR_PRESET_MODE: preset_mode},
+                blocking=True,
+            )
+
+        await hass.async_block_till_done()
+        method_mock.assert_called_once()
+        update_mock.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("action", "command"),
+    [
+        ("true", "pyvesync.devices.vesyncfan.VeSyncTowerFan.toggle_oscillation"),
+        ("false", "pyvesync.devices.vesyncfan.VeSyncTowerFan.toggle_oscillation"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("api_response", "expectation"),
+    [(True, NoException), (False, pytest.raises(HomeAssistantError))],
+)
+async def test_oscillation_success(
+    hass: HomeAssistant,
+    fan_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+    action: str,
+    command: str,
+    api_response: bool,
+    expectation,
+) -> None:
+    """Test oscillation on and off."""
+
+    mock_devices_response(aioclient_mock, "SmartTowerFan")
+
+    with (
+        expectation,
+        patch(
+            command, new_callable=AsyncMock, return_value=api_response
+        ) as method_mock,
+    ):
+        with patch(
+            "homeassistant.components.vesync.fan.VeSyncFanHA.schedule_update_ha_state"
+        ) as update_mock:
+            await hass.services.async_call(
+                FAN_DOMAIN,
+                "oscillate",
+                {ATTR_ENTITY_ID: ENTITY_FAN, "oscillating": action},
                 blocking=True,
             )
 

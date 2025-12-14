@@ -1,0 +1,21 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "API key is already configured"
+    },
+    "error": {
+      "api_timeout": "[%key:common::config_flow::error::timeout_connect%]",
+      "bad_api_response": "[%key:common::config_flow::error::unknown%]",
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "description": "Enter the Prowl API key and its name."
+      }
+    }
+  }
+}

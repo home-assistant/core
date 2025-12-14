@@ -24,6 +24,7 @@ from .const import (
     ATTR_DATA,
     ATTR_ENDPOINT,
     ATTR_METHOD,
+    ATTR_PARAMS,
     ATTR_SESSION_DATA_USER_ID,
     ATTR_SLUG,
     ATTR_TIMEOUT,
@@ -111,6 +112,7 @@ def websocket_supervisor_event(
         vol.Required(ATTR_ENDPOINT): cv.string,
         vol.Required(ATTR_METHOD): cv.string,
         vol.Optional(ATTR_DATA): dict,
+        vol.Optional(ATTR_PARAMS): dict,
         vol.Optional(ATTR_TIMEOUT): vol.Any(Number, None),
     }
 )
@@ -140,6 +142,7 @@ async def websocket_supervisor_api(
             timeout=msg.get(ATTR_TIMEOUT, 10),
             payload=payload,
             source="core.websocket_api",
+            params=msg.get(ATTR_PARAMS),
         )
     except HassioAPIError as err:
         _LOGGER.error("Failed to to call %s - %s", msg[ATTR_ENDPOINT], err)

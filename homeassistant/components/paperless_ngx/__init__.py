@@ -96,7 +96,7 @@ async def _get_paperless_api(
             translation_key="forbidden",
         ) from err
     except InitializationError as err:
-        raise ConfigEntryError(
+        raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
         ) from err

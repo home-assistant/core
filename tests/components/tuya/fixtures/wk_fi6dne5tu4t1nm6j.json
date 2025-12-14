@@ -1,0 +1,186 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "WiFi Smart Gas Boiler Thermostat ",
+  "category": "wk",
+  "product_id": "fi6dne5tu4t1nm6j",
+  "product_name": "WiFi Smart Gas Boiler Thermostat ",
+  "online": true,
+  "sub": false,
+  "time_zone": "+02:00",
+  "active_time": "2025-07-05T17:50:52+00:00",
+  "create_time": "2025-07-05T17:50:52+00:00",
+  "update_time": "2025-07-05T17:50:52+00:00",
+  "function": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["auto"]
+      }
+    },
+    "temp_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": 50,
+        "max": 350,
+        "scale": 1,
+        "step": 5
+      }
+    },
+    "temp_correction": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": -99,
+        "max": 99,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "upper_temp": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": 150,
+        "max": 350,
+        "scale": 1,
+        "step": 5
+      }
+    },
+    "lower_temp": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": 50,
+        "max": 140,
+        "scale": 1,
+        "step": 5
+      }
+    },
+    "child_lock": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "frost": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "factory_reset": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status_range": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["auto"]
+      }
+    },
+    "temp_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": 50,
+        "max": 350,
+        "scale": 1,
+        "step": 5
+      }
+    },
+    "temp_current": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": 0,
+        "max": 800,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "temp_correction": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": -99,
+        "max": 99,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "fault": {
+      "type": "Bitmap",
+      "value": {
+        "label": ["battery_temp_fault"]
+      }
+    },
+    "upper_temp": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": 150,
+        "max": 350,
+        "scale": 1,
+        "step": 5
+      }
+    },
+    "lower_temp": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": 50,
+        "max": 140,
+        "scale": 1,
+        "step": 5
+      }
+    },
+    "battery_percentage": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "child_lock": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "frost": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "factory_reset": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status": {
+    "switch": true,
+    "mode": "auto",
+    "temp_set": 220,
+    "temp_current": 249,
+    "temp_correction": -15,
+    "fault": 0,
+    "upper_temp": 350,
+    "lower_temp": 50,
+    "battery_percentage": 100,
+    "child_lock": false,
+    "frost": false,
+    "factory_reset": false
+  },
+  "set_up": true,
+  "support_local": true
+}

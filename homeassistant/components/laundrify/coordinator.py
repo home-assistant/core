@@ -16,6 +16,8 @@ from .const import DEFAULT_POLL_INTERVAL, DOMAIN, REQUEST_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
+type LaundrifyConfigEntry = ConfigEntry[LaundrifyUpdateCoordinator]
+
 
 class LaundrifyUpdateCoordinator(DataUpdateCoordinator[dict[str, LaundrifyDevice]]):
     """Class to manage fetching laundrify API data."""

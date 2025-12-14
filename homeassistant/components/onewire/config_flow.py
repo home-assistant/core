@@ -5,10 +5,15 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any
 
-from pyownet import protocol
+from aio_ownet.exceptions import OWServerConnectionError
+from aio_ownet.proxy import OWServerStatelessProxy
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
@@ -41,11 +46,10 @@ async def validate_input(
     hass: HomeAssistant, data: dict[str, Any], errors: dict[str, str]
 ) -> None:
     """Validate the user input allows us to connect."""
+    proxy = OWServerStatelessProxy(data[CONF_HOST], data[CONF_PORT])
     try:
-        await hass.async_add_executor_job(
-            protocol.proxy, data[CONF_HOST], data[CONF_PORT]
-        )
-    except protocol.ConnError:
+        await proxy.validate()
+    except OWServerConnectionError:
         errors["base"] = "cannot_connect"
 
 
@@ -160,7 +164,7 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
         return OnewireOptionsFlowHandler(config_entry)
 
 
-class OnewireOptionsFlowHandler(OptionsFlow):
+class OnewireOptionsFlowHandler(OptionsFlowWithReload):
     """Handle OneWire Config options."""
 
     configurable_devices: dict[str, str]

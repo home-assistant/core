@@ -18,6 +18,7 @@ from homeassistant.components.waze_travel_time.const import (
     IMPERIAL_UNITS,
     METRIC_UNITS,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from .const import MOCK_CONFIG
@@ -153,5 +154,5 @@ async def test_sensor_failed_wrcerror(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.waze_travel_time").state == "unknown"
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
     assert "Error on retrieving data: " in caplog.text

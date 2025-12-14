@@ -87,8 +87,7 @@ class SwitchbotVacuumEntity(SwitchbotEntity, StateVacuumEntity):
 
     _device: switchbot.SwitchbotVacuum
     _attr_supported_features = (
-        VacuumEntityFeature.BATTERY
-        | VacuumEntityFeature.RETURN_HOME
+        VacuumEntityFeature.RETURN_HOME
         | VacuumEntityFeature.START
         | VacuumEntityFeature.STATE
     )
@@ -107,11 +106,6 @@ class SwitchbotVacuumEntity(SwitchbotEntity, StateVacuumEntity):
         """Return the status of the vacuum cleaner."""
         status_code = self._device.get_work_status()
         return SWITCHBOT_VACUUM_STATE_MAP[self.protocol_version].get(status_code)
-
-    @property
-    def battery_level(self) -> int:
-        """Return the vacuum battery."""
-        return self._device.get_battery()
 
     async def async_start(self) -> None:
         """Start or resume the cleaning task."""

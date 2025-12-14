@@ -6,7 +6,6 @@ from functools import partial
 from pathlib import Path
 from unittest.mock import patch
 
-from freezegun import freeze_time
 import pytest
 
 from homeassistant.components import wake_word
@@ -170,7 +169,7 @@ async def test_config_entry_unload(
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-@freeze_time("2023-06-22 10:30:00+00:00")
+@pytest.mark.freeze_time("2023-06-22 10:30:00+00:00")
 @pytest.mark.parametrize(
     ("wake_word_id", "expected_ww", "expected_phrase"),
     [

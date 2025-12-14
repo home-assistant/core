@@ -17,7 +17,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_URL, CONF_WEBHOOK_ID
 from homeassistant.core import callback
@@ -186,7 +186,7 @@ class MotionEyeConfigFlow(ConfigFlow, domain=DOMAIN):
         return MotionEyeOptionsFlow()
 
 
-class MotionEyeOptionsFlow(OptionsFlow):
+class MotionEyeOptionsFlow(OptionsFlowWithReload):
     """motionEye options flow."""
 
     async def async_step_init(

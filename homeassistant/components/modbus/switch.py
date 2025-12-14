@@ -11,7 +11,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import get_hub
-from .entity import BaseSwitch
+from .entity import ModbusToggleEntity
 
 PARALLEL_UPDATES = 1
 
@@ -29,7 +29,7 @@ async def async_setup_platform(
     async_add_entities(ModbusSwitch(hass, hub, config) for config in switches)
 
 
-class ModbusSwitch(BaseSwitch, SwitchEntity):
+class ModbusSwitch(ModbusToggleEntity, SwitchEntity):
     """Base class representing a Modbus switch."""
 
     async def async_turn_on(self, **kwargs: Any) -> None:

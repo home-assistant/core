@@ -4,10 +4,10 @@
       "monitor_status": {
         "default": "mdi:television",
         "state": {
+          "down": "mdi:television-off",
           "pause": "mdi:television-pause",
-          "up": "mdi:television-shimmer",
           "seems_down": "mdi:television-off",
-          "down": "mdi:television-off"
+          "up": "mdi:television-shimmer"
         }
       }
     },

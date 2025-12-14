@@ -1,0 +1,947 @@
+# serializer version: 1
+# name: test_adam_binary_sensor_snapshot[platforms0][binary_sensor.adam_plugwise_notification-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.adam_plugwise_notification',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Plugwise notification',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'plugwise_notification',
+    'unique_id': 'fe799307f1624099878210aa0b9f1475-plugwise_notification',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_adam_binary_sensor_snapshot[platforms0][binary_sensor.adam_plugwise_notification-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'error_msg': list([
+      ]),
+      'friendly_name': 'Adam Plugwise notification',
+      'info_msg': list([
+      ]),
+      'other_msg': list([
+      ]),
+      'warning_msg': list([
+        "Node Plug (with MAC address 000D6F000D13CB01, in room 'n.a.') has been unreachable since 23:03 2020-01-18. Please check the connection and restart the device.",
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.adam_plugwise_notification',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_adam_binary_sensor_snapshot[platforms0][binary_sensor.bios_cv_thermostatic_radiator_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.bios_cv_thermostatic_radiator_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'a2c3583e0a6349358998b760cea82d2a-low_battery',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_adam_binary_sensor_snapshot[platforms0][binary_sensor.bios_cv_thermostatic_radiator_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Bios Cv Thermostatic Radiator  Battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.bios_cv_thermostatic_radiator_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_adam_binary_sensor_snapshot[platforms0][binary_sensor.cv_kraan_garage_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.cv_kraan_garage_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'e7693eb9582644e5b865dba8d4447cf1-low_battery',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_adam_binary_sensor_snapshot[platforms0][binary_sensor.cv_kraan_garage_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'CV Kraan Garage Battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.cv_kraan_garage_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_adam_binary_sensor_snapshot[platforms0][binary_sensor.onoff_heating-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.onoff_heating',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Heating',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'heating_state',
+    'unique_id': '90986d591dcd426cae3ec3e8111ff730-heating_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_adam_binary_sensor_snapshot[platforms0][binary_sensor.onoff_heating-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'OnOff Heating',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.onoff_heating',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_adam_binary_sensor_snapshot[platforms0][binary_sensor.thermostatic_radiator_badkamer_1_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.thermostatic_radiator_badkamer_1_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '680423ff840043738f42cc7f1ff97a36-low_battery',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_adam_binary_sensor_snapshot[platforms0][binary_sensor.thermostatic_radiator_badkamer_1_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Thermostatic Radiator Badkamer 1 Battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.thermostatic_radiator_badkamer_1_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_adam_binary_sensor_snapshot[platforms0][binary_sensor.thermostatic_radiator_badkamer_2_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.thermostatic_radiator_badkamer_2_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'f1fee6043d3642a9b0a65297455f008e-low_battery',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_adam_binary_sensor_snapshot[platforms0][binary_sensor.thermostatic_radiator_badkamer_2_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Thermostatic Radiator Badkamer 2 Battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.thermostatic_radiator_badkamer_2_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_adam_binary_sensor_snapshot[platforms0][binary_sensor.thermostatic_radiator_jessie_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.thermostatic_radiator_jessie_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'd3da73bde12a47d5a6b8f9dad971f2ec-low_battery',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_adam_binary_sensor_snapshot[platforms0][binary_sensor.thermostatic_radiator_jessie_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Thermostatic Radiator Jessie Battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.thermostatic_radiator_jessie_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_adam_binary_sensor_snapshot[platforms0][binary_sensor.zone_lisa_bios_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.zone_lisa_bios_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'df4a4a8169904cdb9c03d61a21f42140-low_battery',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_adam_binary_sensor_snapshot[platforms0][binary_sensor.zone_lisa_bios_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Zone Lisa Bios Battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.zone_lisa_bios_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_adam_binary_sensor_snapshot[platforms0][binary_sensor.zone_lisa_wk_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.zone_lisa_wk_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'b59bcebaf94b499ea7d46e4a66fb62d8-low_battery',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_adam_binary_sensor_snapshot[platforms0][binary_sensor.zone_lisa_wk_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Zone Lisa WK Battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.zone_lisa_wk_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_adam_binary_sensor_snapshot[platforms0][binary_sensor.zone_thermostat_jessie_battery-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.zone_thermostat_jessie_battery',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.BATTERY: 'battery'>,
+    'original_icon': None,
+    'original_name': 'Battery',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '6a3bf693d05e48e0b460c815a4fdd09d-low_battery',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_adam_binary_sensor_snapshot[platforms0][binary_sensor.zone_thermostat_jessie_battery-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'battery',
+      'friendly_name': 'Zone Thermostat Jessie Battery',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.zone_thermostat_jessie_battery',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_anna_binary_sensor_snapshot[platforms0-True-anna_heatpump_heating][binary_sensor.opentherm_compressor_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.opentherm_compressor_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Compressor state',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'compressor_state',
+    'unique_id': '1cbf783bb11e4a7c8a6843dee3a86927-compressor_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_anna_binary_sensor_snapshot[platforms0-True-anna_heatpump_heating][binary_sensor.opentherm_compressor_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'OpenTherm Compressor state',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.opentherm_compressor_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_anna_binary_sensor_snapshot[platforms0-True-anna_heatpump_heating][binary_sensor.opentherm_cooling-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.opentherm_cooling',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cooling',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cooling_state',
+    'unique_id': '1cbf783bb11e4a7c8a6843dee3a86927-cooling_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_anna_binary_sensor_snapshot[platforms0-True-anna_heatpump_heating][binary_sensor.opentherm_cooling-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'OpenTherm Cooling',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.opentherm_cooling',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_anna_binary_sensor_snapshot[platforms0-True-anna_heatpump_heating][binary_sensor.opentherm_cooling_enabled-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.opentherm_cooling_enabled',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cooling enabled',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'cooling_enabled',
+    'unique_id': '1cbf783bb11e4a7c8a6843dee3a86927-cooling_enabled',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_anna_binary_sensor_snapshot[platforms0-True-anna_heatpump_heating][binary_sensor.opentherm_cooling_enabled-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'OpenTherm Cooling enabled',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.opentherm_cooling_enabled',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_anna_binary_sensor_snapshot[platforms0-True-anna_heatpump_heating][binary_sensor.opentherm_dhw_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.opentherm_dhw_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'DHW state',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'dhw_state',
+    'unique_id': '1cbf783bb11e4a7c8a6843dee3a86927-dhw_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_anna_binary_sensor_snapshot[platforms0-True-anna_heatpump_heating][binary_sensor.opentherm_dhw_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'OpenTherm DHW state',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.opentherm_dhw_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_anna_binary_sensor_snapshot[platforms0-True-anna_heatpump_heating][binary_sensor.opentherm_flame_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.opentherm_flame_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Flame state',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'flame_state',
+    'unique_id': '1cbf783bb11e4a7c8a6843dee3a86927-flame_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_anna_binary_sensor_snapshot[platforms0-True-anna_heatpump_heating][binary_sensor.opentherm_flame_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'OpenTherm Flame state',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.opentherm_flame_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_anna_binary_sensor_snapshot[platforms0-True-anna_heatpump_heating][binary_sensor.opentherm_heating-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.opentherm_heating',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Heating',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'heating_state',
+    'unique_id': '1cbf783bb11e4a7c8a6843dee3a86927-heating_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_anna_binary_sensor_snapshot[platforms0-True-anna_heatpump_heating][binary_sensor.opentherm_heating-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'OpenTherm Heating',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.opentherm_heating',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_anna_binary_sensor_snapshot[platforms0-True-anna_heatpump_heating][binary_sensor.opentherm_secondary_boiler_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.opentherm_secondary_boiler_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Secondary boiler state',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'secondary_boiler_state',
+    'unique_id': '1cbf783bb11e4a7c8a6843dee3a86927-secondary_boiler_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_anna_binary_sensor_snapshot[platforms0-True-anna_heatpump_heating][binary_sensor.opentherm_secondary_boiler_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'OpenTherm Secondary boiler state',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.opentherm_secondary_boiler_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_anna_binary_sensor_snapshot[platforms0-True-anna_heatpump_heating][binary_sensor.smile_anna_plugwise_notification-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.smile_anna_plugwise_notification',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Plugwise notification',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'plugwise_notification',
+    'unique_id': '015ae9ea3f964e668e490fa39da3870b-plugwise_notification',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_anna_binary_sensor_snapshot[platforms0-True-anna_heatpump_heating][binary_sensor.smile_anna_plugwise_notification-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'error_msg': list([
+      ]),
+      'friendly_name': 'Smile Anna Plugwise notification',
+      'info_msg': list([
+      ]),
+      'other_msg': list([
+      ]),
+      'warning_msg': list([
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.smile_anna_plugwise_notification',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_p1_v4_binary_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][binary_sensor.smile_p1_plugwise_notification-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.smile_p1_plugwise_notification',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Plugwise notification',
+    'platform': 'plugwise',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'plugwise_notification',
+    'unique_id': '03e65b16e4b247a29ae0d75a78cb492e-plugwise_notification',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_p1_v4_binary_sensor_snapshot[platforms0-03e65b16e4b247a29ae0d75a78cb492e-p1v4_442_triple][binary_sensor.smile_p1_plugwise_notification-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'error_msg': list([
+      ]),
+      'friendly_name': 'Smile P1 Plugwise notification',
+      'info_msg': list([
+      ]),
+      'other_msg': list([
+      ]),
+      'warning_msg': list([
+        'The Smile P1 is not connected to a smart meter.',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.smile_p1_plugwise_notification',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

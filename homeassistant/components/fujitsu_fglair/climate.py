@@ -15,6 +15,7 @@ from homeassistant.components.climate import (
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
+    FAN_OFF,
     SWING_BOTH,
     SWING_HORIZONTAL,
     SWING_OFF,
@@ -31,6 +32,7 @@ from .coordinator import FGLairConfigEntry, FGLairCoordinator
 from .entity import FGLairEntity
 
 HA_TO_FUJI_FAN = {
+    FAN_OFF: FanSpeed.QUIET,
     FAN_LOW: FanSpeed.LOW,
     FAN_MEDIUM: FanSpeed.MEDIUM,
     FAN_HIGH: FanSpeed.HIGH,

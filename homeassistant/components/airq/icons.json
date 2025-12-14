@@ -4,9 +4,6 @@
       "health_index": {
         "default": "mdi:heart-pulse"
       },
-      "absolute_humidity": {
-        "default": "mdi:water"
-      },
       "oxygen": {
         "default": "mdi:leaf"
       },

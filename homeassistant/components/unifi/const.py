@@ -13,6 +13,7 @@ PLATFORMS = [
     Platform.BUTTON,
     Platform.DEVICE_TRACKER,
     Platform.IMAGE,
+    Platform.LIGHT,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.UPDATE,

@@ -33,7 +33,10 @@ class AuthFlowContext(FlowContext, total=False):
     redirect_uri: str
 
 
-AuthFlowResult = FlowResult[AuthFlowContext, tuple[str, str]]
+class AuthFlowResult(FlowResult[AuthFlowContext, tuple[str, str]], total=False):
+    """Typed result dict for auth flow."""
+
+    result: Credentials  # Only present if type is CREATE_ENTRY
 
 
 @attr.s(slots=True)

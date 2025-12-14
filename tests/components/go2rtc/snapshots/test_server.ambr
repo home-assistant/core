@@ -1,0 +1,23 @@
+# serializer version: 1
+# name: test_server_run_success[False-d2a0b844f4cdbe773702176c47c9a675eb0c56a0779b8f880cdb3b492ed3b1c1-bc495d266a32e66ba69b9c72546e00101e04fb573f1bd08863fe4ad1aac02949]
+  _CallList([
+    _Call(
+      tuple(
+        b'# This file is managed by Home Assistant\n# Do not edit it manually\n\napp:\n  modules: ["api","exec","ffmpeg","http","mjpeg","onvif","rtmp","rtsp","srtp","webrtc","ws"]\n\napi:\n  listen: ""\n  unix_listen: "/test/path/go2rtc.sock"\n  allow_paths: ["/","/api","/api/frame.jpeg","/api/schemes","/api/streams","/api/webrtc","/api/ws"]\n  local_auth: true\n  username: d2a0b844f4cdbe773702176c47c9a675eb0c56a0779b8f880cdb3b492ed3b1c1\n  password: bc495d266a32e66ba69b9c72546e00101e04fb573f1bd08863fe4ad1aac02949\n\n# ffmpeg needs the exec module\n# Restrict execution to only ffmpeg binary\nexec:\n  allow_paths:\n    - ffmpeg\n\nrtsp:\n  listen: "127.0.0.1:18554"\n\nwebrtc:\n  listen: ":18555/tcp"\n  ice_servers: []\n',
+      ),
+      dict({
+      }),
+    ),
+  ])
+# ---
+# name: test_server_run_success[True-user-pass]
+  _CallList([
+    _Call(
+      tuple(
+        b'# This file is managed by Home Assistant\n# Do not edit it manually\n\napp:\n  modules: ["api","exec","ffmpeg","http","mjpeg","onvif","rtmp","rtsp","srtp","webrtc","ws","debug"]\n\napi:\n  listen: ":11984"\n  unix_listen: "/test/path/go2rtc.sock"\n  allow_paths: ["/","/api","/api/frame.jpeg","/api/schemes","/api/streams","/api/webrtc","/api/ws","/api/config","/api/log","/api/streams.dot"]\n  local_auth: true\n  username: user\n  password: pass\n\n# ffmpeg needs the exec module\n# Restrict execution to only ffmpeg binary\nexec:\n  allow_paths:\n    - ffmpeg\n\nrtsp:\n  listen: "127.0.0.1:18554"\n\nwebrtc:\n  listen: ":18555/tcp"\n  ice_servers: []\n',
+      ),
+      dict({
+      }),
+    ),
+  ])
+# ---

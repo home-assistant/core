@@ -9,7 +9,11 @@ from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 import pytest
 
 from homeassistant.components.lamarzocco.config_flow import CONF_MACHINE
-from homeassistant.components.lamarzocco.const import CONF_USE_BLUETOOTH, DOMAIN
+from homeassistant.components.lamarzocco.const import (
+    CONF_INSTALLATION_KEY,
+    CONF_USE_BLUETOOTH,
+    DOMAIN,
+)
 from homeassistant.config_entries import (
     SOURCE_BLUETOOTH,
     SOURCE_DHCP,
@@ -23,7 +27,12 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from . import USER_INPUT, async_init_integration, get_bluetooth_service_info
+from . import (
+    MOCK_INSTALLATION_KEY,
+    USER_INPUT,
+    async_init_integration,
+    get_bluetooth_service_info,
+)
 
 from tests.common import MockConfigEntry
 
@@ -68,6 +77,7 @@ async def __do_sucessful_machine_selection_step(
     assert result["data"] == {
         **USER_INPUT,
         CONF_TOKEN: None,
+        CONF_INSTALLATION_KEY: MOCK_INSTALLATION_KEY,
     }
     assert result["result"].unique_id == "GS012345"
 
@@ -344,6 +354,7 @@ async def test_bluetooth_discovery(
         **USER_INPUT,
         CONF_MAC: "aa:bb:cc:dd:ee:ff",
         CONF_TOKEN: "dummyToken",
+        CONF_INSTALLATION_KEY: MOCK_INSTALLATION_KEY,
     }
 
 
@@ -407,6 +418,7 @@ async def test_bluetooth_discovery_errors(
         **USER_INPUT,
         CONF_MAC: "aa:bb:cc:dd:ee:ff",
         CONF_TOKEN: None,
+        CONF_INSTALLATION_KEY: MOCK_INSTALLATION_KEY,
     }
 
 
@@ -422,7 +434,7 @@ async def test_dhcp_discovery(
         data=DhcpServiceInfo(
             ip="192.168.1.42",
             hostname=mock_lamarzocco.serial_number,
-            macaddress="aa:bb:cc:dd:ee:ff",
+            macaddress="aabbccddeeff",
         ),
     )
 
@@ -436,8 +448,9 @@ async def test_dhcp_discovery(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         **USER_INPUT,
-        CONF_ADDRESS: "aa:bb:cc:dd:ee:ff",
+        CONF_ADDRESS: "aabbccddeeff",
         CONF_TOKEN: None,
+        CONF_INSTALLATION_KEY: MOCK_INSTALLATION_KEY,
     }
 
 
@@ -453,7 +466,7 @@ async def test_dhcp_discovery_abort_on_hostname_changed(
         data=DhcpServiceInfo(
             ip="192.168.1.42",
             hostname="custom_name",
-            macaddress="00:00:00:00:00:00",
+            macaddress="000000000000",
         ),
     )
     assert result["type"] is FlowResultType.ABORT
@@ -475,14 +488,14 @@ async def test_dhcp_already_configured_and_update(
         data=DhcpServiceInfo(
             ip="192.168.1.42",
             hostname=mock_lamarzocco.serial_number,
-            macaddress="aa:bb:cc:dd:ee:ff",
+            macaddress="aabbccddeeff",
         ),
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     assert mock_config_entry.data[CONF_ADDRESS] != old_address
-    assert mock_config_entry.data[CONF_ADDRESS] == "aa:bb:cc:dd:ee:ff"
+    assert mock_config_entry.data[CONF_ADDRESS] == "aabbccddeeff"
 
 
 async def test_options_flow(

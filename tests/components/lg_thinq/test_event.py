@@ -15,9 +15,11 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_all_entities(
+@pytest.mark.parametrize("device_fixture", ["air_conditioner"])
+async def test_event_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
+    devices: AsyncMock,
     mock_thinq_api: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,

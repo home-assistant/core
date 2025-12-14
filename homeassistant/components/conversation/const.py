@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from enum import IntFlag
+from enum import IntFlag, StrEnum
 from typing import TYPE_CHECKING
 
 from homeassistant.util.hass_dict import HassKey
@@ -10,13 +10,10 @@ from homeassistant.util.hass_dict import HassKey
 if TYPE_CHECKING:
     from homeassistant.helpers.entity_component import EntityComponent
 
-    from .default_agent import DefaultAgent
     from .entity import ConversationEntity
 
 DOMAIN = "conversation"
-DEFAULT_EXPOSED_ATTRIBUTES = {"device_class"}
 HOME_ASSISTANT_AGENT = "conversation.home_assistant"
-OLD_HOME_ASSISTANT_AGENT = "homeassistant"
 
 ATTR_TEXT = "text"
 ATTR_LANGUAGE = "language"
@@ -27,10 +24,23 @@ SERVICE_PROCESS = "process"
 SERVICE_RELOAD = "reload"
 
 DATA_COMPONENT: HassKey[EntityComponent[ConversationEntity]] = HassKey(DOMAIN)
-DATA_DEFAULT_ENTITY: HassKey[DefaultAgent] = HassKey(f"{DOMAIN}_default_entity")
 
 
 class ConversationEntityFeature(IntFlag):
     """Supported features of the conversation entity."""
 
     CONTROL = 1
+
+
+METADATA_CUSTOM_SENTENCE = "hass_custom_sentence"
+METADATA_CUSTOM_FILE = "hass_custom_file"
+
+
+class ChatLogEventType(StrEnum):
+    """Chat log event type."""
+
+    INITIAL_STATE = "initial_state"
+    CREATED = "created"
+    UPDATED = "updated"
+    DELETED = "deleted"
+    CONTENT_ADDED = "content_added"

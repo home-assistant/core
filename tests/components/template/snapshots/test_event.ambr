@@ -1,0 +1,20 @@
+# serializer version: 1
+# name: test_setup_config_entry
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': 'single',
+      'event_types': list([
+        'single',
+        'double',
+        'hold',
+      ]),
+      'friendly_name': 'template_event',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.template_event',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2024-07-09T00:00:00.000+00:00',
+  })
+# ---

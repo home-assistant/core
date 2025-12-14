@@ -4,8 +4,15 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from pyvlx import OpeningDevice, Position
-from pyvlx.opening_device import Awning, Blind, GarageDoor, Gate, RollerShutter, Window
+from pyvlx import (
+    Awning,
+    Blind,
+    GarageDoor,
+    Gate,
+    OpeningDevice,
+    Position,
+    RollerShutter,
+)
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -14,11 +21,10 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from . import VeluxConfigEntry
 from .entity import VeluxEntity
 
 PARALLEL_UPDATES = 1
@@ -26,14 +32,14 @@ PARALLEL_UPDATES = 1
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigEntry,
+    config_entry: VeluxConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up cover(s) for Velux platform."""
-    module = hass.data[DOMAIN][config.entry_id]
+    pyvlx = config_entry.runtime_data
     async_add_entities(
-        VeluxCover(node, config.entry_id)
-        for node in module.pyvlx.nodes
+        VeluxCover(node, config_entry.entry_id)
+        for node in pyvlx.nodes
         if isinstance(node, OpeningDevice)
     )
 
@@ -44,41 +50,38 @@ class VeluxCover(VeluxEntity, CoverEntity):
     _is_blind = False
     node: OpeningDevice
 
+    # Do not name the "main" feature of the device (position control)
+    _attr_name = None
+
     def __init__(self, node: OpeningDevice, config_entry_id: str) -> None:
         """Initialize VeluxCover."""
         super().__init__(node, config_entry_id)
+        # Features common to all covers
+        self._attr_supported_features = (
+            CoverEntityFeature.OPEN
+            | CoverEntityFeature.CLOSE
+            | CoverEntityFeature.SET_POSITION
+            | CoverEntityFeature.STOP
+        )
+        # Window is the default device class for covers
         self._attr_device_class = CoverDeviceClass.WINDOW
         if isinstance(node, Awning):
             self._attr_device_class = CoverDeviceClass.AWNING
-        if isinstance(node, Blind):
-            self._attr_device_class = CoverDeviceClass.BLIND
-            self._is_blind = True
         if isinstance(node, GarageDoor):
             self._attr_device_class = CoverDeviceClass.GARAGE
         if isinstance(node, Gate):
             self._attr_device_class = CoverDeviceClass.GATE
         if isinstance(node, RollerShutter):
             self._attr_device_class = CoverDeviceClass.SHUTTER
-        if isinstance(node, Window):
-            self._attr_device_class = CoverDeviceClass.WINDOW
-
-    @property
-    def supported_features(self) -> CoverEntityFeature:
-        """Flag supported features."""
-        supported_features = (
-            CoverEntityFeature.OPEN
-            | CoverEntityFeature.CLOSE
-            | CoverEntityFeature.SET_POSITION
-            | CoverEntityFeature.STOP
-        )
-        if self.current_cover_tilt_position is not None:
-            supported_features |= (
+        if isinstance(node, Blind):
+            self._attr_device_class = CoverDeviceClass.BLIND
+            self._is_blind = True
+            self._attr_supported_features |= (
                 CoverEntityFeature.OPEN_TILT
                 | CoverEntityFeature.CLOSE_TILT
                 | CoverEntityFeature.SET_TILT_POSITION
                 | CoverEntityFeature.STOP_TILT
             )
-        return supported_features
 
     @property
     def current_cover_position(self) -> int:
@@ -95,7 +98,10 @@ class VeluxCover(VeluxEntity, CoverEntity):
     @property
     def is_closed(self) -> bool:
         """Return if the cover is closed."""
-        return self.node.position.closed
+        # do not use the node's closed state but rely on cover position
+        # until https://github.com/Julius2342/pyvlx/pull/543 is merged.
+        # once merged this can again return self.node.position.closed
+        return self.current_cover_position == 0
 
     @property
     def is_opening(self) -> bool:

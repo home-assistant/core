@@ -64,7 +64,7 @@ PROGRAM_TO_SPEED: dict[int, str] = {
 }
 
 
-class MieleVacuumStateCode(MieleEnum):
+class MieleVacuumStateCode(MieleEnum, missing_to_none=True):
     """Define vacuum state codes."""
 
     idle = 0
@@ -82,12 +82,10 @@ class MieleVacuumStateCode(MieleEnum):
     blocked_front_wheel = 5900
     docked = 5903, 5904
     remote_controlled = 5910
-    missing2none = -9999
 
 
 SUPPORTED_FEATURES = (
     VacuumEntityFeature.STATE
-    | VacuumEntityFeature.BATTERY
     | VacuumEntityFeature.FAN_SPEED
     | VacuumEntityFeature.START
     | VacuumEntityFeature.STOP
@@ -175,11 +173,6 @@ class MieleVacuum(MieleEntity, StateVacuumEntity):
         )
 
     @property
-    def battery_level(self) -> int | None:
-        """Return the battery level."""
-        return self.device.state_battery_level
-
-    @property
     def fan_speed(self) -> str | None:
         """Return the fan speed."""
         return PROGRAM_TO_SPEED.get(self.device.state_program_id)
@@ -196,14 +189,15 @@ class MieleVacuum(MieleEntity, StateVacuumEntity):
         """Send action to the device."""
         try:
             await self.api.send_action(device_id, action)
-        except ClientResponseError as ex:
+        except ClientResponseError as err:
+            _LOGGER.debug("Error setting vacuum state for %s: %s", self.entity_id, err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="set_state_error",
                 translation_placeholders={
                     "entity": self.entity_id,
                 },
-            ) from ex
+            ) from err
 
     async def async_clean_spot(self, **kwargs: Any) -> None:
         """Clean spot."""

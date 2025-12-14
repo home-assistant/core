@@ -13,9 +13,7 @@ from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
-    SensorDeviceClass,
 )
-from homeassistant.components.sensor.helpers import async_parse_date_datetime
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_FORCE_UPDATE,
@@ -181,18 +179,6 @@ class RestSensor(ManualTriggerSensorEntity, RestEntity):
                 self.entity_id, variables, None
             )
 
-        if value is None or self.device_class not in (
-            SensorDeviceClass.DATE,
-            SensorDeviceClass.TIMESTAMP,
-        ):
-            self._attr_native_value = value
-            self._process_manual_data(variables)
-            self.async_write_ha_state()
-            return
-
-        self._attr_native_value = async_parse_date_datetime(
-            value, self.entity_id, self.device_class
-        )
-
+        self._set_native_value_with_possible_timestamp(value)
         self._process_manual_data(variables)
         self.async_write_ha_state()

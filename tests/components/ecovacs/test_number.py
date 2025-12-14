@@ -3,8 +3,14 @@
 from dataclasses import dataclass
 
 from deebot_client.command import Command
-from deebot_client.commands.json import SetCutDirection, SetVolume
-from deebot_client.events import CutDirectionEvent, Event, VolumeEvent
+from deebot_client.commands.json import (
+    SetCleanCount,
+    SetCutDirection,
+    SetVolume,
+    SetWaterInfo,
+)
+from deebot_client.events import CleanCountEvent, CutDirectionEvent, Event, VolumeEvent
+from deebot_client.events.water_info import WaterCustomAmountEvent
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -68,8 +74,34 @@ class NumberTestCase:
                 ),
             ],
         ),
+        (
+            "n0vyif",
+            [
+                NumberTestCase(
+                    "number.x8_pro_omni_clean_count",
+                    CleanCountEvent(1),
+                    "1",
+                    4,
+                    SetCleanCount(4),
+                ),
+                NumberTestCase(
+                    "number.x8_pro_omni_volume",
+                    VolumeEvent(5, 11),
+                    "5",
+                    10,
+                    SetVolume(10),
+                ),
+                NumberTestCase(
+                    "number.x8_pro_omni_water_flow_level",
+                    WaterCustomAmountEvent(14),
+                    "14",
+                    7,
+                    SetWaterInfo(custom_amount=7),
+                ),
+            ],
+        ),
     ],
-    ids=["yna5x1", "5xu9h3"],
+    ids=["yna5x1", "5xu9h3", "n0vyif"],
 )
 async def test_number_entities(
     hass: HomeAssistant,

@@ -14,7 +14,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, callback
@@ -44,7 +44,7 @@ class FeedReaderConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(
         config_entry: ConfigEntry,
-    ) -> OptionsFlow:
+    ) -> FeedReaderOptionsFlowHandler:
         """Get the options flow for this handler."""
         return FeedReaderOptionsFlowHandler()
 
@@ -119,11 +119,10 @@ class FeedReaderConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors={"base": "url_error"},
                 )
 
-        self.hass.config_entries.async_update_entry(reconfigure_entry, data=user_input)
-        return self.async_abort(reason="reconfigure_successful")
+        return self.async_update_reload_and_abort(reconfigure_entry, data=user_input)
 
 
-class FeedReaderOptionsFlowHandler(OptionsFlow):
+class FeedReaderOptionsFlowHandler(OptionsFlowWithReload):
     """Handle an options flow."""
 
     async def async_step_init(

@@ -1,0 +1,11 @@
+{
+  "entity": {
+    "lock": {
+      "secure_mode": {
+        "state": {
+          "locked": "mdi:shield-lock"
+        }
+      }
+    }
+  }
+}

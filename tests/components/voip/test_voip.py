@@ -115,7 +115,8 @@ async def test_calls_not_allowed(
 
         # Should be problem.pcm from components/voip
         played_audio_bytes = audio_bytes
-        done.set()
+        # Use call_soon_threadsafe because send_audio runs in an executor thread
+        hass.loop.call_soon_threadsafe(done.set)
 
     protocol.transport = Mock()
     protocol.loop_delay = 0

@@ -12,39 +12,7 @@ from typing import TYPE_CHECKING, Any, Final
 import orjson
 
 from homeassistant.util.file import write_utf8_file, write_utf8_file_atomic
-from homeassistant.util.json import (
-    JSON_DECODE_EXCEPTIONS as _JSON_DECODE_EXCEPTIONS,
-    JSON_ENCODE_EXCEPTIONS as _JSON_ENCODE_EXCEPTIONS,
-    SerializationError,
-    format_unserializable_data,
-    json_loads as _json_loads,
-)
-
-from .deprecation import (
-    DeprecatedConstant,
-    all_with_deprecated_constants,
-    check_if_deprecated_constant,
-    deprecated_function,
-    dir_with_deprecated_constants,
-)
-
-_DEPRECATED_JSON_DECODE_EXCEPTIONS = DeprecatedConstant(
-    _JSON_DECODE_EXCEPTIONS, "homeassistant.util.json.JSON_DECODE_EXCEPTIONS", "2025.8"
-)
-_DEPRECATED_JSON_ENCODE_EXCEPTIONS = DeprecatedConstant(
-    _JSON_ENCODE_EXCEPTIONS, "homeassistant.util.json.JSON_ENCODE_EXCEPTIONS", "2025.8"
-)
-json_loads = deprecated_function(
-    "homeassistant.util.json.json_loads", breaks_in_ha_version="2025.8"
-)(_json_loads)
-
-# These can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(
-    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
-)
-__all__ = all_with_deprecated_constants(globals())
-
+from homeassistant.util.json import SerializationError, format_unserializable_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -192,15 +160,20 @@ def _orjson_bytes_default_encoder(data: Any) -> bytes:
     )
 
 
-def save_json(
-    filename: str,
+def prepare_save_json(
     data: list | dict,
-    private: bool = False,
     *,
     encoder: type[json.JSONEncoder] | None = None,
-    atomic_writes: bool = False,
-) -> None:
-    """Save JSON data to a file."""
+) -> tuple[str, str | bytes]:
+    """Prepare JSON data for saving to a file.
+
+    Returns a tuple of (mode, json_data) where mode is either 'w' or 'wb'
+    and json_data is either a str or bytes depending on the mode.
+
+    Args:
+        data: Data to serialize.
+        encoder: Optional custom JSON encoder.
+    """
     dump: Callable[[Any], Any]
     try:
         # For backwards compatibility, if they pass in the
@@ -220,10 +193,24 @@ def save_json(
         formatted_data = format_unserializable_data(
             find_paths_unserializable_data(data, dump=dump)
         )
-        msg = f"Failed to serialize to JSON: {filename}. Bad data at {formatted_data}"
-        _LOGGER.error(msg)
-        raise SerializationError(msg) from error
+        raise SerializationError(f"Bad data at {formatted_data}") from error
+    return (mode, json_data)
 
+
+def save_json(
+    filename: str,
+    data: list | dict,
+    private: bool = False,
+    *,
+    encoder: type[json.JSONEncoder] | None = None,
+    atomic_writes: bool = False,
+) -> None:
+    """Save JSON data to a file."""
+    try:
+        mode, json_data = prepare_save_json(data, encoder=encoder)
+    except SerializationError as err:
+        _LOGGER.error("Failed to serialize to JSON: %s. %s", filename, err)
+        raise
     method = write_utf8_file_atomic if atomic_writes else write_utf8_file
     method(filename, json_data, private, mode=mode)
 

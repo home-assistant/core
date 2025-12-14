@@ -8,8 +8,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from loqedAPI import loqed
 import pytest
 
-from homeassistant.components.loqed import DOMAIN
-from homeassistant.components.loqed.const import CONF_CLOUDHOOK_URL
+from homeassistant.components.loqed.const import CONF_CLOUDHOOK_URL, DOMAIN
 from homeassistant.const import CONF_API_TOKEN, CONF_NAME, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component

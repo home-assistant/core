@@ -1,0 +1,9 @@
+{
+  "deviceId": "MW2-0B530EFD-1ADF-4F54-A2C3-46C37F94C689",
+  "deviceInfo": {
+    "deviceType": "DEVICE_WASHER",
+    "modelName": "FAFXU22027",
+    "alias": "Test washer",
+    "reportable": true
+  }
+}

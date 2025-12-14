@@ -8,6 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import httpx_client
 
 from .const import CONF_TOKEN
 
@@ -20,9 +21,12 @@ type TriggercmdConfigEntry = ConfigEntry[ha.Hub]
 
 async def async_setup_entry(hass: HomeAssistant, entry: TriggercmdConfigEntry) -> bool:
     """Set up TRIGGERcmd from a config entry."""
+    hass_client = httpx_client.get_async_client(hass)
     hub = ha.Hub(entry.data[CONF_TOKEN])
-
-    status_code = await client.async_connection_test(entry.data[CONF_TOKEN])
+    await hub.async_init(hass_client)
+    status_code = await client.async_connection_test(
+        entry.data[CONF_TOKEN], hass_client
+    )
     if status_code != 200:
         raise ConfigEntryNotReady
 

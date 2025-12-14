@@ -1,9 +1,9 @@
 """Base entity for the Ping component."""
 
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import DOMAIN
 from .coordinator import PingConfigEntry, PingUpdateCoordinator
 
 
@@ -23,6 +23,6 @@ class PingEntity(CoordinatorEntity[PingUpdateCoordinator]):
 
         self._attr_unique_id = unique_id
         self._attr_device_info = DeviceInfo(
-            identifiers={(HOMEASSISTANT_DOMAIN, config_entry.entry_id)},
+            identifiers={(DOMAIN, config_entry.entry_id)},
             manufacturer="Ping",
         )

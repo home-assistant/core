@@ -1,5 +1,8 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
     "step": {
       "user": {
         "data": {
@@ -7,9 +10,6 @@
           "tld": "TLD"
         }
       }
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
   }
 }

@@ -13,11 +13,13 @@ DOMAIN = "home_connect"
 API_DEFAULT_RETRY_AFTER = 60
 
 APPLIANCES_WITH_PROGRAMS = (
+    "AirConditioner",
     "CleaningRobot",
     "CoffeeMaker",
     "Dishwasher",
     "Dryer",
     "Hood",
+    "Microwave",
     "Oven",
     "WarmingDrawer",
     "Washer",
@@ -61,19 +63,12 @@ BSH_DOOR_STATE_LOCKED = "BSH.Common.EnumType.DoorState.Locked"
 BSH_DOOR_STATE_OPEN = "BSH.Common.EnumType.DoorState.Open"
 
 
-SERVICE_OPTION_ACTIVE = "set_option_active"
-SERVICE_OPTION_SELECTED = "set_option_selected"
-SERVICE_PAUSE_PROGRAM = "pause_program"
-SERVICE_RESUME_PROGRAM = "resume_program"
-SERVICE_SELECT_PROGRAM = "select_program"
 SERVICE_SET_PROGRAM_AND_OPTIONS = "set_program_and_options"
 SERVICE_SETTING = "change_setting"
-SERVICE_START_PROGRAM = "start_program"
 
 ATTR_AFFECTS_TO = "affects_to"
 ATTR_KEY = "key"
 ATTR_PROGRAM = "program"
-ATTR_UNIT = "unit"
 ATTR_VALUE = "value"
 
 AFFECTS_TO_ACTIVE_PROGRAM = "active_program"
@@ -88,6 +83,14 @@ TRANSLATION_KEYS_PROGRAMS_MAP = {
 
 PROGRAMS_TRANSLATION_KEYS_MAP = {
     value: key for key, value in TRANSLATION_KEYS_PROGRAMS_MAP.items()
+}
+
+FAN_SPEED_MODE_OPTIONS = {
+    bsh_key_to_translation_key(option): option
+    for option in (
+        "HeatingVentilationAirConditioning.AirConditioner.EnumType.FanSpeedMode.Automatic",
+        "HeatingVentilationAirConditioning.AirConditioner.EnumType.FanSpeedMode.Manual",
+    )
 }
 
 AVAILABLE_MAPS_ENUM = {
@@ -106,6 +109,20 @@ CLEANING_MODE_OPTIONS = {
         "ConsumerProducts.CleaningRobot.EnumType.CleaningModes.Silent",
         "ConsumerProducts.CleaningRobot.EnumType.CleaningModes.Standard",
         "ConsumerProducts.CleaningRobot.EnumType.CleaningModes.Power",
+        "ConsumerProducts.CleaningRobot.EnumType.CleaningMode.IntelligentMode",
+        "ConsumerProducts.CleaningRobot.EnumType.CleaningMode.VacuumOnly",
+        "ConsumerProducts.CleaningRobot.EnumType.CleaningMode.MopOnly",
+        "ConsumerProducts.CleaningRobot.EnumType.CleaningMode.VacuumAndMop",
+        "ConsumerProducts.CleaningRobot.EnumType.CleaningMode.MopAfterVacuum",
+    )
+}
+
+SUCTION_POWER_OPTIONS = {
+    bsh_key_to_translation_key(option): option
+    for option in (
+        "ConsumerProducts.CleaningRobot.EnumType.SuctionPower.Silent",
+        "ConsumerProducts.CleaningRobot.EnumType.SuctionPower.Standard",
+        "ConsumerProducts.CleaningRobot.EnumType.SuctionPower.Max",
     )
 }
 
@@ -309,12 +326,20 @@ PROGRAM_ENUM_OPTIONS = {
     )
     for option_key, options in (
         (
+            OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE,
+            FAN_SPEED_MODE_OPTIONS,
+        ),
+        (
             OptionKey.CONSUMER_PRODUCTS_CLEANING_ROBOT_REFERENCE_MAP_ID,
             AVAILABLE_MAPS_ENUM,
         ),
         (
             OptionKey.CONSUMER_PRODUCTS_CLEANING_ROBOT_CLEANING_MODE,
             CLEANING_MODE_OPTIONS,
+        ),
+        (
+            OptionKey.CONSUMER_PRODUCTS_CLEANING_ROBOT_SUCTION_POWER,
+            SUCTION_POWER_OPTIONS,
         ),
         (OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_BEAN_AMOUNT, BEAN_AMOUNT_OPTIONS),
         (

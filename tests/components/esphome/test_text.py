@@ -26,7 +26,6 @@ async def test_generic_text_entity(
             object_id="mytext",
             key=1,
             name="my text",
-            unique_id="my_text",
             max_length=100,
             min_length=0,
             pattern=None,
@@ -41,17 +40,17 @@ async def test_generic_text_entity(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("text.test_mytext")
+    state = hass.states.get("text.test_my_text")
     assert state is not None
     assert state.state == "hello world"
 
     await hass.services.async_call(
         TEXT_DOMAIN,
         SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: "text.test_mytext", ATTR_VALUE: "goodbye"},
+        {ATTR_ENTITY_ID: "text.test_my_text", ATTR_VALUE: "goodbye"},
         blocking=True,
     )
-    mock_client.text_command.assert_has_calls([call(1, "goodbye")])
+    mock_client.text_command.assert_has_calls([call(1, "goodbye", device_id=0)])
     mock_client.text_command.reset_mock()
 
 
@@ -66,7 +65,6 @@ async def test_generic_text_entity_no_state(
             object_id="mytext",
             key=1,
             name="my text",
-            unique_id="my_text",
             max_length=100,
             min_length=0,
             pattern=None,
@@ -81,7 +79,7 @@ async def test_generic_text_entity_no_state(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("text.test_mytext")
+    state = hass.states.get("text.test_my_text")
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
@@ -97,7 +95,6 @@ async def test_generic_text_entity_missing_state(
             object_id="mytext",
             key=1,
             name="my text",
-            unique_id="my_text",
             max_length=100,
             min_length=0,
             pattern=None,
@@ -112,6 +109,6 @@ async def test_generic_text_entity_missing_state(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("text.test_mytext")
+    state = hass.states.get("text.test_my_text")
     assert state is not None
     assert state.state == STATE_UNKNOWN

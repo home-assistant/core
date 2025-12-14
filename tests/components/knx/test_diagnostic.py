@@ -120,9 +120,13 @@ async def test_diagnostics_project(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics."""
-    await knx.setup_integration()
+    await knx.setup_integration(
+        config_store_fixture="config_store_light_switch.json",
+        state_updater=False,
+    )
     knx.xknx.version = "0.0.0"
     # snapshot will contain project specific fields in `project_info`
+    # and UI configuration in `config_store`
     assert (
         await get_diagnostics_for_config_entry(hass, hass_client, mock_config_entry)
         == snapshot

@@ -681,6 +681,13 @@ async def test_service_schedule_thermostats(
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
     climate_entity_livingroom = "climate.livingroom"
 
+    assert (
+        hass.states.get(climate_entity_livingroom).attributes.get(
+            "selected_schedule_id"
+        )
+        == "591b54a2764ff4d50d8b5795"
+    )
+
     # Test setting a valid schedule
     with patch("pyatmo.home.Home.async_switch_schedule") as mock_switch_schedule:
         await hass.services.async_call(
@@ -706,6 +713,12 @@ async def test_service_schedule_thermostats(
     assert (
         hass.states.get(climate_entity_livingroom).attributes["selected_schedule"]
         == "Winter"
+    )
+    assert (
+        hass.states.get(climate_entity_livingroom).attributes.get(
+            "selected_schedule_id"
+        )
+        == "b1b54a2f45795764f59d50d8"
     )
 
     # Test setting an invalid schedule
