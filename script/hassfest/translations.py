@@ -29,7 +29,6 @@ RE_URL = re.compile(
     r"[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?)"
 )
 
-
 # Only allow translation of integration names if they contain non-brand names
 ALLOW_NAME_TRANSLATION = {
     "cert_expiry",
