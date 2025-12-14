@@ -244,8 +244,8 @@ class TibberDataAPICoordinator(DataUpdateCoordinator[dict[str, TibberDevice]]):
     async def _async_setup(self) -> None:
         """Initial load of Tibber Data API devices."""
         client = await self._async_get_client()
-        self.data = await client.get_all_devices()
-        self._build_sensor_lookup(self.data)
+        devices = await client.get_all_devices()
+        self._build_sensor_lookup(devices)
 
     async def _async_update_data(self) -> dict[str, TibberDevice]:
         """Fetch the latest device capabilities from the Tibber Data API."""

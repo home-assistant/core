@@ -54,22 +54,6 @@
       "charging_current_offline_fallback": {
         "name": "Offline fallback charging current"
       },
-      "charging_status": {
-        "name": "Charging status",
-        "state": {
-          "charging": "[%key:common::state::charging%]",
-          "idle": "[%key:common::state::idle%]",
-          "unknown": "[%key:common::state::unknown%]"
-        }
-      },
-      "connector_status": {
-        "name": "Connector status",
-        "state": {
-          "connected": "[%key:common::state::connected%]",
-          "disconnected": "[%key:common::state::disconnected%]",
-          "unknown": "[%key:common::state::unknown%]"
-        }
-      },
       "current_l1": {
         "name": "Current L1"
       },

@@ -23,7 +23,13 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util, ssl as ssl_util
 
-from .const import AUTH_IMPLEMENTATION, DATA_HASS_CONFIG, DOMAIN, TibberConfigEntry
+from .const import (
+    AUTH_IMPLEMENTATION,
+    CONF_LEGACY_ACCESS_TOKEN,
+    DATA_HASS_CONFIG,
+    DOMAIN,
+    TibberConfigEntry,
+)
 from .coordinator import TibberDataAPICoordinator
 from .services import async_setup_services
 
@@ -75,14 +81,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: TibberConfigEntry) -> bo
     """Set up a config entry."""
 
     if AUTH_IMPLEMENTATION not in entry.data:
-        entry.async_start_reauth(hass)
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="data_api_reauth_required",
         )
 
     tibber_connection = tibber.Tibber(
-        access_token=entry.data[CONF_ACCESS_TOKEN],
+        access_token=entry.data[CONF_LEGACY_ACCESS_TOKEN],
         websession=async_get_clientsession(hass),
         time_zone=dt_util.get_default_time_zone(),
         ssl=ssl_util.get_default_context(),

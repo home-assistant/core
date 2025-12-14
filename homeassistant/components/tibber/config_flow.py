@@ -16,9 +16,9 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 
-from .const import AUTH_IMPLEMENTATION, DATA_API_DEFAULT_SCOPES, DOMAIN
+from .const import CONF_LEGACY_ACCESS_TOKEN, DATA_API_DEFAULT_SCOPES, DOMAIN
 
-DATA_SCHEMA = vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str})
+DATA_SCHEMA = vol.Schema({vol.Required(CONF_LEGACY_ACCESS_TOKEN): str})
 ERR_TIMEOUT = "timeout"
 ERR_CLIENT = "cannot_connect"
 ERR_TOKEN = "invalid_access_token"
@@ -58,7 +58,7 @@ class TibberConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """Handle the initial step."""
         if user_input is None:
             data_schema = self.add_suggested_values_to_schema(
-                DATA_SCHEMA, {CONF_ACCESS_TOKEN: self._access_token or ""}
+                DATA_SCHEMA, {CONF_LEGACY_ACCESS_TOKEN: self._access_token or ""}
             )
 
             return self.async_show_form(
@@ -68,7 +68,7 @@ class TibberConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 errors={},
             )
 
-        self._access_token = user_input[CONF_ACCESS_TOKEN].replace(" ", "")
+        self._access_token = user_input[CONF_LEGACY_ACCESS_TOKEN].replace(" ", "")
         tibber_connection = tibber.Tibber(
             access_token=self._access_token,
             websession=async_get_clientsession(self.hass),
@@ -79,19 +79,19 @@ class TibberConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         try:
             await tibber_connection.update_info()
         except TimeoutError:
-            errors[CONF_ACCESS_TOKEN] = ERR_TIMEOUT
+            errors[CONF_LEGACY_ACCESS_TOKEN] = ERR_TIMEOUT
         except tibber.InvalidLoginError:
-            errors[CONF_ACCESS_TOKEN] = ERR_TOKEN
+            errors[CONF_LEGACY_ACCESS_TOKEN] = ERR_TOKEN
         except (
             aiohttp.ClientError,
             tibber.RetryableHttpExceptionError,
             tibber.FatalHttpExceptionError,
         ):
-            errors[CONF_ACCESS_TOKEN] = ERR_CLIENT
+            errors[CONF_LEGACY_ACCESS_TOKEN] = ERR_CLIENT
 
         if errors:
             data_schema = self.add_suggested_values_to_schema(
-                DATA_SCHEMA, {CONF_ACCESS_TOKEN: self._access_token or ""}
+                DATA_SCHEMA, {CONF_LEGACY_ACCESS_TOKEN: self._access_token or ""}
             )
 
             return self.async_show_form(
@@ -111,7 +111,6 @@ class TibberConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             )
         else:
             self._abort_if_unique_id_configured()
-            self._async_abort_entries_match({AUTH_IMPLEMENTATION: DOMAIN})
 
         return await self.async_step_pick_implementation()
 
@@ -120,10 +119,10 @@ class TibberConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a reauth flow."""
         reauth_entry = self._get_reauth_entry()
-        self._access_token = reauth_entry.data.get(CONF_ACCESS_TOKEN)
+        self._access_token = reauth_entry.data.get(CONF_LEGACY_ACCESS_TOKEN)
         self._title = reauth_entry.title
-        if reauth_entry.unique_id is not None:
-            await self.async_set_unique_id(reauth_entry.unique_id)
+        # if reauth_entry.unique_id is not None:
+        #     await self.async_set_unique_id(reauth_entry.unique_id)
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -131,7 +130,7 @@ class TibberConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm reauthentication by reusing the user step."""
         reauth_entry = self._get_reauth_entry()
-        self._access_token = reauth_entry.data.get(CONF_ACCESS_TOKEN)
+        self._access_token = reauth_entry.data.get(CONF_LEGACY_ACCESS_TOKEN)
         self._title = reauth_entry.title
         if user_input is None:
             return self.async_show_form(
@@ -144,7 +143,7 @@ class TibberConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         if self._access_token is None:
             return self.async_abort(reason="missing_configuration")
 
-        data[CONF_ACCESS_TOKEN] = self._access_token
+        data[CONF_LEGACY_ACCESS_TOKEN] = self._access_token
 
         access_token = data[CONF_TOKEN][CONF_ACCESS_TOKEN]
         data_api_client = tibber_data_api.TibberDataAPI(

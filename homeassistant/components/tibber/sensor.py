@@ -279,18 +279,6 @@ DATA_API_SENSORS: tuple[SensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
-        key="connector.status",
-        translation_key="connector_status",
-        device_class=SensorDeviceClass.ENUM,
-        options=["connected", "disconnected", "unknown"],
-    ),
-    SensorEntityDescription(
-        key="charging.status",
-        translation_key="charging_status",
-        device_class=SensorDeviceClass.ENUM,
-        options=["charging", "idle", "unknown"],
-    ),
-    SensorEntityDescription(
         key="range.remaining",
         translation_key="range_remaining",
         device_class=SensorDeviceClass.DISTANCE,
@@ -397,7 +385,7 @@ async def _async_setup_graphql_sensors(
                 device_entry.id, new_identifiers={(DOMAIN, home.home_id)}
             )
 
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 async def _async_setup_data_api_sensors(

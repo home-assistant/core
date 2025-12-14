@@ -101,13 +101,14 @@ async def test_flow_entry_already_exists(
     recorder_mock: Recorder, hass: HomeAssistant, config_entry
 ) -> None:
     """Test user input for config_entry that already exists."""
-    test_data = {
-        CONF_ACCESS_TOKEN: "valid",
-    }
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
 
-    with patch("tibber.Tibber.update_info", return_value=None):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}, data=test_data
+    tibber_mock = _mock_tibber(user_id="tibber")
+    with patch("tibber.Tibber", return_value=tibber_mock):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_ACCESS_TOKEN: "valid"}
         )
 
     assert result["type"] is FlowResultType.ABORT
