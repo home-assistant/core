@@ -128,7 +128,7 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[dict[str, GwEntityData
                 translation_key="data_incomplete_or_missing",
             ) from err
 
-        self._async_add_remove_devices(data)
+        await self._async_add_remove_devices(data)
         return data
 
     async def _async_add_remove_devices(self, data: dict[str, GwEntityData]) -> None:
