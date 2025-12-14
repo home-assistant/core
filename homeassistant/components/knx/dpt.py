@@ -82,6 +82,8 @@ _sensor_device_classes: Mapping[str, SensorDeviceClass] = {
     "13.013": SensorDeviceClass.ENERGY,
     "13.015": SensorDeviceClass.REACTIVE_ENERGY,
     "13.016": SensorDeviceClass.ENERGY,
+    "13.1200": SensorDeviceClass.VOLUME,
+    "13.1201": SensorDeviceClass.VOLUME,
     "14.010": SensorDeviceClass.AREA,
     "14.019": SensorDeviceClass.CURRENT,
     "14.027": SensorDeviceClass.VOLTAGE,
@@ -102,6 +104,8 @@ _sensor_device_classes: Mapping[str, SensorDeviceClass] = {
     "14.076": SensorDeviceClass.VOLUME,
     "14.077": SensorDeviceClass.VOLUME_FLOW_RATE,
     "14.080": SensorDeviceClass.APPARENT_POWER,
+    "14.1200": SensorDeviceClass.VOLUME_FLOW_RATE,
+    "14.1201": SensorDeviceClass.VOLUME_FLOW_RATE,
     "29.010": SensorDeviceClass.ENERGY,
     "29.012": SensorDeviceClass.REACTIVE_ENERGY,
 }
