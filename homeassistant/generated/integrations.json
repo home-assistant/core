@@ -323,7 +323,7 @@
     },
     "android_ip_webcam": {
       "name": "Android IP Webcam",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -347,7 +347,7 @@
     },
     "anglian_water": {
       "name": "Anglian Water",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -963,7 +963,7 @@
       "iot_class": "local_polling"
     },
     "cert_expiry": {
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -1039,7 +1039,7 @@
     },
     "cloudflare": {
       "name": "Cloudflare",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_push",
       "single_config_entry": true
@@ -1063,7 +1063,7 @@
     },
     "coinbase": {
       "name": "Coinbase",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -1194,7 +1194,7 @@
     },
     "daikin": {
       "name": "Daikin AC",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -1206,7 +1206,7 @@
     },
     "datadog": {
       "name": "Datadog",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -1326,7 +1326,7 @@
     },
     "dexcom": {
       "name": "Dexcom",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -1395,7 +1395,7 @@
     },
     "dnsip": {
       "name": "DNS IP",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -1407,7 +1407,7 @@
     },
     "doorbird": {
       "name": "DoorBird",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -1448,7 +1448,7 @@
     },
     "droplet": {
       "name": "Droplet",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -1484,7 +1484,7 @@
     },
     "dunehd": {
       "name": "Dune HD",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -1508,7 +1508,7 @@
     },
     "eafm": {
       "name": "Environment Agency Flood Gauges",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -1551,7 +1551,7 @@
     },
     "ecoforest": {
       "name": "Ecoforest",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -1682,7 +1682,7 @@
     },
     "elvia": {
       "name": "Elvia",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -1782,7 +1782,7 @@
     },
     "environment_canada": {
       "name": "Environment Canada",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -1994,7 +1994,7 @@
     },
     "firefly_iii": {
       "name": "Firefly III",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -2012,7 +2012,7 @@
     },
     "fitbit": {
       "name": "Fitbit",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -2247,7 +2247,7 @@
     },
     "fully_kiosk": {
       "name": "Fully Kiosk Browser",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -2275,13 +2275,13 @@
       "iot_class": "cloud_polling"
     },
     "garages_amsterdam": {
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "gardena_bluetooth": {
       "name": "Gardena Bluetooth",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -2327,7 +2327,7 @@
     },
     "geocaching": {
       "name": "Geocaching",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -2362,7 +2362,7 @@
     },
     "github": {
       "name": "GitHub",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
