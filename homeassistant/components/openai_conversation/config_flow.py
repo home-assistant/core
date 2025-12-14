@@ -481,7 +481,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         for prefix, options in MODELS_REASONING_MAP.items():
             if model.startswith(prefix):
                 return options
-        return []
+        return []  # pragma: no cover
 
     async def _get_location_data(self) -> dict[str, str]:
         """Get approximate location data of the user."""
