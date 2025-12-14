@@ -20,7 +20,10 @@ def mock_system_nexa_2_device() -> Generator[MagicMock]:
         device.get_info = AsyncMock()
         device.get_info.return_value = InformationUpdate(
             information=InformationData(
-                name="Test Device", model="Test Model", unique_id="test_device_id"
+                name="Test Device",
+                model="Test Model",
+                unique_id="test_device_id",
+                sw_version="Test Model Version",
             )
         )
 

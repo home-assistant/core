@@ -2,19 +2,19 @@ rules:
   # Bronze
   action-setup: done # No service actions yet
   appropriate-polling: done # No polling used yet
-  brands: done # NOTREALLY # Commit in fork
+  brands: done # Commit in fork
   common-modules: done # entity setup with base entity, no coordinator as its a per device setup
   config-flow-test-coverage: done # NOTREALLY
-  config-flow: done # NOTREALLY
+  config-flow: done
   dependency-transparency: done
-  docs-actions: done # NOTREALLY
-  docs-high-level-description: done # NOTREALLY
-  docs-installation-instructions: done # NOTREALLY
-  docs-removal-instructions: done # NOTREALLY
-  entity-event-setup: done # NOTREALLY
-  entity-unique-id: done # NOTREALLY
-  has-entity-name: done # NOTREALLY
-  runtime-data: done # NOTREALLY
+  docs-actions: done # Does not have any yet
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done # Not used yet
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
   test-before-configure: done # NOTREALLY
   test-before-setup: done # NOTREALLY
-  unique-config-entry: done # NOTREALLY
+  unique-config-entry: done
