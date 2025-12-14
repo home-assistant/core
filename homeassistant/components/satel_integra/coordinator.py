@@ -88,7 +88,9 @@ class SatelIntegraOutputsCoordinator(SatelIntegraBaseCoordinator[dict[int, bool]
         """Update zone objects as per notification from the alarm."""
         _LOGGER.debug("Outputs callback, status: %s", status)
 
-        update_data = {zone: value == 1 for zone, value in status["outputs"].items()}
+        update_data = {
+            output: value == 1 for output, value in status["outputs"].items()
+        }
 
         self.async_set_updated_data(update_data)
 
