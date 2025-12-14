@@ -5,15 +5,13 @@ from datetime import datetime
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID, CONF_TYPE
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_TIME, CONF_TYPE
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN, SERVICE_SET_TIME, TYPE_LOCAL
 from .models import LocalData
-
-ATTR_TIME = "time"
 
 
 async def async_setup_services(hass: HomeAssistant) -> None:
