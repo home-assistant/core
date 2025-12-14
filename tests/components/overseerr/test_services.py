@@ -115,6 +115,41 @@ async def test_service_search_media(
     mock_overseerr_client.search.assert_called_once_with("test query with spaces")
 
 
+async def test_service_search_media_with_limit(
+    hass: HomeAssistant,
+    mock_overseerr_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the "limit" function of the search_media service."""
+
+    @dataclasses.dataclass
+    class SearchResultMock:
+        name: str
+
+    mock_overseerr_client.search.return_value = [
+        SearchResultMock(name="Result 1"),
+        SearchResultMock(name="Result 2"),
+        SearchResultMock(name="Result 3"),
+    ]
+
+    await setup_integration(hass, mock_config_entry)
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEARCH_MEDIA,
+        {
+            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            ATTR_QUERY: "test",
+            ATTR_LIMIT: 2,
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    assert response == {"results": [{"name": "Result 1"}, {"name": "Result 2"}]}
+
+
 async def test_service_request_media(
     hass: HomeAssistant,
     mock_overseerr_client: AsyncMock,
@@ -149,6 +184,80 @@ async def test_service_request_media(
     assert response == {"request": {"media_type": MediaType.TV, "tmdb_id": "123456789"}}
 
 
+async def test_service_search_and_request(
+    hass: HomeAssistant,
+    mock_overseerr_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the search_and_request service."""
+
+    @dataclasses.dataclass
+    class SearchResultMock:
+        title: str
+        id: int
+        media_type: MediaType = MediaType.TV
+
+    mock_overseerr_client.search.return_value = [
+        SearchResultMock(title="Result 1", id=1),
+        SearchResultMock(title="Result 2", id=2),
+    ]
+
+    @dataclasses.dataclass
+    class CreateRequestMock:
+        pass
+
+    mock_overseerr_client.create_request.return_value = CreateRequestMock()
+
+    await setup_integration(hass, mock_config_entry)
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SEARCH_AND_REQUEST,
+        {
+            ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            ATTR_QUERY: "test",
+            ATTR_SEASONS: "1",
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    mock_overseerr_client.search.assert_called_once_with("test")
+    mock_overseerr_client.create_request.assert_called_once_with(MediaType.TV, 1, [1])
+    assert response == {
+        "request": {},
+        "media": {"type": MediaType.TV, "id": 1, "title": "Result 1"},
+    }
+
+
+async def test_service_search_and_request_with_no_results(
+    hass: HomeAssistant,
+    mock_overseerr_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the early exit if the search yielded no results."""
+    mock_overseerr_client.search.return_value = []
+
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(
+        HomeAssistantError, match='The provided query "test" did not yield any results'
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEARCH_AND_REQUEST,
+            {
+                ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                ATTR_QUERY: "test",
+                ATTR_SEASONS: "1",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+
 @pytest.mark.parametrize(
     ("service", "payload", "function", "exception", "raised_exception", "message"),
     [
@@ -164,6 +273,14 @@ async def test_service_request_media(
             SERVICE_SEARCH_MEDIA,
             {ATTR_QUERY: "test"},
             "search",
+            OverseerrConnectionError("Timeout"),
+            HomeAssistantError,
+            "Error connecting to the Overseerr instance: Timeout",
+        ),
+        (
+            SERVICE_REQUEST_MEDIA,
+            {ATTR_MEDIA_TYPE: "tv", ATTR_TMDB_ID: "123456789", ATTR_SEASONS: "1"},
+            "create_request",
             OverseerrConnectionError("Timeout"),
             HomeAssistantError,
             "Error connecting to the Overseerr instance: Timeout",
