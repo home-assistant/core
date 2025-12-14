@@ -32,14 +32,14 @@ async def test_coordinator_fetch_data_success(
     assert coordinator.data.requests is not None
     assert coordinator.data.issues is not None
 
-    # Verify request data
-    assert coordinator.data.requests.total == 50
-    assert coordinator.data.requests.movie == 30
-    assert coordinator.data.requests.tv == 20
-    assert coordinator.data.requests.pending == 10
-    assert coordinator.data.requests.declined == 5
-    assert coordinator.data.requests.processing == 15
-    assert coordinator.data.requests.available == 20
+    # Verify request data (from request_count.json fixture)
+    assert coordinator.data.requests.total == 11
+    assert coordinator.data.requests.movie == 9
+    assert coordinator.data.requests.tv == 2
+    assert coordinator.data.requests.pending == 0
+    assert coordinator.data.requests.declined == 0
+    assert coordinator.data.requests.processing == 3
+    assert coordinator.data.requests.available == 8
 
     # Verify issue data
     assert coordinator.data.issues.total == 15
@@ -148,8 +148,8 @@ async def test_coordinator_update_data(
     )
     assert mock_overseerr_client.get_issue_count.call_count == initial_issue_calls + 1
 
-    # Data should still be valid
-    assert coordinator.data.requests.total == 50
+    # Data should still be valid (from fixtures)
+    assert coordinator.data.requests.total == 11
     assert coordinator.data.issues.total == 15
 
 
