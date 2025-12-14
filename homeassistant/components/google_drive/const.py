@@ -6,5 +6,5 @@ from datetime import timedelta
 
 DOMAIN = "google_drive"
 
-SCAN_INTERVAL = timedelta(minutes=5)
+SCAN_INTERVAL = timedelta(hours=6)
 DRIVE_FOLDER_URL_PREFIX = "https://drive.google.com/drive/folders/"
