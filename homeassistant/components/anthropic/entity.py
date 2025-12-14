@@ -611,23 +611,6 @@ class AnthropicBaseLLMEntity(Entity):
 
         messages = _convert_content(chat_log.content[1:])
 
-        # Add cache_control to the last message to cache the conversation history
-        if messages:
-            last_msg = messages[-1]
-            last_msg_content = last_msg["content"]
-            if isinstance(last_msg_content, str):
-                last_msg["content"] = [
-                    TextBlockParam(
-                        type="text",
-                        text=last_msg_content,
-                        cache_control={"type": "ephemeral"},
-                    )
-                ]
-            elif isinstance(last_msg_content, list) and last_msg_content:
-                last_block = last_msg_content[-1]
-                if isinstance(last_block, dict):
-                    last_block["cache_control"] = {"type": "ephemeral"}
-
         model = options.get(CONF_CHAT_MODEL, DEFAULT[CONF_CHAT_MODEL])
 
         model_args = MessageCreateParamsStreaming(
@@ -694,6 +677,23 @@ class AnthropicBaseLLMEntity(Entity):
                     self.hass, [(a.path, a.mime_type) for a in last_content.attachments]
                 )
             )
+
+        # Add cache_control to the last message to cache the conversation history
+        if messages:
+            last_msg = messages[-1]
+            last_msg_content = last_msg["content"]
+            if isinstance(last_msg_content, str):
+                last_msg["content"] = [
+                    TextBlockParam(
+                        type="text",
+                        text=last_msg_content,
+                        cache_control={"type": "ephemeral"},
+                    )
+                ]
+            elif isinstance(last_msg_content, list) and last_msg_content:
+                last_block = last_msg_content[-1]
+                if isinstance(last_block, dict):
+                    last_block["cache_control"] = {"type": "ephemeral"}
 
         if structure and structure_name:
             structure_name = slugify(structure_name)
