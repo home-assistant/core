@@ -44,6 +44,14 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "heating": {
+        "name": "Heating"
+      },
+      "window_open_detected": {
+        "name": "Window open detected"
+      }
+    },
     "sensor": {
       "air_temperature": {
         "name": "Air temperature"

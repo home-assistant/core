@@ -48,7 +48,7 @@ rules:
   docs-supported-devices: done
   docs-supported-functions: done
   docs-troubleshooting: done
-  docs-use-cases: todo
+  docs-use-cases: done
   dynamic-devices:
     status: exempt
     comment: Single device integration, no dynamic device discovery needed.
