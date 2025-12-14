@@ -1,12 +1,14 @@
 """Test the SystemNexa2 config flow."""
 
+from ipaddress import ip_address
 from unittest.mock import MagicMock
 
 from homeassistant.components.systemnexa2 import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 
 async def test_full_flow(
@@ -75,4 +77,45 @@ async def test_unsupported_device(
     assert result["description_placeholders"] == {
         "model": "Test Model",
         "version": "Test Model Version",
+    }
+
+
+async def test_zeroconf_discovery(
+    hass: HomeAssistant, mock_system_nexa_2_device: MagicMock
+) -> None:
+    """Test zeroconf discovery."""
+    discovery_info = ZeroconfServiceInfo(
+        ip_address=ip_address("10.0.0.131"),
+        ip_addresses=[ip_address("10.0.0.131")],
+        hostname="systemnexa2_test.local.",
+        name="systemnexa2_test._systemnexa2._tcp.local.",
+        port=80,
+        type="_systemnexa2._tcp.local.",
+        properties={
+            "id": "test_device_id",
+            "model": "Test Model",
+            "version": "1.0.0",
+        },
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "systemnexa2_test (Test Model)"
+    assert result["data"] == {
+        CONF_HOST: "10.0.0.131",
+        CONF_NAME: "systemnexa2_test",
+        CONF_DEVICE_ID: "test_device_id",
+        CONF_MODEL: "Test Model",
     }
