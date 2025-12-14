@@ -128,10 +128,10 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[dict[str, GwEntityData
                 translation_key="data_incomplete_or_missing",
             ) from err
 
-        await self._async_add_remove_devices(data)
+        self._async_add_remove_devices(data)
         return data
 
-    async def _async_add_remove_devices(self, data: dict[str, GwEntityData]) -> None:
+    def _async_add_remove_devices(self, data: dict[str, GwEntityData]) -> None:
         """Add new Plugwise devices, remove non-existing devices."""
         set_of_data = set(data)
         # Check for new or removed devices,
@@ -143,9 +143,9 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[dict[str, GwEntityData
         )
         self._current_devices = set_of_data
         if current_devices - set_of_data:  # device(s) to remove
-            await self._async_remove_devices(data)
+            self._async_remove_devices(data)
 
-    async def _async_remove_devices(self, data: dict[str, GwEntityData]) -> None:
+    def _async_remove_devices(self, data: dict[str, GwEntityData]) -> None:
         """Clean registries when removed devices found."""
         device_reg = dr.async_get(self.hass)
         device_list = dr.async_entries_for_config_entry(
