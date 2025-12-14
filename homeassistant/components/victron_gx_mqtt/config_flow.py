@@ -120,6 +120,9 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.info(
                     "Successfully connected to Victron device: %s", installation_id
                 )
+            except AuthenticationError:
+                _LOGGER.exception("Authentication failed during reauthentication")
+                errors["base"] = "invalid_auth"
             except CannotConnectError:
                 _LOGGER.exception("Cannot connect to Victron device")
                 errors["base"] = "cannot_connect"
@@ -241,6 +244,8 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             )
             assert sensed_installation_id == self.installation_id
+        except AuthenticationError:
+            return self.async_abort(reason="invalid_auth")
         except CannotConnectError:
             return self.async_abort(reason="cannot_connect")
 
@@ -269,6 +274,12 @@ class VictronMQTTOptionsFlow(OptionsFlow):
             _LOGGER.info("User input received: %s", user_input)
             try:
                 await validate_input(user_input)
+            except AuthenticationError:
+                return self.async_show_form(
+                    step_id="init",
+                    data_schema=self._get_options_schema(),
+                    errors={"base": "invalid_auth"},
+                )
             except CannotConnectError:
                 return self.async_show_form(
                     step_id="init",
