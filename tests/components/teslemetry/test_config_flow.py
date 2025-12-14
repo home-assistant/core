@@ -304,12 +304,22 @@ async def test_migrate_error_from_v1(
 
 
 @pytest.mark.usefixtures("current_request_with_host")
-async def test_oauth_error_invalid_token(
+@pytest.mark.parametrize(
+    "exception",
+    [
+        InvalidToken,
+        SubscriptionRequired,
+        ClientConnectionError,
+        TeslaFleetError("API error"),
+    ],
+)
+async def test_oauth_error_handling(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    exception: Exception,
 ) -> None:
-    """Test OAuth flow with InvalidToken error."""
+    """Test OAuth flow with various API errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -343,151 +353,7 @@ async def test_oauth_error_invalid_token(
 
     with patch(
         "tesla_fleet_api.teslemetry.Teslemetry.metadata",
-        side_effect=InvalidToken,
-    ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "oauth_error"
-
-
-@pytest.mark.usefixtures("current_request_with_host")
-async def test_oauth_error_subscription_required(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-) -> None:
-    """Test OAuth flow with SubscriptionRequired error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    if result["type"] is FlowResultType.FORM:
-        assert result["step_id"] == "pick_implementation"
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"implementation": DOMAIN}
-        )
-
-    state = config_entry_oauth2_flow._encode_jwt(
-        hass,
-        {
-            "flow_id": result["flow_id"],
-            "redirect_uri": REDIRECT,
-        },
-    )
-
-    client = await hass_client_no_auth()
-    await client.get(f"/auth/external/callback?code=abcd&state={state}")
-
-    aioclient_mock.post(
-        TOKEN_URL,
-        json={
-            "refresh_token": "test_refresh_token",
-            "access_token": "test_access_token",
-            "type": "Bearer",
-            "expires_in": 60,
-        },
-    )
-
-    with patch(
-        "tesla_fleet_api.teslemetry.Teslemetry.metadata",
-        side_effect=SubscriptionRequired,
-    ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "oauth_error"
-
-
-@pytest.mark.usefixtures("current_request_with_host")
-async def test_oauth_error_connection_error(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-) -> None:
-    """Test OAuth flow with ClientConnectionError."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    if result["type"] is FlowResultType.FORM:
-        assert result["step_id"] == "pick_implementation"
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"implementation": DOMAIN}
-        )
-
-    state = config_entry_oauth2_flow._encode_jwt(
-        hass,
-        {
-            "flow_id": result["flow_id"],
-            "redirect_uri": REDIRECT,
-        },
-    )
-
-    client = await hass_client_no_auth()
-    await client.get(f"/auth/external/callback?code=abcd&state={state}")
-
-    aioclient_mock.post(
-        TOKEN_URL,
-        json={
-            "refresh_token": "test_refresh_token",
-            "access_token": "test_access_token",
-            "type": "Bearer",
-            "expires_in": 60,
-        },
-    )
-
-    with patch(
-        "tesla_fleet_api.teslemetry.Teslemetry.metadata",
-        side_effect=ClientConnectionError,
-    ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "oauth_error"
-
-
-@pytest.mark.usefixtures("current_request_with_host")
-async def test_oauth_error_tesla_fleet_error(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-) -> None:
-    """Test OAuth flow with TeslaFleetError."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    if result["type"] is FlowResultType.FORM:
-        assert result["step_id"] == "pick_implementation"
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"implementation": DOMAIN}
-        )
-
-    state = config_entry_oauth2_flow._encode_jwt(
-        hass,
-        {
-            "flow_id": result["flow_id"],
-            "redirect_uri": REDIRECT,
-        },
-    )
-
-    client = await hass_client_no_auth()
-    await client.get(f"/auth/external/callback?code=abcd&state={state}")
-
-    aioclient_mock.post(
-        TOKEN_URL,
-        json={
-            "refresh_token": "test_refresh_token",
-            "access_token": "test_access_token",
-            "type": "Bearer",
-            "expires_in": 60,
-        },
-    )
-
-    with patch(
-        "tesla_fleet_api.teslemetry.Teslemetry.metadata",
-        side_effect=TeslaFleetError("API error"),
+        side_effect=exception,
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
