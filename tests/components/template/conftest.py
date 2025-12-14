@@ -123,7 +123,7 @@ async def async_setup_modern_trigger_format(
 
 @dataclass(frozen=True)
 class TemplatePlatformSetup:
-    """Template Platform Setup Helper."""
+    """Template Platform Setup Information."""
 
     domain: str
     legacy_slug: str | None
