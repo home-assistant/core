@@ -134,6 +134,7 @@ def mock_websocket_client(
         websocket_client.get_directories.return_value = [
             MediaDirectory(
                 key="documents",
+                name="Documents",
                 path="/home/user/documents",
             )
         ]
@@ -147,6 +148,8 @@ def mock_websocket_client(
                     last_accessed=1630000000,
                     created=1630000000,
                     modified=1630000000,
+                    mod_time=1630000000,
+                    permissions="rwxr-xr-x",
                     is_directory=True,
                     is_file=False,
                     is_link=False,
@@ -159,6 +162,8 @@ def mock_websocket_client(
                     last_accessed=1630000000,
                     created=1630000000,
                     modified=1630000000,
+                    mod_time=1630000000,
+                    permissions="rw-r--r--",
                     is_directory=False,
                     is_file=True,
                     is_link=False,
@@ -172,6 +177,8 @@ def mock_websocket_client(
                     last_accessed=1630000000,
                     created=1630000000,
                     modified=1630000000,
+                    mod_time=1630000000,
+                    permissions="rw-r--r--",
                     is_directory=False,
                     is_file=True,
                     is_link=False,
