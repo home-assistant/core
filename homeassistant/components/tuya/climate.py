@@ -208,6 +208,18 @@ def _get_temperature_wrappers(
         device, DPCode.TEMP_SET_F, prefer_function=True
     )
 
+    # If there is a temp unit convert dpcode, override empty units
+    if (
+        temp_unit_convert := DPCodeEnumWrapper.find_dpcode(
+            device, DPCode.TEMP_UNIT_CONVERT
+        )
+    ) is not None:
+        for wrapper in (temp_current, temp_current_f, temp_set, temp_set_f):
+            if wrapper is not None and not wrapper.type_information.unit:
+                wrapper.type_information.unit = temp_unit_convert.read_device_status(
+                    device
+                )
+
     # Get wrappers for celsius and fahrenheit
     # We need to check the unit of measurement
     current_celsius = _get_temperature_wrapper(
@@ -464,23 +476,23 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         return self._read_wrapper(self._target_humidity_wrapper)
 
     @property
-    def hvac_mode(self) -> HVACMode:
+    def hvac_mode(self) -> HVACMode | None:
         """Return hvac mode."""
-        # If the switch is off, hvac mode is off as well.
-        # Unless the switch doesn't exists of course...
+        # If the switch is off, hvac mode is off.
+        switch_status: bool | None
         if (switch_status := self._read_wrapper(self._switch_wrapper)) is False:
             return HVACMode.OFF
 
-        # If the mode is known and maps to an HVAC mode, return it.
-        if (mode := self._read_wrapper(self._hvac_mode_wrapper)) and (
-            hvac_mode := TUYA_HVAC_TO_HA.get(mode)
-        ):
-            return hvac_mode
+        # If we don't have a mode wrapper, return switch only mode.
+        if self._hvac_mode_wrapper is None:
+            if switch_status is True:
+                return self.entity_description.switch_only_hvac_mode
+            return None
 
-        # If hvac_mode is unknown, return the switch only mode.
-        if switch_status:
-            return self.entity_description.switch_only_hvac_mode
-        return HVACMode.OFF
+        # If we do have a mode wrapper, check if the mode maps to an HVAC mode.
+        if (hvac_status := self._read_wrapper(self._hvac_mode_wrapper)) is None:
+            return None
+        return TUYA_HVAC_TO_HA.get(hvac_status)
 
     @property
     def preset_mode(self) -> str | None:
