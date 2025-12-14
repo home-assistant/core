@@ -45,7 +45,7 @@ class SatelIntegraBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
             hass,
             _LOGGER,
             config_entry=entry,
-            name=f"{entry.unique_id} {self.__class__.__name__}",
+            name=f"{entry.entry_id} {self.__class__.__name__}",
         )
 
 
