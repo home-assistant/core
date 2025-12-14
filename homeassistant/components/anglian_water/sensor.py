@@ -32,6 +32,7 @@ class AnglianWaterSensor(StrEnum):
     YESTERDAY_WATER_COST = "yesterday_water_cost"
     YESTERDAY_SEWERAGE_COST = "yesterday_sewerage_cost"
     LATEST_READING = "latest_reading"
+    LAST_UPDATED = "last_updated"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -74,6 +75,14 @@ ENTITY_DESCRIPTIONS: tuple[AnglianWaterSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.MONETARY,
         value_fn=lambda entity: entity.yesterday_sewerage_cost,
         translation_key=AnglianWaterSensor.YESTERDAY_SEWERAGE_COST,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    AnglianWaterSensorEntityDescription(
+        key=AnglianWaterSensor.LAST_UPDATED,
+        native_unit_of_measurement="GBP",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda entity: entity.last_updated,
+        translation_key=AnglianWaterSensor.LAST_UPDATED,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
