@@ -10,10 +10,10 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_SHOW_ON_MAP
+from homeassistant.const import CONF_SCAN_INTERVAL, CONF_SHOW_ON_MAP
 from homeassistant.core import callback
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import DEFAULT_NAME, DEFAULT_POLLING_INTERVAL, DOMAIN
 
 
 class ISSConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -35,7 +35,10 @@ class ISSConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(
                 title=DEFAULT_NAME,
                 data={},
-                options={CONF_SHOW_ON_MAP: user_input.get(CONF_SHOW_ON_MAP, False)},
+                options={
+                    CONF_SHOW_ON_MAP: user_input.get(CONF_SHOW_ON_MAP, False),
+                    CONF_SCAN_INTERVAL: user_input.get(CONF_SCAN_INTERVAL, 60),
+                },
             )
 
         return self.async_show_form(step_id="user")
@@ -57,6 +60,12 @@ class OptionsFlowHandler(OptionsFlow):
                         CONF_SHOW_ON_MAP,
                         default=self.config_entry.options.get(CONF_SHOW_ON_MAP, False),
                     ): bool,
+                    vol.Optional(
+                        CONF_SCAN_INTERVAL,
+                        default=self.config_entry.options.get(
+                            CONF_SCAN_INTERVAL, DEFAULT_POLLING_INTERVAL
+                        ),
+                    ): int,
                 }
             ),
         )

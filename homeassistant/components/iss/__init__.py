@@ -11,11 +11,11 @@ import requests
 from requests.exceptions import HTTPError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_SCAN_INTERVAL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import DEFAULT_POLLING_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,6 +42,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up this integration using UI."""
     hass.data.setdefault(DOMAIN, {})
 
+    polling_interval = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_POLLING_INTERVAL)
+
     iss = pyiss.ISS()
 
     async def async_update() -> IssData:
@@ -56,7 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         config_entry=entry,
         name=DOMAIN,
         update_method=async_update,
-        update_interval=timedelta(seconds=60),
+        update_interval=timedelta(seconds=polling_interval),
     )
 
     await coordinator.async_config_entry_first_refresh()

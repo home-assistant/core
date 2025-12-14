@@ -13,6 +13,7 @@
     "step": {
       "init": {
         "data": {
+          "scan_interval": "Enter your polling interval in seconds",
           "show_on_map": "Show on map"
         }
       }
