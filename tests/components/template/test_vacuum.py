@@ -21,9 +21,13 @@ from homeassistant.helpers.typing import ConfigType
 
 from .conftest import (
     ConfigurationStyle,
-    TemplateEntityTestsSetup,
+    TemplatePlatformSetup,
     async_get_flow_preview_state,
     async_trigger,
+    make_test_trigger,
+    setup_and_test_nested_unique_id,
+    setup_and_test_unique_id,
+    setup_entity,
 )
 
 from tests.common import MockConfigEntry
@@ -38,11 +42,11 @@ TEST_SPEED_SENSOR = "sensor.test_fan_speed"
 TEST_BATTERY_LEVEL_SENSOR = "sensor.test_battery_level"
 TEST_AVAILABILITY_ENTITY = "availability_state.state"
 
-template_entity_setup = TemplateEntityTestsSetup(
+TEST_VACUUM_SETUP = TemplatePlatformSetup(
     vacuum.DOMAIN,
     "vacuums",
     TEST_OBJECT_ID,
-    (
+    make_test_trigger(
         TEST_STATE_SENSOR,
         TEST_SPEED_SENSOR,
         TEST_BATTERY_LEVEL_SENSOR,
@@ -135,7 +139,7 @@ async def setup_vacuum(
     vacuum_config: dict[str, Any],
 ) -> None:
     """Do setup of number integration."""
-    await template_entity_setup.setup_entity(hass, style, count, vacuum_config)
+    await setup_entity(hass, TEST_VACUUM_SETUP, style, count, vacuum_config)
 
 
 @pytest.fixture
@@ -147,8 +151,8 @@ async def setup_test_vacuum_with_extra_config(
     extra_config: dict[str, Any],
 ) -> None:
     """Do setup of number integration."""
-    await template_entity_setup.setup_entity(
-        hass, style, count, vacuum_config, extra_config=extra_config
+    await setup_entity(
+        hass, TEST_VACUUM_SETUP, style, count, vacuum_config, extra_config=extra_config
     )
 
 
@@ -160,8 +164,8 @@ async def setup_state_vacuum(
     state_template: str,
 ):
     """Do setup of vacuum integration using a state template."""
-    await template_entity_setup.setup_entity(
-        hass, style, count, TEMPLATE_VACUUM_ACTIONS, state_template
+    await setup_entity(
+        hass, TEST_VACUUM_SETUP, style, count, TEMPLATE_VACUUM_ACTIONS, state_template
     )
 
 
@@ -174,8 +178,8 @@ async def setup_base_vacuum(
     extra_config: dict,
 ):
     """Do setup of vacuum integration using a state template."""
-    await template_entity_setup.setup_entity(
-        hass, style, count, extra_config, state_template
+    await setup_entity(
+        hass, TEST_VACUUM_SETUP, style, count, extra_config, state_template
     )
 
 
@@ -191,8 +195,9 @@ async def setup_single_attribute_state_vacuum(
 ) -> None:
     """Do setup of vacuum integration testing a single attribute."""
     config = {attribute: attribute_template} if attribute and attribute_template else {}
-    await template_entity_setup.setup_entity(
+    await setup_entity(
         hass,
+        TEST_VACUUM_SETUP,
         style,
         count,
         {**config, **TEMPLATE_VACUUM_ACTIONS},
@@ -210,8 +215,9 @@ async def setup_attributes_state_vacuum(
     attributes: dict,
 ) -> None:
     """Do setup of vacuum integration testing a single attribute."""
-    await template_entity_setup.setup_entity(
+    await setup_entity(
         hass,
+        TEST_VACUUM_SETUP,
         style,
         count,
         TEMPLATE_VACUUM_ACTIONS,
@@ -677,7 +683,7 @@ async def test_unique_id(
     hass: HomeAssistant, style: ConfigurationStyle, config: ConfigType
 ) -> None:
     """Test unique_id option only creates one vacuum per id."""
-    await template_entity_setup.setup_and_test_unique_id(hass, style, config)
+    await setup_and_test_unique_id(hass, TEST_VACUUM_SETUP, style, config)
 
 
 @pytest.mark.parametrize("config", [TEMPLATE_VACUUM_ACTIONS])
@@ -691,8 +697,8 @@ async def test_nested_unique_id(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test a template unique_id propagates to vacuum unique_ids."""
-    await template_entity_setup.setup_and_test_nested_unique_id(
-        hass, style, entity_registry, config
+    await setup_and_test_nested_unique_id(
+        hass, TEST_VACUUM_SETUP, style, entity_registry, config
     )
 
 

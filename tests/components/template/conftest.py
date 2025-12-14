@@ -1,5 +1,6 @@
 """template conftest."""
 
+from dataclasses import dataclass
 from enum import Enum
 
 import pytest
@@ -120,161 +121,164 @@ async def async_setup_modern_trigger_format(
     await hass.async_block_till_done()
 
 
-class TemplateEntityTestsSetup:
-    """Template Entity Tests Setup Helper."""
+@dataclass(frozen=True)
+class TemplatePlatformSetup:
+    """Template Platform Setup Helper."""
 
-    def __init__(
-        self,
-        domain: str,
-        legacy_slug: str | None,
-        test_object_id: str,
-        trigger_entities: tuple[str, ...],
-    ) -> None:
-        """Initialize Template Entity Tests Setup Helper."""
-        self.domain = domain
-        self.legacy_slug = legacy_slug
-        self.test_object_id = test_object_id
-        self.test_entity_id = f"{domain}.{test_object_id}"
-        self.trigger = make_test_trigger(*trigger_entities)
+    domain: str
+    legacy_slug: str | None
+    test_object_id: str
+    trigger: ConfigType
 
-    async def setup_entity(
-        self,
-        hass: HomeAssistant,
-        style: ConfigurationStyle,
-        count: int,
-        config: ConfigType,
-        state_template: str | None = None,
-        extra_config: ConfigType | None = None,
-        attributes: ConfigType | None = None,
-        extra_section_config: ConfigType | None = None,
-    ) -> None:
-        """Do setup of a template entity based on the configuration style."""
-        if style == ConfigurationStyle.LEGACY:
-            await async_setup_legacy_platforms(
-                hass,
-                self.domain,
-                self.legacy_slug,
-                count,
-                {
-                    self.test_object_id: {
-                        **(
-                            {"value_template": state_template} if state_template else {}
-                        ),
-                        **config,
-                        **(extra_config or {}),
-                        **({"attribute_templates": attributes} if attributes else {}),
-                    }
-                },
-            )
-            return
+    @property
+    def test_entity_id(self) -> str:
+        """Return test entity ID."""
+        return f"{self.domain}.{self.test_object_id}"
 
-        entity_config = {
-            "name": self.test_object_id,
-            **({"state": state_template} if state_template else {}),
-            **config,
-            **({"attributes": attributes} if attributes else {}),
-            **(extra_config or {}),
-        }
-        if style == ConfigurationStyle.MODERN:
-            await async_setup_modern_state_format(
-                hass, self.domain, count, entity_config, extra_section_config
-            )
-        elif style == ConfigurationStyle.TRIGGER:
-            await async_setup_modern_trigger_format(
-                hass,
-                self.domain,
-                self.trigger,
-                count,
-                entity_config,
-                extra_section_config,
-            )
 
-    async def setup_and_test_unique_id(
-        self,
-        hass: HomeAssistant,
-        style: ConfigurationStyle,
-        entity_config: ConfigType | None,
-    ) -> None:
-        """Setup 2 entities with the same unique_id and verify only 1 entity is created.
-
-        The entity_config not provide name or unique_id, those are added automatically.
-        """
-        entity_config = {"unique_id": "not-so_-unique-anymore", **(entity_config or {})}
-        if style == ConfigurationStyle.LEGACY:
-            if self.legacy_slug is None:
-                config = [
-                    {"name": "template_entity_1", **entity_config},
-                    {"name": "template_entity_2", **entity_config},
-                ]
-            else:
-                config = {
-                    "template_entity_1": entity_config,
-                    "template_entity_2": entity_config,
+async def setup_entity(
+    hass: HomeAssistant,
+    platform_setup: TemplatePlatformSetup,
+    style: ConfigurationStyle,
+    count: int,
+    config: ConfigType,
+    state_template: str | None = None,
+    extra_config: ConfigType | None = None,
+    attributes: ConfigType | None = None,
+    extra_section_config: ConfigType | None = None,
+) -> None:
+    """Do setup of a template entity based on the configuration style."""
+    if style == ConfigurationStyle.LEGACY:
+        await async_setup_legacy_platforms(
+            hass,
+            platform_setup.domain,
+            platform_setup.legacy_slug,
+            count,
+            {
+                platform_setup.test_object_id: {
+                    **({"value_template": state_template} if state_template else {}),
+                    **config,
+                    **(extra_config or {}),
+                    **({"attribute_templates": attributes} if attributes else {}),
                 }
-            await async_setup_legacy_platforms(
-                hass, self.domain, self.legacy_slug, 1, config
-            )
-        elif style == ConfigurationStyle.MODERN:
-            await async_setup_modern_state_format(
-                hass,
-                self.domain,
-                1,
-                [
-                    {"name": "template_entity_1", **entity_config},
-                    {"name": "template_entity_2", **entity_config},
-                ],
-            )
-        elif style == ConfigurationStyle.TRIGGER:
-            await async_setup_modern_trigger_format(
-                hass,
-                self.domain,
-                self.trigger,
-                1,
-                [
-                    {"name": "template_entity_1", **entity_config},
-                    {"name": "template_entity_2", **entity_config},
-                ],
-            )
+            },
+        )
+        return
 
-        assert len(hass.states.async_all(self.domain)) == 1
+    entity_config = {
+        "name": platform_setup.test_object_id,
+        **({"state": state_template} if state_template else {}),
+        **config,
+        **({"attributes": attributes} if attributes else {}),
+        **(extra_config or {}),
+    }
+    if style == ConfigurationStyle.MODERN:
+        await async_setup_modern_state_format(
+            hass, platform_setup.domain, count, entity_config, extra_section_config
+        )
+    elif style == ConfigurationStyle.TRIGGER:
+        await async_setup_modern_trigger_format(
+            hass,
+            platform_setup.domain,
+            platform_setup.trigger,
+            count,
+            entity_config,
+            extra_section_config,
+        )
 
-    async def setup_and_test_nested_unique_id(
-        self,
-        hass: HomeAssistant,
-        style: ConfigurationStyle,
-        entity_registry: er.EntityRegistry,
-        entity_config: ConfigType | None,
-    ) -> None:
-        """Setup 2 entities with unique unique_ids in a template section that contains a unique_id.
 
-        The test will verify that 2 entities are created where the unique_id appends the
-        section unique_id to each entity unique_id.
+async def setup_and_test_unique_id(
+    hass: HomeAssistant,
+    platform_setup: TemplatePlatformSetup,
+    style: ConfigurationStyle,
+    entity_config: ConfigType | None,
+) -> None:
+    """Setup 2 entities with the same unique_id and verify only 1 entity is created.
 
-        The entity_config should not provide name or unique_id, those are added automatically.
-        """
-        entities = [
-            {"name": "test_a", "unique_id": "a", **(entity_config or {})},
-            {"name": "test_b", "unique_id": "b", **(entity_config or {})},
-        ]
-        extra_section_config = {"unique_id": "x"}
-        if style == ConfigurationStyle.MODERN:
-            await async_setup_modern_state_format(
-                hass, self.domain, 1, entities, extra_section_config
-            )
-        elif style == ConfigurationStyle.TRIGGER:
-            await async_setup_modern_trigger_format(
-                hass, self.domain, self.trigger, 1, entities, extra_section_config
-            )
+    The entity_config not provide name or unique_id, those are added automatically.
+    """
+    entity_config = {"unique_id": "not-so_-unique-anymore", **(entity_config or {})}
+    if style == ConfigurationStyle.LEGACY:
+        if platform_setup.legacy_slug is None:
+            config = [
+                {"name": "template_entity_1", **entity_config},
+                {"name": "template_entity_2", **entity_config},
+            ]
+        else:
+            config = {
+                "template_entity_1": entity_config,
+                "template_entity_2": entity_config,
+            }
+        await async_setup_legacy_platforms(
+            hass, platform_setup.domain, platform_setup.legacy_slug, 1, config
+        )
+    elif style == ConfigurationStyle.MODERN:
+        await async_setup_modern_state_format(
+            hass,
+            platform_setup.domain,
+            1,
+            [
+                {"name": "template_entity_1", **entity_config},
+                {"name": "template_entity_2", **entity_config},
+            ],
+        )
+    elif style == ConfigurationStyle.TRIGGER:
+        await async_setup_modern_trigger_format(
+            hass,
+            platform_setup.domain,
+            platform_setup.trigger,
+            1,
+            [
+                {"name": "template_entity_1", **entity_config},
+                {"name": "template_entity_2", **entity_config},
+            ],
+        )
 
-        assert len(hass.states.async_all(self.domain)) == 2
+    assert len(hass.states.async_all(platform_setup.domain)) == 1
 
-        entry = entity_registry.async_get(f"{self.domain}.test_a")
-        assert entry
-        assert entry.unique_id == "x-a"
 
-        entry = entity_registry.async_get(f"{self.domain}.test_b")
-        assert entry
-        assert entry.unique_id == "x-b"
+async def setup_and_test_nested_unique_id(
+    hass: HomeAssistant,
+    platform_setup: TemplatePlatformSetup,
+    style: ConfigurationStyle,
+    entity_registry: er.EntityRegistry,
+    entity_config: ConfigType | None,
+) -> None:
+    """Setup 2 entities with unique unique_ids in a template section that contains a unique_id.
+
+    The test will verify that 2 entities are created where the unique_id appends the
+    section unique_id to each entity unique_id.
+
+    The entity_config should not provide name or unique_id, those are added automatically.
+    """
+    entities = [
+        {"name": "test_a", "unique_id": "a", **(entity_config or {})},
+        {"name": "test_b", "unique_id": "b", **(entity_config or {})},
+    ]
+    extra_section_config = {"unique_id": "x"}
+    if style == ConfigurationStyle.MODERN:
+        await async_setup_modern_state_format(
+            hass, platform_setup.domain, 1, entities, extra_section_config
+        )
+    elif style == ConfigurationStyle.TRIGGER:
+        await async_setup_modern_trigger_format(
+            hass,
+            platform_setup.domain,
+            platform_setup.trigger,
+            1,
+            entities,
+            extra_section_config,
+        )
+
+    assert len(hass.states.async_all(platform_setup.domain)) == 2
+
+    entry = entity_registry.async_get(f"{platform_setup.domain}.test_a")
+    assert entry
+    assert entry.unique_id == "x-a"
+
+    entry = entity_registry.async_get(f"{platform_setup.domain}.test_b")
+    assert entry
+    assert entry.unique_id == "x-b"
 
 
 @pytest.fixture
