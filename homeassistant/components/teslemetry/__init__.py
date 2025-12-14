@@ -297,15 +297,18 @@ async def async_migrate_entry(
         return False
 
     if config_entry.version == 1:
-        access_token = config_entry.data[CONF_ACCESS_TOKEN]
+        access_token = config_entry.data.get(CONF_ACCESS_TOKEN)
+        if not access_token:
+            raise ConfigEntryAuthFailed("Missing access token")
+
         # Convert legacy access token to OAuth format using migrate endpoint
         try:
             data = await _migrate_token_to_oauth(hass, access_token)
         except ClientResponseError as e:
             LOGGER.error("Failed to migrate token, HTTP error %s", e.status)
-            return False
+            raise ConfigEntryAuthFailed from e
 
-        hass.config_entries.async_update_entry(
+        return hass.config_entries.async_update_entry(
             config_entry,
             data=data,
             version=2,
