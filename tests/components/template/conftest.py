@@ -127,13 +127,13 @@ class TemplatePlatformSetup:
 
     domain: str
     legacy_slug: str | None
-    test_object_id: str
+    object_id: str
     trigger: ConfigType
 
     @property
-    def test_entity_id(self) -> str:
+    def entity_id(self) -> str:
         """Return test entity ID."""
-        return f"{self.domain}.{self.test_object_id}"
+        return f"{self.domain}.{self.object_id}"
 
 
 async def setup_entity(
@@ -155,7 +155,7 @@ async def setup_entity(
             platform_setup.legacy_slug,
             count,
             {
-                platform_setup.test_object_id: {
+                platform_setup.object_id: {
                     **({"value_template": state_template} if state_template else {}),
                     **config,
                     **(extra_config or {}),
@@ -166,7 +166,7 @@ async def setup_entity(
         return
 
     entity_config = {
-        "name": platform_setup.test_object_id,
+        "name": platform_setup.object_id,
         **({"state": state_template} if state_template else {}),
         **config,
         **({"attributes": attributes} if attributes else {}),

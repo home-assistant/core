@@ -34,18 +34,15 @@ from tests.common import MockConfigEntry
 from tests.components.vacuum import common
 from tests.typing import WebSocketGenerator
 
-TEST_OBJECT_ID = "test_vacuum"
-TEST_ENTITY_ID = f"vacuum.{TEST_OBJECT_ID}"
-
 TEST_STATE_SENSOR = "sensor.test_state"
 TEST_SPEED_SENSOR = "sensor.test_fan_speed"
 TEST_BATTERY_LEVEL_SENSOR = "sensor.test_battery_level"
 TEST_AVAILABILITY_ENTITY = "availability_state.state"
 
-TEST_VACUUM_SETUP = TemplatePlatformSetup(
+TEST_VACUUM = TemplatePlatformSetup(
     vacuum.DOMAIN,
     "vacuums",
-    TEST_OBJECT_ID,
+    "test_vacuum",
     make_test_trigger(
         TEST_STATE_SENSOR,
         TEST_SPEED_SENSOR,
@@ -122,7 +119,7 @@ def _verify(
     expected_fan_speed: str | None = None,
 ) -> None:
     """Verify vacuum's state and speed."""
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_VACUUM.entity_id)
     assert state is not None
     assert state.attributes is not None
     attributes = state.attributes
@@ -139,7 +136,7 @@ async def setup_vacuum(
     vacuum_config: dict[str, Any],
 ) -> None:
     """Do setup of number integration."""
-    await setup_entity(hass, TEST_VACUUM_SETUP, style, count, vacuum_config)
+    await setup_entity(hass, TEST_VACUUM, style, count, vacuum_config)
 
 
 @pytest.fixture
@@ -152,7 +149,7 @@ async def setup_test_vacuum_with_extra_config(
 ) -> None:
     """Do setup of number integration."""
     await setup_entity(
-        hass, TEST_VACUUM_SETUP, style, count, vacuum_config, extra_config=extra_config
+        hass, TEST_VACUUM, style, count, vacuum_config, extra_config=extra_config
     )
 
 
@@ -165,7 +162,7 @@ async def setup_state_vacuum(
 ):
     """Do setup of vacuum integration using a state template."""
     await setup_entity(
-        hass, TEST_VACUUM_SETUP, style, count, TEMPLATE_VACUUM_ACTIONS, state_template
+        hass, TEST_VACUUM, style, count, TEMPLATE_VACUUM_ACTIONS, state_template
     )
 
 
@@ -178,9 +175,7 @@ async def setup_base_vacuum(
     extra_config: dict,
 ):
     """Do setup of vacuum integration using a state template."""
-    await setup_entity(
-        hass, TEST_VACUUM_SETUP, style, count, extra_config, state_template
-    )
+    await setup_entity(hass, TEST_VACUUM, style, count, extra_config, state_template)
 
 
 @pytest.fixture
@@ -197,7 +192,7 @@ async def setup_single_attribute_state_vacuum(
     config = {attribute: attribute_template} if attribute and attribute_template else {}
     await setup_entity(
         hass,
-        TEST_VACUUM_SETUP,
+        TEST_VACUUM,
         style,
         count,
         {**config, **TEMPLATE_VACUUM_ACTIONS},
@@ -217,7 +212,7 @@ async def setup_attributes_state_vacuum(
     """Do setup of vacuum integration testing a single attribute."""
     await setup_entity(
         hass,
-        TEST_VACUUM_SETUP,
+        TEST_VACUUM,
         style,
         count,
         TEMPLATE_VACUUM_ACTIONS,
@@ -431,14 +426,14 @@ async def test_battery_level_template_repair(
 
     assert len(issue_registry.issues) == issue_count
     issue = issue_registry.async_get_issue(
-        "template", f"deprecated_battery_level_{TEST_ENTITY_ID}"
+        "template", f"deprecated_battery_level_{TEST_VACUUM.entity_id}"
     )
     assert issue is not None
     assert issue.domain == "template"
     assert issue.severity == ir.IssueSeverity.WARNING
     assert issue.translation_placeholders is not None
-    assert issue.translation_placeholders["entity_name"] == TEST_OBJECT_ID
-    assert issue.translation_placeholders["entity_id"] == TEST_ENTITY_ID
+    assert issue.translation_placeholders["entity_name"] == TEST_VACUUM.object_id
+    assert issue.translation_placeholders["entity_id"] == TEST_VACUUM.entity_id
     assert "Detected that integration 'template' is setting the" not in caplog.text
 
 
@@ -500,14 +495,14 @@ async def test_fan_speed_template(hass: HomeAssistant, expected: str | None) -> 
 @pytest.mark.usefixtures("setup_single_attribute_state_vacuum")
 async def test_icon_template(hass: HomeAssistant, expected: int) -> None:
     """Test icon template."""
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_VACUUM.entity_id)
     assert state is not None
     assert state.attributes.get("icon") == expected
 
     hass.states.async_set(TEST_STATE_SENSOR, STATE_ON)
     await hass.async_block_till_done()
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_VACUUM.entity_id)
     assert state is not None
     assert state.attributes["icon"] == "mdi:check"
 
@@ -534,14 +529,14 @@ async def test_icon_template(hass: HomeAssistant, expected: int) -> None:
 @pytest.mark.usefixtures("setup_single_attribute_state_vacuum")
 async def test_picture_template(hass: HomeAssistant, expected: int) -> None:
     """Test picture template."""
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_VACUUM.entity_id)
     assert state is not None
     assert state.attributes.get("entity_picture") == expected
 
     hass.states.async_set(TEST_STATE_SENSOR, STATE_ON)
     await hass.async_block_till_done()
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_VACUUM.entity_id)
     assert state is not None
     assert state.attributes["entity_picture"] == "local/vacuum.png"
 
@@ -574,7 +569,7 @@ async def test_available_template_with_entities(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     # Device State should not be unavailable
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_VACUUM.entity_id)
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
 
@@ -583,7 +578,7 @@ async def test_available_template_with_entities(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     # device state should be unavailable
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_VACUUM.entity_id)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
@@ -613,7 +608,7 @@ async def test_invalid_availability_template_keeps_component_available(
 ) -> None:
     """Test that an invalid availability keeps the device available."""
     await async_trigger(hass, TEST_STATE_SENSOR)
-    assert hass.states.get(TEST_ENTITY_ID) != STATE_UNAVAILABLE
+    assert hass.states.get(TEST_VACUUM.entity_id) != STATE_UNAVAILABLE
     err = "'x' is undefined"
     assert err in caplog_setup_text or err in caplog.text
 
@@ -634,14 +629,14 @@ async def test_invalid_availability_template_keeps_component_available(
 @pytest.mark.usefixtures("setup_attributes_state_vacuum")
 async def test_attribute_templates(hass: HomeAssistant) -> None:
     """Test attribute_templates template."""
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_VACUUM.entity_id)
     assert state is not None
     assert state.attributes["test_attribute"] == "It ."
 
     hass.states.async_set(TEST_STATE_SENSOR, "Works")
     await hass.async_block_till_done()
-    await async_update_entity(hass, TEST_ENTITY_ID)
-    state = hass.states.get(TEST_ENTITY_ID)
+    await async_update_entity(hass, TEST_VACUUM.entity_id)
+    state = hass.states.get(TEST_VACUUM.entity_id)
     assert state is not None
     assert state.attributes["test_attribute"] == "It Works."
 
@@ -683,7 +678,7 @@ async def test_unique_id(
     hass: HomeAssistant, style: ConfigurationStyle, config: ConfigType
 ) -> None:
     """Test unique_id option only creates one vacuum per id."""
-    await setup_and_test_unique_id(hass, TEST_VACUUM_SETUP, style, config)
+    await setup_and_test_unique_id(hass, TEST_VACUUM, style, config)
 
 
 @pytest.mark.parametrize("config", [TEMPLATE_VACUUM_ACTIONS])
@@ -698,7 +693,7 @@ async def test_nested_unique_id(
 ) -> None:
     """Test a template unique_id propagates to vacuum unique_ids."""
     await setup_and_test_nested_unique_id(
-        hass, TEST_VACUUM_SETUP, style, entity_registry, config
+        hass, TEST_VACUUM, style, entity_registry, config
     )
 
 
@@ -714,32 +709,32 @@ async def test_unused_services(hass: HomeAssistant) -> None:
     """Test calling unused services raises."""
     # Pause vacuum
     with pytest.raises(HomeAssistantError):
-        await common.async_pause(hass, TEST_ENTITY_ID)
+        await common.async_pause(hass, TEST_VACUUM.entity_id)
     await hass.async_block_till_done()
 
     # Stop vacuum
     with pytest.raises(HomeAssistantError):
-        await common.async_stop(hass, TEST_ENTITY_ID)
+        await common.async_stop(hass, TEST_VACUUM.entity_id)
     await hass.async_block_till_done()
 
     # Return vacuum to base
     with pytest.raises(HomeAssistantError):
-        await common.async_return_to_base(hass, TEST_ENTITY_ID)
+        await common.async_return_to_base(hass, TEST_VACUUM.entity_id)
     await hass.async_block_till_done()
 
     # Spot cleaning
     with pytest.raises(HomeAssistantError):
-        await common.async_clean_spot(hass, TEST_ENTITY_ID)
+        await common.async_clean_spot(hass, TEST_VACUUM.entity_id)
     await hass.async_block_till_done()
 
     # Locate vacuum
     with pytest.raises(HomeAssistantError):
-        await common.async_locate(hass, TEST_ENTITY_ID)
+        await common.async_locate(hass, TEST_VACUUM.entity_id)
     await hass.async_block_till_done()
 
     # Set fan's speed
     with pytest.raises(HomeAssistantError):
-        await common.async_set_fan_speed(hass, "medium", TEST_ENTITY_ID)
+        await common.async_set_fan_speed(hass, "medium", TEST_VACUUM.entity_id)
     await hass.async_block_till_done()
 
     _verify(hass, STATE_UNKNOWN, None)
@@ -773,7 +768,7 @@ async def test_state_services(
     await hass.services.async_call(
         "vacuum",
         action,
-        {"entity_id": TEST_ENTITY_ID},
+        {"entity_id": TEST_VACUUM.entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -781,7 +776,7 @@ async def test_state_services(
     # verify
     assert len(calls) == 1
     assert calls[-1].data["action"] == action
-    assert calls[-1].data["caller"] == TEST_ENTITY_ID
+    assert calls[-1].data["caller"] == TEST_VACUUM.entity_id
 
 
 @pytest.mark.parametrize(
@@ -810,23 +805,23 @@ async def test_set_fan_speed(hass: HomeAssistant, calls: list[ServiceCall]) -> N
     """Test set valid fan speed."""
 
     # Set vacuum's fan speed to high
-    await common.async_set_fan_speed(hass, "high", TEST_ENTITY_ID)
+    await common.async_set_fan_speed(hass, "high", TEST_VACUUM.entity_id)
     await hass.async_block_till_done()
 
     # verify
     assert len(calls) == 1
     assert calls[-1].data["action"] == "set_fan_speed"
-    assert calls[-1].data["caller"] == TEST_ENTITY_ID
+    assert calls[-1].data["caller"] == TEST_VACUUM.entity_id
     assert calls[-1].data["fan_speed"] == "high"
 
     # Set fan's speed to medium
-    await common.async_set_fan_speed(hass, "medium", TEST_ENTITY_ID)
+    await common.async_set_fan_speed(hass, "medium", TEST_VACUUM.entity_id)
     await hass.async_block_till_done()
 
     # verify
     assert len(calls) == 2
     assert calls[-1].data["action"] == "set_fan_speed"
-    assert calls[-1].data["caller"] == TEST_ENTITY_ID
+    assert calls[-1].data["caller"] == TEST_VACUUM.entity_id
     assert calls[-1].data["fan_speed"] == "medium"
 
 
@@ -863,23 +858,23 @@ async def test_set_invalid_fan_speed(
     """Test set invalid fan speed when fan has valid speed."""
 
     # Set vacuum's fan speed to high
-    await common.async_set_fan_speed(hass, "high", TEST_ENTITY_ID)
+    await common.async_set_fan_speed(hass, "high", TEST_VACUUM.entity_id)
     await hass.async_block_till_done()
 
     # verify
     assert len(calls) == 1
     assert calls[-1].data["action"] == "set_fan_speed"
-    assert calls[-1].data["caller"] == TEST_ENTITY_ID
+    assert calls[-1].data["caller"] == TEST_VACUUM.entity_id
     assert calls[-1].data["fan_speed"] == "high"
 
     # Set vacuum's fan speed to 'invalid'
-    await common.async_set_fan_speed(hass, "invalid", TEST_ENTITY_ID)
+    await common.async_set_fan_speed(hass, "invalid", TEST_VACUUM.entity_id)
     await hass.async_block_till_done()
 
     # verify fan speed is unchanged
     assert len(calls) == 1
     assert calls[-1].data["action"] == "set_fan_speed"
-    assert calls[-1].data["caller"] == TEST_ENTITY_ID
+    assert calls[-1].data["caller"] == TEST_VACUUM.entity_id
     assert calls[-1].data["fan_speed"] == "high"
 
 
@@ -935,10 +930,10 @@ async def test_empty_action_config(
     supported_features: VacuumEntityFeature,
 ) -> None:
     """Test configuration with empty script."""
-    await common.async_start(hass, TEST_ENTITY_ID)
+    await common.async_start(hass, TEST_VACUUM.entity_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_VACUUM.entity_id)
     assert state is not None
     assert state.attributes["supported_features"] == (
         VacuumEntityFeature.STATE | VacuumEntityFeature.START | supported_features
@@ -950,7 +945,7 @@ async def test_empty_action_config(
     [
         (
             1,
-            {"name": TEST_OBJECT_ID, "start": [], **TEMPLATE_VACUUM_ACTIONS},
+            {"name": TEST_VACUUM.object_id, "start": [], **TEMPLATE_VACUUM_ACTIONS},
         )
     ],
 )
@@ -980,12 +975,12 @@ async def test_assumed_optimistic(
     await hass.services.async_call(
         vacuum.DOMAIN,
         service,
-        {"entity_id": TEST_ENTITY_ID},
+        {"entity_id": TEST_VACUUM.entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_VACUUM.entity_id)
     assert state is not None
     assert state.state == expected
 
@@ -996,7 +991,7 @@ async def test_assumed_optimistic(
         (
             1,
             {
-                "name": TEST_OBJECT_ID,
+                "name": TEST_VACUUM.object_id,
                 "state": "{{ states('sensor.test_state') }}",
                 "start": [],
                 **TEMPLATE_VACUUM_ACTIONS,
@@ -1030,19 +1025,19 @@ async def test_optimistic_option(
     hass.states.async_set(TEST_STATE_SENSOR, VacuumActivity.DOCKED)
     await hass.async_block_till_done()
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_VACUUM.entity_id)
     assert state is not None
     assert state.state == VacuumActivity.DOCKED
 
     await hass.services.async_call(
         vacuum.DOMAIN,
         service,
-        {"entity_id": TEST_ENTITY_ID},
+        {"entity_id": TEST_VACUUM.entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_VACUUM.entity_id)
     assert state is not None
     assert state.state == expected
 
@@ -1052,7 +1047,7 @@ async def test_optimistic_option(
     hass.states.async_set(TEST_STATE_SENSOR, VacuumActivity.DOCKED)
     await hass.async_block_till_done()
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_VACUUM.entity_id)
     assert state is not None
     assert state.state == VacuumActivity.DOCKED
 
@@ -1063,7 +1058,7 @@ async def test_optimistic_option(
         (
             1,
             {
-                "name": TEST_OBJECT_ID,
+                "name": TEST_VACUUM.object_id,
                 "state": "{{ states('sensor.test_state') }}",
                 "start": [],
                 **TEMPLATE_VACUUM_ACTIONS,
@@ -1096,12 +1091,12 @@ async def test_not_optimistic(
     await hass.services.async_call(
         vacuum.DOMAIN,
         service,
-        {"entity_id": TEST_ENTITY_ID},
+        {"entity_id": TEST_VACUUM.entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get(TEST_ENTITY_ID)
+    state = hass.states.get(TEST_VACUUM.entity_id)
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
