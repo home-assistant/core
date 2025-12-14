@@ -265,8 +265,12 @@ class MoldIndicator(SensorEntity):
         self._calc_moldindicator()
         self._attr_available = self._attr_native_value is not None
 
-    def _get_temperature_value(self, entity_id: str) -> float | None:
-        """Get temperature sensor value in Celsius."""
+    def _get_sensor_value(
+        self,
+        entity_id: str,
+        validator: Callable[[float, str | None], float | None],
+    ) -> float | None:
+        """Get and validate a sensor value."""
         if (state := self.hass.states.get(entity_id)) is None:
             return None
 
@@ -276,31 +280,27 @@ class MoldIndicator(SensorEntity):
         if (value := util.convert(state.state, float)) is None:
             return None
 
-        unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        if unit not in UnitOfTemperature:
-            return None
+        return validator(value, state.attributes.get(ATTR_UNIT_OF_MEASUREMENT))
 
-        return TemperatureConverter.convert(value, unit, UnitOfTemperature.CELSIUS)
+    def _get_temperature_value(self, entity_id: str) -> float | None:
+        """Get temperature sensor value in Celsius."""
+
+        def validate_temperature(value: float, unit: str | None) -> float | None:
+            if unit not in UnitOfTemperature:
+                return None
+            return TemperatureConverter.convert(value, unit, UnitOfTemperature.CELSIUS)
+
+        return self._get_sensor_value(entity_id, validate_temperature)
 
     def _get_humidity_value(self, entity_id: str) -> float | None:
         """Get humidity sensor value."""
-        if (state := self.hass.states.get(entity_id)) is None:
-            return None
 
-        if state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
-            return None
+        def validate_humidity(value: float, unit: str | None) -> float | None:
+            if unit != PERCENTAGE or not 0 <= value <= 100:
+                return None
+            return value
 
-        if (value := util.convert(state.state, float)) is None:
-            return None
-
-        unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        if unit != PERCENTAGE:
-            return None
-
-        if not 0 <= value <= 100:
-            return None
-
-        return value
+        return self._get_sensor_value(entity_id, validate_humidity)
 
     def _calc_dewpoint(self) -> None:
         """Calculate the dewpoint for the indoor air."""
