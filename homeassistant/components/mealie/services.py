@@ -128,18 +128,25 @@ def _async_get_entry(call: ServiceCall) -> MealieConfigEntry:
     return cast(MealieConfigEntry, entry)
 
 
-def _valid_mealplan_type(version: AwesomeVersion, entry_type: str) -> bool:
-    """Validate mealplan entry type."""
-    if version.valid and version < AwesomeVersion("v3.7.0"):
-        # Prior to Mealie 3.7.0, only these mealplan entry types were supported
-        return entry_type in {
+def _validate_mealplan_type(version: AwesomeVersion, entry_type: str) -> None:
+    """Validate mealplan entry type, if prior to 3.7.0."""
+
+    if (
+        version.valid
+        and version < AwesomeVersion("v3.7.0")
+        and entry_type
+        not in {
             MealplanEntryType.BREAKFAST.value,
             MealplanEntryType.DINNER.value,
             MealplanEntryType.LUNCH.value,
             MealplanEntryType.SIDE.value,
         }
-    # For Mealie 3.7.0 and newer and nightlies, all current mealplan entry types are valid
-    return entry_type in list(MealplanEntryType)
+    ):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_mealplan_entry_type",
+            translation_placeholders={"mealplan_type": entry_type},
+        )
 
 
 async def _async_get_mealplan(call: ServiceCall) -> ServiceResponse:
@@ -235,12 +242,7 @@ async def _async_set_random_mealplan(call: ServiceCall) -> ServiceResponse:
     entry_type = MealplanEntryType(call.data[ATTR_ENTRY_TYPE])
     client = entry.runtime_data.client
 
-    if not _valid_mealplan_type(entry.runtime_data.version, entry_type.value):
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_mealplan_entry_type",
-            translation_placeholders={"mealplan_type": entry_type.value},
-        )
+    _validate_mealplan_type(entry.runtime_data.version, entry_type.value)
 
     try:
         mealplan = await client.random_mealplan(mealplan_date, entry_type)
@@ -261,12 +263,7 @@ async def _async_set_mealplan(call: ServiceCall) -> ServiceResponse:
     entry_type = MealplanEntryType(call.data[ATTR_ENTRY_TYPE])
     client = entry.runtime_data.client
 
-    if not _valid_mealplan_type(entry.runtime_data.version, entry_type.value):
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_mealplan_entry_type",
-            translation_placeholders={"mealplan_type": entry_type.value},
-        )
+    _validate_mealplan_type(entry.runtime_data.version, entry_type.value)
 
     try:
         mealplan = await client.set_mealplan(
