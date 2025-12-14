@@ -4,11 +4,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
 
-from homeassistant.components.switch import (
-    SwitchDeviceClass,
-    SwitchEntity,
-    SwitchEntityDescription,
-)
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -83,7 +79,6 @@ class ActronAirSwitch(CoordinatorEntity[ActronAirSystemCoordinator], SwitchEntit
 
     _attr_has_entity_name = True
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_device_class = SwitchDeviceClass.SWITCH
     entity_description: ActronAirSwitchEntityDescription
 
     def __init__(
