@@ -289,13 +289,18 @@ class MoldIndicator(SensorEntity):
 
         if state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
             _LOGGER.debug(
-                "Unable to parse sensor %s, state: %s",
+                "Unable to get sensor %s, state: %s",
                 state.entity_id,
                 state.state,
             )
             return None
 
         if (value := util.convert(state.state, float)) is None:
+            _LOGGER.debug(
+                "Unable to parse sensor value %s, state: %s to float",
+                state.entity_id,
+                state.state,
+            )
             return None
 
         return validator(value, state.attributes.get(ATTR_UNIT_OF_MEASUREMENT))
@@ -306,6 +311,7 @@ class MoldIndicator(SensorEntity):
         def validate_temperature(value: float, unit: str | None) -> float | None:
             if TYPE_CHECKING:
                 assert state is not None
+
             if unit not in UnitOfTemperature:
                 _LOGGER.warning(
                     "Temp sensor %s has unsupported unit: %s (allowed: %s, %s)",
@@ -325,6 +331,7 @@ class MoldIndicator(SensorEntity):
         def validate_humidity(value: float, unit: str | None) -> float | None:
             if TYPE_CHECKING:
                 assert state is not None
+
             if unit != PERCENTAGE:
                 _LOGGER.warning(
                     "Humidity sensor %s has unsupported unit: %s (allowed: %s)",
