@@ -42,7 +42,7 @@ ATTR_STATUS = "status"
 CONF_BATTERY = "battery"
 CONF_SYSTEM = "system"
 
-DEFAULT_BATTERY = 1
+DEFAULT_BATTERY = "BAT1"
 DEFAULT_NAME = "Battery"
 DEFAULT_PATH = "/sys/class/power_supply"
 DEFAULT_SYSTEM = "linux"
@@ -51,7 +51,9 @@ SYSTEMS = ["android", "linux"]
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(CONF_BATTERY, default=DEFAULT_BATTERY): cv.positive_int,
+        vol.Optional(CONF_BATTERY, default=DEFAULT_BATTERY): vol.Any(
+            cv.positive_int, cv.string
+        ),
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_SYSTEM, default=DEFAULT_SYSTEM): vol.In(SYSTEMS),
     }
@@ -73,7 +75,10 @@ def setup_platform(
         if system == "android":
             os.listdir(os.path.join(DEFAULT_PATH, "battery"))
         else:
-            os.listdir(os.path.join(DEFAULT_PATH, f"BAT{battery_id}"))
+            if isinstance(battery_id, str):
+                os.listdir(os.path.join(DEFAULT_PATH, battery_id))
+            else:
+                os.listdir(os.path.join(DEFAULT_PATH, f"BAT{battery_id}"))
     except FileNotFoundError:
         _LOGGER.error("No battery found")
         return
