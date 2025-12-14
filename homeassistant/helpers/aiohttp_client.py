@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Awaitable, Callable
 from contextlib import suppress
+from functools import partial
 import socket
 from ssl import SSLContext
 import sys
@@ -34,12 +35,12 @@ if TYPE_CHECKING:
     from aiohttp.typedefs import JSONDecoder
 
 
-DATA_CONNECTOR: HassKey[dict[tuple[bool, int, str], aiohttp.BaseConnector]] = HassKey(
-    "aiohttp_connector"
-)
-DATA_CLIENTSESSION: HassKey[dict[tuple[bool, int, str], aiohttp.ClientSession]] = (
-    HassKey("aiohttp_clientsession")
-)
+DATA_CONNECTOR: HassKey[
+    dict[tuple[bool, int, str, str | None], aiohttp.BaseConnector]
+] = HassKey("aiohttp_connector")
+DATA_CLIENTSESSION: HassKey[
+    dict[tuple[bool, int, str, str | None], aiohttp.ClientSession]
+] = HassKey("aiohttp_clientsession")
 DATA_RESOLVER: HassKey[HassAsyncDNSResolver] = HassKey("aiohttp_resolver")
 
 SERVER_SOFTWARE = (
@@ -132,12 +133,13 @@ def async_get_clientsession(
     verify_ssl: bool = True,
     family: socket.AddressFamily = socket.AF_UNSPEC,
     ssl_cipher: ssl_util.SSLCipherList = ssl_util.SSLCipherList.PYTHON_DEFAULT,
+    interface: str | None = None,
 ) -> aiohttp.ClientSession:
     """Return default aiohttp ClientSession.
 
     This method must be run in the event loop.
     """
-    session_key = _make_key(verify_ssl, family, ssl_cipher)
+    session_key = _make_key(verify_ssl, family, ssl_cipher, interface)
     sessions = hass.data.setdefault(DATA_CLIENTSESSION, {})
 
     if session_key not in sessions:
@@ -147,6 +149,7 @@ def async_get_clientsession(
             auto_cleanup_method=_async_register_default_clientsession_shutdown,
             family=family,
             ssl_cipher=ssl_cipher,
+            interface=interface,
         )
         sessions[session_key] = session
     else:
@@ -163,6 +166,7 @@ def async_create_clientsession(
     auto_cleanup: bool = True,
     family: socket.AddressFamily = socket.AF_UNSPEC,
     ssl_cipher: ssl_util.SSLCipherList = ssl_util.SSLCipherList.PYTHON_DEFAULT,
+    interface: str | None = None,
     **kwargs: Any,
 ) -> aiohttp.ClientSession:
     """Create a new ClientSession with kwargs, i.e. for cookies.
@@ -184,6 +188,7 @@ def async_create_clientsession(
         auto_cleanup_method=auto_cleanup_method,
         family=family,
         ssl_cipher=ssl_cipher,
+        interface=interface,
         **kwargs,
     )
 
@@ -196,11 +201,12 @@ def _async_create_clientsession(
     | None = None,
     family: socket.AddressFamily = socket.AF_UNSPEC,
     ssl_cipher: ssl_util.SSLCipherList = ssl_util.SSLCipherList.PYTHON_DEFAULT,
+    interface: str | None = None,
     **kwargs: Any,
 ) -> aiohttp.ClientSession:
     """Create a new ClientSession with kwargs, i.e. for cookies."""
     clientsession = aiohttp.ClientSession(
-        connector=_async_get_connector(hass, verify_ssl, family, ssl_cipher),
+        connector=_async_get_connector(hass, verify_ssl, family, ssl_cipher, interface),
         json_serialize=json_dumps,
         response_class=HassClientResponse,
         **kwargs,
@@ -332,9 +338,18 @@ def _make_key(
     verify_ssl: bool = True,
     family: socket.AddressFamily = socket.AF_UNSPEC,
     ssl_cipher: ssl_util.SSLCipherList = ssl_util.SSLCipherList.PYTHON_DEFAULT,
-) -> tuple[bool, socket.AddressFamily, ssl_util.SSLCipherList]:
+    interface: str | None = None,
+) -> tuple[bool, socket.AddressFamily, ssl_util.SSLCipherList, str | None]:
     """Make a key for connector or session pool."""
-    return (verify_ssl, family, ssl_cipher)
+    return (verify_ssl, family, ssl_cipher, interface)
+
+
+def _socket_factory(interface: str, addr_info: Any) -> socket.socket:
+    """Socket factory for binding to specific interface."""
+    family, type_, proto, _, _ = addr_info
+    sock = socket.socket(family=family, type=type_, proto=proto)
+    sock.setsockopt(socket.SOL_SOCKET, socket.SO_BINDTODEVICE, interface.encode())
+    return sock
 
 
 class HomeAssistantTCPConnector(aiohttp.TCPConnector):
@@ -358,12 +373,13 @@ def _async_get_connector(
     verify_ssl: bool = True,
     family: socket.AddressFamily = socket.AF_UNSPEC,
     ssl_cipher: ssl_util.SSLCipherList = ssl_util.SSLCipherList.PYTHON_DEFAULT,
+    interface: str | None = None,
 ) -> aiohttp.BaseConnector:
     """Return the connector pool for aiohttp.
 
     This method must be run in the event loop.
     """
-    connector_key = _make_key(verify_ssl, family, ssl_cipher)
+    connector_key = _make_key(verify_ssl, family, ssl_cipher, interface)
     connectors = hass.data.setdefault(DATA_CONNECTOR, {})
 
     if connector_key in connectors:
@@ -381,6 +397,7 @@ def _async_get_connector(
         limit=MAXIMUM_CONNECTIONS,
         limit_per_host=MAXIMUM_CONNECTIONS_PER_HOST,
         resolver=_async_get_or_create_resolver(hass),
+        socket_factory=None if not interface else partial(_socket_factory, interface),
     )
     connectors[connector_key] = connector
 
