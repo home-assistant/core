@@ -2,12 +2,17 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 import logging
 from typing import Any
 from urllib.parse import urlparse
 
-from victron_mqtt import CannotConnectError, DeviceType, Hub as VictronVenusHub
+from victron_mqtt import (
+    AuthenticationError,
+    CannotConnectError,
+    DeviceType,
+    Hub as VictronVenusHub,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -139,6 +144,65 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication request."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reauthentication confirmation."""
+        errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
+
+        if user_input is not None:
+            _LOGGER.info("Reauth user input received: %s", user_input)
+            data = {
+                **reauth_entry.data,
+                CONF_USERNAME: user_input.get(CONF_USERNAME) or None,
+                CONF_PASSWORD: user_input.get(CONF_PASSWORD) or None,
+            }
+            # Remove None values
+            data = {k: v for k, v in data.items() if v is not None}
+
+            try:
+                await validate_input(data)
+                _LOGGER.info("Reauthentication successful")
+            except AuthenticationError:
+                _LOGGER.exception("Authentication failed during reauthentication")
+                errors["base"] = "invalid_auth"
+            except CannotConnectError:
+                _LOGGER.exception("Cannot connect during reauthentication")
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("General error during reauthentication")
+                errors["base"] = "unknown"
+            else:
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates=user_input,
+                )
+
+        reauth_schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_USERNAME, default=reauth_entry.data.get(CONF_USERNAME) or ""
+                ): str,
+                vol.Optional(
+                    CONF_PASSWORD, default=reauth_entry.data.get(CONF_PASSWORD) or ""
+                ): str,
+            }
+        )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=reauth_schema,
+            errors=errors,
+            description_placeholders={"host": reauth_entry.data[CONF_HOST]},
         )
 
     @staticmethod

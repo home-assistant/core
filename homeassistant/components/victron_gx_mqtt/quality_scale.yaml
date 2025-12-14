@@ -40,7 +40,7 @@ rules:
     status: exempt
     comment: |
       Not relevant.
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: done
 
   # Gold

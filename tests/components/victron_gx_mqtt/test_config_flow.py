@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from victron_mqtt import CannotConnectError
+from victron_mqtt.hub import AuthenticationError
 
 from homeassistant.components.victron_gx_mqtt.const import (
     CONF_INSTALLATION_ID,
@@ -415,3 +416,180 @@ async def test_options_flow_cannot_connect(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+
+@pytest.mark.usefixtures("mock_victron_hub")
+async def test_reauth_flow_success(hass: HomeAssistant) -> None:
+    """Test successful reauthentication flow."""
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_INSTALLATION_ID,
+        data={
+            CONF_HOST: MOCK_HOST,
+            CONF_PORT: DEFAULT_PORT,
+            CONF_USERNAME: "old-username",
+            CONF_PASSWORD: "old-password",
+            CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,
+            CONF_SSL: False,
+            CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
+        },
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: "new-username",
+            CONF_PASSWORD: "new-password",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_USERNAME] == "new-username"
+    assert mock_config_entry.data[CONF_PASSWORD] == "new-password"
+
+
+async def test_reauth_flow_cannot_connect(
+    hass: HomeAssistant, mock_victron_hub: MagicMock
+) -> None:
+    """Test reauthentication flow handles connection errors."""
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_INSTALLATION_ID,
+        data={
+            CONF_HOST: MOCK_HOST,
+            CONF_PORT: DEFAULT_PORT,
+            CONF_USERNAME: "old-username",
+            CONF_PASSWORD: "old-password",
+            CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,
+            CONF_SSL: False,
+            CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
+        },
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    mock_victron_hub.return_value.connect.side_effect = CannotConnectError
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: "new-username",
+            CONF_PASSWORD: "new-password",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    # Test recovery from error
+    mock_victron_hub.return_value.connect.side_effect = None
+    mock_victron_hub.return_value.installation_id = MOCK_INSTALLATION_ID
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: "new-username",
+            CONF_PASSWORD: "new-password",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+
+async def test_reauth_flow_unknown_error(
+    hass: HomeAssistant, mock_victron_hub: MagicMock
+) -> None:
+    """Test reauthentication flow handles unknown errors."""
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_INSTALLATION_ID,
+        data={
+            CONF_HOST: MOCK_HOST,
+            CONF_PORT: DEFAULT_PORT,
+            CONF_USERNAME: "old-username",
+            CONF_PASSWORD: "old-password",
+            CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,
+            CONF_SSL: False,
+            CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
+        },
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    mock_victron_hub.return_value.connect.side_effect = Exception("Test error")
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: "new-username",
+            CONF_PASSWORD: "new-password",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
+
+
+async def test_reauth_flow_invalid_auth(
+    hass: HomeAssistant, mock_victron_hub: MagicMock
+) -> None:
+    """Test reauthentication flow handles authentication errors."""
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_INSTALLATION_ID,
+        data={
+            CONF_HOST: MOCK_HOST,
+            CONF_PORT: DEFAULT_PORT,
+            CONF_USERNAME: "old-username",
+            CONF_PASSWORD: "old-password",
+            CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,
+            CONF_SSL: False,
+            CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
+        },
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    mock_victron_hub.return_value.connect.side_effect = AuthenticationError(
+        "Invalid credentials"
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: "new-username",
+            CONF_PASSWORD: "wrong-password",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    # Test recovery with correct credentials
+    mock_victron_hub.return_value.connect.side_effect = None
+    mock_victron_hub.return_value.installation_id = MOCK_INSTALLATION_ID
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: "new-username",
+            CONF_PASSWORD: "correct-password",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"

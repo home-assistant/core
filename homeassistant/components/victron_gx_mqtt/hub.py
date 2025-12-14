@@ -4,6 +4,7 @@ from collections.abc import Callable
 import logging
 
 from victron_mqtt import (
+    AuthenticationError,
     CannotConnectError,
     Device as VictronVenusDevice,
     Hub as VictronVenusHub,
@@ -22,7 +23,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import (
@@ -53,13 +54,13 @@ class Hub:
         """
 
         _LOGGER.info("Initializing hub. ConfigEntry: %s, data: %s", entry, entry.data)
+        config = entry.data
         self.hass = hass
-        self.entry = entry
+        self.host = config[CONF_HOST]
         self.id = entry.unique_id
 
-        config = entry.data
         self._hub: VictronVenusHub = VictronVenusHub(
-            host=config[CONF_HOST],
+            host=self.host,
             port=config.get(CONF_PORT, 1883),
             username=config.get(CONF_USERNAME) or None,
             password=config.get(CONF_PASSWORD) or None,
@@ -81,6 +82,10 @@ class Hub:
         _LOGGER.info("Starting hub")
         try:
             await self._hub.connect()
+        except AuthenticationError as auth_error:
+            raise ConfigEntryAuthFailed(
+                f"Authentication failed for {self.host}: {auth_error}"
+            ) from auth_error
         except CannotConnectError as connect_error:
             raise ConfigEntryNotReady(
                 f"Cannot connect to the hub: {connect_error}"
