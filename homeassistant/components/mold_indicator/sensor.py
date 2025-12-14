@@ -162,11 +162,6 @@ class MoldIndicator(SensorEntity):
         self._calib_factor = calib_factor
         self._is_metric = is_metric
         self._attr_available = False
-        self._entities = {
-            indoor_temp_sensor,
-            indoor_humidity_sensor,
-            outdoor_temp_sensor,
-        }
         self._dewpoint: float | None = None
         self._indoor_temp: float | None = None
         self._outdoor_temp: float | None = None
@@ -209,16 +204,21 @@ class MoldIndicator(SensorEntity):
     @callback
     def _async_setup_sensor(self) -> None:
         """Set up the sensor and start tracking state changes."""
+        entities = (
+            self._indoor_temp_sensor,
+            self._outdoor_temp_sensor,
+            self._indoor_humidity_sensor,
+        )
         self.async_on_remove(
             async_track_state_change_event(
                 self.hass,
-                list(self._entities),
+                entities,
                 self._async_mold_indicator_sensor_state_listener,
             )
         )
 
         # Replay current state of source entities
-        for entity_id in self._entities:
+        for entity_id in entities:
             state = self.hass.states.get(entity_id)
             state_event: Event[EventStateChangedData] = Event(
                 "", {"entity_id": entity_id, "new_state": state, "old_state": None}
