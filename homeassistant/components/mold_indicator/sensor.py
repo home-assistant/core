@@ -156,9 +156,12 @@ class MoldIndicator(SensorEntity):
         """Initialize the sensor."""
         self._attr_name = name
         self._attr_unique_id = unique_id
-        self._indoor_temp_sensor = indoor_temp_sensor
-        self._indoor_humidity_sensor = indoor_humidity_sensor
-        self._outdoor_temp_sensor = outdoor_temp_sensor
+
+        self._entities = {
+            CONF_INDOOR_TEMP: indoor_temp_sensor,
+            CONF_OUTDOOR_TEMP: outdoor_temp_sensor,
+            CONF_INDOOR_HUMIDITY: indoor_humidity_sensor,
+        }
         self._calib_factor = calib_factor
         self._is_metric = is_metric
         self._attr_available = False
@@ -181,12 +184,7 @@ class MoldIndicator(SensorEntity):
     ) -> CALLBACK_TYPE:
         """Render a preview."""
         # Abort early if there is no source entity_id's or calibration factor
-        if (
-            not self._outdoor_temp_sensor
-            or not self._indoor_temp_sensor
-            or not self._indoor_humidity_sensor
-            or not self._calib_factor
-        ):
+        if not all((*self._entities.values(), self._calib_factor)):
             self._attr_available = False
             calculated_state = self._async_calculate_state()
             preview_callback(calculated_state.state, calculated_state.attributes)
@@ -204,21 +202,17 @@ class MoldIndicator(SensorEntity):
     @callback
     def _async_setup_sensor(self) -> None:
         """Set up the sensor and start tracking state changes."""
-        entities = (
-            self._indoor_temp_sensor,
-            self._outdoor_temp_sensor,
-            self._indoor_humidity_sensor,
-        )
+
         self.async_on_remove(
             async_track_state_change_event(
                 self.hass,
-                entities,
+                self._entities.values(),
                 self._async_mold_indicator_sensor_state_listener,
             )
         )
 
         # Replay current state of source entities
-        for entity_id in entities:
+        for entity_id in self._entities.values():
             state = self.hass.states.get(entity_id)
             state_event: Event[EventStateChangedData] = Event(
                 "", {"entity_id": entity_id, "new_state": state, "old_state": None}
@@ -249,11 +243,11 @@ class MoldIndicator(SensorEntity):
         )
 
         # update state depending on which sensor changed
-        if entity_id == self._indoor_temp_sensor:
+        if entity_id == self._entities[CONF_INDOOR_TEMP]:
             self._indoor_temp = self._get_temperature_from_state(new_state)
-        elif entity_id == self._outdoor_temp_sensor:
+        elif entity_id == self._entities[CONF_OUTDOOR_TEMP]:
             self._outdoor_temp = self._get_temperature_from_state(new_state)
-        elif entity_id == self._indoor_humidity_sensor:
+        elif entity_id == self._entities[CONF_INDOOR_HUMIDITY]:
             self._indoor_hum = self._get_humidity_from_state(new_state)
 
         if not update_state:
@@ -409,11 +403,11 @@ class MoldIndicator(SensorEntity):
 
         # check bounds and format
         if crit_humidity > 100:
-            self._attr_native_value = "100"
+            self._attr_native_value = 100
         elif crit_humidity < 0:
-            self._attr_native_value = "0"
+            self._attr_native_value = 0
         else:
-            self._attr_native_value = f"{int(crit_humidity):d}"
+            self._attr_native_value = int(crit_humidity)
 
         _LOGGER.debug("Mold indicator humidity: %s", self.native_value)
 
