@@ -312,8 +312,9 @@ async def test_sensor_changed(hass: HomeAssistant) -> None:
     assert hass.states.get("sensor.mold_indicator").state == "23"
 
 
-async def test_unavailable_sensor_recovery(hass: HomeAssistant) -> None:
-    """Test recovery when sensor becomes unavailable and then available again."""
+@pytest.mark.parametrize("new_state", [STATE_UNAVAILABLE, STATE_UNKNOWN])
+async def test_unavailable_sensor_recovery(hass: HomeAssistant, new_state: str) -> None:
+    """Test recovery when sensor becomes unavailable/unknown and then available again."""
     assert await async_setup_component(
         hass,
         sensor.DOMAIN,
@@ -329,7 +330,6 @@ async def test_unavailable_sensor_recovery(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
     await hass.async_start()
-    await hass.async_block_till_done()
 
     # Initial state should be valid
     moldind = hass.states.get("sensor.mold_indicator")
@@ -339,7 +339,7 @@ async def test_unavailable_sensor_recovery(hass: HomeAssistant) -> None:
     # Set indoor temp to unavailable
     hass.states.async_set(
         "test.indoortemp",
-        STATE_UNAVAILABLE,
+        new_state,
         {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS},
     )
     await hass.async_block_till_done()
@@ -378,7 +378,6 @@ async def test_all_sensors_unavailable_recovery(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
     await hass.async_start()
-    await hass.async_block_till_done()
 
     # Initial state should be valid
     moldind = hass.states.get("sensor.mold_indicator")
