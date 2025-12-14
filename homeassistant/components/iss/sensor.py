@@ -15,6 +15,7 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
+from homeassistant.util.dt import utcnow
 
 from . import IssData
 from .const import DEFAULT_NAME, DOMAIN
@@ -58,6 +59,14 @@ class IssSensor(CoordinatorEntity[DataUpdateCoordinator[IssData]], SensorEntity)
         )
 
     @property
+    def available(self) -> bool:
+        """Return True if the entity is available.
+
+        The entity is considered available as long as we have any data from the coordinator.
+        """
+        return self.coordinator.data is not None
+
+    @property
     def native_value(self) -> int:
         """Return number of people in space."""
         return self.coordinator.data.number_of_people_in_space
@@ -76,5 +85,8 @@ class IssSensor(CoordinatorEntity[DataUpdateCoordinator[IssData]], SensorEntity)
         else:
             attrs["long"] = self.coordinator.data.current_location.get("longitude")
             attrs["lat"] = self.coordinator.data.current_location.get("latitude")
+
+        # Additional attribute to indicate when the last update occurred
+        attrs["last_updated"] = utcnow().isoformat()
 
         return attrs
