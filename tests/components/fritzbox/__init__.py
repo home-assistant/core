@@ -50,7 +50,10 @@ async def setup_config_entry(
 
 
 def set_devices(
-    fritz: Mock, devices: list[Mock] | None = None, templates: list[Mock] | None = None
+    fritz: Mock,
+    devices: list[Mock] | None = None,
+    templates: list[Mock] | None = None,
+    triggers: list[Mock] | None = None,
 ) -> None:
     """Set list of devices or templates."""
     if devices is not None:
@@ -58,6 +61,9 @@ def set_devices(
 
     if templates is not None:
         fritz().get_templates.return_value = templates
+
+    if triggers is not None:
+        fritz().get_triggers.return_value = triggers
 
 
 class FritzEntityBaseMock(Mock):
@@ -209,3 +215,5 @@ class FritzTriggerMock(FritzEntityBaseMock):
     """Mock of a AVM Fritz!Box smarthome trigger."""
 
     active = True
+    ain = "trg1234 56789"
+    name = "fake_trigger"
