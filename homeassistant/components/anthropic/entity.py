@@ -84,12 +84,10 @@ from .const import (
     CONF_WEB_SEARCH_REGION,
     CONF_WEB_SEARCH_TIMEZONE,
     CONF_WEB_SEARCH_USER_LOCATION,
-    CONTEXT_BUFFER_TOKENS,
     DEFAULT,
     DOMAIN,
     LOGGER,
     MIN_THINKING_BUDGET,
-    MODEL_CONTEXT_WINDOW,
     NON_THINKING_MODELS,
 )
 
@@ -265,14 +263,45 @@ def _convert_content(
                         redacted_thinking_block
                     )
             if content.content:
-                # Don't include citations when replaying - encrypted_index references
-                # become invalid across API requests
-                messages[-1]["content"].append(  # type: ignore[union-attr]
-                    TextBlockParam(
-                        type="text",
-                        text=content.content,
+                current_index = 0
+                for detail in (
+                    content.native.citation_details
+                    if isinstance(content.native, ContentDetails)
+                    else [CitationDetails(length=len(content.content))]
+                ):
+                    if detail.index > current_index:
+                        # Add text block for any text without citations
+                        messages[-1]["content"].append(  # type: ignore[union-attr]
+                            TextBlockParam(
+                                type="text",
+                                text=content.content[current_index : detail.index],
+                            )
+                        )
+                    messages[-1]["content"].append(  # type: ignore[union-attr]
+                        TextBlockParam(
+                            type="text",
+                            text=content.content[
+                                detail.index : detail.index + detail.length
+                            ],
+                            citations=detail.citations,
+                        )
+                        if detail.citations
+                        else TextBlockParam(
+                            type="text",
+                            text=content.content[
+                                detail.index : detail.index + detail.length
+                            ],
+                        )
                     )
-                )
+                    current_index = detail.index + detail.length
+                if current_index < len(content.content):
+                    # Add text block for any remaining text without citations
+                    messages[-1]["content"].append(  # type: ignore[union-attr]
+                        TextBlockParam(
+                            type="text",
+                            text=content.content[current_index:],
+                        )
+                    )
             if content.tool_calls:
                 messages[-1]["content"].extend(  # type: ignore[union-attr]
                     [
@@ -539,78 +568,6 @@ def _create_token_stats(
     }
 
 
-def _find_turn_boundaries(
-    content: list[conversation.Content],
-) -> list[tuple[int, int]]:
-    """Find start and end indices of complete conversation turns.
-
-    A turn starts with UserContent and includes all subsequent
-    AssistantContent and ToolResultContent until the next UserContent.
-    Returns list of (start_index, end_index) tuples, with exclusive end.
-    SystemContent at index 0 is never included.
-    """
-    turns: list[tuple[int, int]] = []
-    current_turn_start: int | None = None
-
-    for i, item in enumerate(content):
-        if isinstance(item, conversation.SystemContent):
-            continue
-        if isinstance(item, conversation.UserContent):
-            if current_turn_start is not None:
-                turns.append((current_turn_start, i))
-            current_turn_start = i
-
-    if current_turn_start is not None:
-        turns.append((current_turn_start, len(content)))
-
-    return turns
-
-
-async def _truncate_to_fit_context(
-    client: anthropic.AsyncAnthropic,
-    model: str,
-    system_prompt: list[TextBlockParam],
-    content: list[conversation.Content],
-    tools: list[ToolUnionParam],
-    max_tokens: int,
-) -> list[conversation.Content]:
-    """Truncate oldest turns until content fits within context limit.
-
-    Never truncates SystemContent or the most recent turn.
-    """
-    target_input_tokens = MODEL_CONTEXT_WINDOW - max_tokens - CONTEXT_BUFFER_TOKENS
-
-    working_content = list(content)
-    turns = _find_turn_boundaries(working_content)
-
-    while len(turns) > 1:
-        messages = _convert_content(working_content[1:])
-
-        try:
-            count_kwargs: dict[str, Any] = {
-                "model": model,
-                "system": system_prompt,
-                "messages": messages,
-            }
-            if tools:
-                count_kwargs["tools"] = tools
-            count_response = await client.messages.count_tokens(**count_kwargs)
-            current_tokens = count_response.input_tokens
-        except anthropic.AnthropicError:
-            # If counting fails, proceed without truncation
-            break
-
-        if current_tokens <= target_input_tokens:
-            break
-
-        # Remove the oldest turn
-        oldest_turn_start, oldest_turn_end = turns[0]
-        del working_content[oldest_turn_start:oldest_turn_end]
-        turns = _find_turn_boundaries(working_content)
-
-    return working_content
-
-
 class AnthropicBaseLLMEntity(Entity):
     """Anthropic base LLM entity."""
 
@@ -686,13 +643,7 @@ class AnthropicBaseLLMEntity(Entity):
                 }
             tools.append(web_search)
 
-        # Truncate oldest turns to fit context window
-        output_tokens = max_tokens + thinking_budget if thinking_enabled else max_tokens
-        truncated_content = await _truncate_to_fit_context(
-            client, model, system_prompt, chat_log.content, tools, output_tokens
-        )
-
-        messages = _convert_content(truncated_content[1:])
+        messages = _convert_content(chat_log.content[1:])
 
         # Add cache_control to the last content block to cache the full conversation
         if messages:
