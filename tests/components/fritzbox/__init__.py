@@ -203,3 +203,9 @@ class FritzDeviceCoverUnknownPositionMock(FritzDeviceCoverMock):
     """Mock of a AVM Fritz!Box cover device with unknown position."""
 
     levelpercentage = None
+
+
+class FritzTriggerMock(FritzEntityBaseMock):
+    """Mock of a AVM Fritz!Box smarthome trigger."""
+
+    active = True

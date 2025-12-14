@@ -23,12 +23,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from . import (
-    FritzDeviceSwitchMock,
-    FritzEntityBaseMock,
-    set_devices,
-    setup_config_entry,
-)
+from . import FritzDeviceSwitchMock, FritzTriggerMock, set_devices, setup_config_entry
 from .const import CONF_FAKE_NAME, MOCK_CONFIG
 
 from tests.common import async_fire_time_changed, snapshot_platform
@@ -44,7 +39,7 @@ async def test_setup(
 ) -> None:
     """Test setup of platform."""
     device = FritzDeviceSwitchMock()
-    trigger = FritzEntityBaseMock()
+    trigger = FritzTriggerMock()
     trigger.ain = "trg1234 56789"
     trigger.name = "fake_trigger"
 
@@ -52,7 +47,6 @@ async def test_setup(
         entry = await setup_config_entry(
             hass,
             MOCK_CONFIG[DOMAIN][CONF_DEVICES][0],
-            # ENTITY_ID,
             device=device,
             fritz=fritz,
             trigger=trigger,
@@ -192,7 +186,7 @@ async def test_discover_new_device(hass: HomeAssistant, fritz: Mock) -> None:
 
 async def test_activate_trigger(hass: HomeAssistant, fritz: Mock) -> None:
     """Test activating a FRITZ! trigger."""
-    trigger = FritzEntityBaseMock()
+    trigger = FritzTriggerMock()
     await setup_config_entry(
         hass,
         MOCK_CONFIG[DOMAIN][CONF_DEVICES][0],
@@ -209,7 +203,7 @@ async def test_activate_trigger(hass: HomeAssistant, fritz: Mock) -> None:
 
 async def test_dectivate_trigger(hass: HomeAssistant, fritz: Mock) -> None:
     """Test dectivating a FRITZ! trigger."""
-    trigger = FritzEntityBaseMock()
+    trigger = FritzTriggerMock()
     await setup_config_entry(
         hass,
         MOCK_CONFIG[DOMAIN][CONF_DEVICES][0],
