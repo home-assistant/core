@@ -235,56 +235,35 @@ class MoldIndicator(SensorEntity):
                 else:
                     self.async_schedule_update_ha_state(True)
 
-        @callback
-        def mold_indicator_startup() -> None:
-            """Add listeners and get 1st state."""
-            _LOGGER.debug("Startup for %s", self.entity_id)
-
+        self.async_on_remove(
             async_track_state_change_event(
                 self.hass, list(self._entities), mold_indicator_sensors_state_listener
             )
+        )
 
-            # Read initial state
-            indoor_temp = self.hass.states.get(self._indoor_temp_sensor)
-            outdoor_temp = self.hass.states.get(self._outdoor_temp_sensor)
-            indoor_hum = self.hass.states.get(self._indoor_humidity_sensor)
+        # Read initial state
+        indoor_temp = self.hass.states.get(self._indoor_temp_sensor)
+        outdoor_temp = self.hass.states.get(self._outdoor_temp_sensor)
+        indoor_hum = self.hass.states.get(self._indoor_humidity_sensor)
 
-            schedule_update = self._update_sensor(
-                self._indoor_temp_sensor, None, indoor_temp
+        self._update_sensor(self._indoor_temp_sensor, None, indoor_temp)
+        self._update_sensor(self._outdoor_temp_sensor, None, outdoor_temp)
+        self._update_sensor(self._indoor_humidity_sensor, None, indoor_hum)
+
+        if self._preview_callback:
+            # re-calculate dewpoint and mold indicator
+            self._calc_dewpoint()
+            self._calc_moldindicator()
+            if self._attr_native_value is None:
+                self._attr_available = False
+            else:
+                self._attr_available = True
+            calculated_state = self._async_calculate_state()
+            self._preview_callback(
+                calculated_state.state, calculated_state.attributes
             )
-
-            schedule_update = (
-                False
-                if not self._update_sensor(
-                    self._outdoor_temp_sensor, None, outdoor_temp
-                )
-                else schedule_update
-            )
-
-            schedule_update = (
-                False
-                if not self._update_sensor(
-                    self._indoor_humidity_sensor, None, indoor_hum
-                )
-                else schedule_update
-            )
-
-            if schedule_update and not self._preview_callback:
-                self.async_schedule_update_ha_state(True)
-            if self._preview_callback:
-                # re-calculate dewpoint and mold indicator
-                self._calc_dewpoint()
-                self._calc_moldindicator()
-                if self._attr_native_value is None:
-                    self._attr_available = False
-                else:
-                    self._attr_available = True
-                calculated_state = self._async_calculate_state()
-                self._preview_callback(
-                    calculated_state.state, calculated_state.attributes
-                )
-
-        mold_indicator_startup()
+        else:
+            self.async_schedule_update_ha_state(True)
 
     def _update_sensor(
         self, entity: str, old_state: State | None, new_state: State | None
@@ -313,17 +292,12 @@ class MoldIndicator(SensorEntity):
         """Parse temperature sensor value."""
         _LOGGER.debug("Updating temp sensor with value %s", state.state)
 
-        # Return an error if the sensor change its state to Unknown.
+        # Return None if the sensor state is unknown or unavailable
         if state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
-            _LOGGER.error(
-                "Unable to parse temperature sensor %s with state: %s",
-                state.entity_id,
-                state.state,
-            )
             return None
 
         if (temp := util.convert(state.state, float)) is None:
-            _LOGGER.error(
+            _LOGGER.warning(
                 "Unable to parse temperature sensor %s with state: %s",
                 state.entity_id,
                 state.state,
@@ -335,7 +309,7 @@ class MoldIndicator(SensorEntity):
             unit := state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         ) in UnitOfTemperature:
             return TemperatureConverter.convert(temp, unit, UnitOfTemperature.CELSIUS)
-        _LOGGER.error(
+        _LOGGER.warning(
             "Temp sensor %s has unsupported unit: %s (allowed: %s, %s)",
             state.entity_id,
             unit,
@@ -350,17 +324,12 @@ class MoldIndicator(SensorEntity):
         """Parse humidity sensor value."""
         _LOGGER.debug("Updating humidity sensor with value %s", state.state)
 
-        # Return an error if the sensor change its state to Unknown.
+        # Return None if the sensor state is unknown or unavailable
         if state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
-            _LOGGER.error(
-                "Unable to parse humidity sensor %s, state: %s",
-                state.entity_id,
-                state.state,
-            )
             return None
 
         if (hum := util.convert(state.state, float)) is None:
-            _LOGGER.error(
+            _LOGGER.warning(
                 "Unable to parse humidity sensor %s, state: %s",
                 state.entity_id,
                 state.state,
@@ -368,7 +337,7 @@ class MoldIndicator(SensorEntity):
             return None
 
         if (unit := state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)) != PERCENTAGE:
-            _LOGGER.error(
+            _LOGGER.warning(
                 "Humidity sensor %s has unsupported unit: %s (allowed: %s)",
                 state.entity_id,
                 unit,
@@ -377,7 +346,7 @@ class MoldIndicator(SensorEntity):
             return None
 
         if hum > 100 or hum < 0:
-            _LOGGER.error(
+            _LOGGER.warning(
                 "Humidity sensor %s is out of range: %s (allowed: 0-100)",
                 state.entity_id,
                 hum,
