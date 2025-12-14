@@ -201,8 +201,8 @@ async def test_activate_trigger(hass: HomeAssistant, fritz: Mock) -> None:
     assert fritz().set_trigger_active.call_count == 1
 
 
-async def test_dectivate_trigger(hass: HomeAssistant, fritz: Mock) -> None:
-    """Test dectivating a FRITZ! trigger."""
+async def test_deactivate_trigger(hass: HomeAssistant, fritz: Mock) -> None:
+    """Test deactivating a FRITZ! trigger."""
     trigger = FritzTriggerMock()
     await setup_config_entry(
         hass,
