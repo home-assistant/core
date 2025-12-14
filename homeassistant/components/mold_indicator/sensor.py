@@ -294,6 +294,11 @@ class MoldIndicator(SensorEntity):
             return None
 
         if state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+            _LOGGER.debug(
+                "Unable to parse sensor %s, state: %s",
+                state.entity_id,
+                state.state,
+            )
             return None
 
         if (value := util.convert(state.state, float)) is None:
@@ -305,7 +310,16 @@ class MoldIndicator(SensorEntity):
         """Get temperature value in Celsius from state."""
 
         def validate_temperature(value: float, unit: str | None) -> float | None:
+            if TYPE_CHECKING:
+                assert state is not None
             if unit not in UnitOfTemperature:
+                _LOGGER.warning(
+                    "Temp sensor %s has unsupported unit: %s (allowed: %s, %s)",
+                    state.entity_id,
+                    unit,
+                    UnitOfTemperature.CELSIUS,
+                    UnitOfTemperature.FAHRENHEIT,
+                )
                 return None
             return TemperatureConverter.convert(value, unit, UnitOfTemperature.CELSIUS)
 
@@ -315,7 +329,22 @@ class MoldIndicator(SensorEntity):
         """Get humidity value from state."""
 
         def validate_humidity(value: float, unit: str | None) -> float | None:
-            if unit != PERCENTAGE or not 0 <= value <= 100:
+            if TYPE_CHECKING:
+                assert state is not None
+            if unit != PERCENTAGE:
+                _LOGGER.warning(
+                    "Humidity sensor %s has unsupported unit: %s (allowed: %s)",
+                    state.entity_id,
+                    unit,
+                    PERCENTAGE,
+                )
+                return None
+            if not 0 <= value <= 100:
+                _LOGGER.warning(
+                    "Humidity sensor %s is out of range: %s (allowed: 0-100)",
+                    state.entity_id,
+                    value,
+                )
                 return None
             return value
 
