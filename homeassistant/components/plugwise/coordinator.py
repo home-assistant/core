@@ -92,7 +92,7 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[dict[str, GwEntityData
         except (InvalidXMLError, ResponseError) as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
-                translation_key="invalid_xml_data",
+                translation_key="response_error",
             ) from err
         except UnsupportedDeviceError as err:
             raise ConfigEntryError(
