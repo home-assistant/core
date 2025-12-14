@@ -48,7 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     wolf_client = WolfClient(
         username,
         password,
-        client=create_async_httpx_client(hass=hass, verify_ssl=False, timeout=20)
+        client=create_async_httpx_client(hass=hass, verify_ssl=False, timeout=20),
     )
 
     parameters = await fetch_parameters_init(wolf_client, gateway_id, device_id)
