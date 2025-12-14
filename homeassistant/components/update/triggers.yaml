@@ -14,4 +14,4 @@
             - any
           translation_key: trigger_behavior
 
-update_become_available: *trigger_common
+update_became_available: *trigger_common

@@ -19,7 +19,7 @@
     }
   },
   "triggers": {
-    "update_become_available": {
+    "update_became_available": {
       "trigger": "mdi:package-up"
     }
   }
