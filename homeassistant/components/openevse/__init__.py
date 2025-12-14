@@ -1,1 +1,32 @@
-"""The openevse component."""
+"""The OpenEVSE integration."""
+
+from __future__ import annotations
+
+import openevsewifi
+
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up Hello World from a config entry."""
+
+    entry.runtime_data = openevsewifi.Charger(entry.data[CONF_HOST])
+    try:
+        result = await hass.async_add_executor_job(entry.runtime_data.getStatus)
+        assert result is not None
+    except Exception as ex:
+        raise ConfigEntryError("Unable to connect to charger") from ex
+
+    await hass.config_entries.async_forward_entry_setups(entry, [Platform.SENSOR])
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    # This is called when an entry/configured device is to be removed. The class
+    # needs to unload itself, and remove callbacks. See the classes for further
+    # details
+    return await hass.config_entries.async_unload_platforms(entry, [Platform.SENSOR])

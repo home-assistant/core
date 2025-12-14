@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 
-import openevsewifi
 from requests import RequestException
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -17,15 +15,15 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     CONF_HOST,
-    CONF_MONITORED_VARIABLES,
+    UnitOfElectricCurrent,
     UnitOfEnergy,
     UnitOfTemperature,
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from . import ConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,68 +74,91 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
+    SensorEntityDescription(
+        key="charging_current",
+        name="Current charging current",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
 )
 
 SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
-PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_MONITORED_VARIABLES, default=["status"]): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_KEYS)]
-        ),
-    }
-)
+SCAN_INTERVAL = timedelta(minutes=1)
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the OpenEVSE sensor."""
-    host = config[CONF_HOST]
-    monitored_variables = config[CONF_MONITORED_VARIABLES]
-
-    charger = openevsewifi.Charger(host)
-
-    entities = [
-        OpenEVSESensor(charger, description)
-        for description in SENSOR_TYPES
-        if description.key in monitored_variables
-    ]
-
-    add_entities(entities, True)
+    """Add sensors for passed config_entry in HA."""
+    async_add_entities(
+        [
+            OpenEVSESensor(config_entry.data[CONF_HOST], config_entry, description)
+            for description in SENSOR_TYPES
+        ]
+    )
 
 
 class OpenEVSESensor(SensorEntity):
     """Implementation of an OpenEVSE sensor."""
 
-    def __init__(self, charger, description: SensorEntityDescription) -> None:
+    def __init__(
+        self, host: str, entry: ConfigEntry, description: SensorEntityDescription
+    ) -> None:
         """Initialize the sensor."""
+        self.unique_id = f"{host}: {description.key}"
         self.entity_description = description
-        self.charger = charger
+        self.host = host
+        self.entry = entry
 
     def update(self) -> None:
         """Get the monitored data from the charger."""
         try:
             sensor_type = self.entity_description.key
             if sensor_type == "status":
-                self._attr_native_value = self.charger.getStatus()
+                self._attr_native_value = self.entry.runtime_data.getStatus()
             elif sensor_type == "charge_time":
-                self._attr_native_value = self.charger.getChargeTimeElapsed() / 60
+                self._attr_native_value = (
+                    self.entry.runtime_data.getChargeTimeElapsed() / 60
+                )
             elif sensor_type == "ambient_temp":
-                self._attr_native_value = self.charger.getAmbientTemperature()
+                self._attr_native_value = (
+                    self.entry.runtime_data.getAmbientTemperature()
+                )
             elif sensor_type == "ir_temp":
-                self._attr_native_value = self.charger.getIRTemperature()
+                self._attr_native_value = self.entry.runtime_data.getIRTemperature()
             elif sensor_type == "rtc_temp":
-                self._attr_native_value = self.charger.getRTCTemperature()
+                self._attr_native_value = self.entry.runtime_data.getRTCTemperature()
             elif sensor_type == "usage_session":
-                self._attr_native_value = float(self.charger.getUsageSession()) / 1000
+                self._attr_native_value = (
+                    float(self.entry.runtime_data.getUsageSession()) / 1000
+                )
             elif sensor_type == "usage_total":
-                self._attr_native_value = float(self.charger.getUsageTotal()) / 1000
+                self._attr_native_value = (
+                    float(self.entry.runtime_data.getUsageTotal()) / 1000
+                )
+            elif sensor_type == "charging_current":
+                self._attr_native_value = self.entry.runtime_data.charging_current
             else:
                 self._attr_native_value = "Unknown"
         except (RequestException, ValueError, KeyError):
             _LOGGER.warning("Could not update status for %s", self.name)
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added."""
+        if self.entity_description.key in ["ir_temp", "rtc_temp"]:
+            return False
+        return True
+
+    @property
+    def device_info(self):
+        """Return device information for the OpenEVSE charger."""
+        return {
+            "identifiers": {("openevse", self.host)},
+            "name": f"OpenEVSE {self.host}",
+            "manufacturer": "OpenEVSE",
+        }
