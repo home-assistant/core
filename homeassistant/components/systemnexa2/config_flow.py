@@ -4,8 +4,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
-import sn2
-import sn2.device
+from sn2.device import Device
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -25,9 +24,9 @@ _LOGGER = logging.getLogger(__name__)
 class _DiscoveryInfo:
     name: str
     host: str
-    model: str | None
-    device_id: str | None
-    device_version: str | None
+    model: str
+    device_id: str
+    device_version: str
 
 
 class SN2ConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -41,7 +40,7 @@ class SN2ConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the config flow."""
-        self._discovered_device: _DiscoveryInfo | None = None
+        self._discovered_device: _DiscoveryInfo
         self.data_schema = {
             vol.Required(CONF_HOST): str,
         }
@@ -59,45 +58,81 @@ class SN2ConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_step_add_by_ip_or_hostname(
         self, host_or_ip: str
     ) -> ConfigFlowResult:
-        temp_dev = sn2.Device(host=host_or_ip)
+        temp_dev = Device(host=host_or_ip)
         try:
             info = await temp_dev.get_info()
+            device_id = info.information.unique_id
+            device_model = info.information.model
+            device_version = info.information.sw_version
+            if device_id is None or device_model is None or device_version is None:
+                return self.async_abort(
+                    reason="unsupported_model",
+                    description_placeholders={
+                        "model": str(device_id),
+                        "version": str(device_model),
+                    },
+                )
+
             self._discovered_device = _DiscoveryInfo(
                 name=info.information.name or "Unknown Name",
                 host=host_or_ip,
-                device_id=info.information.unique_id,
-                model=info.information.model,
-                device_version=info.information.sw_version,
+                device_id=device_id,
+                model=device_model,
+                device_version=device_version,
             )
-        except Exception:
+            # Check if device model and version are supported
+        except Exception:  # noqa: BLE001
             return self.async_abort(
                 reason="no_connection", description_placeholders={"host": host_or_ip}
             )
 
-        return await self._async_step_try_add()
+        res = await self._async_step_try_add()
+        if res is not None:
+            return res
+        return await self._async_create_device_entry()
 
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         # Extract device information
+        device_id = discovery_info.properties.get("id")
+        device_model = discovery_info.properties.get("model")
+        device_version = discovery_info.properties.get("version")
+        if device_id is None or device_model is None or device_version is None:
+            return self.async_abort(
+                reason="unsupported_model",
+                description_placeholders={
+                    "model": str(device_id),
+                    "version": str(device_model),
+                },
+            )
         self._discovered_device = _DiscoveryInfo(
             name=discovery_info.name.split(".")[0],
             host=discovery_info.host,
-            device_id=discovery_info.properties.get("id"),
-            model=discovery_info.properties.get("model"),
-            device_version=discovery_info.properties.get("version"),
+            device_id=device_id,
+            model=device_model,
+            device_version=device_version,
         )
+        res = await self._async_step_try_add()
+        if res is not None:
+            return res
+        return await self.async_step_discovery_confirm()
+
+    async def _async_step_try_add(self) -> ConfigFlowResult | None:
         # Check if device model and version are supported
-        if not sn2.device.Device.is_device_supported(
+        if not Device.is_device_supported(
             model=self._discovered_device.model,
             device_version=self._discovered_device.device_version,
         ):
-            return self.async_abort(reason="unsupported_model")
+            return self.async_abort(
+                reason="unsupported_model",
+                description_placeholders={
+                    "model": str(self._discovered_device.model),
+                    "version": str(self._discovered_device.device_version),
+                },
+            )
 
-        return await self._async_step_try_add()
-
-    async def _async_step_try_add(self) -> ConfigFlowResult:
         # Set unique ID and check if already configured
         await self.async_set_unique_id(self._discovered_device.device_id)
         # Update host if device is already configured
@@ -107,7 +142,7 @@ class SN2ConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Log the discovered device
         _LOGGER.info(
-            "Automatically configuring discovered %s: %s at %s",
+            "Configuring device %s: %s at %s",
             # device_type,
             self._discovered_device.name,
             self._discovered_device.model,
@@ -117,26 +152,29 @@ class SN2ConfigFlow(ConfigFlow, domain=DOMAIN):
             "name": self._discovered_device.name,
             "model": self._discovered_device.model or "Unknown model",
         }
-        return await self.async_step_discovery_confirm()
+        return None
 
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Confirm discovery."""
         if user_input is not None and self._discovered_device is not None:
-            device_name = self._discovered_device.name
-            device_model = self._discovered_device.model
-            return self.async_create_entry(
-                title=f"{device_name} ({device_model})",
-                data={
-                    CONF_HOST: self._discovered_device.host,
-                    CONF_NAME: self._discovered_device.name,
-                    CONF_MODEL: self._discovered_device.model,
-                    CONF_DEVICE_ID: self._discovered_device.device_id,
-                },
-            )
+            return await self._async_create_device_entry()
         self._set_confirm_only()
         return self.async_show_form(
             step_id="discovery_confirm",
             description_placeholders={"name": self._discovered_device.name},
+        )
+
+    async def _async_create_device_entry(self) -> ConfigFlowResult:
+        device_name = self._discovered_device.name
+        device_model = self._discovered_device.model
+        return self.async_create_entry(
+            title=f"{device_name} ({device_model})",
+            data={
+                CONF_HOST: self._discovered_device.host,
+                CONF_NAME: self._discovered_device.name,
+                CONF_MODEL: self._discovered_device.model,
+                CONF_DEVICE_ID: self._discovered_device.device_id,
+            },
         )
