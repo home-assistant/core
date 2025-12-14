@@ -138,9 +138,11 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[dict[str, GwEntityData
         # 'new_devices' contains all devices present in 'data' at init ('self._current_devices' is empty)
         # this is required for the proper initialization of all the present platform entities.
         self.new_devices = set_of_data - self._current_devices
-        current_devices = self._stored_devices if not self._current_devices else self._current_devices
+        current_devices = (
+            self._stored_devices if not self._current_devices else self._current_devices
+        )
         self._current_devices = set_of_data
-        if (current_devices - set_of_data):  # device(s) to remove
+        if current_devices - set_of_data:  # device(s) to remove
             await self._async_remove_devices(data)
 
     async def _async_remove_devices(self, data: dict[str, GwEntityData]) -> None:
@@ -165,7 +167,8 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[dict[str, GwEntityData
                     and identifier[1] not in data
                 ):
                     device_reg.async_update_device(
-                        device_entry.id, remove_config_entry_id=self.config_entry.entry_id
+                        device_entry.id,
+                        remove_config_entry_id=self.config_entry.entry_id,
                     )
                     LOGGER.debug(
                         "Removed %s device/zone %s %s from device_registry",
