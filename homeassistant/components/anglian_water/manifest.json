@@ -4,6 +4,7 @@
   "codeowners": ["@pantherale0"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/anglian_water",
+  "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["pyanglianwater"],
   "quality_scale": "bronze",
