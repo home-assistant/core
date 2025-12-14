@@ -248,7 +248,13 @@ class MoldIndicator(SensorEntity):
             new_state,
         )
 
-        self._update_sensor_value(entity_id, new_state)
+        # update state depending on which sensor changed
+        if entity_id == self._indoor_temp_sensor:
+            self._indoor_temp = self._get_temperature_from_state(new_state)
+        elif entity_id == self._outdoor_temp_sensor:
+            self._outdoor_temp = self._get_temperature_from_state(new_state)
+        elif entity_id == self._indoor_humidity_sensor:
+            self._indoor_hum = self._get_humidity_from_state(new_state)
 
         if not update_state:
             return
@@ -261,16 +267,6 @@ class MoldIndicator(SensorEntity):
         # only write state to the state machine if we are not in preview mode
         else:
             self.async_write_ha_state()
-
-    @callback
-    def _update_sensor_value(self, entity_id: str, state: State | None) -> None:
-        """Update a single sensor's cached value from state."""
-        if entity_id == self._indoor_temp_sensor:
-            self._indoor_temp = self._get_temperature_from_state(state)
-        elif entity_id == self._outdoor_temp_sensor:
-            self._outdoor_temp = self._get_temperature_from_state(state)
-        elif entity_id == self._indoor_humidity_sensor:
-            self._indoor_hum = self._get_humidity_from_state(state)
 
     @callback
     def _recalculate(self) -> None:
