@@ -3,7 +3,6 @@
 import base64
 from collections.abc import AsyncGenerator, Callable, Iterable
 from dataclasses import dataclass, field
-from datetime import timedelta
 import json
 from mimetypes import guess_file_type
 from pathlib import Path
@@ -71,7 +70,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, llm
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
-from homeassistant.util.dt import utcnow
 
 from . import AnthropicConfigEntry
 from .const import (
@@ -87,7 +85,6 @@ from .const import (
     CONF_WEB_SEARCH_TIMEZONE,
     CONF_WEB_SEARCH_USER_LOCATION,
     CONTEXT_BUFFER_TOKENS,
-    CONVERSATION_MAX_AGE_HOURS,
     DEFAULT,
     DOMAIN,
     LOGGER,
@@ -569,30 +566,6 @@ def _find_turn_boundaries(
     return turns
 
 
-def _filter_content_by_age(
-    content: list[conversation.Content],
-    max_age_hours: int,
-) -> list[conversation.Content]:
-    """Filter out content older than max_age_hours, keeping complete turns."""
-    if len(content) <= 1:
-        return content
-
-    cutoff_time = utcnow() - timedelta(hours=max_age_hours)
-    turns = _find_turn_boundaries(content)
-
-    if not turns:
-        return content
-
-    filtered: list[conversation.Content] = [content[0]]
-    for start_idx, end_idx in turns:
-        turn_content = content[start_idx:end_idx]
-        newest_in_turn = max(c.created for c in turn_content)
-        if newest_in_turn >= cutoff_time:
-            filtered.extend(turn_content)
-
-    return filtered
-
-
 async def _truncate_to_fit_context(
     client: anthropic.AsyncAnthropic,
     model: str,
@@ -713,16 +686,13 @@ class AnthropicBaseLLMEntity(Entity):
                 }
             tools.append(web_search)
 
-        # Filter out old content and truncate to fit context window
-        filtered_content = _filter_content_by_age(
-            chat_log.content, CONVERSATION_MAX_AGE_HOURS
-        )
+        # Truncate oldest turns to fit context window
         output_tokens = max_tokens + thinking_budget if thinking_enabled else max_tokens
-        filtered_content = await _truncate_to_fit_context(
-            client, model, system_prompt, filtered_content, tools, output_tokens
+        truncated_content = await _truncate_to_fit_context(
+            client, model, system_prompt, chat_log.content, tools, output_tokens
         )
 
-        messages = _convert_content(filtered_content[1:])
+        messages = _convert_content(truncated_content[1:])
 
         # Add cache_control to the last content block to cache the full conversation
         if messages:
