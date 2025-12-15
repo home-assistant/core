@@ -14,18 +14,20 @@ from victron_mqtt import (
 )
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import VictronGxConfigEntry
 from .entity import VictronBaseEntity
 from .hub import Hub
+
+PARALLEL_UPDATES = 0  # There is no I/O in the entity itself.
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: VictronGxConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Victron Venus sensors from a config entry."""
