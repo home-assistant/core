@@ -1056,9 +1056,9 @@ class TelegramNotificationService:
             self.hass.config.is_allowed_path, directory_path
         ):
             raise ServiceValidationError(
-                "File path has not been configured in allowlist_external_dirs.",
                 translation_domain=DOMAIN,
                 translation_key="allowlist_external_dirs_error",
+                translation_placeholders={"file_path": directory_path},
             )
         file: File = await self._send_msg(
             self.bot.get_file,
@@ -1186,6 +1186,7 @@ async def load_data(
             "File path has not been configured in allowlist_external_dirs.",
             translation_domain=DOMAIN,
             translation_key="allowlist_external_dirs_error",
+            translation_placeholders={"file_path": filepath},
         )
     else:
         raise ServiceValidationError(
