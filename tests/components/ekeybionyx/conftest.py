@@ -7,9 +7,11 @@ import pytest
 
 from homeassistant.components.ekeybionyx.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 
 def dummy_systems(
@@ -171,3 +173,26 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
         version=1,
         minor_version=1,
     )
+
+
+@pytest.fixture
+async def load_config_entry(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Set up the config entry."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+
+@pytest.fixture
+async def webhook_test_env(
+    hass: HomeAssistant,
+    load_config_entry: None,
+    hass_client_no_auth: ClientSessionGenerator,
+):
+    """Provide a ready HTTP/webhook stack and return client."""
+    assert await async_setup_component(hass, "http", {"http": {}})
+    assert await async_setup_component(hass, "webhook", {})
+    return await hass_client_no_auth()

@@ -6,39 +6,25 @@ from homeassistant.components.event import ATTR_EVENT_TYPE, ATTR_EVENT_TYPES
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
-from tests.typing import ClientSessionGenerator
 
 
 async def test_event_entity_setup(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
+    hass: HomeAssistant, load_config_entry: None, config_entry: MockConfigEntry
 ) -> None:
     """Test event entity is set up correctly."""
-    config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
     # Check that entity was created
-    entity_id = "event.test1"
-    state = hass.states.get(entity_id)
+    state = hass.states.get(f"event.{config_entry.data['webhooks'][0]['name']}")
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
 
 async def test_event_type_attribute(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
+    hass: HomeAssistant, load_config_entry: None, config_entry: MockConfigEntry
 ) -> None:
     """Test event entity has correct event_types attribute."""
-    config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    entity_id = "event.test1"
-    state = hass.states.get(entity_id)
+    state = hass.states.get(f"event.{config_entry.data['webhooks'][0]['name']}")
     assert state is not None
 
     # Check event_types attribute
@@ -49,18 +35,14 @@ async def test_event_type_attribute(
 
 async def test_config_entry_unload(
     hass: HomeAssistant,
+    load_config_entry: None,
     config_entry: MockConfigEntry,
 ) -> None:
     """Test config entry can be unloaded."""
-    config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
     assert config_entry.state is ConfigEntryState.LOADED
 
     # Verify entity exists
-    entity_id = "event.test1"
-    state = hass.states.get(entity_id)
+    state = hass.states.get(f"event.{config_entry.data['webhooks'][0]['name']}")
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
@@ -71,33 +53,24 @@ async def test_config_entry_unload(
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
     # Entity should become unavailable
-    state = hass.states.get(entity_id)
+    state = hass.states.get(f"event.{config_entry.data['webhooks'][0]['name']}")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
 
 async def test_webhook_handler_triggers_event(
     hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
     config_entry: MockConfigEntry,
+    webhook_test_env,
 ) -> None:
     """Test webhook handler triggers event via HTTP request."""
-    assert await async_setup_component(hass, "http", {"http": {}})
-    assert await async_setup_component(hass, "webhook", {})
-
-    config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    entity_id = "event.test1"
     webhook_data = config_entry.data["webhooks"][0]
 
-    state = hass.states.get(entity_id)
+    state = hass.states.get(f"event.{config_entry.data['webhooks'][0]['name']}")
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
-    client = await hass_client_no_auth()
-    response = await client.post(
+    response = await webhook_test_env.post(
         f"/api/webhook/{webhook_data['webhook_id']}",
         json={"auth": webhook_data["auth"]},
     )
@@ -105,7 +78,49 @@ async def test_webhook_handler_triggers_event(
 
     await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id)
+    state = hass.states.get(f"event.{config_entry.data['webhooks'][0]['name']}")
     assert state is not None
     assert state.state not in (STATE_UNKNOWN, None)
     assert state.attributes.get(ATTR_EVENT_TYPE) == "event happened"
+
+
+async def test_webhook_handler_rejects_invalid_auth(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    webhook_test_env,
+) -> None:
+    """Test webhook handler ignores requests with invalid auth."""
+    webhook_data = config_entry.data["webhooks"][0]
+
+    response = await webhook_test_env.post(
+        f"/api/webhook/{webhook_data['webhook_id']}",
+        json={"auth": "invalid"},
+    )
+    assert response.status == HTTPStatus.UNAUTHORIZED
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"event.{config_entry.data['webhooks'][0]['name']}")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+
+async def test_webhook_handler_missing_auth(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    webhook_test_env,
+) -> None:
+    """Test webhook handler requires the auth field."""
+    webhook_data = config_entry.data["webhooks"][0]
+
+    response = await webhook_test_env.post(
+        f"/api/webhook/{webhook_data['webhook_id']}",
+        json={"not_auth": "value"},
+    )
+    assert response.status == HTTPStatus.BAD_REQUEST
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"event.{config_entry.data['webhooks'][0]['name']}")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
