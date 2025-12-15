@@ -72,6 +72,7 @@ if TYPE_CHECKING:
 
 NEVER_TIME = -1200.0
 RESUB_COOLDOWN_SECONDS = 10.0
+WAIT_FOR_GROUPS_TIMEOUT = 30.0
 EVENT_CHARGING = {
     "CHARGING": True,
     "NOT_CHARGING": False,
@@ -1212,7 +1213,7 @@ class SonosSpeaker:
             return True
 
         try:
-            async with asyncio.timeout(5):
+            async with asyncio.timeout(WAIT_FOR_GROUPS_TIMEOUT):
                 while not _test_groups(groups):
                     await config_entry.runtime_data.topology_condition.wait()
         except TimeoutError:
