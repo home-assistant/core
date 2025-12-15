@@ -84,6 +84,10 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     },
     {
         "domain": "bms_ble",
+        "service_uuid": "0000ffd0-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "domain": "bms_ble",
         "service_uuid": "0000ffe0-0000-1000-8000-00805f9b34fb",
     },
     {
@@ -168,11 +172,6 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "domain": "bms_ble",
         "manufacturer_id": 21330,
         "service_uuid": "000003c1-0000-1000-8000-00805f9b34fb",
-    },
-    {
-        "domain": "bms_ble",
-        "manufacturer_id": 39008,
-        "service_uuid": "0000ffd0-0000-1000-8000-00805f9b34fb",
     },
     {
         "domain": "bms_ble",
