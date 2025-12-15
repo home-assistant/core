@@ -172,6 +172,39 @@ async def test_create_area(
     }
     assert len(area_registry.areas) == 2
 
+    # Create area with invalid aliases
+    await client.send_json_auto_id(
+        {
+            "aliases": [" alias_1 ", "", " "],
+            "floor_id": "first_floor",
+            "icon": "mdi:garage",
+            "labels": ["label_1", "label_2"],
+            "name": "mock 3",
+            "picture": "/image/example.png",
+            "temperature_entity_id": "sensor.mock_temperature",
+            "humidity_entity_id": "sensor.mock_humidity",
+            "type": "config/area_registry/create",
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == {
+        "aliases": unordered(["alias_1"]),
+        "area_id": ANY,
+        "floor_id": "first_floor",
+        "icon": "mdi:garage",
+        "labels": unordered(["label_1", "label_2"]),
+        "name": "mock 3",
+        "picture": "/image/example.png",
+        "created_at": utcnow().timestamp(),
+        "modified_at": utcnow().timestamp(),
+        "temperature_entity_id": "sensor.mock_temperature",
+        "humidity_entity_id": "sensor.mock_humidity",
+    }
+    assert len(area_registry.areas) == 3
+
 
 async def test_create_area_with_name_already_in_use(
     client: MockHAClientWebSocket, area_registry: ar.AreaRegistry
@@ -291,6 +324,40 @@ async def test_update_area(
 
     assert msg["result"] == {
         "aliases": ["alias_1"],
+        "area_id": area.id,
+        "floor_id": None,
+        "icon": None,
+        "labels": [],
+        "name": "mock 2",
+        "picture": None,
+        "temperature_entity_id": None,
+        "humidity_entity_id": None,
+        "created_at": created_at.timestamp(),
+        "modified_at": modified_at.timestamp(),
+    }
+    assert len(area_registry.areas) == 1
+
+    modified_at = datetime.fromisoformat("2024-07-16T13:55:00.900075+00:00")
+    freezer.move_to(modified_at)
+
+    await client.send_json_auto_id(
+        {
+            "type": "config/area_registry/update",
+            "aliases": ["alias_1", "", " ", " alias_2 "],
+            "area_id": area.id,
+            "floor_id": None,
+            "humidity_entity_id": None,
+            "icon": None,
+            "labels": [],
+            "picture": None,
+            "temperature_entity_id": None,
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["result"] == {
+        "aliases": unordered(["alias_1", "alias_2"]),
         "area_id": area.id,
         "floor_id": None,
         "icon": None,
