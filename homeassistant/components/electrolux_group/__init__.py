@@ -15,14 +15,16 @@ from electrolux_group_developer_sdk.client.failed_connection_exception import (
     FailedConnectionException,
 )
 
+from homeassistant.components import persistent_notification
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .api import ElectroluxApiClient
-from .const import CONF_REFRESH_TOKEN, DOMAIN, USER_AGENT
+from .const import CONF_REFRESH_TOKEN, DOMAIN, NEW_APPLIANCE, USER_AGENT
 from .coordinator import ElectroluxDataUpdateCoordinator
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -185,14 +187,23 @@ async def _check_for_new_devices(
         appliance_id = appliance.appliance.applianceId
         # Detect NEW appliances
         if appliance_id not in existing_ids:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": "electrolux_discovery"},
-                    data=ElectroluxDiscoveryData(
-                        discovered_appliance=appliance, entry=entry
-                    ),
-                )
+            # Create coordinator for appliance
+            coordinator = ElectroluxDataUpdateCoordinator(
+                hass, entry, client=client, applianceId=appliance_id
+            )
+
+            await coordinator.async_refresh()
+
+            client.add_listener(appliance_id, coordinator.callback_handle_event)
+            data.coordinators[appliance_id] = coordinator
+
+            # Notify all platforms
+            async_dispatcher_send(hass, NEW_APPLIANCE, entry.entry_id, appliance)
+
+            persistent_notification.async_create(
+                hass,
+                f"New Electrolux appliance {appliance.appliance.applianceName} added.",
+                title="Electrolux Group",
             )
 
     # Detect MISSING appliances
@@ -212,3 +223,8 @@ async def _check_for_new_devices(
 
         if device_entry:
             device_registry.async_remove_device(device_entry.id)
+            persistent_notification.async_create(
+                hass,
+                f"Electrolux appliance {device_entry.name} removed.",
+                title="Electrolux Group",
+            )

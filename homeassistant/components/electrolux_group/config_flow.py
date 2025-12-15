@@ -18,14 +18,11 @@ from electrolux_group_developer_sdk.client.failed_connection_exception import (
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components import persistent_notification
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_API_KEY
 from homeassistant.data_entry_flow import AbortFlow
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from . import ElectroluxConfigEntry, ElectroluxData, ElectroluxDiscoveryData
-from .const import CONF_REFRESH_TOKEN, DOMAIN, NEW_APPLIANCE, USER_AGENT
-from .coordinator import ElectroluxDataUpdateCoordinator
+from . import ElectroluxConfigEntry
+from .const import CONF_REFRESH_TOKEN, DOMAIN, USER_AGENT
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
@@ -74,72 +71,6 @@ class ElectroluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
 
         return self._get_form(step_id="user", errors=errors)
-
-    async def async_step_electrolux_discovery(
-        self, discovery_data: ElectroluxDiscoveryData
-    ) -> config_entries.ConfigFlowResult:
-        """Handle Electrolux device discovered via API."""
-        appliance = discovery_data.discovered_appliance
-        entry = discovery_data.entry
-        appliance_id = appliance.appliance.applianceId
-
-        _LOGGER.info(
-            "Discovered new Electrolux appliance: %s",
-            appliance_id,
-        )
-
-        unique_id = appliance_id
-        if not unique_id:
-            return self.async_abort(reason="missing_id")
-
-        await self.async_set_unique_id(unique_id)
-        self._abort_if_unique_id_configured()
-
-        self._discovered_info = appliance
-        self._entry = entry
-        return await self.async_step_discovery_confirm()
-
-    async def async_step_discovery_confirm(
-        self,
-        user_input: dict[str, Any] | None = None,
-    ) -> config_entries.ConfigFlowResult:
-        """Ask user to confirm adding the discovered appliance."""
-        if user_input is not None:
-            data = cast(ElectroluxData, self._entry.runtime_data)
-
-            client = data.client
-
-            appliance = self._discovered_info
-            appliance_id = appliance.appliance.applianceId
-
-            coordinator = ElectroluxDataUpdateCoordinator(
-                self.hass, self._entry, client=client, applianceId=appliance_id
-            )
-            await coordinator.async_refresh()
-            client.add_listener(appliance_id, coordinator.callback_handle_event)
-            data.coordinators[appliance_id] = coordinator
-
-            # Notify all platforms
-            async_dispatcher_send(
-                self.hass, NEW_APPLIANCE, self._entry.entry_id, self._discovered_info
-            )
-
-            persistent_notification.async_create(
-                self.hass,
-                f"New Electrolux appliance {appliance.appliance.applianceName} added.",
-                title="Electrolux Group",
-            )
-            return self.async_abort(reason="added_to_existing_entry")
-
-        if self._discovered_info.details:
-            brand = self._discovered_info.details.applianceInfo.brand
-        return self.async_show_form(
-            step_id="discovery_confirm",
-            description_placeholders={
-                "device": self._discovered_info.appliance.applianceName,
-                "brand": brand or "Electrolux Group",
-            },
-        )
 
     async def _authenticate_user(
         self, user_input: Mapping[str, Any]
