@@ -895,11 +895,10 @@ async def test_presence_sensor_without_battery(hass: HomeAssistant) -> None:
         assert len(hass.states.async_all("binary_sensor")) == 1
 
         battery_range_sensor = hass.states.get("sensor.test_name_battery_range")
-        battery_range_sensor_attrs = battery_range_sensor.attributes
+        assert battery_range_sensor is not None
+        br_sensor_attrs = battery_range_sensor.attributes
         assert battery_range_sensor.state == ">=60%"
-        assert (
-            battery_range_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Battery range"
-        )
+        assert br_sensor_attrs[ATTR_FRIENDLY_NAME] == "test-name Battery range"
 
         light_level_sensor = hass.states.get("sensor.test_name_light_level")
         light_level_sensor_attrs = light_level_sensor.attributes
