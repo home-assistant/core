@@ -891,8 +891,6 @@ async def test_presence_sensor_without_battery(hass: HomeAssistant) -> None:
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        print(f"hass.states.async_all(): {hass.states.async_all()}")
-
         assert len(hass.states.async_all("sensor")) == 3
         assert len(hass.states.async_all("binary_sensor")) == 1
 
