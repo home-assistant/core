@@ -173,7 +173,7 @@
         "name": "EV charger set current"
       },
       "generator_gen_id_cool_down_timer": {
-        "name": "Generator cool down timer"
+        "name": "Generator cooldown timer"
       },
       "generator_gen_id_qh_start_on_soc": {
         "name": "Generator QH start on SOC"
@@ -191,7 +191,7 @@
         "name": "Generator service interval"
       },
       "generator_gen_id_shut_down_timer": {
-        "name": "Generator shut down timer"
+        "name": "Generator shutdown timer"
       },
       "generator_gen_id_start_on_soc": {
         "name": "Generator start on SOC"
@@ -521,8 +521,20 @@
       "evcharger_mode": {
         "name": "EV charger mode"
       },
+      "evcharger_position": {
+        "name": "EV charger position"
+      },
       "evcharger_power_phase": {
         "name": "EV charger power {phase}"
+      },
+      "evcharger_session_cost": {
+        "name": "EV charger last session cost"
+      },
+      "evcharger_session_energy": {
+        "name": "EV charger last session energy"
+      },
+      "evcharger_session_time": {
+        "name": "EV charger last session time"
       },
       "evcharger_set_current": {
         "name": "EV charger set current"
@@ -530,8 +542,11 @@
       "evcharger_status": {
         "name": "EV charger status"
       },
+      "evcharger_total_energy": {
+        "name": "EV charger total energy"
+      },
       "generator_gen_id_cool_down_timer": {
-        "name": "Generator cool down timer"
+        "name": "Generator cooldown timer"
       },
       "generator_gen_id_qh_start_on_soc": {
         "name": "Generator QH start on SOC"
@@ -549,7 +564,7 @@
         "name": "Generator service interval"
       },
       "generator_gen_id_shut_down_timer": {
-        "name": "Generator shut down timer"
+        "name": "Generator shutdown timer"
       },
       "generator_gen_id_start_on_soc": {
         "name": "Generator start on SOC"
