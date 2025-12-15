@@ -54,6 +54,7 @@ from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import config_validation as cv, template as template_helper
 from homeassistant.helpers.entity_platform import PlatformData
 from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.network import get_url
 from homeassistant.util import slugify
 
 from .camera import GenericCamera, generate_auth
@@ -582,7 +583,8 @@ async def ws_start_preview(
         _LOGGER.debug("Got preview still URL: %s", ha_still_url)
 
     if ha_stream := flow.preview_stream:
-        ha_stream_url = ha_stream.endpoint_url(HLS_PROVIDER)
+        # HLS player needs an absolute URL as base for constructing child playlist URLs
+        ha_stream_url = f"{get_url(hass)}{ha_stream.endpoint_url(HLS_PROVIDER)}"
         _LOGGER.debug("Got preview stream URL: %s", ha_stream_url)
 
     connection.send_message(
