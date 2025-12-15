@@ -73,6 +73,8 @@ build.json @home-assistant/supervisor
 /tests/components/airobot/ @mettolen
 /homeassistant/components/airos/ @CoMPaTech
 /tests/components/airos/ @CoMPaTech
+/homeassistant/components/airpatrol/ @antondalgren
+/tests/components/airpatrol/ @antondalgren
 /homeassistant/components/airq/ @Sibgatulin @dl2080
 /tests/components/airq/ @Sibgatulin @dl2080
 /homeassistant/components/airthings/ @danielhiversen @LaStrada
@@ -218,8 +220,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/bizkaibus/ @UgaitzEtxebarria
 /homeassistant/components/blebox/ @bbx-a @swistakm
 /tests/components/blebox/ @bbx-a @swistakm
-/homeassistant/components/blink/ @fronzbot @mkmer
-/tests/components/blink/ @fronzbot @mkmer
+/homeassistant/components/blink/ @fronzbot
+/tests/components/blink/ @fronzbot
 /homeassistant/components/blue_current/ @gleeuwen @NickKoepr @jtodorova23
 /tests/components/blue_current/ @gleeuwen @NickKoepr @jtodorova23
 /homeassistant/components/bluemaestro/ @bdraco
@@ -306,8 +308,8 @@ build.json @home-assistant/supervisor
 /tests/components/config/ @home-assistant/core
 /homeassistant/components/configurator/ @home-assistant/core
 /tests/components/configurator/ @home-assistant/core
-/homeassistant/components/control4/ @lawtancool
-/tests/components/control4/ @lawtancool
+/homeassistant/components/control4/ @lawtancool @davidrecordon
+/tests/components/control4/ @lawtancool @davidrecordon
 /homeassistant/components/conversation/ @home-assistant/core @synesthesiam @arturpragacz
 /tests/components/conversation/ @home-assistant/core @synesthesiam @arturpragacz
 /homeassistant/components/cookidoo/ @miaucl
@@ -418,6 +420,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/efergy/ @tkdrob
 /tests/components/efergy/ @tkdrob
 /homeassistant/components/egardia/ @jeroenterheerdt
+/homeassistant/components/egauge/ @neggert
+/tests/components/egauge/ @neggert
 /homeassistant/components/eheimdigital/ @autinerd
 /tests/components/eheimdigital/ @autinerd
 /homeassistant/components/ekeybionyx/ @richardpolzer
@@ -460,7 +464,7 @@ build.json @home-assistant/supervisor
 /tests/components/enigma2/ @autinerd
 /homeassistant/components/enphase_envoy/ @bdraco @cgarwood @catsmanac
 /tests/components/enphase_envoy/ @bdraco @cgarwood @catsmanac
-/homeassistant/components/entur_public_transport/ @hfurubotten
+/homeassistant/components/entur_public_transport/ @hfurubotten @SanderBlom
 /homeassistant/components/environment_canada/ @gwww @michaeldavie
 /tests/components/environment_canada/ @gwww @michaeldavie
 /homeassistant/components/ephember/ @ttroy50 @roberty99
@@ -571,6 +575,8 @@ build.json @home-assistant/supervisor
 /tests/components/generic_hygrostat/ @Shulyaka
 /homeassistant/components/geniushub/ @manzanotti
 /tests/components/geniushub/ @manzanotti
+/homeassistant/components/gentex_homelink/ @niaexa @ryanjones-gentex
+/tests/components/gentex_homelink/ @niaexa @ryanjones-gentex
 /homeassistant/components/geo_json_events/ @exxamalte
 /tests/components/geo_json_events/ @exxamalte
 /homeassistant/components/geo_location/ @home-assistant/core
@@ -1356,8 +1362,8 @@ build.json @home-assistant/supervisor
 /tests/components/ring/ @sdb9696
 /homeassistant/components/risco/ @OnFreund
 /tests/components/risco/ @OnFreund
-/homeassistant/components/rituals_perfume_genie/ @milanmeu @frenck
-/tests/components/rituals_perfume_genie/ @milanmeu @frenck
+/homeassistant/components/rituals_perfume_genie/ @milanmeu @frenck @quebulm
+/tests/components/rituals_perfume_genie/ @milanmeu @frenck @quebulm
 /homeassistant/components/rmvtransport/ @cgtobi
 /tests/components/rmvtransport/ @cgtobi
 /homeassistant/components/roborock/ @Lash-L @allenporter
@@ -1763,6 +1769,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/vilfo/ @ManneW
 /tests/components/vilfo/ @ManneW
 /homeassistant/components/vivotek/ @HarlemSquirrel
+/tests/components/vivotek/ @HarlemSquirrel
 /homeassistant/components/vizio/ @raman325
 /tests/components/vizio/ @raman325
 /homeassistant/components/vlc_telnet/ @rodripf @MartinHjelmare
@@ -1802,6 +1809,8 @@ build.json @home-assistant/supervisor
 /tests/components/weatherflow_cloud/ @jeeftor
 /homeassistant/components/weatherkit/ @tjhorner
 /tests/components/weatherkit/ @tjhorner
+/homeassistant/components/web_rtc/ @home-assistant/core
+/tests/components/web_rtc/ @home-assistant/core
 /homeassistant/components/webdav/ @jpbede
 /tests/components/webdav/ @jpbede
 /homeassistant/components/webhook/ @home-assistant/core

@@ -40,6 +40,7 @@ async def test_full_flow(
         user_input={
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: PASSWORD,
+            CONF_ACCOUNT_NUMBER: ACCOUNT_NUMBER,
         },
     )
 
@@ -74,6 +75,7 @@ async def test_already_configured(
         user_input={
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: PASSWORD,
+            CONF_ACCOUNT_NUMBER: ACCOUNT_NUMBER,
         },
     )
 
@@ -107,6 +109,7 @@ async def test_auth_recover_exception(
         user_input={
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: PASSWORD,
+            CONF_ACCOUNT_NUMBER: ACCOUNT_NUMBER,
         },
     )
 
@@ -123,6 +126,7 @@ async def test_auth_recover_exception(
         user_input={
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: PASSWORD,
+            CONF_ACCOUNT_NUMBER: ACCOUNT_NUMBER,
         },
     )
 
@@ -164,6 +168,7 @@ async def test_account_recover_exception(
         user_input={
             CONF_USERNAME: USERNAME,
             CONF_PASSWORD: PASSWORD,
+            CONF_ACCOUNT_NUMBER: ACCOUNT_NUMBER,
         },
     )
 

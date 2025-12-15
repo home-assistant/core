@@ -1,6 +1,7 @@
 """Test the xbox config flow."""
 
 from http import HTTPStatus
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -10,6 +11,8 @@ from homeassistant.components.xbox.const import DOMAIN, OAUTH2_AUTHORIZE, OAUTH2
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from .conftest import CLIENT_ID
 
@@ -47,6 +50,99 @@ async def test_full_flow(
         f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
         "&redirect_uri=https://example.com/auth/external/callback"
         f"&state={state}&scope={scope}"
+    )
+
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == HTTPStatus.OK
+    assert resp.headers["content-type"] == "text/html; charset=utf-8"
+
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "refresh_token": "mock-refresh-token",
+            "access_token": "mock-access-token",
+            "type": "Bearer",
+            "expires_in": 60,
+            "scope": "XboxLive.signin XboxLive.offline_access",
+            "service": "xbox",
+            "token_type": "bearer",
+            "user_id": "AAAAAAAAAAAAAAAAAAAAA",
+        },
+    )
+
+    with patch(
+        "homeassistant.components.xbox.async_setup_entry", return_value=True
+    ) as mock_setup:
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["result"].unique_id == "271958441785640"
+    assert result["result"].title == "GSR Ae"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert len(mock_setup.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("source", "service_info"),
+    [
+        (
+            config_entries.SOURCE_DHCP,
+            DhcpServiceInfo(
+                hostname="xboxone",
+                ip="192.168.0.1",
+                macaddress="aaaaaaaaaaaa",
+            ),
+        ),
+        (
+            config_entries.SOURCE_SSDP,
+            SsdpServiceInfo(
+                ssdp_usn="mock_usn",
+                ssdp_st="mock_st",
+                upnp={"manufacturer": "Microsoft Corporation", "modelName": "Xbox One"},
+            ),
+        ),
+    ],
+)
+@pytest.mark.usefixtures(
+    "current_request_with_host",
+    "xbox_live_client",
+    "authentication_manager",
+)
+async def test_discovery(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    source: str,
+    service_info: Any,
+) -> None:
+    """Check DHCP/SSDP discovery."""
+
+    result = await hass.config_entries.flow.async_init(
+        "xbox", context={"source": source}, data=service_info
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "oauth_discovery"
+    assert not result["errors"]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {},
+    )
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+
+    assert result["url"] == (
+        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
+        "&redirect_uri=https://example.com/auth/external/callback"
+        f"&state={state}&scope=Xboxlive.signin+Xboxlive.offline_access"
     )
 
     client = await hass_client_no_auth()
