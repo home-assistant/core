@@ -297,6 +297,9 @@ def mock_pysqueezebox_player(uuid: str) -> MagicMock:
         mock_player.model_type = None
         mock_player.firmware = None
         mock_player.alarms_enabled = True
+        mock_player.alarm_upcoming = True
+        mock_player.alarm_snooze = False
+        mock_player.alarm_active = False
 
         return mock_player
 

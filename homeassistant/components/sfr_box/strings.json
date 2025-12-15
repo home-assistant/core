@@ -2,7 +2,9 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "Please ensure you reconfigure against the same device."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -58,7 +60,7 @@
       },
       "dsl_connect_count": {
         "name": "DSL connect count",
-        "unit_of_measurement": "connects"
+        "unit_of_measurement": "attempts"
       },
       "dsl_crc_error_count": {
         "name": "DSL CRC error count",
@@ -120,6 +122,17 @@
           "grps_ppp": "GPRS (PPP)"
         }
       }
+    }
+  },
+  "exceptions": {
+    "invalid_credentials": {
+      "message": "The provided credentials are invalid."
+    },
+    "no_data": {
+      "message": "No data received from the SFR box."
+    },
+    "unknown_error": {
+      "message": "An unknown error occurred while communicating with the SFR box: {error}"
     }
   }
 }
