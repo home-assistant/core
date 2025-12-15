@@ -4,6 +4,7 @@ import asyncio
 from typing import Any
 
 from switchbot_api import (
+    CeilingLightCommands,
     CommonCommands,
     Device,
     Remote,
@@ -149,11 +150,36 @@ class SwitchBotCloudRGBWWLight(SwitchBotCloudLight):
         )
 
 
+class SwitchBotCloudCeilingLight(SwitchBotCloudLight):
+    """Representation of SwitchBot Ceiling Light."""
+
+    _attr_max_color_temp_kelvin = 6500
+    _attr_min_color_temp_kelvin = 2700
+
+    _attr_supported_color_modes = {ColorMode.COLOR_TEMP}
+
+    async def _send_brightness_command(self, brightness: int) -> None:
+        """Send a brightness command."""
+        await self.send_api_command(
+            CeilingLightCommands.SET_BRIGHTNESS,
+            parameters=str(value_map_brightness(brightness)),
+        )
+
+    async def _send_color_temperature_command(self, color_temp_kelvin: int) -> None:
+        """Send a color temperature command."""
+        await self.send_api_command(
+            CeilingLightCommands.SET_COLOR_TEMPERATURE,
+            parameters=str(color_temp_kelvin),
+        )
+
+
 @callback
 def _async_make_entity(
     api: SwitchBotAPI, device: Device | Remote, coordinator: SwitchBotCoordinator
-) -> SwitchBotCloudStripLight | SwitchBotCloudRGBWWLight:
+) -> SwitchBotCloudStripLight | SwitchBotCloudRGBWWLight | SwitchBotCloudCeilingLight:
     """Make a SwitchBotCloudLight."""
     if device.device_type == "Strip Light":
         return SwitchBotCloudStripLight(api, device, coordinator)
+    if device.device_type in ["Ceiling Light", "Ceiling Light Pro"]:
+        return SwitchBotCloudCeilingLight(api, device, coordinator)
     return SwitchBotCloudRGBWWLight(api, device, coordinator)
