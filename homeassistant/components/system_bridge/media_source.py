@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from systembridgemodels.media_directories import MediaDirectory
-from systembridgemodels.media_files import MediaFile, MediaFiles
-from systembridgemodels.media_get_files import MediaGetFiles
+from systembridgeconnector.models.media_directories import MediaDirectory
+from systembridgeconnector.models.media_files import MediaFile, MediaFiles
+from systembridgeconnector.models.media_get_files import MediaGetFiles
 
 from homeassistant.components.media_player import MediaClass
 from homeassistant.components.media_source import (
@@ -183,9 +183,9 @@ def _build_media_items(
             for file in media_files.files
             if file.is_directory
             or (
-                file.is_file
-                and file.mime_type is not None
-                and file.mime_type.startswith(MEDIA_MIME_TYPES)
+                not file.is_directory
+                and file.content_type is not None
+                and file.content_type.startswith(MEDIA_MIME_TYPES)
             )
         ],
     )
@@ -197,20 +197,20 @@ def _build_media_item(
 ) -> BrowseMediaSource:
     """Build individual media item."""
     ext = ""
-    if media_file.is_file and media_file.mime_type is not None:
-        ext = f"~~{media_file.mime_type}"
+    if not media_file.is_directory and media_file.content_type is not None:
+        ext = f"~~{media_file.content_type}"
 
-    if media_file.is_directory or media_file.mime_type is None:
+    if media_file.is_directory or media_file.content_type is None:
         media_class = MediaClass.DIRECTORY
     else:
-        media_class = MEDIA_CLASS_MAP[media_file.mime_type.split("/", 1)[0]]
+        media_class = MEDIA_CLASS_MAP[media_file.content_type.split("/", 1)[0]]
 
     return BrowseMediaSource(
         domain=DOMAIN,
         identifier=f"{path}/{media_file.name}{ext}",
         media_class=media_class,
-        media_content_type=media_file.mime_type,
+        media_content_type=media_file.content_type,
         title=media_file.name,
-        can_play=media_file.is_file,
+        can_play=not media_file.is_directory,
         can_expand=media_file.is_directory,
     )
