@@ -2009,6 +2009,7 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "touchline",
     "touchline_sl",
     "tplink_lte",
+    "tplink_omada",
     "traccar",
     "traccar_server",
     "tractive",
