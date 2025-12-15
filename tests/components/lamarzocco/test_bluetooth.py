@@ -324,7 +324,9 @@ async def test_manual_offline_mode(
     freezer: FrozenDateTimeFactory,
     mock_ble_device_from_address: MagicMock,
 ) -> None:
-    """Test the manual offline mode."""
+    """Test that manual offline mode successfully sets up and updates entities via Bluetooth,
+    and marks non-Bluetooth entities as unavailable.
+    """
 
     mock_config_entry_bluetooth.add_to_hass(hass)
     hass.config_entries.async_update_entry(
