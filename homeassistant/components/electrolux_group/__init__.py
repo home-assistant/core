@@ -4,10 +4,13 @@ from asyncio import CancelledError, Task
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, cast
+from typing import cast
 
 from electrolux_group_developer_sdk.auth.token_manager import TokenManager
-from electrolux_group_developer_sdk.client.appliance_client import ApplianceClient
+from electrolux_group_developer_sdk.client.appliance_client import (
+    ApplianceClient,
+    ApplianceData,
+)
 from electrolux_group_developer_sdk.client.failed_connection_exception import (
     FailedConnectionException,
 )
@@ -15,17 +18,8 @@ from electrolux_group_developer_sdk.client.failed_connection_exception import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    ServiceValidationError,
-)
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    entity_registry as er,
-)
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .api import ElectroluxApiClient
 from .const import CONF_REFRESH_TOKEN, DOMAIN, USER_AGENT
@@ -52,16 +46,18 @@ class ElectroluxData:
 type ElectroluxConfigEntry = ConfigEntry[ElectroluxData]
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up Electrolux Group integration."""
+@dataclass(kw_only=True, slots=True)
+class ElectroluxDiscoveryData:
+    """Electrolux discovery data type."""
 
-    return True
+    discovered_appliance: ApplianceData
+    entry: ElectroluxConfigEntry
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ElectroluxConfigEntry) -> bool:
     """Set up Electrolux Group integration entry."""
 
-    def save_tokens(new_access, new_refresh, api_key):
+    def save_tokens(new_access: str, new_refresh: str, api_key: str):
         hass.config_entries.async_update_entry(
             entry,
             data={
@@ -72,15 +68,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             },
         )
 
-    try:
-        token_manager = ElectroluxTokenManager(hass, entry, save_tokens)
-        appliance_client = ApplianceClient(
-            token_manager=token_manager, external_user_agent=USER_AGENT
-        )
-    except Exception as exception:
-        raise ConfigEntryAuthFailed("Failed to setup API client") from exception
-
-    client = ElectroluxApiClient(appliance_client)
+    token_manager = ElectroluxTokenManager(hass, entry, save_tokens)
+    appliance_client = ApplianceClient(
+        token_manager=token_manager, external_user_agent=USER_AGENT
+    )
 
     # Check during integration initialization if we are able to set it up correctly
     try:
@@ -88,6 +79,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except FailedConnectionException as e:
         raise ConfigEntryAuthFailed("Connection with client failed.") from e
 
+    client = ElectroluxApiClient(appliance_client)
     appliances = await client.fetch_appliance_data()
 
     coordinators: dict[str, ElectroluxDataUpdateCoordinator] = {}
@@ -134,7 +126,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ElectroluxConfigEntry) -> bool:
     """Unload a config entry."""
     # Remove SSE listeners
     runtime_data = entry.runtime_data
@@ -161,7 +153,10 @@ class ElectroluxTokenManager(TokenManager):
     """Token Manager for Electrolux integration."""
 
     def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, on_token_update
+        self,
+        hass: HomeAssistant,
+        entry: ElectroluxConfigEntry,
+        on_token_update: Callable[[str, str, str], None],
     ) -> None:
         """Initialize Token Manager."""
         self._hass = hass
@@ -174,7 +169,7 @@ class ElectroluxTokenManager(TokenManager):
 
 
 async def _check_for_new_devices(
-    hass: HomeAssistant, entry: ConfigEntry, client: ElectroluxApiClient
+    hass: HomeAssistant, entry: ElectroluxConfigEntry, client: ElectroluxApiClient
 ):
     """Fetch appliances from API and trigger discovery for any new ones."""
     _LOGGER.info("Checking for new devices")
@@ -194,7 +189,9 @@ async def _check_for_new_devices(
                 hass.config_entries.flow.async_init(
                     DOMAIN,
                     context={"source": "electrolux_discovery"},
-                    data={"discovery_appliance_data": appliance, "entry": entry},
+                    data=ElectroluxDiscoveryData(
+                        discovered_appliance=appliance, entry=entry
+                    ),
                 )
             )
 

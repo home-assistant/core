@@ -32,5 +32,36 @@
         "description": "A new appliance \"{device}\" has been discovered. Do you want to add it to Home Assistant?"
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "connection_state": {
+        "name": "Connection state"
+      },
+      "start_at": {
+        "name": "Start at"
+      },
+      "running_time": {
+        "name": "Running time"
+      },
+      "appliance_state": {
+        "name": "Appliance state"
+      },
+      "food_probe_state": {
+        "name": "Food probe state"
+      },
+      "door_state": {
+        "name": "Door state"
+      },
+      "remote_control": {
+        "name": "Remote control"
+      },
+      "food_probe_temperature": {
+        "name": "Food probe temperature"
+      },
+      "display_temperature": {
+        "name": "Current temperature"
+      }
+    }
   }
 }

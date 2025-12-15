@@ -1,6 +1,7 @@
 """Sensor entity for Electrolux Group Integration."""
 
 from collections.abc import Callable
+from dataclasses import dataclass
 import logging
 from typing import Any, cast
 
@@ -41,13 +42,12 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
-    dataclass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import ElectroluxConfigEntry
 from .coordinator import ElectroluxDataUpdateCoordinator
 from .entity import ElectroluxBaseEntity
 from .entity_helper import async_setup_entities_helper
@@ -60,19 +60,18 @@ ELECTROLUX_TO_HA_TEMPERATURE_UNIT = {
 }
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class ElectroluxSensorDescription(SensorEntityDescription):
     """Custom sensor description for Electrolux sensors."""
 
-    name: str = ""
-    value_fn: Callable[..., Any] = lambda *args: None
+    value_fn: Callable[..., Any]
     is_supported_fn: Callable[..., Any] = lambda *args: None
 
 
 GENERAL_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription, ...] = (
     ElectroluxSensorDescription(
         key="connection_state",
-        name="Connection state",
+        translation_key="connection_state",
         icon="mdi:wifi",
         value_fn=lambda appliance: appliance.state.connectionState,
     ),
@@ -81,7 +80,7 @@ GENERAL_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription, ...] = (
 OVEN_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription, ...] = (
     ElectroluxSensorDescription(
         key="start_at",
-        name="Start at",
+        translation_key="start_at",
         icon="mdi:timer-play-outline",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda appliance: appliance.get_current_start_at(),
@@ -89,7 +88,7 @@ OVEN_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription, ...] = (
     ),
     ElectroluxSensorDescription(
         key="runnig_time",
-        name="Running time",
+        translation_key="runnig_time",
         icon="mdi:timer-outline",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -100,7 +99,7 @@ OVEN_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription, ...] = (
     ),
     ElectroluxSensorDescription(
         key="appliance_state",
-        name="Appliance state",
+        translation_key="appliance_state",
         icon="mdi:information-outline",
         value_fn=lambda appliance: appliance.get_current_appliance_state(),
         is_supported_fn=lambda appliance: appliance.is_feature_supported(
@@ -109,7 +108,7 @@ OVEN_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription, ...] = (
     ),
     ElectroluxSensorDescription(
         key="food_probe_state",
-        name="Food probe state",
+        translation_key="food_probe_state",
         icon="mdi:thermometer-probe",
         value_fn=lambda appliance: appliance.get_current_food_probe_insertion_state(),
         is_supported_fn=lambda appliance: appliance.is_feature_supported(
@@ -118,14 +117,14 @@ OVEN_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription, ...] = (
     ),
     ElectroluxSensorDescription(
         key="door_state",
-        name="Door state",
+        translation_key="door_state",
         icon="mdi:door",
         value_fn=lambda appliance: appliance.get_current_door_state(),
         is_supported_fn=lambda appliance: appliance.is_feature_supported(DOOR_STATE),
     ),
     ElectroluxSensorDescription(
         key="remote_control",
-        name="Remote control",
+        translation_key="remote_control",
         icon="mdi:remote",
         value_fn=lambda appliance: appliance.get_current_remote_control(),
         is_supported_fn=lambda appliance: appliance.is_feature_supported(
@@ -137,7 +136,7 @@ OVEN_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription, ...] = (
 OVEN_TEMPERATURE_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription, ...] = (
     ElectroluxSensorDescription(
         key="food_probe_temperature",
-        name="Food probe temperature",
+        translation_key="food_probe_temperature",
         icon="mdi:thermometer-probe",
         value_fn=lambda appliance: appliance.get_current_display_food_probe_temperature_f()
         if appliance.get_current_temperature_unit() == "FAHRENHEIT"
@@ -148,7 +147,7 @@ OVEN_TEMPERATURE_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription, ...] = (
     ),
     ElectroluxSensorDescription(
         key="display_temperature",
-        name="Current temperature",
+        translation_key="display_temperature",
         icon="mdi:thermometer",
         value_fn=lambda appliance: appliance.get_current_display_temperature_f()
         if appliance.get_current_temperature_unit() == "FAHRENHEIT"
@@ -161,7 +160,8 @@ OVEN_TEMPERATURE_ELECTROLUX_SENSORS: tuple[ElectroluxSensorDescription, ...] = (
 
 
 def build_entities_for_appliance(
-    appliance_data, coordinators
+    appliance_data: ApplianceData,
+    coordinators: dict[str, ElectroluxDataUpdateCoordinator],
 ) -> list[ElectroluxBaseEntity]:
     """Return all entities for a single appliance."""
     appliance = appliance_data.appliance
@@ -218,7 +218,7 @@ def build_entities_for_appliance(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ElectroluxConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set sensor for Electrolux Integration."""
@@ -239,16 +239,6 @@ class ElectroluxSensor(ElectroluxBaseEntity[ApplianceData], SensorEntity):
         """Initialize the sensor."""
         super().__init__(appliance_data, coordinator)
         self.entity_description = description
-        self._attr_name = description.name
-        self._attr_icon = description.icon
-        self._attr_device_class = description.device_class
-        self._attr_native_unit_of_measurement = getattr(
-            description, "native_unit_of_measurement", None
-        )
-        self._attr_suggested_unit_of_measurement = getattr(
-            description, "suggested_unit_of_measurement", None
-        )
-        self._attr_state_class = getattr(description, "state_class", None)
         self._attr_unique_id = (
             f"{appliance_data.appliance.applianceId}_{description.key}"
         )

@@ -1,28 +1,37 @@
 """Contains entity helper methods."""
 
 from collections.abc import Callable
-from typing import cast
+
+from electrolux_group_developer_sdk.client.appliances.appliance_data import (
+    ApplianceData,
+)
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import ElectroluxData
+from . import ElectroluxConfigEntry
 from .api import ElectroluxApiClient
 from .const import NEW_APPLIANCE
+from .coordinator import ElectroluxDataUpdateCoordinator
+from .entity import ElectroluxBaseEntity
 
 
 async def async_setup_entities_helper(
     hass: HomeAssistant,
-    entry,
-    async_add_entities: Callable,
-    build_entities_fn: Callable[[object, dict], list],
+    entry: ElectroluxConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    build_entities_fn: Callable[
+        [ApplianceData, dict[str, ElectroluxDataUpdateCoordinator]],
+        list[ElectroluxBaseEntity],
+    ],
 ):
     """Provide async_setup_entry helper."""
 
-    data = cast(ElectroluxData, entry.runtime_data)
+    data = entry.runtime_data
     client: ElectroluxApiClient = data.client
     appliances = await client.fetch_appliance_data()
-    entities = []
+    entities: list[ElectroluxBaseEntity] = []
     coordinators = data.coordinators
 
     for appliance_data in appliances:
@@ -31,7 +40,7 @@ async def async_setup_entities_helper(
     async_add_entities(entities)
 
     # Listen for new/removed appliances
-    async def _new_appliance(entry_id, appliance_data):
+    async def _new_appliance(entry_id: str, appliance_data: ApplianceData):
         if entry.entry_id != entry_id:
             return
         new_entities = build_entities_fn(appliance_data, coordinators)

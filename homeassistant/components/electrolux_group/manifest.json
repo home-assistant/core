@@ -1,11 +1,15 @@
 {
   "domain": "electrolux_group",
   "name": "Electrolux AEG Frigidaire",
-  "codeowners": ["@electrolux-oss"],
+  "codeowners": [
+    "@electrolux-oss"
+  ],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/electrolux_group",
   "integration_type": "hub",
   "iot_class": "cloud_push",
   "quality_scale": "bronze",
-  "requirements": ["electrolux-group-developer-sdk==0.1.2"]
+  "requirements": [
+    "electrolux-group-developer-sdk==0.1.3"
+  ]
 }
