@@ -5,6 +5,7 @@ from typing import Any
 
 import botocore.exceptions
 from homelink.auth.srp_auth import SRPAuth
+import jwt
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlowResult
@@ -38,17 +39,20 @@ class SRPFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """Ask for username and password."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            email = user_input[CONF_EMAIL].strip().lower()
-            await self.async_set_unique_id(email)
-            self._abort_if_unique_id_configured()
-
             srp_auth = SRPAuth()
             try:
                 tokens = await self.hass.async_add_executor_job(
                     srp_auth.async_get_access_token,
-                    email,
+                    user_input[CONF_EMAIL],
                     user_input[CONF_PASSWORD],
                 )
+                access_token = jwt.decode(
+                    tokens["AuthenticationResult"]["AccessToken"],
+                    options={"verify_signature": False},
+                )
+                sub = access_token["sub"]
+                await self.async_set_unique_id(sub)
+                self._abort_if_unique_id_configured()
             except botocore.exceptions.ClientError:
                 errors["base"] = "srp_auth_failed"
             except Exception:
