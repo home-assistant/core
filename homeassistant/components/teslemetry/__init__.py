@@ -67,7 +67,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> bool:
     """Set up Teslemetry config."""
 
-    access_token = entry.data["token"]["access_token"]
     session = async_get_clientsession(hass)
     oauth_session = OAuth2Session(hass, entry, TeslemetryImplementation(hass))
 
