@@ -50,6 +50,7 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
     """Base class for La Marzocco coordinators."""
 
     _default_update_interval: timedelta | None = SCAN_INTERVAL
+    _ignore_offline_mode = False
     config_entry: LaMarzoccoConfigEntry
     update_success = False
 
@@ -61,7 +62,7 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
     ) -> None:
         """Initialize coordinator."""
         update_interval = self._default_update_interval
-        if entry.options.get(CONF_OFFLINE_MODE):
+        if not self._ignore_offline_mode and entry.options.get(CONF_OFFLINE_MODE):
             update_interval = None
         super().__init__(
             hass,
@@ -217,16 +218,7 @@ class LaMarzoccoStatisticsUpdateCoordinator(LaMarzoccoUpdateCoordinator):
 class LaMarzoccoBluetoothUpdateCoordinator(LaMarzoccoUpdateCoordinator):
     """Class to handle fetching data from the La Marzocco Bluetooth API centrally."""
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        entry: LaMarzoccoConfigEntry,
-        device: LaMarzoccoMachine,
-    ) -> None:
-        """Initialize coordinator."""
-        super().__init__(hass, entry, device)
-        # Always use default interval for Bluetooth, even in offline mode
-        self.update_interval = self._default_update_interval
+    _ignore_offline_mode = True
 
     async def _internal_async_setup(self) -> None:
         """Initial setup for Bluetooth coordinator."""
