@@ -2465,7 +2465,7 @@
           "name": "Google Maps"
         },
         "google_photos": {
-          "integration_type": "hub",
+          "integration_type": "service",
           "config_flow": true,
           "iot_class": "cloud_polling",
           "name": "Google Photos"
