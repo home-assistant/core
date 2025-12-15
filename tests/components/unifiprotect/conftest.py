@@ -331,7 +331,7 @@ def sensor_fixture(fixed_now: datetime):
 
 
 @pytest.fixture(name="sensor_all")
-def csensor_all_fixture(sensor: Sensor):
+def sensor_all_fixture(sensor: Sensor):
     """Mock UniFi Protect Sensor device."""
 
     all_sensor = sensor.model_copy()
