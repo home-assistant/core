@@ -16,7 +16,7 @@ from homeassistant.components.victron_gx_mqtt.const import (
     DEFAULT_UPDATE_FREQUENCY_SECONDS,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
+from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -431,12 +431,17 @@ async def test_reauth_flow_success(hass: HomeAssistant) -> None:
             CONF_PASSWORD: "old-password",
             CONF_INSTALLATION_ID: MOCK_INSTALLATION_ID,
             CONF_SSL: False,
-            CONF_UPDATE_FREQUENCY_SECONDS: DEFAULT_UPDATE_FREQUENCY_SECONDS,
+            CONF_UPDATE_FREQUENCY_SECONDS: 42,
         },
     )
     mock_config_entry.add_to_hass(hass)
 
-    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_REAUTH, "entry_id": mock_config_entry.entry_id},
+        data=mock_config_entry.data,
+    )
+
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
@@ -452,6 +457,7 @@ async def test_reauth_flow_success(hass: HomeAssistant) -> None:
     assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data[CONF_USERNAME] == "new-username"
     assert mock_config_entry.data[CONF_PASSWORD] == "new-password"
+    assert mock_config_entry.data[CONF_UPDATE_FREQUENCY_SECONDS] == 42
 
 
 async def test_reauth_flow_cannot_connect(
@@ -473,7 +479,12 @@ async def test_reauth_flow_cannot_connect(
     )
     mock_config_entry.add_to_hass(hass)
 
-    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_REAUTH, "entry_id": mock_config_entry.entry_id},
+        data=mock_config_entry.data,
+    )
+
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
@@ -525,7 +536,11 @@ async def test_reauth_flow_unknown_error(
     )
     mock_config_entry.add_to_hass(hass)
 
-    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_REAUTH, "entry_id": mock_config_entry.entry_id},
+        data=mock_config_entry.data,
+    )
 
     mock_victron_hub.return_value.connect.side_effect = Exception("Test error")
 
@@ -560,7 +575,12 @@ async def test_reauth_flow_invalid_auth(
     )
     mock_config_entry.add_to_hass(hass)
 
-    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_REAUTH, "entry_id": mock_config_entry.entry_id},
+        data=mock_config_entry.data,
+    )
+
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
