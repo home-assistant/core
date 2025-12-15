@@ -120,8 +120,6 @@ def _verify(
 ) -> None:
     """Verify vacuum's state and speed."""
     state = hass.states.get(TEST_VACUUM.entity_id)
-    assert state is not None
-    assert state.attributes is not None
     attributes = state.attributes
     assert state.state == expected_state
     assert attributes.get(ATTR_BATTERY_LEVEL) == expected_battery_level

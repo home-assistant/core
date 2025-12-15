@@ -275,11 +275,9 @@ async def setup_and_test_nested_unique_id(
     assert len(hass.states.async_all(platform_setup.domain)) == 2
 
     entry = entity_registry.async_get(f"{platform_setup.domain}.test_a")
-    assert entry
     assert entry.unique_id == "x-a"
 
     entry = entity_registry.async_get(f"{platform_setup.domain}.test_b")
-    assert entry
     assert entry.unique_id == "x-b"
 
 
