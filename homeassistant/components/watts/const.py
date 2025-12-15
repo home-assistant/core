@@ -15,8 +15,10 @@ OAUTH2_SCOPES = [
     "https://visionlogin.onmicrosoft.com/homeassistant-api/homeassistant.read",
 ]
 
-UPDATE_INTERVAL = 30
-FAST_POLLING_INTERVAL = 5
+# Update intervals
+UPDATE_INTERVAL_SECONDS = 30
+FAST_POLLING_INTERVAL_SECONDS = 5
+DISCOVERY_INTERVAL_MINUTES = 15
 
 # Mapping from Watts Vision + modes to Home Assistant HVAC modes
 

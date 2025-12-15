@@ -12,10 +12,16 @@ from visionpluspython.client import WattsVisionClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
+from homeassistant.helpers import (
+    aiohttp_client,
+    config_entry_oauth2_flow,
+    device_registry as dr,
+)
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
+from .const import DOMAIN
 from .coordinator import WattsVisionDeviceCoordinator, WattsVisionHubCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,6 +40,52 @@ class WattsVisionRuntimeData:
 
 
 type WattsVisionConfigEntry = ConfigEntry[WattsVisionRuntimeData]
+
+
+@callback
+def _handle_new_devices(
+    hass: HomeAssistant,
+    entry: WattsVisionConfigEntry,
+    hub_coordinator: WattsVisionHubCoordinator,
+) -> None:
+    """Check for new devices and create coordinators."""
+    current_device_ids = set(hub_coordinator.data.keys())
+    known_device_ids = set(entry.runtime_data.device_coordinators.keys())
+    new_device_ids = current_device_ids - known_device_ids
+
+    if not new_device_ids:
+        return
+
+    _LOGGER.info("Discovered %d new device(s): %s", len(new_device_ids), new_device_ids)
+
+    device_coordinators = entry.runtime_data.device_coordinators
+    client = entry.runtime_data.client
+
+    for device_id in new_device_ids:
+        device_coordinator = WattsVisionDeviceCoordinator(
+            hass, client, entry, hub_coordinator, device_id
+        )
+        device_coordinator.async_set_updated_data(hub_coordinator.data[device_id])
+        device_coordinators[device_id] = device_coordinator
+
+        _LOGGER.debug("Created coordinator for device %s", device_id)
+
+    async_dispatcher_send(hass, f"{DOMAIN}_{entry.entry_id}_new_device")
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,
+    config_entry: WattsVisionConfigEntry,
+    device_entry: dr.DeviceEntry,
+) -> bool:
+    """Remove a config entry from a device."""
+    # Allow removal if device is not in coordinator data
+    return not any(
+        identifier
+        for identifier in device_entry.identifiers
+        if identifier[0] == DOMAIN
+        and identifier[1] in config_entry.runtime_data.hub_coordinator.data
+    )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: WattsVisionConfigEntry) -> bool:
@@ -73,6 +125,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: WattsVisionConfigEntry) 
     await hub_coordinator.async_setup()
     await hub_coordinator.async_config_entry_first_refresh()
 
+    # Stale device tracking
+    hub_coordinator.previous_devices = set(hub_coordinator.data.keys())
+
     device_coordinators = {}
     for device_id in hub_coordinator.device_ids:
         device_coordinator = WattsVisionDeviceCoordinator(
@@ -89,6 +144,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: WattsVisionConfigEntry) 
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Listener for dynamic device detection
+    entry.async_on_unload(
+        hub_coordinator.async_add_listener(
+            lambda: _handle_new_devices(hass, entry, hub_coordinator)
+        )
+    )
 
     return True
 

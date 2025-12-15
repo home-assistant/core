@@ -13,12 +13,13 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import WattsVisionConfigEntry
-from .const import HVAC_MODE_TO_THERMOSTAT, THERMOSTAT_MODE_TO_HVAC
+from .const import DOMAIN, HVAC_MODE_TO_THERMOSTAT, THERMOSTAT_MODE_TO_HVAC
 from .coordinator import WattsVisionDeviceCoordinator
 from .entity import WattsVisionEntity
 
@@ -35,10 +36,42 @@ async def async_setup_entry(
     """Set up Watts Vision climate entities from a config entry."""
 
     device_coordinators = entry.runtime_data.device_coordinators
+    known_device_ids: set[str] = set()
 
-    async_add_entities(
-        WattsVisionClimate(device_coordinator, device_coordinator.data)
-        for device_coordinator in device_coordinators.values()
+    @callback
+    def _check_new_devices() -> None:
+        """Check for new devices."""
+        current_device_ids = set(device_coordinators.keys())
+        new_device_ids = current_device_ids - known_device_ids
+
+        if not new_device_ids:
+            return
+
+        _LOGGER.debug(
+            "Adding climate entities for %d new device(s)",
+            len(new_device_ids),
+        )
+
+        new_entities = [
+            WattsVisionClimate(
+                device_coordinators[device_id],
+                device_coordinators[device_id].data,
+            )
+            for device_id in new_device_ids
+        ]
+
+        known_device_ids.update(new_device_ids)
+        async_add_entities(new_entities)
+
+    _check_new_devices()
+
+    # Listen for new devices
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            f"{DOMAIN}_{entry.entry_id}_new_device",
+            _check_new_devices,
+        )
     )
 
 
