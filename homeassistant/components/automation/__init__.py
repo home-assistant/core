@@ -133,6 +133,7 @@ _EXPERIMENTAL_TRIGGER_PLATFORMS = {
     "media_player",
     "switch",
     "text",
+    "update",
     "vacuum",
 }
 
