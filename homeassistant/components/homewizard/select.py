@@ -22,7 +22,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up HomeWizard select based on a config entry."""
-    if entry.runtime_data.data.batteries is not None:
+    if entry.runtime_data.data.device.supports_batteries():
         async_add_entities(
             [
                 HomeWizardBatteryModeSelectEntity(
