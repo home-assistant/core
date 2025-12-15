@@ -63,7 +63,7 @@ class HomeWizardBatteryModeSelectEntity(HomeWizardEntity, SelectEntity):
         """Return the selected entity option to represent the entity state."""
         return (
             self.coordinator.data.batteries.mode
-            if self.coordinator.data.batteries
+            if self.coordinator.data.batteries and self.coordinator.data.batteries.mode
             else None
         )
 
