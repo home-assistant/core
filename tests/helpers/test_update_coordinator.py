@@ -721,8 +721,8 @@ async def test_async_config_entry_first_refresh_invalid_state(
     crd.setup_method = AsyncMock()
     with pytest.raises(
         config_entries.ConfigEntryError,
-        match="`async_config_entry_first_refresh`, called outside of state ConfigEntryState.SETUP_IN_PROGRESS,"
-        " was in state ConfigEntryState.NOT_LOADED",
+        match="`async_config_entry_first_refresh` called when config entry state is ConfigEntryState.NOT_LOADED, "
+        "but must be called during ConfigEntryState.SETUP_IN_PROGRESS",
     ):
         await crd.async_config_entry_first_refresh()
 
@@ -743,8 +743,8 @@ async def test_async_config_entry_first_refresh_invalid_state_in_integration(
 
     with pytest.raises(
         config_entries.ConfigEntryError,
-        match="`async_config_entry_first_refresh`, called outside of state ConfigEntryState.SETUP_IN_PROGRESS,"
-        " was in state ConfigEntryState.NOT_LOADED",
+        match="`async_config_entry_first_refresh` called when config entry state is ConfigEntryState.NOT_LOADED, "
+        "but must be called during ConfigEntryState.SETUP_IN_PROGRESS",
     ):
         await crd.async_config_entry_first_refresh()
 
