@@ -4,6 +4,7 @@ import base64
 from datetime import datetime
 from http import HTTPStatus
 import io
+import os
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, mock_open, patch
 
@@ -1689,7 +1690,7 @@ async def test_deprecated_timeout_parameter(
                 ATTR_DIRECTORY_PATH: "/tmp/tempfolder3",  # noqa: S108
             },
             lambda hass: "/tmp/tempfolder3/file_name3.jpg",  # noqa: S108
-            lambda hass: "/tmp",  # noqa: S108
+            lambda hass: "/tmp/tempfolder3",  # noqa: S108
             id="no_custom_name_custom_dir",
         ),
         pytest.param(
@@ -1700,7 +1701,7 @@ async def test_deprecated_timeout_parameter(
                 ATTR_DIRECTORY_PATH: "/tmp/tempfolder4",  # noqa: S108
             },
             lambda hass: "/tmp/tempfolder4/custom_name4.jpg",  # noqa: S108
-            lambda hass: "/tmp",  # noqa: S108
+            lambda hass: "/tmp/tempfolder4",  # noqa: S108
             id="custom_name_custom_dir",
         ),
     ],
@@ -1721,6 +1722,9 @@ async def test_download_file(
 
     expected_path = expected_download_path(hass)
     allowlist_dir = expected_allowlist_dir(hass)
+    # verify dir exists, if not create it
+    await hass.async_add_executor_job(os.makedirs, allowlist_dir, 0o777, True)
+
     hass.config.allowlist_external_dirs.add(allowlist_dir)
 
     file_id = schema_request[ATTR_FILE_ID]
