@@ -109,6 +109,7 @@ async def integration_fixture(
         "heiman_motion_sensor_m1",
         "humidity_sensor",
         "ikea_air_quality_monitor",
+        "ikea_scroll_wheel",
         "inovelli_vtm30",
         "laundry_dryer",
         "leak_sensor",
