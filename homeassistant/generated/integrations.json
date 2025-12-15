@@ -2030,7 +2030,7 @@
     },
     "fjaraskupan": {
       "name": "Fj\u00e4r\u00e5skupan",
-      "integration_type": "device",
+      "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
     },
