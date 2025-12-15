@@ -400,7 +400,7 @@ class TuyaSelectEntity(TuyaEntity, SelectEntity):
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
         self._dpcode_wrapper = dpcode_wrapper
-        self._attr_options = dpcode_wrapper.type_information.range
+        self._attr_options = dpcode_wrapper.options
 
     @property
     def current_option(self) -> str | None:
