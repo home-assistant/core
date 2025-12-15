@@ -50,6 +50,7 @@ def mock_process_uploaded_file():
         yield
 
 
+@pytest.mark.xdist_group("sftp_storage")
 @pytest.mark.usefixtures("current_request_with_host")
 @pytest.mark.usefixtures("mock_process_uploaded_file")
 @pytest.mark.usefixtures("mock_ssh_connection")
@@ -83,6 +84,7 @@ async def test_backup_sftp_full_flow(
     assert result["data"] == user_input
 
 
+@pytest.mark.xdist_group("sftp_storage")
 @pytest.mark.usefixtures("current_request_with_host")
 @pytest.mark.usefixtures("mock_process_uploaded_file")
 @pytest.mark.usefixtures("mock_ssh_connection")
@@ -106,6 +108,7 @@ async def test_already_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.xdist_group("sftp_storage")
 @pytest.mark.parametrize(
     ("exception_type", "backup_location", "error_base"),
     [
@@ -171,6 +174,7 @@ async def test_config_flow_exceptions(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.xdist_group("sftp_storage")
 @pytest.mark.usefixtures("current_request_with_host")
 @pytest.mark.usefixtures("mock_process_uploaded_file")
 async def test_config_entry_error(hass: HomeAssistant) -> None:
