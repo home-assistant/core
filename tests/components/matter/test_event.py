@@ -78,6 +78,7 @@ async def test_generic_switch_multi_node(
     assert state_button_1.name == "Mock Generic Switch Button (1)"
     # check event_types from featuremap 30 (0b11110) and MultiPressMax unset (default 2)
     assert state_button_1.attributes[ATTR_EVENT_TYPES] == [
+        "multi_press_ongoing",
         "multi_press_1",
         "multi_press_2",
         "long_press",
@@ -91,6 +92,7 @@ async def test_generic_switch_multi_node(
     assert state_button_2.name == "Mock Generic Switch Button (2)"
     # check event_types from featuremap 30 (0b11110) and MultiPressMax 4
     assert state_button_2.attributes[ATTR_EVENT_TYPES] == [
+        "multi_press_ongoing",
         "multi_press_1",
         "multi_press_2",
         "multi_press_3",
