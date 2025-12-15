@@ -100,9 +100,7 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
 
         available_main_ains = [
             ain
-            for ain, dev in data.devices.items()
-            | data.templates.items()
-            | data.triggers.items()
+            for ain, dev in (data.devices | data.templates | data.triggers).items()
             if dev.device_and_unit_id[1] is None
         ]
         device_reg = dr.async_get(self.hass)
