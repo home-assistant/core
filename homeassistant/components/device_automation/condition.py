@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Protocol
+from typing import Any, Protocol
 
 import voluptuous as vol
 
@@ -11,17 +11,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.condition import (
     Condition,
+    ConditionChecker,
     ConditionCheckerType,
     ConditionConfig,
-    trace_condition_function,
 )
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import DeviceAutomationType, async_get_device_automation_platform
 from .helpers import async_validate_device_automation_config
-
-if TYPE_CHECKING:
-    from homeassistant.helpers import condition
 
 
 class DeviceAutomationConditionProtocol(Protocol):
@@ -90,14 +87,20 @@ class DeviceCondition(Condition):
         assert config.options is not None
         self._config = config.options
 
-    async def async_get_checker(self) -> condition.ConditionCheckerType:
+    async def async_get_checker(self) -> ConditionChecker:
         """Test a device condition."""
         platform = await async_get_device_automation_platform(
             self._hass, self._config[CONF_DOMAIN], DeviceAutomationType.CONDITION
         )
-        return trace_condition_function(
-            platform.async_condition_from_config(self._hass, self._config)
+        platform_checker = platform.async_condition_from_config(
+            self._hass, self._config
         )
+
+        def checker(variables: TemplateVarsType = None, **kwargs: Any) -> bool:
+            result = platform_checker(self._hass, variables)
+            return result is not False
+
+        return checker
 
 
 CONDITIONS: dict[str, type[Condition]] = {

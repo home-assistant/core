@@ -1,7 +1,7 @@
 """Provides conditions for lights."""
 
 from collections.abc import Callable
-from typing import TYPE_CHECKING, Any, Final, override
+from typing import TYPE_CHECKING, Any, Final, Unpack, override
 
 import voluptuous as vol
 
@@ -10,11 +10,11 @@ from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import config_validation as cv, target
 from homeassistant.helpers.condition import (
     Condition,
-    ConditionCheckerType,
+    ConditionChecker,
+    ConditionCheckParams,
     ConditionConfig,
-    trace_condition_function,
 )
-from homeassistant.helpers.typing import ConfigType, TemplateVarsType
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 
@@ -61,7 +61,7 @@ class StateConditionBase(Condition):
         self._state = state
 
     @override
-    async def async_get_checker(self) -> ConditionCheckerType:
+    async def async_get_checker(self) -> ConditionChecker:
         """Get the condition checker."""
 
         def check_any_match_state(states: list[str]) -> bool:
@@ -78,12 +78,11 @@ class StateConditionBase(Condition):
         elif self._behavior == BEHAVIOR_ALL:
             matcher = check_all_match_state
 
-        @trace_condition_function
-        def test_state(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
+        def test_state(**kwargs: Unpack[ConditionCheckParams]) -> bool:
             """Test state condition."""
             target_selection = target.TargetSelection(self._target)
             targeted_entities = target.async_extract_referenced_entity_ids(
-                hass, target_selection, expand_group=False
+                self._hass, target_selection, expand_group=False
             )
             referenced_entity_ids = targeted_entities.referenced.union(
                 targeted_entities.indirectly_referenced
@@ -96,7 +95,7 @@ class StateConditionBase(Condition):
             light_entity_states = [
                 state.state
                 for entity_id in light_entity_ids
-                if (state := hass.states.get(entity_id))
+                if (state := self._hass.states.get(entity_id))
                 and state.state in STATE_CONDITION_VALID_STATES
             ]
             return matcher(light_entity_states)
