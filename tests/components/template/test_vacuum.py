@@ -346,7 +346,7 @@ async def test_valid_legacy_configs(hass: HomeAssistant, count, parm1, parm2) ->
     """Test: configs."""
 
     # Ensure trigger entity templates are rendered
-    hass.states.async_set(TEST_STATE_SENSOR, "")
+    hass.states.async_set(TEST_STATE_SENSOR, None)
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all("vacuum")) == count
@@ -428,10 +428,8 @@ async def test_battery_level_template_repair(
     issue = issue_registry.async_get_issue(
         "template", f"deprecated_battery_level_{TEST_VACUUM.entity_id}"
     )
-    assert issue is not None
     assert issue.domain == "template"
     assert issue.severity == ir.IssueSeverity.WARNING
-    assert issue.translation_placeholders is not None
     assert issue.translation_placeholders["entity_name"] == TEST_VACUUM.object_id
     assert issue.translation_placeholders["entity_id"] == TEST_VACUUM.entity_id
     assert "Detected that integration 'template' is setting the" not in caplog.text
@@ -496,14 +494,12 @@ async def test_fan_speed_template(hass: HomeAssistant, expected: str | None) -> 
 async def test_icon_template(hass: HomeAssistant, expected: int) -> None:
     """Test icon template."""
     state = hass.states.get(TEST_VACUUM.entity_id)
-    assert state is not None
     assert state.attributes.get("icon") == expected
 
     hass.states.async_set(TEST_STATE_SENSOR, STATE_ON)
     await hass.async_block_till_done()
 
     state = hass.states.get(TEST_VACUUM.entity_id)
-    assert state is not None
     assert state.attributes["icon"] == "mdi:check"
 
 
@@ -530,14 +526,12 @@ async def test_icon_template(hass: HomeAssistant, expected: int) -> None:
 async def test_picture_template(hass: HomeAssistant, expected: int) -> None:
     """Test picture template."""
     state = hass.states.get(TEST_VACUUM.entity_id)
-    assert state is not None
     assert state.attributes.get("entity_picture") == expected
 
     hass.states.async_set(TEST_STATE_SENSOR, STATE_ON)
     await hass.async_block_till_done()
 
     state = hass.states.get(TEST_VACUUM.entity_id)
-    assert state is not None
     assert state.attributes["entity_picture"] == "local/vacuum.png"
 
 
@@ -569,18 +563,14 @@ async def test_available_template_with_entities(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     # Device State should not be unavailable
-    state = hass.states.get(TEST_VACUUM.entity_id)
-    assert state is not None
-    assert state.state != STATE_UNAVAILABLE
+    assert hass.states.get(TEST_VACUUM.entity_id).state != STATE_UNAVAILABLE
 
     # When Availability template returns false
     hass.states.async_set(TEST_AVAILABILITY_ENTITY, STATE_OFF)
     await hass.async_block_till_done()
 
     # device state should be unavailable
-    state = hass.states.get(TEST_VACUUM.entity_id)
-    assert state is not None
-    assert state.state == STATE_UNAVAILABLE
+    assert hass.states.get(TEST_VACUUM.entity_id).state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize("extra_config", [{}])
@@ -630,14 +620,12 @@ async def test_invalid_availability_template_keeps_component_available(
 async def test_attribute_templates(hass: HomeAssistant) -> None:
     """Test attribute_templates template."""
     state = hass.states.get(TEST_VACUUM.entity_id)
-    assert state is not None
     assert state.attributes["test_attribute"] == "It ."
 
     hass.states.async_set(TEST_STATE_SENSOR, "Works")
     await hass.async_block_till_done()
     await async_update_entity(hass, TEST_VACUUM.entity_id)
     state = hass.states.get(TEST_VACUUM.entity_id)
-    assert state is not None
     assert state.attributes["test_attribute"] == "It Works."
 
 
@@ -934,7 +922,6 @@ async def test_empty_action_config(
     await hass.async_block_till_done()
 
     state = hass.states.get(TEST_VACUUM.entity_id)
-    assert state is not None
     assert state.attributes["supported_features"] == (
         VacuumEntityFeature.STATE | VacuumEntityFeature.START | supported_features
     )
@@ -981,7 +968,6 @@ async def test_assumed_optimistic(
     await hass.async_block_till_done()
 
     state = hass.states.get(TEST_VACUUM.entity_id)
-    assert state is not None
     assert state.state == expected
 
 
@@ -1026,7 +1012,6 @@ async def test_optimistic_option(
     await hass.async_block_till_done()
 
     state = hass.states.get(TEST_VACUUM.entity_id)
-    assert state is not None
     assert state.state == VacuumActivity.DOCKED
 
     await hass.services.async_call(
@@ -1038,7 +1023,6 @@ async def test_optimistic_option(
     await hass.async_block_till_done()
 
     state = hass.states.get(TEST_VACUUM.entity_id)
-    assert state is not None
     assert state.state == expected
 
     hass.states.async_set(TEST_STATE_SENSOR, VacuumActivity.RETURNING)
@@ -1048,7 +1032,6 @@ async def test_optimistic_option(
     await hass.async_block_till_done()
 
     state = hass.states.get(TEST_VACUUM.entity_id)
-    assert state is not None
     assert state.state == VacuumActivity.DOCKED
 
 
@@ -1097,7 +1080,6 @@ async def test_not_optimistic(
     await hass.async_block_till_done()
 
     state = hass.states.get(TEST_VACUUM.entity_id)
-    assert state is not None
     assert state.state == STATE_UNKNOWN
 
 

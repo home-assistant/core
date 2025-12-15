@@ -42,7 +42,9 @@ def make_test_trigger(*entities: str) -> dict:
     }
 
 
-async def async_trigger(hass: HomeAssistant, entity_id: str, state: str = "") -> None:
+async def async_trigger(
+    hass: HomeAssistant, entity_id: str, state: str | None = None
+) -> None:
     """Trigger a state change."""
     hass.states.async_set(entity_id, state)
     await hass.async_block_till_done()
@@ -327,7 +329,6 @@ async def async_get_flow_preview_state(
     result = await hass.config_entries.flow.async_init(
         template.DOMAIN, context={"source": SOURCE_USER}
     )
-    assert "type" in result
     assert result["type"] is FlowResultType.MENU
 
     result = await hass.config_entries.flow.async_configure(
@@ -335,13 +336,9 @@ async def async_get_flow_preview_state(
         {"next_step_id": domain},
     )
     await hass.async_block_till_done()
-    assert "type" in result
     assert result["type"] is FlowResultType.FORM
-    assert "step_id" in result
     assert result["step_id"] == domain
-    assert "errors" in result
     assert result["errors"] is None
-    assert "preview" in result
     assert result["preview"] == "template"
 
     await client.send_json_auto_id(
