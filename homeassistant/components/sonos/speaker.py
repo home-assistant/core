@@ -1015,11 +1015,21 @@ class SonosSpeaker:
         speakers: list[SonosSpeaker],
     ) -> None:
         """Form a group with other players."""
+        # When joining multiple speakers, build the group incrementally and
+        # wait for the grouping to complete after each join. This avoids race
+        # conditions in zone topology updates.
         async with config_entry.runtime_data.topology_condition:
-            group: list[SonosSpeaker] = await hass.async_add_executor_job(
-                master.join, speakers
-            )
-            await SonosSpeaker.wait_for_groups(hass, config_entry, [group])
+            join_list: list[SonosSpeaker] = []
+            for speaker in speakers:
+                _LOGGER.debug("Join %s to %s", speaker.zone_name, master.zone_name)
+                join_list.append(speaker)
+                group: list[SonosSpeaker] = await hass.async_add_executor_job(
+                    master.join, join_list
+                )
+                await SonosSpeaker.wait_for_groups(hass, config_entry, [group])
+                _LOGGER.debug(
+                    "Join Complete %s to %s", speaker.zone_name, master.zone_name
+                )
 
     @soco_error()
     def unjoin(self) -> None:
