@@ -17,5 +17,10 @@
     "press": {
       "service": "mdi:gesture-tap-button"
     }
+  },
+  "triggers": {
+    "pressed": {
+      "trigger": "mdi:gesture-tap-button"
+    }
   }
 }
