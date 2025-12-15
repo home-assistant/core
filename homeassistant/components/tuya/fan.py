@@ -77,10 +77,6 @@ def _has_a_valid_dpcode(device: CustomerDevice) -> bool:
 class _FanSpeedEnumWrapper(DPCodeEnumWrapper):
     """Wrapper for fan speed DP code (from an enum)."""
 
-    def get_speed_count(self) -> int:
-        """Get the number of speeds supported by the fan."""
-        return len(self.range)
-
     def read_device_status(self, device: CustomerDevice) -> int | None:
         """Get the current speed as a percentage."""
         if (value := super().read_device_status(device)) is None:
@@ -99,10 +95,6 @@ class _FanSpeedIntegerWrapper(DPCodeIntegerWrapper):
         """Init DPCodeIntegerWrapper."""
         super().__init__(dpcode, type_information)
         self._remap_helper = RemapHelper.from_type_information(type_information, 1, 100)
-
-    def get_speed_count(self) -> int:
-        """Get the number of speeds supported by the fan."""
-        return 100
 
     def read_device_status(self, device: CustomerDevice) -> int | None:
         """Get the current speed as a percentage."""
@@ -201,7 +193,8 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
 
         if speed_wrapper:
             self._attr_supported_features |= FanEntityFeature.SET_SPEED
-            self._attr_speed_count = speed_wrapper.get_speed_count()
+            if speed_wrapper.range is not None:
+                self._attr_speed_count = len(speed_wrapper.range)
 
         if oscillate_wrapper:
             self._attr_supported_features |= FanEntityFeature.OSCILLATE
