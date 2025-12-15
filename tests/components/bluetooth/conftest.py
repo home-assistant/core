@@ -45,7 +45,7 @@ def disable_bluetooth_auto_recovery():
 def mock_operating_system_85():
     """Mock running Home Assistant Operating system 8.5."""
     with (
-        patch("homeassistant.components.hassio.is_hassio", return_value=True),
+        patch("homeassistant.helpers.hassio.is_hassio", return_value=True),
         patch(
             "homeassistant.components.hassio.get_os_info",
             return_value={
@@ -67,7 +67,7 @@ def mock_operating_system_85():
 def mock_operating_system_90():
     """Mock running Home Assistant Operating system 9.0."""
     with (
-        patch("homeassistant.components.hassio.is_hassio", return_value=True),
+        patch("homeassistant.helpers.hassio.is_hassio", return_value=True),
         patch(
             "homeassistant.components.hassio.get_os_info",
             return_value={
