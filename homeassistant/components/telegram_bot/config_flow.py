@@ -64,6 +64,14 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+DESCRIPTION_PLACEHOLDERS: dict[str, str] = {
+    "botfather_username": "@BotFather",
+    "botfather_url": "https://t.me/botfather",
+    "getidsbot_username": "@GetIDs Bot",
+    "getidsbot_url": "https://t.me/getidsbot",
+    "socks_url": "socks5://username:password@proxy_ip:proxy_port",
+}
+
 STEP_USER_DATA_SCHEMA: vol.Schema = vol.Schema(
     {
         vol.Required(CONF_PLATFORM): SelectSelector(
@@ -310,10 +318,7 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow to create a new config entry for a Telegram bot."""
 
-        description_placeholders: dict[str, str] = {
-            "botfather_username": "@BotFather",
-            "botfather_url": "https://t.me/botfather",
-        }
+        description_placeholders: dict[str, str] = DESCRIPTION_PLACEHOLDERS.copy()
         if not user_input:
             return self.async_show_form(
                 step_id="user",
@@ -552,13 +557,14 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                         },
                     },
                 ),
+                description_placeholders=DESCRIPTION_PLACEHOLDERS,
             )
         user_input[CONF_PROXY_URL] = user_input[SECTION_ADVANCED_SETTINGS].get(
             CONF_PROXY_URL
         )
 
         errors: dict[str, str] = {}
-        description_placeholders: dict[str, str] = {}
+        description_placeholders: dict[str, str] = DESCRIPTION_PLACEHOLDERS.copy()
 
         user_input[CONF_API_KEY] = api_key
         bot_name = await self._validate_bot(
@@ -661,6 +667,7 @@ class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema({vol.Required(CONF_CHAT_ID): vol.Coerce(int)}),
+            description_placeholders=DESCRIPTION_PLACEHOLDERS,
             errors=errors,
         )
 

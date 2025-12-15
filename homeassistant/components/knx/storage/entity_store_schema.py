@@ -46,6 +46,8 @@ from .const import (
     CONF_GA_COLOR_TEMP,
     CONF_GA_CONTROLLER_MODE,
     CONF_GA_CONTROLLER_STATUS,
+    CONF_GA_DATE,
+    CONF_GA_DATETIME,
     CONF_GA_FAN_SPEED,
     CONF_GA_FAN_SWING,
     CONF_GA_FAN_SWING_HORIZONTAL,
@@ -72,6 +74,7 @@ from .const import (
     CONF_GA_SWITCH,
     CONF_GA_TEMPERATURE_CURRENT,
     CONF_GA_TEMPERATURE_TARGET,
+    CONF_GA_TIME,
     CONF_GA_UP_DOWN,
     CONF_GA_VALVE,
     CONF_GA_WHITE_BRIGHTNESS,
@@ -197,6 +200,24 @@ COVER_KNX_SCHEMA = AllSerializeFirst(
             " 'Position - Set position' is required."
         ),
     ),
+)
+
+DATE_KNX_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_GA_DATE): GASelector(write_required=True, valid_dpt="11.001"),
+        vol.Optional(CONF_RESPOND_TO_READ, default=False): selector.BooleanSelector(),
+        vol.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
+    }
+)
+
+DATETIME_KNX_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_GA_DATETIME): GASelector(
+            write_required=True, valid_dpt="19.001"
+        ),
+        vol.Optional(CONF_RESPOND_TO_READ, default=False): selector.BooleanSelector(),
+        vol.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
+    }
 )
 
 
@@ -334,6 +355,14 @@ SWITCH_KNX_SCHEMA = vol.Schema(
         vol.Optional(CONF_RESPOND_TO_READ, default=False): selector.BooleanSelector(),
         vol.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
     },
+)
+
+TIME_KNX_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_GA_TIME): GASelector(write_required=True, valid_dpt="10.001"),
+        vol.Optional(CONF_RESPOND_TO_READ, default=False): selector.BooleanSelector(),
+        vol.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
+    }
 )
 
 
@@ -482,8 +511,11 @@ KNX_SCHEMA_FOR_PLATFORM = {
     Platform.BINARY_SENSOR: BINARY_SENSOR_KNX_SCHEMA,
     Platform.CLIMATE: CLIMATE_KNX_SCHEMA,
     Platform.COVER: COVER_KNX_SCHEMA,
+    Platform.DATE: DATE_KNX_SCHEMA,
+    Platform.DATETIME: DATETIME_KNX_SCHEMA,
     Platform.LIGHT: LIGHT_KNX_SCHEMA,
     Platform.SWITCH: SWITCH_KNX_SCHEMA,
+    Platform.TIME: TIME_KNX_SCHEMA,
 }
 
 ENTITY_STORE_DATA_SCHEMA: VolSchemaType = vol.All(

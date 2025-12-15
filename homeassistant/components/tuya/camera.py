@@ -118,8 +118,8 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
 
     async def async_enable_motion_detection(self) -> None:
         """Enable motion detection in the camera."""
-        await self._async_send_dpcode_update(self._motion_detection_switch, True)
+        await self._async_send_wrapper_updates(self._motion_detection_switch, True)
 
     async def async_disable_motion_detection(self) -> None:
         """Disable motion detection in camera."""
-        await self._async_send_dpcode_update(self._motion_detection_switch, False)
+        await self._async_send_wrapper_updates(self._motion_detection_switch, False)
