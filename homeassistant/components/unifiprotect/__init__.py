@@ -158,6 +158,22 @@ async def _async_setup_entry(
 ) -> None:
     await async_migrate_data(hass, entry, data_service.api, bootstrap)
     data_service.async_setup()
+
+    # Create the NVR device before loading platforms
+    # This ensures via_device references work for all device entities
+    nvr = bootstrap.nvr
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, nvr.mac)},
+        identifiers={(DOMAIN, nvr.mac)},
+        manufacturer="Ubiquiti",
+        name=nvr.display_name,
+        model=nvr.type,
+        sw_version=str(nvr.version),
+        configuration_url=nvr.api.base_url,
+    )
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     hass.http.register_view(ThumbnailProxyView(hass))
     hass.http.register_view(SnapshotProxyView(hass))

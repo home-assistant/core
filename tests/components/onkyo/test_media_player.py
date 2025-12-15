@@ -1,9 +1,10 @@
 """Test Onkyo media player platform."""
 
+import asyncio
 from collections.abc import AsyncGenerator
 from unittest.mock import AsyncMock, patch
 
-from aioonkyo import Instruction, Zone, command
+from aioonkyo import Code, Instruction, Kind, Zone, command, query, status
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -56,7 +57,11 @@ async def auto_setup_integration(
     """Auto setup integration."""
     with (
         patch(
-            "homeassistant.components.onkyo.media_player.AUDIO_VIDEO_INFORMATION_UPDATE_WAIT_TIME",
+            "homeassistant.components.onkyo.media_player.QUERY_AV_INFO_DELAY",
+            0,
+        ),
+        patch(
+            "homeassistant.components.onkyo.media_player.QUERY_STATE_DELAY",
             0,
         ),
         patch("homeassistant.components.onkyo.PLATFORMS", [Platform.MEDIA_PLAYER]),
@@ -228,3 +233,59 @@ async def test_select_hdmi_output(
         blocking=True,
     )
     assert writes[0] == command.HDMIOutput(command.HDMIOutput.Param.BOTH)
+
+
+async def test_query_state_task(
+    read_queue: asyncio.Queue, writes: list[Instruction]
+) -> None:
+    """Test query state task."""
+    read_queue.put_nowait(
+        status.Power(
+            Code.from_kind_zone(Kind.POWER, Zone.MAIN), None, status.Power.Param.STANDBY
+        )
+    )
+    read_queue.put_nowait(
+        status.Power(
+            Code.from_kind_zone(Kind.POWER, Zone.MAIN), None, status.Power.Param.ON
+        )
+    )
+    read_queue.put_nowait(
+        status.Power(
+            Code.from_kind_zone(Kind.POWER, Zone.MAIN), None, status.Power.Param.STANDBY
+        )
+    )
+    read_queue.put_nowait(
+        status.Power(
+            Code.from_kind_zone(Kind.POWER, Zone.MAIN), None, status.Power.Param.ON
+        )
+    )
+
+    await asyncio.sleep(0.1)
+
+    queries = [w for w in writes if isinstance(w, query.Volume)]
+    assert len(queries) == 1
+
+
+async def test_query_av_info_task(
+    read_queue: asyncio.Queue, writes: list[Instruction]
+) -> None:
+    """Test query AV info task."""
+    read_queue.put_nowait(
+        status.InputSource(
+            Code.from_kind_zone(Kind.INPUT_SOURCE, Zone.MAIN),
+            None,
+            status.InputSource.Param("24"),
+        )
+    )
+    read_queue.put_nowait(
+        status.InputSource(
+            Code.from_kind_zone(Kind.INPUT_SOURCE, Zone.MAIN),
+            None,
+            status.InputSource.Param("00"),
+        )
+    )
+
+    await asyncio.sleep(0.1)
+
+    queries = [w for w in writes if isinstance(w, query.AudioInformation)]
+    assert len(queries) == 1
