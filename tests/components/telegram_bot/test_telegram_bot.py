@@ -4,6 +4,7 @@ import base64
 from datetime import datetime
 from http import HTTPStatus
 import io
+from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, mock_open, patch
 
@@ -1721,7 +1722,10 @@ async def test_download_file(
 
     expected_path = expected_download_path(hass)
     allowlist_dir = expected_allowlist_dir(hass)
-    hass.config.allowlist_external_dirs.add(allowlist_dir)
+    # Resolve the allowlist dir to avoid mismatches with symlinked
+    # CI working directories (ensure the path format matches
+    # `is_allowed_path` resolution)
+    hass.config.allowlist_external_dirs.add(Path(allowlist_dir).resolve())
 
     file_id = schema_request[ATTR_FILE_ID]
     telegram_file = File(
