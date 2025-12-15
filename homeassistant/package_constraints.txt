@@ -2,7 +2,7 @@
 
 aiodhcpwatcher==1.2.1
 aiodiscover==2.7.1
-aiodns==3.6.0
+aiodns==3.6.1
 aiohasupervisor==0.3.3
 aiohttp-asyncmdnsresolver==0.1.1
 aiohttp-fast-zlib==0.3.0
@@ -69,7 +69,7 @@ standard-telnetlib==3.13.0
 typing-extensions>=4.15.0,<5.0
 ulid-transform==1.5.2
 urllib3>=2.0
-uv==0.9.6
+uv==0.9.17
 voluptuous-openapi==0.1.0
 voluptuous-serialize==2.7.0
 voluptuous==0.15.2
@@ -223,3 +223,6 @@ gql<4.0.0
 
 # Pin pytest-rerunfailures to prevent accidental breaks
 pytest-rerunfailures==16.0.1
+
+# pycares 5.x is not yet compatible with aiodns
+pycares==4.11.0
