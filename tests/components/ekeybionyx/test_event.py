@@ -2,6 +2,8 @@
 
 from http import HTTPStatus
 
+from aiohttp.test_utils import TestClient
+
 from homeassistant.components.event import ATTR_EVENT_TYPE, ATTR_EVENT_TYPES
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
@@ -20,7 +22,7 @@ async def test_event_entity_setup(
     assert state.state == STATE_UNKNOWN
 
 
-async def test_event_type_attribute(
+async def test_event_types_attribute(
     hass: HomeAssistant, load_config_entry: None, config_entry: MockConfigEntry
 ) -> None:
     """Test event entity has correct event_types attribute."""
@@ -61,7 +63,7 @@ async def test_config_entry_unload(
 async def test_webhook_handler_triggers_event(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    webhook_test_env,
+    webhook_test_env: TestClient,
 ) -> None:
     """Test webhook handler triggers event via HTTP request."""
     webhook_data = config_entry.data["webhooks"][0]
@@ -87,7 +89,7 @@ async def test_webhook_handler_triggers_event(
 async def test_webhook_handler_rejects_invalid_auth(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    webhook_test_env,
+    webhook_test_env: TestClient,
 ) -> None:
     """Test webhook handler ignores requests with invalid auth."""
     webhook_data = config_entry.data["webhooks"][0]
@@ -108,7 +110,7 @@ async def test_webhook_handler_rejects_invalid_auth(
 async def test_webhook_handler_missing_auth(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    webhook_test_env,
+    webhook_test_env: TestClient,
 ) -> None:
     """Test webhook handler requires the auth field."""
     webhook_data = config_entry.data["webhooks"][0]
@@ -116,6 +118,28 @@ async def test_webhook_handler_missing_auth(
     response = await webhook_test_env.post(
         f"/api/webhook/{webhook_data['webhook_id']}",
         json={"not_auth": "value"},
+    )
+    assert response.status == HTTPStatus.BAD_REQUEST
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get(f"event.{config_entry.data['webhooks'][0]['name']}")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+
+async def test_webhook_handler_invalid_json(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    webhook_test_env: TestClient,
+) -> None:
+    """Test webhook handler rejects invalid JSON payloads."""
+    webhook_data = config_entry.data["webhooks"][0]
+
+    response = await webhook_test_env.post(
+        f"/api/webhook/{webhook_data['webhook_id']}",
+        data="not json",
+        headers={"Content-Type": "application/json"},
     )
     assert response.status == HTTPStatus.BAD_REQUEST
 

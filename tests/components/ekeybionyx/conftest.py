@@ -3,6 +3,7 @@
 from http import HTTPStatus
 from unittest.mock import patch
 
+from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant.components.ekeybionyx.const import DOMAIN
@@ -191,7 +192,7 @@ async def webhook_test_env(
     hass: HomeAssistant,
     load_config_entry: None,
     hass_client_no_auth: ClientSessionGenerator,
-):
+) -> TestClient:
     """Provide a ready HTTP/webhook stack and return client."""
     assert await async_setup_component(hass, "http", {"http": {}})
     assert await async_setup_component(hass, "webhook", {})

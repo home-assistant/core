@@ -54,7 +54,10 @@ class EkeyEvent(EventEntity):
         async def async_webhook_handler(
             hass: HomeAssistant, webhook_id: str, request: Request
         ) -> Response | None:
-            payload = await request.json()
+            try:
+                payload = await request.json()
+            except ValueError:
+                return Response(status=HTTPStatus.BAD_REQUEST)
             auth = payload.get("auth")
 
             if auth is None:
