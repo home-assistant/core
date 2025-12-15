@@ -22,7 +22,6 @@ class DeviceWrapper:
     """Base device wrapper."""
 
     options: list[str] | None = None
-    """Valid options for the wrapper, if applicable."""
 
     def read_device_status(self, device: CustomerDevice) -> Any | None:
         """Read device status and convert to a Home Assistant value."""
