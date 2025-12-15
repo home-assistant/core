@@ -440,6 +440,15 @@ options_schema = partial(generate_schema, flow_type="options")
 config_schema = partial(generate_schema, flow_type="config")
 
 
+async def _get_forecast_description_place_holders(
+    handler: SchemaCommonFlowHandler,
+) -> dict[str, str]:
+    return {
+        "daily_link": "https://www.home-assistant.io/integrations/template/#daily-weather-forecast",
+        "hourly_link": "https://www.home-assistant.io/integrations/template/#hourly-weather-forecast",
+    }
+
+
 async def choose_options_step(options: dict[str, Any]) -> str:
     """Return next step_id for options flow according to template_type."""
     return cast(str, options["template_type"])
@@ -620,6 +629,7 @@ CONFIG_FLOW = {
         config_schema(Platform.WEATHER),
         preview="template",
         validate_user_input=validate_user_input(Platform.WEATHER),
+        description_placeholders=_get_forecast_description_place_holders,
     ),
 }
 
@@ -704,6 +714,7 @@ OPTIONS_FLOW = {
         options_schema(Platform.WEATHER),
         preview="template",
         validate_user_input=validate_user_input(Platform.WEATHER),
+        description_placeholders=_get_forecast_description_place_holders,
     ),
 }
 

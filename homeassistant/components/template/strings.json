@@ -523,8 +523,8 @@
         "data_description": {
           "condition": "Defines a template to get the current weather condition",
           "device_id": "[%key:component::template::common::device_id_description%]",
-          "forecast_daily": "Defines a template to get the [daily forecast data]({https://www.home-assistant.io/integrations/template/#daily-weather-forecast})",
-          "forecast_hourly": "Defines a template to get the [hourly forecast data]({https://www.home-assistant.io/integrations/template/#hourly-weather-forecast})",
+          "forecast_daily": "Defines a template to get the [daily forecast data]({daily_link})",
+          "forecast_hourly": "Defines a template to get the [hourly forecast data]({hourly_link})",
           "humidity": "Defines a template to get the current humidity",
           "temperature": "Defines a template to get the current temperature",
           "temperature_unit": "The temperature unit"
