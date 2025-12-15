@@ -1,6 +1,7 @@
 """Common fixtures for the Anglian Water tests."""
 
 from collections.abc import Generator
+from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pyanglianwater.meter import SmartMeter
@@ -38,6 +39,7 @@ def mock_smart_meter() -> SmartMeter:
     mock.latest_read = 50
     mock.yesterday_water_cost = 0.5
     mock.yesterday_sewerage_cost = 0.5
+    mock.last_updated = datetime(year=2025, month=1, day=1, hour=0, minute=0, second=0)
     return mock
 
 
