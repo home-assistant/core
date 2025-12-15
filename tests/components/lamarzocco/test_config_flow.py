@@ -531,7 +531,7 @@ async def test_options_flow_bluetooth_required_for_offline_mode(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test options flow."""
+    """Test options flow validates that Bluetooth is required when offline mode is enabled."""
     await async_init_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
