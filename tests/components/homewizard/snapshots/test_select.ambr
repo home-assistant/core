@@ -14,7 +14,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'standby',
+    'state': 'zero',
   })
 # ---
 # name: test_select_entity_snapshots[HWE-P1-select.device_battery_group_mode].1
