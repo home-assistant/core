@@ -15,6 +15,13 @@ from .entity import MealieEntity
 
 PARALLEL_UPDATES = 0
 
+SUPPORTED_MEALPLAN_ENTRY_TYPES = [
+    MealplanEntryType.BREAKFAST,
+    MealplanEntryType.DINNER,
+    MealplanEntryType.LUNCH,
+    MealplanEntryType.SIDE,
+]
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -26,7 +33,7 @@ async def async_setup_entry(
 
     async_add_entities(
         MealieMealplanCalendarEntity(coordinator, entry_type)
-        for entry_type in MealplanEntryType
+        for entry_type in SUPPORTED_MEALPLAN_ENTRY_TYPES
     )
 
 

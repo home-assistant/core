@@ -87,6 +87,9 @@
       }
     },
     "number": {
+      "bbw_dose": {
+        "name": "Brew by weight {dose}"
+      },
       "coffee_temp": {
         "name": "Coffee target temperature"
       },
@@ -101,9 +104,20 @@
       },
       "smart_standby_time": {
         "name": "Smart standby time"
+      },
+      "steam_temp": {
+        "name": "Steam target temperature"
       }
     },
     "select": {
+      "bbw_dose_mode": {
+        "name": "Brew by weight dose mode",
+        "state": {
+          "continuous": "Continuous",
+          "dose1": "Dose 1",
+          "dose2": "Dose 2"
+        }
+      },
       "prebrew_infusion_select": {
         "name": "Prebrew/-infusion mode",
         "state": {
@@ -179,6 +193,9 @@
     },
     "auto_on_off_error": {
       "message": "Error while setting auto on/off to {state} for {id}"
+    },
+    "bluetooth_connection_failed": {
+      "message": "Error while connecting to machine via Bluetooth"
     },
     "button_error": {
       "message": "Error while executing button {key}"
