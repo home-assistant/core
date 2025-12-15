@@ -99,7 +99,7 @@ from tests.common import MockConfigEntry, async_capture_events, async_load_fixtu
 from tests.typing import ClientSessionGenerator
 
 
-async def test_webhook_platform_init(hass: HomeAssistant, webhook_platform) -> None:
+async def test_webhook_platform_init(hass: HomeAssistant, webhook_bot) -> None:
     """Test initialization of the webhooks platform."""
     assert hass.services.has_service(DOMAIN, SERVICE_SEND_MESSAGE) is True
 
