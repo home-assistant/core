@@ -1,7 +1,7 @@
 """template conftest."""
 
-from enum import Enum, StrEnum
 from dataclasses import dataclass
+from enum import Enum, StrEnum
 
 import pytest
 
