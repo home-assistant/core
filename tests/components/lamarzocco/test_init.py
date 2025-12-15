@@ -1,10 +1,10 @@
 """Test initialization of lamarzocco."""
 
 from datetime import timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, PropertyMock
 
 from freezegun.api import FrozenDateTimeFactory
-from pylamarzocco.const import FirmwareType, ModelName
+from pylamarzocco.const import FirmwareType
 from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 from pylamarzocco.models import WebSocketDetails
 import pytest
@@ -25,12 +25,7 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 
-from . import (
-    MOCK_INSTALLATION_KEY,
-    USER_INPUT,
-    async_init_integration,
-    get_bluetooth_service_info,
-)
+from . import MOCK_INSTALLATION_KEY, USER_INPUT, async_init_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -56,6 +51,7 @@ async def test_config_entry_not_ready(
     mock_lamarzocco: MagicMock,
 ) -> None:
     """Test the La Marzocco configuration entry not ready."""
+    mock_lamarzocco.bluetooth_client_available = False
     mock_lamarzocco.websocket.connected = False
     mock_lamarzocco.get_dashboard.side_effect = RequestNotSuccessful("")
 
@@ -196,38 +192,6 @@ async def test_config_flow_entry_migration_downgrade(
     assert not await hass.config_entries.async_setup(entry.entry_id)
 
 
-async def test_bluetooth_is_set_from_discovery(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_lamarzocco: MagicMock,
-    mock_cloud_client: MagicMock,
-) -> None:
-    """Check we can fill a device from discovery info."""
-
-    service_info = get_bluetooth_service_info(
-        ModelName.GS3_MP, mock_lamarzocco.serial_number
-    )
-    mock_cloud_client.get_thing_settings.return_value.ble_auth_token = "token"
-    with (
-        patch(
-            "homeassistant.components.lamarzocco.async_discovered_service_info",
-            return_value=[service_info],
-        ) as discovery,
-        patch(
-            "homeassistant.components.lamarzocco.LaMarzoccoMachine"
-        ) as mock_machine_class,
-    ):
-        mock_machine_class.return_value = mock_lamarzocco
-        await async_init_integration(hass, mock_config_entry)
-    discovery.assert_called_once()
-    assert mock_machine_class.call_count == 1
-    _, kwargs = mock_machine_class.call_args
-    assert kwargs["bluetooth_client"] is not None
-
-    assert mock_config_entry.data[CONF_MAC] == service_info.address
-    assert mock_config_entry.data[CONF_TOKEN] == "token"
-
-
 async def test_websocket_closed_on_unload(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -319,12 +283,11 @@ async def test_websocket_reconnects_after_termination(
     mock_config_entry: MockConfigEntry,
     mock_lamarzocco: MagicMock,
     freezer: FrozenDateTimeFactory,
+    mock_websocket_terminated: PropertyMock,
 ) -> None:
     """Test the websocket reconnects after background task terminates."""
-    # Setup: websocket connected initially
-    mock_websocket = MagicMock()
-    mock_websocket.closed = False
-    mock_lamarzocco.websocket = WebSocketDetails(mock_websocket, None)
+    # Setup: websocket disconnected initially
+    mock_websocket_terminated.return_value = True
 
     await async_init_integration(hass, mock_config_entry)
 
@@ -332,17 +295,12 @@ async def test_websocket_reconnects_after_termination(
     assert mock_lamarzocco.connect_dashboard_websocket.call_count == 1
 
     # Simulate websocket disconnection (e.g., after internet outage)
-    mock_websocket.closed = True
+    mock_websocket_terminated.return_value = True
 
-    # Simulate the background task terminating by patching websocket_terminated
-    with patch(
-        "homeassistant.components.lamarzocco.coordinator.LaMarzoccoConfigUpdateCoordinator.websocket_terminated",
-        new=True,
-    ):
-        # Trigger the coordinator's update (which runs every 60 seconds)
-        freezer.tick(timedelta(seconds=61))
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+    # Trigger the coordinator's update (which runs every 60 seconds)
+    freezer.tick(timedelta(seconds=61))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     # Verify websocket reconnection was attempted
     assert mock_lamarzocco.connect_dashboard_websocket.call_count == 2

@@ -30,7 +30,6 @@ from homeassistant.const import (
 DOMAIN = "tuya"
 LOGGER = logging.getLogger(__package__)
 
-CONF_APP_TYPE = "tuya_app_type"
 CONF_ENDPOINT = "endpoint"
 CONF_TERMINAL_ID = "terminal_id"
 CONF_TOKEN_INFO = "token_info"
@@ -48,6 +47,9 @@ TUYA_RESPONSE_MSG = "msg"
 TUYA_RESPONSE_QR_CODE = "qrcode"
 TUYA_RESPONSE_RESULT = "result"
 TUYA_RESPONSE_SUCCESS = "success"
+
+CELSIUS_ALIASES = {"°c", "c", "celsius", "℃"}
+FAHRENHEIT_ALIASES = {"°f", "f", "fahrenheit", "℉"}
 
 PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
@@ -1159,12 +1161,12 @@ UNITS = (
     ),
     UnitOfMeasurement(
         unit=UnitOfTemperature.CELSIUS,
-        aliases={"°c", "c", "celsius", "℃"},
+        aliases=CELSIUS_ALIASES,
         device_classes={SensorDeviceClass.TEMPERATURE},
     ),
     UnitOfMeasurement(
         unit=UnitOfTemperature.FAHRENHEIT,
-        aliases={"°f", "f", "fahrenheit"},
+        aliases=FAHRENHEIT_ALIASES,
         device_classes={SensorDeviceClass.TEMPERATURE},
     ),
     UnitOfMeasurement(

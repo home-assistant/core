@@ -6,6 +6,7 @@
   "config_flow": true,
   "dependencies": ["ssdp"],
   "documentation": "https://www.home-assistant.io/integrations/dlna_dms",
+  "integration_type": "service",
   "iot_class": "local_polling",
   "requirements": ["async-upnp-client==0.46.0"],
   "ssdp": [

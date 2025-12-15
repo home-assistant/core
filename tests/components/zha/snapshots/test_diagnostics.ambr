@@ -206,6 +206,8 @@
         'profile_id': 260,
       }),
     }),
+    'exposes_features': list([
+    ]),
     'friendly_manufacturer': 'FakeManufacturer',
     'friendly_model': 'FakeModel',
     'ieee': '**REDACTED**',
@@ -235,7 +237,6 @@
     'power_source': 'Mains',
     'quirk_applied': False,
     'quirk_class': 'zigpy.device.Device',
-    'quirk_id': None,
     'routes': list([
     ]),
     'rssi': None,

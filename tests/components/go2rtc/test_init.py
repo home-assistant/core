@@ -2,9 +2,11 @@
 
 from collections.abc import Awaitable, Callable
 import logging
+from pathlib import Path
 from typing import NamedTuple
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import ANY, AsyncMock, Mock, patch
 
+from aiohttp import BasicAuth, UnixConnector
 from aiohttp.client_exceptions import ClientConnectionError, ServerConnectionError
 from awesomeversion import AwesomeVersion
 from go2rtc_client import Stream
@@ -40,9 +42,11 @@ from homeassistant.components.go2rtc.const import (
     DOMAIN,
     RECOMMENDED_VERSION,
 )
+from homeassistant.components.go2rtc.util import get_go2rtc_unix_socket_path
 from homeassistant.components.stream import Orientation
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_URL
+from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
+from homeassistant.core import EVENT_HOMEASSISTANT_STOP
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
@@ -189,12 +193,40 @@ async def _test_setup_and_signaling(
     "mock_go2rtc_entry",
 )
 @pytest.mark.parametrize(
-    ("config", "ui_enabled"),
+    ("config", "ui_enabled", "expected_username", "expected_password"),
     [
-        ({DOMAIN: {}}, False),
-        ({DOMAIN: {CONF_DEBUG_UI: True}}, True),
-        ({DEFAULT_CONFIG_DOMAIN: {}}, False),
-        ({DEFAULT_CONFIG_DOMAIN: {}, DOMAIN: {CONF_DEBUG_UI: True}}, True),
+        ({DOMAIN: {}}, False, "mock_username_token", "mock_password_token"),
+        (
+            {
+                DOMAIN: {
+                    CONF_DEBUG_UI: True,
+                    CONF_USERNAME: "test_username",
+                    CONF_PASSWORD: "test",
+                }
+            },
+            True,
+            "test_username",
+            "test",
+        ),
+        (
+            {DEFAULT_CONFIG_DOMAIN: {}},
+            False,
+            "mock_username_token",
+            "mock_password_token",
+        ),
+        (
+            {
+                DEFAULT_CONFIG_DOMAIN: {},
+                DOMAIN: {
+                    CONF_DEBUG_UI: True,
+                    CONF_USERNAME: "test_username",
+                    CONF_PASSWORD: "test",
+                },
+            },
+            True,
+            "test_username",
+            "test",
+        ),
     ],
 )
 @pytest.mark.parametrize("has_go2rtc_entry", [True, False])
@@ -208,25 +240,43 @@ async def test_setup_go_binary(
     server_stop: Mock,
     init_test_integration: MockCamera,
     has_go2rtc_entry: bool,
+    server_dir: Path,
     config: ConfigType,
     ui_enabled: bool,
+    expected_username: str,
+    expected_password: str,
 ) -> None:
     """Test the go2rtc config entry with binary."""
     assert (len(hass.config_entries.async_entries(DOMAIN)) == 1) == has_go2rtc_entry
 
     def after_setup() -> None:
-        server.assert_called_once_with(hass, "/usr/bin/go2rtc", enable_ui=ui_enabled)
+        server.assert_called_once_with(
+            hass,
+            "/usr/bin/go2rtc",
+            ANY,
+            enable_ui=ui_enabled,
+            username=expected_username,
+            password=expected_password,
+            working_dir=str(server_dir),
+        )
+        call_kwargs = server.call_args[1]
+        assert call_kwargs["username"] == expected_username
+        assert call_kwargs["password"] == expected_password
         server_start.assert_called_once()
 
-    await _test_setup_and_signaling(
-        hass,
-        issue_registry,
-        rest_client,
-        ws_client,
-        config,
-        after_setup,
-        init_test_integration,
-    )
+    with patch("homeassistant.components.go2rtc.token_hex") as mock_token_hex:
+        # First call for username, second call for password
+        mock_token_hex.side_effect = ["mock_username_token", "mock_password_token"]
+
+        await _test_setup_and_signaling(
+            hass,
+            issue_registry,
+            rest_client,
+            ws_client,
+            config,
+            after_setup,
+            init_test_integration,
+        )
 
     await hass.async_stop()
     server_stop.assert_called_once()
@@ -419,6 +469,25 @@ ERR_UNSUPPORTED_VERSION = "The go2rtc server version is not supported"
 _INVALID_CONFIG = "Invalid config for 'go2rtc': "
 ERR_INVALID_URL = _INVALID_CONFIG + "invalid url"
 ERR_EXCLUSIVE = _INVALID_CONFIG + DEBUG_UI_URL_MESSAGE
+ERR_AUTH_WITHOUT_URL_OR_UI = (
+    _INVALID_CONFIG
+    + "Username and password can only be set when a URL is configured or debug_ui is true"
+)
+ERR_AUTH_INCOMPLETE = (
+    _INVALID_CONFIG
+    + "some but not all values in the same group of inclusion 'auth' 'go2rtc-><auth>',"
+)
+ERR_AUTH_REQUIRED_WITH_DEBUG_UI = (
+    _INVALID_CONFIG + "Username and password must be set when debug_ui is true"
+)
+ERR_USERNAME_EMPTY = (
+    _INVALID_CONFIG
+    + "length of value must be at least 1 for dictionary value 'go2rtc->username'"
+)
+ERR_PASSWORD_EMPTY = (
+    _INVALID_CONFIG
+    + "length of value must be at least 1 for dictionary value 'go2rtc->password'"
+)
 ERR_URL_REQUIRED = "Go2rtc URL required in non-docker installs"
 
 
@@ -458,6 +527,60 @@ async def test_non_user_setup_with_error(
             None,
             True,
             ERR_EXCLUSIVE,
+        ),
+        (
+            {DOMAIN: {CONF_USERNAME: "test_user", CONF_PASSWORD: "test_pass"}},
+            "/usr/bin/go2rtc",
+            True,
+            ERR_AUTH_WITHOUT_URL_OR_UI,
+        ),
+        (
+            {DOMAIN: {CONF_URL: "http://localhost:1984", CONF_USERNAME: "test_user"}},
+            None,
+            True,
+            ERR_AUTH_INCOMPLETE,
+        ),
+        (
+            {DOMAIN: {CONF_URL: "http://localhost:1984", CONF_PASSWORD: "test_pass"}},
+            None,
+            True,
+            ERR_AUTH_INCOMPLETE,
+        ),
+        (
+            {DOMAIN: {CONF_DEBUG_UI: True, CONF_USERNAME: "test_user"}},
+            "/usr/bin/go2rtc",
+            True,
+            ERR_AUTH_INCOMPLETE,
+        ),
+        (
+            {DOMAIN: {CONF_DEBUG_UI: True, CONF_PASSWORD: "test_pass"}},
+            "/usr/bin/go2rtc",
+            True,
+            ERR_AUTH_INCOMPLETE,
+        ),
+        (
+            {DOMAIN: {CONF_DEBUG_UI: True}},
+            "/usr/bin/go2rtc",
+            True,
+            ERR_AUTH_REQUIRED_WITH_DEBUG_UI,
+        ),
+        (
+            {DOMAIN: {CONF_DEBUG_UI: True, CONF_USERNAME: "", CONF_PASSWORD: ""}},
+            "/usr/bin/go2rtc",
+            True,
+            ERR_USERNAME_EMPTY,
+        ),
+        (
+            {
+                DOMAIN: {
+                    CONF_DEBUG_UI: True,
+                    CONF_USERNAME: "username",
+                    CONF_PASSWORD: "",
+                }
+            },
+            "/usr/bin/go2rtc",
+            True,
+            ERR_PASSWORD_EMPTY,
         ),
     ],
 )
@@ -905,3 +1028,148 @@ async def test_stream_orientation_with_generic_camera(
             rest_client,
             "ffmpeg:https://test.stream/video.m3u8#video=h264#audio=copy#raw=-vf vflip",
         )
+
+
+@pytest.mark.usefixtures(
+    "mock_get_binary",
+    "mock_is_docker_env",
+    "mock_go2rtc_entry",
+    "rest_client",
+    "server",
+)
+async def test_unix_socket_connection(hass: HomeAssistant, server_dir: Path) -> None:
+    """Test Unix socket is used for HA-managed go2rtc instances."""
+    config = {DOMAIN: {}}
+
+    with (
+        patch("homeassistant.components.go2rtc.ClientSession") as mock_session_cls,
+        patch("homeassistant.components.go2rtc.token_hex") as mock_token_hex,
+    ):
+        mock_session = AsyncMock()
+        mock_session_cls.return_value = mock_session
+        # First call for username, second call for password
+        mock_token_hex.side_effect = ["mock_username_token", "mock_password_token"]
+
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        # Verify ClientSession was created with UnixConnector and auth
+        mock_session_cls.assert_called_once()
+        call_kwargs = mock_session_cls.call_args[1]
+        assert "connector" in call_kwargs
+        connector = call_kwargs["connector"]
+        assert isinstance(connector, UnixConnector)
+        assert connector.path == get_go2rtc_unix_socket_path(server_dir)
+        # Auth should be auto-generated when credentials are not explicitly configured
+        assert "auth" in call_kwargs
+        auth = call_kwargs["auth"]
+        assert isinstance(auth, BasicAuth)
+        # Verify auto-generated credentials match our mocked values
+        assert auth.login == "mock_username_token"
+        assert auth.password == "mock_password_token"
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
+
+        mock_session.close.assert_called_once()
+
+
+@pytest.mark.usefixtures("rest_client", "server")
+async def test_unix_socket_not_used_for_custom_server(hass: HomeAssistant) -> None:
+    """Test Unix socket is not used for custom go2rtc instances."""
+    config = {DOMAIN: {CONF_URL: "http://localhost:1984/"}}
+
+    with patch(
+        "homeassistant.components.go2rtc.async_get_clientsession"
+    ) as mock_get_session:
+        mock_session = AsyncMock()
+        mock_get_session.return_value = mock_session
+
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        # Verify standard clientsession was used, not UnixConnector
+        mock_get_session.assert_called_once_with(hass)
+
+
+@pytest.mark.usefixtures("rest_client", "server")
+async def test_basic_auth_with_custom_url(hass: HomeAssistant) -> None:
+    """Test BasicAuth session is created when username and password are provided with custom URL."""
+    config = {
+        DOMAIN: {
+            CONF_URL: "http://localhost:1984/",
+            CONF_USERNAME: "test_user",
+            CONF_PASSWORD: "test_pass",
+        }
+    }
+
+    with patch(
+        "homeassistant.components.go2rtc.async_create_clientsession"
+    ) as mock_create_session:
+        mock_session = AsyncMock()
+        mock_create_session.return_value = mock_session
+
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        # Verify async_create_clientsession was called with BasicAuth
+        mock_create_session.assert_called_once()
+        call_kwargs = mock_create_session.call_args[1]
+        assert "auth" in call_kwargs
+        auth = call_kwargs["auth"]
+        assert isinstance(auth, BasicAuth)
+        assert auth.login == "test_user"
+        assert auth.password == "test_pass"
+
+
+@pytest.mark.usefixtures("rest_client")
+async def test_basic_auth_with_debug_ui(hass: HomeAssistant, server_dir: Path) -> None:
+    """Test BasicAuth session is created when username and password are provided with debug_ui."""
+    config = {
+        DOMAIN: {
+            CONF_DEBUG_UI: True,
+            CONF_USERNAME: "test_user",
+            CONF_PASSWORD: "test_pass",
+        }
+    }
+
+    with (
+        patch(
+            "homeassistant.components.go2rtc.Server",
+            autospec=True,
+        ) as mock_server_cls,
+        patch("homeassistant.components.go2rtc.ClientSession") as mock_session_cls,
+        patch("homeassistant.components.go2rtc.is_docker_env", return_value=True),
+        patch(
+            "homeassistant.components.go2rtc.shutil.which",
+            return_value="/usr/bin/go2rtc",
+        ),
+    ):
+        mock_session = AsyncMock()
+        mock_session_cls.return_value = mock_session
+
+        # Configure the Server mock instance
+        mock_server_instance = AsyncMock()
+        mock_server_cls.return_value = mock_server_instance
+
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        # Verify ClientSession was created with BasicAuth and UnixConnector
+        mock_session_cls.assert_called_once()
+        call_kwargs = mock_session_cls.call_args[1]
+        assert "connector" in call_kwargs
+        connector = call_kwargs["connector"]
+        assert isinstance(connector, UnixConnector)
+        assert connector.path == get_go2rtc_unix_socket_path(server_dir)
+        assert "auth" in call_kwargs
+        auth = call_kwargs["auth"]
+        assert isinstance(auth, BasicAuth)
+        assert auth.login == "test_user"
+        assert auth.password == "test_pass"
+
+        # Verify Server was called with username and password
+        mock_server_cls.assert_called_once()
+        call_kwargs = mock_server_cls.call_args[1]
+        assert call_kwargs["username"] == "test_user"
+        assert call_kwargs["password"] == "test_pass"

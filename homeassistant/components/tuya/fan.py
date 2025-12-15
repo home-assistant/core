@@ -21,16 +21,11 @@ from homeassistant.util.percentage import (
 )
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, DPType
+from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .models import (
-    DPCodeBooleanWrapper,
-    DPCodeEnumWrapper,
-    EnumTypeData,
-    IntegerTypeData,
-    find_dpcode,
-)
-from .util import get_dpcode
+from .models import DPCodeBooleanWrapper, DPCodeEnumWrapper, DPCodeIntegerWrapper
+from .type_information import IntegerTypeInformation
+from .util import RemapHelper, get_dpcode
 
 _DIRECTION_DPCODES = (DPCode.FAN_DIRECTION,)
 _MODE_DPCODES = (DPCode.FAN_MODE, DPCode.MODE)
@@ -53,6 +48,19 @@ TUYA_SUPPORT_TYPE: set[DeviceCategory] = {
 }
 
 
+class _DirectionEnumWrapper(DPCodeEnumWrapper):
+    """Wrapper for fan direction DP code."""
+
+    def read_device_status(self, device: CustomerDevice) -> str | None:
+        """Read the device status and return the direction string."""
+        if (value := super().read_device_status(device)) and value in {
+            DIRECTION_FORWARD,
+            DIRECTION_REVERSE,
+        }:
+            return value
+        return None
+
+
 def _has_a_valid_dpcode(device: CustomerDevice) -> bool:
     """Check if the device has at least one valid DP code."""
     properties_to_check: list[DPCode | tuple[DPCode, ...] | None] = [
@@ -64,6 +72,60 @@ def _has_a_valid_dpcode(device: CustomerDevice) -> bool:
         _DIRECTION_DPCODES,
     ]
     return any(get_dpcode(device, code) for code in properties_to_check)
+
+
+class _FanSpeedEnumWrapper(DPCodeEnumWrapper):
+    """Wrapper for fan speed DP code (from an enum)."""
+
+    def get_speed_count(self) -> int:
+        """Get the number of speeds supported by the fan."""
+        return len(self.type_information.range)
+
+    def read_device_status(self, device: CustomerDevice) -> int | None:
+        """Get the current speed as a percentage."""
+        if (value := super().read_device_status(device)) is None:
+            return None
+        return ordered_list_item_to_percentage(self.type_information.range, value)
+
+    def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
+        """Convert a Home Assistant value back to a raw device value."""
+        return percentage_to_ordered_list_item(self.type_information.range, value)
+
+
+class _FanSpeedIntegerWrapper(DPCodeIntegerWrapper):
+    """Wrapper for fan speed DP code (from an integer)."""
+
+    def __init__(self, dpcode: str, type_information: IntegerTypeInformation) -> None:
+        """Init DPCodeIntegerWrapper."""
+        super().__init__(dpcode, type_information)
+        self._remap_helper = RemapHelper.from_type_information(type_information, 1, 100)
+
+    def get_speed_count(self) -> int:
+        """Get the number of speeds supported by the fan."""
+        return 100
+
+    def read_device_status(self, device: CustomerDevice) -> int | None:
+        """Get the current speed as a percentage."""
+        if (value := super().read_device_status(device)) is None:
+            return None
+        return round(self._remap_helper.remap_value_to(value))
+
+    def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
+        """Convert a Home Assistant value back to a raw device value."""
+        return round(self._remap_helper.remap_value_from(value))
+
+
+def _get_speed_wrapper(
+    device: CustomerDevice,
+) -> _FanSpeedEnumWrapper | _FanSpeedIntegerWrapper | None:
+    """Get the speed wrapper for the device."""
+    if int_wrapper := _FanSpeedIntegerWrapper.find_dpcode(
+        device, _SPEED_DPCODES, prefer_function=True
+    ):
+        return int_wrapper
+    return _FanSpeedEnumWrapper.find_dpcode(
+        device, _SPEED_DPCODES, prefer_function=True
+    )
 
 
 async def async_setup_entry(
@@ -85,9 +147,16 @@ async def async_setup_entry(
                     TuyaFanEntity(
                         device,
                         manager,
+                        direction_wrapper=_DirectionEnumWrapper.find_dpcode(
+                            device, _DIRECTION_DPCODES, prefer_function=True
+                        ),
                         mode_wrapper=DPCodeEnumWrapper.find_dpcode(
                             device, _MODE_DPCODES, prefer_function=True
                         ),
+                        oscillate_wrapper=DPCodeBooleanWrapper.find_dpcode(
+                            device, _OSCILLATE_DPCODES, prefer_function=True
+                        ),
+                        speed_wrapper=_get_speed_wrapper(device),
                         switch_wrapper=DPCodeBooleanWrapper.find_dpcode(
                             device, _SWITCH_DPCODES, prefer_function=True
                         ),
@@ -105,10 +174,6 @@ async def async_setup_entry(
 class TuyaFanEntity(TuyaEntity, FanEntity):
     """Tuya Fan Device."""
 
-    _direction: EnumTypeData | None = None
-    _oscillate: DPCode | None = None
-    _speed: IntegerTypeData | None = None
-    _speeds: EnumTypeData | None = None
     _attr_name = None
 
     def __init__(
@@ -116,37 +181,32 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
         device: CustomerDevice,
         device_manager: Manager,
         *,
+        direction_wrapper: _DirectionEnumWrapper | None,
         mode_wrapper: DPCodeEnumWrapper | None,
+        oscillate_wrapper: DPCodeBooleanWrapper | None,
+        speed_wrapper: _FanSpeedEnumWrapper | _FanSpeedIntegerWrapper | None,
         switch_wrapper: DPCodeBooleanWrapper | None,
     ) -> None:
         """Init Tuya Fan Device."""
         super().__init__(device, device_manager)
+        self._direction_wrapper = direction_wrapper
         self._mode_wrapper = mode_wrapper
+        self._oscillate_wrapper = oscillate_wrapper
+        self._speed_wrapper = speed_wrapper
         self._switch_wrapper = switch_wrapper
+
         if mode_wrapper:
             self._attr_supported_features |= FanEntityFeature.PRESET_MODE
             self._attr_preset_modes = mode_wrapper.type_information.range
 
-        # Find speed controls, can be either percentage or a set of speeds
-        if int_type := find_dpcode(
-            self.device, _SPEED_DPCODES, dptype=DPType.INTEGER, prefer_function=True
-        ):
+        if speed_wrapper:
             self._attr_supported_features |= FanEntityFeature.SET_SPEED
-            self._speed = int_type
-        elif enum_type := find_dpcode(
-            self.device, _SPEED_DPCODES, dptype=DPType.ENUM, prefer_function=True
-        ):
-            self._attr_supported_features |= FanEntityFeature.SET_SPEED
-            self._speeds = enum_type
+            self._attr_speed_count = speed_wrapper.get_speed_count()
 
-        if dpcode := get_dpcode(self.device, _OSCILLATE_DPCODES):
-            self._oscillate = dpcode
+        if oscillate_wrapper:
             self._attr_supported_features |= FanEntityFeature.OSCILLATE
 
-        if enum_type := find_dpcode(
-            self.device, _DIRECTION_DPCODES, dptype=DPType.ENUM, prefer_function=True
-        ):
-            self._direction = enum_type
+        if direction_wrapper:
             self._attr_supported_features |= FanEntityFeature.DIRECTION
         if switch_wrapper:
             self._attr_supported_features |= (
@@ -155,42 +215,19 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
-        await self._async_send_dpcode_update(self._mode_wrapper, preset_mode)
+        await self._async_send_wrapper_updates(self._mode_wrapper, preset_mode)
 
-    def set_direction(self, direction: str) -> None:
+    async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
-        if self._direction is None:
-            return
-        self._send_command([{"code": self._direction.dpcode, "value": direction}])
+        await self._async_send_wrapper_updates(self._direction_wrapper, direction)
 
-    def set_percentage(self, percentage: int) -> None:
+    async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
-        if self._speed is not None:
-            self._send_command(
-                [
-                    {
-                        "code": self._speed.dpcode,
-                        "value": int(self._speed.remap_value_from(percentage, 1, 100)),
-                    }
-                ]
-            )
-            return
-
-        if self._speeds is not None:
-            self._send_command(
-                [
-                    {
-                        "code": self._speeds.dpcode,
-                        "value": percentage_to_ordered_list_item(
-                            self._speeds.range, percentage
-                        ),
-                    }
-                ]
-            )
+        await self._async_send_wrapper_updates(self._speed_wrapper, percentage)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
-        await self._async_send_dpcode_update(self._switch_wrapper, False)
+        await self._async_send_wrapper_updates(self._switch_wrapper, False)
 
     async def async_turn_on(
         self,
@@ -202,39 +239,22 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
         if self._switch_wrapper is None:
             return
 
-        commands: list[dict[str, str | bool | int]] = [
-            self._switch_wrapper.get_update_command(self.device, True)
-        ]
+        commands = self._switch_wrapper.get_update_commands(self.device, True)
 
-        if percentage is not None and self._speed is not None:
-            commands.append(
-                {
-                    "code": self._speed.dpcode,
-                    "value": int(self._speed.remap_value_from(percentage, 1, 100)),
-                }
-            )
-
-        if percentage is not None and self._speeds is not None:
-            commands.append(
-                {
-                    "code": self._speeds.dpcode,
-                    "value": percentage_to_ordered_list_item(
-                        self._speeds.range, percentage
-                    ),
-                }
+        if percentage is not None and self._speed_wrapper is not None:
+            commands.extend(
+                self._speed_wrapper.get_update_commands(self.device, percentage)
             )
 
         if preset_mode is not None and self._mode_wrapper:
-            commands.append(
-                self._mode_wrapper.get_update_command(self.device, preset_mode)
+            commands.extend(
+                self._mode_wrapper.get_update_commands(self.device, preset_mode)
             )
         await self._async_send_commands(commands)
 
-    def oscillate(self, oscillating: bool) -> None:
+    async def async_oscillate(self, oscillating: bool) -> None:
         """Oscillate the fan."""
-        if self._oscillate is None:
-            return
-        self._send_command([{"code": self._oscillate, "value": oscillating}])
+        await self._async_send_wrapper_updates(self._oscillate_wrapper, oscillating)
 
     @property
     def is_on(self) -> bool | None:
@@ -244,26 +264,12 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
     @property
     def current_direction(self) -> str | None:
         """Return the current direction of the fan."""
-        if (
-            self._direction is None
-            or (value := self.device.status.get(self._direction.dpcode)) is None
-        ):
-            return None
-
-        if value.lower() == DIRECTION_FORWARD:
-            return DIRECTION_FORWARD
-
-        if value.lower() == DIRECTION_REVERSE:
-            return DIRECTION_REVERSE
-
-        return None
+        return self._read_wrapper(self._direction_wrapper)
 
     @property
     def oscillating(self) -> bool | None:
         """Return true if the fan is oscillating."""
-        if self._oscillate is None:
-            return None
-        return self.device.status.get(self._oscillate)
+        return self._read_wrapper(self._oscillate_wrapper)
 
     @property
     def preset_mode(self) -> str | None:
@@ -273,23 +279,4 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
     @property
     def percentage(self) -> int | None:
         """Return the current speed."""
-        if self._speed is not None:
-            if (value := self.device.status.get(self._speed.dpcode)) is None:
-                return None
-            return int(self._speed.remap_value_to(value, 1, 100))
-
-        if self._speeds is not None:
-            if (
-                value := self.device.status.get(self._speeds.dpcode)
-            ) is None or value not in self._speeds.range:
-                return None
-            return ordered_list_item_to_percentage(self._speeds.range, value)
-
-        return None
-
-    @property
-    def speed_count(self) -> int:
-        """Return the number of speeds the fan supports."""
-        if self._speeds is not None:
-            return len(self._speeds.range)
-        return 100
+        return self._read_wrapper(self._speed_wrapper)

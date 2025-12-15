@@ -22,6 +22,7 @@ from .const import (
     DEPRECATED_FIRMWARE_ISSUE_ID,
     DEPRECATED_FIRMWARES,
     DOMAIN,
+    OPEN_WIFI_AP_ISSUE_ID,
     OUTBOUND_WEBSOCKET_INCORRECTLY_ENABLED_ISSUE_ID,
     BLEScannerMode,
 )
@@ -149,6 +150,45 @@ def async_manage_outbound_websocket_incorrectly_enabled_issue(
     ir.async_delete_issue(hass, DOMAIN, issue_id)
 
 
+@callback
+def async_manage_open_wifi_ap_issue(
+    hass: HomeAssistant,
+    entry: ShellyConfigEntry,
+) -> None:
+    """Manage the open WiFi AP issue."""
+    issue_id = OPEN_WIFI_AP_ISSUE_ID.format(unique=entry.unique_id)
+
+    if TYPE_CHECKING:
+        assert entry.runtime_data.rpc is not None
+
+    device = entry.runtime_data.rpc.device
+
+    # Check if WiFi AP is enabled and is open (no password)
+    if (
+        (wifi_config := device.config.get("wifi"))
+        and (ap_config := wifi_config.get("ap"))
+        and ap_config.get("enable")
+        and ap_config.get("is_open")
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            is_fixable=True,
+            is_persistent=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="open_wifi_ap",
+            translation_placeholders={
+                "device_name": device.name,
+                "ip_address": device.ip_address,
+            },
+            data={"entry_id": entry.entry_id},
+        )
+        return
+
+    ir.async_delete_issue(hass, DOMAIN, issue_id)
+
+
 class ShellyRpcRepairsFlow(RepairsFlow):
     """Handler for an issue fixing flow."""
 
@@ -229,6 +269,49 @@ class DisableOutboundWebSocketFlow(ShellyRpcRepairsFlow):
         return self.async_create_entry(title="", data={})
 
 
+class DisableOpenWiFiApFlow(RepairsFlow):
+    """Handler for Disable Open WiFi AP flow."""
+
+    def __init__(self, device: RpcDevice, issue_id: str) -> None:
+        """Initialize."""
+        self._device = device
+        self.issue_id = issue_id
+
+    async def async_step_init(
+        self, user_input: dict[str, str] | None = None
+    ) -> data_entry_flow.FlowResult:
+        """Handle the first step of a fix flow."""
+        issue_registry = ir.async_get(self.hass)
+        description_placeholders = None
+        if issue := issue_registry.async_get_issue(DOMAIN, self.issue_id):
+            description_placeholders = issue.translation_placeholders
+
+        return self.async_show_menu(
+            menu_options=["confirm", "ignore"],
+            description_placeholders=description_placeholders,
+        )
+
+    async def async_step_confirm(
+        self, user_input: dict[str, str] | None = None
+    ) -> data_entry_flow.FlowResult:
+        """Handle the confirm step of a fix flow."""
+        try:
+            result = await self._device.wifi_setconfig(ap_enable=False)
+            if result.get("restart_required"):
+                await self._device.trigger_reboot()
+        except (DeviceConnectionError, RpcCallError):
+            return self.async_abort(reason="cannot_connect")
+
+        return self.async_create_entry(title="", data={})
+
+    async def async_step_ignore(
+        self, user_input: dict[str, str] | None = None
+    ) -> data_entry_flow.FlowResult:
+        """Handle the ignore step of a fix flow."""
+        ir.async_ignore_issue(self.hass, DOMAIN, self.issue_id, True)
+        return self.async_abort(reason="issue_ignored")
+
+
 async def async_create_fix_flow(
     hass: HomeAssistant, issue_id: str, data: dict[str, str] | None
 ) -> RepairsFlow:
@@ -252,5 +335,8 @@ async def async_create_fix_flow(
 
     if "outbound_websocket_incorrectly_enabled" in issue_id:
         return DisableOutboundWebSocketFlow(device)
+
+    if "open_wifi_ap" in issue_id:
+        return DisableOpenWiFiApFlow(device, issue_id)
 
     return ConfirmRepairFlow()

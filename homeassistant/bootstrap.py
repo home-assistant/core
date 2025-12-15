@@ -1000,7 +1000,7 @@ class _WatchPendingSetups:
             # We log every LOG_SLOW_STARTUP_INTERVAL until all integrations are done
             # once we take over LOG_SLOW_STARTUP_INTERVAL (60s) to start up
             _LOGGER.warning(
-                "Waiting on integrations to complete setup: %s",
+                "Waiting for integrations to complete setup: %s",
                 self._setup_started,
             )
 

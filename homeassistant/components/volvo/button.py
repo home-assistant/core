@@ -64,6 +64,11 @@ _DESCRIPTIONS: tuple[VolvoButtonDescription, ...] = (
         api_command="honk-flash",
         required_command_key="HONK_AND_FLASH",
     ),
+    VolvoButtonDescription(
+        key="lock_reduced_guard",
+        api_command="lock-reduced-guard",
+        required_command_key="LOCK_REDUCED_GUARD",
+    ),
 )
 
 

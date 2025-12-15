@@ -1,7 +1,8 @@
 """Test for the LCN cover platform."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from pypck.inputs import (
     ModStatusMotorPositionBS4,
     ModStatusMotorPositionModule,
@@ -19,6 +20,7 @@ from homeassistant.components.cover import (
     DOMAIN as DOMAIN_COVER,
     CoverState,
 )
+from homeassistant.components.lcn.cover import SCAN_INTERVAL
 from homeassistant.components.lcn.helpers import get_device_connection
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -34,7 +36,7 @@ from homeassistant.helpers import entity_registry as er
 
 from .conftest import MockConfigEntry, MockDeviceConnection, init_integration
 
-from tests.common import snapshot_platform
+from tests.common import async_fire_time_changed, snapshot_platform
 
 COVER_OUTPUTS = "cover.testmodule_cover_outputs"
 COVER_RELAYS = "cover.testmodule_cover_relays"
@@ -520,6 +522,78 @@ async def test_pushed_relays_status_change(
     assert state is not None
     assert state.state == CoverState.OPEN
     assert state.attributes[ATTR_CURRENT_POSITION] == 75
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "request_methods", "return_values"),
+    [
+        (
+            COVER_OUTPUTS,
+            ("request_status_output",),
+            (ModStatusOutput(LcnAddr(0, 7, False), 0, 100),),
+        ),
+        (
+            COVER_RELAYS,
+            ("request_status_relays",),
+            (ModStatusRelays(LcnAddr(0, 7, False), [False] * 8),),
+        ),
+        (
+            COVER_RELAYS_BS4,
+            ("request_status_relays", "request_status_motor_position"),
+            (
+                ModStatusRelays(LcnAddr(0, 7, False), [False] * 8),
+                ModStatusMotorPositionBS4(LcnAddr(0, 7, False), 1, 50),
+            ),
+        ),
+    ],
+)
+async def test_availability(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entry: MockConfigEntry,
+    entity_id: str,
+    request_methods: list[str],
+    return_values: list[ModStatusOutput | ModStatusRelays],
+) -> None:
+    """Test the availability of cover entity."""
+    await init_integration(hass, entry)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
+
+    # no response from device -> unavailable
+    with patch.multiple(
+        MockDeviceConnection,
+        **{
+            request_method: AsyncMock(return_value=None)
+            for request_method in request_methods
+        },
+    ):
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    with patch.multiple(
+        MockDeviceConnection,
+        **{
+            request_method: AsyncMock(return_value=return_value)
+            for request_method, return_value in zip(
+                request_methods, return_values, strict=True
+            )
+        },
+    ):
+        freezer.tick(SCAN_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
 
 
 async def test_unload_config_entry(hass: HomeAssistant, entry: MockConfigEntry) -> None:

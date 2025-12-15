@@ -20,7 +20,7 @@ class SmartThingsConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
     """Handle configuration of SmartThings integrations."""
 
     VERSION = 3
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
     DOMAIN = DOMAIN
 
     @property
