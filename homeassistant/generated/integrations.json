@@ -2729,7 +2729,7 @@
     },
     "hisense_aehw4a1": {
       "name": "Hisense AEH-W4A1",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
