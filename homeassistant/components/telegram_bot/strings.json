@@ -99,6 +99,7 @@
           "data_description": {
             "chat_id": "ID representing the user or group chat to which messages can be sent."
           },
+          "description": "To get your chat ID, follow these steps:\n\n1. Open Telegram and start a chat with [{getidsbot_username}]({getidsbot_url}).\n1. Send any message to the bot.\n1. Your chat ID is in the `id` field of the bot's response.",
           "title": "Add chat"
         }
       }

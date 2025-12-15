@@ -67,6 +67,8 @@ _LOGGER = logging.getLogger(__name__)
 DESCRIPTION_PLACEHOLDERS: dict[str, str] = {
     "botfather_username": "@BotFather",
     "botfather_url": "https://t.me/botfather",
+    "getidsbot_username": "@GetIDs Bot",
+    "getidsbot_url": "https://t.me/getidsbot",
     "socks_url": "socks5://username:password@proxy_ip:proxy_port",
 }
 
@@ -665,6 +667,7 @@ class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema({vol.Required(CONF_CHAT_ID): vol.Coerce(int)}),
+            description_placeholders=DESCRIPTION_PLACEHOLDERS,
             errors=errors,
         )
 
