@@ -82,7 +82,7 @@ def _has_a_valid_dpcode(device: CustomerDevice) -> bool:
 class _FanSpeedEnumWrapper(DPCodeEnumWrapper):
     """Wrapper for fan speed DP code (from an enum)."""
 
-    def read_device_status(self, device: CustomerDevice) -> int | None:
+    def read_device_status(self, device: CustomerDevice) -> int | None:  # type: ignore[override]
         """Get the current speed as a percentage."""
         if (value := super().read_device_status(device)) is None:
             return None
