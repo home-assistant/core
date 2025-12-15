@@ -67,6 +67,14 @@ class SFTPStorageMissingPasswordOrPkey(SFTPStorageException):
     """Exception raised during config flow - when user did not provide password or private key file."""
 
 
+class SFTPStorageWritePermissionDenied(SFTPStorageException):
+    """Exception raised during config flow - when user managed to login but fails to write file due to permission."""
+
+    def __init__(self, backup_location: str) -> None:
+        """Initializes the exception that sets `backup_location` as attribute."""
+        self.backup_location = backup_location
+
+
 class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle an SFTP Storage config flow."""
 
@@ -147,6 +155,12 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
                 # - SFTPStorageMissingPasswordOrPkey, if password and private key are not provided.
                 # - asyncssh.sftp.SFTPNoSuchFile, if directory does not exist.
                 # - asyncssh.sftp.SFTPPermissionDenied, if we don't have access to said directory
+                LOGGER.debug(
+                    "Testing connection to remote host %s@%s:%s",
+                    user_config.username,
+                    user_config.host,
+                    user_config.port,
+                )
                 async with (
                     connect(
                         host=user_config.host,
@@ -157,8 +171,24 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
                     ) as ssh,
                     ssh.start_sftp_client() as sftp,
                 ):
+                    LOGGER.debug(
+                        "Testing remote host (%s@%s:%s) permissions",
+                        user_config.username,
+                        user_config.host,
+                        user_config.port,
+                    )
                     await sftp.chdir(user_config.backup_location)
                     await sftp.listdir()
+                    test_file = f"{user_config.backup_location}/.ha_sftp_storage_test"
+                    LOGGER.debug("Attempting to write to test file: %s", test_file)
+                    try:
+                        async with sftp.open(test_file, "w") as f:
+                            await f.write("")
+                        await sftp.unlink(test_file)
+                    except SFTPPermissionDenied as e:
+                        raise SFTPStorageWritePermissionDenied(
+                            user_config.backup_location
+                        ) from e
 
                 LOGGER.debug(
                     "Will register SFTP Storage agent with user@host %s@%s",
@@ -177,6 +207,11 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "permission_denied"
             except SFTPStorageMissingPasswordOrPkey:
                 errors["base"] = "key_or_password_needed"
+            except SFTPStorageWritePermissionDenied as e:
+                if e.backup_location == "/":
+                    errors["base"] = "sftp_write_root_permission_denied"
+                else:
+                    errors["base"] = "sftp_write_permission_denied"
             except SFTPNoSuchFile:
                 errors["base"] = "sftp_no_such_file"
             except SFTPPermissionDenied:
