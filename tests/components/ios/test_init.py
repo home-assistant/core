@@ -8,7 +8,11 @@ import pytest
 
 from homeassistant.components import ios
 from homeassistant.components.ios import iOSConfigView
-from homeassistant.components.ios.storage import CarPlayStore, async_get_carplay_store
+from homeassistant.components.ios.storage import (
+    DATA_CARPLAY_STORAGE,
+    CarPlayStore,
+    get_carplay_store,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
@@ -79,7 +83,10 @@ async def test_ios_config_view_includes_carplay(hass: HomeAssistant) -> None:
     request.app = mock_app
 
     # Initialize CarPlay store with test data
-    store = await async_get_carplay_store(hass)
+    store = CarPlayStore(hass)
+    await store.async_load()
+    hass.data[DATA_CARPLAY_STORAGE] = store
+
     await store.async_set_data(
         {
             "enabled": True,
@@ -111,7 +118,7 @@ async def test_carplay_storage_setup(hass: HomeAssistant) -> None:
     assert ios.DOMAIN in hass.data
 
     # Verify store can be accessed through the proper function
-    store = await async_get_carplay_store(hass)
+    store = get_carplay_store(hass)
     data = await store.async_get_data()
     assert data == {"enabled": True, "quick_access": []}
 
@@ -254,13 +261,16 @@ async def test_carplay_store_individual_setters(hass: HomeAssistant) -> None:
     assert data["quick_access"] == quick_access
 
 
-async def test_carplay_store_async_get_function(hass: HomeAssistant) -> None:
-    """Test the async_get_carplay_store function reuses store instances."""
-    # Get store first time - should create new instance
-    store1 = await async_get_carplay_store(hass)
+async def test_carplay_store_get_function(hass: HomeAssistant) -> None:
+    """Test the get_carplay_store function access after setup."""
+    # Setup component which loads the store
+    await async_setup_component(hass, ios.DOMAIN, {ios.DOMAIN: {}})
+
+    # Get store - should be already loaded from setup
+    store1 = get_carplay_store(hass)
 
     # Get store second time - should reuse existing instance
-    store2 = await async_get_carplay_store(hass)
+    store2 = get_carplay_store(hass)
 
     # Should be the same instance
     assert store1 is store2

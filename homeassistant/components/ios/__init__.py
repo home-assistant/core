@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
+from homeassistant.components.http.decorators import require_admin
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -43,7 +44,7 @@ from .const import (
     CONF_ACTIONS,
     DOMAIN,
 )
-from .storage import async_get_carplay_store
+from .storage import DATA_CARPLAY_STORAGE, CarPlayStore, get_carplay_store
 
 CONF_PUSH = "push"
 CONF_PUSH_CATEGORIES = "categories"
@@ -266,8 +267,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.data[DOMAIN] = ios_config
 
-    # Initialize CarPlay storage and register API endpoints always
-    await async_get_carplay_store(hass)
+    # Initialize CarPlay storage during setup
+    store = CarPlayStore(hass)
+    await store.async_load()
+    hass.data[DATA_CARPLAY_STORAGE] = store
 
     # Register CarPlay API endpoints - always available regardless of config entries
     hass.http.register_view(iOSCarPlayConfigView())
@@ -334,7 +337,7 @@ class iOSConfigView(HomeAssistantView):
         response_config = self.config.copy()
 
         # Add carplay config from store
-        store = await async_get_carplay_store(hass)
+        store = get_carplay_store(hass)
         carplay_config = await store.async_get_data()
         response_config["carplay"] = carplay_config
 
@@ -387,7 +390,7 @@ class iOSCarPlayConfigView(HomeAssistantView):
     async def get(self, request: web.Request) -> web.Response:
         """Handle the GET request for CarPlay configuration."""
         hass = request.app[KEY_HASS]
-        store = await async_get_carplay_store(hass)
+        store = get_carplay_store(hass)
         carplay_config = await store.async_get_data()
         return self.json(carplay_config)
 
@@ -398,6 +401,7 @@ class iOSCarPlayUpdateView(HomeAssistantView):
     url = "/api/ios/carplay/update"
     name = "api:ios:carplay:update"
 
+    @require_admin
     async def post(self, request: web.Request) -> web.Response:
         """Handle the POST request for CarPlay configuration updates."""
         try:
@@ -406,7 +410,7 @@ class iOSCarPlayUpdateView(HomeAssistantView):
             return self.json_message("Invalid JSON", HTTPStatus.BAD_REQUEST)
 
         hass = request.app[KEY_HASS]
-        store = await async_get_carplay_store(hass)
+        store = get_carplay_store(hass)
 
         # Validate the data structure
         if not isinstance(data, dict):

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable
 from typing import Any
 
@@ -25,28 +24,22 @@ class CarPlayStore:
         self.data: dict[str, Any] = {}
         self.subscriptions: dict[str | None, list[Callable[[], None]]] = {}
         self._loaded = False
-        self._load_lock = asyncio.Lock()
 
     async def async_load(self) -> None:
         """Load the data from storage."""
         if self._loaded:
             return
 
-        async with self._load_lock:
-            # Check again in case another coroutine loaded while we were waiting
-            if self._loaded:
-                return  # type: ignore[unreachable]
-
-            stored_data = await self._store.async_load()
-            if stored_data is not None:
-                self.data = stored_data
-            else:
-                # Default carplay configuration
-                self.data = {
-                    "enabled": True,
-                    "quick_access": [],
-                }
-            self._loaded = True
+        stored_data = await self._store.async_load()
+        if stored_data is not None:
+            self.data = stored_data
+        else:
+            # Default carplay configuration
+            self.data = {
+                "enabled": True,
+                "quick_access": [],
+            }
+        self._loaded = True
 
     async def async_save(self) -> None:
         """Save the data to storage."""
@@ -92,10 +85,6 @@ class CarPlayStore:
         return unsubscribe
 
 
-async def async_get_carplay_store(hass: HomeAssistant) -> CarPlayStore:
+def get_carplay_store(hass: HomeAssistant) -> CarPlayStore:
     """Get the CarPlay store."""
-    if DATA_CARPLAY_STORAGE not in hass.data:
-        store = CarPlayStore(hass)
-        await store.async_load()
-        hass.data[DATA_CARPLAY_STORAGE] = store
     return hass.data[DATA_CARPLAY_STORAGE]
