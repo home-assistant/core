@@ -58,9 +58,9 @@ class AnglianWaterUpdateCoordinator(DataUpdateCoordinator[None]):
 
     async def _async_update_data(self) -> None:
         """Update data from Anglian Water's API."""
-        try
+        try:
+            await self.api.update(self.config_entry.data[CONF_ACCOUNT_NUMBER])
             await self._insert_statistics()
-            return await self.api.update(self.config_entry.data[CONF_ACCOUNT_NUMBER])
         except (ExpiredAccessTokenError, UnknownEndpointError) as err:
             raise UpdateFailed from err
 
