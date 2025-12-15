@@ -50,7 +50,6 @@ class SRPFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                     user_input[CONF_PASSWORD],
                 )
             except botocore.exceptions.ClientError:
-                _LOGGER.exception("Error authenticating HomeLink account")
                 errors["base"] = "srp_auth_failed"
             except Exception:
                 _LOGGER.exception("An unexpected error occurred")
