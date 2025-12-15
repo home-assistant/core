@@ -28,7 +28,7 @@ async def async_setup_entry(
         [
             DimmableLight(entity, entry.runtime_data.local_address)
             for entity in entry.runtime_data.devices
-            if isinstance(entity, dim_device.DimDevice)
+            if type(entity) is dim_device.DimDevice
         ]
     )
 
@@ -42,34 +42,23 @@ class DimmableLight(LightEntity):
     def __init__(self, light: dim_device.DimDevice, local_address: str | None) -> None:
         """Initialize an dimmable light."""
         self._light = light
-        self._name = str(light.name)
         self._state = False
         self._brightness = 255
         self._attr_color_mode = ColorMode.BRIGHTNESS
         self._local_address = local_address
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._light.device_data.id)},
-            name=self.name,
-            model=self._light.device_config.model_name,
-            model_id=str(self._light.device_data.device),
-            sw_version=str(
-                self._light.device_data.data.get("module", {}).get("version", "")
-            ),
+        self._attr_unique_id = str(light.entity_id)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, light.device_data.id)},
+            name=str(light.name),
+            model=light.device_config.model_name,
+            model_id=str(light.device_data.device),
+            sw_version=str(light.device_data.data.get("module", {}).get("version", "")),
         )
 
     @property
     def icon(self) -> str | None:
         """Icon of the entity."""
         return "mdi:lightbulb"
-
-    @property
-    def name(self) -> str:
-        """Return the display name of this light."""
-        return self._name
 
     @property
     def color_mode(self) -> ColorMode:

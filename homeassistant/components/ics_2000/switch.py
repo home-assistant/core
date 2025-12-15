@@ -29,7 +29,7 @@ async def async_setup_entry(
         [
             Switch(entity, entry.runtime_data.local_address)
             for entity in entry.runtime_data.devices
-            if isinstance(entity, switch_device.SwitchDevice)
+            if type(entity) is switch_device.SwitchDevice
         ]
     )
 
@@ -45,20 +45,16 @@ class Switch(SwitchEntity):
     ) -> None:
         """Initialize an switch."""
         self._switch = switch
-        self._name = str(switch.name)
         self._state = False
         self._local_address = local_address
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self._switch.device_data.id)},
-            name=self.name,
-            model=self._switch.device_config.model_name,
-            model_id=str(self._switch.device_data.device),
+        self._attr_unique_id = str(switch.entity_id)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, switch.device_data.id)},
+            name=str(switch.name),
+            model=switch.device_config.model_name,
+            model_id=str(switch.device_data.device),
             sw_version=str(
-                self._switch.device_data.data.get("module", {}).get("version", "")
+                switch.device_data.data.get("module", {}).get("version", "")
             ),
         )
 
@@ -66,11 +62,6 @@ class Switch(SwitchEntity):
     def icon(self) -> str | None:
         """Icon of the entity."""
         return "mdi:flash"
-
-    @property
-    def name(self) -> str:
-        """Return the display name of this switch."""
-        return self._name
 
     @property
     def is_on(self) -> bool | None:
