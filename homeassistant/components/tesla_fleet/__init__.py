@@ -1,6 +1,5 @@
 """Tesla Fleet integration."""
 
-import asyncio
 from typing import Final
 
 from aiohttp.client_exceptions import ClientResponseError
@@ -83,29 +82,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
     region: str = token["ou_code"].lower()
 
     oauth_session = OAuth2Session(hass, entry, implementation)
-    refresh_lock = asyncio.Lock()
 
-    async def _refresh_token() -> str:
-        async with refresh_lock:
-            try:
-                await oauth_session.async_ensure_token_valid()
-            except ClientResponseError as e:
-                if e.status == 401:
-                    raise ConfigEntryAuthFailed from e
-                raise ConfigEntryNotReady from e
-            token: str = oauth_session.token[CONF_ACCESS_TOKEN]
-            return token
+    async def _get_access_token() -> str:
+        try:
+            await oauth_session.async_ensure_token_valid()
+        except ClientResponseError as e:
+            if e.status == 401:
+                raise ConfigEntryAuthFailed from e
+            raise ConfigEntryNotReady from e
+        token: str = oauth_session.token[CONF_ACCESS_TOKEN]
+        return token
 
     # Create API connection
     tesla = TeslaFleetApi(
         session=session,
-        access_token=access_token,
+        access_token=_get_access_token,
         region=region,
         charging_scope=False,
         partner_scope=False,
         energy_scope=Scope.ENERGY_DEVICE_DATA in scopes,
         vehicle_scope=Scope.VEHICLE_DEVICE_DATA in scopes,
-        refresh_hook=_refresh_token,
     )
     try:
         products = (await tesla.products())["response"]
