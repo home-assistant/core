@@ -79,17 +79,17 @@ class _FanSpeedEnumWrapper(DPCodeEnumWrapper):
 
     def get_speed_count(self) -> int:
         """Get the number of speeds supported by the fan."""
-        return len(self.type_information.range)
+        return len(self.range)
 
     def read_device_status(self, device: CustomerDevice) -> int | None:
         """Get the current speed as a percentage."""
         if (value := super().read_device_status(device)) is None:
             return None
-        return ordered_list_item_to_percentage(self.type_information.range, value)
+        return ordered_list_item_to_percentage(self.range, value)
 
     def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
         """Convert a Home Assistant value back to a raw device value."""
-        return percentage_to_ordered_list_item(self.type_information.range, value)
+        return percentage_to_ordered_list_item(self.range, value)
 
 
 class _FanSpeedIntegerWrapper(DPCodeIntegerWrapper):
@@ -197,7 +197,7 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
 
         if mode_wrapper:
             self._attr_supported_features |= FanEntityFeature.PRESET_MODE
-            self._attr_preset_modes = mode_wrapper.type_information.range
+            self._attr_preset_modes = mode_wrapper.range
 
         if speed_wrapper:
             self._attr_supported_features |= FanEntityFeature.SET_SPEED

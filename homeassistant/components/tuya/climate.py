@@ -373,7 +373,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         if hvac_mode_wrapper:
             self._attr_hvac_modes = [HVACMode.OFF]
             unknown_hvac_modes: list[str] = []
-            for tuya_mode in hvac_mode_wrapper.type_information.range:
+            for tuya_mode in hvac_mode_wrapper.range:
                 if tuya_mode in TUYA_HVAC_TO_HA:
                     ha_mode = TUYA_HVAC_TO_HA[tuya_mode]
                     self._hvac_to_tuya[ha_mode] = tuya_mode
@@ -404,7 +404,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         # Determine fan modes
         if fan_mode_wrapper:
             self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
-            self._attr_fan_modes = fan_mode_wrapper.type_information.range
+            self._attr_fan_modes = fan_mode_wrapper.range
 
         # Determine swing modes
         if swing_wrapper:
