@@ -8,5 +8,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["pyanglianwater"],
   "quality_scale": "bronze",
-  "requirements": ["pyanglianwater==3.0.0"]
+  "requirements": ["pyanglianwater==3.1.0"]
 }
