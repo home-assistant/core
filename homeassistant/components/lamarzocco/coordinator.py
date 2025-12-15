@@ -62,7 +62,9 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
     ) -> None:
         """Initialize coordinator."""
         update_interval = self._default_update_interval
-        if not self._ignore_offline_mode and entry.options.get(CONF_OFFLINE_MODE):
+        if not self._ignore_offline_mode and entry.options.get(
+            CONF_OFFLINE_MODE, False
+        ):
             update_interval = None
         super().__init__(
             hass,
