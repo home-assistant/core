@@ -71,7 +71,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
     session = async_get_clientsession(hass)
     oauth_session = OAuth2Session(hass, entry, TeslemetryImplementation(hass))
 
-    async def _refresh_hook() -> str:
+    async def _get_access_token() -> str:
         try:
             await oauth_session.async_ensure_token_valid()
         except ClientResponseError as e:
@@ -84,8 +84,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
     # Create API connection
     teslemetry = Teslemetry(
         session=session,
-        access_token=access_token,
-        refresh_hook=_refresh_hook,
+        access_token=_get_access_token,
     )
     try:
         calls = await asyncio.gather(
@@ -141,7 +140,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             if not stream:
                 stream = TeslemetryStream(
                     session,
-                    access_token,
+                    _get_access_token,
                     server=f"{region.lower()}.teslemetry.com",
                     parse_timestamp=True,
                     manual=True,
