@@ -21,6 +21,8 @@ from .type_information import (
 class DeviceWrapper:
     """Base device wrapper."""
 
+    range: list[str] | None = None
+
     def read_device_status(self, device: CustomerDevice) -> Any | None:
         """Read device status and convert to a Home Assistant value."""
         raise NotImplementedError
