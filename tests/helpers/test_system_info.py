@@ -30,7 +30,7 @@ async def test_get_system_info_supervisor_not_available(
         patch("platform.system", return_value="Linux"),
         patch("homeassistant.helpers.system_info.is_docker_env", return_value=True),
         patch("homeassistant.helpers.system_info.is_official_image", return_value=True),
-        patch.object(hassio, "is_hassio", return_value=True),
+        patch("homeassistant.helpers.hassio.is_hassio", return_value=True),
         patch.object(hassio, "get_info", return_value=None),
         patch("homeassistant.helpers.system_info.cached_get_user", return_value="root"),
     ):
