@@ -275,7 +275,7 @@ async def test_select_multiple_state_changes(
     ("device_fixture", "entity_ids"),
     [
         (
-            "HWE-P1-no-batteries",
+            "HWE-P1",
             [
                 "select.device_battery_group_mode",
             ],

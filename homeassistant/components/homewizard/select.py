@@ -48,11 +48,7 @@ class HomeWizardBatteryModeSelectEntity(HomeWizardEntity, SelectEntity):
             key="battery_group_mode",
             translation_key="battery_group_mode",
             entity_category=EntityCategory.CONFIG,
-            entity_registry_enabled_default=(
-                coordinator.data.batteries is not None
-                and coordinator.data.batteries.battery_count is not None
-                and coordinator.data.batteries.battery_count > 0
-            ),
+            entity_registry_enabled_default=False,
             options=[
                 str(mode)
                 for mode in (coordinator.data.device.supported_battery_modes() or [])
