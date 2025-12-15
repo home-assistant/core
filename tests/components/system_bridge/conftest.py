@@ -8,21 +8,25 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from systembridgeconnector.const import EventKey, EventType
-from systembridgemodels.fixtures.modules.battery import FIXTURE_BATTERY
-from systembridgemodels.fixtures.modules.cpu import FIXTURE_CPU
-from systembridgemodels.fixtures.modules.disks import FIXTURE_DISKS
-from systembridgemodels.fixtures.modules.displays import FIXTURE_DISPLAYS
-from systembridgemodels.fixtures.modules.gpus import FIXTURE_GPUS
-from systembridgemodels.fixtures.modules.media import FIXTURE_MEDIA
-from systembridgemodels.fixtures.modules.memory import FIXTURE_MEMORY
-from systembridgemodels.fixtures.modules.networks import FIXTURE_NETWORKS
-from systembridgemodels.fixtures.modules.processes import FIXTURE_PROCESSES
-from systembridgemodels.fixtures.modules.sensors import FIXTURE_SENSORS
-from systembridgemodels.fixtures.modules.system import FIXTURE_SYSTEM
-from systembridgemodels.media_directories import MediaDirectory
-from systembridgemodels.media_files import MediaFile, MediaFiles
-from systembridgemodels.modules import Module, ModulesData, RegisterDataListener
-from systembridgemodels.response import Response
+from systembridgeconnector.models.fixtures.modules.battery import FIXTURE_BATTERY
+from systembridgeconnector.models.fixtures.modules.cpu import FIXTURE_CPU
+from systembridgeconnector.models.fixtures.modules.disks import FIXTURE_DISKS
+from systembridgeconnector.models.fixtures.modules.displays import FIXTURE_DISPLAYS
+from systembridgeconnector.models.fixtures.modules.gpus import FIXTURE_GPUS
+from systembridgeconnector.models.fixtures.modules.media import FIXTURE_MEDIA
+from systembridgeconnector.models.fixtures.modules.memory import FIXTURE_MEMORY
+from systembridgeconnector.models.fixtures.modules.networks import FIXTURE_NETWORKS
+from systembridgeconnector.models.fixtures.modules.processes import FIXTURE_PROCESSES
+from systembridgeconnector.models.fixtures.modules.sensors import FIXTURE_SENSORS
+from systembridgeconnector.models.fixtures.modules.system import FIXTURE_SYSTEM
+from systembridgeconnector.models.media_directories import MediaDirectory
+from systembridgeconnector.models.media_files import MediaFile, MediaFiles
+from systembridgeconnector.models.modules import (
+    Module,
+    ModulesData,
+    RegisterDataListener,
+)
+from systembridgeconnector.models.response import Response
 
 from homeassistant.components.system_bridge.config_flow import SystemBridgeConfigFlow
 from homeassistant.components.system_bridge.const import DOMAIN
@@ -130,6 +134,7 @@ def mock_websocket_client(
         websocket_client.get_directories.return_value = [
             MediaDirectory(
                 key="documents",
+                name="Documents",
                 path="/home/user/documents",
             )
         ]
@@ -143,6 +148,8 @@ def mock_websocket_client(
                     last_accessed=1630000000,
                     created=1630000000,
                     modified=1630000000,
+                    mod_time=1630000000,
+                    permissions="rwxr-xr-x",
                     is_directory=True,
                     is_file=False,
                     is_link=False,
@@ -155,6 +162,8 @@ def mock_websocket_client(
                     last_accessed=1630000000,
                     created=1630000000,
                     modified=1630000000,
+                    mod_time=1630000000,
+                    permissions="rw-r--r--",
                     is_directory=False,
                     is_file=True,
                     is_link=False,
@@ -168,6 +177,8 @@ def mock_websocket_client(
                     last_accessed=1630000000,
                     created=1630000000,
                     modified=1630000000,
+                    mod_time=1630000000,
+                    permissions="rw-r--r--",
                     is_directory=False,
                     is_file=True,
                     is_link=False,
