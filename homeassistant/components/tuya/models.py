@@ -133,6 +133,12 @@ class DPCodeEnumWrapper(DPCodeTypeInformationWrapper[EnumTypeInformation]):
     """Simple wrapper for EnumTypeInformation values."""
 
     _DPTYPE = EnumTypeInformation
+    range: list[str]
+
+    def __init__(self, dpcode: str, type_information: EnumTypeInformation) -> None:
+        """Init DPCodeEnumWrapper."""
+        super().__init__(dpcode, type_information)
+        self.range = type_information.range
 
     def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
         """Convert a Home Assistant value back to a raw device value."""
