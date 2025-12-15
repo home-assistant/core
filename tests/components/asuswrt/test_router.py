@@ -1,11 +1,15 @@
-from unittest.mock import AsyncMock, MagicMock, patch
+"""Unit tests for router."""
+
+from unittest.mock import AsyncMock, patch
+
 from homeassistant.components.asuswrt.router import AsusWrtRouter
 from homeassistant.core import HomeAssistant
+
 from tests.common import MockConfigEntry
 
 
 async def test_get_rates_none_value(hass: HomeAssistant) -> None:
-    """Test AsusWrtLegacyBridge._get_rates with None value"""
+    """Test AsusWrtLegacyBridge._get_rates with None value."""
     with (
         patch(
             "homeassistant.components.asuswrt.router.AsusWrtBridge.get_bridge"

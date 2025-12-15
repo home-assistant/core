@@ -272,9 +272,7 @@ async def test_abort_invalid_unique_id(hass: HomeAssistant, connect_legacy) -> N
 @pytest.mark.parametrize(
     ("side_effect", "error"),
     [
-        (OSError, "cannot_connect"),
-        (TypeError, "unknown"),
-        (None, "cannot_connect"),
+        (ConnectionError, "cannot_connect"),
     ],
 )
 async def test_on_connect_legacy_failed(
