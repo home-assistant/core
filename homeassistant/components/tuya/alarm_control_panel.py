@@ -100,13 +100,13 @@ class _AlarmActionWrapper(DPCodeEnumWrapper):
         """Return if action is supported."""
         return (
             mapped_value := self._ACTION_MAPPINGS.get(action)
-        ) is not None and mapped_value in self.type_information.range
+        ) is not None and mapped_value in self.options
 
     def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
         """Convert value to raw value."""
         if (
             mapped_value := self._ACTION_MAPPINGS.get(value)
-        ) is not None and mapped_value in self.type_information.range:
+        ) is not None and mapped_value in self.options:
             return mapped_value
         raise ValueError(f"Unsupported value {value} for {self.dpcode}")
 
