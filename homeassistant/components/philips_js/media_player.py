@@ -252,8 +252,7 @@ class PhilipsTVMediaPlayer(PhilipsJsEntity, MediaPlayerEntity):
                     can_expand=False,
                     thumbnail=self.get_browse_image_url(
                         MediaType.CHANNEL,
-                        f"{self._tv.channel_list_id}/{channel['ccid']}",
-                        media_image_id=None,
+                        f"{self._tv.channel_list_id}/{channel['ccid']}",                        
                     ),
                 )
                 for channel in self._tv.channels_current
@@ -296,8 +295,7 @@ class PhilipsTVMediaPlayer(PhilipsJsEntity, MediaPlayerEntity):
                         can_expand=False,
                         thumbnail=self.get_browse_image_url(
                             MediaType.CHANNEL,
-                            f"{list_id}/{channel['ccid']}",
-                            media_image_id=None,
+                            f"{list_id}/{channel['ccid']}",                            
                         ),
                     )
                     for channel in favorites.get("channels", [])
