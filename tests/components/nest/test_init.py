@@ -401,7 +401,7 @@ async def test_add_devices(
     assert len(device_entries) == 2
 
 
-async def test_stale_device_clenaup(
+async def test_stale_device_cleanup(
     hass: HomeAssistant,
     setup_platform: PlatformSetup,
     create_device: CreateDevice,

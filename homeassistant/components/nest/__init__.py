@@ -129,7 +129,7 @@ class SignalUpdateCallback:
         """Initialize EventCallback."""
         self._hass = hass
         self._config_entry = config_entry
-        self._device_listeners = list[DevicesAddedListener]()
+        self._device_listeners: list[DevicesAddedListener] = []
         self._known_devices: dict[str, Device] = {}
         self._device_manager: DeviceManager | None = None
 
