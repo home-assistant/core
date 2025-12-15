@@ -95,7 +95,6 @@ class _AlarmActionWrapper(DPCodeEnumWrapper):
         "disarm": "disarmed",
         "trigger": "sos",
     }
-    range: list[str]
 
     def __init__(self, dpcode: str, type_information: EnumTypeInformation) -> None:
         """Init _AlarmActionWrapper."""
@@ -186,12 +185,13 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
         self._state_wrapper = state_wrapper
 
         # Determine supported modes
-        if "arm_home" in action_wrapper.range:
-            self._attr_supported_features |= AlarmControlPanelEntityFeature.ARM_HOME
-        if "arm_away" in action_wrapper.range:
-            self._attr_supported_features |= AlarmControlPanelEntityFeature.ARM_AWAY
-        if "trigger" in action_wrapper.range:
-            self._attr_supported_features |= AlarmControlPanelEntityFeature.TRIGGER
+        if action_wrapper.range:
+            if "arm_home" in action_wrapper.range:
+                self._attr_supported_features |= AlarmControlPanelEntityFeature.ARM_HOME
+            if "arm_away" in action_wrapper.range:
+                self._attr_supported_features |= AlarmControlPanelEntityFeature.ARM_AWAY
+            if "trigger" in action_wrapper.range:
+                self._attr_supported_features |= AlarmControlPanelEntityFeature.TRIGGER
 
     @property
     def alarm_state(self) -> AlarmControlPanelState | None:
