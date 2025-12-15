@@ -3,13 +3,10 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
 
-from homeassistant.const import Platform
-
-if TYPE_CHECKING:
-    from homeassistant.config_entries import ConfigEntry
-    from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.core import Event, HomeAssistant
 
 from .hub import Hub
 
@@ -20,13 +17,6 @@ PLATFORMS: list[Platform] = [
 ]
 
 type VictronGxConfigEntry = ConfigEntry[Hub]
-
-
-async def _update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle options update."""
-    _LOGGER.info("Options have been updated - applying changes")
-    # Reload the integration to apply changes
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: VictronGxConfigEntry) -> bool:
@@ -41,7 +31,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: VictronGxConfigEntry) ->
     await hub.start()
 
     # Register the update listener
+    async def _update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+        _LOGGER.info("Options have been updated - applying changes")
+        # Reload the integration to apply changes
+        await hass.config_entries.async_reload(entry.entry_id)
+
     entry.async_on_unload(entry.add_update_listener(_update_listener))
+
+    async def _async_stop(_: Event) -> None:
+        await hub.stop()
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop)
+    )
 
     _LOGGER.debug("sync_setup_entry completed for entry: %s", entry.entry_id)
     return True
