@@ -3,7 +3,6 @@
 from unittest.mock import AsyncMock
 
 import botocore.exceptions
-import jwt
 import pytest
 
 from homeassistant.components.gentex_homelink.const import DOMAIN
@@ -11,7 +10,7 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import TEST_CREDENTIALS, setup_integration
+from . import TEST_ACCESS_JWT, TEST_CREDENTIALS, setup_integration
 
 from tests.common import MockConfigEntry
 
@@ -36,7 +35,7 @@ async def test_full_flow(
     assert result["data"] == {
         "auth_implementation": "gentex_homelink",
         "token": {
-            "access_token": jwt.encode({"sub": "some-uuid"}, key="secret"),
+            "access_token": TEST_ACCESS_JWT,
             "refresh_token": "refresh",
             "expires_in": 3600,
             "token_type": "bearer",

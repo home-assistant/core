@@ -5,10 +5,11 @@ from unittest.mock import AsyncMock, patch
 
 from homelink.model.button import Button
 import homelink.model.device
-import jwt
 import pytest
 
 from homeassistant.components.gentex_homelink import DOMAIN
+
+from . import TEST_ACCESS_JWT
 
 from tests.common import MockConfigEntry
 
@@ -22,7 +23,7 @@ def mock_srp_auth() -> Generator[AsyncMock]:
         instance = mock_srp_auth.return_value
         instance.async_get_access_token.return_value = {
             "AuthenticationResult": {
-                "AccessToken": jwt.encode({"sub": "some-uuid"}, key="secret"),
+                "AccessToken": TEST_ACCESS_JWT,
                 "RefreshToken": "refresh",
                 "TokenType": "bearer",
                 "ExpiresIn": 3600,
