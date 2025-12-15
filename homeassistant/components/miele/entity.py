@@ -73,5 +73,5 @@ class MieleEntity(CoordinatorEntity[MieleDataUpdateCoordinator]):
         return (
             super().available
             and self._device_id in self.coordinator.data.devices
-            and (self.device.state_status is not StateStatus.NOT_CONNECTED)
+            and (self.device.state_status is not StateStatus.not_connected)
         )
