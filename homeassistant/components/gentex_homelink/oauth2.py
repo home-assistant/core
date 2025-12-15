@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 class SRPAuthImplementation(config_entry_oauth2_flow.AbstractOAuth2Implementation):
     """Base class to abstract OAuth2 authentication."""
 
-    def __init__(self, hass: HomeAssistant, domain) -> None:
+    def __init__(self, hass: HomeAssistant, domain: str) -> None:
         """Initialize the SRP Auth implementation."""
 
         self.hass = hass
@@ -45,16 +45,13 @@ class SRPAuthImplementation(config_entry_oauth2_flow.AbstractOAuth2Implementatio
     async def async_resolve_external_data(self, external_data) -> dict:
         """Format the token from the source appropriately for HomeAssistant."""
         tokens = external_data["tokens"]
-        new_token = {}
-        new_token["access_token"] = tokens["AuthenticationResult"]["AccessToken"]
-        new_token["refresh_token"] = tokens["AuthenticationResult"]["RefreshToken"]
-        new_token["token_type"] = tokens["AuthenticationResult"]["TokenType"]
-        new_token["expires_in"] = tokens["AuthenticationResult"]["ExpiresIn"]
-        new_token["expires_at"] = (
-            time.time() + tokens["AuthenticationResult"]["ExpiresIn"]
-        )
-
-        return new_token
+        return {
+            "access_token": tokens["AuthenticationResult"]["AccessToken"],
+            "refresh_token": tokens["AuthenticationResult"]["RefreshToken"],
+            "token_type": tokens["AuthenticationResult"]["TokenType"],
+            "expires_in": tokens["AuthenticationResult"]["ExpiresIn"],
+            "expires_at": (time.time() + tokens["AuthenticationResult"]["ExpiresIn"]),
+        }
 
     async def _token_request(self, data: dict) -> dict:
         """Make a token request."""

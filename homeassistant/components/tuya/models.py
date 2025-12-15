@@ -2,12 +2,9 @@
 
 from __future__ import annotations
 
-import base64
 from typing import Any, Self
 
 from tuya_sharing import CustomerDevice
-
-from homeassistant.util.json import json_loads
 
 from .type_information import (
     BitmapTypeInformation,
@@ -49,13 +46,6 @@ class DPCodeWrapper(DeviceWrapper):
         """Init DPCodeWrapper."""
         self.dpcode = dpcode
 
-    def _read_device_status_raw(self, device: CustomerDevice) -> Any | None:
-        """Read the raw device status for the DPCode.
-
-        Private helper method for `read_device_status`.
-        """
-        return device.status.get(self.dpcode)
-
     def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
         """Convert a Home Assistant value back to a raw device value.
 
@@ -93,7 +83,7 @@ class DPCodeTypeInformationWrapper[T: TypeInformation](DPCodeWrapper):
     def read_device_status(self, device: CustomerDevice) -> Any | None:
         """Read the device value for the dpcode."""
         return self.type_information.process_raw_value(
-            self._read_device_status_raw(device), device
+            device.status.get(self.dpcode), device
         )
 
     @classmethod
@@ -112,20 +102,6 @@ class DPCodeTypeInformationWrapper[T: TypeInformation](DPCodeWrapper):
                 dpcode=type_information.dpcode, type_information=type_information
             )
         return None
-
-
-class DPCodeBase64Wrapper(DPCodeTypeInformationWrapper[RawTypeInformation]):
-    """Wrapper to extract information from a RAW/binary value."""
-
-    _DPTYPE = RawTypeInformation
-
-    def read_bytes(self, device: CustomerDevice) -> bytes | None:
-        """Read the device value for the dpcode."""
-        if (raw_value := self._read_device_status_raw(device)) is None or (
-            len(decoded := base64.b64decode(raw_value)) == 0
-        ):
-            return None
-        return decoded
 
 
 class DPCodeBooleanWrapper(DPCodeTypeInformationWrapper[BooleanTypeInformation]):
@@ -151,12 +127,6 @@ class DPCodeJsonWrapper(DPCodeTypeInformationWrapper[JsonTypeInformation]):
     """Wrapper to extract information from a JSON value."""
 
     _DPTYPE = JsonTypeInformation
-
-    def read_json(self, device: CustomerDevice) -> Any | None:
-        """Read the device value for the dpcode."""
-        if (raw_value := self._read_device_status_raw(device)) is None:
-            return None
-        return json_loads(raw_value)
 
 
 class DPCodeEnumWrapper(DPCodeTypeInformationWrapper[EnumTypeInformation]):
@@ -198,6 +168,12 @@ class DPCodeIntegerWrapper(DPCodeTypeInformationWrapper[IntegerTypeInformation])
         )
 
 
+class DPCodeRawWrapper(DPCodeTypeInformationWrapper[RawTypeInformation]):
+    """Wrapper to extract information from a RAW/binary value."""
+
+    _DPTYPE = RawTypeInformation
+
+
 class DPCodeStringWrapper(DPCodeTypeInformationWrapper[StringTypeInformation]):
     """Wrapper to extract information from a STRING value."""
 
@@ -214,7 +190,7 @@ class DPCodeBitmapBitWrapper(DPCodeWrapper):
 
     def read_device_status(self, device: CustomerDevice) -> bool | None:
         """Read the device value for the dpcode."""
-        if (raw_value := self._read_device_status_raw(device)) is None:
+        if (raw_value := device.status.get(self.dpcode)) is None:
             return None
         return (raw_value & (1 << self._mask)) != 0
 
