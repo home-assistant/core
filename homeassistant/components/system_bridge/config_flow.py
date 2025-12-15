@@ -12,8 +12,8 @@ from systembridgeconnector.exceptions import (
     ConnectionClosedException,
     ConnectionErrorException,
 )
+from systembridgeconnector.models.modules import GetData, Module
 from systembridgeconnector.websocket_client import WebSocketClient
-from systembridgemodels.modules import GetData, Module
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
