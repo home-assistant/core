@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from contextlib import suppress
+import itertools
 import logging
 from typing import Any
 
@@ -346,12 +347,21 @@ async def async_validate_config_section(
 
 async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> ConfigType:
     """Validate config."""
-    if DOMAIN not in config:
+
+    configs = []
+    for key in config:
+        if DOMAIN not in key:
+            continue
+
+        if key == DOMAIN or (key.startswith(DOMAIN) and len(key.split()) > 1):
+            configs.append(cv.ensure_list(config[key]))
+
+    if not configs:
         return config
 
     config_sections = []
 
-    for cfg in cv.ensure_list(config[DOMAIN]):
+    for cfg in itertools.chain(*configs):
         try:
             template_config: TemplateConfig = await async_validate_config_section(
                 hass, cfg
