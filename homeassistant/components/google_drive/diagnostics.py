@@ -31,7 +31,7 @@ async def async_get_config_entry_diagnostics(
     backups = await coordinator.client.async_list_backups()
 
     data = {
-        "storage_quota": dataclasses.asdict(coordinator.data),
+        "coordinator_data": dataclasses.asdict(coordinator.data),
         "config": {
             **entry.data,
             **entry.options,

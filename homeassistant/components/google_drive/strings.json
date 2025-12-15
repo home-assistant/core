@@ -45,6 +45,9 @@
   },
   "entity": {
     "sensor": {
+      "backups_size": {
+        "name": "Total size of backups"
+      },
       "storage_total": {
         "name": "Total available storage"
       },

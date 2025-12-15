@@ -202,6 +202,12 @@ class DriveClient:
             backups.append(backup)
         return backups
 
+    async def async_get_size_of_all_backups(self) -> int:
+        """Get size of all backups."""
+        backups = await self.async_list_backups()
+
+        return sum(backup.size for backup in backups)
+
     async def async_get_backup_file_id(self, backup_id: str) -> str | None:
         """Get file_id of backup if it exists."""
         query = " and ".join(

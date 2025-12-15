@@ -71,6 +71,14 @@ def mock_api() -> Generator[MagicMock]:
             return result
 
         mock_api.get_user = AsyncMock(side_effect=mock_get_user)
+        # Setup looks up existing folder to make sure it still exists
+        # and list backups during coordinator update
+        mock_api.list_files = AsyncMock(
+            side_effect=[
+                {"files": [{"id": "HA folder ID", "name": "HA folder name"}]},
+                {"files": []},
+            ]
+        )
         yield mock_api
 
 
@@ -125,5 +133,7 @@ def mock_agent_backup() -> AgentBackup:
         homeassistant_version="2024.12.0",
         name="Test",
         protected=False,
-        size=987,
+        size=InformationConverter.convert(
+            100, UnitOfInformation.MEBIBYTES, UnitOfInformation.BYTES
+        ),
     )

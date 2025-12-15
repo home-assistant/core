@@ -1,5 +1,6 @@
 """Tests for the Google Drive sensor platform."""
 
+import json
 from unittest.mock import AsyncMock, MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -7,6 +8,7 @@ from google_drive_api.exceptions import GoogleDriveApiError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.backup import AgentBackup
 from homeassistant.components.google_drive.const import SCAN_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -19,13 +21,8 @@ pytestmark = [
 ]
 
 
-async def setup_integration(
-    hass: HomeAssistant, config_entry: MockConfigEntry, mock_api: MagicMock
-) -> None:
+async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Set up Google Drive integration."""
-    mock_api.list_files = AsyncMock(
-        return_value={"files": [{"id": "HA folder ID", "name": "HA folder name"}]}
-    )
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -41,7 +38,7 @@ async def test_sensor(
     mock_api: MagicMock,
 ) -> None:
     """Test the creation and values of the Google Drive sensors."""
-    await setup_integration(hass, config_entry, mock_api)
+    await setup_integration(hass, config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
@@ -74,8 +71,6 @@ async def test_sensor_unknown_when_unlimited_plan(
         }
     )
 
-    await setup_integration(hass, config_entry, mock_api)
-
     assert not hass.states.get("sensor.testuser_domain_com_total_available_storage")
 
 
@@ -87,7 +82,7 @@ async def test_sensor_availability(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the availability handling of the Google Drive sensors."""
-    await setup_integration(hass, config_entry, mock_api)
+    await setup_integration(hass, config_entry)
 
     mock_api.get_user.side_effect = GoogleDriveApiError("API error")
     freezer.tick(SCAN_INTERVAL)
@@ -99,6 +94,7 @@ async def test_sensor_availability(
     )
     assert state.state == STATE_UNAVAILABLE
 
+    mock_api.list_files.side_effect = [{"files": []}]
     mock_api.get_user.side_effect = None
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
@@ -108,3 +104,40 @@ async def test_sensor_availability(
         state := hass.states.get("sensor.testuser_domain_com_total_available_storage")
     )
     assert state.state != STATE_UNAVAILABLE
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_calculate_backups_size(
+    hass: HomeAssistant,
+    mock_api: MagicMock,
+    config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    mock_agent_backup: AgentBackup,
+) -> None:
+    """Test the availability handling of the Google Drive sensors."""
+    await setup_integration(hass, config_entry)
+
+    assert (
+        state := hass.states.get("sensor.testuser_domain_com_total_size_of_backups")
+    )
+    assert state.state == "0.0"
+
+    mock_api.list_files = AsyncMock(
+        return_value={
+            "files": [
+                {
+                    "id": "HA folder ID",
+                    "name": "HA folder name",
+                    "description": json.dumps(mock_agent_backup.as_dict()),
+                }
+            ]
+        }
+    )
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        state := hass.states.get("sensor.testuser_domain_com_total_size_of_backups")
+    )
+    assert state.state == "100.0"

@@ -15,8 +15,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .api import StorageQuotaData
-from .coordinator import GoogleDriveConfigEntry, GoogleDriveDataUpdateCoordinator
+from .coordinator import (
+    GoogleDriveConfigEntry,
+    GoogleDriveDataUpdateCoordinator,
+    SensorData,
+)
 from .entity import GoogleDriveEntity
 
 # Coordinator is used to centralize the data updates
@@ -27,8 +30,8 @@ PARALLEL_UPDATES = 0
 class GoogleDriveSensorEntityDescription(SensorEntityDescription):
     """Describes GoogleDrive sensor entity."""
 
-    exists_fn: Callable[[StorageQuotaData], bool] = lambda _: True
-    value_fn: Callable[[StorageQuotaData], StateType]
+    exists_fn: Callable[[SensorData], bool] = lambda _: True
+    value_fn: Callable[[SensorData], StateType]
 
 
 SENSORS: tuple[GoogleDriveSensorEntityDescription, ...] = (
@@ -40,7 +43,8 @@ SENSORS: tuple[GoogleDriveSensorEntityDescription, ...] = (
         suggested_display_precision=0,
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: data.limit,
+        value_fn=lambda data: data.storage_quota.limit,
+        exists_fn=lambda data: data.storage_quota.limit is not None,
     ),
     GoogleDriveSensorEntityDescription(
         key="storage_used",
@@ -50,7 +54,7 @@ SENSORS: tuple[GoogleDriveSensorEntityDescription, ...] = (
         suggested_display_precision=0,
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: data.usage,
+        value_fn=lambda data: data.storage_quota.usage,
     ),
     GoogleDriveSensorEntityDescription(
         key="storage_used_in_drive",
@@ -60,7 +64,7 @@ SENSORS: tuple[GoogleDriveSensorEntityDescription, ...] = (
         suggested_display_precision=0,
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: data.usage_in_drive,
+        value_fn=lambda data: data.storage_quota.usage_in_drive,
         entity_registry_enabled_default=False,
     ),
     GoogleDriveSensorEntityDescription(
@@ -71,7 +75,18 @@ SENSORS: tuple[GoogleDriveSensorEntityDescription, ...] = (
         suggested_display_precision=0,
         device_class=SensorDeviceClass.DATA_SIZE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: data.usage_in_trash,
+        value_fn=lambda data: data.storage_quota.usage_in_trash,
+        entity_registry_enabled_default=False,
+    ),
+    GoogleDriveSensorEntityDescription(
+        key="backups_size",
+        translation_key="backups_size",
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.MEBIBYTES,
+        suggested_display_precision=0,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.all_backups_size,
         entity_registry_enabled_default=False,
     ),
 )

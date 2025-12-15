@@ -22,7 +22,7 @@
         'homeassistant_version': '2024.12.0',
         'name': 'Test',
         'protected': False,
-        'size': 987,
+        'size': 104857600.0,
       }),
     ]),
     'backup_agents': list([
@@ -35,16 +35,19 @@
       'auth_implementation': 'google_drive',
       'token': dict({
         'access_token': '**REDACTED**',
-        'expires_at': 1762906821.1114354,
+        'expires_at': 1765781192.0037117,
         'refresh_token': '**REDACTED**',
         'scope': 'https://www.googleapis.com/auth/drive.file',
       }),
     }),
-    'storage_quota': dict({
-      'limit': 10737418240,
-      'usage': 5368709120,
-      'usage_in_drive': 2147483648,
-      'usage_in_trash': 1073741824,
+    'coordinator_data': dict({
+      'all_backups_size': 104857600.0,
+      'storage_quota': dict({
+        'limit': 10737418240,
+        'usage': 5368709120,
+        'usage_in_drive': 2147483648,
+        'usage_in_trash': 1073741824,
+      }),
     }),
   })
 # ---
