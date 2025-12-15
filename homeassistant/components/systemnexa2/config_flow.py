@@ -34,8 +34,6 @@ class SN2ConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    # This integration creates config entries automatically from discovery
-    # and doesn't require any user interaction
     CONNECTION_CLASS = CONN_CLASS_LOCAL_PUSH
 
     def __init__(self) -> None:
@@ -80,7 +78,6 @@ class SN2ConfigFlow(ConfigFlow, domain=DOMAIN):
                 model=device_model,
                 device_version=device_version,
             )
-            # Check if device model and version are supported
         except Exception:  # noqa: BLE001
             return self.async_abort(
                 reason="no_connection", description_placeholders={"host": host_or_ip}
@@ -95,7 +92,6 @@ class SN2ConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
-        # Extract device information
         device_id = discovery_info.properties.get("id")
         device_model = discovery_info.properties.get("model")
         device_version = discovery_info.properties.get("version")
@@ -120,7 +116,6 @@ class SN2ConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_discovery_confirm()
 
     async def _async_step_try_add(self) -> ConfigFlowResult | None:
-        # Check if device model and version are supported
         if not Device.is_device_supported(
             model=self._discovered_device.model,
             device_version=self._discovered_device.device_version,
@@ -133,17 +128,13 @@ class SN2ConfigFlow(ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        # Set unique ID and check if already configured
         await self.async_set_unique_id(self._discovered_device.device_id)
-        # Update host if device is already configured
         self._abort_if_unique_id_configured(
             updates={CONF_HOST: self._discovered_device.host}
         )
 
-        # Log the discovered device
         _LOGGER.info(
             "Configuring device %s: %s at %s",
-            # device_type,
             self._discovered_device.name,
             self._discovered_device.model,
             self._discovered_device.host,

@@ -25,9 +25,3 @@ class SystemNexa2Entity(Entity):
         self._attr_name = name
         self._attr_unique_id = f"{entry_id}-{unique_entity_id}"
         self._attr_device_info = device_info
-
-    async def async_added_to_hass(self) -> None:
-        """Add data updated listener after this object has been initialized."""
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Remove data updated listener after this object has been initialized."""
