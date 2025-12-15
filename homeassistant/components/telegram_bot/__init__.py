@@ -322,8 +322,7 @@ SERVICE_SCHEMA_DOWNLOAD_FILE = vol.Schema(
         vol.Required(ATTR_FILE_ID): cv.string,
         vol.Optional(ATTR_DIRECTORY_PATH): cv.string,
         vol.Optional(ATTR_FILE_NAME): cv.string,
-    },
-    extra=vol.ALLOW_EXTRA,
+    }
 )
 
 SERVICE_MAP: dict[str, VolSchemaType] = {
@@ -488,7 +487,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             SERVICE_SEND_STICKER,
             SERVICE_SEND_LOCATION,
             SERVICE_SEND_POLL,
-            SERVICE_DOWNLOAD_FILE,
         ]:
             supports_response = SupportsResponse.OPTIONAL
 

@@ -1080,7 +1080,9 @@ class TelegramNotificationService:
         _LOGGER.debug("Download file %s to %s", file_id, custom_path)
         try:
             file_content = await file.download_as_bytearray()
-            await asyncio.to_thread(Path(custom_path).write_bytes, file_content)
+            await self.hass.async_add_executor_job(
+                Path(custom_path).write_bytes, file_content
+            )
         except Exception as exc:
             _LOGGER.error("Error downloading file to %s: %s", custom_path, exc)
             raise HomeAssistantError(

@@ -4,7 +4,6 @@ import base64
 from datetime import datetime
 from http import HTTPStatus
 import io
-import os
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, mock_open, patch
 
@@ -1662,18 +1661,25 @@ async def test_deprecated_timeout_parameter(
 
 
 @pytest.mark.parametrize(
-    ("telegram_file_name", "schema_request", "expected_download_path"),
+    (
+        "telegram_file_name",
+        "schema_request",
+        "expected_download_path",
+        "expected_allowlist_dir",
+    ),
     [
         pytest.param(
             "file_name1.jpg",
             {ATTR_FILE_ID: "some-file-id-1"},
             lambda hass: f"{hass.config.path(DOMAIN)}/file_name1.jpg",
+            lambda hass: hass.config.path(DOMAIN),
             id="no_custom_name_no_custom_dir",
         ),
         pytest.param(
             "file_name2.jpg",
             {ATTR_FILE_ID: "some-file-id-2", ATTR_FILE_NAME: "custom_name2.jpg"},
             lambda hass: f"{hass.config.path(DOMAIN)}/custom_name2.jpg",
+            lambda hass: hass.config.path(DOMAIN),
             id="custom_name_no_custom_dir",
         ),
         pytest.param(
@@ -1683,6 +1689,7 @@ async def test_deprecated_timeout_parameter(
                 ATTR_DIRECTORY_PATH: "/tmp/tempfolder3",  # noqa: S108
             },
             lambda hass: "/tmp/tempfolder3/file_name3.jpg",  # noqa: S108
+            lambda hass: "/tmp",  # noqa: S108
             id="no_custom_name_custom_dir",
         ),
         pytest.param(
@@ -1693,6 +1700,7 @@ async def test_deprecated_timeout_parameter(
                 ATTR_DIRECTORY_PATH: "/tmp/tempfolder4",  # noqa: S108
             },
             lambda hass: "/tmp/tempfolder4/custom_name4.jpg",  # noqa: S108
+            lambda hass: "/tmp",  # noqa: S108
             id="custom_name_custom_dir",
         ),
     ],
@@ -1704,6 +1712,7 @@ async def test_download_file(
     telegram_file_name: str,
     schema_request: dict[str, Any],
     expected_download_path: Any,
+    expected_allowlist_dir: Any,
 ) -> None:
     """Test download file."""
     mock_broadcast_config_entry.add_to_hass(hass)
@@ -1711,12 +1720,7 @@ async def test_download_file(
     await hass.async_block_till_done()
 
     expected_path = expected_download_path(hass)
-    expected_directory = os.path.dirname(expected_path)
-    allowlist_dir = (
-        expected_directory
-        if os.path.exists(expected_directory)
-        else os.path.dirname(expected_directory)
-    )
+    allowlist_dir = expected_allowlist_dir(hass)
     hass.config.allowlist_external_dirs.add(allowlist_dir)
 
     file_id = schema_request[ATTR_FILE_ID]
@@ -1737,10 +1741,9 @@ async def test_download_file(
                 return_value=f"This is the file content of {telegram_file_name}".encode()
             ),
         ) as download_as_bytearray_mock,
-        patch(
-            "homeassistant.components.telegram_bot.bot.asyncio.to_thread",
-            AsyncMock(return_value=None),
-        ) as to_thread_mock,
+        patch.object(
+            hass, "async_add_executor_job", AsyncMock(return_value=None)
+        ) as add_exec_mock,
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -1752,8 +1755,8 @@ async def test_download_file(
     await hass.async_block_till_done()
     get_file_mock.assert_called_once_with(file_id=file_id)
     download_as_bytearray_mock.assert_called_once()
-    to_thread_mock.assert_called()
-    args, _ = to_thread_mock.call_args
+    add_exec_mock.assert_called()
+    args, _ = add_exec_mock.call_args
     assert str(args[0].__self__) == expected_path
     assert args[1] == f"This is the file content of {telegram_file_name}".encode()
 
