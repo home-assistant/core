@@ -1,6 +1,5 @@
 """Switch entity for the SystemNexa2 integration."""
 
-import logging
 from typing import Any
 
 from sn2.device import Device, OnOffSetting
@@ -13,8 +12,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import SystemNexa2Entity
 from .helpers import SystemNexa2ConfigEntry
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -83,14 +80,7 @@ class ConfigurationSwitch(SystemNexa2Entity, SwitchEntity):
 
     @callback
     def handle_state_update(self, is_on: bool) -> None:
-        """Handle state update from the device.
-
-        Updates the entity's native value and writes the new state to Home Assistant
-        if the value has changed.
-
-        Args:
-            value: The new state value received from the device.
-        """
+        """Handle state update from the device."""
         self._attr_is_on = is_on
         self.async_write_ha_state()
 

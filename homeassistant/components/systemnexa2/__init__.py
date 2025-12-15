@@ -32,13 +32,11 @@ from .switch import ConfigurationSwitch, SN2SwitchPlug
 
 _LOGGER = logging.getLogger(__name__)
 
-# Define constants for the component
 DOMAIN = "systemnexa2"
 SWITCH_MODELS = ["WBR-01"]
 PLUG_MODELS = ["WPR-01", "WPO-01"]
 LIGHT_MODELS = ["WBD-01", "WPD-01"]
 
-# Configuration schema
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema({})},
     extra=vol.ALLOW_EXTRA,
@@ -63,7 +61,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SystemNexa2ConfigEntry) 
     if device.info_data is None:
         return False
 
-    # Store device info
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
@@ -154,5 +151,4 @@ async def async_unload_entry(
         _LOGGER.info("Unload")
         await entry.runtime_data.device.disconnect()
 
-    # Unload the platforms
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

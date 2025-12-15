@@ -60,8 +60,6 @@ class SN2Light(SystemNexa2Entity, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
-        # Default value -1 which is toggle
-        value = -1
         # Check if we're setting brightness
         if ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs[ATTR_BRIGHTNESS]
@@ -83,7 +81,6 @@ class SN2Light(SystemNexa2Entity, LightEntity):
     @callback
     def handle_state_update(self, state: Any) -> None:
         """Handle state updates from the device."""
-        # If it's a direct boolean state
         if isinstance(state, bool):
             self._attr_is_on = state
             if state:
@@ -91,7 +88,6 @@ class SN2Light(SystemNexa2Entity, LightEntity):
             self.async_write_ha_state()
             return
 
-        # If it's a number value (0-1) for direct brightness control
         if isinstance(state, (int, float)):
             brightness_value = float(state)
             if brightness_value == 0:
