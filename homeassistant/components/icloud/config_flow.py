@@ -155,8 +155,8 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             CONF_GPS_ACCURACY_THRESHOLD: self._gps_accuracy_threshold,
         }
 
-        # If this is a password update attempt, update the entry instead of creating one
-        if step_id == "user":
+        # If this is a password update attempt, don't try and creating one
+        if step_id == "user" and not self._existing_entry_data:
             return self.async_create_entry(title=self._username, data=data)
 
         entry = await self.async_set_unique_id(self.unique_id)
