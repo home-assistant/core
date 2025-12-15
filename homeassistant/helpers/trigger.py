@@ -509,13 +509,13 @@ def make_conditional_entity_state_trigger(
     return CustomTrigger
 
 
-def make_from_entity_state_trigger(
+def make_entity_from_state_trigger(
     domain: str, *, from_state: str
 ) -> type[EntityFromStateTriggerBase]:
-    """Create a "from" entity state trigger class."""
+    """Create an entity "from state" trigger class."""
 
     class CustomTrigger(EntityFromStateTriggerBase):
-        """Trigger for "from" entity state changes."""
+        """Trigger for entity "from state" changes."""
 
         _domain = domain
         _from_state = from_state
