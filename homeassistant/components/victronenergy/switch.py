@@ -90,29 +90,17 @@ class MQTTDiscoveredSwitch(VictronBaseEntity, SwitchEntity):
         if not self._command_topic:
             return
 
-        manager = self._manager
-        if not manager.client:
-            _LOGGER.error("MQTT client not available for switch %s", self._attr_name)
-            return
-
         _LOGGER.debug(
             "Turning on switch %s by publishing %s to %s",
             self._attr_name,
             self._payload_on,
             self._command_topic,
         )
-        manager.client.publish(
-            self._command_topic, self._payload_on, qos=0, retain=False
-        )
+        self._manager.publish(self._command_topic, self._payload_on)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         if not self._command_topic:
-            return
-
-        manager = self._manager
-        if not manager.client:
-            _LOGGER.error("MQTT client not available for switch %s", self._attr_name)
             return
 
         _LOGGER.debug(
@@ -121,6 +109,4 @@ class MQTTDiscoveredSwitch(VictronBaseEntity, SwitchEntity):
             self._payload_off,
             self._command_topic,
         )
-        manager.client.publish(
-            self._command_topic, self._payload_off, qos=0, retain=False
-        )
+        self._manager.publish(self._command_topic, self._payload_off)

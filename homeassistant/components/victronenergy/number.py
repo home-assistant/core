@@ -122,13 +122,6 @@ class MQTTDiscoveredNumber(VictronBaseEntity, NumberEntity):
             )
             return
 
-        manager = self._manager
-        if not manager.client:
-            _LOGGER.warning(
-                "MQTT client not available to set number %s", self._attr_name
-            )
-            return
-
         # Ensure value is within bounds
         value = max(
             self._attr_native_min_value, min(self._attr_native_max_value, value)
@@ -165,4 +158,4 @@ class MQTTDiscoveredNumber(VictronBaseEntity, NumberEntity):
             payload,
             self._command_topic,
         )
-        manager.client.publish(self._command_topic, payload, qos=0, retain=False)
+        self._manager.publish(self._command_topic, payload)

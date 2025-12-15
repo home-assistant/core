@@ -9,7 +9,9 @@ import logging
 import ssl
 from typing import Any
 
-import paho.mqtt.client as mqtt
+import paho.mqtt.client as mqtt_client
+import paho.mqtt.properties as mqtt_properties
+import paho.mqtt.subscribeoptions as mqtt_subscribeoptions
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -21,6 +23,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .binary_sensor import MQTTDiscoveredBinarySensor
 from .const import CONF_BROKER, CONF_PORT, CONF_USERNAME, DOMAIN
 from .entity import VictronBaseEntity
+from .mqtt_worker import MqttWorker
 from .number import MQTTDiscoveredNumber
 from .sensor import MQTTDiscoveredSensor
 from .switch import MQTTDiscoveredSwitch
@@ -94,7 +97,7 @@ def _extract_via_device_from_discovery(device_info: dict[str, Any]) -> DeviceKey
     return (DOMAIN, str(via_device))
 
 
-def _configure_tls(client: mqtt.Client) -> None:
+def _configure_tls(client: mqtt_client.Client) -> None:
     """Configure TLS settings for the MQTT client."""
     client.tls_set(
         ca_certs=None,
@@ -112,7 +115,7 @@ class VictronMqttManager:
 
     hass: HomeAssistant
     entry: ConfigEntry
-    client: mqtt.Client | None
+    client: mqtt_client.Client | None
     _platform_callbacks: dict[str, AddConfigEntryEntitiesCallback | None]
     _topic_entity_map: dict[str, set[VictronBaseEntity]]
     _entity_registry: dict[DeviceKey, dict[str, VictronBaseEntity]]
@@ -120,9 +123,11 @@ class VictronMqttManager:
     _topic_device_map: dict[str, DeviceKey]
     _topic_payload_cache: dict[str, bytes]
     _pending_via_device_discoveries: dict[DeviceKey, list[dict[str, Any]]]
+    _mqtt_worker: MqttWorker | None
     _republish_timer_handle: asyncio.TimerHandle | None
+    _republish_task: asyncio.Task | None
     _unique_id: str | None
-    _keepalive_task_started: bool
+    _keepalive_task: asyncio.Task | None
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the MQTT manager."""
@@ -136,9 +141,11 @@ class VictronMqttManager:
         self._topic_device_map = {}
         self._topic_payload_cache = {}
         self._pending_via_device_discoveries = {}
+        self._mqtt_worker = None
         self._republish_timer_handle = None
+        self._republish_task = None
         self._unique_id = None
-        self._keepalive_task_started = False
+        self._keepalive_task = None
 
     def _setup_and_run_client(self, broker: str, port: int) -> None:
         """Set up TLS (if needed) and run the MQTT client loop."""
@@ -148,42 +155,69 @@ class VictronMqttManager:
             if port == 8883:
                 _configure_tls(self.client)
 
-            self.client.connect(broker, port, 60)
-            _LOGGER.debug("Starting MQTT client loop")
-            self.client.loop_forever()
+            self.client.connect_async(broker, port, 60)
+            _LOGGER.debug("Starting MQTT client background loop thread")
+            # Start the paho background network loop in its own thread.
+            # Using loop_start avoids blocking an executor thread with
+            # loop_forever and lets us stop the loop with loop_stop during cleanup.
+            try:
+                self.client.loop_start()
+            except Exception:
+                _LOGGER.exception("Failed to start MQTT background loop thread")
+
+    def _subscribe(
+        self,
+        topic: str
+        | tuple[str, int]
+        | tuple[str, mqtt_subscribeoptions.SubscribeOptions]
+        | list[tuple[str, int]]
+        | list[tuple[str, mqtt_subscribeoptions.SubscribeOptions]],
+        qos: int = 0,
+        options: mqtt_subscribeoptions.SubscribeOptions | None = None,
+        properties: mqtt_properties.Properties | None = None,
+    ) -> None:
+        """Enqueue a subscribe to the MQTT broker (fire-and-forget)."""
+        if self._mqtt_worker:
+            self._mqtt_worker.enqueue("subscribe", topic, qos, options, properties)
+
+    def _unsubscribe(
+        self,
+        topic: str | list[str],
+        properties: mqtt_properties.Properties | None = None,
+    ) -> None:
+        """Enqueue an unsubscribe to the MQTT broker (fire-and-forget)."""
+        if self._mqtt_worker:
+            self._mqtt_worker.enqueue("unsubscribe", topic, properties)
 
     async def _keepalive_suppress_republish_task(self) -> None:
         """Publish keepalive JSON payload every 30 seconds."""
         topic = f"R/{self._unique_id}/keepalive"
+        payload = json.dumps({"keepalive-options": ["suppress-republish"]})
         while True:
-            if self.client is not None:
-                payload = json.dumps({"keepalive-options": ["suppress-republish"]})
-                self.client.publish(topic, payload=payload, qos=0, retain=False)
-                _LOGGER.debug(
-                    "Published periodic keepalive to topic: %s with payload: %s",
-                    topic,
-                    payload,
-                )
+            self.publish(topic, payload)
+            _LOGGER.debug(
+                "Published periodic keepalive to topic: %s with payload: %s",
+                topic,
+                payload,
+            )
             await asyncio.sleep(30)
+
+    def _keepalive_task_done(self, task: asyncio.Task) -> None:
+        """Mark that the keepalive task is not running."""
+        self._keepalive_task = None
 
     def _send_republish(self) -> None:
         """Timer callback to send keepalive."""
-        try:
-            # Send the keepalive
-            if self.client and self._unique_id:
-                topic = f"R/{self._unique_id}/keepalive"
-                payload = json.dumps({"keepalive-options": []})
-                self.client.publish(topic, payload=payload, qos=0, retain=False)
-                _LOGGER.info("Sent batched keepalive to topic %s", topic)
-            else:
-                _LOGGER.warning(
-                    "Cannot send keepalive - client or unique_id not available"
-                )
+        # Timer fired — clear the timer handle so queue logic is accurate
+        self._republish_timer_handle = None
 
-        except Exception as err:
-            _LOGGER.error("Error sending keepalive: %s", err)
-        finally:
-            self._republish_timer_handle = None
+        if not self._unique_id:
+            _LOGGER.warning("Cannot send keepalive - unique_id not available")
+            return
+
+        topic = f"R/{self._unique_id}/keepalive"
+        payload = json.dumps({"keepalive-options": []})
+        self.publish(topic, payload)
 
     def _queue_republish(self) -> None:
         """Queue a keepalive request using a resettable timer (batches multiple requests).
@@ -201,7 +235,7 @@ class VictronMqttManager:
         # Start/restart timer for 2 seconds from now
         self._republish_timer_handle = self.hass.loop.call_later(
             2.0, self._send_republish
-        )  # Wake up event loop
+        )
 
     def _store_device_info(
         self, device_key: DeviceKey, device_info: dict[str, Any]
@@ -506,50 +540,86 @@ class VictronMqttManager:
         for entity in entities:
             entity.handle_mqtt_message(topic, payload)
 
-    def _on_connect(self, client, userdata, flags, rc) -> None:
+    def _handle_connect(self) -> None:
         """Handle MQTT connection."""
-        _LOGGER.info("MQTT connection callback - result code: %s", rc)
-        if rc == 0:
-            _LOGGER.info(
-                "Successfully connected to MQTT broker at %s:%d",
-                self.entry.data[CONF_BROKER],
-                self.entry.data[CONF_PORT],
-            )
-            # Subscribe to all discovery topics
-            result = client.subscribe("homeassistant/#")
-            _LOGGER.info(
-                "Subscribed to homeassistant/# discovery topics, result: %s", result
-            )
+        if not self.client:
+            return
 
-            # Re-subscribe to all state topics
-            for topic in self._topic_entity_map:
-                client.subscribe(topic)
-                _LOGGER.debug("Re-Subscribed to MQTT topic: %s", topic)
-            # Publish initial keepalive and start periodic task
-            if self._unique_id and not self._keepalive_task_started:
-                topic = f"R/{self._unique_id}/keepalive"
-                client.publish(topic, payload="", qos=0, retain=False)
-                _LOGGER.debug("Published initial keepalive to topic: %s", topic)
-                # Schedule keepalive task on main event loop
-                self.hass.loop.call_soon_threadsafe(
-                    lambda: asyncio.create_task(self._keepalive_suppress_republish_task())
+        # CLear the discovery data cache so that all discovery messages are reprocessed
+        self._topic_payload_cache.clear()
+        _LOGGER.info("Cleared discovery payload cache on MQTT reconnect")
+
+        # Subscribe to all discovery topics
+        # When these are received, the entities will be created/updated accordingly
+        # which will also re-subscribe to their state topics
+        self._subscribe("homeassistant/#")
+        _LOGGER.info("Subscribed to homeassistant/# discovery topics")
+
+        # Start task to periodically send a keepalive with suppress-republish option.
+        # This keepalive is just to tell the GX MQTT broker that someone is still listening.
+        if self._unique_id and not self._keepalive_task:
+            # Start keepalive as a background task tied to the config entry.
+            # It needs to be a background tasks because during startup, Home Assistant
+            # waits until all created regular tasks are done.
+            try:
+                self._keepalive_task = self.entry.async_create_background_task(
+                    self.hass,
+                    self._keepalive_suppress_republish_task(),
+                    "victron keepalive",
                 )
-                self._keepalive_task_started = True
+                self._keepalive_task.add_done_callback(self._keepalive_task_done)
                 _LOGGER.debug(
                     "Started keepalive task for unique ID: %s", self._unique_id
                 )
-            else:
-                _LOGGER.debug(
-                    "Keepalive task already started for unique ID: %s", self._unique_id
-                )
+            except Exception:
+                _LOGGER.exception("Failed starting keepalive background task")
         else:
+            _LOGGER.debug(
+                "Keepalive task already started for unique ID: %s", self._unique_id
+            )
+
+    def _handle_disconnect(self) -> None:
+        """Handle MQTT disconnection."""
+        if not self.client:
+            # Busy with the cleanup
+            return
+
+        _LOGGER.info(
+            "MQTT disconnection - marking all entities as unavailable and devices as removed"
+        )
+        # Mark all entities as unavailable
+        for entity_dict in self._entity_registry.values():
+            for entity in entity_dict.values():
+                entity.set_available(False)
+
+        # Clear the device registry to force re-registration on reconnect
+        self._device_registry.clear()
+        self._topic_device_map.clear()
+
+    def _on_connect(self, client, userdata, flags, rc) -> None:
+        """Handle MQTT connection."""
+        _LOGGER.info("MQTT connection callback - result code: %s", rc)
+        if rc != 0:
             error_msg = _MQTT_ERROR_MESSAGES.get(rc, f"Unknown error (code {rc})")
             _LOGGER.error(
                 "Failed to connect to MQTT broker - result code %s: %s. %s",
                 rc,
-                mqtt.connack_string(rc),
+                mqtt_client.connack_string(rc),
                 error_msg,
             )
+            return
+
+        _LOGGER.info(
+            "Successfully connected to MQTT broker at %s:%d",
+            self.entry.data[CONF_BROKER],
+            self.entry.data[CONF_PORT],
+        )
+
+        try:
+            # schedule the in-loop handler
+            self.hass.loop.call_soon_threadsafe(self._handle_connect)
+        except Exception:
+            _LOGGER.exception("Failed scheduling connect handler")
 
     def _on_message(self, client, userdata, msg) -> None:
         """Handle all MQTT messages."""
@@ -557,13 +627,32 @@ class VictronMqttManager:
         topic = msg.topic
         payload = msg.payload
         if topic.startswith("homeassistant/device/"):
-            self.hass.loop.call_soon_threadsafe(
-                asyncio.create_task, self._handle_discovery_message(topic, payload)
-            )
+            try:
+                asyncio.run_coroutine_threadsafe(
+                    self._handle_discovery_message(topic, payload), self.hass.loop
+                )
+            except Exception:
+                _LOGGER.exception(
+                    "Failed scheduling discovery message handler for topic %s",
+                    topic,
+                )
         else:
             self.hass.loop.call_soon_threadsafe(
                 self._handle_state_message, topic, payload
             )
+
+    def _on_disconnect(self, client, userdata, rc) -> None:
+        """Handle MQTT disconnection."""
+        _LOGGER.info("Disconnected from MQTT broker with result code: %s", rc)
+        if rc != 0:
+            _LOGGER.warning(
+                "Unexpected disconnection from MQTT broker with result code %s", rc
+            )
+        try:
+            # schedule the in-loop handler
+            self.hass.loop.call_soon_threadsafe(self._handle_disconnect)
+        except Exception:
+            _LOGGER.exception("Failed scheduling disconnect handler")
 
     def start(self) -> None:
         """Start the MQTT client in a background thread and prepare keepalive publishing."""
@@ -580,7 +669,7 @@ class VictronMqttManager:
             unique_id,
         )
 
-        client = mqtt.Client()
+        client = mqtt_client.Client()
 
         # Set up authentication
         if username and token:
@@ -591,62 +680,23 @@ class VictronMqttManager:
 
         client.on_connect = self._on_connect
         client.on_message = self._on_message
+        client.on_disconnect = self._on_disconnect
 
         self.client = client
         self._unique_id = unique_id
 
-        # Run the MQTT client setup and connection in executor to avoid blocking
+        # Start background MQTT worker for blocking client calls
+        try:
+            self._mqtt_worker = MqttWorker(self.client)
+            self._mqtt_worker.start()
+        except Exception:
+            _LOGGER.exception("Failed to start MQTT worker thread")
+
         self.hass.async_add_executor_job(self._setup_and_run_client, broker, port)
 
     async def restore_devices_from_registry(self) -> None:
         """Restore devices from Home Assistant's device registry on startup."""
         _LOGGER.info("Restoring devices from Home Assistant device registry")
-
-        device_registry = dr.async_get(self.hass)
-
-        # Find all devices associated with this integration
-        devices = dr.async_entries_for_config_entry(
-            device_registry, self.entry.entry_id
-        )
-
-        for device in devices:
-            # Extract the device identifier from identifiers
-            if not device.identifiers:
-                _LOGGER.warning(
-                    "Device %s has no identifiers, skipping restoration", device.name
-                )
-                continue
-            device_key = next(iter(device.identifiers))
-
-            # Create device info structure from registry data
-            device_info = {
-                "identifiers": [device_key],
-                "name": device.name,
-                "model": device.model,
-                "manufacturer": device.manufacturer,
-                "sw_version": device.sw_version,
-                "hw_version": device.hw_version,
-            }
-
-            # Add via_device if it exists
-            if device.via_device_id:
-                device_info["via_device"] = str(device.via_device_id)
-
-            # Store restored device info in our local registry (topic will be generated from identifiers)
-            self._store_device_info(device_key, device_info)
-
-            _LOGGER.debug(
-                "Restored device from registry: %s (identifiers: %s, via_device: %s)",
-                device.name,
-                device.identifiers,
-                device_info.get("via_device"),
-            )
-
-        _LOGGER.info(
-            "Restored %d devices from Home Assistant device registry. "
-            "Entities will be created when MQTT discovery messages are received.",
-            len(self._device_registry),
-        )
 
     async def cleanup(self) -> None:
         """Clean up resources when the manager is being destroyed."""
@@ -657,6 +707,46 @@ class VictronMqttManager:
             _LOGGER.debug("Cancelling keepalive timer")
             self._republish_timer_handle.cancel()
             self._republish_timer_handle = None
+
+        # Cancel republish task if running and await its completion
+        if self._republish_task:
+            _LOGGER.debug("Cancelling republish task")
+            try:
+                self._republish_task.cancel()
+                try:
+                    await asyncio.wait_for(self._republish_task, timeout=10.0)
+                except asyncio.CancelledError:
+                    _LOGGER.debug("Republish task cancelled")
+                except TimeoutError:
+                    _LOGGER.warning("Timed out waiting for republish task to finish")
+                except Exception:
+                    _LOGGER.exception(
+                        "Error while waiting for republish task to finish"
+                    )
+            except Exception:
+                _LOGGER.exception("Error cancelling republish task")
+            finally:
+                self._republish_task = None
+
+        # Cancel keepalive task if running and await its completion
+        if self._keepalive_task:
+            _LOGGER.debug("Cancelling keepalive background task")
+            try:
+                self._keepalive_task.cancel()
+                try:
+                    await asyncio.wait_for(self._keepalive_task, timeout=10.0)
+                except asyncio.CancelledError:
+                    _LOGGER.debug("Keepalive task cancelled")
+                except TimeoutError:
+                    _LOGGER.warning("Timed out waiting for keepalive task to finish")
+                except Exception:
+                    _LOGGER.exception(
+                        "Error while waiting for keepalive task to finish"
+                    )
+            except Exception:
+                _LOGGER.exception("Error cancelling keepalive task")
+            finally:
+                self._keepalive_task = None
 
         # Clear all registries
         registries_to_clear = [
@@ -671,15 +761,26 @@ class VictronMqttManager:
             registry.clear()
 
         # Disconnect MQTT if still connected
+        # Stop the mqtt worker before disconnecting the client
+        if self._mqtt_worker:
+            try:
+                self._mqtt_worker.stop()
+            except Exception:  # pragma: no cover - defensive
+                _LOGGER.exception("Error stopping MQTT worker")
+            finally:
+                self._mqtt_worker = None
+
         if self.client:
             try:
-                self.client.loop_stop()
-                self.client.disconnect()
-            except (RuntimeError, OSError, ssl.SSLError):
-                _LOGGER.debug("Error during MQTT cleanup", exc_info=True)
+                await self.hass.async_add_executor_job(self.client.loop_stop)
+            except Exception:
+                _LOGGER.exception("Error stopping MQTT loop")
+            try:
+                await self.hass.async_add_executor_job(self.client.disconnect)
+            except Exception:
+                _LOGGER.exception("Error disconnecting MQTT client")
             self.client = None
-
-        _LOGGER.debug("VictronMqttManager cleanup completed")
+        _LOGGER.info("VictronMqttManager cleanup completed")
 
     def set_platform_add_entities(
         self, platform: str, add_entities: AddConfigEntryEntitiesCallback
@@ -693,26 +794,31 @@ class VictronMqttManager:
 
     def subscribe_entity(self, entity: VictronBaseEntity) -> None:
         """Subscribe an entity to its state topic."""
-        if entity.state_topic is not None:
-            if entity.state_topic not in self._topic_entity_map:
-                self._topic_entity_map[entity.state_topic] = set()
-                if self.client:
-                    self.client.subscribe(entity.state_topic)
-            self._topic_entity_map[entity.state_topic].add(entity)
+        if entity.state_topic is None:
+            return
+
+        if entity.state_topic not in self._topic_entity_map:
+            self._topic_entity_map[entity.state_topic] = set()
+            self._subscribe(entity.state_topic)
+
+        self._topic_entity_map[entity.state_topic].add(entity)
 
     def unsubscribe_entity(self, entity: VictronBaseEntity) -> None:
         """Unsubscribe an entity from its state topic."""
+        if entity.state_topic is None:
+            return
         if entity.state_topic not in self._topic_entity_map:
             return
+
         entity_set = self._topic_entity_map[entity.state_topic]
         if entity not in entity_set:
             return
+
         entity_set.remove(entity)
         if not entity_set:
             # No more entities for this topic, unsubscribe
             del self._topic_entity_map[entity.state_topic]
-            if self.client:
-                self.client.unsubscribe(entity.state_topic)
+            self._unsubscribe(entity.state_topic)
 
     def register_entity(self, entity: VictronBaseEntity) -> None:
         """Register an entity with the manager."""
@@ -733,6 +839,18 @@ class VictronMqttManager:
         _LOGGER.debug(
             "Unregistered entity %s from device %s", entity.entity_id, device_key
         )
+
+    def publish(
+        self,
+        topic: str,
+        payload: str | bytes | bytearray | float | None = None,
+        qos: int = 0,
+        retain: bool = False,
+        props: mqtt_properties.Properties | None = None,
+    ) -> None:
+        """Publish a message to the MQTT broker using the executor to avoid blocking."""
+        if self._mqtt_worker:
+            self._mqtt_worker.enqueue("publish", topic, payload, qos, retain, props)
 
     def has_device_key(self, device_key: DeviceKey) -> bool:
         """Return True if the device_key is in the device registry."""
@@ -783,12 +901,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
-    """Remove a device from the device registry.
+    """Return whether a user is allowed to remove this device."""
 
-    This allows users to delete devices that no longer have valid discovery topics
-    (empty config) after a restart. Returns True only for orphaned devices that
-    can safely be removed, False for devices with active configurations.
-    """
     # Get the manager to check if this device is active
     manager: VictronMqttManager = hass.data.get(DOMAIN, {}).get(config_entry.entry_id)
     if not manager:

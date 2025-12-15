@@ -2,13 +2,15 @@
 
 import json
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityCategory
 from homeassistant.helpers.template import Template
 
+if TYPE_CHECKING:
+    from . import VictronMqttManager
 from .const import DOMAIN
 from .types import DeviceKey
 
@@ -18,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 class VictronBaseEntity(Entity):
     """Base class for Victron Energy entities."""
 
-    _manager: Any
+    _manager: "VictronMqttManager"
     _device_key: DeviceKey
     _device_info: dict[str, Any]
     _platform: str
@@ -60,7 +62,7 @@ class VictronBaseEntity(Entity):
 
     def __init__(
         self,
-        manager,
+        manager: "VictronMqttManager",
         device_key: DeviceKey,
         device_info: dict[str, Any],
         unique_id: str,
