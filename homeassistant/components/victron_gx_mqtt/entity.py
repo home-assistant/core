@@ -40,9 +40,6 @@ class VictronBaseEntity(Entity):
         self._metric = metric
         self._device_info = device_info
         self._attr_unique_id = metric.unique_id
-        self._attr_native_unit_of_measurement = self._map_metric_to_unit_of_measurement(
-            metric
-        )
         self._attr_should_poll = False
         self._attr_has_entity_name = True
         self._attr_suggested_display_precision = metric.precision
@@ -51,11 +48,13 @@ class VictronBaseEntity(Entity):
         )  # same as in merge_topics.py
         self._attr_translation_placeholders = metric.key_values
 
-        # Specific changes related to HA
-        # device class and state class are relevant only for certain metric kinds
+        # Some attributes are relevant only for certain metric kinds
         if metric.metric_kind in [MetricKind.SENSOR, MetricKind.NUMBER]:
             self._attr_device_class = self._map_metric_to_device_class(metric)
             self._attr_state_class = self._map_metric_to_stateclass(metric)
+            self._attr_native_unit_of_measurement = (
+                self._map_metric_to_unit_of_measurement(metric)
+            )
 
         self._attr_entity_category = (
             EntityCategory.DIAGNOSTIC
