@@ -6,7 +6,7 @@ from base64 import b64decode
 from dataclasses import dataclass
 from typing import Any
 
-from tuya_device_handlers.device_wrapper import (
+from tuya_device_handlers.device_wrapper.common import (
     DPCodeEnumWrapper,
     DPCodeRawWrapper,
     DPCodeStringWrapper,

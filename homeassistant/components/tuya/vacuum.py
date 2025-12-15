@@ -4,7 +4,10 @@ from __future__ import annotations
 
 from typing import Any
 
-from tuya_device_handlers.device_wrapper import DPCodeBooleanWrapper, DPCodeEnumWrapper
+from tuya_device_handlers.device_wrapper.common import (
+    DPCodeBooleanWrapper,
+    DPCodeEnumWrapper,
+)
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.vacuum import (

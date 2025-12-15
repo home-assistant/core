@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from tuya_device_handlers.device_wrapper import DPCodeEnumWrapper
+from tuya_device_handlers.device_wrapper.common import DPCodeEnumWrapper
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription

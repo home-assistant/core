@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from tuya_device_handlers.device_wrapper import DPCodeIntegerWrapper
+from tuya_device_handlers.device_wrapper.common import DPCodeIntegerWrapper
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.number import (

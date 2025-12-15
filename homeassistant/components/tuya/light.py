@@ -7,7 +7,7 @@ from enum import StrEnum
 import json
 from typing import Any, cast
 
-from tuya_device_handlers.device_wrapper import (
+from tuya_device_handlers.device_wrapper.common import (
     DPCodeBooleanWrapper,
     DPCodeEnumWrapper,
     DPCodeIntegerWrapper,

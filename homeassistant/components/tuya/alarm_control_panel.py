@@ -5,7 +5,10 @@ from __future__ import annotations
 from base64 import b64decode
 from typing import Any
 
-from tuya_device_handlers.device_wrapper import DPCodeEnumWrapper, DPCodeRawWrapper
+from tuya_device_handlers.device_wrapper.common import (
+    DPCodeEnumWrapper,
+    DPCodeRawWrapper,
+)
 from tuya_device_handlers.type_information import EnumTypeInformation
 from tuya_sharing import CustomerDevice, Manager
 
