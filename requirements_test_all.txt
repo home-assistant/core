@@ -222,7 +222,7 @@ aiodhcpwatcher==1.2.1
 aiodiscover==2.7.1
 
 # homeassistant.components.dnsip
-aiodns==3.6.0
+aiodns==3.6.1
 
 # homeassistant.components.duke_energy
 aiodukeenergy==0.3.0
@@ -2487,7 +2487,7 @@ tesla-powerwall==0.5.2
 tesla-wall-connector==1.1.0
 
 # homeassistant.components.teslemetry
-teslemetry-stream==0.7.10
+teslemetry-stream==0.8.2
 
 # homeassistant.components.tessie
 tessie-api==0.1.1
