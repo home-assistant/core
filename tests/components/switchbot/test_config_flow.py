@@ -45,18 +45,6 @@ DOMAIN = "switchbot"
 
 
 @pytest.fixture
-def mock_scanners_all_active() -> Generator[None]:
-    """Mock all scanners as active mode."""
-    mock_scanner = Mock()
-    mock_scanner.current_mode = BluetoothScanningMode.ACTIVE
-    with patch(
-        "homeassistant.components.bluetooth.async_current_scanners",
-        return_value=[mock_scanner],
-    ):
-        yield
-
-
-@pytest.fixture
 def mock_scanners_all_passive() -> Generator[None]:
     """Mock all scanners as passive mode."""
     mock_scanner = Mock()
