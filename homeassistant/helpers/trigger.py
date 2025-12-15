@@ -169,7 +169,12 @@ def async_subscribe_platform_events(
 async def _register_trigger_platform(
     hass: HomeAssistant, integration_domain: str, platform: TriggerProtocol
 ) -> None:
-    """Register a trigger platform."""
+    """Register a trigger platform and notify listeners.
+
+    If the trigger platform does not provide any triggers, or it is disabled,
+    listeners will not be notified.
+    """
+    from homeassistant.components import automation  # noqa: PLC0415
 
     new_triggers: set[str] = set()
 
@@ -178,6 +183,12 @@ async def _register_trigger_platform(
             trigger_key = get_absolute_description_key(integration_domain, trigger_key)
             hass.data[TRIGGERS][trigger_key] = integration_domain
             new_triggers.add(trigger_key)
+        if not new_triggers:
+            _LOGGER.debug(
+                "Integration %s returned no triggers in async_get_triggers",
+                integration_domain,
+            )
+            return
     elif hasattr(platform, "async_validate_trigger_config") or hasattr(
         platform, "TRIGGER_SCHEMA"
     ):
@@ -188,6 +199,10 @@ async def _register_trigger_platform(
             "Integration %s does not provide trigger support, skipping",
             integration_domain,
         )
+        return
+
+    if automation.is_disabled_experimental_trigger(hass, integration_domain):
+        _LOGGER.debug("Triggers for integration %s are disabled", integration_domain)
         return
 
     # We don't use gather here because gather adds additional overhead
@@ -322,18 +337,18 @@ class EntityTriggerBase(Trigger):
         self._options = config.options or {}
         self._target = config.target
 
-    def is_from_state(self, from_state: State, to_state: State) -> bool:
-        """Check if the state matches the origin state."""
-        return not self.is_to_state(from_state)
+    def is_valid_transition(self, from_state: State, to_state: State) -> bool:
+        """Check if the origin state is not an expected target states."""
+        return not self.is_valid_state(from_state)
 
     @abc.abstractmethod
-    def is_to_state(self, state: State) -> bool:
-        """Check if the state matches the target state."""
+    def is_valid_state(self, state: State) -> bool:
+        """Check if the new state matches the expected state(s)."""
 
     def check_all_match(self, entity_ids: set[str]) -> bool:
         """Check if all entity states match."""
         return all(
-            self.is_to_state(state)
+            self.is_valid_state(state)
             for entity_id in entity_ids
             if (state := self._hass.states.get(entity_id)) is not None
         )
@@ -342,7 +357,7 @@ class EntityTriggerBase(Trigger):
         """Check that only one entity state matches."""
         return (
             sum(
-                self.is_to_state(state)
+                self.is_valid_state(state)
                 for entity_id in entity_ids
                 if (state := self._hass.states.get(entity_id)) is not None
             )
@@ -379,12 +394,12 @@ class EntityTriggerBase(Trigger):
             if not from_state or from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
                 return
 
-            # The trigger should never fire if the previous state was not the from state
-            if not to_state or not self.is_from_state(from_state, to_state):
+            # The trigger should never fire if the new state is not valid
+            if not to_state or not self.is_valid_state(to_state):
                 return
 
-            # The trigger should never fire if the new state is not the to state
-            if not self.is_to_state(to_state):
+            # The trigger should never fire if the transition is not valid
+            if not self.is_valid_transition(from_state, to_state):
                 return
 
             if behavior == BEHAVIOR_LAST:
@@ -418,8 +433,8 @@ class EntityStateTriggerBase(EntityTriggerBase):
 
     _to_state: str
 
-    def is_to_state(self, state: State) -> bool:
-        """Check if the state matches the target state."""
+    def is_valid_state(self, state: State) -> bool:
+        """Check if the new state matches the expected state."""
         return state.state == self._to_state
 
 
@@ -429,12 +444,12 @@ class ConditionalEntityStateTriggerBase(EntityTriggerBase):
     _from_states: set[str]
     _to_states: set[str]
 
-    def is_from_state(self, from_state: State, to_state: State) -> bool:
-        """Check if the state matches the origin state."""
+    def is_valid_transition(self, from_state: State, to_state: State) -> bool:
+        """Check if the origin state matches the expected ones."""
         return from_state.state in self._from_states
 
-    def is_to_state(self, state: State) -> bool:
-        """Check if the state matches the target state."""
+    def is_valid_state(self, state: State) -> bool:
+        """Check if the new state matches the expected states."""
         return state.state in self._to_states
 
 
@@ -444,8 +459,8 @@ class EntityStateAttributeTriggerBase(EntityTriggerBase):
     _attribute: str
     _attribute_to_state: str
 
-    def is_to_state(self, state: State) -> bool:
-        """Check if the state matches the target state."""
+    def is_valid_state(self, state: State) -> bool:
+        """Check if the new state attribute matches the expected one."""
         return state.attributes.get(self._attribute) == self._attribute_to_state
 
 

@@ -11,6 +11,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import TransmissionConfigEntry, TransmissionDataUpdateCoordinator
 from .entity import TransmissionEntity
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class TransmissionSwitchEntityDescription(SwitchEntityDescription):

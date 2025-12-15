@@ -14,6 +14,7 @@ from .coordinator import LeilSaunaCoordinator
 PLATFORMS: list[Platform] = [
     Platform.CLIMATE,
     Platform.LIGHT,
+    Platform.SENSOR,
 ]
 
 type LeilSaunaConfigEntry = ConfigEntry[LeilSaunaCoordinator]

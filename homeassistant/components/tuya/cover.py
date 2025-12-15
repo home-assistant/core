@@ -23,35 +23,36 @@ from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
 from .models import DPCodeBooleanWrapper, DPCodeEnumWrapper, DPCodeIntegerWrapper
+from .type_information import IntegerTypeInformation
+from .util import RemapHelper
 
 
 class _DPCodePercentageMappingWrapper(DPCodeIntegerWrapper):
     """Wrapper for DPCode position values mapping to 0-100 range."""
+
+    def __init__(self, dpcode: str, type_information: IntegerTypeInformation) -> None:
+        """Init DPCodeIntegerWrapper."""
+        super().__init__(dpcode, type_information)
+        self._remap_helper = RemapHelper.from_type_information(type_information, 0, 100)
 
     def _position_reversed(self, device: CustomerDevice) -> bool:
         """Check if the position and direction should be reversed."""
         return False
 
     def read_device_status(self, device: CustomerDevice) -> float | None:
-        if (value := self._read_device_status_raw(device)) is None:
+        if (value := device.status.get(self.dpcode)) is None:
             return None
 
         return round(
-            self.type_information.remap_value_to(
-                value,
-                0,
-                100,
-                self._position_reversed(device),
+            self._remap_helper.remap_value_to(
+                value, reverse=self._position_reversed(device)
             )
         )
 
     def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
         return round(
-            self.type_information.remap_value_from(
-                value,
-                0,
-                100,
-                self._position_reversed(device),
+            self._remap_helper.remap_value_from(
+                value, reverse=self._position_reversed(device)
             )
         )
 
@@ -103,17 +104,17 @@ class _InstructionEnumWrapper(DPCodeEnumWrapper, _InstructionWrapper):
     stop_instruction = "stop"
 
     def get_open_command(self, device: CustomerDevice) -> dict[str, Any] | None:
-        if self.open_instruction in self.type_information.range:
+        if self.open_instruction in self.options:
             return {"code": self.dpcode, "value": self.open_instruction}
         return None
 
     def get_close_command(self, device: CustomerDevice) -> dict[str, Any] | None:
-        if self.close_instruction in self.type_information.range:
+        if self.close_instruction in self.options:
             return {"code": self.dpcode, "value": self.close_instruction}
         return None
 
     def get_stop_command(self, device: CustomerDevice) -> dict[str, Any] | None:
-        if self.stop_instruction in self.type_information.range:
+        if self.stop_instruction in self.options:
             return {"code": self.dpcode, "value": self.stop_instruction}
         return None
 
@@ -421,7 +422,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
 
         if self._set_position is not None:
             await self._async_send_commands(
-                [self._set_position.get_update_command(self.device, 100)]
+                self._set_position.get_update_commands(self.device, 100)
             )
 
     async def async_close_cover(self, **kwargs: Any) -> None:
@@ -434,12 +435,14 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
 
         if self._set_position is not None:
             await self._async_send_commands(
-                [self._set_position.get_update_command(self.device, 0)]
+                self._set_position.get_update_commands(self.device, 0)
             )
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        await self._async_send_dpcode_update(self._set_position, kwargs[ATTR_POSITION])
+        await self._async_send_wrapper_updates(
+            self._set_position, kwargs[ATTR_POSITION]
+        )
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
@@ -450,6 +453,6 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
-        await self._async_send_dpcode_update(
+        await self._async_send_wrapper_updates(
             self._tilt_position, kwargs[ATTR_TILT_POSITION]
         )
