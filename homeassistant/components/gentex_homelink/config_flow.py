@@ -46,19 +46,18 @@ class SRPFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                     user_input[CONF_EMAIL],
                     user_input[CONF_PASSWORD],
                 )
-                access_token = jwt.decode(
-                    tokens["AuthenticationResult"]["AccessToken"],
-                    options={"verify_signature": False},
-                )
-                sub = access_token["sub"]
-                await self.async_set_unique_id(sub)
-                self._abort_if_unique_id_configured()
             except botocore.exceptions.ClientError:
                 errors["base"] = "srp_auth_failed"
             except Exception:
                 _LOGGER.exception("An unexpected error occurred")
                 errors["base"] = "unknown"
             else:
+                access_token = jwt.decode(
+                    tokens["AuthenticationResult"]["AccessToken"],
+                    options={"verify_signature": False},
+                )
+                await self.async_set_unique_id(access_token["sub"])
+                self._abort_if_unique_id_configured()
                 self.external_data = {"tokens": tokens}
                 return await self.async_step_creation()
 
