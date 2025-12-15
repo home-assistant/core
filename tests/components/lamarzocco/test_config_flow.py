@@ -11,6 +11,7 @@ import pytest
 from homeassistant.components.lamarzocco.config_flow import CONF_MACHINE
 from homeassistant.components.lamarzocco.const import (
     CONF_INSTALLATION_KEY,
+    CONF_OFFLINE_MODE,
     CONF_USE_BLUETOOTH,
     DOMAIN,
 )
@@ -522,4 +523,5 @@ async def test_options_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_USE_BLUETOOTH: False,
+        CONF_OFFLINE_MODE: False,
     }

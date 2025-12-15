@@ -226,9 +226,11 @@
     "step": {
       "init": {
         "data": {
+          "offline_mode": "Offline Mode",
           "use_bluetooth": "Use Bluetooth"
         },
         "data_description": {
+          "offline_mode": "Enable offline mode to operate without internet connectivity through Bluetooth. Only local features will be available. Requires Bluetooth to be enabled.",
           "use_bluetooth": "Should the integration try to use Bluetooth to control the machine?"
         }
       }
