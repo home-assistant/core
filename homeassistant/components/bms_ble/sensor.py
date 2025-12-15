@@ -124,6 +124,7 @@ SENSOR_TYPES: Final[list[BmsEntityDescription]] = [
         key=ATTR_CURRENT,
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
+        translation_key=ATTR_CURRENT,
         value_fn=lambda data: data.get("current"),
     ),
     BmsEntityDescription(
@@ -205,11 +206,11 @@ SENSOR_TYPES: Final[list[BmsEntityDescription]] = [
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         key=ATTR_MIN_VOLTAGE,
-        translation_key=ATTR_MIN_VOLTAGE,
         name="Minimal cell voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=3,
+        translation_key=ATTR_MIN_VOLTAGE,
         value_fn=lambda data: (
             min(cells) if (cells := data.get("cell_voltages", [])) else None
         ),
@@ -221,6 +222,7 @@ SENSOR_TYPES: Final[list[BmsEntityDescription]] = [
         key=ATTR_RSSI,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         state_class=SensorStateClass.MEASUREMENT,
+        translation_key=ATTR_RSSI,
         value_fn=lambda data: None,  # RSSI is handled in a separate class
     ),
     BmsEntityDescription(
