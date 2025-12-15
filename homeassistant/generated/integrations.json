@@ -388,7 +388,7 @@
     },
     "apcupsd": {
       "name": "APC UPS Daemon",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -1478,7 +1478,7 @@
     },
     "duke_energy": {
       "name": "Duke Energy",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -2415,7 +2415,7 @@
     },
     "goodwe": {
       "name": "GoodWe Inverter",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -2465,7 +2465,7 @@
           "name": "Google Maps"
         },
         "google_photos": {
-          "integration_type": "hub",
+          "integration_type": "service",
           "config_flow": true,
           "iot_class": "cloud_polling",
           "name": "Google Photos"
@@ -2483,7 +2483,7 @@
           "name": "Google Sheets"
         },
         "google_tasks": {
-          "integration_type": "hub",
+          "integration_type": "service",
           "config_flow": true,
           "iot_class": "cloud_polling",
           "name": "Google Tasks"
@@ -2495,7 +2495,7 @@
           "name": "Google Translate text-to-speech"
         },
         "google_travel_time": {
-          "integration_type": "hub",
+          "integration_type": "service",
           "config_flow": true,
           "iot_class": "cloud_polling"
         },
@@ -2547,7 +2547,7 @@
       "name": "Govee",
       "integrations": {
         "govee_ble": {
-          "integration_type": "hub",
+          "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_push",
           "name": "Govee Bluetooth"
@@ -2696,7 +2696,7 @@
     },
     "here_travel_time": {
       "name": "HERE Travel Time",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -3693,7 +3693,7 @@
       "name": "Logitech",
       "integrations": {
         "harmony": {
-          "integration_type": "hub",
+          "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_push",
           "name": "Logitech Harmony Hub"

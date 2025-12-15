@@ -2047,7 +2047,7 @@ pysmhi==1.1.0
 pysml==0.1.5
 
 # homeassistant.components.smlight
-pysmlight==0.2.11
+pysmlight==0.2.13
 
 # homeassistant.components.snmp
 pysnmp==7.1.22
@@ -2461,7 +2461,7 @@ surepy==0.9.0
 switchbot-api==2.8.0
 
 # homeassistant.components.system_bridge
-systembridgeconnector==5.1.0
+systembridgeconnector==5.2.4
 
 # homeassistant.components.tailscale
 tailscale==0.6.2

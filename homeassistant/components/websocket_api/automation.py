@@ -150,7 +150,7 @@ def _async_get_automation_components_for_target(
     """
     extracted = target_helpers.async_extract_referenced_entity_ids(
         hass,
-        target_helpers.TargetSelectorData(target_selection),
+        target_helpers.TargetSelection(target_selection),
         expand_group=expand_group,
     )
     _LOGGER.debug("Extracted entities for lookup: %s", extracted)
