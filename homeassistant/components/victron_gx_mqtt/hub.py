@@ -20,9 +20,8 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
-    EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceInfo
 
@@ -90,9 +89,8 @@ class Hub:
             raise ConfigEntryNotReady(
                 f"Cannot connect to the hub: {connect_error}"
             ) from connect_error
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.stop)
 
-    async def stop(self, event: Event | None = None) -> None:
+    async def stop(self) -> None:
         """Stop the Victron MQTT hub."""
         _LOGGER.info("Stopping hub")
         await self._hub.disconnect()
