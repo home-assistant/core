@@ -28,7 +28,7 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.target import (
-    TargetSelectorData,
+    TargetSelection,
     async_extract_referenced_entity_ids,
 )
 from homeassistant.util.json import JsonValueType
@@ -117,7 +117,7 @@ def _async_get_ufp_instance(hass: HomeAssistant, device_id: str) -> ProtectApiCl
 
 @callback
 def _async_get_ufp_camera(call: ServiceCall) -> Camera:
-    ref = async_extract_referenced_entity_ids(call.hass, TargetSelectorData(call.data))
+    ref = async_extract_referenced_entity_ids(call.hass, TargetSelection(call.data))
     entity_registry = er.async_get(call.hass)
 
     entity_id = ref.indirectly_referenced.pop()
@@ -135,7 +135,7 @@ def _async_get_protect_from_call(call: ServiceCall) -> set[ProtectApiClient]:
     return {
         _async_get_ufp_instance(call.hass, device_id)
         for device_id in async_extract_referenced_entity_ids(
-            call.hass, TargetSelectorData(call.data)
+            call.hass, TargetSelection(call.data)
         ).referenced_devices
     }
 
@@ -207,7 +207,7 @@ def _async_unique_id_to_mac(unique_id: str) -> str:
 
 async def set_chime_paired_doorbells(call: ServiceCall) -> None:
     """Set paired doorbells on chime."""
-    ref = async_extract_referenced_entity_ids(call.hass, TargetSelectorData(call.data))
+    ref = async_extract_referenced_entity_ids(call.hass, TargetSelection(call.data))
     entity_registry = er.async_get(call.hass)
 
     entity_id = ref.indirectly_referenced.pop()
@@ -223,7 +223,7 @@ async def set_chime_paired_doorbells(call: ServiceCall) -> None:
 
     call.data = ReadOnlyDict(call.data.get("doorbells") or {})
     doorbell_refs = async_extract_referenced_entity_ids(
-        call.hass, TargetSelectorData(call.data)
+        call.hass, TargetSelection(call.data)
     )
     doorbell_ids: set[str] = set()
     for camera_id in doorbell_refs.referenced | doorbell_refs.indirectly_referenced:

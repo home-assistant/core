@@ -29,7 +29,7 @@ from homeassistant.const import ATTR_MODE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.target import (
-    TargetSelectorData,
+    TargetSelection,
     async_extract_referenced_entity_ids,
 )
 
@@ -272,7 +272,7 @@ class LIFXManager:
         async def service_handler(service: ServiceCall) -> None:
             """Apply a service, i.e. start an effect."""
             referenced = async_extract_referenced_entity_ids(
-                self.hass, TargetSelectorData(service.data)
+                self.hass, TargetSelection(service.data)
             )
             all_referenced = referenced.referenced | referenced.indirectly_referenced
             if all_referenced:

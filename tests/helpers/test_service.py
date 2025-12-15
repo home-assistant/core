@@ -2699,7 +2699,7 @@ async def test_deprecated_service_target_selector_class(hass: HomeAssistant) -> 
     assert selector.device_ids == {"device1", "device2"}
     assert selector.floor_ids == {"first_floor"}
     assert selector.label_ids == {"label1", "label2"}
-    assert selector.has_any_selector is True
+    assert selector.has_any_target is True
 
 
 async def test_deprecated_selected_entities_class(
