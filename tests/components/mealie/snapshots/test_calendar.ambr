@@ -50,20 +50,6 @@
       'uid': None,
     }),
     dict({
-      'description': 'Delicious Greek turkey meatballs with lemon orzo, tender veggies, and a creamy feta yogurt sauce. These healthy baked Greek turkey meatballs are filled with tons of wonderful herbs and make the perfect protein-packed weeknight meal!',
-      'end': dict({
-        'date': '2024-01-24',
-      }),
-      'location': None,
-      'recurrence_id': None,
-      'rrule': None,
-      'start': dict({
-        'date': '2024-01-23',
-      }),
-      'summary': 'Greek Turkey Meatballs with Lemon Orzo & Creamy Feta Yogurt Sauce',
-      'uid': None,
-    }),
-    dict({
       'description': 'This is a modified Pampered Chef recipe. You can use a trifle bowl or large glass punch/salad bowl to show it off. It is really easy to make and I never have any leftovers. Cook time includes chill time.',
       'end': dict({
         'date': '2024-01-24',
@@ -106,20 +92,6 @@
       'uid': None,
     }),
     dict({
-      'description': 'Einfacher Nudelauflauf mit Brokkoli, Sahnesauce und extra Käse. Dieses vegetarische 5 Zutaten Rezept ist super schnell gemacht und SO gut!',
-      'end': dict({
-        'date': '2024-01-23',
-      }),
-      'location': None,
-      'recurrence_id': None,
-      'rrule': None,
-      'start': dict({
-        'date': '2024-01-22',
-      }),
-      'summary': 'Einfacher Nudelauflauf mit Brokkoli',
-      'uid': None,
-    }),
-    dict({
       'description': 'Simple to prepare and ready in 25 minutes, this vegetarian miso noodle recipe can be eaten on its own or served as a side.',
       'end': dict({
         'date': '2024-01-24',
@@ -131,20 +103,6 @@
         'date': '2024-01-23',
       }),
       'summary': 'Miso Udon Noodles with Spinach and Tofu',
-      'uid': None,
-    }),
-    dict({
-      'description': 'Avis aux nostalgiques des années 1980, la mousse de saumon est de retour dans une présentation adaptée au goût du jour. On utilise une technique sans faille : un saumon frais cuit au micro-ondes et mélangé au robot avec du fromage à la crème et de la crème sure. On obtient ainsi une texture onctueuse à tartiner, qui n’a rien à envier aux préparations gélatineuses d’antan !',
-      'end': dict({
-        'date': '2024-01-23',
-      }),
-      'location': None,
-      'recurrence_id': None,
-      'rrule': None,
-      'start': dict({
-        'date': '2024-01-22',
-      }),
-      'summary': 'Mousse de saumon',
       'uid': None,
     }),
     dict({
