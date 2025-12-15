@@ -154,6 +154,9 @@ class DPCodeIntegerWrapper(DPCodeTypeInformationWrapper[IntegerTypeInformation])
         """Init DPCodeIntegerWrapper."""
         super().__init__(dpcode, type_information)
         self.native_unit = type_information.unit
+        self.min_value = self.type_information.scale_value(type_information.min)
+        self.max_value = self.type_information.scale_value(type_information.max)
+        self.value_step = self.type_information.scale_value(type_information.step)
 
     def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
         """Convert a Home Assistant value back to a raw device value."""

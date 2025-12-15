@@ -153,12 +153,8 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
 
         # Determine humidity parameters
         if target_humidity_wrapper:
-            self._attr_min_humidity = round(
-                target_humidity_wrapper.type_information.min_scaled
-            )
-            self._attr_max_humidity = round(
-                target_humidity_wrapper.type_information.max_scaled
-            )
+            self._attr_min_humidity = round(target_humidity_wrapper.min_value)
+            self._attr_max_humidity = round(target_humidity_wrapper.max_value)
 
         # Determine mode support and provided modes
         if mode_wrapper:

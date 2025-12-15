@@ -200,21 +200,6 @@ class IntegerTypeInformation(TypeInformation[float]):
     step: int
     unit: str | None = None
 
-    @property
-    def max_scaled(self) -> float:
-        """Return the max scaled."""
-        return self.scale_value(self.max)
-
-    @property
-    def min_scaled(self) -> float:
-        """Return the min scaled."""
-        return self.scale_value(self.min)
-
-    @property
-    def step_scaled(self) -> float:
-        """Return the step scaled."""
-        return self.step / (10**self.scale)
-
     def scale_value(self, value: int) -> float:
         """Scale a value."""
         return value / (10**self.scale)
