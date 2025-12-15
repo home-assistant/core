@@ -139,7 +139,8 @@ def mock_add_webhook(
 def mock_webhook_id():
     """Mock webhook_id."""
     with patch(
-        "homeassistant.components.webhook.async_generate_id", return_value="1234567890"
+        "homeassistant.components.ekeybionyx.config_flow.webhook_generate_id",
+        return_value="1234567890",
     ):
         yield
 
