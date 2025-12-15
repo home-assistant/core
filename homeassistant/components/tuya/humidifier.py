@@ -163,7 +163,7 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
         # Determine mode support and provided modes
         if mode_wrapper:
             self._attr_supported_features |= HumidifierEntityFeature.MODES
-            self._attr_available_modes = mode_wrapper.range
+            self._attr_available_modes = mode_wrapper.options
 
     @property
     def is_on(self) -> bool | None:

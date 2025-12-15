@@ -99,7 +99,7 @@ class _AlarmActionWrapper(DPCodeEnumWrapper):
     def __init__(self, dpcode: str, type_information: EnumTypeInformation) -> None:
         """Init _AlarmActionWrapper."""
         super().__init__(dpcode, type_information)
-        self.range = [
+        self.options = [
             ha_action
             for ha_action, tuya_action in self._ACTION_MAPPINGS.items()
             if tuya_action in type_information.range
@@ -185,12 +185,12 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
         self._state_wrapper = state_wrapper
 
         # Determine supported modes
-        if action_wrapper.range:
-            if "arm_home" in action_wrapper.range:
+        if action_wrapper.options:
+            if "arm_home" in action_wrapper.options:
                 self._attr_supported_features |= AlarmControlPanelEntityFeature.ARM_HOME
-            if "arm_away" in action_wrapper.range:
+            if "arm_away" in action_wrapper.options:
                 self._attr_supported_features |= AlarmControlPanelEntityFeature.ARM_AWAY
-            if "trigger" in action_wrapper.range:
+            if "trigger" in action_wrapper.options:
                 self._attr_supported_features |= AlarmControlPanelEntityFeature.TRIGGER
 
     @property

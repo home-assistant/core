@@ -31,12 +31,12 @@ from .models import (
 class _DPCodeEventWrapper(DPCodeTypeInformationWrapper):
     """Base class for Tuya event wrappers."""
 
-    range: list[str]
+    options: list[str]
 
     def __init__(self, dpcode: str, type_information: Any) -> None:
         """Init _DPCodeEventWrapper."""
         super().__init__(dpcode, type_information)
-        self.range = ["triggered"]
+        self.options = ["triggered"]
 
     def get_event_type(
         self, device: CustomerDevice, updated_status_properties: list[str] | None
@@ -229,7 +229,7 @@ class TuyaEventEntity(TuyaEntity, EventEntity):
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
         self._dpcode_wrapper = dpcode_wrapper
-        self._attr_event_types = dpcode_wrapper.range
+        self._attr_event_types = dpcode_wrapper.options
 
     async def _handle_state_update(
         self,
