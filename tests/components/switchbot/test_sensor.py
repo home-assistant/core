@@ -853,7 +853,7 @@ async def test_presence_sensor_without_battery(hass: HomeAssistant) -> None:
     inject_bluetooth_service_info(hass, PRESENCE_SENSOR_SERVICE_INFO)
 
     with patch(
-        "homeassistant.components.switchbot.sensor.switchbot.parse_advertisement_data",
+        "homeassistant.components.switchbot.sensor.parse_advertisement_data",
         return_value=SwitchBotAdvertisement(
             address="AA:BB:CC:DD:EE:FF",
             data={
