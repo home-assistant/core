@@ -1,16 +1,16 @@
 """Test the homelink config flow."""
 
-import time
 from unittest.mock import AsyncMock
 
 import botocore.exceptions
 import pytest
 
 from homeassistant.components.gentex_homelink.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+from . import TEST_CREDENTIALS, setup_integration
 
 from tests.common import MockConfigEntry
 
@@ -29,7 +29,7 @@ async def test_full_flow(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_EMAIL: "test@test.com", CONF_PASSWORD: "SomePassword"},
+        user_input=TEST_CREDENTIALS,
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
@@ -46,26 +46,13 @@ async def test_full_flow(
 
 
 async def test_unique_configurations(
-    hass: HomeAssistant, mock_srp_auth: AsyncMock, mock_setup_entry: AsyncMock
+    hass: HomeAssistant,
+    mock_srp_auth: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Check full flow."""
-    user_credentials = {CONF_EMAIL: "test@test.com", CONF_PASSWORD: "SomePassword"}
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=user_credentials[CONF_EMAIL],
-        version=1,
-        data={
-            "auth_implementation": "gentex_homelink",
-            "token": {
-                "expires_at": time.time() + 10000,
-                "access_token": "",
-                "refresh_token": "",
-            },
-            "last_update_id": None,
-        },
-        state=ConfigEntryState.LOADED,
-    )
-    config_entry.add_to_hass(hass)
+    await setup_integration(hass, mock_config_entry)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -76,7 +63,7 @@ async def test_unique_configurations(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input=user_credentials,
+        user_input=TEST_CREDENTIALS,
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
@@ -109,7 +96,7 @@ async def test_exceptions(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_EMAIL: "test@test.com", CONF_PASSWORD: "SomePassword"},
+        user_input=TEST_CREDENTIALS,
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -119,6 +106,6 @@ async def test_exceptions(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_EMAIL: "test@test.com", CONF_PASSWORD: "SomePassword"},
+        user_input=TEST_CREDENTIALS,
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY

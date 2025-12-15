@@ -8,6 +8,9 @@ import homelink.model.device
 import pytest
 
 from homeassistant.components.gentex_homelink import DOMAIN
+from homeassistant.const import CONF_EMAIL
+
+from . import TEST_CREDENTIALS
 
 from tests.common import MockConfigEntry
 
@@ -60,6 +63,8 @@ def mock_device() -> AsyncMock:
 def mock_config_entry() -> MockConfigEntry:
     """Mock setup entry."""
     return MockConfigEntry(
+        unique_id=TEST_CREDENTIALS[CONF_EMAIL],
+        version=1,
         domain=DOMAIN,
         data={
             "auth_implementation": "gentex_homelink",

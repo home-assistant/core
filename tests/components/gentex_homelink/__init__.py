@@ -3,9 +3,12 @@
 from typing import Any
 from unittest.mock import AsyncMock
 
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+
+TEST_CREDENTIALS = {CONF_EMAIL: "test@test.com", CONF_PASSWORD: "SomePassword"}
 
 
 async def setup_integration(hass: HomeAssistant, entry: MockConfigEntry) -> None:
