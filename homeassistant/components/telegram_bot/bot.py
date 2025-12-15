@@ -1052,7 +1052,9 @@ class TelegramNotificationService:
         """Download a file from Telegram."""
         if not directory_path:
             directory_path = self.hass.config.path(DOMAIN)
-        if not self.hass.config.is_allowed_path(directory_path):
+        if not await self.hass.async_add_executor_job(
+            self.hass.config.is_allowed_path, directory_path
+        ):
             raise ServiceValidationError(
                 "File path has not been configured in allowlist_external_dirs.",
                 translation_domain=DOMAIN,
@@ -1065,12 +1067,19 @@ class TelegramNotificationService:
             file_id=file_id,
             context=context,
         )
-        if not file_name:
-            file_name = (
-                os.path.basename(file.file_path) if file.file_path else "unknown_file"
+        if not file.file_path:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="action_failed",
+                translation_placeholders={
+                    "error": "No file path returned from Telegram"
+                },
             )
+        if not file_name:
+            file_name = os.path.basename(file.file_path)
+
         custom_path = os.path.join(directory_path, file_name)
-        if not os.path.exists(directory_path):
+        if not await self.hass.async_add_executor_job(os.path.exists, directory_path):
             _LOGGER.debug("directory %s does not exist, creating it", directory_path)
 
             def mkdir() -> None:
@@ -1083,8 +1092,7 @@ class TelegramNotificationService:
             await self.hass.async_add_executor_job(
                 Path(custom_path).write_bytes, file_content
             )
-        except Exception as exc:
-            _LOGGER.error("Error downloading file to %s: %s", custom_path, exc)
+        except (RuntimeError, OSError) as exc:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="action_failed",

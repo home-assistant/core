@@ -1729,6 +1729,11 @@ async def test_download_file(
         file_unique_id="file_unique_id",
         file_path=f"file/path/{telegram_file_name}",
     )
+    write_called: dict[str, Any] = {}
+
+    def fake_write_bytes(self, data: bytes) -> None:
+        write_called["self"] = self
+        write_called["data"] = data
 
     with (
         patch(
@@ -1741,9 +1746,7 @@ async def test_download_file(
                 return_value=f"This is the file content of {telegram_file_name}".encode()
             ),
         ) as download_as_bytearray_mock,
-        patch.object(
-            hass, "async_add_executor_job", AsyncMock(return_value=None)
-        ) as add_exec_mock,
+        patch("pathlib.Path.write_bytes", new=fake_write_bytes),
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -1755,10 +1758,12 @@ async def test_download_file(
     await hass.async_block_till_done()
     get_file_mock.assert_called_once_with(file_id=file_id)
     download_as_bytearray_mock.assert_called_once()
-    add_exec_mock.assert_called()
-    args, _ = add_exec_mock.call_args
-    assert str(args[0].__self__) == expected_path
-    assert args[1] == f"This is the file content of {telegram_file_name}".encode()
+    assert "self" in write_called
+    assert str(write_called["self"]) == expected_path
+    assert (
+        write_called["data"]
+        == f"This is the file content of {telegram_file_name}".encode()
+    )
 
 
 async def test_download_file_when_bot_failed_to_get_file(
