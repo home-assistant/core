@@ -81,9 +81,9 @@ class StateConditionBase(Condition):
         @trace_condition_function
         def test_state(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
             """Test state condition."""
-            selector_data = target.TargetSelectorData(self._target)
+            target_selection = target.TargetSelection(self._target)
             targeted_entities = target.async_extract_referenced_entity_ids(
-                hass, selector_data, expand_group=False
+                hass, target_selection, expand_group=False
             )
             referenced_entity_ids = targeted_entities.referenced.union(
                 targeted_entities.indirectly_referenced
