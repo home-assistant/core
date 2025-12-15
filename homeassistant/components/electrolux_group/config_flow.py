@@ -23,7 +23,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_API_KEY
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from . import ElectroluxData
+from . import ElectroluxConfigEntry, ElectroluxData, ElectroluxDiscoveryData
 from .const import CONF_REFRESH_TOKEN, DOMAIN, NEW_APPLIANCE, USER_AGENT
 from .coordinator import ElectroluxDataUpdateCoordinator
 
@@ -37,7 +37,7 @@ class ElectroluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the Electrolux flow."""
         super().__init__()
         self._discovered_info: ApplianceData
-        self._entry: config_entries.ConfigEntry
+        self._entry: ElectroluxConfigEntry
 
     VERSION = 1
 
@@ -76,11 +76,11 @@ class ElectroluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self._get_form(step_id="user", errors=errors)
 
     async def async_step_electrolux_discovery(
-        self, discovery_appliance_data
+        self, discovery_data: ElectroluxDiscoveryData
     ) -> config_entries.ConfigFlowResult:
         """Handle Electrolux device discovered via API."""
-        appliance = discovery_appliance_data.get("discovery_appliance_data")
-        entry = discovery_appliance_data.get("entry")
+        appliance = discovery_data.discovered_appliance
+        entry = discovery_data.entry
         appliance_id = appliance.appliance.applianceId
 
         _LOGGER.info(
@@ -141,7 +141,9 @@ class ElectroluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def _authenticate_user(self, user_input: Mapping[str, Any]):
+    async def _authenticate_user(
+        self, user_input: Mapping[str, Any]
+    ) -> tuple[TokenManager, ApplianceClient]:
         token_manager = TokenManager(
             access_token=user_input[CONF_ACCESS_TOKEN],
             refresh_token=user_input[CONF_REFRESH_TOKEN],
@@ -159,7 +161,9 @@ class ElectroluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return token_manager, appliance_client
 
-    def _get_form(self, step_id, errors):
+    def _get_form(
+        self, step_id: str, errors: dict[str, str]
+    ) -> config_entries.ConfigFlowResult:
         return self.async_show_form(
             step_id=step_id,
             data_schema=vol.Schema(

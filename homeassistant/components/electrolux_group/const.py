@@ -8,6 +8,4 @@ CONF_REFRESH_TOKEN = "refresh_token"
 
 NEW_APPLIANCE = "electrolux_new_appliance"
 
-ELECTROLUX_INTEGRATION_VERSION = "0.0.1"
-
-USER_AGENT = f"HomeAssistant/{HA_VERSION} ElectroluxGroupIntegration/{ELECTROLUX_INTEGRATION_VERSION}"
+USER_AGENT = f"HomeAssistant/{HA_VERSION}"

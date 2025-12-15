@@ -4,11 +4,12 @@ from abc import abstractmethod
 import logging
 from typing import Generic, TypeVar
 
+from electrolux_group_developer_sdk.client.appliance_client import ApplianceData
+
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .api import ApplianceData
 from .const import DOMAIN
 from .coordinator import ElectroluxDataUpdateCoordinator
 
@@ -69,19 +70,6 @@ class ElectroluxBaseEntity(
         self._is_entity_available = False
         self.async_write_ha_state()
 
-    async def send_device_command(self, command) -> None:
-        """Send a command to the appliance."""
-        _LOGGER.info(
-            "Sending command for appliance: %s, command: %s",
-            self.appliance_id,
-            command,
-        )
-
-        await self.coordinator.client.send_appliance_command(self.appliance_id, command)
-
-        # Refresh state after a command
-        await self.coordinator.async_refresh()
-
     async def async_added_to_hass(self) -> None:
         """When entity is added to HA."""
         await super().async_added_to_hass()
@@ -93,7 +81,7 @@ class ElectroluxBaseEntity(
         """Update entity-specific attributes."""
 
     @callback
-    def _handle_coordinator_update(self):
+    def _handle_coordinator_update(self) -> None:
         """When the coordinator updates."""
         appliance_state = self.coordinator.data.appliance_state
         if not appliance_state:
