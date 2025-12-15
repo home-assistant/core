@@ -77,7 +77,6 @@ class SensorValue(SystemNexa2Entity, SensorEntity):
         name: str,
         entry_id: str,
         unique_id: str,
-        # value: str | int | float,
         entity_description: SensorEntityDescription,
     ) -> None:
         """Initialize the configuration switch."""
