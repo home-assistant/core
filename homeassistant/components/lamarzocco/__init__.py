@@ -184,6 +184,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
             coordinators.statistics_coordinator.async_config_entry_first_refresh(),
         )
 
+    if local_mode and not bluetooth_client:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN, translation_key="bluetooth_required_offline"
+        )
+
     # bt coordinator only if bluetooth client is available
     # and after the initial refresh of the config coordinator
     # to fetch only if the others failed

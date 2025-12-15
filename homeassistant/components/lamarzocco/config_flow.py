@@ -379,9 +379,15 @@ class LmOptionsFlowHandler(OptionsFlowWithReload):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the options for the custom component."""
-        if user_input:
-            return self.async_create_entry(title="", data=user_input)
+        errors: dict[str, str] = {}
 
+        if user_input:
+            if user_input.get(CONF_OFFLINE_MODE) and not user_input.get(
+                CONF_USE_BLUETOOTH
+            ):
+                errors[CONF_USE_BLUETOOTH] = "bluetooth_required_offline"
+            else:
+                return self.async_create_entry(title="", data=user_input)
         options_schema = vol.Schema(
             {
                 vol.Optional(
@@ -398,4 +404,5 @@ class LmOptionsFlowHandler(OptionsFlowWithReload):
         return self.async_show_form(
             step_id="init",
             data_schema=options_schema,
+            errors=errors,
         )

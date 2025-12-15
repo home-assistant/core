@@ -197,6 +197,9 @@
     "bluetooth_connection_failed": {
       "message": "Error while connecting to machine via Bluetooth"
     },
+    "bluetooth_required_offline": {
+      "message": "Bluetooth is required when offline mode is enabled, but no Bluetooth device was found"
+    },
     "button_error": {
       "message": "Error while executing button {key}"
     },
@@ -223,6 +226,9 @@
     }
   },
   "options": {
+    "error": {
+      "bluetooth_required_offline": "Bluetooth is required when offline mode is enabled."
+    },
     "step": {
       "init": {
         "data": {
