@@ -25,7 +25,7 @@ from .const import (
     DPCode,
 )
 from .entity import TuyaEntity
-from .models import DPCodeIntegerWrapper, IntegerTypeData
+from .models import DPCodeIntegerWrapper
 
 NUMBERS: dict[DeviceCategory, tuple[NumberEntityDescription, ...]] = {
     DeviceCategory.BH: (
@@ -482,8 +482,6 @@ async def async_setup_entry(
 
 class TuyaNumberEntity(TuyaEntity, NumberEntity):
     """Tuya Number Entity."""
-
-    _number: IntegerTypeData | None = None
 
     def __init__(
         self,
