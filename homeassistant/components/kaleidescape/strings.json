@@ -73,27 +73,5 @@
         "name": "Video mode"
       }
     }
-  },
-  "services": {
-    "update_volume_level": {
-      "description": "Updates the volume level in listening Kaleidescape apps.",
-      "fields": {
-        "volume_level": {
-          "description": "[%key:component::media_player::services::volume_set::fields::volume_level::description%]",
-          "name": "[%key:component::media_player::services::volume_set::fields::volume_level::name%]"
-        }
-      },
-      "name": "Update volume level"
-    },
-    "update_volume_muted": {
-      "description": "Updates the mute state in listening Kaleidescape apps.",
-      "fields": {
-        "is_volume_muted": {
-          "description": "[%key:component::media_player::services::volume_mute::fields::is_volume_muted::description%]",
-          "name": "[%key:component::media_player::services::volume_mute::fields::is_volume_muted::name%]"
-        }
-      },
-      "name": "Update mute state"
-    }
   }
 }

@@ -50,13 +50,5 @@
         "default": "mdi:monitor-screenshot"
       }
     }
-  },
-  "services": {
-    "update_volume_level": {
-      "service": "mdi:volume-high"
-    },
-    "update_volume_muted": {
-      "service": "mdi:volume-mute"
-    }
   }
 }
