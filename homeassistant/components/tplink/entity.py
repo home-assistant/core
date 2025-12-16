@@ -273,9 +273,10 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
         except Exception as ex:  # noqa: BLE001
             if self._attr_available:
                 _LOGGER.warning(
-                    "Unable to read data for %s %s: %s",
-                    self._device,
+                    "Unable to read data for %s of %s (%s): %s",
                     self.entity_id,
+                    self.device_info["name"] if self.device_info else "unknown device",
+                    self.device_info["model"] if self.device_info else "unknown model",
                     ex,
                 )
             self._attr_available = False
