@@ -260,7 +260,7 @@ async def test_remove_torrent_service_with_delete_data(
 @pytest.mark.parametrize(
     ("filter_mode", "expected_statuses"),
     [
-        ("all", None),
+        ("all", ["seeding", "downloading", "stopped"]),
         ("started", ["downloading"]),
         ("completed", ["seeding"]),
         ("paused", ["stopped"]),
@@ -273,7 +273,7 @@ async def test_get_torrents_service(
     mock_config_entry: MockConfigEntry,
     mock_torrent,
     filter_mode: str,
-    expected_statuses: list[str] | None,
+    expected_statuses: list[str],
 ) -> None:
     """Test get torrents service with various filter modes."""
     client = mock_transmission_client.return_value
@@ -308,24 +308,7 @@ async def test_get_torrents_service(
     torrents = response[ATTR_TORRENTS]
     assert isinstance(torrents, dict)
 
-    if filter_mode == "all":
-        assert len(torrents) == 3
-        assert "Downloading" in torrents
-        assert "Seeding" in torrents
-        assert "Stopped" in torrents
-    elif filter_mode == "started":
-        assert len(torrents) == 1
-        assert "Downloading" in torrents
-    elif filter_mode == "completed":
-        assert len(torrents) == 1
-        assert "Seeding" in torrents
-    elif filter_mode == "paused":
-        assert len(torrents) == 1
-        assert "Stopped" in torrents
-    elif filter_mode == "active":
-        assert len(torrents) == 2
-        assert "Downloading" in torrents
-        assert "Seeding" in torrents
+    assert len(torrents) == len(expected_statuses)
 
     for torrent_name, torrent_data in torrents.items():
         assert isinstance(torrent_data, dict)
