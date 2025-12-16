@@ -1,9 +1,11 @@
 """Test for Roborock init."""
 
+import datetime
 import pathlib
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from roborock import (
     RoborockInvalidCredentials,
@@ -11,10 +13,15 @@ from roborock import (
     RoborockNoUserAgreement,
 )
 from roborock.exceptions import RoborockException
+from roborock.mqtt.session import MqttSessionUnauthorized
 
+from homeassistant.components.homeassistant import (
+    DOMAIN as HA_DOMAIN,
+    SERVICE_UPDATE_ENTITY,
+)
 from homeassistant.components.roborock.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceRegistry
@@ -23,7 +30,7 @@ from homeassistant.setup import async_setup_component
 from .conftest import FakeDevice
 from .mock_data import ROBOROCK_RRUID, USER_EMAIL
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import ClientSessionGenerator
 
 
@@ -64,13 +71,18 @@ async def test_home_assistant_stop(
     assert device_manager.close.called
 
 
+@pytest.mark.parametrize(
+    "side_effect", [RoborockInvalidCredentials(), MqttSessionUnauthorized()]
+)
 async def test_reauth_started(
-    hass: HomeAssistant, mock_roborock_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    side_effect: Exception,
 ) -> None:
     """Test reauth flow started."""
     with patch(
         "homeassistant.components.roborock.create_device_manager",
-        side_effect=RoborockInvalidCredentials(),
+        side_effect=side_effect,
     ):
         await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
@@ -293,6 +305,72 @@ async def test_migrate_config_entry_unique_id(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.unique_id == ROBOROCK_RRUID
+
+
+@pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
+async def test_update_unavailability_threshold(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    setup_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test that a small number of update failures are suppressed before marking a device unavailable."""
+    await async_setup_component(hass, HA_DOMAIN, {})
+    assert setup_entry.state is ConfigEntryState.LOADED
+
+    # We pick an arbitrary sensor to test for availability
+    sensor_entity_id = "sensor.roborock_s7_maxv_battery"
+    expected_state = "100"
+    state = hass.states.get(sensor_entity_id)
+    assert state is not None
+    assert state.state == expected_state
+
+    # Simulate a few update failures below the threshold
+    assert fake_vacuum.v1_properties is not None
+    fake_vacuum.v1_properties.status.refresh.side_effect = RoborockException(
+        "Simulated update failure"
+    )
+
+    # Move forward in time less than the threshold
+    freezer.tick(datetime.timedelta(seconds=90))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Force a coordinator refresh.
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: sensor_entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    # Verify that the entity is still available
+    state = hass.states.get(sensor_entity_id)
+    assert state is not None
+    assert state.state == expected_state
+
+    # Move forward in time to exceed the threshold
+    freezer.tick(datetime.timedelta(minutes=3))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Verify that the entity is now unavailable
+    state = hass.states.get(sensor_entity_id)
+    assert state is not None
+    assert state.state == "unavailable"
+
+    # Now restore normal update behavior and refresh.
+    fake_vacuum.v1_properties.status.refresh.side_effect = None
+
+    freezer.tick(datetime.timedelta(seconds=45))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Verify that the entity recovers and is available again
+    state = hass.states.get(sensor_entity_id)
+    assert state is not None
+    assert state.state == expected_state
 
 
 async def test_cloud_api_repair(
