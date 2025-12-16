@@ -78,4 +78,4 @@ async def test_migrate_from_future_version(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.MIGRATION_ERROR
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR
