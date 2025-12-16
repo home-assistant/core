@@ -16,7 +16,7 @@ from homeassistant.const import CONF_EXCLUDE, CONF_INCLUDE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import ServiceNotFound
-from homeassistant.helpers import config_validation as cv, selector
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.storage import Store
 
 from . import (
@@ -318,9 +318,7 @@ class NotifySetupFlow(SetupFlow[NotifyAuthModule]):
         schema = vol.Schema(
             {
                 vol.Required("notify_service"): vol.In(self._available_notify_services),
-                vol.Optional("target"): selector.EntitySelector(
-                    selector.EntitySelectorConfig(domain="notify")
-                ),
+                vol.Optional("target"): str,
             }
         )
 
