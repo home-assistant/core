@@ -4,10 +4,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.trigger import (
-    EntityStateTriggerBase,
+    EntityTargetStateTriggerBase,
     Trigger,
-    make_conditional_entity_state_trigger,
-    make_entity_state_trigger,
+    make_entity_target_state_trigger,
+    make_entity_transition_trigger,
 )
 
 from .const import DOMAIN, AlarmControlPanelEntityFeature, AlarmControlPanelState
@@ -21,7 +21,7 @@ def supports_feature(hass: HomeAssistant, entity_id: str, features: int) -> bool
         return False
 
 
-class EntityStateTriggerRequiredFeatures(EntityStateTriggerBase):
+class EntityStateTriggerRequiredFeatures(EntityTargetStateTriggerBase):
     """Trigger for entity state changes."""
 
     _required_features: int
@@ -38,7 +38,7 @@ class EntityStateTriggerRequiredFeatures(EntityStateTriggerBase):
 
 def make_entity_state_trigger_required_features(
     domain: str, to_state: str, required_features: int
-) -> type[EntityStateTriggerBase]:
+) -> type[EntityTargetStateTriggerBase]:
     """Create an entity state trigger class."""
 
     class CustomTrigger(EntityStateTriggerRequiredFeatures):
@@ -52,7 +52,7 @@ def make_entity_state_trigger_required_features(
 
 
 TRIGGERS: dict[str, type[Trigger]] = {
-    "armed": make_conditional_entity_state_trigger(
+    "armed": make_entity_transition_trigger(
         DOMAIN,
         from_states={
             AlarmControlPanelState.ARMING,
@@ -89,8 +89,12 @@ TRIGGERS: dict[str, type[Trigger]] = {
         AlarmControlPanelState.ARMED_VACATION,
         AlarmControlPanelEntityFeature.ARM_VACATION,
     ),
-    "disarmed": make_entity_state_trigger(DOMAIN, AlarmControlPanelState.DISARMED),
-    "triggered": make_entity_state_trigger(DOMAIN, AlarmControlPanelState.TRIGGERED),
+    "disarmed": make_entity_target_state_trigger(
+        DOMAIN, AlarmControlPanelState.DISARMED
+    ),
+    "triggered": make_entity_target_state_trigger(
+        DOMAIN, AlarmControlPanelState.TRIGGERED
+    ),
 }
 
 

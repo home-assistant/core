@@ -430,8 +430,8 @@ class EntityTriggerBase(Trigger):
         )
 
 
-class EntityStateTriggerBase(EntityTriggerBase):
-    """Trigger for entity state changes."""
+class EntityTargetStateTriggerBase(EntityTriggerBase):
+    """Trigger for entity state changes to a specific state."""
 
     _to_state: str
 
@@ -440,8 +440,8 @@ class EntityStateTriggerBase(EntityTriggerBase):
         return state.state == self._to_state
 
 
-class ConditionalEntityStateTriggerBase(EntityTriggerBase):
-    """Class for entity state changes where the from state is restricted."""
+class EntityTransitionTriggerBase(EntityTriggerBase):
+    """Trigger for entity state changes between specific states."""
 
     _from_states: set[str]
     _to_states: set[str]
@@ -458,8 +458,8 @@ class ConditionalEntityStateTriggerBase(EntityTriggerBase):
         return state.state in self._to_states
 
 
-class EntityFromStateTriggerBase(EntityTriggerBase):
-    """Class for entity state changes from a specific state."""
+class EntityOriginStateTriggerBase(EntityTriggerBase):
+    """Trigger for entity state changes from a specific state."""
 
     _from_state: str
 
@@ -474,8 +474,8 @@ class EntityFromStateTriggerBase(EntityTriggerBase):
         return state.state != self._from_state
 
 
-class EntityStateAttributeTriggerBase(EntityTriggerBase):
-    """Trigger for entity state attribute changes."""
+class EntityTargetStateAttributeTriggerBase(EntityTriggerBase):
+    """Trigger for entity state attribute changes to a specific state."""
 
     _attribute: str
     _attribute_to_state: str
@@ -494,12 +494,12 @@ class EntityStateAttributeTriggerBase(EntityTriggerBase):
         return state.attributes.get(self._attribute) == self._attribute_to_state
 
 
-def make_entity_state_trigger(
+def make_entity_target_state_trigger(
     domain: str, to_state: str
-) -> type[EntityStateTriggerBase]:
-    """Create an entity state trigger class."""
+) -> type[EntityTargetStateTriggerBase]:
+    """Create a trigger for entity state changes to a specific state."""
 
-    class CustomTrigger(EntityStateTriggerBase):
+    class CustomTrigger(EntityTargetStateTriggerBase):
         """Trigger for entity state changes."""
 
         _domain = domain
@@ -508,12 +508,12 @@ def make_entity_state_trigger(
     return CustomTrigger
 
 
-def make_conditional_entity_state_trigger(
+def make_entity_transition_trigger(
     domain: str, *, from_states: set[str], to_states: set[str]
-) -> type[ConditionalEntityStateTriggerBase]:
-    """Create a conditional entity state trigger class."""
+) -> type[EntityTransitionTriggerBase]:
+    """Create a trigger for entity state changes between specific states."""
 
-    class CustomTrigger(ConditionalEntityStateTriggerBase):
+    class CustomTrigger(EntityTransitionTriggerBase):
         """Trigger for conditional entity state changes."""
 
         _domain = domain
@@ -523,12 +523,12 @@ def make_conditional_entity_state_trigger(
     return CustomTrigger
 
 
-def make_entity_from_state_trigger(
+def make_entity_origin_state_trigger(
     domain: str, *, from_state: str
-) -> type[EntityFromStateTriggerBase]:
-    """Create an entity "from state" trigger class."""
+) -> type[EntityOriginStateTriggerBase]:
+    """Create a trigger for entity state changes from a specific state."""
 
-    class CustomTrigger(EntityFromStateTriggerBase):
+    class CustomTrigger(EntityOriginStateTriggerBase):
         """Trigger for entity "from state" changes."""
 
         _domain = domain
@@ -537,12 +537,12 @@ def make_entity_from_state_trigger(
     return CustomTrigger
 
 
-def make_entity_state_attribute_trigger(
+def make_entity_target_state_attribute_trigger(
     domain: str, attribute: str, to_state: str
-) -> type[EntityStateAttributeTriggerBase]:
-    """Create an entity state attribute trigger class."""
+) -> type[EntityTargetStateAttributeTriggerBase]:
+    """Create a trigger for entity state attribute changes to a specific state."""
 
-    class CustomTrigger(EntityStateAttributeTriggerBase):
+    class CustomTrigger(EntityTargetStateAttributeTriggerBase):
         """Trigger for entity state changes."""
 
         _domain = domain
@@ -1135,6 +1135,5 @@ async def async_get_all_descriptions(
             description["target"] = target
 
         new_descriptions_cache[missing_trigger] = description
-
     hass.data[TRIGGER_DESCRIPTION_CACHE] = new_descriptions_cache
     return new_descriptions_cache
