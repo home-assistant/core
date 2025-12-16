@@ -18,7 +18,7 @@ from . import magic_client
 
 from tests.common import MockConfigEntry
 
-MOCK_CONF_URL = "http://huawei-lte.example.com"
+MOCK_CONF_URL = "http://192.168.1.1/"
 
 
 @patch("homeassistant.components.huawei_lte.Connection", MagicMock())
