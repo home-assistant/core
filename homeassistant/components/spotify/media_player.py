@@ -42,17 +42,17 @@ from .entity import SpotifyEntity
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_SPOTIFY = (
-        MediaPlayerEntityFeature.BROWSE_MEDIA
-        | MediaPlayerEntityFeature.NEXT_TRACK
-        | MediaPlayerEntityFeature.PAUSE
-        | MediaPlayerEntityFeature.PLAY
-        | MediaPlayerEntityFeature.PLAY_MEDIA
-        | MediaPlayerEntityFeature.PREVIOUS_TRACK
-        | MediaPlayerEntityFeature.REPEAT_SET
-        | MediaPlayerEntityFeature.SEEK
-        | MediaPlayerEntityFeature.SELECT_SOURCE
-        | MediaPlayerEntityFeature.SHUFFLE_SET
-        | MediaPlayerEntityFeature.VOLUME_SET
+    MediaPlayerEntityFeature.BROWSE_MEDIA
+    | MediaPlayerEntityFeature.NEXT_TRACK
+    | MediaPlayerEntityFeature.PAUSE
+    | MediaPlayerEntityFeature.PLAY
+    | MediaPlayerEntityFeature.PLAY_MEDIA
+    | MediaPlayerEntityFeature.PREVIOUS_TRACK
+    | MediaPlayerEntityFeature.REPEAT_SET
+    | MediaPlayerEntityFeature.SEEK
+    | MediaPlayerEntityFeature.SELECT_SOURCE
+    | MediaPlayerEntityFeature.SHUFFLE_SET
+    | MediaPlayerEntityFeature.VOLUME_SET
 )
 
 REPEAT_MODE_MAPPING_TO_HA = {
@@ -68,9 +68,9 @@ AFTER_REQUEST_SLEEP = 1
 
 
 async def async_setup_entry(
-        hass: HomeAssistant,
-        entry: SpotifyConfigEntry,
-        async_add_entities: AddConfigEntryEntitiesCallback,
+    hass: HomeAssistant,
+    entry: SpotifyConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Spotify based on a config entry."""
     data = entry.runtime_data
@@ -83,7 +83,7 @@ async def async_setup_entry(
 
 
 def ensure_item[_R](
-        func: Callable[[SpotifyMediaPlayer, Item], _R],
+    func: Callable[[SpotifyMediaPlayer, Item], _R],
 ) -> Callable[[SpotifyMediaPlayer], _R | None]:
     """Ensure that the currently playing item is available."""
 
@@ -96,7 +96,7 @@ def ensure_item[_R](
 
 
 def async_refresh_after[_T: SpotifyEntity, **_P](
-        func: Callable[Concatenate[_T, _P], Awaitable[None]],
+    func: Callable[Concatenate[_T, _P], Awaitable[None]],
 ) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:
     """Define a wrapper to yield and refresh after."""
 
@@ -116,9 +116,9 @@ class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
     _attr_translation_key = "spotify"
 
     def __init__(
-            self,
-            coordinator: SpotifyCoordinator,
-            device_coordinator: DataUpdateCoordinator[list[Device]],
+        self,
+        coordinator: SpotifyCoordinator,
+        device_coordinator: DataUpdateCoordinator[list[Device]],
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
@@ -314,7 +314,7 @@ class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
 
     @async_refresh_after
     async def async_play_media(
-            self, media_type: MediaType | str, media_id: str, **kwargs: Any
+        self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play media."""
         media_type = media_type.removeprefix(MEDIA_PLAYER_PREFIX)
@@ -394,9 +394,9 @@ class SpotifyMediaPlayer(SpotifyEntity, MediaPlayerEntity):
         await self.coordinator.client.set_repeat(REPEAT_MODE_MAPPING_TO_SPOTIFY[repeat])
 
     async def async_browse_media(
-            self,
-            media_content_type: MediaType | str | None = None,
-            media_content_id: str | None = None,
+        self,
+        media_content_type: MediaType | str | None = None,
+        media_content_id: str | None = None,
     ) -> BrowseMedia:
         """Implement the websocket media browsing helper."""
 
