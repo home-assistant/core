@@ -174,7 +174,7 @@ async def test_user_flow_duplicate_account(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     # Should abort because the account is already configured
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
