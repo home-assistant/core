@@ -1,0 +1,147 @@
+"""Support for ESPHome water heaters."""
+
+from __future__ import annotations
+
+from typing import Any
+
+from aioesphomeapi import (
+    WaterHeaterInfo,
+    WaterHeaterOperation,
+    WaterHeaterState,
+)
+
+from homeassistant.components.water_heater import (
+    ATTR_OPERATION_MODE,
+    WaterHeaterEntity,
+    WaterHeaterEntityFeature,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    PRECISION_TENTHS,
+    UnitOfTemperature,
+)
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from .entity import (
+    EsphomeEntity,
+    EsphomeEnumMapper,
+    platform_async_setup_entry,
+)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up ESPHome water heaters based on a config entry."""
+    await platform_async_setup_entry(
+        hass,
+        entry,
+        async_add_entities,
+        component_key="water_heater",
+        info_type=WaterHeaterInfo,
+        entity_type=EsphomeWaterHeater,
+        converter=lambda obj, info: obj,
+    )
+
+
+class EsphomeWaterHeater(EsphomeEntity[WaterHeaterInfo, WaterHeaterState], WaterHeaterEntity):
+    """A water heater implementation for ESPHome."""
+
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_precision = PRECISION_TENTHS
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry_id: str,
+        component_key: str,
+        key: int,
+        info: WaterHeaterInfo,
+    ) -> None:
+        """Initialize the water heater."""
+        super().__init__(hass, entry_id, component_key, key, info)
+        
+        # Mapping van ESPHome modes naar HA string modes.
+        # Pas dit aan als jouw ESPHome PR andere ENUM namen gebruikt in aioesphomeapi.
+        self._mode_selector = EsphomeEnumMapper(
+            {
+                WaterHeaterOperation.OFF: "off",
+                WaterHeaterOperation.IDLE: "off",  # Idle mapt vaak naar off of eco in HA context, afhankelijk van voorkeur
+                WaterHeaterOperation.HEAT: "electric",
+                WaterHeaterOperation.PERFORMANCE: "performance",
+                WaterHeaterOperation.ECO: "eco",
+                WaterHeaterOperation.HIGH_DEMAND: "high_demand",
+                WaterHeaterOperation.HEAT_PUMP: "heat_pump",
+                WaterHeaterOperation.GAS: "gas",
+            }
+        )
+
+    @property
+    def supported_features(self) -> WaterHeaterEntityFeature:
+        """Return the list of supported features."""
+        features = WaterHeaterEntityFeature.TARGET_TEMPERATURE
+        
+        # Als het device modes ondersteunt (anders dan alleen aan/uit), voegen we Operation Mode toe
+        if self._static_info.supported_modes:
+             features |= WaterHeaterEntityFeature.OPERATION_MODE
+             
+        return features
+
+    @property
+    def min_temp(self) -> float:
+        """Return the minimum temperature."""
+        return self._static_info.min_temperature
+
+    @property
+    def max_temp(self) -> float:
+        """Return the maximum temperature."""
+        return self._static_info.max_temperature
+
+    @property
+    def current_temperature(self) -> float | None:
+        """Return the current temperature."""
+        return self._state.current_temperature
+
+    @property
+    def target_temperature(self) -> float | None:
+        """Return the temperature we try to reach."""
+        return self._state.target_temperature
+
+    @property
+    def current_operation(self) -> str | None:
+        """Return current operation ie. eco, electric, performance, ..."""
+        return self._mode_selector.from_esphome(self._state.operation)
+
+    @property
+    def operation_list(self) -> list[str] | None:
+        """Return the list of available operation modes."""
+        if not self._static_info.supported_modes:
+            return None
+        return [
+            self._mode_selector.from_esphome(mode)
+            for mode in self._static_info.supported_modes
+            if mode in self._mode_selector
+        ]
+
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set new target temperature."""
+        data = {"key": self._key}
+        
+        if ATTR_TEMPERATURE in kwargs:
+            data["target_temperature"] = kwargs[ATTR_TEMPERATURE]
+            
+        if ATTR_OPERATION_MODE in kwargs:
+            data["mode"] = self._mode_selector.from_hass(kwargs[ATTR_OPERATION_MODE])
+
+        await self._client.water_heater_command(**data)
+
+    async def async_set_operation_mode(self, operation_mode: str) -> None:
+        """Set new target operation mode."""
+        await self._client.water_heater_command(
+            key=self._key,
+            mode=self._mode_selector.from_hass(operation_mode),
+        )
