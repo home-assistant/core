@@ -377,6 +377,9 @@ aioraven==0.7.1
 # homeassistant.components.recollect_waste
 aiorecollect==2023.09.0
 
+# homeassistant.components.refoss_rpc
+aiorefoss==1.0.1
+
 # homeassistant.components.ridwell
 aioridwell==2025.09.0
 

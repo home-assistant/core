@@ -1,0 +1,90 @@
+{
+  "config": {
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "description": "Before setup, devices must be connected to the network.\n\nThis path can be configured for Refoss product models including R11,P11s, etc. \n\nFor more information, please refer to 'Help'.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the Refoss device to connect to."
+        }
+      },
+      "credentials": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "Password for access to the device."
+        }
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "Password for access to the device."
+        }
+      },
+      "confirm_discovery": {
+        "description": "Do you want to set up the {model} at {host}?\n\ndevices that are not password protected will be added."
+      },
+      "reconfigure": {
+        "description": "Update configuration for {device_name}.\n\nBefore setup, devices must be connected to the network.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "[%key:component::refoss_rpc::config::step::user::data_description::host%]"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reauth_unsuccessful": "Re-authentication was unsuccessful, please remove the integration and set it up again.",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "another_device": "Re-configuration was unsuccessful, the IP address/hostname of another Refoss device was used.",
+      "mac_address_mismatch": "[%key:component::refoss_rpc::config::error::mac_address_mismatch%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "firmware_not_fully_supported": "Device not fully supported. Please contact Refoss support",
+      "mac_address_mismatch": "The MAC address of the device does not match the one in the configuration, please reboot the device and try again."
+    }
+  },
+  "device_automation": {
+    "trigger_subtype": {
+      "button1": "First button",
+      "button2": "Second button"
+    },
+    "trigger_type": {
+      "button_down": "{subtype} button down",
+      "button_up": "{subtype} button up",
+      "button_single_push": "{subtype} single push",
+      "button_double_push": "{subtype} double push",
+      "button_triple_push": "{subtype} triple push",
+      "button_long_push": "{subtype} long push"
+    }
+  },
+  "entity": {
+    "event": {
+      "input": {
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "button_down": "Button down",
+              "button_up": "Button up",
+              "button_single_push": "Single push",
+              "button_double_push": "Double push",
+              "button_triple_push": "Triple push",
+              "button_long_push": "Long push"
+            }
+          }
+        }
+      }
+    }
+  }
+}
