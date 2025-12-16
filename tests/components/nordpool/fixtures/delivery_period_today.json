@@ -831,7 +831,7 @@
   "exchangeRate": 11.05186,
   "areaStates": [
     {
-      "state": "Final",
+      "state": "Preliminary",
       "areas": ["SE3", "SE4"]
     }
   ],
