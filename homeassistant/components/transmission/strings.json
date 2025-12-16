@@ -125,9 +125,9 @@
       "options": {
         "active": "Active",
         "all": "All",
-        "completed": "Completed (Seeding)",
+        "completed": "Completed",
         "paused": "Paused",
-        "started": "Started (Downloading)"
+        "started": "Started"
       }
     }
   },
