@@ -9,11 +9,7 @@ import pytest
 
 from homeassistant.components import ios
 from homeassistant.components.ios import iOSConfigView
-from homeassistant.components.ios.storage import (
-    DATA_CARPLAY_STORAGE,
-    CarPlayStore,
-    get_carplay_store,
-)
+from homeassistant.components.ios.storage import get_carplay_store
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
@@ -72,8 +68,26 @@ async def test_not_configuring_ios_not_creates_entry(hass: HomeAssistant) -> Non
     assert len(mock_setup.mock_calls) == 0
 
 
-async def test_ios_config_view_includes_carplay(hass: HomeAssistant) -> None:
+async def test_ios_config_view_includes_carplay(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
     """Test that the iOS config view includes carplay configuration from storage."""
+    # Pre-populate storage with test data
+    hass_storage["ios.carplay_config"] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": "ios.carplay_config",
+        "data": {
+            "enabled": True,
+            "quick_access": [
+                {"entity_id": "light.living_room", "display_name": "Living Room"},
+            ],
+        },
+    }
+
+    # Setup the component to create the store instance
+    await async_setup_component(hass, ios.DOMAIN, {ios.DOMAIN: {}})
+
     # Set up iOS config
     ios_config = {"push": {"categories": []}}
     view = iOSConfigView(ios_config)
@@ -83,20 +97,7 @@ async def test_ios_config_view_includes_carplay(hass: HomeAssistant) -> None:
     request = Mock()
     request.app = mock_app
 
-    # Initialize CarPlay store with test data
-    store = CarPlayStore(hass)
-    await store.async_load()
-    hass.data[DATA_CARPLAY_STORAGE] = store
-
-    await store.async_set_data(
-        {
-            "enabled": True,
-            "quick_access": [
-                {"entity_id": "light.living_room", "display_name": "Living Room"},
-            ],
-        }
-    )
-    hass.data[ios.DOMAIN] = {}  # Test with iOS carplay data from storage
+    # Test with iOS carplay data from storage
     response = await view.get(request)
     assert response.status == 200
     response_text = response.text
