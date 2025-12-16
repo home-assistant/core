@@ -31,7 +31,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.util import dt as dt_util
 
 from . import mock_asyncio_subprocess_run
@@ -39,7 +39,9 @@ from . import mock_asyncio_subprocess_run
 from tests.common import async_fire_time_changed
 
 
-async def test_setup_platform_yaml(hass: HomeAssistant) -> None:
+async def test_setup_platform_yaml(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
     """Test setting up the platform with platform yaml."""
     await setup.async_setup_component(
         hass,
@@ -55,6 +57,10 @@ async def test_setup_platform_yaml(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 0
+    issue = issue_registry.async_get_issue(DOMAIN, "cover_platform_yaml_not_supported")
+    assert issue is not None
+    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.translation_placeholders == {"platform": COVER_DOMAIN}
 
 
 async def test_no_poll_when_cover_has_no_command_state(hass: HomeAssistant) -> None:

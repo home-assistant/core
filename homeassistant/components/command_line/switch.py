@@ -6,7 +6,11 @@ import asyncio
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchEntity
+from homeassistant.components.switch import (
+    DOMAIN as SWITCH_DOMAIN,
+    ENTITY_ID_FORMAT,
+    SwitchEntity,
+)
 from homeassistant.const import (
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
@@ -27,7 +31,11 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util, slugify
 
 from .const import CONF_COMMAND_TIMEOUT, LOGGER, TRIGGER_ENTITY_OPTIONS
-from .utils import async_call_shell_with_timeout, async_check_output_or_log
+from .utils import (
+    async_call_shell_with_timeout,
+    async_check_output_or_log,
+    create_platform_yaml_not_supported_issue,
+)
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -40,6 +48,7 @@ async def async_setup_platform(
 ) -> None:
     """Find and return switches controlled by shell commands."""
     if not discovery_info:
+        create_platform_yaml_not_supported_issue(hass, SWITCH_DOMAIN)
         return
 
     switches = []
