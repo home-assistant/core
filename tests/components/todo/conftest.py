@@ -62,7 +62,7 @@ def mock_setup_integration(hass: HomeAssistant) -> None:
 
 @pytest.fixture(autouse=True)
 async def set_time_zone(hass: HomeAssistant) -> None:
-    """Set the time zone for the tests that keesp UTC-6 all year round."""
+    """Set the time zone for the tests that keeps UTC-6 all year round."""
     await hass.config.async_set_time_zone("America/Regina")
 
 
@@ -87,7 +87,7 @@ def mock_test_entity(test_entity_items: list[TodoItem]) -> TodoListEntity:
         | TodoListEntityFeature.MOVE_TODO_ITEM
     )
     entity1.async_create_todo_item = AsyncMock(wraps=entity1.async_create_todo_item)
-    entity1.async_update_todo_item = AsyncMock()
+    entity1.async_update_todo_item = AsyncMock(wraps=entity1.async_update_todo_item)
     entity1.async_delete_todo_items = AsyncMock(wraps=entity1.async_delete_todo_items)
     entity1.async_move_todo_item = AsyncMock()
     return entity1

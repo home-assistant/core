@@ -193,6 +193,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         _async_remove_completed_items,
         required_features=[TodoListEntityFeature.DELETE_TODO_ITEM],
     )
+    component.async_register_entity_service(
+        TodoServices.RESET_ITEMS,
+        None,
+        _async_reset_todo_items,
+        required_features=[TodoListEntityFeature.UPDATE_TODO_ITEM],
+    )
 
     await component.async_setup(config)
     return True
@@ -540,3 +546,16 @@ async def _async_remove_completed_items(entity: TodoListEntity, _: ServiceCall) 
     ]
     if uids:
         await entity.async_delete_todo_items(uids=uids)
+
+
+async def _async_reset_todo_items(entity: TodoListEntity, _: ServiceCall) -> None:
+    """Reset all items from the To-do list to needed."""
+    items = [
+        item
+        for item in entity.todo_items or ()
+        if item.status != TodoItemStatus.NEEDS_ACTION
+    ]
+    for item in items:
+        data = dataclasses.asdict(item)
+        data["status"] = TodoItemStatus.NEEDS_ACTION
+        await entity.async_update_todo_item(item=TodoItem(**data))
