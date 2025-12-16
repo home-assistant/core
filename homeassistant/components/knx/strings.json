@@ -460,6 +460,41 @@
             }
           }
         },
+        "fan": {
+          "description": "The KNX fan platform is used as an interface to fan actuators.",
+          "knx": {
+            "ga_oscillation": {
+              "description": "Toggle oscillation of the fan.",
+              "label": "Oscillation"
+            },
+            "speed": {
+              "description": "Control the speed of the fan.",
+              "ga_speed": {
+                "description": "Group address to control the current speed of the fan as a percentage value.",
+                "label": "Speed"
+              },
+              "ga_step": {
+                "description": "Group address to control the current speed step.",
+                "label": "Step"
+              },
+              "label": "Fan speed",
+              "max_step": {
+                "description": "Number of discrete fan speed steps (Off excluded).",
+                "label": "Fan steps"
+              },
+              "options": {
+                "percentage_mode": {
+                  "description": "Set the fan speed as a percentage value (0-100%).",
+                  "label": "Percentage"
+                },
+                "step_mode": {
+                  "description": "Set the fan speed in discrete steps.",
+                  "label": "Steps"
+                }
+              }
+            }
+          }
+        },
         "header": "Create new entity",
         "light": {
           "description": "The KNX light platform is used as an interface to dimming actuators, LED controllers, DALI gateways and similar.",
