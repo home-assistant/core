@@ -207,7 +207,7 @@ async def test_subentry_unsupported_model(
     subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
         hass, subentry.subentry_id
     )
-    assert subentry_flow["type"] == FlowResultType.FORM
+    assert subentry_flow["type"] is FlowResultType.FORM
     assert subentry_flow["step_id"] == "init"
 
     # Configure initial step
@@ -220,7 +220,7 @@ async def test_subentry_unsupported_model(
         },
     )
     await hass.async_block_till_done()
-    assert subentry_flow["type"] == FlowResultType.FORM
+    assert subentry_flow["type"] is FlowResultType.FORM
     assert subentry_flow["step_id"] == "advanced"
 
     # Configure advanced step
@@ -800,7 +800,7 @@ async def test_subentry_switching(
     assert subentry_flow["step_id"] == "init"
 
     for step_options in new_options:
-        assert subentry_flow["type"] == FlowResultType.FORM
+        assert subentry_flow["type"] is FlowResultType.FORM
 
         # Test that current options are showed as suggested values:
         for key in subentry_flow["data_schema"].schema:
@@ -834,7 +834,7 @@ async def test_subentry_web_search_user_location(
     subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
         hass, subentry.subentry_id
     )
-    assert subentry_flow["type"] == FlowResultType.FORM
+    assert subentry_flow["type"] is FlowResultType.FORM
     assert subentry_flow["step_id"] == "init"
 
     # Configure initial step
@@ -845,7 +845,7 @@ async def test_subentry_web_search_user_location(
             CONF_PROMPT: "Speak like a pirate",
         },
     )
-    assert subentry_flow["type"] == FlowResultType.FORM
+    assert subentry_flow["type"] is FlowResultType.FORM
     assert subentry_flow["step_id"] == "advanced"
 
     # Configure advanced step
@@ -859,7 +859,7 @@ async def test_subentry_web_search_user_location(
         },
     )
     await hass.async_block_till_done()
-    assert subentry_flow["type"] == FlowResultType.FORM
+    assert subentry_flow["type"] is FlowResultType.FORM
     assert subentry_flow["step_id"] == "model"
 
     hass.config.country = "US"

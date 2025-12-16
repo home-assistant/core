@@ -42,7 +42,7 @@ async def test_options_flow(
     await hass.async_block_till_done()
 
     assert result["step_id"] == "init"
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     # test: valid input
 
@@ -54,7 +54,7 @@ async def test_options_flow(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][ATTR_PARSER] == PARSER_PLAIN_TEXT
 
 
