@@ -21,6 +21,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.unit_system import METRIC_SYSTEM
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ATTRIBUTION,
@@ -120,6 +121,19 @@ class NOAATidesAndCurrentsSensor(SensorEntity):
         attr: dict[str, Any] = {}
         if self.data is None:
             return attr
+
+        # Index 0 is the next tide event (the same event in native_value)
+        api_time = self.data["time_stamp"][0]
+        if api_time is not None:
+            # convert to local time for display, matching existing attributes
+            local_next = dt_util.as_local(api_time)
+            attr["next_tide_event_time"] = local_next.strftime("%Y-%m-%dT%H:%M")
+            attr["next_tide_event_height"] = self.data["predicted_wl"][0]
+
+            # minutes until next tide event, based on now in the same timezone
+            delta = (local_next - dt_util.now()).total_seconds() / 60
+            attr["minutes_until_next_tide_event"] = int(delta)
+
         if self.data["hi_lo"][1] == "H":
             attr["high_tide_time"] = self.data["time_stamp"][1].strftime(
                 "%Y-%m-%dT%H:%M"
