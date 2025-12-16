@@ -380,6 +380,16 @@
   },
   "title": "Media player",
   "triggers": {
+    "muted": {
+      "description": "Triggers after one or more media players are muted.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::media_player::common::trigger_behavior_description%]",
+          "name": "[%key:component::media_player::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Media player muted"
+    },
     "stopped_playing": {
       "description": "Triggers after one or more media players stop playing media.",
       "fields": {
