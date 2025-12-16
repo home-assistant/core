@@ -361,11 +361,9 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         # it to define min, max & step temperatures
         if self._set_temperature:
             self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
-            self._attr_max_temp = self._set_temperature.type_information.max_scaled
-            self._attr_min_temp = self._set_temperature.type_information.min_scaled
-            self._attr_target_temperature_step = (
-                self._set_temperature.type_information.step_scaled
-            )
+            self._attr_max_temp = self._set_temperature.max_value
+            self._attr_min_temp = self._set_temperature.min_value
+            self._attr_target_temperature_step = self._set_temperature.value_step
 
         # Determine HVAC modes
         self._attr_hvac_modes: list[HVACMode] = []
@@ -373,7 +371,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         if hvac_mode_wrapper:
             self._attr_hvac_modes = [HVACMode.OFF]
             unknown_hvac_modes: list[str] = []
-            for tuya_mode in hvac_mode_wrapper.type_information.range:
+            for tuya_mode in hvac_mode_wrapper.options:
                 if tuya_mode in TUYA_HVAC_TO_HA:
                     ha_mode = TUYA_HVAC_TO_HA[tuya_mode]
                     self._hvac_to_tuya[ha_mode] = tuya_mode
@@ -394,17 +392,13 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         # Determine dpcode to use for setting the humidity
         if target_humidity_wrapper:
             self._attr_supported_features |= ClimateEntityFeature.TARGET_HUMIDITY
-            self._attr_min_humidity = round(
-                target_humidity_wrapper.type_information.min_scaled
-            )
-            self._attr_max_humidity = round(
-                target_humidity_wrapper.type_information.max_scaled
-            )
+            self._attr_min_humidity = round(target_humidity_wrapper.min_value)
+            self._attr_max_humidity = round(target_humidity_wrapper.max_value)
 
         # Determine fan modes
         if fan_mode_wrapper:
             self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
-            self._attr_fan_modes = fan_mode_wrapper.type_information.range
+            self._attr_fan_modes = fan_mode_wrapper.options
 
         # Determine swing modes
         if swing_wrapper:
