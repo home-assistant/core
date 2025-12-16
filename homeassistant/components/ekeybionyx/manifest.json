@@ -7,5 +7,5 @@
   "documentation": "https://www.home-assistant.io/integrations/ekeybionyx",
   "iot_class": "local_push",
   "quality_scale": "bronze",
-  "requirements": ["ekey-bionyxpy==1.0.0"]
+  "requirements": ["ekey-bionyxpy==1.0.1"]
 }
