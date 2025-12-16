@@ -7,7 +7,6 @@ from uiprotect.data import ModelType, Version
 from homeassistant.const import Platform
 
 DOMAIN = "unifiprotect"
-
 # If rate limit for 4.x or later a 429 is returned
 # so we can use a lower value
 AUTH_RETRIES = 2
