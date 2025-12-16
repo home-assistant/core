@@ -36,7 +36,7 @@ rules:
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: todo
 
   # Gold
@@ -54,12 +54,18 @@ rules:
   docs-troubleshooting: done
   docs-use-cases: done
   dynamic-devices: todo
-  entity-category: done
-  entity-device-class: done
-  entity-disabled-by-default: done
-  entity-translations: done
+  entity-category:
+    status: exempt
+    comment: This integration does not use entity categories.
+  entity-device-class:
+    status: exempt
+    comment: This integration does not use entity device classes.
+  entity-disabled-by-default:
+    status: exempt
+    comment: Not required for this integration at this stage.
+  entity-translations: todo
   exception-translations: todo
-  icon-translations: done
+  icon-translations: todo
   reconfiguration-flow: todo
   repair-issues:
     status: exempt
