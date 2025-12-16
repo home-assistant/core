@@ -860,7 +860,7 @@ egauge-async==0.4.0
 eheimdigital==1.4.0
 
 # homeassistant.components.ekeybionyx
-ekey-bionyxpy==1.0.0
+ekey-bionyxpy==1.0.1
 
 # homeassistant.components.electric_kiwi
 electrickiwi-api==0.9.14
@@ -2097,7 +2097,7 @@ pyialarm==2.2.0
 pyicloud==2.2.0
 
 # homeassistant.components.insteon
-pyinsteon==1.6.3
+pyinsteon==1.6.4
 
 # homeassistant.components.intesishome
 pyintesishome==1.8.0
@@ -2532,7 +2532,7 @@ python-kasa[speedups]==0.10.2
 python-linkplay==0.2.12
 
 # homeassistant.components.matter
-python-matter-server==8.1.0
+python-matter-server==8.1.2
 
 # homeassistant.components.melcloud
 python-melcloud==0.1.2

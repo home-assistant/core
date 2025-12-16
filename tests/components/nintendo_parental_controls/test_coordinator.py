@@ -85,7 +85,7 @@ async def test_update_errors(
     assert len(entries) == 0
 
     # Ensure the config entry is marked as expected state
-    assert mock_config_entry.state == expected_state
+    assert mock_config_entry.state is expected_state
 
     # Ensure the correct translation key is used in the error
     assert mock_config_entry.error_reason_translation_key == translation_key
