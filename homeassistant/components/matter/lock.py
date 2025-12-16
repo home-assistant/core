@@ -23,6 +23,7 @@ from .const import LOGGER
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
+from .services import ATTR_CODE_SLOT, ATTR_USERCODE # Added imports
 
 DOOR_LOCK_OPERATION_SOURCE = {
     # mapping from operation source id's to textual representation
@@ -190,6 +191,27 @@ class MatterLock(MatterEntity, LockEntity):
         code_bytes = code.encode() if code else None
         await self.send_device_command(
             command=clusters.DoorLock.Commands.UnlockDoor(code_bytes),
+            timed_request_timeout_ms=1000,
+        )
+
+    async def async_set_usercode(self, code_slot: int, usercode: str) -> None:
+        """Set a usercode on the lock."""
+        await self.send_device_command(
+            command=clusters.DoorLock.Commands.SetPinCode(
+                userIndex=code_slot - 1,  # Matter user indexes are 0-based
+                userStatus=clusters.DoorLock.Enums.UserStatusEnum.kEnabled,
+                userType=clusters.DoorLock.Enums.UserTypeEnum.kUnrestricted,
+                pin=usercode.encode(),
+            ),
+            timed_request_timeout_ms=1000,
+        )
+
+    async def async_clear_usercode(self, code_slot: int) -> None:
+        """Clear a usercode on the lock."""
+        await self.send_device_command(
+            command=clusters.DoorLock.Commands.ClearPinCode(
+                userIndex=code_slot - 1  # Matter user indexes are 0-based
+            ),
             timed_request_timeout_ms=1000,
         )
 
