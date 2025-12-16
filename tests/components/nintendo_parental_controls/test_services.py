@@ -13,7 +13,7 @@ from homeassistant.components.nintendo_parental_controls.services import (
 )
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
@@ -51,7 +51,7 @@ async def test_add_bonus_time_invalid_device(
 ) -> None:
     """Test add bonus time service."""
     await setup_integration(hass, mock_config_entry)
-    with pytest.raises(HomeAssistantError) as err:
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             NintendoParentalServices.ADD_BONUS_TIME,
@@ -78,14 +78,15 @@ async def test_add_bonus_time_device_id_not_nintendo(
         config_entry_id=mock_config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "00:11:22:33:44:55")},
     )
-    await hass.services.async_call(
-        DOMAIN,
-        NintendoParentalServices.ADD_BONUS_TIME,
-        {
-            ATTR_DEVICE_ID: device_entry.id,
-            ATTR_BONUS_TIME: 15,
-        },
-        blocking=True,
-    )
-    # Ensure no errors are raised
-    assert True
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            NintendoParentalServices.ADD_BONUS_TIME,
+            {
+                ATTR_DEVICE_ID: device_entry.id,
+                ATTR_BONUS_TIME: 15,
+            },
+            blocking=True,
+        )
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "invalid_device"
