@@ -11,7 +11,13 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.airobot.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MAC,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
@@ -43,7 +49,7 @@ async def test_user_flow(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Test Thermostat"
+    assert result["title"] == "T01A1B2C3"
     assert result["data"] == TEST_USER_INPUT
     assert result["result"].unique_id == "T01A1B2C3"
     assert len(mock_setup_entry.mock_calls) == 1
@@ -70,7 +76,7 @@ async def test_form_exceptions(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_airobot_client.get_settings.side_effect = exception
+    mock_airobot_client.get_statuses.side_effect = exception
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -80,7 +86,7 @@ async def test_form_exceptions(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error_base}
 
-    mock_airobot_client.get_settings.side_effect = None
+    mock_airobot_client.get_statuses.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -88,7 +94,7 @@ async def test_form_exceptions(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Test Thermostat"
+    assert result["title"] == "T01A1B2C3"
     assert result["data"] == TEST_USER_INPUT
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -148,7 +154,7 @@ async def test_dhcp_discovery(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Test Thermostat"
+    assert result["title"] == "T01A1B2C3"
     assert result["data"][CONF_HOST] == "192.168.1.100"
     assert result["data"][CONF_USERNAME] == "T01A1B2C3"
     assert result["data"][CONF_PASSWORD] == "test-password"
@@ -200,7 +206,7 @@ async def test_dhcp_discovery_errors(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Test Thermostat"
+    assert result["title"] == "T01A1B2C3"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -307,3 +313,100 @@ async def test_reauth_flow_errors(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data[CONF_PASSWORD] == "new-password"
+
+
+@pytest.mark.parametrize(
+    "device_name",
+    ["New Thermostat Name", ""],
+    ids=["with_name", "empty_name"],
+)
+async def test_options_flow(
+    hass: HomeAssistant,
+    mock_airobot_client: AsyncMock,
+    init_integration: MockConfigEntry,
+    device_name: str,
+) -> None:
+    """Test options flow with various device names."""
+    result = await hass.config_entries.options.async_init(init_integration.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert mock_airobot_client.get_settings.call_count >= 1
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_NAME: device_name},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_NAME: device_name}
+
+    if device_name:
+        mock_airobot_client.set_device_name.assert_called_once_with(device_name)
+    else:
+        mock_airobot_client.set_device_name.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("exception", "error_base"),
+    [
+        (AirobotAuthError("Authentication failed"), "invalid_auth"),
+        (AirobotConnectionError("Connection failed"), "cannot_connect"),
+        (AirobotError("Generic error"), "unknown"),
+    ],
+)
+async def test_options_flow_errors(
+    hass: HomeAssistant,
+    mock_airobot_client: AsyncMock,
+    init_integration: MockConfigEntry,
+    exception: Exception,
+    error_base: str,
+) -> None:
+    """Test options flow with errors."""
+    result = await hass.config_entries.options.async_init(init_integration.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    mock_airobot_client.set_device_name.side_effect = exception
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_NAME: "New Name"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error_base}
+
+    mock_airobot_client.set_device_name.side_effect = None
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_NAME: "New Name"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_NAME: "New Name"}
+
+
+async def test_options_flow_fetch_name_error(
+    hass: HomeAssistant,
+    mock_airobot_client: AsyncMock,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test options flow when fetching current name fails."""
+    mock_airobot_client.get_settings.side_effect = AirobotConnectionError(
+        "Connection failed"
+    )
+
+    result = await hass.config_entries.options.async_init(init_integration.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    mock_airobot_client.get_settings.side_effect = None
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_NAME: "New Name"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_NAME: "New Name"}

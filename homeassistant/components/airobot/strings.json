@@ -75,5 +75,23 @@
     "set_temperature_failed": {
       "message": "Failed to set temperature to {temperature}."
     }
+  },
+  "options": {
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "init": {
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "name": "Set the device name for the thermostat (1-20 characters)."
+        },
+        "description": "Configure your Airobot thermostat settings."
+      }
+    }
   }
 }

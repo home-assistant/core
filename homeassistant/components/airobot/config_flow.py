@@ -16,8 +16,19 @@ from pyairobotrest.exceptions import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow as BaseConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow as BaseConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MAC,
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -61,14 +72,13 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> DeviceInf
     try:
         # Try to fetch data to validate connection and authentication
         status = await client.get_statuses()
-        settings = await client.get_settings()
     except AirobotAuthError as err:
         raise InvalidAuth from err
     except (AirobotConnectionError, AirobotTimeoutError, AirobotError) as err:
         raise CannotConnect from err
 
     # Use device name or device ID as title
-    title = settings.device_name or status.device_id
+    title = status.device_id
 
     return DeviceInfo(title=title, device_id=status.device_id)
 
@@ -78,6 +88,13 @@ class AirobotConfigFlow(BaseConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     MINOR_VERSION = 1
+
+    @staticmethod
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> AirobotOptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return AirobotOptionsFlowHandler()
 
     def __init__(self) -> None:
         """Initialize the config flow."""
@@ -222,6 +239,54 @@ class AirobotConfigFlow(BaseConfigFlow, domain=DOMAIN):
                 "username": reauth_entry.data[CONF_USERNAME],
                 "host": reauth_entry.data[CONF_HOST],
             },
+            errors=errors,
+        )
+
+
+class AirobotOptionsFlowHandler(OptionsFlow):
+    """Handle Airobot options."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            device_name = user_input.get(CONF_NAME, "").strip()
+
+            if device_name:
+                # Set device name on the thermostat
+                try:
+                    await self.config_entry.runtime_data.client.set_device_name(
+                        device_name
+                    )
+                except AirobotAuthError:
+                    errors["base"] = "invalid_auth"
+                except (AirobotConnectionError, AirobotTimeoutError):
+                    errors["base"] = "cannot_connect"
+                except AirobotError:
+                    errors["base"] = "unknown"
+
+            if not errors:
+                return self.async_create_entry(title="", data=user_input)
+
+        # Get current device name from thermostat settings
+        current_name = ""
+        try:
+            settings = await self.config_entry.runtime_data.client.get_settings()
+            current_name = settings.device_name or ""
+        except AirobotError as err:
+            _LOGGER.debug("Could not fetch current device name: %s", err)
+            current_name = self.config_entry.options.get(CONF_NAME, "")
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(CONF_NAME, default=current_name): str,
+                }
+            ),
             errors=errors,
         )
 
