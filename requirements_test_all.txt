@@ -124,7 +124,7 @@ WSDiscovery==2.1.2
 accuweather==4.2.2
 
 # homeassistant.components.actron_air
-actron-neo-api==0.1.87
+actron-neo-api==0.2.0
 
 # homeassistant.components.adax
 adax==0.4.0
@@ -657,7 +657,7 @@ colorlog==6.10.1
 colorthief==0.2.1
 
 # homeassistant.components.compit
-compit-inext-api==0.3.1
+compit-inext-api==0.3.4
 
 # homeassistant.components.concord232
 concord232==0.15.1
@@ -2401,7 +2401,7 @@ smart-meter-texas==0.5.5
 snapcast==2.3.6
 
 # homeassistant.components.sonos
-soco==0.30.12
+soco==0.30.13
 
 # homeassistant.components.solaredge
 solaredge-web==0.0.1
