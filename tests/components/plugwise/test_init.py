@@ -23,7 +23,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.update_coordinator import UpdateFailed
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -372,7 +371,7 @@ async def test_delete_removed_device(
     """Test device removal at integration init."""
     data = mock_smile_adam_heat_cool.async_update.return_value
     mock_config_entry.add_to_hass(hass)
-    assert await async_setup_component(hass, DOMAIN, {})
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     item_list: list[str] = []
