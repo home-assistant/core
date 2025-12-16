@@ -212,6 +212,7 @@ SERVICE_SCHEMA_BASE_SEND_FILE = BASE_SERVICE_SCHEMA.extend(
         vol.Optional(ATTR_PASSWORD): cv.string,
         vol.Optional(ATTR_AUTHENTICATION): cv.string,
         vol.Optional(ATTR_VERIFY_SSL): cv.boolean,
+        vol.Optional(ATTR_REPLY_TO_MSGID): vol.Coerce(int),
     }
 )
 
@@ -231,6 +232,7 @@ SERVICE_SCHEMA_SEND_LOCATION = vol.All(
         {
             vol.Required(ATTR_LONGITUDE): cv.string,
             vol.Required(ATTR_LATITUDE): cv.string,
+            vol.Optional(ATTR_REPLY_TO_MSGID): vol.Coerce(int),
         }
     ),
 )
@@ -248,6 +250,7 @@ SERVICE_SCHEMA_SEND_POLL = vol.All(
             vol.Optional(ATTR_ALLOWS_MULTIPLE_ANSWERS, default=False): cv.boolean,
             vol.Optional(ATTR_DISABLE_NOTIF): cv.boolean,
             vol.Optional(ATTR_MESSAGE_THREAD_ID): vol.Coerce(int),
+            vol.Optional(ATTR_REPLY_TO_MSGID): vol.Coerce(int),
         }
     ),
 )
