@@ -6,14 +6,18 @@ import logging
 from typing import Any
 
 from orvibo.s20 import S20, S20Exception
+import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components.switch import SwitchEntity
-from homeassistant.const import CONF_HOST, CONF_MAC
+from homeassistant.components.switch import (
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
+    SwitchEntity,
+)
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_SWITCHES
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -28,6 +32,20 @@ _LOGGER = logging.getLogger(__name__)
 
 
 PARALLEL_UPDATES = 1
+
+PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_SWITCHES, default=[]): vol.All(
+            cv.ensure_list,
+            [
+                {
+                    vol.Required(CONF_HOST): cv.string,
+                    vol.Optional(CONF_MAC): cv.string,
+                }
+            ],
+        )
+    }
+)
 
 
 async def async_setup_platform(
@@ -88,7 +106,13 @@ async def async_setup_entry(
     """Setup Entry."""
     switch = []
     switch.append(
-        S20Switch(entry.title, entry.data[CONF_HOST], entry.data[CONF_MAC]),
+        S20Switch(
+            entry.title,
+            entry.data[CONF_HOST],
+            entry.data[CONF_MAC],
+            entry.runtime_data.exc,
+            entry.runtime_data.s20,
+        ),
     )
     async_add_entities(switch)
 
@@ -100,15 +124,15 @@ class S20Switch(SwitchEntity):
     _attr_name = None
     _attr_should_poll = True
 
-    def __init__(self, name, host, mac):
+    def __init__(self, name, host, mac, exc: type[S20Exception], s20: S20) -> None:
         """Initialize the S20 device."""
 
         self._name = name
         self._host = host
         self._mac = mac
         self._state = False
-        self._exc = S20Exception
-        self._s20 = S20(self._host, self._mac)
+        self._exc = exc
+        self._s20 = s20
         self._unique_id = self._mac
 
     @property
