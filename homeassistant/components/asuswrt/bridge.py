@@ -56,7 +56,7 @@ from .const import (
     SENSORS_RATES,
     SENSORS_UPTIME,
 )
-from .helpers import clean_dict
+from .helpers import clean_dict, translate_to_legacy
 
 SENSORS_TYPE_BYTES = "sensors_bytes"
 SENSORS_TYPE_COUNT = "sensors_count"
@@ -385,7 +385,7 @@ class AsusWrtHttpBridge(AsusWrtBridge):
         """
         try:
             raw = await self._api.async_get_data(datatype, force=force)
-            return clean_dict(convert_to_ha_data(raw))
+            return translate_to_legacy(clean_dict(convert_to_ha_data(raw)))
         except AsusRouterError as ex:
             raise UpdateFailed(ex) from ex
 
@@ -400,7 +400,7 @@ class AsusWrtHttpBridge(AsusWrtBridge):
             data = await self._api.async_get_data(datatype)
             # Get the list of sensors from the raw data
             # and translate in to the legacy format
-            sensors = convert_to_ha_sensors(data, datatype)
+            sensors = translate_to_legacy(convert_to_ha_sensors(data, datatype))
             _LOGGER.debug("Available `%s` sensors: %s", datatype.value, sensors)
         except AsusRouterError as ex:
             _LOGGER.warning(
