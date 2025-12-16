@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from env_canada import ECRadar
+from env_canada.ec_cache import Cache
 import voluptuous as vol
 
 from homeassistant.components.camera import Camera
@@ -78,5 +79,15 @@ class ECCameraEntity(CoordinatorEntity[ECDataUpdateCoordinator[ECRadar]], Camera
 
     async def async_set_radar_type(self, radar_type: str):
         """Set the type of radar to retrieve."""
+        # Clear cache entries for this radar location to force refresh with new type
+        cache_prefix = self.radar_object._map._get_cache_prefix()
+        keys_to_delete = [
+            key
+            for key in Cache._cache
+            if key.startswith(cache_prefix) or key.startswith("capabilities-")
+        ]
+        for key in keys_to_delete:
+            del Cache._cache[key]
+
         self.radar_object.precip_type = radar_type.lower()
         await self.radar_object.update()
