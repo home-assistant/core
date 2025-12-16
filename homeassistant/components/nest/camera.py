@@ -57,16 +57,19 @@ async def async_setup_entry(
 ) -> None:
     """Set up the cameras."""
 
-    entities: list[NestCameraBaseEntity] = []
-    for device in entry.runtime_data.device_manager.devices.values():
-        if (live_stream := device.traits.get(CameraLiveStreamTrait.NAME)) is None:
-            continue
-        if StreamingProtocol.WEB_RTC in live_stream.supported_protocols:
-            entities.append(NestWebRTCEntity(device))
-        elif StreamingProtocol.RTSP in live_stream.supported_protocols:
-            entities.append(NestRTSPEntity(device))
+    def devices_added(devices: list[Device]) -> None:
+        entities: list[NestCameraBaseEntity] = []
+        for device in devices:
+            if (live_stream := device.traits.get(CameraLiveStreamTrait.NAME)) is None:
+                continue
+            if StreamingProtocol.WEB_RTC in live_stream.supported_protocols:
+                entities.append(NestWebRTCEntity(device))
+            elif StreamingProtocol.RTSP in live_stream.supported_protocols:
+                entities.append(NestRTSPEntity(device))
 
-    async_add_entities(entities)
+        async_add_entities(entities)
+
+    entry.runtime_data.register_devices_listener(devices_added)
 
 
 class StreamRefresh:
