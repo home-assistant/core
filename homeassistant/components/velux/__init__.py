@@ -26,11 +26,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: VeluxConfigEntry) -> boo
     password = entry.data[CONF_PASSWORD]
     pyvlx = PyVLX(host=host, password=password)
 
-    LOGGER.debug(f"Setting up Velux gateway {host}")
+    LOGGER.debug("Setting up Velux gateway %s", host)
     try:
-        LOGGER.debug(f"Retrieving scenes from {host}")
+        LOGGER.debug("Retrieving scenes from %s", host)
         await pyvlx.load_scenes()
-        LOGGER.debug(f"Retrieving nodes from {host}")
+        LOGGER.debug("Retrieving nodes from %s", host)
         await pyvlx.load_nodes()
     except (OSError, PyVLXException) as ex:
         # Defer setup and retry later as the bridge is not ready/available
@@ -39,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VeluxConfigEntry) -> boo
             "If connection continues to fail, try power-cycling the gateway device."
         ) from ex
 
-    LOGGER.debug(f"Velux connection to {host} successful")
+    LOGGER.debug("Velux connection to %s successful", host)
     entry.runtime_data = pyvlx
 
     connections = None
