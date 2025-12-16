@@ -96,7 +96,7 @@ async def test_data_secure_group_key_issue_repair_flow(
     )
 
     flow_id = flow["flow_id"]
-    assert flow["type"] == FlowResultType.FORM
+    assert flow["type"] is FlowResultType.FORM
     assert flow["step_id"] == "secure_knxkeys"
     assert flow["description_placeholders"] == _placeholders
 
@@ -112,7 +112,7 @@ async def test_data_secure_group_key_issue_repair_flow(
                 CONF_KNX_KNXKEY_PASSWORD: "invalid_password_mocked",
             },
         )
-    assert flow["type"] == FlowResultType.FORM
+    assert flow["type"] is FlowResultType.FORM
     assert flow["step_id"] == "secure_knxkeys"
     assert flow["errors"] == {CONF_KNX_KNXKEY_PASSWORD: "keyfile_invalid_signature"}
 
@@ -126,7 +126,7 @@ async def test_data_secure_group_key_issue_repair_flow(
                 CONF_KNX_KNXKEY_PASSWORD: "password",
             },
         )
-    assert flow["type"] == FlowResultType.CREATE_ENTRY
+    assert flow["type"] is FlowResultType.CREATE_ENTRY
     assert (
         issue_registry.async_get_issue(DOMAIN, REPAIR_ISSUE_DATA_SECURE_GROUP_KEY)
         is None
