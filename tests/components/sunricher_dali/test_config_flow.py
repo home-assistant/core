@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 from PySrDaliGateway.exceptions import DaliGatewayError
 
 from homeassistant.components.sunricher_dali.const import CONF_SERIAL_NUMBER, DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -15,6 +15,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from tests.common import MockConfigEntry
 
@@ -219,3 +220,43 @@ async def test_discovery_unique_id_already_configured(
 
     assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
+
+
+async def test_dhcp_updates_existing_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test DHCP discovery updates IP of existing entry."""
+    mock_config_entry.add_to_hass(hass)
+
+    assert mock_config_entry.data[CONF_HOST] != "192.168.1.200"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="192.168.1.200",
+            macaddress="6a242121110e",
+            hostname="dali-gateway",
+        ),
+    )
+
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "already_configured"
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.200"
+
+
+async def test_dhcp_unknown_device(hass: HomeAssistant) -> None:
+    """Test DHCP discovery of unknown device aborts."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="192.168.1.100",
+            macaddress="aabbccddeeff",
+            hostname="unknown-gateway",
+        ),
+    )
+
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "no_dhcp_flow"
