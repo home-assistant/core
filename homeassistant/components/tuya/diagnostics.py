@@ -98,6 +98,7 @@ def _async_device_as_dict(
         "home_assistant": {},
         "set_up": device.set_up,
         "support_local": device.support_local,
+        "local_strategy": device.local_strategy,
         "warnings": DEVICE_WARNINGS.get(device.id),
     }
 
