@@ -652,21 +652,6 @@ async def test_tunneling_setup_manual_request_description_error(
             "base": "no_tunnel_discovered",
             "tunneling_type": "unsupported_tunnel_type",
         }
-    # No connection to gateway
-    with patch(
-        "homeassistant.components.knx.config_flow.request_description",
-        side_effect=CommunicationError(""),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_KNX_TUNNELING_TYPE: CONF_KNX_TUNNELING_TCP,
-                CONF_HOST: "192.168.0.1",
-                CONF_PORT: 3671,
-            },
-        )
-        assert result["step_id"] == "manual_tunnel"
-        assert result["errors"] == {"base": "cannot_connect"}
     # OK configuration
     with patch(
         "homeassistant.components.knx.config_flow.request_description",
@@ -698,6 +683,56 @@ async def test_tunneling_setup_manual_request_description_error(
     }
     knx_setup.assert_called_once()
 
+@patch(
+    "homeassistant.components.knx.config_flow.GatewayScanner",
+    return_value=GatewayScannerMock(),
+)
+async def test_tunneling_setup_manual_request_without_reachable_gateway(
+    gateway_scanner_mock: MagicMock,
+    hass: HomeAssistant,
+    knx_setup,
+) -> None:
+    """Test manual tunneling can work even if the gateway cannot answer a description."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING,
+        },
+    )
+    assert result["step_id"] == "manual_tunnel"
+    assert result["errors"] == {"base": "no_tunnel_discovered"}
+
+    # No connection to gateway
+    with patch(
+        "homeassistant.components.knx.config_flow.request_description",
+        side_effect=CommunicationError(""),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_KNX_TUNNELING_TYPE: CONF_KNX_TUNNELING_TCP,
+                CONF_HOST: "192.168.0.1",
+                CONF_PORT: 3671,
+            },
+        )
+    # Even if the connection to gateway fails on UDP description request, assume
+    # that the TCP connection requested by the user will work:
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Tunneling TCP @ 192.168.0.1"
+    assert result["data"] == {
+        **DEFAULT_ENTRY_DATA,
+        CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING_TCP,
+        CONF_HOST: "192.168.0.1",
+        CONF_PORT: 3671,
+        CONF_KNX_TUNNEL_ENDPOINT_IA: None,
+        CONF_KNX_SECURE_DEVICE_AUTHENTICATION: None,
+        CONF_KNX_SECURE_USER_ID: None,
+        CONF_KNX_SECURE_USER_PASSWORD: None,
+    }
+    knx_setup.assert_called_once()
 
 @patch(
     "homeassistant.components.knx.config_flow.GatewayScanner",
