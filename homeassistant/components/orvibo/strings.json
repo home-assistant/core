@@ -51,6 +51,9 @@
     },
     "update_error": {
       "message": "Error while fetching state for S20 {name}."
+    },
+    "init_error": {
+      "message": "Error while initializing S20 {host}."
     }
   },
   "issues": {

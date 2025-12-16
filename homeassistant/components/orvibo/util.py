@@ -11,9 +11,6 @@ from homeassistant.config_entries import ConfigEntry
 class S20Data:
     """S20 data class."""
 
-    #    name: str
-    #    host: str
-    #    mac: str
     exc: type[S20Exception]
     s20: S20
 
