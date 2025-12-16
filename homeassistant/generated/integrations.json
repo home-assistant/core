@@ -3290,7 +3290,7 @@
     },
     "keenetic_ndms2": {
       "name": "Keenetic NDMS2 Router",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
