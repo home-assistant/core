@@ -63,3 +63,29 @@ async def test_add_bonus_time_invalid_device(
         )
     assert err.value.translation_domain == DOMAIN
     assert err.value.translation_key == "device_not_found"
+
+
+async def test_add_bonus_time_device_id_not_nintendo(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_nintendo_client: AsyncMock,
+) -> None:
+    """Test add bonus time service with a device that is not a valid Nintendo device."""
+    await setup_integration(hass, mock_config_entry)
+    # Create a device that does not have a Nintendo identifier
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "00:11:22:33:44:55")},
+    )
+    await hass.services.async_call(
+        DOMAIN,
+        NintendoParentalServices.ADD_BONUS_TIME,
+        {
+            ATTR_DEVICE_ID: device_entry.id,
+            ATTR_BONUS_TIME: 15,
+        },
+        blocking=True,
+    )
+    # Ensure no errors are raised
+    assert True
