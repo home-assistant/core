@@ -23,13 +23,9 @@ class CarPlayStore:
         self._store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
         self.data: dict[str, Any] = {}
         self.subscriptions: dict[str | None, list[Callable[[], None]]] = {}
-        self._loaded = False
 
     async def async_load(self) -> None:
         """Load the data from storage."""
-        if self._loaded:
-            return
-
         stored_data = await self._store.async_load()
         if stored_data is not None:
             self.data = stored_data
@@ -39,7 +35,6 @@ class CarPlayStore:
                 "enabled": True,
                 "quick_access": [],
             }
-        self._loaded = True
 
     async def async_save(self) -> None:
         """Save the data to storage."""
@@ -50,24 +45,20 @@ class CarPlayStore:
 
     async def async_set_data(self, data: dict[str, Any]) -> None:
         """Set the carplay data."""
-        await self.async_load()
         self.data.update(data)
         await self.async_save()
 
     async def async_get_data(self) -> dict[str, Any]:
         """Get the carplay data."""
-        await self.async_load()
         return self.data.copy()
 
     async def async_set_enabled(self, enabled: bool) -> None:
         """Set the carplay enabled state."""
-        await self.async_load()
         self.data["enabled"] = enabled
         await self.async_save()
 
     async def async_set_quick_access(self, quick_access: list[dict[str, Any]]) -> None:
         """Set the carplay quick access items."""
-        await self.async_load()
         self.data["quick_access"] = quick_access
         await self.async_save()
 

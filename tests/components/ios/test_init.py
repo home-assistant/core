@@ -2,6 +2,7 @@
 
 import json
 from pathlib import Path
+from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
@@ -123,36 +124,6 @@ async def test_carplay_storage_setup(hass: HomeAssistant) -> None:
     assert data == {"enabled": True, "quick_access": []}
 
 
-async def test_carplay_store_operations(hass: HomeAssistant) -> None:
-    """Test CarPlay store CRUD operations."""
-    store = CarPlayStore(hass)
-
-    # Test setting and getting data
-    test_data = {
-        "enabled": True,
-        "quick_access": [
-            {"entity_id": "light.living_room", "display_name": "Living Room Light"},
-            {"entity_id": "climate.thermostat"},
-        ],
-    }
-
-    await store.async_set_data(test_data)
-    retrieved_data = await store.async_get_data()
-
-    assert retrieved_data == test_data
-
-    # Test updating data
-    updated_data = {
-        "enabled": False,
-        "quick_access": [{"entity_id": "switch.fan"}],
-    }
-
-    await store.async_set_data(updated_data)
-    new_data = await store.async_get_data()
-
-    assert new_data == updated_data
-
-
 async def test_carplay_api_endpoints(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
@@ -214,66 +185,56 @@ async def test_carplay_api_validation(
     assert resp.status == 400
 
 
-async def test_carplay_store_subscriptions(hass: HomeAssistant) -> None:
-    """Test CarPlay store subscription functionality."""
-    store = CarPlayStore(hass)
+async def test_carplay_api_with_storage_data(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test CarPlay API with pre-populated storage data."""
+    # Pre-populate storage with test data
+    hass_storage["ios.carplay_config"] = {
+        "version": 1,
+        "minor_version": 1,
+        "key": "ios.carplay_config",
+        "data": {
+            "enabled": False,
+            "quick_access": [{"entity_id": "light.test", "display_name": "Test Light"}],
+        },
+    }
 
-    # Track callback calls
-    callback_called = False
-
-    def callback() -> None:
-        nonlocal callback_called
-        callback_called = True
-
-    # Subscribe to changes
-    unsubscribe = store.async_subscribe(callback)
-
-    # Make a change that triggers save
-    await store.async_set_data({"enabled": False, "quick_access": []})
-
-    # Verify callback was called
-    assert callback_called
-
-    # Reset and test unsubscribe
-    callback_called = False
-    unsubscribe()
-
-    # Make another change
-    await store.async_set_data({"enabled": True, "quick_access": []})
-
-    # Verify callback was not called after unsubscribe
-    assert not callback_called
-
-
-async def test_carplay_store_individual_setters(hass: HomeAssistant) -> None:
-    """Test individual setter methods in CarPlay store."""
-    store = CarPlayStore(hass)
-
-    # Test async_set_enabled
-    await store.async_set_enabled(False)
-    data = await store.async_get_data()
-    assert data["enabled"] is False
-
-    # Test async_set_quick_access
-    quick_access = [{"entity_id": "light.test", "display_name": "Test Light"}]
-    await store.async_set_quick_access(quick_access)
-    data = await store.async_get_data()
-    assert data["quick_access"] == quick_access
-
-
-async def test_carplay_store_get_function(hass: HomeAssistant) -> None:
-    """Test the get_carplay_store function access after setup."""
-    # Setup component which loads the store
+    # Setup the component
     await async_setup_component(hass, ios.DOMAIN, {ios.DOMAIN: {}})
 
-    # Get store - should be already loaded from setup
-    store1 = get_carplay_store(hass)
+    client = await hass_client()
 
-    # Get store second time - should reuse existing instance
-    store2 = get_carplay_store(hass)
+    # Test GET endpoint returns stored data
+    resp = await client.get("/api/ios/carplay")
+    assert resp.status == 200
+    data = await resp.json()
+    assert data == {
+        "enabled": False,
+        "quick_access": [{"entity_id": "light.test", "display_name": "Test Light"}],
+    }
 
-    # Should be the same instance
-    assert store1 is store2
+    # Test POST endpoint updates storage
+    update_data = {
+        "enabled": True,
+        "quick_access": [
+            {"entity_id": "light.kitchen", "display_name": "Kitchen Light"}
+        ],
+    }
+
+    resp = await client.post("/api/ios/carplay/update", json=update_data)
+    assert resp.status == 200
+
+    # Verify data was updated in storage
+    resp = await client.get("/api/ios/carplay")
+    assert resp.status == 200
+    data = await resp.json()
+    assert data == update_data
+
+    # Verify storage was actually written to
+    assert hass_storage["ios.carplay_config"]["data"] == update_data
 
 
 async def test_carplay_api_error_handling(
