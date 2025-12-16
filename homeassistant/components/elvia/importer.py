@@ -109,7 +109,6 @@ class ElviaImporter:
             if (
                 hourly_data is None
                 or len(hourly_data) == 0
-                or not hourly_data[-1]["verified"]
                 or (from_time := dt_util.parse_datetime(hourly_data[0]["startTime"]))
                 is None
             ):
