@@ -69,14 +69,6 @@ SWITCH_ACTIONS = {
     "turn_on": SWITCH_TURN_ON,
     "turn_off": SWITCH_TURN_OFF,
 }
-NAMED_SWITCH_ACTIONS = {
-    **SWITCH_ACTIONS,
-    "name": TEST_OBJECT_ID,
-}
-UNIQUE_ID_CONFIG = {
-    **SWITCH_ACTIONS,
-    "unique_id": "not-so-unique-anymore",
-}
 
 
 @pytest.fixture
