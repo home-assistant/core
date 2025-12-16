@@ -173,22 +173,20 @@ class _ColorDataWrapper(DPCodeJsonWrapper):
     s_type = DEFAULT_S_TYPE
     v_type = DEFAULT_V_TYPE
 
-    def read_hs_color(self, device: CustomerDevice) -> tuple[float, float] | None:
-        """Get the HS value from this color data."""
-        if (status := self.read_device_status(device)) is None:
+    def read_device_status(
+        self, device: CustomerDevice
+    ) -> tuple[tuple[float, float], float] | None:
+        """Return a tuple with (HS, V) from this color data."""
+        if (status := super().read_device_status(device)) is None:
             return None
         return (
             self.h_type.remap_value_to(status["h"]),
             self.s_type.remap_value_to(status["s"]),
-        )
+        ), round(self.v_type.remap_value_to(status["v"]))
 
-    def read_brightness(self, device: CustomerDevice) -> int | None:
-        """Get the brightness value from this color data."""
-        if (status := self.read_device_status(device)) is None:
-            return None
-        return round(self.v_type.remap_value_to(status["v"]))
-
-    def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
+    def _convert_value_to_raw_value(
+        self, device: CustomerDevice, value: tuple[tuple[float, float], float]
+    ) -> Any:
         """Convert a Home Assistant color/brightness pair back to a raw device value."""
         color, brightness = value
         return json.dumps(
@@ -792,7 +790,8 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         """Return the brightness of this light between 0..255."""
         # If the light is currently in color mode, extract the brightness from the color data
         if self.color_mode == ColorMode.HS and self._color_data_wrapper:
-            return self._color_data_wrapper.read_brightness(self.device)
+            data = self._read_wrapper(self._color_data_wrapper)
+            return None if data is None else data[1]
 
         return self._read_wrapper(self._brightness_wrapper)
 
@@ -806,7 +805,8 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         """Return the hs_color of the light."""
         if self._color_data_wrapper is None:
             return None
-        return self._color_data_wrapper.read_hs_color(self.device)
+        data = self._read_wrapper(self._color_data_wrapper)
+        return None if data is None else data[0]
 
     @property
     def color_mode(self) -> ColorMode:
