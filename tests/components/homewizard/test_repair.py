@@ -59,18 +59,18 @@ async def test_repair_acquires_token(
     result = await start_repair_fix_flow(client, DOMAIN, issue_id)
 
     flow_id = result["flow_id"]
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
     result = await process_repair_fix_flow(client, flow_id)
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "authorize"
 
     # Simulate user not pressing the button
     result = await process_repair_fix_flow(client, flow_id, json={})
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "authorize"
     assert result["errors"] == {"base": "authorization_failed"}
 
@@ -79,7 +79,7 @@ async def test_repair_acquires_token(
     mock_homewizardenergy_v2.get_token.return_value = "cool_token"
     result = await process_repair_fix_flow(client, flow_id, json={})
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert mock_config_entry.data[CONF_TOKEN] == "cool_token"
     assert mock_config_entry.state is ConfigEntryState.LOADED
 

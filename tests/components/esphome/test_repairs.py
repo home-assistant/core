@@ -87,7 +87,7 @@ async def test_device_conflict_manual(
         "name": "test",
         "stored_mac": "11:22:33:44:55:aa",
     }
-    assert data["type"] == FlowResultType.MENU
+    assert data["type"] is FlowResultType.MENU
     assert data["step_id"] == "init"
 
     data = await process_repair_fix_flow(
@@ -102,7 +102,7 @@ async def test_device_conflict_manual(
         "name": "test",
         "stored_mac": "11:22:33:44:55:aa",
     }
-    assert data["type"] == FlowResultType.FORM
+    assert data["type"] is FlowResultType.FORM
     assert data["step_id"] == "manual"
 
     device_info = DeviceInfo(
@@ -116,7 +116,7 @@ async def test_device_conflict_manual(
     caplog.clear()
     data = await process_repair_fix_flow(client, flow_id)
 
-    assert data["type"] == FlowResultType.CREATE_ENTRY
+    assert data["type"] is FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()
     assert "Unexpected device found" not in caplog.text
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
@@ -205,7 +205,7 @@ async def test_device_conflict_migration(
         "name": "test",
         "stored_mac": "11:22:33:44:55:aa",
     }
-    assert data["type"] == FlowResultType.MENU
+    assert data["type"] is FlowResultType.MENU
     assert data["step_id"] == "init"
 
     data = await process_repair_fix_flow(
@@ -220,13 +220,13 @@ async def test_device_conflict_migration(
         "name": "test",
         "stored_mac": "11:22:33:44:55:aa",
     }
-    assert data["type"] == FlowResultType.FORM
+    assert data["type"] is FlowResultType.FORM
     assert data["step_id"] == "migrate"
 
     caplog.clear()
     data = await process_repair_fix_flow(client, flow_id)
 
-    assert data["type"] == FlowResultType.CREATE_ENTRY
+    assert data["type"] is FlowResultType.CREATE_ENTRY
     await hass.async_block_till_done()
     assert "Unexpected device found" not in caplog.text
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None

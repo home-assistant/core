@@ -76,7 +76,7 @@ async def test_ws_setup_depose_mfa(
 
     flow = result["result"]
     # Cannot use identity `is` check here as the value is parsed from JSON
-    assert flow["type"] == FlowResultType.FORM.value
+    assert flow["type"] is FlowResultType.FORM.value
     assert flow["handler"] == "example_module"
     assert flow["step_id"] == "init"
     assert flow["data_schema"][0] == {"type": "string", "name": "pin", "required": True}
@@ -96,7 +96,7 @@ async def test_ws_setup_depose_mfa(
 
     flow = result["result"]
     # Cannot use identity `is` check here as the value is parsed from JSON
-    assert flow["type"] == FlowResultType.CREATE_ENTRY.value
+    assert flow["type"] is FlowResultType.CREATE_ENTRY.value
     assert flow["handler"] == "example_module"
     assert flow["data"]["result"] is None
 
