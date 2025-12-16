@@ -1,6 +1,9 @@
 """Compensation constants."""
 
+from homeassistant.const import Platform
+
 DOMAIN = "compensation"
+PLATFORMS = [Platform.SENSOR]
 
 SENSOR = "compensation"
 
@@ -11,6 +14,7 @@ CONF_DATAPOINTS = "data_points"
 CONF_DEGREE = "degree"
 CONF_PRECISION = "precision"
 CONF_POLYNOMIAL = "polynomial"
+CONF_POLYNOMIAL_CONFIG = "polynomial_config"
 
 DATA_COMPENSATION = "compensation_data"
 
