@@ -1,6 +1,6 @@
 {
   "domain": "ipma",
-  "name": "Instituto Português do Mar e Atmosfera (IPMA)",
+  "name": "Instituto Portugu\u00eas do Mar e Atmosfera (IPMA)",
   "codeowners": ["@dgomes"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ipma",
