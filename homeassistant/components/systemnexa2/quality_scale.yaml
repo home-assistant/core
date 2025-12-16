@@ -15,6 +15,7 @@ rules:
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
+  strict-typing: done
   test-before-configure: done
   test-before-setup: done
   unique-config-entry: done
