@@ -968,7 +968,7 @@ async def test_privacy_mode_on(
     reolink_host: MagicMock,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Test successful setup even when privacy mode is turned on."""
+    """Test successful setup eis ConfigEntryState.e is turned on."""
     reolink_host.baichuan.privacy_mode.return_value = True
     reolink_host.get_states = AsyncMock(side_effect=LoginPrivacyModeError("Test error"))
 

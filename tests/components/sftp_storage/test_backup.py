@@ -87,7 +87,7 @@ async def test_agents_info(
     assert (
         response["result"]
         == {"agents": [{"agent_id": "backup.local", "name": "local"}]}
-        or config_entry.state == ConfigEntryState.NOT_LOADED
+        or config_entry.state is ConfigEntryState.NOT_LOADED
     )
 
 
