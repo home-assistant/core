@@ -1,0 +1,2151 @@
+# serializer version: 1
+# name: test_image[ex30_2024][image.volvo_ex30_exterior_back-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.volvo_ex30_exterior_back',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Exterior back',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'exterior_back',
+    'unique_id': 'yv1abcdefg1234567_exterior_back',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image[ex30_2024][image.volvo_ex30_exterior_back-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': 'testtoken',
+      'entity_picture': '/api/image_proxy/image.volvo_ex30_exterior_back?token=testtoken',
+      'friendly_name': 'Volvo EX30 Exterior back',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.volvo_ex30_exterior_back',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-10-03T12:00:00',
+  })
+# ---
+# name: test_image[ex30_2024][image.volvo_ex30_exterior_back_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.volvo_ex30_exterior_back_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Exterior back left',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'exterior_back_left',
+    'unique_id': 'yv1abcdefg1234567_exterior_back_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image[ex30_2024][image.volvo_ex30_exterior_back_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': 'testtoken',
+      'entity_picture': '/api/image_proxy/image.volvo_ex30_exterior_back_left?token=testtoken',
+      'friendly_name': 'Volvo EX30 Exterior back left',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.volvo_ex30_exterior_back_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-10-03T12:00:00',
+  })
+# ---
+# name: test_image[ex30_2024][image.volvo_ex30_exterior_front-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.volvo_ex30_exterior_front',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Exterior front',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'exterior_front',
+    'unique_id': 'yv1abcdefg1234567_exterior_front',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image[ex30_2024][image.volvo_ex30_exterior_front-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': 'testtoken',
+      'entity_picture': '/api/image_proxy/image.volvo_ex30_exterior_front?token=testtoken',
+      'friendly_name': 'Volvo EX30 Exterior front',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.volvo_ex30_exterior_front',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-10-03T12:00:00',
+  })
+# ---
+# name: test_image[ex30_2024][image.volvo_ex30_exterior_front_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.volvo_ex30_exterior_front_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Exterior front left',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'exterior_front_left',
+    'unique_id': 'yv1abcdefg1234567_exterior_front_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image[ex30_2024][image.volvo_ex30_exterior_front_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': 'testtoken',
+      'entity_picture': '/api/image_proxy/image.volvo_ex30_exterior_front_left?token=testtoken',
+      'friendly_name': 'Volvo EX30 Exterior front left',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.volvo_ex30_exterior_front_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-10-03T12:00:00',
+  })
+# ---
+# name: test_image[ex30_2024][image.volvo_ex30_exterior_side_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.volvo_ex30_exterior_side_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Exterior side left',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'exterior_side_left',
+    'unique_id': 'yv1abcdefg1234567_exterior_side_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image[ex30_2024][image.volvo_ex30_exterior_side_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': 'testtoken',
+      'entity_picture': '/api/image_proxy/image.volvo_ex30_exterior_side_left?token=testtoken',
+      'friendly_name': 'Volvo EX30 Exterior side left',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.volvo_ex30_exterior_side_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-10-03T12:00:00',
+  })
+# ---
+# name: test_image[ex30_2024][image.volvo_ex30_exterior_side_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.volvo_ex30_exterior_side_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Exterior side right',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'exterior_side_right',
+    'unique_id': 'yv1abcdefg1234567_exterior_side_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image[ex30_2024][image.volvo_ex30_exterior_side_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': 'testtoken',
+      'entity_picture': '/api/image_proxy/image.volvo_ex30_exterior_side_right?token=testtoken',
+      'friendly_name': 'Volvo EX30 Exterior side right',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.volvo_ex30_exterior_side_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-10-03T12:00:00',
+  })
+# ---
+# name: test_image[ex30_2024][image.volvo_ex30_interior-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.volvo_ex30_interior',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Interior',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'interior',
+    'unique_id': 'yv1abcdefg1234567_interior',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image[ex30_2024][image.volvo_ex30_interior-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': 'testtoken',
+      'entity_picture': '/api/image_proxy/image.volvo_ex30_interior?token=testtoken',
+      'friendly_name': 'Volvo EX30 Interior',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.volvo_ex30_interior',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-10-03T12:00:00',
+  })
+# ---
+# name: test_image[xc40_electric_2024][image.volvo_xc40_exterior_back-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.volvo_xc40_exterior_back',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Exterior back',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'exterior_back',
+    'unique_id': 'yv1abcdefg1234567_exterior_back',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image[xc40_electric_2024][image.volvo_xc40_exterior_back-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': 'testtoken',
+      'entity_picture': '/api/image_proxy/image.volvo_xc40_exterior_back?token=testtoken',
+      'friendly_name': 'Volvo XC40 Exterior back',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.volvo_xc40_exterior_back',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-10-03T12:00:00',
+  })
+# ---
+# name: test_image[xc40_electric_2024][image.volvo_xc40_exterior_back_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.volvo_xc40_exterior_back_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Exterior back left',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'exterior_back_left',
+    'unique_id': 'yv1abcdefg1234567_exterior_back_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image[xc40_electric_2024][image.volvo_xc40_exterior_back_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': 'testtoken',
+      'entity_picture': '/api/image_proxy/image.volvo_xc40_exterior_back_left?token=testtoken',
+      'friendly_name': 'Volvo XC40 Exterior back left',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.volvo_xc40_exterior_back_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-10-03T12:00:00',
+  })
+# ---
+# name: test_image[xc40_electric_2024][image.volvo_xc40_exterior_back_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.volvo_xc40_exterior_back_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Exterior back right',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'exterior_back_right',
+    'unique_id': 'yv1abcdefg1234567_exterior_back_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image[xc40_electric_2024][image.volvo_xc40_exterior_back_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': 'testtoken',
+      'entity_picture': '/api/image_proxy/image.volvo_xc40_exterior_back_right?token=testtoken',
+      'friendly_name': 'Volvo XC40 Exterior back right',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.volvo_xc40_exterior_back_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-10-03T12:00:00',
+  })
+# ---
+# name: test_image[xc40_electric_2024][image.volvo_xc40_exterior_front-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.volvo_xc40_exterior_front',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Exterior front',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'exterior_front',
+    'unique_id': 'yv1abcdefg1234567_exterior_front',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image[xc40_electric_2024][image.volvo_xc40_exterior_front-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': 'testtoken',
+      'entity_picture': '/api/image_proxy/image.volvo_xc40_exterior_front?token=testtoken',
+      'friendly_name': 'Volvo XC40 Exterior front',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.volvo_xc40_exterior_front',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-10-03T12:00:00',
+  })
+# ---
+# name: test_image[xc40_electric_2024][image.volvo_xc40_exterior_front_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.volvo_xc40_exterior_front_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Exterior front left',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'exterior_front_left',
+    'unique_id': 'yv1abcdefg1234567_exterior_front_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image[xc40_electric_2024][image.volvo_xc40_exterior_front_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': 'testtoken',
+      'entity_picture': '/api/image_proxy/image.volvo_xc40_exterior_front_left?token=testtoken',
+      'friendly_name': 'Volvo XC40 Exterior front left',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.volvo_xc40_exterior_front_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-10-03T12:00:00',
+  })
+# ---
+# name: test_image[xc40_electric_2024][image.volvo_xc40_exterior_front_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.volvo_xc40_exterior_front_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Exterior front right',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'exterior_front_right',
+    'unique_id': 'yv1abcdefg1234567_exterior_front_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image[xc40_electric_2024][image.volvo_xc40_exterior_front_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': 'testtoken',
+      'entity_picture': '/api/image_proxy/image.volvo_xc40_exterior_front_right?token=testtoken',
+      'friendly_name': 'Volvo XC40 Exterior front right',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.volvo_xc40_exterior_front_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-10-03T12:00:00',
+  })
+# ---
+# name: test_image[xc40_electric_2024][image.volvo_xc40_exterior_side_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.volvo_xc40_exterior_side_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Exterior side left',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'exterior_side_left',
+    'unique_id': 'yv1abcdefg1234567_exterior_side_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image[xc40_electric_2024][image.volvo_xc40_exterior_side_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': 'testtoken',
+      'entity_picture': '/api/image_proxy/image.volvo_xc40_exterior_side_left?token=testtoken',
+      'friendly_name': 'Volvo XC40 Exterior side left',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.volvo_xc40_exterior_side_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-10-03T12:00:00',
+  })
+# ---
+# name: test_image[xc40_electric_2024][image.volvo_xc40_exterior_side_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.volvo_xc40_exterior_side_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Exterior side right',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'exterior_side_right',
+    'unique_id': 'yv1abcdefg1234567_exterior_side_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image[xc40_electric_2024][image.volvo_xc40_exterior_side_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': 'testtoken',
+      'entity_picture': '/api/image_proxy/image.volvo_xc40_exterior_side_right?token=testtoken',
+      'friendly_name': 'Volvo XC40 Exterior side right',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.volvo_xc40_exterior_side_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-10-03T12:00:00',
+  })
+# ---
+# name: test_image[xc40_electric_2024][image.volvo_xc40_interior-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.volvo_xc40_interior',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Interior',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'interior',
+    'unique_id': 'yv1abcdefg1234567_interior',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image[xc40_electric_2024][image.volvo_xc40_interior-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': 'testtoken',
+      'entity_picture': '/api/image_proxy/image.volvo_xc40_interior?token=testtoken',
+      'friendly_name': 'Volvo XC40 Interior',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.volvo_xc40_interior',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-10-03T12:00:00',
+  })
+# ---
+# name: test_image[xc60_phev_2020][image.volvo_xc60_exterior_back-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.volvo_xc60_exterior_back',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Exterior back',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'exterior_back',
+    'unique_id': 'yv1abcdefg1234567_exterior_back',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image[xc60_phev_2020][image.volvo_xc60_exterior_back-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': 'testtoken',
+      'entity_picture': '/api/image_proxy/image.volvo_xc60_exterior_back?token=testtoken',
+      'friendly_name': 'Volvo XC60 Exterior back',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.volvo_xc60_exterior_back',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-10-03T12:00:00',
+  })
+# ---
+# name: test_image[xc60_phev_2020][image.volvo_xc60_exterior_back_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.volvo_xc60_exterior_back_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Exterior back left',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'exterior_back_left',
+    'unique_id': 'yv1abcdefg1234567_exterior_back_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image[xc60_phev_2020][image.volvo_xc60_exterior_back_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': 'testtoken',
+      'entity_picture': '/api/image_proxy/image.volvo_xc60_exterior_back_left?token=testtoken',
+      'friendly_name': 'Volvo XC60 Exterior back left',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.volvo_xc60_exterior_back_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-10-03T12:00:00',
+  })
+# ---
+# name: test_image[xc60_phev_2020][image.volvo_xc60_exterior_back_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.volvo_xc60_exterior_back_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Exterior back right',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'exterior_back_right',
+    'unique_id': 'yv1abcdefg1234567_exterior_back_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image[xc60_phev_2020][image.volvo_xc60_exterior_back_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': 'testtoken',
+      'entity_picture': '/api/image_proxy/image.volvo_xc60_exterior_back_right?token=testtoken',
+      'friendly_name': 'Volvo XC60 Exterior back right',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.volvo_xc60_exterior_back_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-10-03T12:00:00',
+  })
+# ---
+# name: test_image[xc60_phev_2020][image.volvo_xc60_exterior_front-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.volvo_xc60_exterior_front',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Exterior front',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'exterior_front',
+    'unique_id': 'yv1abcdefg1234567_exterior_front',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image[xc60_phev_2020][image.volvo_xc60_exterior_front-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': 'testtoken',
+      'entity_picture': '/api/image_proxy/image.volvo_xc60_exterior_front?token=testtoken',
+      'friendly_name': 'Volvo XC60 Exterior front',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.volvo_xc60_exterior_front',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-10-03T12:00:00',
+  })
+# ---
+# name: test_image[xc60_phev_2020][image.volvo_xc60_exterior_front_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.volvo_xc60_exterior_front_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Exterior front left',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'exterior_front_left',
+    'unique_id': 'yv1abcdefg1234567_exterior_front_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image[xc60_phev_2020][image.volvo_xc60_exterior_front_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': 'testtoken',
+      'entity_picture': '/api/image_proxy/image.volvo_xc60_exterior_front_left?token=testtoken',
+      'friendly_name': 'Volvo XC60 Exterior front left',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.volvo_xc60_exterior_front_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-10-03T12:00:00',
+  })
+# ---
+# name: test_image[xc60_phev_2020][image.volvo_xc60_exterior_front_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.volvo_xc60_exterior_front_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Exterior front right',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'exterior_front_right',
+    'unique_id': 'yv1abcdefg1234567_exterior_front_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image[xc60_phev_2020][image.volvo_xc60_exterior_front_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': 'testtoken',
+      'entity_picture': '/api/image_proxy/image.volvo_xc60_exterior_front_right?token=testtoken',
+      'friendly_name': 'Volvo XC60 Exterior front right',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.volvo_xc60_exterior_front_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-10-03T12:00:00',
+  })
+# ---
+# name: test_image[xc60_phev_2020][image.volvo_xc60_exterior_side_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.volvo_xc60_exterior_side_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Exterior side left',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'exterior_side_left',
+    'unique_id': 'yv1abcdefg1234567_exterior_side_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image[xc60_phev_2020][image.volvo_xc60_exterior_side_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': 'testtoken',
+      'entity_picture': '/api/image_proxy/image.volvo_xc60_exterior_side_left?token=testtoken',
+      'friendly_name': 'Volvo XC60 Exterior side left',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.volvo_xc60_exterior_side_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-10-03T12:00:00',
+  })
+# ---
+# name: test_image[xc60_phev_2020][image.volvo_xc60_exterior_side_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.volvo_xc60_exterior_side_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Exterior side right',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'exterior_side_right',
+    'unique_id': 'yv1abcdefg1234567_exterior_side_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image[xc60_phev_2020][image.volvo_xc60_exterior_side_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': 'testtoken',
+      'entity_picture': '/api/image_proxy/image.volvo_xc60_exterior_side_right?token=testtoken',
+      'friendly_name': 'Volvo XC60 Exterior side right',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.volvo_xc60_exterior_side_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-10-03T12:00:00',
+  })
+# ---
+# name: test_image[xc60_phev_2020][image.volvo_xc60_interior-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.volvo_xc60_interior',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Interior',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'interior',
+    'unique_id': 'yv1abcdefg1234567_interior',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image[xc60_phev_2020][image.volvo_xc60_interior-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': 'testtoken',
+      'entity_picture': '/api/image_proxy/image.volvo_xc60_interior?token=testtoken',
+      'friendly_name': 'Volvo XC60 Interior',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.volvo_xc60_interior',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-10-03T12:00:00',
+  })
+# ---
+# name: test_image[xc90_petrol_2019][image.volvo_xc90_exterior_back-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.volvo_xc90_exterior_back',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Exterior back',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'exterior_back',
+    'unique_id': 'yv1abcdefg1234567_exterior_back',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image[xc90_petrol_2019][image.volvo_xc90_exterior_back-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': 'testtoken',
+      'entity_picture': '/api/image_proxy/image.volvo_xc90_exterior_back?token=testtoken',
+      'friendly_name': 'Volvo XC90 Exterior back',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.volvo_xc90_exterior_back',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-10-03T12:00:00',
+  })
+# ---
+# name: test_image[xc90_petrol_2019][image.volvo_xc90_exterior_back_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.volvo_xc90_exterior_back_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Exterior back left',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'exterior_back_left',
+    'unique_id': 'yv1abcdefg1234567_exterior_back_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image[xc90_petrol_2019][image.volvo_xc90_exterior_back_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': 'testtoken',
+      'entity_picture': '/api/image_proxy/image.volvo_xc90_exterior_back_left?token=testtoken',
+      'friendly_name': 'Volvo XC90 Exterior back left',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.volvo_xc90_exterior_back_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-10-03T12:00:00',
+  })
+# ---
+# name: test_image[xc90_petrol_2019][image.volvo_xc90_exterior_back_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.volvo_xc90_exterior_back_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Exterior back right',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'exterior_back_right',
+    'unique_id': 'yv1abcdefg1234567_exterior_back_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image[xc90_petrol_2019][image.volvo_xc90_exterior_back_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': 'testtoken',
+      'entity_picture': '/api/image_proxy/image.volvo_xc90_exterior_back_right?token=testtoken',
+      'friendly_name': 'Volvo XC90 Exterior back right',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.volvo_xc90_exterior_back_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-10-03T12:00:00',
+  })
+# ---
+# name: test_image[xc90_petrol_2019][image.volvo_xc90_exterior_front-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.volvo_xc90_exterior_front',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Exterior front',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'exterior_front',
+    'unique_id': 'yv1abcdefg1234567_exterior_front',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image[xc90_petrol_2019][image.volvo_xc90_exterior_front-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': 'testtoken',
+      'entity_picture': '/api/image_proxy/image.volvo_xc90_exterior_front?token=testtoken',
+      'friendly_name': 'Volvo XC90 Exterior front',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.volvo_xc90_exterior_front',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-10-03T12:00:00',
+  })
+# ---
+# name: test_image[xc90_petrol_2019][image.volvo_xc90_exterior_front_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.volvo_xc90_exterior_front_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Exterior front left',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'exterior_front_left',
+    'unique_id': 'yv1abcdefg1234567_exterior_front_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image[xc90_petrol_2019][image.volvo_xc90_exterior_front_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': 'testtoken',
+      'entity_picture': '/api/image_proxy/image.volvo_xc90_exterior_front_left?token=testtoken',
+      'friendly_name': 'Volvo XC90 Exterior front left',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.volvo_xc90_exterior_front_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-10-03T12:00:00',
+  })
+# ---
+# name: test_image[xc90_petrol_2019][image.volvo_xc90_exterior_front_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.volvo_xc90_exterior_front_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Exterior front right',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'exterior_front_right',
+    'unique_id': 'yv1abcdefg1234567_exterior_front_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image[xc90_petrol_2019][image.volvo_xc90_exterior_front_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': 'testtoken',
+      'entity_picture': '/api/image_proxy/image.volvo_xc90_exterior_front_right?token=testtoken',
+      'friendly_name': 'Volvo XC90 Exterior front right',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.volvo_xc90_exterior_front_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-10-03T12:00:00',
+  })
+# ---
+# name: test_image[xc90_petrol_2019][image.volvo_xc90_exterior_side_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.volvo_xc90_exterior_side_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Exterior side left',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'exterior_side_left',
+    'unique_id': 'yv1abcdefg1234567_exterior_side_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image[xc90_petrol_2019][image.volvo_xc90_exterior_side_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': 'testtoken',
+      'entity_picture': '/api/image_proxy/image.volvo_xc90_exterior_side_left?token=testtoken',
+      'friendly_name': 'Volvo XC90 Exterior side left',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.volvo_xc90_exterior_side_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-10-03T12:00:00',
+  })
+# ---
+# name: test_image[xc90_petrol_2019][image.volvo_xc90_exterior_side_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.volvo_xc90_exterior_side_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Exterior side right',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'exterior_side_right',
+    'unique_id': 'yv1abcdefg1234567_exterior_side_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image[xc90_petrol_2019][image.volvo_xc90_exterior_side_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': 'testtoken',
+      'entity_picture': '/api/image_proxy/image.volvo_xc90_exterior_side_right?token=testtoken',
+      'friendly_name': 'Volvo XC90 Exterior side right',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.volvo_xc90_exterior_side_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-10-03T12:00:00',
+  })
+# ---
+# name: test_image[xc90_petrol_2019][image.volvo_xc90_interior-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.volvo_xc90_interior',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Interior',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'interior',
+    'unique_id': 'yv1abcdefg1234567_interior',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image[xc90_petrol_2019][image.volvo_xc90_interior-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': 'testtoken',
+      'entity_picture': '/api/image_proxy/image.volvo_xc90_interior?token=testtoken',
+      'friendly_name': 'Volvo XC90 Interior',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.volvo_xc90_interior',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-10-03T12:00:00',
+  })
+# ---
+# name: test_image[xc90_phev_2024][image.volvo_xc90_exterior_back-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.volvo_xc90_exterior_back',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Exterior back',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'exterior_back',
+    'unique_id': 'yv1abcdefg1234567_exterior_back',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image[xc90_phev_2024][image.volvo_xc90_exterior_back-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': 'testtoken',
+      'entity_picture': '/api/image_proxy/image.volvo_xc90_exterior_back?token=testtoken',
+      'friendly_name': 'Volvo XC90 Exterior back',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.volvo_xc90_exterior_back',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-10-03T12:00:00',
+  })
+# ---
+# name: test_image[xc90_phev_2024][image.volvo_xc90_exterior_back_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.volvo_xc90_exterior_back_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Exterior back left',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'exterior_back_left',
+    'unique_id': 'yv1abcdefg1234567_exterior_back_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image[xc90_phev_2024][image.volvo_xc90_exterior_back_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': 'testtoken',
+      'entity_picture': '/api/image_proxy/image.volvo_xc90_exterior_back_left?token=testtoken',
+      'friendly_name': 'Volvo XC90 Exterior back left',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.volvo_xc90_exterior_back_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-10-03T12:00:00',
+  })
+# ---
+# name: test_image[xc90_phev_2024][image.volvo_xc90_exterior_back_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.volvo_xc90_exterior_back_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Exterior back right',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'exterior_back_right',
+    'unique_id': 'yv1abcdefg1234567_exterior_back_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image[xc90_phev_2024][image.volvo_xc90_exterior_back_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': 'testtoken',
+      'entity_picture': '/api/image_proxy/image.volvo_xc90_exterior_back_right?token=testtoken',
+      'friendly_name': 'Volvo XC90 Exterior back right',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.volvo_xc90_exterior_back_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-10-03T12:00:00',
+  })
+# ---
+# name: test_image[xc90_phev_2024][image.volvo_xc90_exterior_front-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.volvo_xc90_exterior_front',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Exterior front',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'exterior_front',
+    'unique_id': 'yv1abcdefg1234567_exterior_front',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image[xc90_phev_2024][image.volvo_xc90_exterior_front-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': 'testtoken',
+      'entity_picture': '/api/image_proxy/image.volvo_xc90_exterior_front?token=testtoken',
+      'friendly_name': 'Volvo XC90 Exterior front',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.volvo_xc90_exterior_front',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-10-03T12:00:00',
+  })
+# ---
+# name: test_image[xc90_phev_2024][image.volvo_xc90_exterior_front_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.volvo_xc90_exterior_front_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Exterior front left',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'exterior_front_left',
+    'unique_id': 'yv1abcdefg1234567_exterior_front_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image[xc90_phev_2024][image.volvo_xc90_exterior_front_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': 'testtoken',
+      'entity_picture': '/api/image_proxy/image.volvo_xc90_exterior_front_left?token=testtoken',
+      'friendly_name': 'Volvo XC90 Exterior front left',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.volvo_xc90_exterior_front_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-10-03T12:00:00',
+  })
+# ---
+# name: test_image[xc90_phev_2024][image.volvo_xc90_exterior_front_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.volvo_xc90_exterior_front_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Exterior front right',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'exterior_front_right',
+    'unique_id': 'yv1abcdefg1234567_exterior_front_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image[xc90_phev_2024][image.volvo_xc90_exterior_front_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': 'testtoken',
+      'entity_picture': '/api/image_proxy/image.volvo_xc90_exterior_front_right?token=testtoken',
+      'friendly_name': 'Volvo XC90 Exterior front right',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.volvo_xc90_exterior_front_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-10-03T12:00:00',
+  })
+# ---
+# name: test_image[xc90_phev_2024][image.volvo_xc90_exterior_side_left-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.volvo_xc90_exterior_side_left',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Exterior side left',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'exterior_side_left',
+    'unique_id': 'yv1abcdefg1234567_exterior_side_left',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image[xc90_phev_2024][image.volvo_xc90_exterior_side_left-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': 'testtoken',
+      'entity_picture': '/api/image_proxy/image.volvo_xc90_exterior_side_left?token=testtoken',
+      'friendly_name': 'Volvo XC90 Exterior side left',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.volvo_xc90_exterior_side_left',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-10-03T12:00:00',
+  })
+# ---
+# name: test_image[xc90_phev_2024][image.volvo_xc90_exterior_side_right-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.volvo_xc90_exterior_side_right',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Exterior side right',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'exterior_side_right',
+    'unique_id': 'yv1abcdefg1234567_exterior_side_right',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image[xc90_phev_2024][image.volvo_xc90_exterior_side_right-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': 'testtoken',
+      'entity_picture': '/api/image_proxy/image.volvo_xc90_exterior_side_right?token=testtoken',
+      'friendly_name': 'Volvo XC90 Exterior side right',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.volvo_xc90_exterior_side_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-10-03T12:00:00',
+  })
+# ---
+# name: test_image[xc90_phev_2024][image.volvo_xc90_interior-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.volvo_xc90_interior',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Interior',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'interior',
+    'unique_id': 'yv1abcdefg1234567_interior',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_image[xc90_phev_2024][image.volvo_xc90_interior-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': 'testtoken',
+      'entity_picture': '/api/image_proxy/image.volvo_xc90_interior?token=testtoken',
+      'friendly_name': 'Volvo XC90 Interior',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.volvo_xc90_interior',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-10-03T12:00:00',
+  })
+# ---

@@ -218,6 +218,35 @@
         "name": "Location"
       }
     },
+    "image": {
+      "exterior_back": {
+        "name": "Exterior back"
+      },
+      "exterior_back_left": {
+        "name": "Exterior back left"
+      },
+      "exterior_back_right": {
+        "name": "Exterior back right"
+      },
+      "exterior_front": {
+        "name": "Exterior front"
+      },
+      "exterior_front_left": {
+        "name": "Exterior front left"
+      },
+      "exterior_front_right": {
+        "name": "Exterior front right"
+      },
+      "exterior_side_left": {
+        "name": "Exterior side left"
+      },
+      "exterior_side_right": {
+        "name": "Exterior side right"
+      },
+      "interior": {
+        "name": "Interior"
+      }
+    },
     "lock": {
       "lock": {
         "name": "[%key:component::lock::title%]"
