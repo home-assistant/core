@@ -338,8 +338,11 @@ class EntityTriggerBase(Trigger):
         self._target = config.target
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
-        """Check if the origin state is not an expected target states."""
-        return not self.is_valid_state(from_state)
+        """Check if the origin state is valid and the state has changed."""
+        if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            return False
+
+        return from_state.state != to_state.state
 
     @abc.abstractmethod
     def is_valid_state(self, state: State) -> bool:
@@ -390,12 +393,11 @@ class EntityTriggerBase(Trigger):
             from_state = event.data["old_state"]
             to_state = event.data["new_state"]
 
-            # The trigger should never fire if the previous state was not a valid state
-            if not from_state or from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            if not from_state or not to_state:
                 return
 
             # The trigger should never fire if the new state is not valid
-            if not to_state or not self.is_valid_state(to_state):
+            if not self.is_valid_state(to_state):
                 return
 
             # The trigger should never fire if the transition is not valid
@@ -446,6 +448,9 @@ class ConditionalEntityStateTriggerBase(EntityTriggerBase):
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check if the origin state matches the expected ones."""
+        if not super().is_valid_transition(from_state, to_state):
+            return False
+
         return from_state.state in self._from_states
 
     def is_valid_state(self, state: State) -> bool:
@@ -453,11 +458,36 @@ class ConditionalEntityStateTriggerBase(EntityTriggerBase):
         return state.state in self._to_states
 
 
+class EntityFromStateTriggerBase(EntityTriggerBase):
+    """Class for entity state changes from a specific state."""
+
+    _from_state: str
+
+    def is_valid_transition(self, from_state: State, to_state: State) -> bool:
+        """Check if the origin state matches the expected one and that the state changed."""
+        return (
+            from_state.state == self._from_state and to_state.state != self._from_state
+        )
+
+    def is_valid_state(self, state: State) -> bool:
+        """Check if the new state is not the same as the expected origin state."""
+        return state.state != self._from_state
+
+
 class EntityStateAttributeTriggerBase(EntityTriggerBase):
     """Trigger for entity state attribute changes."""
 
     _attribute: str
     _attribute_to_state: str
+
+    def is_valid_transition(self, from_state: State, to_state: State) -> bool:
+        """Check if the origin state is valid and the state has changed."""
+        if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            return False
+
+        return from_state.attributes.get(self._attribute) != to_state.attributes.get(
+            self._attribute
+        )
 
     def is_valid_state(self, state: State) -> bool:
         """Check if the new state attribute matches the expected one."""
@@ -489,6 +519,20 @@ def make_conditional_entity_state_trigger(
         _domain = domain
         _from_states = from_states
         _to_states = to_states
+
+    return CustomTrigger
+
+
+def make_entity_from_state_trigger(
+    domain: str, *, from_state: str
+) -> type[EntityFromStateTriggerBase]:
+    """Create an entity "from state" trigger class."""
+
+    class CustomTrigger(EntityFromStateTriggerBase):
+        """Trigger for entity "from state" changes."""
+
+        _domain = domain
+        _from_state = from_state
 
     return CustomTrigger
 
