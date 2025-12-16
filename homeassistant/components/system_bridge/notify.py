@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from systembridgemodels.notification import Notification
+from systembridgeconnector.models.notification import Notification
 
 from homeassistant.components.notify import (
     ATTR_DATA,

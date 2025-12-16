@@ -46,3 +46,8 @@ ERROR_INVALID_AUTH = "invalid_auth"
 
 # Config flow abort reasons
 ABORT_NO_PLANTS = "no_plants"
+
+# Battery modes for TOU (Time of Use) settings
+BATT_MODE_LOAD_FIRST = 0
+BATT_MODE_BATTERY_FIRST = 1
+BATT_MODE_GRID_FIRST = 2
