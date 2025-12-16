@@ -229,6 +229,8 @@ async def test_dhcp_updates_existing_entry(
     """Test DHCP discovery updates IP of existing entry."""
     mock_config_entry.add_to_hass(hass)
 
+    assert mock_config_entry.data[CONF_HOST] != "192.168.1.200"
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_DHCP},
@@ -244,9 +246,7 @@ async def test_dhcp_updates_existing_entry(
     assert mock_config_entry.data[CONF_HOST] == "192.168.1.200"
 
 
-async def test_dhcp_unknown_device(
-    hass: HomeAssistant,
-) -> None:
+async def test_dhcp_unknown_device(hass: HomeAssistant) -> None:
     """Test DHCP discovery of unknown device aborts."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -259,4 +259,4 @@ async def test_dhcp_unknown_device(
     )
 
     assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "unknown"
+    assert result.get("reason") == "no_dhcp_flow"

@@ -145,4 +145,4 @@ class DaliCenterConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(serial_number)
         self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
 
-        return self.async_abort(reason="unknown")
+        return self.async_abort(reason="no_dhcp_flow")
