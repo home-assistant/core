@@ -23,7 +23,7 @@ from homeassistant.util.percentage import (
 )
 from homeassistant.util.scaling import int_states_in_range
 
-from .const import DOMAIN, KNX_ADDRESS, KNX_MODULE_KEY, FanConf
+from .const import CONF_SYNC_STATE, DOMAIN, KNX_ADDRESS, KNX_MODULE_KEY, FanConf
 from .entity import KnxUiEntity, KnxUiEntityPlatformController, KnxYamlEntity
 from .knx_module import KNXModule
 from .schema import FanSchema
@@ -211,6 +211,7 @@ class KnxUiFan(_KnxFan, KnxUiEntity):
                 CONF_GA_OSCILLATION
             ),
             max_step=max_step,
+            sync_state=knx_conf.get(CONF_SYNC_STATE),
         )
         # FanSpeedMode.STEP if max_step is set
         self._step_range: tuple[int, int] | None = (1, max_step) if max_step else None
