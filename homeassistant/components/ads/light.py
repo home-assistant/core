@@ -10,6 +10,8 @@ import voluptuous as vol
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
+    DEFAULT_MAX_KELVIN,
+    DEFAULT_MIN_KELVIN,
     PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
     ColorMode,
     LightEntity,
@@ -94,26 +96,29 @@ class AdsLight(AdsEntity, LightEntity):
         self._state_dict[STATE_KEY_COLOR_TEMP_KELVIN] = None
         self._ads_var_brightness = ads_var_brightness
         self._ads_var_color_temp_kelvin = ads_var_color_temp_kelvin
-        self._min_color_temp_kelvin = min_color_temp_kelvin
-        self._max_color_temp_kelvin = max_color_temp_kelvin
 
         # Determine supported color modes
-        supported_modes = {ColorMode.ONOFF}
+        supported_modes = [ColorMode.ONOFF]
         if ads_var_brightness is not None:
-            supported_modes.add(ColorMode.BRIGHTNESS)
+            supported_modes.append(ColorMode.BRIGHTNESS)
         if ads_var_color_temp_kelvin is not None:
-            supported_modes.add(ColorMode.COLOR_TEMP)
+            supported_modes.append(ColorMode.COLOR_TEMP)
 
-        self._attr_supported_color_modes = supported_modes
-        self._attr_color_mode = next(iter(supported_modes))
+        self._attr_supported_color_modes = set(supported_modes)
+        self._attr_color_mode = supported_modes[-1]
 
         # Set color temperature range (static config values take precedence over defaults)
-        self._attr_min_color_temp_kelvin = (
-            min_color_temp_kelvin if min_color_temp_kelvin is not None else 2000
-        )
-        self._attr_max_color_temp_kelvin = (
-            max_color_temp_kelvin if max_color_temp_kelvin is not None else 6500
-        )
+        if ads_var_color_temp_kelvin is not None:
+            self._attr_min_color_temp_kelvin = (
+                min_color_temp_kelvin
+                if min_color_temp_kelvin is not None
+                else DEFAULT_MIN_KELVIN
+            )
+            self._attr_max_color_temp_kelvin = (
+                max_color_temp_kelvin
+                if max_color_temp_kelvin is not None
+                else DEFAULT_MAX_KELVIN
+            )
 
     async def async_added_to_hass(self) -> None:
         """Register device notification."""
@@ -142,16 +147,6 @@ class AdsLight(AdsEntity, LightEntity):
     def color_temp_kelvin(self) -> int | None:
         """Return the color temperature in Kelvin."""
         return self._state_dict[STATE_KEY_COLOR_TEMP_KELVIN]
-
-    @property
-    def min_color_temp_kelvin(self) -> int:
-        """Return the minimum color temperature in Kelvin."""
-        return self._attr_min_color_temp_kelvin or 2000
-
-    @property
-    def max_color_temp_kelvin(self) -> int:
-        """Return the maximum color temperature in Kelvin."""
-        return self._attr_max_color_temp_kelvin or 6500
 
     @property
     def is_on(self) -> bool:
