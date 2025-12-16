@@ -52,6 +52,6 @@ async def test_reauth_flow(
     )
     assert len(entries) == 0
     # Ensure the config entry is marked as needing reauth
-    assert mock_config_entry.state == ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
     assert mock_config_entry.error_reason_translation_key == "auth_expired"
