@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 
-from .const import CONF_NET_ID, DOMAIN
+from .const import CONF_NET_ID
 from .coordinator import YoLinkLocalCoordinator
 from .message_listener import LocalHubMessageListener
 
@@ -28,7 +28,6 @@ type YoLinkLocalConfigEntry = ConfigEntry[
 
 async def async_setup_entry(hass: HomeAssistant, entry: YoLinkLocalConfigEntry) -> bool:
     """Set up YoLink Local from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
 
     session = aiohttp_client.async_create_clientsession(hass)
 
