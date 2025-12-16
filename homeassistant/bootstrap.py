@@ -627,11 +627,13 @@ async def async_enable_logging(
         if "SUPERVISOR" in os.environ and "HA_DUPLICATE_LOG_FILE" not in os.environ:
             # Rename the default log file if it exists, since previous versions created
             # it even on Supervisor
-            if os.path.isfile(default_log_path):
-                with contextlib.suppress(OSError):
-                    await hass.async_add_executor_job(
-                        os.rename, default_log_path, f"{default_log_path}.old"
-                    )
+            def rename_old_file() -> None:
+                """Rename old log file in executor."""
+                if os.path.isfile(default_log_path):
+                    with contextlib.suppress(OSError):
+                        os.rename(default_log_path, f"{default_log_path}.old")
+
+            await hass.async_add_executor_job(rename_old_file)
             err_log_path = None
         else:
             err_log_path = default_log_path
