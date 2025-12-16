@@ -35,7 +35,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: VeluxConfigEntry) -> boo
     except (OSError, PyVLXException) as ex:
         # Defer setup and retry later as the bridge is not ready/available
         raise ConfigEntryNotReady(
-            f"Error connecting to Velux gateway at {host}"
+            f"Unable to connect to Velux gateway at {host}. "
+            "If connection continues to fail, try power-cycling the gateway device."
         ) from ex
 
     LOGGER.debug(f"Velux connection to {host} successful")
