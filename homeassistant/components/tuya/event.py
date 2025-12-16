@@ -58,7 +58,7 @@ class _EventEnumWrapper(DPCodeEnumWrapper, _DPCodeEventWrapper):
     @property
     def event_types(self) -> list[str]:
         """Return the event types for the enum."""
-        return self.type_information.range
+        return self.options
 
     def get_event_type(
         self, device: CustomerDevice, updated_status_properties: list[str] | None

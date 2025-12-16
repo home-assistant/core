@@ -6,10 +6,11 @@ from typing import Any
 
 import botocore.exceptions
 from homelink.auth.srp_auth import SRPAuth
+import jwt
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_UNIQUE_ID
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 
 from .const import DOMAIN
@@ -39,10 +40,6 @@ class SRPFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """Ask for username and password."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            await self.async_set_unique_id(user_input[CONF_EMAIL])
-            if self.source != SOURCE_REAUTH:
-                self._abort_if_unique_id_configured()
-
             srp_auth = SRPAuth()
             try:
                 tokens = await self.hass.async_add_executor_job(
@@ -51,15 +48,22 @@ class SRPFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                     user_input[CONF_PASSWORD],
                 )
             except botocore.exceptions.ClientError:
-                _LOGGER.exception("Error authenticating homelink account")
                 errors["base"] = "srp_auth_failed"
             except Exception:
                 _LOGGER.exception("An unexpected error occurred")
                 errors["base"] = "unknown"
             else:
+                access_token = jwt.decode(
+                    tokens["AuthenticationResult"]["AccessToken"],
+                    options={"verify_signature": False},
+                )
+                sub = access_token["sub"]
+                await self.async_set_unique_id(sub)
+                if self.source != SOURCE_REAUTH:
+                    self._abort_if_unique_id_configured()
                 self.external_data = {
                     "tokens": tokens,
-                    CONF_EMAIL: user_input[CONF_EMAIL].lower(),
+                    CONF_UNIQUE_ID: sub,
                 }
                 return await self.async_step_creation()
 
@@ -92,7 +96,7 @@ class SRPFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Create an oauth config entry or update existing entry for reauth."""
-        await self.async_set_unique_id(self.external_data[CONF_EMAIL])
+        await self.async_set_unique_id(self.external_data[CONF_UNIQUE_ID])
         if self.source == SOURCE_REAUTH:
             self._abort_if_unique_id_mismatch()
             return self.async_update_reload_and_abort(
