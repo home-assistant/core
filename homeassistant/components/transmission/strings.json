@@ -151,7 +151,7 @@
       "name": "Add torrent"
     },
     "get_torrents": {
-      "description": "Gets a list of current torrents",
+      "description": "Get a list of current torrents",
       "fields": {
         "entry_id": {
           "description": "[%key:component::transmission::services::add_torrent::fields::entry_id::description%]",
