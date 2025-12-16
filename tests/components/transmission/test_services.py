@@ -31,7 +31,7 @@ async def test_service_config_entry_not_loaded_state(
     """Test service call when config entry is in failed state."""
     mock_config_entry.add_to_hass(hass)
 
-    assert mock_config_entry.state == ConfigEntryState.NOT_LOADED
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
     with pytest.raises(ServiceValidationError, match="service_not_found"):
         await hass.services.async_call(
