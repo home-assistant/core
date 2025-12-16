@@ -52,6 +52,8 @@ class MatterMediaPlayer(MatterEntity, MediaPlayerEntity):
         | MediaPlayerEntityFeature.VOLUME_STEP
     )
     _attr_volume_step = 0.01
+    # No state in the Speaker endpoint as it is dedicated to volume control
+    _attr_state = MediaPlayerState.ON
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level."""
@@ -115,8 +117,6 @@ class MatterMediaPlayer(MatterEntity, MediaPlayerEntity):
             if max_level is None or max_level <= 0:
                 max_level = 254
             self._attr_volume_level = matter_volume / float(max_level)
-        # No state in the Speaker endpoint as it is dedicated to volume control
-        self._attr_state = MediaPlayerState.ON
 
 
 # Discovery schema(s) to map Matter Attributes to HA entities
