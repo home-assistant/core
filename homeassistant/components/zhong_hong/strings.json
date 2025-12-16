@@ -1,0 +1,15 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up ZhongHong HVAC Gateway",
+        "description": "Please enter the IP address and port of your HVAC gateway.",
+        "data": {
+          "host": "IP Address",
+          "port": "Port",
+          "gateway_address": "Gateway Address"
+        }
+      }
+    }
+  }
+}
