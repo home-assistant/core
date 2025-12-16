@@ -43,6 +43,7 @@ async def test_full_flow(
         },
     }
     assert result["title"] == "SRPAuth"
+    assert result["result"].unique_id == "some-uuid"
 
 
 async def test_unique_configurations(
