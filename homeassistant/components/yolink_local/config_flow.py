@@ -61,9 +61,9 @@ class YoLinkLocalHubConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            await self.async_set_unique_id(user_input[CONF_NET_ID])
+            self._abort_if_unique_id_configured()
             try:
-                await self.async_set_unique_id(user_input[CONF_NET_ID])
-                self._abort_if_unique_id_configured()
                 info = await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
