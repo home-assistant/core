@@ -148,6 +148,153 @@
       "freezer_temperature": {
         "name": "Freezer temperature"
       },
+      "fsv_setting": {
+        "name": "FSV Setting {fsv_id}"
+      },
+      "fsv_setting_1021": {
+        "name": "FSV 1021: Target room temperature, Upper limit"
+      },
+      "fsv_setting_1022": {
+        "name": "FSV 1022: Target room temperature, Lower limit"
+      },
+      "fsv_setting_1031": {
+        "name": "FSV 1031: Target Water Outlet Upper Limit (Heating)"
+      },
+      "fsv_setting_1032": {
+        "name": "FSV 1032: Target Water Outlet Lower Limit (Heating)"
+      },
+      "fsv_setting_1051": {
+        "name": "FSV 1051: Maximum DHW Tank Temperature (User Limit)"
+      },
+      "fsv_setting_1052": {
+        "name": "FSV 1052: Target DHW Tank Temperature Lower Limit (User Limit)"
+      },
+      "fsv_setting_2011": {
+        "name": "FSV 2011: Water Law: Low Ambient Outdoor Temp Setpoint"
+      },
+      "fsv_setting_2012": {
+        "name": "FSV 2012: Water Law: High Ambient Outdoor Temp Setpoint"
+      },
+      "fsv_setting_2021": {
+        "name": "FSV 2021: Water Law: Flow Temp at Low Ambient (Zone 1)"
+      },
+      "fsv_setting_2022": {
+        "name": "FSV 2022: Water Law: Flow Temp at High Ambient (Zone 1)"
+      },
+      "fsv_setting_2031": {
+        "name": "FSV 2031: Water Law: Flow Temp at Low Ambient (Zone 2)"
+      },
+      "fsv_setting_2032": {
+        "name": "FSV 2032: Water Law: Flow Temp at High Ambient (Zone 2)"
+      },
+      "fsv_setting_2091": {
+        "name": "FSV 2091: External Run Input for Zone 1 (3rd Party Thermostat)"
+      },
+      "fsv_setting_2092": {
+        "name": "FSV 2092: External Run Input for Zone 2 (3rd Party Thermostat)"
+      },
+      "fsv_setting_2093": {
+        "name": "FSV 2093: Remote Controller Room Temp Control (Internal Sensor)"
+      },
+      "fsv_setting_3011": {
+        "name": "FSV 3011: Enable / Disable DHW Tank Function"
+      },
+      "fsv_setting_3021": {
+        "name": "FSV 3021: Maximum DHW tank temperature (Heat Pump limit)"
+      },
+      "fsv_setting_3022": {
+        "name": "FSV 3022: DHW Hysteresis: Temperature difference (HP OFF)"
+      },
+      "fsv_setting_3023": {
+        "name": "FSV 3023: DHW Hysteresis: Temperature difference (HP ON)"
+      },
+      "fsv_setting_3025": {
+        "name": "FSV 3025: Max. cylinder heating time (HP vs Space Heating)"
+      },
+      "fsv_setting_3031": {
+        "name": "FSV 3031: DHW Hysteresis Thermo On/Off"
+      },
+      "fsv_setting_3032": {
+        "name": "FSV 3032: Max. cylinder heating time (HP before Booster assist)"
+      },
+      "fsv_setting_3041": {
+        "name": "FSV 3041: Anti-Legionella function (Enable)"
+      },
+      "fsv_setting_3042": {
+        "name": "FSV 3042: Anti-Legionella Function Day"
+      },
+      "fsv_setting_3043": {
+        "name": "FSV 3043: Anti-Legionella Function Start Time"
+      },
+      "fsv_setting_3044": {
+        "name": "FSV 3044: Anti-Legionella Function Target Temperature"
+      },
+      "fsv_setting_3045": {
+        "name": "FSV 3045: Anti-Legionella Function Hold Time"
+      },
+      "fsv_setting_3051": {
+        "name": "FSV 3051: Hotwater Boost Function (Enable)"
+      },
+      "fsv_setting_3052": {
+        "name": "FSV 3052: Hotwater Boost Timer duration"
+      },
+      "fsv_setting_3071": {
+        "name": "FSV 3071: 3-Way Valve Direction (0=Room Default, 1=Tank)"
+      },
+      "fsv_setting_3081": {
+        "name": "FSV 3081: Back Up Heater (1st Step)"
+      },
+      "fsv_setting_3082": {
+        "name": "FSV 3082: Back Up Heater (2nd Step)"
+      },
+      "fsv_setting_3083": {
+        "name": "FSV 3083: Booster Heater Capacity (kW rating)"
+      },
+      "fsv_setting_4011": {
+        "name": "FSV 4011: DHW / Space Heating Priority Setting"
+      },
+      "fsv_setting_4012": {
+        "name": "FSV 4012: Outdoor temperature for priority changeover"
+      },
+      "fsv_setting_4021": {
+        "name": "FSV 4021: Backup Heater Application (Enable/Disable)"
+      },
+      "fsv_setting_4041": {
+        "name": "FSV 4041: Mixing Valve Control (Enable)"
+      },
+      "fsv_setting_4042": {
+        "name": "FSV 4042: Mixing Valve Target Temperature Difference (Heating)"
+      },
+      "fsv_setting_4051": {
+        "name": "FSV 4051: Inverter Pump Control (Application / Enable)"
+      },
+      "fsv_setting_4052": {
+        "name": "FSV 4052: Inverter Pump Control (Target DeltaT)"
+      },
+      "fsv_setting_4053": {
+        "name": "FSV 4053: Inverter Pump Control (Control Factor / Gain)"
+      },
+      "fsv_setting_4054": {
+        "name": "FSV 4054: Inverter Pump Control (PWM Minimum Output)"
+      },
+      "fsv_setting_4061": {
+        "name": "FSV 4061: 2-Zone Control (Application / Enable)"
+      },
+      "fsv_setting_5021": {
+        "name": "FSV 5021: DHW Saving Mode"
+      },
+      "fsv_setting_5051": {
+        "name": "FSV 5051: FR Control (Frequency Ratio / Compressor Limit)"
+      },
+      "fsv_setting_5081": {
+        "name": "FSV 5081: PV Control (Photovoltaics) Activation"
+      },
+      "fsv_setting_5083": {
+        "name": "FSV 5083: PV Control (Heating Setpoint Addition)"
+      },
+      "fsv_setting_5091": {
+        "name": "FSV 5091: Smart Grid Control"
+      },
       "hood_fan_speed": {
         "name": "Fan speed"
       },
