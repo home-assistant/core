@@ -1,0 +1,11 @@
+{
+  "domain": "rotarex",
+  "name": "Rotarex DIMES SRG",
+  "config_flow": true,
+  "documentation": "https://github.com/Rotarex/homeassistant/blob/main/README.md",
+  "issue_tracker": "https://github.com/Rotarex/homeassistant/issues",
+  "codeowners": [],
+  "requirements": ["aiohttp"],
+  "version": "0.1.0",
+  "iot_class": "cloud_polling"
+}

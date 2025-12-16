@@ -1,0 +1,22 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Rotarex Wave Login",
+        "description": "Enter your Rotarex Wave account credentials.",
+        "data": {
+          "email": "Email",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the Rotarex API. Please check your network connection.",
+      "invalid_auth": "Invalid email or password. Please check your credentials and try again.",
+      "unknown": "An unknown error occurred."
+    },
+    "abort": {
+      "already_configured": "This Rotarex account is already configured."
+    }
+  }
+}
