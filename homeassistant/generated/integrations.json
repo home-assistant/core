@@ -80,7 +80,7 @@
     "aeg": {
       "name": "AEG",
       "integration_type": "virtual",
-      "supported_by": "electrolux_group"
+      "supported_by": "electrolux"
     },
     "aemet": {
       "name": "AEMET OpenData",
@@ -1620,8 +1620,8 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "electrolux_group": {
-      "name": "Electrolux AEG Frigidaire",
+    "electrolux": {
+      "name": "Electrolux",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_push"
@@ -2195,7 +2195,7 @@
     "frigidaire": {
       "name": "Frigidaire",
       "integration_type": "virtual",
-      "supported_by": "electrolux_group"
+      "supported_by": "electrolux"
     },
     "fritzbox": {
       "name": "FRITZ!",
@@ -5133,7 +5133,7 @@
     "plushome": {
       "name": "+Home",
       "integration_type": "virtual",
-      "supported_by": "electrolux_group"
+      "supported_by": "electrolux"
     },
     "pocketcasts": {
       "name": "Pocket Casts",

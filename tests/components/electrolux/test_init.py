@@ -4,8 +4,8 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from homeassistant.components.electrolux_group import ElectroluxData
-from homeassistant.components.electrolux_group.const import CONF_REFRESH_TOKEN, DOMAIN
+from homeassistant.components.electrolux import ElectroluxData
+from homeassistant.components.electrolux.const import CONF_REFRESH_TOKEN, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_API_KEY
 from homeassistant.core import HomeAssistant
@@ -51,10 +51,10 @@ async def test_async_setup_entry_success(
             "electrolux_group_developer_sdk.client.appliance_client.ApplianceClient.start_event_stream"
         ) as mock_appliance_client_start_event_stream,
         patch(
-            "homeassistant.components.electrolux_group.api.ElectroluxApiClient"
+            "homeassistant.components.electrolux.api.ElectroluxApiClient"
         ) as mock_api_client_class,
         patch(
-            "homeassistant.components.electrolux_group.coordinator.ElectroluxDataUpdateCoordinator"
+            "homeassistant.components.electrolux.coordinator.ElectroluxDataUpdateCoordinator"
         ) as mock_coordinator_class,
     ):
         # Setup TokenManager behavior

@@ -29,4 +29,3 @@ class ElectroluxDiscoveryData:
 
     discovered_appliance: ApplianceData
     entry: ElectroluxConfigEntry
-

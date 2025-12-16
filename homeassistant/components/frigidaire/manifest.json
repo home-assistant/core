@@ -1,6 +1,6 @@
 {
-    "domain": "frigidaire",
-    "name": "Frigidaire",
-    "integration_type": "virtual",
-    "supported_by": "electrolux_group"
+  "domain": "frigidaire",
+  "name": "Frigidaire",
+  "integration_type": "virtual",
+  "supported_by": "electrolux"
 }

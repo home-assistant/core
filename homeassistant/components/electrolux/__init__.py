@@ -1,10 +1,9 @@
-"""The Electrolux Group integration."""
+"""The Electrolux integration."""
 
 from asyncio import CancelledError, Task
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
-from typing import cast
 
 from electrolux_group_developer_sdk.auth.token_manager import TokenManager
 from electrolux_group_developer_sdk.client.appliance_client import (
@@ -57,7 +56,7 @@ class ElectroluxDiscoveryData:
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ElectroluxConfigEntry) -> bool:
-    """Set up Electrolux Group integration entry."""
+    """Set up Electrolux integration entry."""
 
     def save_tokens(new_access: str, new_refresh: str, api_key: str):
         hass.config_entries.async_update_entry(
@@ -138,7 +137,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ElectroluxConfigEntry) 
             coordinator.remove_listeners()
 
         # Cancel SSE task
-        data = cast(ElectroluxData, entry.runtime_data)
+        data = entry.runtime_data
         sse_task = data.sse_task
         if sse_task:
             sse_task.cancel()
@@ -177,7 +176,7 @@ async def _check_for_new_devices(
     _LOGGER.info("Checking for new devices")
     device_registry = dr.async_get(hass)
 
-    data = cast(ElectroluxData, entry.runtime_data)
+    data = entry.runtime_data
     coordinators = data.coordinators
     appliances = await client.fetch_appliance_data()
 
@@ -203,7 +202,7 @@ async def _check_for_new_devices(
             persistent_notification.async_create(
                 hass,
                 f"New Electrolux appliance {appliance.appliance.applianceName} added.",
-                title="Electrolux Group",
+                title="Electrolux",
             )
 
     # Detect MISSING appliances
@@ -226,5 +225,5 @@ async def _check_for_new_devices(
             persistent_notification.async_create(
                 hass,
                 f"Electrolux appliance {device_entry.name} removed.",
-                title="Electrolux Group",
+                title="Electrolux",
             )

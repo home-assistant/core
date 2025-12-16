@@ -1,4 +1,4 @@
-"""Sensor entity for Electrolux Group Integration."""
+"""Sensor entity for Electrolux Integration."""
 
 from collections.abc import Callable
 from dataclasses import dataclass
