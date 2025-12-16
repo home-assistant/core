@@ -45,5 +45,28 @@
         }
       }
     }
+  },
+  "entity": {
+    "light": {
+      "led": {
+        "name": "Flashlight"
+      }
+    },
+    "switch": {
+      "energy_saving": {
+        "name": "Sleep mode"
+      }
+    }
+  },
+  "exceptions": {
+    "charging": {
+      "message": "The flashlight cannot be activated while charging."
+    },
+    "low_battery": {
+      "message": "The flashlight cannot be activated due to low battery."
+    },
+    "not_seen_recently": {
+      "message": "The flashlight cannot be activated when the tracker has not moved recently."
+    }
   }
 }

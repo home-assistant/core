@@ -2,10 +2,8 @@
 
 from unittest.mock import AsyncMock
 
-from pynintendoparental.exceptions import (
-    InvalidOAuthConfigurationException,
-    NoDevicesFoundException,
-)
+from pynintendoauth.exceptions import InvalidOAuthConfigurationException
+from pynintendoparental.exceptions import NoDevicesFoundException
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -35,7 +33,7 @@ async def test_invalid_authentication(
     )
     assert len(entries) == 0
     # Ensure the config entry is marked as error
-    assert mock_config_entry.state == ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_no_devices(
@@ -55,4 +53,4 @@ async def test_no_devices(
     )
     assert len(entries) == 0
     # Ensure the config entry is marked as error
-    assert mock_config_entry.state == ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR

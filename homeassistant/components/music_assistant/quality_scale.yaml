@@ -30,9 +30,7 @@ rules:
   integration-owner: done
   log-when-unavailable: todo
   parallel-updates: todo
-  reauthentication-flow:
-    status: exempt
-    comment: Devices don't require authentication
+  reauthentication-flow: done
   test-coverage: todo
 
   # Gold
