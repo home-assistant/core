@@ -2714,8 +2714,8 @@
       "name": "Hikvision",
       "integrations": {
         "hikvision": {
-          "integration_type": "hub",
-          "config_flow": false,
+          "integration_type": "device",
+          "config_flow": true,
           "iot_class": "local_push",
           "name": "Hikvision"
         },
@@ -3136,7 +3136,7 @@
     },
     "ipma": {
       "name": "Instituto Portugu\u00eas do Mar e Atmosfera (IPMA)",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
