@@ -168,11 +168,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # influxdb-client > setuptools
         "influxdb-client": {"setuptools"}
     },
-    "insteon": {
-        # https://github.com/pyinsteon/pyinsteon/issues/430
-        # pyinsteon > pyserial-asyncio
-        "pyinsteon": {"pyserial-asyncio"}
-    },
     "izone": {"python-izone": {"async-timeout"}},
     "keba": {
         # https://github.com/jsbronder/asyncio-dgram/issues/20
