@@ -109,12 +109,12 @@ async def test_gateway_config_entry_not_ready(
     ("side_effect", "entry_state"),
     [
         (ConnectionFailedError, ConfigEntryState.SETUP_RETRY),
-        (InvalidAuthentication, ConfigEntryState.SETUP_RETRY),
+        (InvalidAuthentication, ConfigEntryState.SETUP_ERROR),
         (InvalidSetupError, ConfigEntryState.SETUP_ERROR),
         (InvalidXMLError, ConfigEntryState.SETUP_RETRY),
         (PlugwiseError, ConfigEntryState.SETUP_RETRY),
         (ResponseError, ConfigEntryState.SETUP_RETRY),
-        (UnsupportedDeviceError, ConfigEntryState.SETUP_RETRY),
+        (UnsupportedDeviceError, ConfigEntryState.SETUP_ERROR),
     ],
 )
 async def test_coordinator_connect_exceptions(
