@@ -13,5 +13,5 @@
   "integration_type": "device",
   "iot_class": "local_push",
   "loggers": ["oralb_ble"],
-  "requirements": ["oralb-ble==0.17.6"]
+  "requirements": ["oralb-ble==1.0.2"]
 }

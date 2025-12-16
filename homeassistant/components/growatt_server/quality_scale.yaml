@@ -28,9 +28,7 @@ rules:
     status: todo
     comment: Update server URL dropdown to show regional descriptions (e.g., 'China', 'United States') instead of raw URLs.
   docs-installation-parameters: todo
-  entity-unavailable:
-    status: todo
-    comment: Replace bare Exception catches in __init__.py with specific growattServer exceptions.
+  entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
