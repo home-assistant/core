@@ -34,13 +34,46 @@
   "entity": {
     "sensor": {
       "next_arrival": {
-        "name": "Next arrival"
+        "name": "Next arrival",
+        "state_attributes": {
+          "destination": {
+            "name": "Destination"
+          },
+          "route": {
+            "name": "Route"
+          },
+          "stop_id": {
+            "name": "Stop ID"
+          }
+        }
       },
       "second_arrival": {
-        "name": "Second arrival"
+        "name": "Second arrival",
+        "state_attributes": {
+          "destination": {
+            "name": "Destination"
+          },
+          "route": {
+            "name": "Route"
+          },
+          "stop_id": {
+            "name": "Stop ID"
+          }
+        }
       },
       "third_arrival": {
-        "name": "Third arrival"
+        "name": "Third arrival",
+        "state_attributes": {
+          "destination": {
+            "name": "Destination"
+          },
+          "route": {
+            "name": "Route"
+          },
+          "stop_id": {
+            "name": "Stop ID"
+          }
+        }
       }
     }
   }
