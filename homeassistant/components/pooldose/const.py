@@ -7,7 +7,7 @@ from homeassistant.const import UnitOfTemperature, UnitOfVolume, UnitOfVolumeFlo
 DOMAIN = "pooldose"
 MANUFACTURER = "SEKO"
 
-# Mapping of device units (upper case) to Home Assistant units
+# Forward Mapping: Device/API units (upper case) to Home Assistant units
 UNIT_MAPPING: dict[str, str] = {
     # Temperature units
     "°C": UnitOfTemperature.CELSIUS,
@@ -18,4 +18,14 @@ UNIT_MAPPING: dict[str, str] = {
     # Volume units
     "L": UnitOfVolume.LITERS,
     "M3": UnitOfVolume.CUBIC_METERS,
+}
+
+# Reverse mapping: Home Assistant units to device/API units
+REVERSE_UNIT_MAPPING: dict[str, str] = {
+    # Volume flow rate units
+    UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR: "m3/h",
+    UnitOfVolumeFlowRate.LITERS_PER_SECOND: "L/s",
+    # Volume units
+    UnitOfVolume.LITERS: "L",
+    UnitOfVolume.CUBIC_METERS: "m3",
 }
