@@ -185,7 +185,7 @@ class KnxUiFan(_KnxFan, KnxUiEntity):
     ) -> None:
         """Initialize of KNX fan."""
         knx_conf = ConfigExtractor(config[DOMAIN])
-        # max_step is required, thus can be used to differentiate modes
+        # max_step is required for step mode, thus can be used to differentiate modes
         max_step: int | None = knx_conf.get(CONF_SPEED, FanConf.MAX_STEP)
         super().__init__(
             knx_module=knx_module,
