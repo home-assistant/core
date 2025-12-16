@@ -596,7 +596,7 @@ def _get_color_data_wrapper(
     elif (
         description.fallback_color_data_mode == FallbackColorDataMode.V2
         or color_data_wrapper.dpcode == DPCode.COLOUR_DATA_V2
-        or (brightness_wrapper and brightness_wrapper.type_information.max > 255)
+        or (brightness_wrapper and brightness_wrapper.max_value > 255)
     ):
         color_data_wrapper.h_type = DEFAULT_H_TYPE_V2
         color_data_wrapper.s_type = DEFAULT_S_TYPE_V2
@@ -706,7 +706,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         elif (
             color_supported(color_modes)
             and color_mode_wrapper is not None
-            and WorkMode.WHITE in color_mode_wrapper.type_information.range
+            and WorkMode.WHITE in color_mode_wrapper.options
         ):
             color_modes.add(ColorMode.WHITE)
             self._white_color_mode = ColorMode.WHITE
