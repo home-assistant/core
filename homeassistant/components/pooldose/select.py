@@ -57,30 +57,35 @@ SELECT_DESCRIPTIONS: tuple[PooldoseSelectEntityDescription, ...] = (
         translation_key="ph_type_dosing_method",
         entity_category=EntityCategory.CONFIG,
         options=["off", "proportional", "on_off", "timed"],
+        entity_registry_enabled_default=False,
     ),
     PooldoseSelectEntityDescription(
         key="orp_type_dosing_set",
         translation_key="orp_type_dosing_set",
         entity_category=EntityCategory.CONFIG,
         options=["low", "high"],
+        entity_registry_enabled_default=False,
     ),
     PooldoseSelectEntityDescription(
         key="orp_type_dosing_method",
         translation_key="orp_type_dosing_method",
         entity_category=EntityCategory.CONFIG,
         options=["off", "proportional", "on_off", "timed"],
+        entity_registry_enabled_default=False,
     ),
     PooldoseSelectEntityDescription(
         key="cl_type_dosing_set",
         translation_key="cl_type_dosing_set",
         entity_category=EntityCategory.CONFIG,
         options=["low", "high"],
+        entity_registry_enabled_default=False,
     ),
     PooldoseSelectEntityDescription(
         key="cl_type_dosing_method",
         translation_key="cl_type_dosing_method",
         entity_category=EntityCategory.CONFIG,
         options=["off", "proportional", "on_off", "timed"],
+        entity_registry_enabled_default=False,
     ),
 )
 
