@@ -110,7 +110,7 @@ async def test_gateway_config_entry_not_ready(
     [
         (ConnectionFailedError, ConfigEntryState.SETUP_RETRY),
         (InvalidAuthentication, ConfigEntryState.SETUP_RETRY),
-        (InvalidSetupError, ConfigEntryState.SETUP_RETRY),
+        (InvalidSetupError, ConfigEntryState.SETUP_ERROR),
         (InvalidXMLError, ConfigEntryState.SETUP_RETRY),
         (PlugwiseError, ConfigEntryState.SETUP_RETRY),
         (ResponseError, ConfigEntryState.SETUP_RETRY),
