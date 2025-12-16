@@ -258,13 +258,13 @@ async def test_remove_torrent_service_with_delete_data(
 
 
 @pytest.mark.parametrize(
-    ("filter_mode", "expected_statuses"),
+    ("filter_mode", "expected_statuses", "expected_torrents"),
     [
-        ("all", ["seeding", "downloading", "stopped"]),
-        ("started", ["downloading"]),
-        ("completed", ["seeding"]),
-        ("paused", ["stopped"]),
-        ("active", ["seeding", "downloading"]),
+        ("all", ["seeding", "downloading", "stopped"], [1, 2, 3]),
+        ("started", ["downloading"], [1]),
+        ("completed", ["seeding"], [2]),
+        ("paused", ["stopped"], [3]),
+        ("active", ["seeding", "downloading"], [1, 2]),
     ],
 )
 async def test_get_torrents_service(
@@ -274,6 +274,7 @@ async def test_get_torrents_service(
     mock_torrent,
     filter_mode: str,
     expected_statuses: list[str],
+    expected_torrents: list[int],
 ) -> None:
     """Test get torrents service with various filter modes."""
     client = mock_transmission_client.return_value
@@ -316,3 +317,7 @@ async def test_get_torrents_service(
         assert "name" in torrent_data
         assert "status" in torrent_data
         assert torrent_data["name"] == torrent_name
+        assert torrent_data["id"] in expected_torrents
+        expected_torrents.remove(int(torrent_data["id"]))
+
+    assert len(expected_torrents) == 0
