@@ -49,6 +49,8 @@ async def async_setup_entry(
             coordinator,
             f"Input #{i}",
             setup_input(board_api, i),
+            config_entry.entry_id,
+            config_entry.data["host"],
         )
         for i in range(1, int(input_count) + 1)
     )
@@ -57,13 +59,16 @@ async def async_setup_entry(
 class ProgettihwswBinarySensor(CoordinatorEntity, BinarySensorEntity):
     """Represent a binary sensor."""
 
-    def __init__(self, coordinator, name, sensor: Input) -> None:
+    def __init__(
+        self, coordinator, name, sensor: Input, entry_id: str, host: str
+    ) -> None:
         """Set initializing values."""
         super().__init__(coordinator)
         self._attr_name = name
         self._sensor = sensor
+        self._attr_unique_id = f"{entry_id}_{host}_input_{sensor.id}"
 
     @property
     def is_on(self):
         """Get sensor state."""
-        return self.coordinator.data[self._sensor.id]
+        return self.coordinator.data[self._sensor.id - 1]
