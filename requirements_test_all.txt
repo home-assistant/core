@@ -1785,9 +1785,6 @@ pyiqvia==2022.04.0
 # homeassistant.components.iskra
 pyiskra==0.1.27
 
-# homeassistant.components.iss
-pyiss==1.0.1
-
 # homeassistant.components.isy994
 pyisy==3.4.1
 
@@ -2390,6 +2387,9 @@ simplisafe-python==2024.01.0
 
 # homeassistant.components.sky_remote
 skyboxremote==0.0.6
+
+# homeassistant.components.iss
+skyfield==1.49
 
 # homeassistant.components.slack
 slack_sdk==3.33.4

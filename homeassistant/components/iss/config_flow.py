@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from urllib.parse import urlparse
+
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -12,8 +14,24 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_SHOW_ON_MAP
 from homeassistant.core import callback
+from homeassistant.helpers import selector
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import (
+    CONF_PEOPLE_UPDATE_HOURS,
+    CONF_POSITION_UPDATE_SECONDS,
+    CONF_TLE_SOURCES,
+    DEFAULT_NAME,
+    DEFAULT_PEOPLE_UPDATE_HOURS,
+    DEFAULT_PEOPLE_URL,
+    DEFAULT_POSITION_UPDATE_SECONDS,
+    DEFAULT_TLE_SOURCES,
+    DOMAIN,
+    MIN_PEOPLE_UPDATE_HOURS,
+    MIN_POSITION_UPDATE_SECONDS,
+    TLE_SOURCES,
+)
+
+CONF_PEOPLE_URL = "people_url"
 
 
 class ISSConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -35,7 +53,13 @@ class ISSConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(
                 title=DEFAULT_NAME,
                 data={},
-                options={CONF_SHOW_ON_MAP: user_input.get(CONF_SHOW_ON_MAP, False)},
+                options={
+                    CONF_SHOW_ON_MAP: user_input.get(CONF_SHOW_ON_MAP, False),
+                    CONF_PEOPLE_URL: user_input.get(
+                        CONF_PEOPLE_URL, DEFAULT_PEOPLE_URL
+                    ),
+                    CONF_TLE_SOURCES: DEFAULT_TLE_SOURCES,
+                },
             )
 
         return self.async_show_form(step_id="user")
@@ -46,17 +70,85 @@ class OptionsFlowHandler(OptionsFlow):
 
     async def async_step_init(self, user_input=None) -> ConfigFlowResult:
         """Manage the options."""
-        if user_input is not None:
-            return self.async_create_entry(data=self.config_entry.options | user_input)
+        errors: dict[str, str] = {}
 
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(
-                        CONF_SHOW_ON_MAP,
-                        default=self.config_entry.options.get(CONF_SHOW_ON_MAP, False),
-                    ): bool,
-                }
-            ),
+        data_schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_SHOW_ON_MAP,
+                    default=self.config_entry.options.get(CONF_SHOW_ON_MAP, False),
+                ): bool,
+                vol.Optional(
+                    CONF_PEOPLE_URL,
+                    default=self.config_entry.options.get(
+                        CONF_PEOPLE_URL, DEFAULT_PEOPLE_URL
+                    ),
+                    description="The URL used to fetch the current number of people in space",
+                ): str,
+                vol.Optional(
+                    CONF_PEOPLE_UPDATE_HOURS,
+                    default=self.config_entry.options.get(
+                        CONF_PEOPLE_UPDATE_HOURS, DEFAULT_PEOPLE_UPDATE_HOURS
+                    ),
+                    description={"suffix": "hours"},
+                ): int,
+                vol.Optional(
+                    CONF_POSITION_UPDATE_SECONDS,
+                    default=self.config_entry.options.get(
+                        CONF_POSITION_UPDATE_SECONDS, DEFAULT_POSITION_UPDATE_SECONDS
+                    ),
+                    description={"suffix": "seconds"},
+                ): int,
+                vol.Optional(
+                    CONF_TLE_SOURCES,
+                    default=self.config_entry.options.get(
+                        CONF_TLE_SOURCES, DEFAULT_TLE_SOURCES
+                    ),
+                ): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=list(TLE_SOURCES.keys()),
+                        multiple=True,
+                        translation_key="tle_sources",
+                    )
+                ),
+            }
         )
+
+        if user_input is not None:
+            # Validate TLE sources
+            tle_sources = user_input.get(CONF_TLE_SOURCES, [])
+            if not tle_sources:
+                errors[CONF_TLE_SOURCES] = "no_tle_sources"
+            elif not all(source in TLE_SOURCES for source in tle_sources):
+                errors[CONF_TLE_SOURCES] = "invalid_tle_source"
+
+            # Validate people URL
+            try:
+                parsed_url = urlparse(user_input[CONF_PEOPLE_URL])
+                if not parsed_url.scheme or not parsed_url.netloc:
+                    errors[CONF_PEOPLE_URL] = "invalid_url"
+            except ValueError:
+                errors[CONF_PEOPLE_URL] = "invalid_url"
+
+            # Validate people update hours
+            if user_input[CONF_PEOPLE_UPDATE_HOURS] < MIN_PEOPLE_UPDATE_HOURS:
+                errors[CONF_PEOPLE_UPDATE_HOURS] = "min_people_update_hours"
+
+            # Validate position update seconds
+            if user_input[CONF_POSITION_UPDATE_SECONDS] < MIN_POSITION_UPDATE_SECONDS:
+                errors[CONF_POSITION_UPDATE_SECONDS] = "min_position_update_seconds"
+
+            # If no errors, create entry
+            if not errors:
+                return self.async_create_entry(
+                    data=self.config_entry.options | user_input
+                )
+
+            # Show form again with errors
+            return self.async_show_form(
+                step_id="init",
+                data_schema=data_schema,
+                errors=errors,
+            )
+
+        return self.async_show_form(step_id="init", data_schema=data_schema)
