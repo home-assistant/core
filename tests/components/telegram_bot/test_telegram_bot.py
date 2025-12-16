@@ -5,7 +5,7 @@ from datetime import datetime
 from http import HTTPStatus
 import io
 import os
-import tempfile
+from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, mock_open, patch
 
@@ -1794,6 +1794,7 @@ async def test_download_file(
 
 
 async def test_download_file_directory_created_successfully(
+    tmp_path: Path,
     hass: HomeAssistant,
     mock_broadcast_config_entry: MockConfigEntry,
     mock_external_calls: None,
@@ -1803,41 +1804,36 @@ async def test_download_file_directory_created_successfully(
     await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    try:
-        temp_dir_obj = await hass.async_add_executor_job(tempfile.TemporaryDirectory)
-        allowlist_dir = temp_dir_obj.name
-        await hass.async_add_executor_job(os.makedirs, allowlist_dir, 0o777, True)
-        hass.config.allowlist_external_dirs.add(allowlist_dir)
-        download_path = os.path.join(allowlist_dir, "download_dir")
+    allowlist_dir = tmp_path.as_posix()
+    # await hass.async_add_executor_job(os.makedirs, allowlist_dir, 0o777, True)
+    hass.config.allowlist_external_dirs.add(allowlist_dir)
+    download_path = os.path.join(allowlist_dir, "download_dir")
 
-        schema_request = {
-            ATTR_FILE_ID: "file-id-for-new-dir",
-            ATTR_DIRECTORY_PATH: download_path,
-            ATTR_FILE_NAME: "dont_care.jpg",
-        }
+    schema_request = {
+        ATTR_FILE_ID: "file-id-for-new-dir",
+        ATTR_DIRECTORY_PATH: download_path,
+        ATTR_FILE_NAME: "dont_care.jpg",
+    }
 
-        telegram_file = File(
-            file_id=schema_request[ATTR_FILE_ID],
-            file_unique_id="file_unique_id",
-            file_path=f"file/path/{schema_request[ATTR_FILE_NAME]}",
-        )
-        (
-            get_file_mock,
-            download_as_bytearray_mock,
-            write_called,
-        ) = await _run_download_file_service_with_mocks(
-            hass, schema_request, telegram_file, "This is the file content"
-        )
+    telegram_file = File(
+        file_id=schema_request[ATTR_FILE_ID],
+        file_unique_id="file_unique_id",
+        file_path=f"file/path/{schema_request[ATTR_FILE_NAME]}",
+    )
+    (
+        get_file_mock,
+        download_as_bytearray_mock,
+        write_called,
+    ) = await _run_download_file_service_with_mocks(
+        hass, schema_request, telegram_file, "This is the file content"
+    )
 
-        get_file_mock.assert_called_once()
-        download_as_bytearray_mock.assert_called_once()
-        assert "self" in write_called
-        assert str(write_called["self"]) == os.path.join(
-            download_path, schema_request[ATTR_FILE_NAME]
-        )
-    finally:
-        if allowlist_dir is not None:
-            await hass.async_add_executor_job(temp_dir_obj.cleanup)
+    get_file_mock.assert_called_once()
+    download_as_bytearray_mock.assert_called_once()
+    assert "self" in write_called
+    assert str(write_called["self"]) == os.path.join(
+        download_path, schema_request[ATTR_FILE_NAME]
+    )
 
 
 async def test_download_file_when_bot_failed_to_get_file(
