@@ -89,7 +89,7 @@ class ActronAirSwitch(CoordinatorEntity[ActronAirSystemCoordinator], SwitchEntit
         """Initialize the switch."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.serial_number}-{description.key}"
+        self._attr_unique_id = f"{coordinator.serial_number}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.serial_number)},
             manufacturer="Actron Air",

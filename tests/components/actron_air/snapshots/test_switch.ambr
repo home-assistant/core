@@ -22,7 +22,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Away mode',
     'platform': 'actron_air',
@@ -30,14 +30,13 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'away_mode',
-    'unique_id': '123456-away_mode',
+    'unique_id': '123456_away_mode',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_switch_entities[switch.test_system_away_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
       'friendly_name': 'Test System Away mode',
     }),
     'context': <ANY>,
@@ -71,7 +70,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Continuous fan',
     'platform': 'actron_air',
@@ -79,14 +78,13 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'continuous_fan',
-    'unique_id': '123456-continuous_fan',
+    'unique_id': '123456_continuous_fan',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_switch_entities[switch.test_system_continuous_fan-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
       'friendly_name': 'Test System Continuous fan',
     }),
     'context': <ANY>,
@@ -120,7 +118,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Quiet mode',
     'platform': 'actron_air',
@@ -128,14 +126,13 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'quiet_mode',
-    'unique_id': '123456-quiet_mode',
+    'unique_id': '123456_quiet_mode',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_switch_entities[switch.test_system_quiet_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
       'friendly_name': 'Test System Quiet mode',
     }),
     'context': <ANY>,
@@ -169,7 +166,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Turbo mode',
     'platform': 'actron_air',
@@ -177,14 +174,13 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'turbo_mode',
-    'unique_id': '123456-turbo_mode',
+    'unique_id': '123456_turbo_mode',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_switch_entities[switch.test_system_turbo_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
       'friendly_name': 'Test System Turbo mode',
     }),
     'context': <ANY>,
