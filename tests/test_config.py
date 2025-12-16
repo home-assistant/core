@@ -465,9 +465,21 @@ def test_load_yaml_config_preserves_key_order() -> None:
     ]
 
 
+def test_get_default_config_dir() -> None:
+    """Test default config dir."""
+    with patch.dict(os.environ, {}, clear=True):
+        assert config_util.get_default_config_dir().endswith(
+            config_util.CONFIG_DIR_NAME
+        )
+
+    with patch.dict(os.environ, {"SUPERVISOR": "1"}, clear=True):
+        assert config_util.get_default_config_dir().endswith(HOMEASSISTANT_DOMAIN)
+
+
 async def test_create_default_config_returns_none_if_write_error(
     hass: HomeAssistant,
 ) -> None:
+
     """Test the writing of a default configuration.
 
     Non existing folder returns None.
