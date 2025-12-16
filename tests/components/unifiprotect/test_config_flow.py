@@ -172,9 +172,9 @@ async def test_form(hass: HomeAssistant, bootstrap: Bootstrap, nvr: NVR) -> None
 
 
 async def test_form_version_too_old(
-    hass: HomeAssistant, bootstrap: Bootstrap, old_nvr: NVR
+    hass: HomeAssistant, bootstrap: Bootstrap, old_nvr: NVR, nvr: NVR, mock_setup: None
 ) -> None:
-    """Test we handle the version being too old."""
+    """Test we handle the version being too old and can recover."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -203,9 +203,35 @@ async def test_form_version_too_old(
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "protect_version"}
 
+    # Now test recovery with valid version
+    bootstrap.nvr = nvr
+    with (
+        patch(
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_bootstrap",
+            return_value=bootstrap,
+        ),
+        patch(
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_meta_info",
+            return_value=None,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                "host": DEFAULT_HOST,
+                "username": DEFAULT_USERNAME,
+                "password": DEFAULT_PASSWORD,
+                "api_key": DEFAULT_API_KEY,
+            },
+        )
 
-async def test_form_invalid_auth_password(hass: HomeAssistant) -> None:
-    """Test we handle invalid auth password."""
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_form_invalid_auth_password(
+    hass: HomeAssistant, bootstrap: Bootstrap, nvr: NVR, mock_setup: None
+) -> None:
+    """Test we handle invalid auth password and can recover."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -233,11 +259,35 @@ async def test_form_invalid_auth_password(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"password": "invalid_auth"}
 
+    # Now test recovery with valid credentials
+    bootstrap.nvr = nvr
+    with (
+        patch(
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_bootstrap",
+            return_value=bootstrap,
+        ),
+        patch(
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_meta_info",
+            return_value=None,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                "host": DEFAULT_HOST,
+                "username": DEFAULT_USERNAME,
+                "password": "correct-password",
+                "api_key": DEFAULT_API_KEY,
+            },
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_invalid_auth_api_key(
-    hass: HomeAssistant, bootstrap: Bootstrap
+    hass: HomeAssistant, bootstrap: Bootstrap, nvr: NVR, mock_setup: None
 ) -> None:
-    """Test we handle invalid auth api key."""
+    """Test we handle invalid auth api key and can recover."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -265,11 +315,39 @@ async def test_form_invalid_auth_api_key(
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"api_key": "invalid_auth"}
 
+    # Now test recovery with valid API key
+    bootstrap.nvr = nvr
+    with (
+        patch(
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_bootstrap",
+            return_value=bootstrap,
+        ),
+        patch(
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_meta_info",
+            return_value=None,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                "host": DEFAULT_HOST,
+                "username": DEFAULT_USERNAME,
+                "password": DEFAULT_PASSWORD,
+                "api_key": "correct-api-key",
+            },
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_cloud_user(
-    hass: HomeAssistant, bootstrap: Bootstrap, cloud_account: CloudAccount
+    hass: HomeAssistant,
+    bootstrap: Bootstrap,
+    cloud_account: CloudAccount,
+    nvr: NVR,
+    mock_setup: None,
 ) -> None:
-    """Test we handle cloud users."""
+    """Test we handle cloud users and can recover with local user."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -300,9 +378,37 @@ async def test_form_cloud_user(
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cloud_user"}
 
+    # Now test recovery with local user
+    user.cloud_account = None
+    bootstrap.users[bootstrap.auth_user_id] = user
+    bootstrap.nvr = nvr
+    with (
+        patch(
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_bootstrap",
+            return_value=bootstrap,
+        ),
+        patch(
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_meta_info",
+            return_value=None,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                "host": DEFAULT_HOST,
+                "username": "local-username",
+                "password": DEFAULT_PASSWORD,
+                "api_key": DEFAULT_API_KEY,
+            },
+        )
 
-async def test_form_cannot_connect(hass: HomeAssistant) -> None:
-    """Test we handle cannot connect error."""
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_form_cannot_connect(
+    hass: HomeAssistant, bootstrap: Bootstrap, nvr: NVR, mock_setup: None
+) -> None:
+    """Test we handle cannot connect error and can recover."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -329,6 +435,30 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    # Now test recovery when connection works
+    bootstrap.nvr = nvr
+    with (
+        patch(
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_bootstrap",
+            return_value=bootstrap,
+        ),
+        patch(
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_meta_info",
+            return_value=None,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                "host": DEFAULT_HOST,
+                "username": DEFAULT_USERNAME,
+                "password": DEFAULT_PASSWORD,
+                "api_key": DEFAULT_API_KEY,
+            },
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_reauth_auth(
@@ -392,7 +522,7 @@ async def test_form_reauth_auth(
             return_value=None,
         ),
     ):
-        result3 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {
                 "username": "test-username",
@@ -400,10 +530,9 @@ async def test_form_reauth_auth(
                 "api_key": "test-api-key",
             },
         )
-        await hass.async_block_till_done()
 
-    assert result3["type"] is FlowResultType.ABORT
-    assert result3["reason"] == "reauth_successful"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
     assert len(mock_setup.mock_calls) == 1
 
     # Verify that non-sensitive data was preserved when only credentials were updated
@@ -415,24 +544,13 @@ async def test_form_reauth_auth(
     assert ufp_reauth_entry.data[CONF_API_KEY] == "test-api-key"
 
 
-async def test_form_options(hass: HomeAssistant, ufp_client: ProtectApiClient) -> None:
+async def test_form_options(
+    hass: HomeAssistant,
+    ufp_config_entry: MockConfigEntry,
+    ufp_client: ProtectApiClient,
+) -> None:
     """Test we handle options flows."""
-    mock_config = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            "host": "1.1.1.1",
-            "username": "test-username",
-            "password": "test-password",
-            "api_key": "test-api-key",
-            "id": "UnifiProtect",
-            "port": 443,
-            "verify_ssl": False,
-            "max_media": 1000,
-        },
-        version=2,
-        unique_id=_async_unifi_mac_from_hass(MAC_ADDR),
-    )
-    mock_config.add_to_hass(hass)
+    ufp_config_entry.add_to_hass(hass)
 
     with (
         _patch_discovery(),
@@ -443,11 +561,11 @@ async def test_form_options(hass: HomeAssistant, ufp_client: ProtectApiClient) -
     ):
         mock_api.return_value = ufp_client
 
-        await hass.config_entries.async_setup(mock_config.entry_id)
+        await hass.config_entries.async_setup(ufp_config_entry.entry_id)
         await hass.async_block_till_done()
-        assert mock_config.state is ConfigEntryState.LOADED
+        assert ufp_config_entry.state is ConfigEntryState.LOADED
 
-        result = await hass.config_entries.options.async_init(mock_config.entry_id)
+        result = await hass.config_entries.options.async_init(ufp_config_entry.entry_id)
         assert result["type"] is FlowResultType.FORM
         assert not result["errors"]
         assert result["step_id"] == "init"
@@ -469,7 +587,7 @@ async def test_form_options(hass: HomeAssistant, ufp_client: ProtectApiClient) -
             "max_media": 1000,
         }
         await hass.async_block_till_done()
-        await hass.config_entries.async_unload(mock_config.entry_id)
+        await hass.config_entries.async_unload(ufp_config_entry.entry_id)
 
 
 @pytest.mark.parametrize(
@@ -570,13 +688,13 @@ async def test_discovered_by_unifi_discovery_direct_connect_updated(
     mock_config = MockConfigEntry(
         domain=DOMAIN,
         data={
-            "host": "y.ui.direct",
-            "username": "test-username",
-            "password": "test-password",
-            "api_key": "test-api-key",
+            CONF_HOST: "y.ui.direct",
+            CONF_USERNAME: DEFAULT_USERNAME,
+            CONF_PASSWORD: DEFAULT_PASSWORD,
+            CONF_API_KEY: DEFAULT_API_KEY,
             "id": "UnifiProtect",
-            "port": 443,
-            "verify_ssl": True,
+            CONF_PORT: DEFAULT_PORT,
+            CONF_VERIFY_SSL: True,
         },
         version=2,
         unique_id=DEVICE_MAC_ADDRESS.replace(":", "").upper(),
@@ -1088,8 +1206,10 @@ async def test_discovery_can_be_ignored(hass: HomeAssistant) -> None:
 
 async def test_discovery_with_both_ignored_and_normal_entry(
     hass: HomeAssistant,
+    bootstrap: Bootstrap,
+    nvr: NVR,
 ) -> None:
-    """Test discovery skips ignored entries with different MAC."""
+    """Test discovery skips ignored entries with different MAC and completes."""
     # Create ignored entry with different MAC - should be skipped (line 182)
     # Use a completely different MAC that won't match discovery MAC (AABBCCDDEEFF)
     other_mac = "11:22:33:44:55:66"
@@ -1125,6 +1245,38 @@ async def test_discovery_with_both_ignored_and_normal_entry(
     # Flow continues to discovery step since no match found
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
+
+    # Complete the flow
+    bootstrap.nvr = nvr
+    with (
+        patch(
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_bootstrap",
+            return_value=bootstrap,
+        ),
+        patch(
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_meta_info",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.unifiprotect.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.unifiprotect.async_setup",
+            return_value=True,
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": DEFAULT_USERNAME,
+                "password": DEFAULT_PASSWORD,
+                "api_key": DEFAULT_API_KEY,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_discovery_confirm_fallback_to_ip(
