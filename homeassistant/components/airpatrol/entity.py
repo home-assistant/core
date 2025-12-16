@@ -50,5 +50,5 @@ class AirPatrolEntity(CoordinatorEntity[AirPatrolDataUpdateCoordinator]):
             super().available
             and self._unit_id in self.coordinator.data
             and "climate" in self.device_data
-            and bool(self.climate_data)
+            and self.climate_data is not None
         )
