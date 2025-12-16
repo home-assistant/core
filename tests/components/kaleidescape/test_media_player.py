@@ -7,13 +7,6 @@ from kaleidescape.device import Movie
 import pytest
 
 from homeassistant.components.kaleidescape import media_player
-from homeassistant.components.kaleidescape.const import (
-    DOMAIN,
-    SERVICE_ATTR_VOLUME_LEVEL,
-    SERVICE_ATTR_VOLUME_MUTED,
-    SERVICE_UPDATE_VOLUME_LEVEL,
-    SERVICE_UPDATE_VOLUME_MUTED,
-)
 from homeassistant.components.kaleidescape.media_player import (
     ATTR_VOLUME_CAPABILITIES,
     EVENT_DATA_VOLUME_LEVEL,
@@ -23,7 +16,11 @@ from homeassistant.components.kaleidescape.media_player import (
     EVENT_TYPE_VOLUME_SET,
     EVENT_TYPE_VOLUME_UP,
 )
-from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
+from homeassistant.components.media_player import (
+    ATTR_MEDIA_VOLUME_LEVEL,
+    ATTR_MEDIA_VOLUME_MUTED,
+    DOMAIN as MEDIA_PLAYER_DOMAIN,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_COMMAND,
@@ -35,6 +32,8 @@ from homeassistant.const import (
     SERVICE_MEDIA_STOP,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    SERVICE_VOLUME_MUTE,
+    SERVICE_VOLUME_SET,
     STATE_IDLE,
     STATE_OFF,
     STATE_PAUSED,
@@ -342,11 +341,11 @@ async def test_async_update_volume_level(
 
     # Test service call sets capabilities and sends volume level
     await hass.services.async_call(
-        DOMAIN,
-        SERVICE_UPDATE_VOLUME_LEVEL,
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_VOLUME_SET,
         {
             ATTR_ENTITY_ID: ENTITY_ID,
-            SERVICE_ATTR_VOLUME_LEVEL: 0.42,
+            ATTR_MEDIA_VOLUME_LEVEL: 0.42,
         },
         blocking=True,
     )
@@ -359,11 +358,11 @@ async def test_async_update_volume_level(
     # Test 2nd service call with runs without updating capabilities again
     mock_device.set_volume_capabilities.reset_mock()
     await hass.services.async_call(
-        DOMAIN,
-        SERVICE_UPDATE_VOLUME_LEVEL,
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_VOLUME_SET,
         {
             ATTR_ENTITY_ID: ENTITY_ID,
-            SERVICE_ATTR_VOLUME_LEVEL: 0.43,
+            ATTR_MEDIA_VOLUME_LEVEL: 0.43,
         },
         blocking=True,
     )
@@ -393,11 +392,11 @@ async def test_async_update_volume_muted(
 
     # Test service call sets capabilities and sends mute state
     await hass.services.async_call(
-        DOMAIN,
-        SERVICE_UPDATE_VOLUME_MUTED,
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_VOLUME_MUTE,
         {
             ATTR_ENTITY_ID: ENTITY_ID,
-            SERVICE_ATTR_VOLUME_MUTED: True,
+            ATTR_MEDIA_VOLUME_MUTED: True,
         },
         blocking=True,
     )
@@ -411,11 +410,11 @@ async def test_async_update_volume_muted(
     # Test 2nd service call runs without updating capabilities again
     mock_device.set_volume_capabilities.reset_mock()
     await hass.services.async_call(
-        DOMAIN,
-        SERVICE_UPDATE_VOLUME_MUTED,
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_VOLUME_MUTE,
         {
             ATTR_ENTITY_ID: ENTITY_ID,
-            SERVICE_ATTR_VOLUME_MUTED: False,
+            ATTR_MEDIA_VOLUME_MUTED: False,
         },
         blocking=True,
     )

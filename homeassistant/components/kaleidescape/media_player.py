@@ -8,7 +8,6 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from kaleidescape import const as kaleidescape_const
-import voluptuous as vol
 
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
@@ -17,7 +16,6 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import CONF_COMMAND, CONF_PARAMS
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
@@ -29,10 +27,6 @@ from .const import (
     EVENT_TYPE_VOLUME_QUERY,
     EVENT_TYPE_VOLUME_SET,
     EVENT_TYPE_VOLUME_UP,
-    SERVICE_ATTR_VOLUME_LEVEL,
-    SERVICE_ATTR_VOLUME_MUTED,
-    SERVICE_UPDATE_VOLUME_LEVEL,
-    SERVICE_UPDATE_VOLUME_MUTED,
 )
 from .entity import KaleidescapeEntity
 
@@ -79,25 +73,6 @@ async def async_setup_entry(
     """Set up the platform from a config entry."""
     async_add_entities([KaleidescapeMediaPlayer(entry.runtime_data)])
 
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_UPDATE_VOLUME_LEVEL,
-        {
-            vol.Required(SERVICE_ATTR_VOLUME_LEVEL): vol.All(
-                vol.Coerce(float),
-                vol.Range(min=0.0, max=1.0),
-            )
-        },
-        "async_update_volume_level",
-    )
-
-    platform.async_register_entity_service(
-        SERVICE_UPDATE_VOLUME_MUTED,
-        {vol.Required(SERVICE_ATTR_VOLUME_MUTED): cv.boolean},
-        "async_update_volume_muted",
-    )
-
 
 class KaleidescapeMediaPlayer(KaleidescapeEntity, MediaPlayerEntity):
     """Representation of a Kaleidescape device."""
@@ -110,6 +85,8 @@ class KaleidescapeMediaPlayer(KaleidescapeEntity, MediaPlayerEntity):
         | MediaPlayerEntityFeature.STOP
         | MediaPlayerEntityFeature.NEXT_TRACK
         | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.VOLUME_MUTE
     )
     _attr_name = None
 
@@ -218,9 +195,9 @@ class KaleidescapeMediaPlayer(KaleidescapeEntity, MediaPlayerEntity):
 
         self._debounce_set_volume = self.hass.loop.call_later(DEBOUNCE_TIME, _fire)
 
-    async def async_update_volume_level(self, volume_level: float) -> None:
+    async def async_set_volume_level(self, volume: float) -> None:
         """Service call handler to send volume level back to Kaleidescape app."""
-        scaled_level = int(max(0, min(100, round(volume_level, 3) * 100)))
+        scaled_level = int(max(0, min(100, round(volume, 3) * 100)))
 
         await self._async_add_volume_capabilities(
             kaleidescape_const.VOLUME_CAPABILITIES_SET_VOLUME
@@ -231,16 +208,16 @@ class KaleidescapeMediaPlayer(KaleidescapeEntity, MediaPlayerEntity):
 
         await self._device.set_volume_level(scaled_level)
 
-    async def async_update_volume_muted(self, is_volume_muted: bool) -> None:
+    async def async_mute_volume(self, mute: bool) -> None:
         """Service call handler to send mute state back to Kaleidescape app."""
         await self._async_add_volume_capabilities(
             kaleidescape_const.VOLUME_CAPABILITIES_MUTE_CONTROL
             | kaleidescape_const.VOLUME_CAPABILITIES_MUTE_FEEDBACK
         )
 
-        _LOGGER.debug("Sending volume_muted=%s to device", is_volume_muted)
+        _LOGGER.debug("Sending volume_muted=%s to device", mute)
 
-        await self._device.set_volume_muted(is_volume_muted)
+        await self._device.set_volume_muted(mute)
 
     async def _async_add_volume_capabilities(
         self, value: int, force: bool = False
