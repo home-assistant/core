@@ -1079,13 +1079,9 @@ class TelegramNotificationService:
             file_name = os.path.basename(file.file_path)
 
         custom_path = os.path.join(directory_path, file_name)
-        if not await self.hass.async_add_executor_job(os.path.exists, directory_path):
-            _LOGGER.debug("directory %s does not exist, creating it", directory_path)
-
-            def mkdir() -> None:
-                os.makedirs(directory_path, exist_ok=True)
-
-            await self.hass.async_add_executor_job(mkdir)
+        await self.hass.async_add_executor_job(
+            self._prepare_download_directory, directory_path
+        )
         _LOGGER.debug("Download file %s to %s", file_id, custom_path)
         try:
             file_content = await file.download_as_bytearray()
@@ -1099,6 +1095,13 @@ class TelegramNotificationService:
                 translation_placeholders={"error": str(exc)},
             ) from exc
         return {ATTR_FILE_PATH: custom_path}
+
+    @staticmethod
+    def _prepare_download_directory(directory_path: str) -> None:
+        """Create download directory if it does not exist."""
+        if not os.path.exists(directory_path):
+            _LOGGER.debug("directory %s does not exist, creating it", directory_path)
+            os.makedirs(directory_path, exist_ok=True)
 
 
 def initialize_bot(hass: HomeAssistant, p_config: MappingProxyType[str, Any]) -> Bot:
