@@ -1,5 +1,7 @@
 """Test ESPHome infrared proxy remotes."""
 
+from unittest.mock import patch
+
 from aioesphomeapi import (
     APIClient,
     InfraredProxyCapability,
@@ -11,7 +13,7 @@ import pytest
 from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN, RemoteEntityFeature
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 
 async def test_infrared_proxy_transmitter_only(
@@ -171,12 +173,12 @@ async def test_infrared_proxy_receive_event(
     assert "entry_id" in event_data
 
 
-async def test_infrared_proxy_send_command_not_implemented(
+async def test_infrared_proxy_send_command_protocol(
     hass: HomeAssistant,
     mock_client: APIClient,
     mock_esphome_device,
 ) -> None:
-    """Test that send_command raises appropriate error."""
+    """Test sending protocol-based commands."""
     entity_info = [
         InfraredProxyInfo(
             object_id="myremote",
@@ -195,15 +197,199 @@ async def test_infrared_proxy_send_command_not_implemented(
     )
     await hass.async_block_till_done()
 
-    # Test send_command raises error
+    # Test protocol-based command
+    with patch.object(
+        mock_client, "infrared_proxy_transmit_protocol"
+    ) as mock_transmit_protocol:
+        await hass.services.async_call(
+            REMOTE_DOMAIN,
+            "send_command",
+            {
+                "entity_id": "remote.test_my_remote",
+                "command": ['{"protocol": "NEC", "address": 4, "command": 8}'],
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+        mock_transmit_protocol.assert_called_once_with(
+            1, '{"protocol": "NEC", "address": 4, "command": 8}'
+        )
+
+
+async def test_infrared_proxy_send_command_pulse_width(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device,
+) -> None:
+    """Test sending pulse-width based commands."""
+    entity_info = [
+        InfraredProxyInfo(
+            object_id="myremote",
+            key=1,
+            name="my remote",
+            capabilities=InfraredProxyCapability.TRANSMITTER,
+        )
+    ]
+    states = []
+    user_service = []
+    await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+    )
+    await hass.async_block_till_done()
+
+    # Test pulse-width command
+    with patch.object(mock_client, "infrared_proxy_transmit") as mock_transmit:
+        await hass.services.async_call(
+            REMOTE_DOMAIN,
+            "send_command",
+            {
+                "entity_id": "remote.test_my_remote",
+                "command": [
+                    '{"timing": {"frequency": 38000, "length_in_bits": 32}, "data": [1, 2, 3, 4]}'
+                ],
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+        assert mock_transmit.call_count == 1
+        call_args = mock_transmit.call_args
+        assert call_args[0][0] == 1  # key
+        assert call_args[0][2] == b"\x01\x02\x03\x04"  # decoded data
+
+
+async def test_infrared_proxy_send_command_invalid_json(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device,
+) -> None:
+    """Test sending invalid JSON command."""
+    entity_info = [
+        InfraredProxyInfo(
+            object_id="myremote",
+            key=1,
+            name="my remote",
+            capabilities=InfraredProxyCapability.TRANSMITTER,
+        )
+    ]
+    states = []
+    user_service = []
+    await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+    )
+    await hass.async_block_till_done()
+
+    # Test invalid JSON
     with pytest.raises(
-        HomeAssistantError,
-        match="Direct command sending not yet implemented",
+        ServiceValidationError,
+        match="Command must be valid JSON",
     ):
         await hass.services.async_call(
             REMOTE_DOMAIN,
             "send_command",
-            {"entity_id": "remote.test_my_remote", "command": ["test"]},
+            {"entity_id": "remote.test_my_remote", "command": ["not valid json"]},
+            blocking=True,
+        )
+
+
+async def test_infrared_proxy_send_command_invalid_data_array(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device,
+) -> None:
+    """Test sending command with invalid data array."""
+    entity_info = [
+        InfraredProxyInfo(
+            object_id="myremote",
+            key=1,
+            name="my remote",
+            capabilities=InfraredProxyCapability.TRANSMITTER,
+        )
+    ]
+    states = []
+    user_service = []
+    await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+    )
+    await hass.async_block_till_done()
+
+    # Test invalid data type (not an array)
+    with pytest.raises(
+        ServiceValidationError,
+        match="Data must be an array of integers",
+    ):
+        await hass.services.async_call(
+            REMOTE_DOMAIN,
+            "send_command",
+            {
+                "entity_id": "remote.test_my_remote",
+                "command": ['{"timing": {"frequency": 38000}, "data": "not_an_array"}'],
+            },
+            blocking=True,
+        )
+
+    # Test invalid array values (out of range)
+    with pytest.raises(
+        ServiceValidationError,
+        match="Invalid data array",
+    ):
+        await hass.services.async_call(
+            REMOTE_DOMAIN,
+            "send_command",
+            {
+                "entity_id": "remote.test_my_remote",
+                "command": ['{"timing": {"frequency": 38000}, "data": [1, 2, 300, 4]}'],
+            },
+            blocking=True,
+        )
+
+
+async def test_infrared_proxy_send_command_no_transmitter(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device,
+) -> None:
+    """Test sending command to receiver-only device."""
+    entity_info = [
+        InfraredProxyInfo(
+            object_id="myremote",
+            key=1,
+            name="my remote",
+            capabilities=InfraredProxyCapability.RECEIVER,  # No transmitter
+        )
+    ]
+    states = []
+    user_service = []
+    await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+    )
+    await hass.async_block_till_done()
+
+    # Test send_command raises error
+    with pytest.raises(
+        HomeAssistantError,
+        match="does not support infrared transmission",
+    ):
+        await hass.services.async_call(
+            REMOTE_DOMAIN,
+            "send_command",
+            {
+                "entity_id": "remote.test_my_remote",
+                "command": ['{"protocol": "NEC", "address": 4, "command": 8}'],
+            },
             blocking=True,
         )
 

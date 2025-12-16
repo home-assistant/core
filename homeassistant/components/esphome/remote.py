@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from functools import partial
+import json
 import logging
 from typing import Any
 
@@ -12,12 +13,14 @@ from aioesphomeapi import (
     EntityState,
     InfraredProxyCapability,
     InfraredProxyInfo,
+    InfraredProxyTimingParams,
 )
 
 from homeassistant.components.remote import RemoteEntity, RemoteEntityFeature
 from homeassistant.core import callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
+from .const import DOMAIN
 from .entity import EsphomeEntity, platform_async_setup_entry
 
 _LOGGER = logging.getLogger(__name__)
@@ -67,13 +70,89 @@ class EsphomeInfraredProxy(EsphomeEntity[InfraredProxyInfo, EntityState], Remote
         _LOGGER.debug("Turn off called for %s (no-op)", self.name)
 
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
-        """Send commands to a device."""
-        # This method would need to parse command data and timing parameters
-        # For now, we'll raise an error as this requires more complex implementation
-        raise HomeAssistantError(
-            "Direct command sending not yet implemented for ESPHome infrared proxy. "
-            "Use the infrared_proxy_transmit service instead."
-        )
+        """Send commands to a device.
+
+        Commands should be JSON strings containing either:
+        1. Protocol-based format: {"protocol": "NEC", "address": 0x04, "command": 0x08}
+        2. Pulse-width format: {
+            "timing": {
+                "frequency": 38000,
+                "length_in_bits": 32,
+                "header_high_us": 9000,
+                "header_low_us": 4500,
+                ...
+            },
+            "data": [0x01, 0x02, 0x03, 0x04]
+        }
+        """
+        self._check_capabilities()
+
+        for cmd in command:
+            try:
+                cmd_data = json.loads(cmd)
+            except json.JSONDecodeError as err:
+                raise ServiceValidationError(
+                    f"Command must be valid JSON: {err}"
+                ) from err
+
+            # Check if this is a protocol-based command
+            if "protocol" in cmd_data:
+                self._client.infrared_proxy_transmit_protocol(
+                    self._static_info.key,
+                    cmd,  # Pass the original JSON string
+                )
+            # Check if this is a pulse-width command
+            elif "timing" in cmd_data and "data" in cmd_data:
+                timing_data = cmd_data["timing"]
+                data_array = cmd_data["data"]
+
+                # Convert array of integers to bytes
+                if not isinstance(data_array, list):
+                    raise ServiceValidationError(
+                        "Data must be an array of integers (0-255)"
+                    )
+
+                try:
+                    data_bytes = bytes(data_array)
+                except (ValueError, TypeError) as err:
+                    raise ServiceValidationError(
+                        f"Invalid data array: {err}. Each element must be an integer between 0 and 255."
+                    ) from err
+
+                timing = InfraredProxyTimingParams(
+                    frequency=timing_data.get("frequency", 38000),
+                    length_in_bits=timing_data.get("length_in_bits", 32),
+                    header_high_us=timing_data.get("header_high_us", 0),
+                    header_low_us=timing_data.get("header_low_us", 0),
+                    one_high_us=timing_data.get("one_high_us", 0),
+                    one_low_us=timing_data.get("one_low_us", 0),
+                    zero_high_us=timing_data.get("zero_high_us", 0),
+                    zero_low_us=timing_data.get("zero_low_us", 0),
+                    footer_high_us=timing_data.get("footer_high_us", 0),
+                    footer_low_us=timing_data.get("footer_low_us", 0),
+                    repeat_high_us=timing_data.get("repeat_high_us", 0),
+                    repeat_low_us=timing_data.get("repeat_low_us", 0),
+                    minimum_idle_time_us=timing_data.get("minimum_idle_time_us", 0),
+                    msb_first=timing_data.get("msb_first", True),
+                    repeat_count=timing_data.get("repeat_count", 1),
+                )
+                self._client.infrared_proxy_transmit(
+                    self._static_info.key,
+                    timing,
+                    data_bytes,
+                )
+            else:
+                raise ServiceValidationError(
+                    "Command must contain either 'protocol' or both 'timing' and 'data' fields"
+                )
+
+    def _check_capabilities(self) -> None:
+        """Check if the device supports transmission."""
+        if not self._static_info.capabilities & InfraredProxyCapability.TRANSMITTER:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="infrared_proxy_transmitter_not_supported",
+            )
 
     async def async_learn_command(self, **kwargs: Any) -> None:
         """Learn a command from a device."""

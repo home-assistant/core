@@ -140,6 +140,9 @@
     "error_uploading": {
       "message": "Error during OTA (Over-The-Air) update of {configuration}. Try again in ESPHome dashboard for more information."
     },
+    "infrared_proxy_transmitter_not_supported": {
+      "message": "Device does not support infrared transmission"
+    },
     "ota_in_progress": {
       "message": "An OTA (Over-The-Air) update is already in progress for {configuration}."
     }
