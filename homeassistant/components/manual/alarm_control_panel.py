@@ -353,6 +353,8 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
         No code needed, a trigger time of zero for the current state
         disables the alarm.
         """
+        if self._state == AlarmControlPanelState.TRIGGERED:
+            return
         if not self._trigger_time_by_state[self._active_state]:
             return
         self._async_update_state(AlarmControlPanelState.TRIGGERED)
