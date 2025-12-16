@@ -151,13 +151,14 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             sorted_keys = sorted(mix_chart_entries)
 
             # Create datetime from the latest entry
-            date_now = dt_util.now().date()
-            last_updated_time = dt_util.parse_time(str(sorted_keys[-1]))
-            mix_detail["lastdataupdate"] = datetime.datetime.combine(
-                date_now,
-                last_updated_time,  # type: ignore[arg-type]
-                dt_util.get_default_time_zone(),
-            )
+            if sorted_keys:
+                date_now = dt_util.now().date()
+                last_updated_time = dt_util.parse_time(str(sorted_keys[-1]))
+                mix_detail["lastdataupdate"] = datetime.datetime.combine(
+                    date_now,
+                    last_updated_time,  # type: ignore[arg-type]
+                    dt_util.get_default_time_zone(),
+                )
 
             # Dashboard data for mix system
             dashboard_data = self.api.dashboard_data(self.plant_id)
