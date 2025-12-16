@@ -33,7 +33,7 @@
     'supported_features': 0,
     'translation_key': 'audio_issues',
     'unique_id': '01JG00V55WEVTJ0CJHM0GAD7PC-audio_issues',
-    'unit_of_measurement': 'issues',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_all_entities[sensor.overseerr_audio_issues-state]
@@ -41,7 +41,6 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Overseerr Audio issues',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'issues',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.overseerr_audio_issues',
@@ -137,7 +136,7 @@
     'supported_features': 0,
     'translation_key': 'closed_issues',
     'unique_id': '01JG00V55WEVTJ0CJHM0GAD7PC-closed_issues',
-    'unit_of_measurement': 'issues',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_all_entities[sensor.overseerr_closed_issues-state]
@@ -145,7 +144,6 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Overseerr Closed issues',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'issues',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.overseerr_closed_issues',
@@ -293,7 +291,7 @@
     'supported_features': 0,
     'translation_key': 'open_issues',
     'unique_id': '01JG00V55WEVTJ0CJHM0GAD7PC-open_issues',
-    'unit_of_measurement': 'issues',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_all_entities[sensor.overseerr_open_issues-state]
@@ -301,7 +299,6 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Overseerr Open issues',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'issues',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.overseerr_open_issues',
@@ -449,7 +446,7 @@
     'supported_features': 0,
     'translation_key': 'subtitle_issues',
     'unique_id': '01JG00V55WEVTJ0CJHM0GAD7PC-subtitle_issues',
-    'unit_of_measurement': 'issues',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_all_entities[sensor.overseerr_subtitle_issues-state]
@@ -457,7 +454,6 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Overseerr Subtitle issues',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'issues',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.overseerr_subtitle_issues',
@@ -501,7 +497,7 @@
     'supported_features': 0,
     'translation_key': 'total_issues',
     'unique_id': '01JG00V55WEVTJ0CJHM0GAD7PC-total_issues',
-    'unit_of_measurement': 'issues',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_all_entities[sensor.overseerr_total_issues-state]
@@ -509,7 +505,6 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Overseerr Total issues',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'issues',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.overseerr_total_issues',
@@ -657,7 +652,7 @@
     'supported_features': 0,
     'translation_key': 'video_issues',
     'unique_id': '01JG00V55WEVTJ0CJHM0GAD7PC-video_issues',
-    'unit_of_measurement': 'issues',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_all_entities[sensor.overseerr_video_issues-state]
@@ -665,7 +660,6 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Overseerr Video issues',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'issues',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.overseerr_video_issues',

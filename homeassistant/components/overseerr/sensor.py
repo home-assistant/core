@@ -11,7 +11,7 @@ from homeassistant.components.sensor import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import ISSUES, REQUESTS
+from .const import REQUESTS
 from .coordinator import OverseerrConfigEntry, OverseerrCoordinator
 from .entity import OverseerrEntity
 from .models import OverseerrData
@@ -71,37 +71,31 @@ SENSORS: tuple[OverseerrSensorEntityDescription, ...] = (
     ),
     OverseerrSensorEntityDescription(
         key="total_issues",
-        native_unit_of_measurement=ISSUES,
         state_class=SensorStateClass.TOTAL,
         value_fn=lambda data: data.issues.total,
     ),
     OverseerrSensorEntityDescription(
         key="open_issues",
-        native_unit_of_measurement=ISSUES,
         state_class=SensorStateClass.TOTAL,
         value_fn=lambda data: data.issues.open,
     ),
     OverseerrSensorEntityDescription(
         key="closed_issues",
-        native_unit_of_measurement=ISSUES,
         state_class=SensorStateClass.TOTAL,
         value_fn=lambda data: data.issues.closed,
     ),
     OverseerrSensorEntityDescription(
         key="video_issues",
-        native_unit_of_measurement=ISSUES,
         state_class=SensorStateClass.TOTAL,
         value_fn=lambda data: data.issues.video,
     ),
     OverseerrSensorEntityDescription(
         key="audio_issues",
-        native_unit_of_measurement=ISSUES,
         state_class=SensorStateClass.TOTAL,
         value_fn=lambda data: data.issues.audio,
     ),
     OverseerrSensorEntityDescription(
         key="subtitle_issues",
-        native_unit_of_measurement=ISSUES,
         state_class=SensorStateClass.TOTAL,
         value_fn=lambda data: data.issues.subtitles,
     ),

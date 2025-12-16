@@ -8,7 +8,6 @@ DOMAIN = "overseerr"
 LOGGER = logging.getLogger(__package__)
 
 REQUESTS = "requests"
-ISSUES = "issues"
 
 ATTR_STATUS = "status"
 ATTR_SORT_ORDER = "sort_order"
