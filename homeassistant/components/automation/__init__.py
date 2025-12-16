@@ -125,13 +125,16 @@ _EXPERIMENTAL_TRIGGER_PLATFORMS = {
     "alarm_control_panel",
     "assist_satellite",
     "binary_sensor",
+    "button",
     "climate",
     "cover",
     "fan",
     "lawn_mower",
     "light",
     "media_player",
+    "switch",
     "text",
+    "update",
     "vacuum",
 }
 

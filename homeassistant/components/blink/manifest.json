@@ -1,7 +1,7 @@
 {
   "domain": "blink",
   "name": "Blink",
-  "codeowners": ["@fronzbot", "@mkmer"],
+  "codeowners": ["@fronzbot"],
   "config_flow": true,
   "dhcp": [
     {
@@ -18,7 +18,8 @@
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/blink",
+  "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["blinkpy"],
-  "requirements": ["blinkpy==0.24.1"]
+  "requirements": ["blinkpy==0.25.2"]
 }
