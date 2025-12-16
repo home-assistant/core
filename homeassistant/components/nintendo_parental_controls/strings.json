@@ -37,6 +37,15 @@
         "name": "Max screentime today"
       }
     },
+    "select": {
+      "timer_mode": {
+        "name": "Restriction mode",
+        "state": {
+          "daily": "Same for all days",
+          "each_day_of_the_week": "Different for each day"
+        }
+      }
+    },
     "sensor": {
       "playing_time": {
         "name": "Used screen time"
