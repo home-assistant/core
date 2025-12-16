@@ -233,6 +233,8 @@ def execute(
             "Warning loading script %s: %s", filename, ", ".join(compiled.warnings)
         )
 
+    local_classes = set()
+
     def protected_getattr(obj: object, name: str, default: Any = None) -> Any:
         """Restricted method to get attributes."""
         if name.startswith("async_"):
@@ -249,6 +251,16 @@ def execute(
             raise ScriptError(f"Not allowed to access {obj.__class__.__name__}.{name}")
 
         return getattr(obj, name, default)
+
+    def _metaclass(name: str, bases: Any, dict: Any) -> Any:
+        obj = type(name, bases, dict)
+        local_classes.add(name)
+        return obj
+
+    def _write(obj: Any) -> Any:
+        if type(obj).__name__ in local_classes:
+            return obj
+        return full_write_guard(obj)
 
     extra_builtins = {
         "__import__": guarded_import,
@@ -270,9 +282,11 @@ def execute(
     logger = logging.getLogger(f"{__name__}.{filename}")
     restricted_globals = {
         "__builtins__": builtins,
+        "__metaclass__": _metaclass,
+        "__name__": "__hass__",
         "_print_": StubPrinter,
         "_getattr_": protected_getattr,
-        "_write_": full_write_guard,
+        "_write_": _write,
         "_getiter_": iter,
         "_getitem_": default_guarded_getitem,
         "_iter_unpack_sequence_": guarded_iter_unpack_sequence,
