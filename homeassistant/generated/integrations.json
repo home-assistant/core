@@ -388,7 +388,7 @@
     },
     "apcupsd": {
       "name": "APC UPS Daemon",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -1478,7 +1478,7 @@
     },
     "duke_energy": {
       "name": "Duke Energy",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -2747,13 +2747,13 @@
     },
     "hko": {
       "name": "Hong Kong Observatory",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "hlk_sw16": {
       "name": "Hi-Link HLK-SW16",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -2868,7 +2868,7 @@
     },
     "huawei_lte": {
       "name": "Huawei LTE",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -2899,7 +2899,7 @@
           "name": "Husqvarna Automower"
         },
         "husqvarna_automower_ble": {
-          "integration_type": "hub",
+          "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_polling",
           "name": "Husqvarna Automower BLE"
@@ -2908,13 +2908,13 @@
     },
     "huum": {
       "name": "Huum",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "hvv_departures": {
       "name": "HVV Departures",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
