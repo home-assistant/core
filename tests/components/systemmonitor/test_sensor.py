@@ -544,7 +544,7 @@ async def test_remove_obsolete_entities(
                 mock_added_config_entry.entry_id
             )
         )
-        == 44
+        == 64
     )
 
     entity_registry.async_update_entity(
@@ -585,7 +585,7 @@ async def test_remove_obsolete_entities(
                 mock_added_config_entry.entry_id
             )
         )
-        == 45
+        == 65
     )
 
     assert (
@@ -635,3 +635,67 @@ async def test_no_duplicate_disk_entities(
     assert disk_sensor.state == "60.0"
 
     assert "Platform systemmonitor does not generate unique IDs." not in caplog.text
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_psi_sensor(
+    hass: HomeAssistant,
+    mock_psutil: Mock,
+    mock_os: Mock,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the PSI sensor."""
+    mock_config_entry = MockConfigEntry(
+        title="System Monitor",
+        domain=DOMAIN,
+        data={},
+        options={},
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Use snapshot for all psi sensors
+    for entity in er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    ):
+        if "pressure" in entity.unique_id:
+            state = hass.states.get(entity.entity_id)
+            assert state
+            assert state == snapshot(name=f"{entity.entity_id}")
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_psi_sensor_unavailable(
+    hass: HomeAssistant,
+    mock_psutil: Mock,
+    mock_os: Mock,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the PSI sensor when data is unavailable."""
+    mock_config_entry = MockConfigEntry(
+        title="System Monitor",
+        domain=DOMAIN,
+        data={},
+        options={},
+    )
+
+    with patch(
+        "homeassistant.components.systemmonitor.coordinator.get_all_pressure_info",
+        return_value={},
+    ):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        # Use snapshot for all psi sensors
+        for entity in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        ):
+            if "pressure" in entity.unique_id:
+                state = hass.states.get(entity.entity_id)
+                assert state
+                assert state == snapshot(name=f"{entity.entity_id}-unavailable")
