@@ -1,8 +1,8 @@
-"""Config flow for Electrolux Group integration."""
+"""Config flow for Electrolux integration."""
 
 from collections.abc import Mapping
 import logging
-from typing import Any, cast
+from typing import Any
 
 from electrolux_group_developer_sdk.auth.invalid_credentials_exception import (
     InvalidCredentialsException,
@@ -28,7 +28,7 @@ _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 
 class ElectroluxConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for the Electrolux Group integration."""
+    """Handle a config flow for the Electrolux integration."""
 
     def __init__(self) -> None:
         """Initialize the Electrolux flow."""

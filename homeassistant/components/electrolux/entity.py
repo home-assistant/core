@@ -1,4 +1,4 @@
-"""Base entity for Electrolux Group integration."""
+"""Base entity for Electrolux integration."""
 
 from abc import abstractmethod
 import logging
