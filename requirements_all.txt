@@ -860,7 +860,7 @@ egauge-async==0.4.0
 eheimdigital==1.4.0
 
 # homeassistant.components.ekeybionyx
-ekey-bionyxpy==1.0.0
+ekey-bionyxpy==1.0.1
 
 # homeassistant.components.electric_kiwi
 electrickiwi-api==0.9.14
