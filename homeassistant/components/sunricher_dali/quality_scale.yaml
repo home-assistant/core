@@ -40,8 +40,10 @@ rules:
   # Gold
   devices: done
   diagnostics: todo
-  discovery-update-info: todo
-  discovery: todo
+  discovery-update-info: done
+  discovery:
+    status: exempt
+    comment: Device has no way to be discovered.
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo

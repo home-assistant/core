@@ -128,6 +128,7 @@ _EXPERIMENTAL_TRIGGER_PLATFORMS = {
     "button",
     "climate",
     "cover",
+    "device_tracker",
     "fan",
     "lawn_mower",
     "light",
