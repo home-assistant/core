@@ -448,7 +448,7 @@ class TelegramNotificationService:
                 params[ATTR_MESSAGE_THREAD_ID] = data[ATTR_MESSAGE_THREAD_ID]
             # Keyboards:
             if ATTR_KEYBOARD in data:
-                keys = data.get(ATTR_KEYBOARD)
+                keys = data[ATTR_KEYBOARD]
                 keys = keys if isinstance(keys, list) else [keys]
                 if keys:
                     params[ATTR_REPLYMARKUP] = ReplyKeyboardMarkup(

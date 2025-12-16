@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Callable
+from datetime import UTC, datetime, timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
@@ -22,6 +23,7 @@ from homeassistant.components.reolink.const import (
     BATTERY_ALL_WAKE_UPDATE_INTERVAL,
     BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL,
     CONF_BC_PORT,
+    CONF_FIRMWARE_CHECK_TIME,
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
@@ -47,6 +49,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format
 from homeassistant.setup import async_setup_component
 
 from .conftest import (
+    CONF_BC_ONLY,
     CONF_SUPPORTS_PRIVACY_MODE,
     CONF_USE_HTTPS,
     DEFAULT_PROTOCOL,
@@ -58,6 +61,7 @@ from .conftest import (
     TEST_MAC,
     TEST_MAC_CAM,
     TEST_NVR_NAME,
+    TEST_PASSWORD,
     TEST_PORT,
     TEST_PRIVACY,
     TEST_UID,
@@ -146,10 +150,14 @@ async def test_firmware_error_twice(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
+    freezer.tick(FIRMWARE_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
     entity_id = f"{Platform.UPDATE}.{TEST_NVR_NAME}_firmware"
     assert hass.states.get(entity_id).state == STATE_OFF
 
-    freezer.tick(FIRMWARE_UPDATE_INTERVAL)
+    freezer.tick(2 * FIRMWARE_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -1128,6 +1136,53 @@ async def test_camera_wake_callback(
     # check that a coordinator update was scheduled.
     assert reolink_host.get_states.call_count >= 1
     assert hass.states.get(entity_id).state == STATE_OFF
+
+
+@pytest.mark.parametrize(("seconds", "call_count"), [(10, 1), (3600, 0)])
+async def test_firmware_update_delay(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    reolink_host: MagicMock,
+    seconds: int,
+    call_count: int,
+) -> None:
+    """Test delay of firmware update check."""
+    now = datetime.now(UTC)
+    check_delay = (
+        now
+        + timedelta(seconds=seconds)
+        - now.replace(hour=0, minute=0, second=0, microsecond=0)
+    ).total_seconds()
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=format_mac(TEST_MAC),
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_PORT: TEST_PORT,
+            CONF_USE_HTTPS: TEST_USE_HTTPS,
+            CONF_SUPPORTS_PRIVACY_MODE: TEST_PRIVACY,
+            CONF_BC_PORT: TEST_BC_PORT,
+            CONF_BC_ONLY: False,
+            CONF_FIRMWARE_CHECK_TIME: check_delay,
+        },
+        options={
+            CONF_PROTOCOL: DEFAULT_PROTOCOL,
+        },
+        title=TEST_NVR_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    freezer.tick(60)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert reolink_host.check_new_firmware.call_count == call_count
 
 
 async def test_baichaun_only(

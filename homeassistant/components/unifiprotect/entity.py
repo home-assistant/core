@@ -319,7 +319,8 @@ class ProtectNVREntity(BaseProtectEntity):
             identifiers={(DOMAIN, self.device.mac)},
             manufacturer=DEFAULT_BRAND,
             name=self.device.display_name,
-            model=self.device.type,
+            model=self.device.market_name or self.device.type,
+            model_id=self.device.type,
             sw_version=str(self.device.version),
             configuration_url=self.device.api.base_url,
         )
@@ -438,7 +439,7 @@ class ProtectEventMixin(ProtectEntityDescription[T]):
 
 
 @dataclass(frozen=True, kw_only=True)
-class ProtectSetableKeysMixin(ProtectEntityDescription[T]):
+class ProtectSettableKeysMixin(ProtectEntityDescription[T]):
     """Mixin for settable values."""
 
     ufp_set_method: str | None = None
