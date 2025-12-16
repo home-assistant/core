@@ -8,6 +8,7 @@ import pytest
 from homeassistant.components.icloud.config_flow import (
     CONF_TRUSTED_DEVICE,
     CONF_VERIFICATION_CODE,
+    IcloudFlowHandler,
 )
 from homeassistant.components.icloud.const import (
     CONF_GPS_ACCURACY_THRESHOLD,
@@ -24,6 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import (
+    DEVICE,
     MOCK_CONFIG,
     PASSWORD,
     PASSWORD_2,
@@ -418,3 +420,49 @@ async def test_password_update_wrong_password(hass: HomeAssistant) -> None:
 
         assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}
+
+
+async def test_validate_and_create_entry_user(
+    hass: HomeAssistant, service_authenticated: MagicMock
+) -> None:
+    """Test _validate_and_create_entry for user flow."""
+
+    service_authenticated.return_value.devices = DEVICE
+
+    flow = IcloudFlowHandler()
+    flow.hass = hass
+    flow.context = {"source": SOURCE_USER}
+    user_input = {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD}
+    result = await flow._validate_and_create_entry(user_input, "user")
+
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == USERNAME
+
+
+async def test_validate_and_reauth_entry_user(
+    hass: HomeAssistant, service_authenticated: MagicMock
+) -> None:
+    """Test _validate_and_create_entry for reauth flow."""
+
+    service_authenticated.return_value.devices = DEVICE
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    flow = IcloudFlowHandler()
+    flow.hass = hass
+    flow.context = {"source": "reauth", "unique_id": USERNAME}
+    flow._existing_entry_data = MOCK_CONFIG
+    user_input = {CONF_PASSWORD: PASSWORD_2}
+
+    with (
+        patch.object(flow, "async_set_unique_id", return_value=config_entry),
+        patch.object(hass.config_entries, "async_update_entry"),
+        patch.object(hass.config_entries, "async_reload"),
+    ):
+        result = await flow._validate_and_create_entry(user_input, "reauth_confirm")
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
