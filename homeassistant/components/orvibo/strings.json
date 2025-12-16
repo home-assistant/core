@@ -43,6 +43,9 @@
     }
   },
   "exceptions": {
+    "init_error": {
+      "message": "Error while initializing S20 {host}."
+    },
     "turn_off_error": {
       "message": "Error while turning off S20 {name}."
     },
@@ -51,9 +54,6 @@
     },
     "update_error": {
       "message": "Error while fetching state for S20 {name}."
-    },
-    "init_error": {
-      "message": "Error while initializing S20 {host}."
     }
   },
   "issues": {
