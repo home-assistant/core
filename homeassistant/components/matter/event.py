@@ -68,13 +68,8 @@ class MatterEventEntity(MatterEntity, EventEntity):
             event_types.append("switch_latched")
         elif feature_map & SwitchFeature.kMomentarySwitchMultiPress:
             # Momentary switch with multi press support
-            max_presses_supported = self.get_matter_attribute_value(
-                clusters.Switch.Attributes.MultiPressMax
-            )
-            max_presses_supported = min(max_presses_supported or 2, 18)
             event_types.append("multi_press_ongoing")
-            for i in range(max_presses_supported):
-                event_types.append(f"multi_press_{i + 1}")  # noqa: PERF401
+            event_types.append("multi_press_complete")
         elif feature_map & SwitchFeature.kMomentarySwitch:
             # momentary switch without multi press support
             event_types.append("initial_press")
@@ -114,12 +109,17 @@ class MatterEventEntity(MatterEntity, EventEntity):
         """Call on NodeEvent."""
         if data.endpoint_id != self._endpoint.endpoint_id:
             return
-        if data.event_id == clusters.Switch.Events.MultiPressComplete.event_id:
-            # multi press event
-            presses = (data.data or {}).get("totalNumberOfPressesCounted", 1)
-            event_type = f"multi_press_{presses}"
-        else:
-            event_type = EVENT_TYPES_MAP[data.event_id]
+        event_type = EVENT_TYPES_MAP[data.event_id]
+
+        if event_type == "multi_press_complete":
+            if data.data:
+                presses = data.data.get("totalNumberOfPressesCounted", 1)
+                if presses == 1:
+                    data.data["event_type_extra"] = "single"
+                elif presses == 2:
+                    data.data["event_type_extra"] = "double"
+                elif presses == 3:
+                    data.data["event_type_extra"] = "triple"
 
         if event_type not in self.event_types:
             # this should not happen, but guard for bad things
