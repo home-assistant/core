@@ -154,6 +154,11 @@ class RingCam(RingEntity[RingDoorBell], Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a still image response from the camera."""
+        # For live_view cameras, get a fresh snapshot
+        if self.entity_description.key == "live_view":
+            return await self._async_get_fresh_snapshot()
+
+        # For last_recording cameras, use the cached video frame
         key = (width, height)
         if not (image := self._images.get(key)) and self._video_url is not None:
             image = await ffmpeg.async_get_image(
@@ -167,6 +172,11 @@ class RingCam(RingEntity[RingDoorBell], Camera):
                 self._images[key] = image
 
         return image
+
+    @exception_wrap
+    async def _async_get_fresh_snapshot(self) -> bytes | None:
+        """Get a fresh snapshot from the camera."""
+        return await self._device.async_get_snapshot()
 
     async def handle_async_mjpeg_stream(
         self, request: web.Request
