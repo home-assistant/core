@@ -4,7 +4,7 @@ import asyncio
 import logging
 from typing import Any
 
-from orvibo.s20 import discover
+from orvibo.s20 import S20, S20Exception, discover
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -79,10 +79,20 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", menu_options=["start_discovery", "edit"]
         )
 
-    def _input_error(self, user_input: dict[str, Any]) -> str | None:
+    async def _input_error(self, user_input: dict[str, Any]) -> str | None:
         """Validate user input."""
         if len(user_input[CONF_MAC]) != 17 or user_input[CONF_MAC].count(":") != 5:
             return "invalid_mac"
+
+        try:
+            await self.hass.async_add_executor_job(
+                S20,
+                user_input[CONF_HOST],
+                user_input[CONF_MAC],
+            )
+        except S20Exception:
+            return "cannot_connect"
+
         return None
 
     async def async_step_edit(
@@ -93,7 +103,7 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input:
             user_input[CONF_MAC] = format_mac(user_input[CONF_MAC])
-            error = self._input_error(user_input)
+            error = await self._input_error(user_input)
             if not error:
                 await self.async_set_unique_id(user_input[CONF_MAC])
                 self._abort_if_unique_id_configured()
@@ -176,7 +186,7 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Normalize and validate input
         user_input[CONF_MAC] = format_mac(user_input[CONF_MAC])
-        error = self._input_error(user_input)
+        error = await self._input_error(user_input)
         if error:
             return self.async_abort(reason=error)
 

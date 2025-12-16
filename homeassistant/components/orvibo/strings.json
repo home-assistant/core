@@ -5,6 +5,7 @@
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]"
     },
     "error": {
+      "cannot_connect": "Unable to connect to the S20 switch",
       "invalid_mac": "Invalid MAC address format"
     },
     "flow_title": "{host}",
