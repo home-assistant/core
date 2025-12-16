@@ -2,14 +2,14 @@
 
 import logging
 
+from orvibo.s20 import S20, S20Exception
+
 from homeassistant import core
 from homeassistant.const import CONF_HOST, CONF_MAC, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+
 from .const import DOMAIN
-
-from orvibo.s20 import S20, S20Exception
-
 from .util import S20ConfigEntry, S20Data
 
 PLATFORMS = [Platform.SWITCH]
