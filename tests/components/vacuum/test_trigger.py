@@ -48,6 +48,7 @@ async def target_vacuums(hass: HomeAssistant) -> list[str]:
         "vacuum.errored",
         "vacuum.paused_cleaning",
         "vacuum.started_cleaning",
+        "vacuum.started_returning",
     ],
 )
 async def test_vacuum_triggers_gated_by_labs_flag(
@@ -90,6 +91,11 @@ async def test_vacuum_triggers_gated_by_labs_flag(
             trigger="vacuum.started_cleaning",
             target_states=[VacuumActivity.CLEANING],
             other_states=other_states(VacuumActivity.CLEANING),
+        ),
+        *parametrize_trigger_states(
+            trigger="vacuum.started_returning",
+            target_states=[VacuumActivity.RETURNING],
+            other_states=other_states(VacuumActivity.RETURNING),
         ),
     ],
 )
@@ -158,6 +164,11 @@ async def test_vacuum_state_trigger_behavior_any(
             target_states=[VacuumActivity.CLEANING],
             other_states=other_states(VacuumActivity.CLEANING),
         ),
+        *parametrize_trigger_states(
+            trigger="vacuum.started_returning",
+            target_states=[VacuumActivity.RETURNING],
+            other_states=other_states(VacuumActivity.RETURNING),
+        ),
     ],
 )
 async def test_vacuum_state_trigger_behavior_first(
@@ -223,6 +234,11 @@ async def test_vacuum_state_trigger_behavior_first(
             trigger="vacuum.started_cleaning",
             target_states=[VacuumActivity.CLEANING],
             other_states=other_states(VacuumActivity.CLEANING),
+        ),
+        *parametrize_trigger_states(
+            trigger="vacuum.started_returning",
+            target_states=[VacuumActivity.RETURNING],
+            other_states=other_states(VacuumActivity.RETURNING),
         ),
     ],
 )
