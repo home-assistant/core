@@ -399,6 +399,8 @@ build.json @home-assistant/supervisor
 /tests/components/duckdns/ @tr4nt0r
 /homeassistant/components/duke_energy/ @hunterjm
 /tests/components/duke_energy/ @hunterjm
+/homeassistant/components/duosida_ev/ @americodias
+/tests/components/duosida_ev/ @americodias
 /homeassistant/components/duotecno/ @cereal2nd
 /tests/components/duotecno/ @cereal2nd
 /homeassistant/components/dwd_weather_warnings/ @runningman84 @stephan192 @andarotajo
