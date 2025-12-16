@@ -44,4 +44,8 @@ class LeilSaunaCoordinator(DataUpdateCoordinator[SaunumData]):
         try:
             return await self.client.async_get_data()
         except SaunumException as err:
-            raise UpdateFailed(f"Communication error: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+                translation_placeholders={"error": str(err)},
+            ) from err

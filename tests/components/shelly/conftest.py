@@ -247,6 +247,7 @@ MOCK_CONFIG = {
     "wifi": {"sta": {"enable": True}, "sta1": {"enable": False}},
     "ws": {"enable": False, "server": None},
     "voltmeter:100": {"xvoltage": {"unit": "ppm"}},
+    "smoke:0": {"id": 0, "name": "test channel name"},
     "script:1": {"id": 1, "name": "test_script.js", "enable": True},
     "script:2": {"id": 2, "name": "test_script_2.js", "enable": False},
     "script:3": {"id": 3, "name": BLE_SCRIPT_NAME, "enable": False},
@@ -439,6 +440,7 @@ MOCK_STATUS_RPC = {
         "current_C": 12.3,
         "output": True,
     },
+    "smoke:0": {"id": 0, "alarm": False, "mute": False},
     "script:1": {
         "id": 1,
         "running": True,
@@ -574,6 +576,9 @@ def _mock_rpc_device(version: str | None = None):
         zigbee_enabled=False,
         zigbee_firmware=False,
         ip_address="10.10.10.10",
+        wifi_setconfig=AsyncMock(return_value={"restart_required": True}),
+        ble_setconfig=AsyncMock(return_value={"restart_required": False}),
+        shutdown=AsyncMock(),
     )
     type(device).name = PropertyMock(return_value="Test name")
     return device
@@ -598,6 +603,8 @@ def _mock_blu_rtv_device(version: str | None = None):
             }
         ),
         xmod_info={},
+        wifi_setconfig=AsyncMock(return_value={}),
+        ble_setconfig=AsyncMock(return_value={}),
     )
     type(device).name = PropertyMock(return_value="Test name")
     return device

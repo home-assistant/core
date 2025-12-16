@@ -26,6 +26,7 @@ class SupportedModels(StrEnum):
     CONTACT = "contact"
     PLUG = "plug"
     MOTION = "motion"
+    PRESENCE_SENSOR = "presence_sensor"
     HUMIDIFIER = "humidifier"
     LOCK = "lock"
     LOCK_PRO = "lock_pro"
@@ -108,6 +109,7 @@ NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.METER_PRO_C: SupportedModels.HYGROMETER_CO2,
     SwitchbotModel.CONTACT_SENSOR: SupportedModels.CONTACT,
     SwitchbotModel.MOTION_SENSOR: SupportedModels.MOTION,
+    SwitchbotModel.PRESENCE_SENSOR: SupportedModels.PRESENCE_SENSOR,
     SwitchbotModel.LEAK: SupportedModels.LEAK,
     SwitchbotModel.REMOTE: SupportedModels.REMOTE,
     SwitchbotModel.HUBMINI_MATTER: SupportedModels.HUBMINI_MATTER,
