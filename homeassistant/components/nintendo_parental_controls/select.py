@@ -86,10 +86,10 @@ class NintendoParentalSelectEntity(NintendoDevice, SelectEntity):
     @property
     def options(self) -> list[str]:
         """Return a list of available options."""
-        return [option.name for option in self.entity_description.options_enum]
+        return [option.name.lower() for option in self.entity_description.options_enum]
 
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        enum_option = self.entity_description.options_enum[option]
+        enum_option = self.entity_description.options_enum[option.upper()]
         await self.entity_description.set_option_fn(self._device, enum_option)
         await self.coordinator.async_request_refresh()

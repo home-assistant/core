@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
+from pynintendoparental.enum import DeviceTimerMode
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
@@ -54,8 +55,10 @@ async def test_select_option(
         SERVICE_SELECT_OPTION,
         {
             ATTR_ENTITY_ID: "select.home_assistant_test_restriction_mode",
-            ATTR_OPTION: "EACH_DAY_OF_THE_WEEK",
+            ATTR_OPTION: DeviceTimerMode.EACH_DAY_OF_THE_WEEK.name.lower(),
         },
         blocking=True,
     )
-    mock_nintendo_device.set_timer_mode.assert_awaited_once_with("EACH_DAY_OF_THE_WEEK")
+    mock_nintendo_device.set_timer_mode.assert_awaited_once_with(
+        DeviceTimerMode.EACH_DAY_OF_THE_WEEK
+    )

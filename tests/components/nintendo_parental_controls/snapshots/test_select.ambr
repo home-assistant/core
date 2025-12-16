@@ -6,8 +6,8 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'DAILY',
-        'EACH_DAY_OF_THE_WEEK',
+        'daily',
+        'each_day_of_the_week',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -44,8 +44,8 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Home Assistant Test Restriction mode',
       'options': list([
-        'DAILY',
-        'EACH_DAY_OF_THE_WEEK',
+        'daily',
+        'each_day_of_the_week',
       ]),
     }),
     'context': <ANY>,
@@ -53,6 +53,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'DAILY',
+    'state': 'daily',
   })
 # ---
