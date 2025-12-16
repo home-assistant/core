@@ -116,7 +116,7 @@ async def test_turtle_mode_switch(
     alt_speed_enabled: bool,
     expected_state: str,
 ) -> None:
-    """Test turtle mode switch with sleep delay."""
+    """Test turtle mode switch."""
     client = mock_transmission_client.return_value
 
     current_alt_speed = not alt_speed_enabled
@@ -135,13 +135,12 @@ async def test_turtle_mode_switch(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    with patch("homeassistant.components.transmission.switch.AFTER_WRITE_SLEEP", 2):
-        await hass.services.async_call(
-            SWITCH_DOMAIN,
-            service,
-            {ATTR_ENTITY_ID: "switch.transmission_turtle_mode"},
-            blocking=True,
-        )
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: "switch.transmission_turtle_mode"},
+        blocking=True,
+    )
 
     client.set_session.assert_called_once_with(alt_speed_enabled=alt_speed_enabled)
 
