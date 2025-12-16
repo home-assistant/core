@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 from enum import StrEnum
 
 from homeassistant.components.sensor import (
@@ -15,6 +16,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .coordinator import NintendoParentalControlsConfigEntry, NintendoUpdateCoordinator
 from .entity import Device, NintendoDevice
@@ -28,13 +30,16 @@ class NintendoParentalControlsSensor(StrEnum):
 
     PLAYING_TIME = "playing_time"
     TIME_REMAINING = "time_remaining"
+    LAST_SYNC = "last_sync"
+    TIME_EXTENDED = "time_extended"
 
 
 @dataclass(kw_only=True, frozen=True)
 class NintendoParentalControlsSensorEntityDescription(SensorEntityDescription):
     """Description for Nintendo parental controls sensor entities."""
 
-    value_fn: Callable[[Device], int | float | None]
+    value_fn: Callable[[Device], datetime | int | float | None]
+    available_fn: Callable[[Device], bool] = lambda device: True
 
 
 SENSOR_DESCRIPTIONS: tuple[NintendoParentalControlsSensorEntityDescription, ...] = (
@@ -53,6 +58,23 @@ SENSOR_DESCRIPTIONS: tuple[NintendoParentalControlsSensorEntityDescription, ...]
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.today_time_remaining,
+    ),
+    NintendoParentalControlsSensorEntityDescription(
+        key=NintendoParentalControlsSensor.TIME_EXTENDED,
+        translation_key=NintendoParentalControlsSensor.TIME_EXTENDED,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda device: device.extra_playing_time,
+        available_fn=lambda device: device.extra_playing_time is not None,
+    ),
+    NintendoParentalControlsSensorEntityDescription(
+        key=NintendoParentalControlsSensor.LAST_SYNC,
+        translation_key=NintendoParentalControlsSensor.LAST_SYNC,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda device: dt_util.utc_from_timestamp(device.last_sync)
+        if device.last_sync
+        else None,
     ),
 )
 
@@ -86,6 +108,11 @@ class NintendoParentalControlsSensorEntity(NintendoDevice, SensorEntity):
         self.entity_description = description
 
     @property
-    def native_value(self) -> int | float | None:
+    def native_value(self) -> datetime | int | float | None:
         """Return the native value."""
         return self.entity_description.value_fn(self._device)
+
+    @property
+    def available(self) -> bool:
+        """Return if the sensor is available."""
+        return super().available and self.entity_description.available_fn(self._device)
