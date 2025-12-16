@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine, Iterable, Mapping
+from collections.abc import Awaitable, Callable, Coroutine, Iterable, Mapping
 import dataclasses
 from enum import Enum
 from functools import cache, partial
@@ -77,9 +77,39 @@ ALL_SERVICE_DESCRIPTIONS_CACHE: HassKey[
     tuple[set[tuple[str, str]], dict[str, dict[str, Any]]]
 ] = HassKey("all_service_descriptions_cache")
 
+# batching
 BatchProcessingCallback = Callable[
     [ServiceCall, list["Entity"], dict], EntityServiceResponse | None
 ]
+
+# Callbacks are in the form func(entity: Entity, **kwargs)
+BatchAddCallback = Callable[["Entity", dict[str, Any]], None]
+
+# We're wrapping async_turn_on/off/etc
+EntityActionMethod = Callable[..., Awaitable[None]]
+
+_BATCH_KEY = "_batch_if_possible"
+
+
+def batch_aware(
+    add_to_batch: BatchAddCallback,
+) -> Callable[[EntityActionMethod], EntityActionMethod]:
+    """Wrapper to indicate an entity method is batch aware."""
+
+    def decorator(
+        method: EntityActionMethod,
+    ) -> EntityActionMethod:
+        async def wrapper(self: Entity, **kwargs: Any) -> None:
+            if kwargs.get(_BATCH_KEY):
+                add_to_batch(self, kwargs)
+                return  # defer execution
+
+            # Otherwise, call the original entity method
+            await method(self, **kwargs)
+
+        return wrapper
+
+    return decorator
 
 
 @cache
