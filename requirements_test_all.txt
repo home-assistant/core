@@ -2116,7 +2116,7 @@ python-kasa[speedups]==0.10.2
 python-linkplay==0.2.12
 
 # homeassistant.components.matter
-python-matter-server==8.1.0
+python-matter-server==8.1.2
 
 # homeassistant.components.melcloud
 python-melcloud==0.1.2
