@@ -184,6 +184,7 @@ FLOWS = {
         "elkm1",
         "elmax",
         "elvia",
+        "emby",
         "emoncms",
         "emonitor",
         "emulated_roku",
