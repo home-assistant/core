@@ -269,7 +269,7 @@ async def test_duplicate_repair_issue_repair_flow(
         result = await start_repair_fix_flow(client, DOMAIN, issue.issue_id)
 
         flow_id = result["flow_id"]
-        assert result["type"] is FlowResultType.FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "confirm_recreate"
 
         result = await process_repair_fix_flow(client, flow_id, json={})
