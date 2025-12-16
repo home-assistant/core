@@ -175,14 +175,15 @@ class _ColorDataWrapper(DPCodeJsonWrapper):
 
     def read_device_status(
         self, device: CustomerDevice
-    ) -> tuple[tuple[float, float], float] | None:
-        """Return a tuple with (HS, V) from this color data."""
+    ) -> tuple[float, float, float] | None:
+        """Return a tuple (H, S, V) from this color data."""
         if (status := super().read_device_status(device)) is None:
             return None
         return (
             self.h_type.remap_value_to(status["h"]),
             self.s_type.remap_value_to(status["s"]),
-        ), round(self.v_type.remap_value_to(status["v"]))
+            self.v_type.remap_value_to(status["v"]),
+        )
 
     def _convert_value_to_raw_value(
         self, device: CustomerDevice, value: tuple[tuple[float, float], float]
@@ -763,7 +764,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
 
             commands.extend(
                 self._color_data_wrapper.get_update_commands(
-                    self.device, (color, brightness)
+                    self.device, (color[0], color[1], brightness)
                 ),
             )
 
@@ -790,8 +791,8 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         """Return the brightness of this light between 0..255."""
         # If the light is currently in color mode, extract the brightness from the color data
         if self.color_mode == ColorMode.HS and self._color_data_wrapper:
-            data = self._read_wrapper(self._color_data_wrapper)
-            return None if data is None else data[1]
+            hsv_data = self._read_wrapper(self._color_data_wrapper)
+            return None if hsv_data is None else round(hsv_data[2])
 
         return self._read_wrapper(self._brightness_wrapper)
 
@@ -805,8 +806,8 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         """Return the hs_color of the light."""
         if self._color_data_wrapper is None:
             return None
-        data = self._read_wrapper(self._color_data_wrapper)
-        return None if data is None else data[0]
+        hsv_data = self._read_wrapper(self._color_data_wrapper)
+        return None if hsv_data is None else (hsv_data[0], hsv_data[1])
 
     @property
     def color_mode(self) -> ColorMode:
