@@ -214,6 +214,59 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
         _LOGGER.info("Getting options flow handler")
         return VictronMQTTOptionsFlow()
 
+    async def async_step_ssdp_auth(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle SSDP auth when credentials are required."""
+        assert self.hostname is not None
+        assert self.installation_id is not None
+
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            _LOGGER.info("SSDP auth user input received: %s", user_input)
+            data: dict[str, Any] = {
+                CONF_HOST: self.hostname,
+                CONF_SERIAL: self.serial,
+                CONF_INSTALLATION_ID: self.installation_id,
+                CONF_USERNAME: user_input.get(CONF_USERNAME) or None,
+                CONF_PASSWORD: user_input[CONF_PASSWORD],
+            }
+            # Remove None values
+            data = {k: v for k, v in data.items() if v is not None}
+
+            try:
+                await validate_input(data)
+                _LOGGER.info("SSDP authentication successful")
+            except AuthenticationError:
+                _LOGGER.exception("Authentication failed during SSDP setup")
+                errors["base"] = "invalid_auth"
+            except CannotConnectError:
+                _LOGGER.exception("Cannot connect during SSDP setup")
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("General error during SSDP setup")
+                errors["base"] = "unknown"
+            else:
+                return self.async_create_entry(
+                    title=f"{self.model_name} ({self.serial})",
+                    data=data,
+                )
+
+        auth_schema = vol.Schema(
+            {
+                vol.Optional(CONF_USERNAME, default=""): str,
+                vol.Optional(CONF_PASSWORD, default=""): str,
+            }
+        )
+
+        return self.async_show_form(
+            step_id="ssdp_auth",
+            data_schema=auth_schema,
+            errors=errors,
+            description_placeholders={"host": self.hostname},
+        )
+
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -236,16 +289,15 @@ class VictronMQTTConfigFlow(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         try:
-            sensed_installation_id = await validate_input(
-                {
-                    CONF_HOST: self.hostname,
-                    CONF_SERIAL: self.serial,
-                    CONF_INSTALLATION_ID: self.installation_id,
-                }
-            )
+            ssdp_conf = {
+                CONF_HOST: self.hostname,
+                CONF_SERIAL: self.serial,
+                CONF_INSTALLATION_ID: self.installation_id,
+            }
+            sensed_installation_id = await validate_input(ssdp_conf)
             assert sensed_installation_id == self.installation_id
         except AuthenticationError:
-            return self.async_abort(reason="invalid_auth")
+            return await self.async_step_ssdp_auth()
         except CannotConnectError:
             return self.async_abort(reason="cannot_connect")
 

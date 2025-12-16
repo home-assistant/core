@@ -22,6 +22,18 @@
         "description": "The credentials for {host} need to be updated.",
         "title": "Reauthenticate Victron GX"
       },
+      "ssdp_auth": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "[%key:component::victron_gx_mqtt::config::step::user::data_description::password%]",
+          "username": "[%key:component::victron_gx_mqtt::config::step::user::data_description::username%]"
+        },
+        "description": "Authentication is required to connect to {host}.",
+        "title": "Authenticate Victron GX"
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
