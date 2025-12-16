@@ -60,6 +60,99 @@ DATA_UPDATE = {
     },
 }
 
+# Device tracker test data
+TRACKER_DEVICE_ID = "t1000_tracker"
+
+# Wi-Fi scan data (measurementId 5001)
+WIFI_SCAN_DATA = [
+    {"mac": "AA:BB:CC:DD:EE:01", "rssi": -45},
+    {"mac": "AA:BB:CC:DD:EE:02", "rssi": -67},
+    {"mac": "AA:BB:CC:DD:EE:03", "rssi": -72},
+    {"mac": "AA:BB:CC:DD:EE:04", "rssi": -85},
+]
+
+DATA_WIFI_SCAN = {
+    TRACKER_DEVICE_ID: {
+        "Wi-Fi_Scan_5001": TTNSensorValue(
+            {
+                "end_device_ids": {"device_id": TRACKER_DEVICE_ID},
+                "received_at": "2024-03-13T10:00:00.000000000Z",
+            },
+            "Wi-Fi_Scan_5001",
+            WIFI_SCAN_DATA,
+        )
+    }
+}
+
+# GPS coordinate data
+GPS_LATITUDE = 52.3676
+GPS_LONGITUDE = 4.9041
+
+DATA_GPS = {
+    TRACKER_DEVICE_ID: {
+        "Latitude_4198": TTNSensorValue(
+            {
+                "end_device_ids": {"device_id": TRACKER_DEVICE_ID},
+                "received_at": "2024-03-13T11:00:00.000000000Z",
+            },
+            "Latitude_4198",
+            GPS_LATITUDE,
+        ),
+        "Longitude_4197": TTNSensorValue(
+            {
+                "end_device_ids": {"device_id": TRACKER_DEVICE_ID},
+                "received_at": "2024-03-13T11:00:00.000000000Z",
+            },
+            "Longitude_4197",
+            GPS_LONGITUDE,
+        ),
+    }
+}
+
+# Combined GPS and Wi-Fi data
+DATA_GPS_AND_WIFI = {
+    TRACKER_DEVICE_ID: {
+        "Latitude_4198": TTNSensorValue(
+            {
+                "end_device_ids": {"device_id": TRACKER_DEVICE_ID},
+                "received_at": "2024-03-13T12:00:00.000000000Z",
+            },
+            "Latitude_4198",
+            GPS_LATITUDE,
+        ),
+        "Longitude_4197": TTNSensorValue(
+            {
+                "end_device_ids": {"device_id": TRACKER_DEVICE_ID},
+                "received_at": "2024-03-13T12:00:00.000000000Z",
+            },
+            "Longitude_4197",
+            GPS_LONGITUDE,
+        ),
+        "Wi-Fi_Scan_5001": TTNSensorValue(
+            {
+                "end_device_ids": {"device_id": TRACKER_DEVICE_ID},
+                "received_at": "2024-03-13T12:00:00.000000000Z",
+            },
+            "Wi-Fi_Scan_5001",
+            WIFI_SCAN_DATA,
+        ),
+    }
+}
+
+# Battery update (no location data)
+DATA_BATTERY_ONLY = {
+    TRACKER_DEVICE_ID: {
+        "Battery_3": TTNSensorValue(
+            {
+                "end_device_ids": {"device_id": TRACKER_DEVICE_ID},
+                "received_at": "2024-03-13T13:00:00.000000000Z",
+            },
+            "Battery_3",
+            85,
+        )
+    }
+}
+
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
