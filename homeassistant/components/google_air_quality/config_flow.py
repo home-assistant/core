@@ -31,12 +31,14 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     LocationSelector,
     LocationSelectorConfig,
-    NumberSelector,
-    NumberSelectorConfig,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
 )
 
 from .const import CONF_REFERRER, DOMAIN, SECTION_API_KEY_OPTIONS
 
+SECTIONS_ADDITIONAL_FORECASTS = "section_addtitional_forecasts"
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
@@ -84,16 +86,6 @@ def _get_location_schema(hass: HomeAssistant) -> vol.Schema:
                     CONF_LONGITUDE: hass.config.longitude,
                 },
             ): LocationSelector(LocationSelectorConfig(radius=False)),
-        }
-    )
-
-
-def _get_forecast_schema(hass: HomeAssistant) -> vol.Schema:
-    """Return the extended schema including forecast."""
-    base = _get_location_schema(hass)
-    return base.extend(
-        {
-            vol.Optional("forecast"): int,
         }
     )
 
@@ -227,12 +219,18 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
         subentry = self._get_reconfigure_subentry()
         if user_input:
             mutable_data = dict(subentry.data)
-            mutable_data.update(
-                {
-                    "forecast": user_input["forecast"],
-                    "forecast_time": user_input["forecast_time"],
-                }
-            )
+
+            forecast_hours: list[int] = []
+
+            if user_input.get("forecast") is True:
+                forecast_hours.append(1)
+
+            section_data = user_input.get(SECTIONS_ADDITIONAL_FORECASTS) or {}
+            additional_times = section_data.get("additional_forecast_times", [])
+
+            forecast_hours.extend(int(value) for value in additional_times)
+
+            mutable_data["forecast"] = forecast_hours
             return self.async_update_reload_and_abort(
                 self._get_entry(),
                 self._get_reconfigure_subentry(),
@@ -244,12 +242,30 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
             data_schema=vol.Schema(
                 {
                     vol.Required(
-                        "forecast", default=subentry.data.get("forecast", False)
+                        "forecast",
+                        default=bool(subentry.data.get("forecast")),
                     ): bool,
-                    vol.Required(
-                        "forecast_time",
-                        default=subentry.data.get("forecast_time", 1),
-                    ): NumberSelector(NumberSelectorConfig(min=1, max=96, step=1)),
+                    vol.Optional("section_addtitional_forecasts"): section(
+                        vol.Schema(
+                            {
+                                vol.Optional(
+                                    "additional_forecast_times",
+                                    default=[
+                                        str(value)
+                                        for value in subentry.data.get("forecast", [])
+                                        if value != 1
+                                    ],
+                                ): SelectSelector(
+                                    SelectSelectorConfig(
+                                        options=[str(hour) for hour in range(2, 97)],
+                                        multiple=True,
+                                        mode=SelectSelectorMode.DROPDOWN,
+                                    )
+                                ),
+                            }
+                        ),
+                        SectionConfig(collapsed=True),
+                    ),
                 }
             ),
         )

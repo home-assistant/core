@@ -48,6 +48,7 @@
     "location": {
       "abort": {
         "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
         "unable_to_fetch": "[%key:component::google_air_quality::common::unable_to_fetch%]"
       },
       "entry_type": "Air quality location",
@@ -61,15 +62,24 @@
       "step": {
         "forecast": {
           "data": {
-            "forecast": "Enable forecast",
-            "forecast_time": "Forecast time"
+            "forecast": "Enable forecast for the next hour"
           },
           "data_description": {
-            "forecast": "Turn on the air-quality forecast",
-            "forecast_time": "Hours for which the forecast should apply"
+            "forecast": "Turn on the air-quality forecast for the next hour"
           },
           "description": "Configure the air-quality forecast settings.",
-          "title": "Air-quality forecast"
+          "sections": {
+            "section_addtitional_forecasts": {
+              "data": {
+                "additional_forecast_times": "Additional forecast time"
+              },
+              "data_description": {
+                "additional_forecast_times": "Hours for which the forecast should apply. Multiple selections allowed."
+              },
+              "name": "Additional forecast times"
+            }
+          },
+          "title": "Air-quality forecasts"
         },
         "location": {
           "data": {

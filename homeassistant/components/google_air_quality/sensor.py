@@ -157,37 +157,41 @@ async def async_setup_entry(
         subentry_runtime_data = entry.runtime_data.subentries_runtime_data[
             subentry.subentry_id
         ]
-        coordinator = subentry_runtime_data.coordinator_current_conditions
+        current_coordinator = subentry_runtime_data.coordinator_current_conditions
         async_add_entities(
             (
                 AirQualitySensorEntity(
-                    coordinator, description, subentry.subentry_id, subentry
+                    current_coordinator,
+                    description,
+                    subentry.subentry_id,
+                    subentry,
                 )
                 for description in AIR_QUALITY_SENSOR_TYPES
-                if description.exists_fn(coordinator.data)
+                if description.exists_fn(current_coordinator.data)
             ),
             config_subentry_id=subentry.subentry_id,
         )
-        forecast_coordinator = subentry_runtime_data.coordinator_forecast
-        if subentry.data.get("forecast") is True:
-            forecast_coordinator = subentry_runtime_data.coordinator_forecast
-            if forecast_coordinator is None:
-                continue
-            async_add_entities(
-                (
-                    AirQualityForecastSensorEntity(
-                        forecast_coordinator,
-                        description,
-                        subentry.subentry_id,
-                        subentry,
-                    )
-                    for description in AIR_QUALITY_SENSOR_TYPES
-                    if description.exists_fn(
-                        forecast_coordinator.data.hourly_forecasts[0]
-                    )
-                ),
-                config_subentry_id=subentry.subentry_id,
-            )
+        if subentry.data.get("forecast"):
+            for (
+                hour,
+                forecast_coordinator,
+            ) in subentry_runtime_data.coordinators_forecast.items():
+                forecast_data = forecast_coordinator.data.hourly_forecasts[0]
+
+                async_add_entities(
+                    (
+                        AirQualityForecastSensorEntity(
+                            forecast_coordinator,
+                            description,
+                            subentry.subentry_id,
+                            subentry,
+                            hour,
+                        )
+                        for description in AIR_QUALITY_SENSOR_TYPES
+                        if description.exists_fn(forecast_data)
+                    ),
+                    config_subentry_id=subentry.subentry_id,
+                )
 
 
 class AirQualitySensorEntity(
@@ -255,19 +259,20 @@ class AirQualityForecastSensorEntity(
         description: AirQualitySensorEntityDescription,
         subentry_id: str,
         subentry: ConfigSubentry,
+        hour: int,
     ) -> None:
         """Set up Air Quality Sensors."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{description.key}_{subentry.data[CONF_LATITUDE]}_{subentry.data[CONF_LONGITUDE]}_forecast"
+        self._attr_unique_id = f"forecast_{hour}_{description.key}_{subentry.data[CONF_LATITUDE]}_{subentry.data[CONF_LONGITUDE]}"
         self._attr_device_info = DeviceInfo(
             identifiers={
                 (
                     DOMAIN,
-                    f"{self.coordinator.config_entry.entry_id}_{subentry_id}_forecast",
+                    f"{self.coordinator.config_entry.entry_id}_{subentry_id}_forecast_{hour}h",
                 )
             },
-            name="Forecast",
+            name=f"{subentry.title} forecast {hour}h",
             entry_type=DeviceEntryType.SERVICE,
         )
         if description.translation_placeholders_fn:
@@ -297,3 +302,8 @@ class AirQualityForecastSensorEntity(
         return self.entity_description.native_unit_of_measurement_fn(
             self.coordinator.data.hourly_forecasts[0]
         )
+
+    @property
+    def state_class(self) -> None:
+        """Return the state class of the forecast sensor."""
+        return None

@@ -31,7 +31,7 @@ class GoogleAirQualitySubEntryRuntimeData:
     """Runtime data for a Google Weather sub-entry."""
 
     coordinator_current_conditions: GoogleAirQualityCurrentConditionsCoordinator
-    coordinator_forecast: GoogleAirQualityForecastCoordinator | None
+    coordinators_forecast: dict[int, GoogleAirQualityForecastCoordinator]
 
 
 @dataclass
@@ -97,6 +97,7 @@ class GoogleAirQualityForecastCoordinator(
         config_entry: GoogleAirQualityConfigEntry,
         subentry_id: str,
         client: GoogleAirQualityApi,
+        hour: int,
     ) -> None:
         """Initialize DataUpdateCoordinator."""
         super().__init__(
@@ -110,7 +111,7 @@ class GoogleAirQualityForecastCoordinator(
         subentry = config_entry.subentries[subentry_id]
         self.lat = subentry.data[CONF_LATITUDE]
         self.long = subentry.data[CONF_LONGITUDE]
-        self.forecast = subentry.data["forecast"]
+        self.forecast = hour
 
     async def _async_update_data(self) -> AirQualityForecastData:
         """Fetch air quality data for this coordinate."""
