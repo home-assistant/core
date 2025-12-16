@@ -64,6 +64,7 @@ class SRPFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 self.external_data = {
                     "tokens": tokens,
                     CONF_UNIQUE_ID: sub,
+                    CONF_EMAIL: user_input[CONF_EMAIL].strip().lower(),
                 }
                 return await self.async_step_creation()
 
@@ -97,11 +98,11 @@ class SRPFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Create an oauth config entry or update existing entry for reauth."""
         await self.async_set_unique_id(self.external_data[CONF_UNIQUE_ID])
+        entry_title = self.external_data[CONF_EMAIL] or self.flow_impl.name
         if self.source == SOURCE_REAUTH:
             self._abort_if_unique_id_mismatch()
             return self.async_update_reload_and_abort(
-                self._get_reauth_entry(),
-                data_updates=data,
+                self._get_reauth_entry(), data_updates=data, title=entry_title
             )
         self._abort_if_unique_id_configured()
-        return await super().async_oauth_create_entry(data)
+        return self.async_create_entry(title=entry_title, data=data)
