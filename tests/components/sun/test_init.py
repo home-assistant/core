@@ -148,8 +148,7 @@ async def test_state_change(
     caplog.clear()
     with freeze_time(patched_time):
         async_fire_time_changed(hass, patched_time)
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert caplog.text.count("sun phase_update") == 1
     # Called once by time listener, once from Sun.update_events

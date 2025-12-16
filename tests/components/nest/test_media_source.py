@@ -1644,8 +1644,7 @@ async def test_remove_stale_media(
     point_in_time = datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=1)
     with freeze_time(point_in_time):
         async_fire_time_changed(hass, point_in_time)
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     # Verify that the event media is still present and that the extra files
     # are removed. Newer media is not removed.

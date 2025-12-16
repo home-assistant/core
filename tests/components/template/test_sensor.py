@@ -1005,8 +1005,7 @@ async def test_self_referencing_entity_picture_loop(
         "homeassistant.helpers.ratelimit.time.time", return_value=next_time.timestamp()
     ):
         async_fire_time_changed(hass, next_time)
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "Template loop detected" in caplog_setup_text
 

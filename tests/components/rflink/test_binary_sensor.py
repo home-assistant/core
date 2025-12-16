@@ -176,8 +176,7 @@ async def test_off_delay(hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch) -
     future = now + timedelta(seconds=35)
     with freeze_time(future):
         async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
     state = hass.states.get("binary_sensor.test2")
     assert state.state == STATE_ON
     assert len(events) == 2
@@ -186,8 +185,7 @@ async def test_off_delay(hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch) -
     future = now + timedelta(seconds=45)
     with freeze_time(future):
         async_fire_time_changed(hass, future)
-        await hass.async_block_till_done()
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
     state = hass.states.get("binary_sensor.test2")
     assert state.state == STATE_OFF
     assert len(events) == 3
