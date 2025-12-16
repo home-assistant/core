@@ -1,0 +1,12 @@
+{
+  "domain": "hinen_power",
+  "name": "Hinen Power",
+  "codeowners": ["@Hinen-WeiFeng"],
+  "config_flow": true,
+  "dependencies": ["application_credentials"],
+  "documentation": "https://www.home-assistant.io/integrations/hinen",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": ["hinen-open-api==1.0.1"]
+}

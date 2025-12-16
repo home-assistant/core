@@ -666,6 +666,8 @@ build.json @home-assistant/supervisor
 /tests/components/here_travel_time/ @eifinger
 /homeassistant/components/hikvision/ @mezz64
 /homeassistant/components/hikvisioncam/ @fbradyirl
+/homeassistant/components/hinen_power/ @Hinen-WeiFeng
+/tests/components/hinen_power/ @Hinen-WeiFeng
 /homeassistant/components/hisense_aehw4a1/ @bannhead
 /tests/components/hisense_aehw4a1/ @bannhead
 /homeassistant/components/history/ @home-assistant/core

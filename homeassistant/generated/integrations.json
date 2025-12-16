@@ -2727,6 +2727,12 @@
         }
       }
     },
+    "hinen_power": {
+      "name": "Hinen Power",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "hisense_aehw4a1": {
       "name": "Hisense AEH-W4A1",
       "integration_type": "hub",
