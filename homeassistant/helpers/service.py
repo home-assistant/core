@@ -77,6 +77,10 @@ ALL_SERVICE_DESCRIPTIONS_CACHE: HassKey[
     tuple[set[tuple[str, str]], dict[str, dict[str, Any]]]
 ] = HassKey("all_service_descriptions_cache")
 
+BatchProcessingCallback = Callable[
+    [ServiceCall, list["Entity"], dict], EntityServiceResponse | None
+]
+
 
 @cache
 def _base_components() -> dict[str, ModuleType]:
