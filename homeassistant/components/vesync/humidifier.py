@@ -132,12 +132,12 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
     @property
     def current_humidity(self) -> int:
         """Return the current humidity."""
-        return self.device.state.humidity
+        return int(self.device.state.humidity)
 
     @property
     def target_humidity(self) -> int:
         """Return the humidity we try to reach."""
-        return self.device.state.auto_humidity
+        return int(self.device.state.auto_humidity)
 
     @property
     def mode(self) -> str | None:
@@ -191,4 +191,4 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
     @property
     def is_on(self) -> bool:
         """Return True if device is on."""
-        return self.device.state.device_status == "on"
+        return bool(self.device.state.device_status == "on")
