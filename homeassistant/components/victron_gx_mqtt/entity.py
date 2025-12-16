@@ -40,8 +40,6 @@ class VictronBaseEntity(Entity):
         self._metric = metric
         self._device_info = device_info
         self._attr_unique_id = metric.unique_id
-        self._attr_should_poll = False
-        self._attr_has_entity_name = True
         self._attr_suggested_display_precision = metric.precision
         self._attr_translation_key = metric.generic_short_id.replace("{", "").replace(
             "}", ""
@@ -63,16 +61,6 @@ class VictronBaseEntity(Entity):
         )
         self._attr_entity_registry_enabled_default = (
             metric.generic_short_id not in ENTITIES_DISABLE_BY_DEFAULT
-        )
-
-    def __repr__(self) -> str:
-        """Return a string representation of the entity."""
-        return (
-            f"VictronBaseEntity(device={self._device.name}, "
-            f"unique_id={self._attr_unique_id}, "
-            f"metric={self._metric.short_id}, "
-            f"translation_key={self._attr_translation_key}, "
-            f"translation_placeholders={self._attr_translation_placeholders})"
         )
 
     @callback
