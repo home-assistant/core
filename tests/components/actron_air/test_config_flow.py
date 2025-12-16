@@ -240,6 +240,9 @@ async def test_reauth_flow_wrong_account(
     assert result["step_id"] == "user"
     assert result["progress_action"] == "wait_for_authorization"
 
+    # Wait for the progress to complete
+    await hass.async_block_till_done()
+
     # Continue the flow after progress is done
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
