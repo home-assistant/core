@@ -22,6 +22,10 @@ REGISTERED_NOTIFICATIONS = (
     | NotificationType.REQUEST_AVAILABLE
     | NotificationType.REQUEST_PROCESSING_FAILED
     | NotificationType.REQUEST_AUTOMATICALLY_APPROVED
+    | NotificationType.ISSUE_REPORTED
+    | NotificationType.ISSUE_COMMENTED
+    | NotificationType.ISSUE_RESOLVED
+    | NotificationType.ISSUE_REOPENED
 )
 JSON_PAYLOAD = (
     '"{\\"notification_type\\":\\"{{notification_type}}\\",\\"subject\\":\\"{{subject}'
