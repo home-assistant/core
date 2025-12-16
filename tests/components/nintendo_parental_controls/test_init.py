@@ -29,7 +29,7 @@ async def test_invalid_authentication(
     )
     assert len(entries) == 0
     # Ensure the config entry is marked as error
-    assert mock_config_entry.state == ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_reauth_flow(
