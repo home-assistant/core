@@ -13,6 +13,7 @@ from roborock import (
     RoborockNoUserAgreement,
 )
 from roborock.exceptions import RoborockException
+from roborock.mqtt.session import MqttSessionUnauthorized
 
 from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
@@ -70,13 +71,18 @@ async def test_home_assistant_stop(
     assert device_manager.close.called
 
 
+@pytest.mark.parametrize(
+    "side_effect", [RoborockInvalidCredentials(), MqttSessionUnauthorized()]
+)
 async def test_reauth_started(
-    hass: HomeAssistant, mock_roborock_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    side_effect: Exception,
 ) -> None:
     """Test reauth flow started."""
     with patch(
         "homeassistant.components.roborock.create_device_manager",
-        side_effect=RoborockInvalidCredentials(),
+        side_effect=side_effect,
     ):
         await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()

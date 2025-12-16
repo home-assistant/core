@@ -347,7 +347,7 @@
     },
     "anglian_water": {
       "name": "Anglian Water",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -388,7 +388,7 @@
     },
     "apcupsd": {
       "name": "APC UPS Daemon",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -1194,7 +1194,7 @@
     },
     "daikin": {
       "name": "Daikin AC",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -1206,7 +1206,7 @@
     },
     "datadog": {
       "name": "Datadog",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -1326,7 +1326,7 @@
     },
     "dexcom": {
       "name": "Dexcom",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -1448,7 +1448,7 @@
     },
     "droplet": {
       "name": "Droplet",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -1478,13 +1478,13 @@
     },
     "duke_energy": {
       "name": "Duke Energy",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "dunehd": {
       "name": "Dune HD",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -1508,7 +1508,7 @@
     },
     "eafm": {
       "name": "Environment Agency Flood Gauges",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -1551,7 +1551,7 @@
     },
     "ecoforest": {
       "name": "Ecoforest",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -1682,7 +1682,7 @@
     },
     "elvia": {
       "name": "Elvia",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -1696,7 +1696,7 @@
       "name": "emoncms",
       "integrations": {
         "emoncms": {
-          "integration_type": "hub",
+          "integration_type": "service",
           "config_flow": true,
           "iot_class": "local_polling",
           "name": "Emoncms"
@@ -1711,7 +1711,7 @@
     },
     "emonitor": {
       "name": "SiteSage Emonitor",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -1782,7 +1782,7 @@
     },
     "environment_canada": {
       "name": "Environment Canada",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -1812,7 +1812,7 @@
     },
     "epson": {
       "name": "Epson",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -1835,7 +1835,7 @@
     },
     "escea": {
       "name": "Escea",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -1899,7 +1899,7 @@
     },
     "evil_genius_labs": {
       "name": "Evil Genius Labs",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -1911,7 +1911,7 @@
     },
     "faa_delays": {
       "name": "FAA Delays",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -1982,7 +1982,7 @@
     },
     "fing": {
       "name": "Fing",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -1994,13 +1994,13 @@
     },
     "firefly_iii": {
       "name": "Firefly III",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
     },
     "fireservicerota": {
       "name": "FireServiceRota",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -2012,13 +2012,13 @@
     },
     "fitbit": {
       "name": "Fitbit",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "fivem": {
       "name": "FiveM",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -2142,7 +2142,7 @@
     },
     "foscam": {
       "name": "Foscam",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -2224,7 +2224,7 @@
     },
     "frontier_silicon": {
       "name": "Frontier Silicon",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -2247,7 +2247,7 @@
     },
     "fully_kiosk": {
       "name": "Fully Kiosk Browser",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -2275,13 +2275,13 @@
       "iot_class": "cloud_polling"
     },
     "garages_amsterdam": {
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "gardena_bluetooth": {
       "name": "Gardena Bluetooth",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -2327,7 +2327,7 @@
     },
     "geocaching": {
       "name": "Geocaching",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -2362,7 +2362,7 @@
     },
     "github": {
       "name": "GitHub",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -2380,7 +2380,7 @@
     },
     "glances": {
       "name": "Glances",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -2415,7 +2415,7 @@
     },
     "goodwe": {
       "name": "GoodWe Inverter",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -2465,7 +2465,7 @@
           "name": "Google Maps"
         },
         "google_photos": {
-          "integration_type": "hub",
+          "integration_type": "service",
           "config_flow": true,
           "iot_class": "cloud_polling",
           "name": "Google Photos"
@@ -2483,7 +2483,7 @@
           "name": "Google Sheets"
         },
         "google_tasks": {
-          "integration_type": "hub",
+          "integration_type": "service",
           "config_flow": true,
           "iot_class": "cloud_polling",
           "name": "Google Tasks"
@@ -2495,7 +2495,7 @@
           "name": "Google Translate text-to-speech"
         },
         "google_travel_time": {
-          "integration_type": "hub",
+          "integration_type": "service",
           "config_flow": true,
           "iot_class": "cloud_polling"
         },
@@ -2547,7 +2547,7 @@
       "name": "Govee",
       "integrations": {
         "govee_ble": {
-          "integration_type": "hub",
+          "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_push",
           "name": "Govee Bluetooth"
@@ -2696,7 +2696,7 @@
     },
     "here_travel_time": {
       "name": "HERE Travel Time",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -2747,13 +2747,13 @@
     },
     "hko": {
       "name": "Hong Kong Observatory",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "hlk_sw16": {
       "name": "Hi-Link HLK-SW16",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -2868,7 +2868,7 @@
     },
     "huawei_lte": {
       "name": "Huawei LTE",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -2899,7 +2899,7 @@
           "name": "Husqvarna Automower"
         },
         "husqvarna_automower_ble": {
-          "integration_type": "hub",
+          "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_polling",
           "name": "Husqvarna Automower BLE"
@@ -2908,13 +2908,13 @@
     },
     "huum": {
       "name": "Huum",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "hvv_departures": {
       "name": "HVV Departures",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -3693,7 +3693,7 @@
       "name": "Logitech",
       "integrations": {
         "harmony": {
-          "integration_type": "hub",
+          "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_push",
           "name": "Logitech Harmony Hub"

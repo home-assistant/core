@@ -6,6 +6,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from homeassistant.components.actron_air.const import DOMAIN
+from homeassistant.const import CONF_API_TOKEN
+
+from tests.common import MockConfigEntry
+
 
 @pytest.fixture
 def mock_actron_api() -> Generator[AsyncMock]:
@@ -84,3 +89,14 @@ def mock_actron_api() -> Generator[AsyncMock]:
         settings.set_turbo_mode = AsyncMock()
 
         yield api
+
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Return a mock config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="test@example.com",
+        data={CONF_API_TOKEN: "test_refresh_token"},
+        unique_id="test_user_id",
+    )
