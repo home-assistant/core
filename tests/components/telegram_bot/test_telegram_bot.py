@@ -437,6 +437,7 @@ async def _run_download_file_service_with_mocks(
             "download_file",
             schema_request,
             blocking=True,
+            return_response=True,
         )
         await hass.async_block_till_done()
 
@@ -1811,8 +1812,6 @@ async def test_download_file_custom_dir(
     allowlist_dir = tmp_path.as_posix()
     schema_request[ATTR_DIRECTORY_PATH] = allowlist_dir
     expected_path = expected_download_path(tmp_path.as_posix())
-    # verify dir exists, if not create it
-    await hass.async_add_executor_job(os.makedirs, allowlist_dir, 0o777, True)
 
     hass.config.allowlist_external_dirs.add(allowlist_dir)
 
