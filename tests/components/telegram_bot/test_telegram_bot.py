@@ -1705,31 +1705,82 @@ async def test_deprecated_timeout_parameter(
         "telegram_file_name",
         "schema_request",
         "expected_download_path",
-        "expected_allowlist_dir",
     ),
     [
         pytest.param(
             "file_name1.jpg",
             {ATTR_FILE_ID: "some-file-id-1"},
             lambda hass: f"{hass.config.path(DOMAIN)}/file_name1.jpg",
-            lambda hass: hass.config.path(DOMAIN),
-            id="no_custom_name_no_custom_dir",
+            id="no_custom_name",
         ),
         pytest.param(
             "file_name2.jpg",
             {ATTR_FILE_ID: "some-file-id-2", ATTR_FILE_NAME: "custom_name2.jpg"},
             lambda hass: f"{hass.config.path(DOMAIN)}/custom_name2.jpg",
-            lambda hass: hass.config.path(DOMAIN),
-            id="custom_name_no_custom_dir",
+            id="custom_name",
         ),
+    ],
+)
+async def test_download_file_no_custom_dir(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+    telegram_file_name: str,
+    schema_request: dict[str, Any],
+    expected_download_path: Any,
+) -> None:
+    """Test download file."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    allowlist_dir = hass.config.path(DOMAIN)
+    expected_path = expected_download_path(hass)
+    # verify dir exists, if not create it
+    await hass.async_add_executor_job(os.makedirs, allowlist_dir, 0o777, True)
+
+    hass.config.allowlist_external_dirs.add(allowlist_dir)
+
+    file_id = schema_request[ATTR_FILE_ID]
+    telegram_file = File(
+        file_id=file_id,
+        file_unique_id="file_unique_id",
+        file_path=f"file/path/{telegram_file_name}",
+    )
+    (
+        get_file_mock,
+        download_as_bytearray_mock,
+        write_called,
+    ) = await _run_download_file_service_with_mocks(
+        hass,
+        schema_request,
+        telegram_file,
+        f"This is the file content of {telegram_file_name}".encode(),
+    )
+
+    get_file_mock.assert_called_once_with(file_id=file_id)
+    download_as_bytearray_mock.assert_called_once()
+    assert "self" in write_called
+    assert str(write_called["self"]) == expected_path
+    assert (
+        write_called["data"]
+        == f"This is the file content of {telegram_file_name}".encode()
+    )
+
+
+@pytest.mark.parametrize(
+    (
+        "telegram_file_name",
+        "schema_request",
+        "expected_download_path",
+    ),
+    [
         pytest.param(
             "file_name3.jpg",
             {
                 ATTR_FILE_ID: "some-file-id-3",
-                ATTR_DIRECTORY_PATH: "/tmp/tempfolder3",  # noqa: S108
             },
-            lambda hass: "/tmp/tempfolder3/file_name3.jpg",  # noqa: S108
-            lambda hass: "/tmp/tempfolder3",  # noqa: S108
+            lambda path: f"{path}/file_name3.jpg",
             id="no_custom_name_custom_dir",
         ),
         pytest.param(
@@ -1737,30 +1788,29 @@ async def test_deprecated_timeout_parameter(
             {
                 ATTR_FILE_ID: "some-file-id-4",
                 ATTR_FILE_NAME: "custom_name4.jpg",
-                ATTR_DIRECTORY_PATH: "/tmp/tempfolder4",  # noqa: S108
             },
-            lambda hass: "/tmp/tempfolder4/custom_name4.jpg",  # noqa: S108
-            lambda hass: "/tmp/tempfolder4",  # noqa: S108
+            lambda path: f"{path}/custom_name4.jpg",
             id="custom_name_custom_dir",
         ),
     ],
 )
-async def test_download_file(
+async def test_download_file_custom_dir(
+    tmp_path: Path,
     hass: HomeAssistant,
     mock_broadcast_config_entry: MockConfigEntry,
     mock_external_calls: None,
     telegram_file_name: str,
     schema_request: dict[str, Any],
     expected_download_path: Any,
-    expected_allowlist_dir: Any,
 ) -> None:
     """Test download file."""
     mock_broadcast_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    expected_path = expected_download_path(hass)
-    allowlist_dir = expected_allowlist_dir(hass)
+    allowlist_dir = tmp_path.as_posix()
+    schema_request[ATTR_DIRECTORY_PATH] = allowlist_dir
+    expected_path = expected_download_path(tmp_path.as_posix())
     # verify dir exists, if not create it
     await hass.async_add_executor_job(os.makedirs, allowlist_dir, 0o777, True)
 
