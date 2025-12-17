@@ -444,6 +444,32 @@ async def _run_download_file_service_with_mocks(
     return get_file_mock, download_as_bytearray_mock, write_called, response
 
 
+def _assert_download_file_mocks_calls(
+    file_content,
+    expected_path,
+    file_id,
+    get_file_mock,
+    download_as_bytearray_mock,
+    write_called,
+):
+    """Common assert for mocks calls."""
+    get_file_mock.assert_called_once_with(file_id=file_id)
+    download_as_bytearray_mock.assert_called_once()
+    assert "self" in write_called
+    assert str(write_called["self"]) == expected_path
+    assert write_called["data"] == file_content
+
+
+def _assert_download_file_response(
+    response: ServiceResponse, expected_path: str
+) -> None:
+    """Assert download file response."""
+    assert response is not None
+    assert len(response.keys()) == 1
+    assert "file_path" in response
+    assert response["file_path"] == expected_path
+
+
 async def test_send_chat_action(
     hass: HomeAssistant,
     webhook_bot,
@@ -1748,6 +1774,7 @@ async def test_download_file_no_custom_dir(
         file_unique_id="file_unique_id",
         file_path=f"file/path/{telegram_file_name}",
     )
+    file_content = f"This is the file content of {telegram_file_name}".encode()
     (
         get_file_mock,
         download_as_bytearray_mock,
@@ -1757,21 +1784,18 @@ async def test_download_file_no_custom_dir(
         hass,
         schema_request,
         telegram_file,
-        f"This is the file content of {telegram_file_name}".encode(),
+        file_content,
     )
 
-    get_file_mock.assert_called_once_with(file_id=file_id)
-    download_as_bytearray_mock.assert_called_once()
-    assert "self" in write_called
-    assert str(write_called["self"]) == expected_path
-    assert (
-        write_called["data"]
-        == f"This is the file content of {telegram_file_name}".encode()
+    _assert_download_file_mocks_calls(
+        file_content,
+        expected_path,
+        file_id,
+        get_file_mock,
+        download_as_bytearray_mock,
+        write_called,
     )
-    assert response is not None
-    assert len(response.keys()) == 1
-    assert "file_path" in response
-    assert response["file_path"] == expected_path
+    _assert_download_file_response(response, expected_path)
 
 
 @pytest.mark.parametrize(
@@ -1826,6 +1850,7 @@ async def test_download_file_custom_dir(
         file_unique_id="file_unique_id",
         file_path=f"file/path/{telegram_file_name}",
     )
+    file_content = f"This is the file content of {telegram_file_name}".encode()
     (
         get_file_mock,
         download_as_bytearray_mock,
@@ -1835,21 +1860,18 @@ async def test_download_file_custom_dir(
         hass,
         schema_request,
         telegram_file,
-        f"This is the file content of {telegram_file_name}".encode(),
+        file_content,
     )
 
-    get_file_mock.assert_called_once_with(file_id=file_id)
-    download_as_bytearray_mock.assert_called_once()
-    assert "self" in write_called
-    assert str(write_called["self"]) == expected_path
-    assert (
-        write_called["data"]
-        == f"This is the file content of {telegram_file_name}".encode()
+    _assert_download_file_mocks_calls(
+        file_content,
+        expected_path,
+        file_id,
+        get_file_mock,
+        download_as_bytearray_mock,
+        write_called,
     )
-    assert response is not None
-    assert len(response.keys()) == 1
-    assert "file_path" in response
-    assert response["file_path"] == expected_path
+    _assert_download_file_response(response, expected_path)
 
 
 async def test_download_file_directory_created_successfully(
@@ -1880,23 +1902,25 @@ async def test_download_file_directory_created_successfully(
         file_unique_id="file_unique_id",
         file_path=f"file/path/{schema_request[ATTR_FILE_NAME]}",
     )
+    file_content = "file content for new dir"
     (
         get_file_mock,
         download_as_bytearray_mock,
         write_called,
         response,
     ) = await _run_download_file_service_with_mocks(
-        hass, schema_request, telegram_file, "This is the file content"
+        hass, schema_request, telegram_file, file_content
     )
 
-    get_file_mock.assert_called_once()
-    download_as_bytearray_mock.assert_called_once()
-    assert "self" in write_called
-    assert str(write_called["self"]) == expected_path
-    assert response is not None
-    assert len(response.keys()) == 1
-    assert "file_path" in response
-    assert response["file_path"] == expected_path
+    _assert_download_file_mocks_calls(
+        file_content,
+        expected_path,
+        schema_request[ATTR_FILE_ID],
+        get_file_mock,
+        download_as_bytearray_mock,
+        write_called,
+    )
+    _assert_download_file_response(response, expected_path)
 
 
 async def test_download_file_when_bot_failed_to_get_file(
