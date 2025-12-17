@@ -1,87 +1,157 @@
-"""Support for Ness D8X/D16X zone states - represented as binary sensors."""
+"""Support for Ness zone binary sensors."""
 
 from __future__ import annotations
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from collections.abc import Mapping
+import logging
+from typing import Any, cast
 
-from . import (
-    CONF_ZONE_ID,
-    CONF_ZONE_NAME,
-    CONF_ZONE_TYPE,
-    CONF_ZONES,
-    SIGNAL_ZONE_CHANGED,
-    ZoneChangedData,
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from . import SIGNAL_ZONE_CHANGED
+from .const import DEFAULT_MAX_SUPPORTED_ZONES, DOMAIN, PANEL_MODEL_ZONES
+
+_LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Ness Alarm binary sensor devices."""
-    if not discovery_info:
-        return
+    """Set up Ness zone binary sensors from a config entry."""
 
-    configured_zones = discovery_info[CONF_ZONES]
+    entity_registry = er.async_get(hass)
 
-    devices = []
+    panel_model = config_entry.data.get("panel_model", "UNKNOWN")
 
-    for zone_config in configured_zones:
-        zone_type = zone_config[CONF_ZONE_TYPE]
-        zone_name = zone_config[CONF_ZONE_NAME]
-        zone_id = zone_config[CONF_ZONE_ID]
-        device = NessZoneBinarySensor(
-            zone_id=zone_id, name=zone_name, zone_type=zone_type
+    if panel_model.startswith("MANUAL_"):
+        try:
+            zone_str = panel_model.split("_")[1]
+            enabled_zones = int(zone_str)
+        except (IndexError, ValueError):
+            _LOGGER.warning(
+                "Invalid manual model format '%s', defaulting to %s zones",
+                panel_model,
+                DEFAULT_MAX_SUPPORTED_ZONES,
+            )
+    elif panel_model in PANEL_MODEL_ZONES:
+        enabled_zones = PANEL_MODEL_ZONES[panel_model]
+    else:
+        enabled_zones = DEFAULT_MAX_SUPPORTED_ZONES
+        _LOGGER.warning(
+            "Unknown panel model '%s', defaulting to %s zones",
+            panel_model,
+            enabled_zones,
         )
-        devices.append(device)
 
-    async_add_entities(devices)
+    entities = []
 
+    # Always create 32 zones, and disable based on the number of supported zones from
+    for zone_id in range(1, DEFAULT_MAX_SUPPORTED_ZONES + 1):
+        name = f"Zone {zone_id}"
+        zone_type = BinarySensorDeviceClass.MOTION
 
-class NessZoneBinarySensor(BinarySensorEntity):
-    """Representation of an Ness alarm zone as a binary sensor."""
+        should_be_enabled = zone_id <= enabled_zones
 
-    _attr_should_poll = False
+        unique_id = f"{config_entry.entry_id}_zone_{zone_id}"
+        existing_entity = entity_registry.async_get_entity_id(
+            "binary_sensor", DOMAIN, unique_id
+        )
 
-    def __init__(self, zone_id, name, zone_type):
-        """Initialize the binary_sensor."""
-        self._zone_id = zone_id
-        self._name = name
-        self._type = zone_type
-        self._state = 0
+        if existing_entity:
+            current_entry = entity_registry.entities.get(existing_entity)
+            if current_entry:
+                is_currently_disabled = current_entry.disabled_by is not None
 
-    async def async_added_to_hass(self) -> None:
-        """Register callbacks."""
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass, SIGNAL_ZONE_CHANGED, self._handle_zone_change
+                if should_be_enabled and is_currently_disabled:
+                    entity_registry.async_update_entity(
+                        existing_entity, disabled_by=None
+                    )
+                elif not should_be_enabled and not is_currently_disabled:
+                    entity_registry.async_update_entity(
+                        existing_entity,
+                        disabled_by=er.RegistryEntryDisabler.INTEGRATION,
+                    )
+
+        entities.append(
+            NessZoneSensor(
+                zone_id,
+                name,
+                zone_type,
+                config_entry.entry_id,
+                should_be_enabled,
             )
         )
 
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return self._name
+    async_add_entities(entities)
 
-    @property
-    def is_on(self):
-        """Return true if sensor is on."""
-        return self._state == 1
 
-    @property
-    def device_class(self):
-        """Return the class of this sensor, from DEVICE_CLASSES."""
-        return self._type
+class NessZoneSensor(BinarySensorEntity):
+    """Representation of a Ness zone sensor."""
+
+    _attr_should_poll = False
+
+    def __init__(
+        self,
+        zone_id: int,
+        name: str,
+        zone_type: str,
+        entry_id: str,
+        enabled_by_default: bool,
+    ) -> None:
+        """Initialize the zone sensor."""
+        self._zone_id = zone_id
+        self._attr_name = name
+        self._attr_device_class = cast(BinarySensorDeviceClass, zone_type)
+        self._entry_id = entry_id
+        self._attr_unique_id = f"{entry_id}_zone_{zone_id}"
+        self._state = False
+
+        # Set entity as disabled if beyond panel's capacity
+        # This only applies on first creation, not on reload
+        self._attr_entity_registry_enabled_default = enabled_by_default
+
+    async def async_added_to_hass(self) -> None:
+        """Register callbacks and restore state."""
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                SIGNAL_ZONE_CHANGED,
+                self._handle_zone_change,
+            )
+        )
 
     @callback
-    def _handle_zone_change(self, data: ZoneChangedData):
-        """Handle zone state update."""
-        if self._zone_id == data.zone_id:
-            self._state = data.state
-            self.async_write_ha_state()
+    def _handle_zone_change(self, zone_id: int, state: bool) -> None:
+        """Handle zone state changes."""
+        if zone_id != self._zone_id:
+            return
+
+        self._state = state
+        self.async_write_ha_state()
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if sensor is on."""
+        return self._state
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return True
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return entity specific state attributes."""
+        return {
+            "zone_id": self._zone_id,
+        }
