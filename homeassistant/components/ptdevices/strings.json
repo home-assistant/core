@@ -26,14 +26,12 @@
       },
       "user": {
         "data": {
-          "api_token": "[%key:common::config_flow::data::api_token%]",
-          "device_id": "Device ID"
+          "api_token": "[%key:common::config_flow::data::api_token%]"
         },
         "data_description": {
-          "api_token": "API Token for your PTDevices account.",
-          "device_id": "Device ID or MAC address from your PTDevice."
+          "api_token": "API Token for your PTDevices account."
         },
-        "description": "Enter the Device ID or MAC address of the device to connect to and your token API key from ParemTech"
+        "description": "Enter your token API key from ParemTech"
       }
     }
   },
