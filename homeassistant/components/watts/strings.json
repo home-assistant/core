@@ -27,5 +27,13 @@
         "title": "[%key:common::config_flow::title::reauth%]"
       }
     }
+  },
+  "exceptions": {
+    "set_hvac_mode_error": {
+      "message": "An error occurred while setting the HVAC mode."
+    },
+    "set_temperature_error": {
+      "message": "An error occurred while setting the temperature."
+    }
   }
 }

@@ -126,7 +126,8 @@ class WattsVisionClimate(WattsVisionThermostatEntity, ClimateEntity):
             )
         except RuntimeError as err:
             raise HomeAssistantError(
-                f"Error setting temperature for {self.device_id}: {err}"
+                translation_domain=DOMAIN,
+                translation_key="set_temperature_error",
             ) from err
 
         _LOGGER.debug(
@@ -147,7 +148,8 @@ class WattsVisionClimate(WattsVisionThermostatEntity, ClimateEntity):
             await self.coordinator.client.set_thermostat_mode(self.device_id, mode)
         except (ValueError, RuntimeError) as err:
             raise HomeAssistantError(
-                f"Error setting HVAC mode for {self.device_id}: {err}"
+                translation_domain=DOMAIN,
+                translation_key="set_hvac_mode_error",
             ) from err
 
         _LOGGER.debug(

@@ -44,11 +44,11 @@ rules:
     comment: Integration is a cloud service and does not support discovery.
   docs-data-update: done
   docs-examples: done
-  docs-known-limitations: todo
+  docs-known-limitations: done
   docs-supported-devices: done
   docs-supported-functions: done
-  docs-troubleshooting: todo
-  docs-use-cases: todo
+  docs-troubleshooting: done
+  docs-use-cases: done
   dynamic-devices: done
   entity-category: done
   entity-device-class: done
@@ -56,10 +56,16 @@ rules:
   entity-translations:
     status: exempt
     comment: No entity required translations.
-  exception-translations: todo
-  icon-translations: todo
-  reconfiguration-flow: todo
-  repair-issues: todo
+  exception-translations: done
+  icon-translations:
+    status: exempt
+    comment: Thermostat entities use standard HA Climate entity.
+  reconfiguration-flow:
+    status: exempt
+    comment: This integration uses OAuth2 and has no configurable settings beyond authentication.
+  repair-issues:
+    status: exempt
+    comment: No actionable repair scenarios, auth issues are handled by reauthentication flow.
   stale-devices: done
 
   # Platinum

@@ -226,7 +226,9 @@ async def test_set_temperature_api_error(
     # Make the API call fail
     mock_watts_client.set_thermostat_temperature.side_effect = RuntimeError("API Error")
 
-    with pytest.raises(HomeAssistantError, match="Error setting temperature"):
+    with pytest.raises(
+        HomeAssistantError, match="An error occurred while setting the temperature"
+    ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
@@ -248,7 +250,9 @@ async def test_set_hvac_mode_value_error(
 
     mock_watts_client.set_thermostat_mode.side_effect = ValueError("Invalid mode")
 
-    with pytest.raises(HomeAssistantError, match="Error setting HVAC mode"):
+    with pytest.raises(
+        HomeAssistantError, match="An error occurred while setting the HVAC mode"
+    ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
