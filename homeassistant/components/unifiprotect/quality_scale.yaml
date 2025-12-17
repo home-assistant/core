@@ -32,7 +32,7 @@ rules:
   parallel-updates: done
   reauthentication-flow: done
   test-coverage:
-    status: todo
+    status: done
     comment: Diagnostics tests could use snapshot testing.
 
   # Gold
@@ -49,15 +49,13 @@ rules:
   docs-use-cases: done
   dynamic-devices: done
   entity-category: done
-  entity-device-class: done
+  entity-device-class:
+    status: done
+    comment: "Planned improvement: remove doorbell occupancy binary sensor and keep the event sensor after a solution for https://github.com/home-assistant/core/issues/145941 is available."
   entity-disabled-by-default: done
-  entity-translations:
-    status: todo
-    comment: Some entity names could be improved for clarity.
+  entity-translations: done
   exception-translations: done
-  icon-translations:
-    status: todo
-    comment: Icons in binary_sensor.py could be migrated to icons.json.
+  icon-translations: done
   reconfiguration-flow: done
   repair-issues: done
   stale-devices: done
@@ -65,6 +63,4 @@ rules:
   # Platinum
   async-dependency: done
   inject-websession: done
-  strict-typing:
-    status: todo
-    comment: Could use HassKey for typed hass.data access.
+  strict-typing: done
