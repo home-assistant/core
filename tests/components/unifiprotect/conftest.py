@@ -91,6 +91,7 @@ def mock_ufp_config_entry():
             CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
         },
         version=2,
+        unique_id="A1E00C826924",
     )
 
 
