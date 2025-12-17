@@ -21,9 +21,14 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import ConfigEntry
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,6 +91,22 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
 SCAN_INTERVAL = timedelta(minutes=1)
+
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up the openevse platform."""
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if entry.data[CONF_HOST] == config[CONF_HOST]:
+            return
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(DOMAIN, data={CONF_HOST: config[CONF_HOST]})
+    )
 
 
 async def async_setup_entry(
