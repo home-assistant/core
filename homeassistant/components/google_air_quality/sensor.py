@@ -197,7 +197,7 @@ async def async_setup_entry(
 class AirQualitySensorEntity(
     CoordinatorEntity[GoogleAirQualityCurrentConditionsCoordinator], SensorEntity
 ):
-    """Defining the Air Quality Sensors with AirQualitySensorEntityDescription."""
+    """Defining the current conditions Air Quality Sensors with AirQualitySensorEntityDescription."""
 
     entity_description: AirQualitySensorEntityDescription
     _attr_attribution = "Data provided by Google Air Quality"
@@ -247,7 +247,7 @@ class AirQualitySensorEntity(
 class AirQualityForecastSensorEntity(
     CoordinatorEntity[GoogleAirQualityForecastCoordinator], SensorEntity
 ):
-    """Defining the Air Quality Sensors with AirQualitySensorEntityDescription."""
+    """Defining the forecast Air Quality Sensors with AirQualitySensorEntityDescription."""
 
     entity_description: AirQualitySensorEntityDescription
     _attr_attribution = "Data provided by Google Air Quality"

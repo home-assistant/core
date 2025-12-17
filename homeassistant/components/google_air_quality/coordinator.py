@@ -48,7 +48,7 @@ type GoogleAirQualityConfigEntry = ConfigEntry[GoogleAirQualityRuntimeData]
 class GoogleAirQualityCurrentConditionsCoordinator(
     DataUpdateCoordinator[AirQualityCurrentConditionsData]
 ):
-    """Coordinator for fetching Google AirQuality data."""
+    """Coordinator for fetching Google AirQuality current conditions data."""
 
     config_entry: GoogleAirQualityConfigEntry
 
@@ -87,7 +87,7 @@ class GoogleAirQualityCurrentConditionsCoordinator(
 class GoogleAirQualityForecastCoordinator(
     DataUpdateCoordinator[AirQualityForecastData]
 ):
-    """Coordinator for fetching Google AirQuality data."""
+    """Coordinator for fetching Google AirQuality forecast data."""
 
     config_entry: GoogleAirQualityConfigEntry
 

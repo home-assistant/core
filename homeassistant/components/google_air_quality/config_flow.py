@@ -131,12 +131,10 @@ class GoogleAirQualityConfigFlow(ConfigFlow, domain=DOMAIN):
             auth = Auth(session, user_input[CONF_API_KEY], referrer=referrer)
             api = GoogleAirQualityApi(auth)
             location = user_input[CONF_LOCATION]
-            lat = location[CONF_LATITUDE]
-            lon = location[CONF_LONGITUDE]
             if await _validate_input(
                 request_fn=lambda: api.async_get_current_conditions(
-                    lat=lat,
-                    lon=lon,
+                    lat=location[CONF_LATITUDE],
+                    lon=location[CONF_LONGITUDE],
                 ),
                 errors=errors,
                 description_placeholders=description_placeholders,
@@ -196,12 +194,10 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
                 return self.async_abort(reason="already_configured")
             api: GoogleAirQualityApi = self._get_entry().runtime_data.api
             location = user_input[CONF_LOCATION]
-            lat = location[CONF_LATITUDE]
-            lon = location[CONF_LONGITUDE]
             if await _validate_input(
                 request_fn=lambda: api.async_get_current_conditions(
-                    lat=lat,
-                    lon=lon,
+                    lat=location[CONF_LATITUDE],
+                    lon=location[CONF_LONGITUDE],
                 ),
                 errors=errors,
                 description_placeholders=description_placeholders,
