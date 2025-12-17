@@ -71,6 +71,17 @@
       }
     }
   },
+  "exceptions": {
+    "config_entry_not_found": {
+      "message": "Config entry not found. Please check that the config entry ID is correct."
+    },
+    "config_entry_not_loaded": {
+      "message": "Config entry is not loaded. Please ensure the Risco integration is set up correctly."
+    },
+    "not_local_entry": {
+      "message": "This service only works with local Risco connections."
+    }
+  },
   "options": {
     "step": {
       "ha_to_risco": {
@@ -104,6 +115,22 @@
         "description": "Select what state your Home Assistant alarm control panel will report for every state reported by Risco",
         "title": "Map Risco states to Home Assistant states"
       }
+    }
+  },
+  "services": {
+    "set_time": {
+      "description": "Sets the time of an alarm panel.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Risco alarm panel to set the time for.",
+          "name": "Config entry"
+        },
+        "time": {
+          "description": "The time to send to the alarm panel. Leave it empty to use the Home Assistant system time.",
+          "name": "Time"
+        }
+      },
+      "name": "Set the alarm panel time"
     }
   }
 }
