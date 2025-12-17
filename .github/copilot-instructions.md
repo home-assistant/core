@@ -52,7 +52,7 @@ rules:
 - **Code formatting** - We have ruff as a formatting tool that will catch those if needed (unless specifically instructed otherwise in these instructions)
 
 **Git commit practices during review:**
-- **Do NOT amend or squash commits after review has started** - Reviewers need to see what changed since their last review
+- **Do NOT amend, squash, or rebase commits after review has started** - Reviewers need to see what changed since their last review
 
 ## Python Requirements
 
