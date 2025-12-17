@@ -332,7 +332,7 @@
           "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]"
         },
         "directory_path": {
-          "description": "Local directory path to save the file to. defaults to the 'telegram_bot' directory within your Home Assistant configuration directory.",
+          "description": "Local directory path to save the file to. Defaults to the 'telegram_bot' directory within your Home Assistant configuration directory.",
           "example": "/config/telegram_bot",
           "name": "Directory path"
         },

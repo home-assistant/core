@@ -1805,7 +1805,6 @@ async def test_download_file_directory_created_successfully(
     await hass.async_block_till_done()
 
     allowlist_dir = tmp_path.as_posix()
-    # await hass.async_add_executor_job(os.makedirs, allowlist_dir, 0o777, True)
     hass.config.allowlist_external_dirs.add(allowlist_dir)
     download_path = os.path.join(allowlist_dir, "download_dir")
 
