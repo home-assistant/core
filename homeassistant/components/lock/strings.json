@@ -98,7 +98,7 @@
   "title": "Lock",
   "triggers": {
     "jammed": {
-      "description": "Triggers after one or more locks got jammed.",
+      "description": "Triggers after one or more locks jam.",
       "fields": {
         "behavior": {
           "description": "[%key:component::lock::common::trigger_behavior_description%]",
