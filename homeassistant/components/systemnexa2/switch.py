@@ -19,7 +19,7 @@ async def async_setup_entry(
     entry: SystemNexa2ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up lights based on a config entry."""
+    """Set up switch based on a config entry."""
     device = entry.runtime_data.device
     entities: list[SystemNexa2Entity] = [
         ConfigurationSwitch(
@@ -86,10 +86,10 @@ class ConfigurationSwitch(SystemNexa2Entity, SwitchEntity):
 
 
 class SN2SwitchPlug(SystemNexa2Entity, SwitchEntity):
-    """Representation of a Light."""
+    """Representation of a Switch."""
 
     def __init__(self, device: Device, device_info: DeviceInfo, entry_id: str) -> None:
-        """Initialize the light."""
+        """Initialize the switch."""
         super().__init__(
             device,
             entry_id=entry_id,
@@ -101,15 +101,15 @@ class SN2SwitchPlug(SystemNexa2Entity, SwitchEntity):
         self._attr_available = True
 
     async def async_turn_on(self, **_kwargs: Any) -> None:
-        """Turn on the light."""
+        """Turn on the switch."""
         await self._device.turn_on()
 
     async def async_turn_off(self, **_kwargs: Any) -> None:
-        """Turn off the light."""
+        """Turn off the switch."""
         await self._device.turn_off()
 
     async def async_toggle(self, **_kwargs: Any) -> None:
-        """Toggle the light."""
+        """Toggle the switch."""
         await self._device.toggle()
 
     @callback
