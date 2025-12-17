@@ -172,7 +172,7 @@ async def test_dust_collection_mode_none(
     dust_collection_mode: RoborockDockDustCollectionModeCode | None,
     expected_state: str,
 ) -> None:
-    """Test that maps without a name are given a placeholder name."""
+    """Test that the dust collection mode entity correctly handles mode values."""
     assert fake_vacuum.v1_properties
     assert fake_vacuum.v1_properties.dust_collection_mode
     fake_vacuum.v1_properties.dust_collection_mode.mode = dust_collection_mode
