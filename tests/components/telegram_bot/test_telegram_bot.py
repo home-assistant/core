@@ -421,7 +421,9 @@ async def test_send_chat_action(
 
     await hass.async_block_till_done()
     mock.assert_called_once()
-    mock.assert_called_with(chat_id=123456, action=CHAT_ACTION_TYPING)
+    mock.assert_called_with(
+        chat_id=123456, action=CHAT_ACTION_TYPING, message_thread_id=123
+    )
 
 
 @pytest.mark.parametrize(
