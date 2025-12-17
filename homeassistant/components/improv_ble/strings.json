@@ -28,7 +28,16 @@
         "description": "Choose next step.",
         "menu_options": {
           "identify": "Identify device",
-          "provision": "Connect device to a Wi-Fi network"
+          "provision": "Connect device to a Wi-Fi network",
+          "set_hostname": "Set hostname"
+        }
+      },
+      "main_menu_with_device_info": {
+        "description": "[%key:component::improv_ble::config::step::main_menu::description%]\n\nFirmware Name: {firmware_name}\nFirmware Version: {firmware_version}\nHardware Chip/Variant: {hardware_chip}\nDevice Name: {device_name}",
+        "menu_options": {
+          "identify": "[%key:component::improv_ble::config::step::main_menu::menu_options::identify%]",
+          "provision": "[%key:component::improv_ble::config::step::main_menu::menu_options::provision%]",
+          "set_hostname": "[%key:component::improv_ble::config::step::main_menu::menu_options::set_hostname%]"
         }
       },
       "provision": {
@@ -37,6 +46,12 @@
           "ssid": "SSID"
         },
         "description": "Enter Wi-Fi credentials to connect the device to your network."
+      },
+      "set_hostname": {
+        "data": {
+          "hostname": "Hostname"
+        },
+        "description": "Enter the hostname to assign to the device or leave as the default provided. This will usually be used determine the entity name of the device in Home Assistant and for mDNS broadcasts. It should be unique among all devices connected to the same Wi-Fi network and should contain only alphanumeric characters and the '-' sign."
       },
       "user": {
         "data": {
