@@ -297,9 +297,9 @@ class VolvoMediumIntervalCoordinator(VolvoBaseCoordinator):
     async def _async_determine_api_calls(
         self,
     ) -> list[Callable[[], Coroutine[Any, Any, Any]]]:
-        api_calls: list[Any] = []
         api = self.context.api
         vehicle = self.context.vehicle
+        api_calls: list[Any] = [api.async_get_engine_status]
 
         if vehicle.has_battery_engine():
             capabilities = await api.async_get_energy_capabilities()
@@ -316,9 +316,6 @@ class VolvoMediumIntervalCoordinator(VolvoBaseCoordinator):
                 ]
 
                 api_calls.append(self._async_get_energy_state)
-
-        if vehicle.has_combustion_engine():
-            api_calls.append(api.async_get_engine_status)
 
         return api_calls
 
