@@ -259,10 +259,8 @@ async def test_sensor_with_time_filtering(
     assert len(sensor_states) == 13
 
     # Find the actual departure time sensor and next departure sensor
-    actual_departure_sensor = hass.states.get("sensor.test_route_time_filter_departure")
-    next_departure_sensor = hass.states.get(
-        "sensor.test_route_time_filter_next_departure"
-    )
+    actual_departure_sensor = hass.states.get("sensor.afternoon_commute_departure")
+    next_departure_sensor = hass.states.get("sensor.afternoon_commute_next_departure")
 
     assert actual_departure_sensor is not None, "Actual departure sensor not found"
     assert actual_departure_sensor["state"] != STATE_UNKNOWN
@@ -350,7 +348,7 @@ async def test_sensor_with_time_filtering_next_day(
     assert len(sensor_states) == 13
 
     # Find the actual departure sensor
-    actual_departure_sensor = hass.states.get("sensor.test_route_morning_departure")
+    actual_departure_sensor = hass.states.get("sensor.morning_commute_departure")
 
     assert actual_departure_sensor is not None, "Actual departure sensor not found"
 
