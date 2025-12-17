@@ -33,7 +33,7 @@ class OpenEVSEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(user_input[CONF_HOST])
             self._abort_if_unique_id_configured()
 
-            if not self.check_status(user_input[CONF_HOST]):
+            if not await self.check_status(user_input[CONF_HOST]):
                 return self.async_show_form(
                     step_id="user",
                     data_schema=vol.Schema({vol.Required(CONF_HOST): str}),

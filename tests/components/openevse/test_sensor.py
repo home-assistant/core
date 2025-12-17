@@ -15,7 +15,7 @@ from tests.common import MockConfigEntry
 @pytest.fixture
 def mock_charger():
     """Create a mock OpenEVSE charger."""
-    with patch("homeassistant.components.openevse.sensor.openevsewifi.Charger") as mock:
+    with patch("homeassistant.components.openevse.openevsewifi.Charger") as mock:
         charger = MagicMock()
         charger.getStatus.return_value = "Charging"
         charger.getChargeTimeElapsed.return_value = 3600  # 60 minutes in seconds

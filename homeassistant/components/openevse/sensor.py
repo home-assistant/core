@@ -134,7 +134,7 @@ class OpenEVSESensor(SensorEntity):
         self.entity_description = description
         self.host = host
         self.entry = entry
-        self.entity_registry_enabled_default = self.entity_description.key in (
+        self.entity_registry_enabled_default = self.entity_description.key not in (
             "ir_temp",
             "rtc_temp",
         )
