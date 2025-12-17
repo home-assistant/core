@@ -49,3 +49,13 @@ class OpenEVSEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user", data_schema=vol.Schema({vol.Required(CONF_HOST): str})
         )
+
+    async def async_step_import(self, data) -> config_entries.ConfigFlowResult:
+        """Handle the initial step."""
+
+        return self.async_create_entry(
+            title=f"OpenEVSE {data[CONF_HOST]}",
+            data={
+                CONF_HOST: data[CONF_HOST],
+            },
+        )

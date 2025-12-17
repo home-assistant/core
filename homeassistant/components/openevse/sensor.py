@@ -13,6 +13,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_HOST,
     UnitOfElectricCurrent,
@@ -117,7 +118,11 @@ async def async_setup_platform(
             return
 
     hass.async_create_task(
-        hass.config_entries.flow.async_init(DOMAIN, data={CONF_HOST: config[CONF_HOST]})
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            data={CONF_HOST: config[CONF_HOST]},
+            context={"source": SOURCE_IMPORT},
+        )
     )
 
 
