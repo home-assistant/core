@@ -97,6 +97,11 @@ class TtnDeviceTracker(CoordinatorEntity[TTNCoordinator], TrackerEntity):
         self._attr_unique_id = device_id
         self._attr_name = None  # Use device name
 
+        # Store geocoded location (from external geolocation services)
+        self._geocoded_lat: float | None = None
+        self._geocoded_lon: float | None = None
+        self._geocoded_accuracy: float | None = None
+
     @property
     def entity_category(self) -> None:
         """Return None to prevent diagnostic categorization."""
@@ -104,15 +109,32 @@ class TtnDeviceTracker(CoordinatorEntity[TTNCoordinator], TrackerEntity):
 
     @property
     def latitude(self) -> float | None:
-        """Return latitude from GPS if available."""
+        """Return latitude from GPS or geocoded location."""
+        # Prioritize GPS over geocoded location
         coords = self._get_gps_coordinates()
-        return coords[0] if coords else None
+        if coords:
+            return coords[0]
+        # Fall back to geocoded location if no GPS
+        return self._geocoded_lat
 
     @property
     def longitude(self) -> float | None:
-        """Return longitude from GPS if available."""
+        """Return longitude from GPS or geocoded location."""
+        # Prioritize GPS over geocoded location
         coords = self._get_gps_coordinates()
-        return coords[1] if coords else None
+        if coords:
+            return coords[1]
+        # Fall back to geocoded location if no GPS
+        return self._geocoded_lon
+
+    def set_geocoded_location(
+        self, latitude: float, longitude: float, accuracy: float | None = None
+    ) -> None:
+        """Set geocoded location from external geolocation service."""
+        self._geocoded_lat = latitude
+        self._geocoded_lon = longitude
+        self._geocoded_accuracy = accuracy
+        self.async_write_ha_state()
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -162,31 +184,44 @@ class TtnDeviceTracker(CoordinatorEntity[TTNCoordinator], TrackerEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return extra state attributes with Wi-Fi scan data for geolocation."""
+        attrs: dict[str, Any] = {}
+
+        # Add Wi-Fi scan data if available
         wifi_data = self._get_wifi_scan_data()
-        if not wifi_data:
-            return None
+        if wifi_data:
+            # The value type can be list at runtime despite type hints
+            value: Any = wifi_data.value
+            if isinstance(value, list) and value:
+                attrs["wifi_access_points_count"] = len(value)
 
-        # The value type can be list at runtime despite type hints
-        value: Any = wifi_data.value
-        if isinstance(value, list) and value:
-            attrs: dict[str, Any] = {"wifi_access_points_count": len(value)}
+                # Wi-Fi scan data (list of dicts with mac/rssi)
+                if all(isinstance(item, dict) and "mac" in item for item in value):
+                    # Store Wi-Fi access points for geolocation services
+                    wifi_aps = []
+                    for idx, ap in enumerate(value, 1):
+                        attrs[f"wifi_ap_{idx}_mac"] = ap.get("mac")
+                        attrs[f"wifi_ap_{idx}_rssi"] = ap.get("rssi")
+                        wifi_aps.append(
+                            {
+                                "macAddress": ap.get("mac"),
+                                "signalStrength": int(ap.get("rssi", 0)),
+                            }
+                        )
 
-            # Wi-Fi scan data (list of dicts with mac/rssi)
-            if all(isinstance(item, dict) and "mac" in item for item in value):
-                # Store Wi-Fi access points for geolocation services
-                wifi_aps = []
-                for idx, ap in enumerate(value, 1):
-                    attrs[f"wifi_ap_{idx}_mac"] = ap.get("mac")
-                    attrs[f"wifi_ap_{idx}_rssi"] = ap.get("rssi")
-                    wifi_aps.append(
-                        {
-                            "macAddress": ap.get("mac"),
-                            "signalStrength": int(ap.get("rssi", 0)),
-                        }
-                    )
+                    # Store in format ready for Google Geolocation API
+                    attrs["wifi_access_points"] = wifi_aps
 
-                # Store in format ready for Google Geolocation API
-                attrs["wifi_access_points"] = wifi_aps
-                return attrs
+        # Add geocoded location info if available
+        if self._geocoded_lat is not None and self._geocoded_lon is not None:
+            attrs["geocoded_latitude"] = self._geocoded_lat
+            attrs["geocoded_longitude"] = self._geocoded_lon
+            if self._geocoded_accuracy is not None:
+                attrs["geocoded_accuracy"] = self._geocoded_accuracy
 
-        return None
+            # Indicate if we're currently showing geocoded location
+            if not self._get_gps_coordinates():
+                attrs["location_source"] = "geocoded"
+            else:
+                attrs["location_source"] = "gps"
+
+        return attrs if attrs else None

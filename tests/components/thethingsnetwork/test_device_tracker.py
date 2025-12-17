@@ -256,3 +256,134 @@ async def test_sensor_with_no_location_device(
     # But sensor should still exist
     sensor_entity_id = f"sensor.{DEVICE_ID}_a_field"
     assert entity_registry.async_get(sensor_entity_id)
+
+
+async def test_geocoded_location_fallback(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    mock_ttnclient,
+    mock_config_entry,
+) -> None:
+    """Test geocoded location is used when no GPS available."""
+    # Setup with Wi-Fi scan data only (no GPS)
+    mock_ttnclient.return_value.fetch_data.return_value = DATA_WIFI_SCAN
+
+    await init_integration(hass, mock_config_entry)
+
+    # Get the entity
+    entity_id = f"{DEVICE_TRACKER_DOMAIN}.{TRACKER_DEVICE_ID}"
+    entity = entity_registry.async_get(entity_id)
+    assert entity
+
+    # Initial state should be unknown (no location)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "unknown"
+    assert ATTR_LATITUDE not in state.attributes
+    assert ATTR_LONGITUDE not in state.attributes
+
+    # Get the entity component
+    component = hass.data.get("entity_components", {}).get("device_tracker")
+    assert component
+    entity_obj = component.get_entity(entity_id)
+    assert entity_obj
+
+    # Set geocoded location
+    geocoded_lat = 51.0340168
+    geocoded_lon = 3.7415962
+    geocoded_accuracy = 26.147
+
+    entity_obj.set_geocoded_location(geocoded_lat, geocoded_lon, geocoded_accuracy)
+    await hass.async_block_till_done()
+
+    # Now the geocoded location should be used
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes[ATTR_LATITUDE] == geocoded_lat
+    assert state.attributes[ATTR_LONGITUDE] == geocoded_lon
+    assert state.attributes["geocoded_latitude"] == geocoded_lat
+    assert state.attributes["geocoded_longitude"] == geocoded_lon
+    assert state.attributes["geocoded_accuracy"] == geocoded_accuracy
+    assert state.attributes["location_source"] == "geocoded"
+
+
+async def test_gps_priority_over_geocoded(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_ttnclient,
+    mock_config_entry,
+) -> None:
+    """Test GPS coordinates take priority over geocoded location."""
+    # Setup with GPS data
+    mock_ttnclient.return_value.fetch_data.return_value = DATA_GPS
+
+    await init_integration(hass, mock_config_entry)
+
+    entity_id = f"{DEVICE_TRACKER_DOMAIN}.{TRACKER_DEVICE_ID}"
+    entity = entity_registry.async_get(entity_id)
+    assert entity
+
+    # Get the entity component
+    component = hass.data.get("entity_components", {}).get("device_tracker")
+    assert component
+    entity_obj = component.get_entity(entity_id)
+    assert entity_obj
+
+    # Set geocoded location (different from GPS)
+    geocoded_lat = 51.0340168
+    geocoded_lon = 3.7415962
+    geocoded_accuracy = 26.147
+
+    entity_obj.set_geocoded_location(geocoded_lat, geocoded_lon, geocoded_accuracy)
+    await hass.async_block_till_done()
+
+    # GPS should take priority
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes[ATTR_LATITUDE] == GPS_LATITUDE  # GPS, not geocoded
+    assert state.attributes[ATTR_LONGITUDE] == GPS_LONGITUDE  # GPS, not geocoded
+
+    # But geocoded attributes should still be present
+    assert state.attributes["geocoded_latitude"] == geocoded_lat
+    assert state.attributes["geocoded_longitude"] == geocoded_lon
+    assert state.attributes["geocoded_accuracy"] == geocoded_accuracy
+    assert state.attributes["location_source"] == "gps"
+
+
+async def test_geocoded_location_without_accuracy(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_ttnclient,
+    mock_config_entry,
+) -> None:
+    """Test geocoded location can be set without accuracy parameter."""
+    # Setup with Wi-Fi scan data only
+    mock_ttnclient.return_value.fetch_data.return_value = DATA_WIFI_SCAN
+
+    await init_integration(hass, mock_config_entry)
+
+    entity_id = f"{DEVICE_TRACKER_DOMAIN}.{TRACKER_DEVICE_ID}"
+
+    # Get the entity component
+    component = hass.data.get("entity_components", {}).get("device_tracker")
+    assert component
+    entity_obj = component.get_entity(entity_id)
+    assert entity_obj
+
+    # Set geocoded location without accuracy
+    geocoded_lat = 51.0340168
+    geocoded_lon = 3.7415962
+
+    entity_obj.set_geocoded_location(geocoded_lat, geocoded_lon)
+    await hass.async_block_till_done()
+
+    # Verify location is set without accuracy
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes[ATTR_LATITUDE] == geocoded_lat
+    assert state.attributes[ATTR_LONGITUDE] == geocoded_lon
+    assert state.attributes["geocoded_latitude"] == geocoded_lat
+    assert state.attributes["geocoded_longitude"] == geocoded_lon
+    assert "geocoded_accuracy" not in state.attributes  # Should not be present
+    assert state.attributes["location_source"] == "geocoded"
