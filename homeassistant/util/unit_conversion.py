@@ -522,6 +522,22 @@ class ReactivePowerConverter(BaseUnitConverter):
     }
 
 
+class OzoneConcentrationConverter(BaseUnitConverter):
+    """Convert ozone ratio to mass per volume."""
+
+    UNIT_CLASS = "ozone"
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        CONCENTRATION_PARTS_PER_BILLION: 1,
+        # concentration (µg/m3) = 0.0409 x concentration (ppb) x molar mass
+        # Ozone molar mass: 48.00 g/mol
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: 0.0409 * 48.00,
+    }
+    VALID_UNITS = {
+        CONCENTRATION_PARTS_PER_BILLION,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    }
+
+
 class SpeedConverter(BaseUnitConverter):
     """Utility to convert speed values."""
 
