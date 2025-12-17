@@ -121,7 +121,7 @@ async def test_carplay_storage_setup(hass: HomeAssistant) -> None:
 
     # Verify store can be accessed through the proper function
     store = get_carplay_store(hass)
-    data = await store.async_get_data()
+    data = store.get_data()
     assert data == {"enabled": True, "quick_access": []}
 
 

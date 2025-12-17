@@ -338,7 +338,7 @@ class iOSConfigView(HomeAssistantView):
 
         # Add carplay config from store
         store = get_carplay_store(hass)
-        carplay_config = await store.async_get_data()
+        carplay_config = store.get_data()
         response_config["carplay"] = carplay_config
 
         return self.json(response_config)
@@ -391,7 +391,7 @@ class iOSCarPlayConfigView(HomeAssistantView):
         """Handle the GET request for CarPlay configuration."""
         hass = request.app[KEY_HASS]
         store = get_carplay_store(hass)
-        carplay_config = await store.async_get_data()
+        carplay_config = store.get_data()
         return self.json(carplay_config)
 
 
