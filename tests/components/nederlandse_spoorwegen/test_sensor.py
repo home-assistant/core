@@ -1,7 +1,7 @@
 """Test the Nederlandse Spoorwegen sensor."""
 
 from collections.abc import Generator
-from datetime import datetime
+from datetime import date, datetime
 from unittest.mock import AsyncMock, patch
 import zoneinfo
 
@@ -226,10 +226,11 @@ async def test_sensor_with_time_filtering(
     3. The filtering is based on time-only (ignoring date)
     """
     # Create a config entry with a route that has time set to 16:00
+    # Test frozen at: 2025-09-15 14:30 UTC = 16:30 Amsterdam time
     # The fixture includes trips at the following times:
-    # 16:24 (first trip) - should be INCLUDED (at or after 16:00)
-    # 16:34 (second trip) - should be INCLUDED (at or after 16:00)
-    # With time=16:00, trips at 16:24 and 16:34 should be included
+    # 16:24/16:25 (trip 0) - FILTERED OUT (departed before 16:30 now)
+    # 16:34/16:35 (trip 1) - INCLUDED (>= 16:00 configured time AND > 16:30 now)
+    # With time=16:00, only future trips at or after 16:00 are included
     config_entry = MockConfigEntry(
         title=INTEGRATION_TITLE,
         data={CONF_API_KEY: API_KEY},
@@ -303,7 +304,7 @@ async def test_sensor_with_time_filtering(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_with_time_filtering_next_day(
     hass: HomeAssistant,
-    mock_nsapi: AsyncMock,
+    mock_tomorrow_trips_nsapi: AsyncMock,
 ) -> None:
     """Test that time filtering automatically rolls over to next day when time is in past.
 
@@ -351,9 +352,30 @@ async def test_sensor_with_time_filtering_next_day(
 
     assert actual_departure_sensor is not None, "Actual departure sensor not found"
 
-    # The sensor should have a valid trip (from tomorrow at or after 08:00)
-    # We don't assert the exact time since it depends on the fixture data,
-    # but it should not be STATE_UNKNOWN
+    # The sensor should have a valid trip
     assert actual_departure_sensor.state != STATE_UNKNOWN, (
         "Expected to have trips from tomorrow when configured time is in the past"
+    )
+
+    # Verify the first trip is tomorrow morning at or after 08:00
+    # The fixture has trips at 08:24, 08:34 on 2025-09-16 (tomorrow)
+    departure_dt = datetime.fromisoformat(actual_departure_sensor.state)
+    ams_tz = zoneinfo.ZoneInfo("Europe/Amsterdam")
+    departure_local = departure_dt.astimezone(ams_tz)
+
+    departure_hour = departure_local.hour
+    departure_minute = departure_local.minute
+    departure_date = departure_local.date()
+
+    # Verify trip is at or after 08:00 morning time
+    assert 8 <= departure_hour < 12, (
+        f"Expected morning trip (08:00-11:59) but got {departure_hour}:{departure_minute:02d}. "
+        "This means the rollover to tomorrow logic is not working correctly."
+    )
+
+    # Verify trip is from tomorrow (2025-09-16)
+    expected_date = date(2025, 9, 16)
+    assert departure_date == expected_date, (
+        f"Expected trip from tomorrow (2025-09-16) but got {departure_date}. "
+        "The coordinator should query tomorrow's trips when configured time is >1 hour in the past."
     )
