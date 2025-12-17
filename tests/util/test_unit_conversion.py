@@ -162,7 +162,7 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
     ),
     OzoneConcentrationConverter: (
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        CONCENTRATION_PARTS_PER_MILLION,
+        CONCENTRATION_PARTS_PER_BILLION,
         1.9632,
     ),
     PowerConverter: (UnitOfPower.WATT, UnitOfPower.KILO_WATT, 1000),
