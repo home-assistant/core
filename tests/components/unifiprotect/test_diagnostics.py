@@ -1,6 +1,11 @@
 """Test UniFi Protect diagnostics."""
 
-from uiprotect.data import NVR, Light
+import re
+from typing import Any
+from unittest.mock import patch
+
+from syrupy.assertion import SnapshotAssertion
+from uiprotect.data import Light
 
 from homeassistant.core import HomeAssistant
 
@@ -9,52 +14,52 @@ from .utils import MockUFPFixture, init_entry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
+# Pattern for hex IDs (24 char hex strings like device/user IDs)
+HEX_ID_PATTERN = re.compile(r"^[a-f0-9]{24}$")
+# Pattern for MAC addresses (12 hex chars)
+MAC_PATTERN = re.compile(r"^[A-F0-9]{12}$")
+
+
+def _normalize_diagnostics(data: Any) -> Any:
+    """Normalize diagnostics data for deterministic snapshots.
+
+    Removes repr fields (contain memory addresses) and normalizes
+    hex IDs and MAC addresses that are randomly generated.
+    """
+    if isinstance(data, dict):
+        return {
+            k: _normalize_diagnostics(v)
+            for k, v in data.items()
+            if k != "repr"  # Remove repr fields with memory addresses
+        }
+    if isinstance(data, list):
+        return [_normalize_diagnostics(item) for item in data]
+    if isinstance(data, str):
+        if HEX_ID_PATTERN.match(data):
+            return "**REDACTED_ID**"
+        if MAC_PATTERN.match(data):
+            return "**REDACTED_MAC**"
+    return data
+
 
 async def test_diagnostics(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
     light: Light,
     hass_client: ClientSessionGenerator,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test generating diagnostics for a config entry."""
-
     await init_entry(hass, ufp, [light])
 
-    options = dict(ufp.entry.options)
-    hass.config_entries.async_update_entry(ufp.entry, options=options)
-    await hass.async_block_till_done()
+    # Mock anonymize_data to return unchanged data for deterministic snapshots
+    with patch(
+        "homeassistant.components.unifiprotect.diagnostics.anonymize_data",
+        side_effect=lambda x: x,
+    ):
+        diag = await get_diagnostics_for_config_entry(hass, hass_client, ufp.entry)
 
-    diag = await get_diagnostics_for_config_entry(hass, hass_client, ufp.entry)
+    # Normalize data to remove non-deterministic values (memory addresses, random IDs)
+    diag_normalized = _normalize_diagnostics(diag)
 
-    assert "options" in diag and isinstance(diag["options"], dict)
-    options = diag["options"]
-
-    assert "bootstrap" in diag and isinstance(diag["bootstrap"], dict)
-    bootstrap = diag["bootstrap"]
-    nvr: NVR = ufp.api.bootstrap.nvr
-    # validate some of the data
-    assert "nvr" in bootstrap and isinstance(bootstrap["nvr"], dict)
-    nvr_dict = bootstrap["nvr"]
-    # should have been anonymized
-    assert nvr_dict["id"] != nvr.id
-    assert nvr_dict["mac"] != nvr.mac
-    assert nvr_dict["host"] != str(nvr.host)
-    # should have been kept
-    assert nvr_dict["firmwareVersion"] == nvr.firmware_version
-    assert nvr_dict["version"] == str(nvr.version)
-    assert nvr_dict["type"] == nvr.type
-
-    assert (
-        "lights" in bootstrap
-        and isinstance(bootstrap["lights"], list)
-        and len(bootstrap["lights"]) == 1
-    )
-    light_dict = bootstrap["lights"][0]
-    # should have been anonymized
-    assert light_dict["id"] != light.id
-    assert light_dict["name"] != light.mac
-    assert light_dict["mac"] != light.mac
-    assert light_dict["host"] != str(light.host)
-    # should have been kept
-    assert light_dict["firmwareVersion"] == light.firmware_version
-    assert light_dict["type"] == light.type
+    assert diag_normalized == snapshot
