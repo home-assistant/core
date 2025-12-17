@@ -199,6 +199,7 @@ class SonosDiscoveryManager:
             status_code = getattr(
                 getattr(ex, "response", None), "status_code", getattr(ex, "code", None)
             )
+            # When UPnP is disabled, Sonos returns HTTP 403 Forbidden error.
             if status_code == HTTPStatus.FORBIDDEN:
                 ir.async_create_issue(
                     self.hass,
