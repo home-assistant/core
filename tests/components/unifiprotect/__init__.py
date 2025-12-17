@@ -1,9 +1,12 @@
 """Tests for the UniFi Protect integration."""
 
+from collections.abc import Generator
 from contextlib import contextmanager
-from unittest.mock import AsyncMock, MagicMock, patch
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
+from uiprotect.data.base import ProtectModel
 from unifi_discovery import AIOUnifiScanner, UnifiDevice, UnifiService
 
 DEVICE_HOSTNAME = "unvr"
@@ -46,3 +49,23 @@ def _patch_discovery(device=None, no_device=False):
             yield
 
     return _patcher()
+
+
+@contextmanager
+def patch_ufp_method(
+    obj: ProtectModel, method: str, *args: Any, **kwargs: Any
+) -> Generator[AsyncMock]:
+    """Patch a method on a UniFi Protect pydantic model.
+
+    Pydantic models have frozen fields that cannot be directly patched.
+    This context manager temporarily unfreezes the field, patches the method,
+    and yields the mock for assertions.
+
+    Usage:
+        with patch_ufp_method(doorbell, "set_lcd_text") as mock_method:
+            await hass.services.async_call(...)
+            mock_method.assert_called_once_with(...)
+    """
+    obj.__pydantic_fields__[method] = Mock(final=False, frozen=False)
+    with patch.object(obj, method, *args, **kwargs) as mock_method:
+        yield mock_method
