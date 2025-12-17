@@ -157,11 +157,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         "asyncio-dgram": {"setuptools"}
     },
     "harmony": {"aioharmony": {"async-timeout"}},
-    "heatmiser": {
-        # https://github.com/andylockran/heatmiserV3/issues/96
-        # heatmiserV3 > pyserial-asyncio
-        "heatmiserv3": {"pyserial-asyncio"}
-    },
     "here_travel_time": {
         "here-routing": {"async-timeout"},
         "here-transit": {"async-timeout"},
@@ -172,11 +167,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # https://github.com/influxdata/influxdb-client-python/issues/695
         # influxdb-client > setuptools
         "influxdb-client": {"setuptools"}
-    },
-    "insteon": {
-        # https://github.com/pyinsteon/pyinsteon/issues/430
-        # pyinsteon > pyserial-asyncio
-        "pyinsteon": {"pyserial-asyncio"}
     },
     "izone": {"python-izone": {"async-timeout"}},
     "keba": {
@@ -194,7 +184,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         "python-linkplay": {"async-timeout"},
     },
     "loqed": {"loqedapi": {"async-timeout"}},
-    "matter": {"python-matter-server": {"async-timeout"}},
     "mediaroom": {"pymediaroom": {"async-timeout"}},
     "met": {"pymetno": {"async-timeout"}},
     "met_eireann": {"pymeteireann": {"async-timeout"}},

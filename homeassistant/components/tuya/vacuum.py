@@ -135,8 +135,7 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
             self._attr_supported_features |= VacuumEntityFeature.PAUSE
 
         if charge_wrapper or (
-            mode_wrapper
-            and TUYA_MODE_RETURN_HOME in mode_wrapper.type_information.range
+            mode_wrapper and TUYA_MODE_RETURN_HOME in mode_wrapper.options
         ):
             self._attr_supported_features |= VacuumEntityFeature.RETURN_HOME
 
@@ -149,7 +148,7 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
             )
 
         if fan_speed_wrapper:
-            self._attr_fan_speed_list = fan_speed_wrapper.type_information.range
+            self._attr_fan_speed_list = fan_speed_wrapper.options
             self._attr_supported_features |= VacuumEntityFeature.FAN_SPEED
 
     @property
@@ -196,7 +195,7 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
         """Set fan speed."""
         await self._async_send_wrapper_updates(self._fan_speed_wrapper, fan_speed)
 
-    def send_command(
+    async def async_send_command(
         self,
         command: str,
         params: dict[str, Any] | list[Any] | None = None,
@@ -207,4 +206,4 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
             raise ValueError("Params cannot be omitted for Tuya vacuum commands")
         if not isinstance(params, list):
             raise TypeError("Params must be a list for Tuya vacuum commands")
-        self._send_command([{"code": command, "value": params[0]}])
+        await self._async_send_commands([{"code": command, "value": params[0]}])

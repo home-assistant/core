@@ -5,7 +5,8 @@ from __future__ import annotations
 from typing import Any
 
 import voluptuous as vol
-from wled import WLED, Device, WLEDConnectionError
+from wled import WLED, Device, WLEDConnectionError, WLEDUnsupportedVersionError
+import yarl
 
 from homeassistant.components import onboarding
 from homeassistant.config_entries import (
@@ -22,6 +23,15 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import CONF_KEEP_MAIN_LIGHT, DEFAULT_KEEP_MAIN_LIGHT, DOMAIN
 from .coordinator import WLEDConfigEntry
+
+
+def _normalize_host(host: str) -> str:
+    """Normalize host by extracting hostname if a URL is provided."""
+    try:
+        return yarl.URL(host).host or host
+    except ValueError:
+        pass
+    return host
 
 
 class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -46,8 +56,11 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
+            host = _normalize_host(user_input[CONF_HOST])
             try:
-                device = await self._async_get_device(user_input[CONF_HOST])
+                device = await self._async_get_device(host)
+            except WLEDUnsupportedVersionError:
+                errors["base"] = "unsupported_version"
             except WLEDConnectionError:
                 errors["base"] = "cannot_connect"
             else:
@@ -65,16 +78,12 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
                     )
                     return self.async_update_reload_and_abort(
                         entry,
-                        data_updates=user_input,
+                        data_updates={CONF_HOST: host},
                     )
-                self._abort_if_unique_id_configured(
-                    updates={CONF_HOST: user_input[CONF_HOST]}
-                )
+                self._abort_if_unique_id_configured(updates={CONF_HOST: host})
                 return self.async_create_entry(
                     title=device.info.name,
-                    data={
-                        CONF_HOST: user_input[CONF_HOST],
-                    },
+                    data={CONF_HOST: host},
                 )
         data_schema = vol.Schema({vol.Required(CONF_HOST): str})
         if self.source == SOURCE_RECONFIGURE:
@@ -110,6 +119,8 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
         self.discovered_host = discovery_info.host
         try:
             self.discovered_device = await self._async_get_device(discovery_info.host)
+        except WLEDUnsupportedVersionError:
+            return self.async_abort(reason="unsupported_version")
         except WLEDConnectionError:
             return self.async_abort(reason="cannot_connect")
 

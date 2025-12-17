@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import AirobotConfigEntry, AirobotDataUpdateCoordinator
 
-PLATFORMS: list[Platform] = [Platform.CLIMATE]
+PLATFORMS: list[Platform] = [Platform.CLIMATE, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AirobotConfigEntry) -> bool:
