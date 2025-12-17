@@ -8,7 +8,7 @@ from typing import Any
 
 import aioptdevices
 from aioptdevices.configuration import Configuration
-from aioptdevices.interface import Interface, PTDevicesResponse
+from aioptdevices.interface import Interface
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -46,7 +46,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> str:
 
     # Test Connection
     try:
-        response: PTDevicesResponse = await ptdevices_interface.get_data()
+        response = await ptdevices_interface.get_data()
     # Catch any errors
     except aioptdevices.PTDevicesRequestError as err:
         raise CannotConnect from err
