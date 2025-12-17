@@ -14,6 +14,7 @@ from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.shelly.const import (
     DOMAIN,
     ENTRY_RELOAD_COOLDOWN,
+    MODEL_TOP_EV_CHARGER_EVE01,
     MODEL_WALL_DISPLAY,
     MOTION_MODELS,
 )
@@ -567,6 +568,7 @@ async def test_wall_display_relay_mode(
     """Test Wall Display in relay mode."""
     climate_entity_id = "climate.test_name"
     switch_entity_id = "switch.test_name_test_switch_0"
+    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
 
     config_entry = await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
@@ -576,7 +578,6 @@ async def test_wall_display_relay_mode(
     new_status = deepcopy(mock_rpc_device.status)
     new_status["sys"]["relay_in_thermostat"] = False
     new_status.pop("thermostat:0")
-    new_status.pop("cover:0")
     monkeypatch.setattr(mock_rpc_device, "status", new_status)
 
     await hass.config_entries.async_reload(config_entry.entry_id)
@@ -828,6 +829,7 @@ async def test_cury_switch_entity(
     status = {
         "cury:0": {
             "id": 0,
+            "away_mode": False,
             "slots": {
                 "left": {
                     "intensity": 70,
@@ -847,7 +849,13 @@ async def test_cury_switch_entity(
     monkeypatch.setattr(mock_rpc_device, "status", status)
     await init_integration(hass, 3)
 
-    for entity in ("left_slot", "left_slot_boost", "right_slot", "right_slot_boost"):
+    for entity in (
+        "away_mode",
+        "left_slot",
+        "left_slot_boost",
+        "right_slot",
+        "right_slot_boost",
+    ):
         entity_id = f"{SWITCH_DOMAIN}.test_name_{entity}"
 
         state = hass.states.get(entity_id)
@@ -954,3 +962,33 @@ async def test_cury_switch_availability(
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
+
+
+async def test_rpc_ev_charging_switch(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    entity_registry: EntityRegistry,
+) -> None:
+    """Test the charging switch for EV charger."""
+    config = deepcopy(mock_rpc_device.config)
+    config["boolean:200"] = {
+        "name": "Start Charging",
+        "meta": {"ui": {"view": "toggle"}},
+        "role": "start_charging",
+    }
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    status = deepcopy(mock_rpc_device.status)
+    status["boolean:200"] = {"value": False}
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    entity_id = "switch.test_name_charging"
+
+    await init_integration(hass, 3, model=MODEL_TOP_EV_CHARGER_EVE01)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
+
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry.unique_id == "123456789ABC-boolean:200-boolean_start_charging"

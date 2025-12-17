@@ -9,7 +9,7 @@ from brother import Brother, SnmpError
 from homeassistant.components.snmp import async_get_snmp_engine
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
 from .const import (
     CONF_COMMUNITY,
@@ -49,6 +49,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: BrotherConfigEntry) -> b
 
     coordinator = BrotherDataUpdateCoordinator(hass, entry, brother)
     await coordinator.async_config_entry_first_refresh()
+
+    if brother.serial.lower() != entry.unique_id:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="serial_mismatch",
+            translation_placeholders={
+                "device": entry.title,
+            },
+        )
 
     entry.runtime_data = coordinator
 

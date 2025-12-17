@@ -9,7 +9,6 @@ import math
 from typing import Any
 from unittest.mock import patch
 
-from freezegun.api import freeze_time
 import pytest
 
 from homeassistant.components import sensor
@@ -477,7 +476,7 @@ async def test_restore_sensor_save_state(
     assert type(extra_data["native_value"]) is native_value_type
 
 
-@freeze_time("2020-02-08 15:00:00")
+@pytest.mark.freeze_time("2020-02-08 15:00:00")
 async def test_restore_sensor_save_state_frozen_time_datetime(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
@@ -505,7 +504,7 @@ async def test_restore_sensor_save_state_frozen_time_datetime(
     assert type(extra_data["native_value"]) is dict
 
 
-@freeze_time("2020-02-08 15:00:00")
+@pytest.mark.freeze_time("2020-02-08 15:00:00")
 async def test_restore_sensor_save_state_frozen_time_date(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
@@ -601,7 +600,7 @@ async def test_translated_unit(
     """Test translated unit."""
 
     with patch(
-        "homeassistant.helpers.service.translation.async_get_translations",
+        "homeassistant.helpers.entity_platform.translation.async_get_translations",
         return_value={
             "component.test.entity.sensor.test_translation_key.unit_of_measurement": "Tests"
         },
@@ -633,7 +632,7 @@ async def test_translated_unit_with_native_unit_raises(
     """Test that translated unit."""
 
     with patch(
-        "homeassistant.helpers.service.translation.async_get_translations",
+        "homeassistant.helpers.entity_platform.translation.async_get_translations",
         return_value={
             "component.test.entity.sensor.test_translation_key.unit_of_measurement": "Tests"
         },
@@ -664,7 +663,7 @@ async def test_unit_translation_key_without_platform_raises(
     """Test that unit translation key property raises if the entity has no platform yet."""
 
     with patch(
-        "homeassistant.helpers.service.translation.async_get_translations",
+        "homeassistant.helpers.entity_platform.translation.async_get_translations",
         return_value={
             "component.test.entity.sensor.test_translation_key.unit_of_measurement": "Tests"
         },
@@ -789,6 +788,26 @@ async def test_unit_translation_key_without_platform_raises(
             100,
             pytest.approx(37.77777),
             "37.8",
+            1,
+        ),
+        (
+            SensorDeviceClass.TEMPERATURE_DELTA,
+            UnitOfTemperature.CELSIUS,
+            UnitOfTemperature.FAHRENHEIT,
+            UnitOfTemperature.FAHRENHEIT,
+            2,
+            3.6,
+            "3.6",
+            1,
+        ),
+        (
+            SensorDeviceClass.TEMPERATURE_DELTA,
+            UnitOfTemperature.FAHRENHEIT,
+            UnitOfTemperature.CELSIUS,
+            UnitOfTemperature.CELSIUS,
+            1,
+            pytest.approx(0.555556),
+            "0.6",
             1,
         ),
         (
@@ -1163,6 +1182,15 @@ async def test_custom_unit(
             100,
             100,
             SensorDeviceClass.WEIGHT,
+        ),
+        (
+            UnitOfTemperature.CELSIUS,
+            UnitOfTemperature.FAHRENHEIT,
+            UnitOfTemperature.FAHRENHEIT,
+            10,
+            10,
+            18,
+            SensorDeviceClass.TEMPERATURE_DELTA,
         ),
     ],
 )
@@ -1814,6 +1842,7 @@ async def test_unit_conversion_priority_suggested_unit_change_2(
         (SensorDeviceClass.SOUND_PRESSURE, UnitOfSoundPressure.DECIBEL, 0),
         (SensorDeviceClass.SPEED, UnitOfSpeed.MILLIMETERS_PER_SECOND, 0),
         (SensorDeviceClass.TEMPERATURE, UnitOfTemperature.KELVIN, 1),
+        (SensorDeviceClass.TEMPERATURE_DELTA, UnitOfTemperature.KELVIN, 1),
         (SensorDeviceClass.VOLTAGE, UnitOfElectricPotential.VOLT, 0),
         (SensorDeviceClass.VOLUME, UnitOfVolume.MILLILITERS, 0),
         (SensorDeviceClass.VOLUME_FLOW_RATE, UnitOfVolumeFlowRate.LITERS_PER_SECOND, 0),
@@ -2229,6 +2258,7 @@ async def test_non_numeric_device_class_with_unit_of_measurement(
         SensorDeviceClass.SPEED,
         SensorDeviceClass.SULPHUR_DIOXIDE,
         SensorDeviceClass.TEMPERATURE,
+        SensorDeviceClass.TEMPERATURE_DELTA,
         SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
         SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
         SensorDeviceClass.VOLTAGE,

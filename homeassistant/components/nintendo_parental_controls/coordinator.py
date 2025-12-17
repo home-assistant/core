@@ -5,8 +5,9 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
+from pynintendoauth.exceptions import InvalidOAuthConfigurationException
 from pynintendoparental import Authenticator, NintendoParental
-from pynintendoparental.exceptions import InvalidOAuthConfigurationException
+from pynintendoparental.exceptions import NoDevicesFoundException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -23,6 +24,8 @@ UPDATE_INTERVAL = timedelta(seconds=60)
 
 class NintendoUpdateCoordinator(DataUpdateCoordinator[None]):
     """Nintendo data update coordinator."""
+
+    config_entry: NintendoParentalControlsConfigEntry
 
     def __init__(
         self,
@@ -49,4 +52,9 @@ class NintendoUpdateCoordinator(DataUpdateCoordinator[None]):
         except InvalidOAuthConfigurationException as err:
             raise ConfigEntryError(
                 err, translation_domain=DOMAIN, translation_key="invalid_auth"
+            ) from err
+        except NoDevicesFoundException as err:
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="no_devices_found",
             ) from err

@@ -10,7 +10,6 @@ PLATFORM_WEBHOOKS = "webhooks"
 SECTION_ADVANCED_SETTINGS = "advanced_settings"
 SUBENTRY_TYPE_ALLOWED_CHAT_IDS = "allowed_chat_ids"
 
-CONF_BOT_COUNT = "bot_count"
 CONF_ALLOWED_CHAT_IDS = "allowed_chat_ids"
 CONF_CONFIG_ENTRY_ID = "config_entry_id"
 
@@ -23,12 +22,6 @@ CONF_CHAT_ID = "chat_id"
 BOT_NAME = "telegram_bot"
 ERROR_FIELD = "error_field"
 ERROR_MESSAGE = "error_message"
-
-ISSUE_DEPRECATED_YAML = "deprecated_yaml"
-ISSUE_DEPRECATED_YAML_HAS_MORE_PLATFORMS = (
-    "deprecated_yaml_import_issue_has_more_platforms"
-)
-ISSUE_DEPRECATED_YAML_IMPORT_ISSUE_ERROR = "deprecated_yaml_import_issue_error"
 
 DEFAULT_TRUSTED_NETWORKS = [ip_network("149.154.160.0/20"), ip_network("91.108.4.0/22")]
 
@@ -51,9 +44,11 @@ SERVICE_ANSWER_CALLBACK_QUERY = "answer_callback_query"
 SERVICE_DELETE_MESSAGE = "delete_message"
 SERVICE_LEAVE_CHAT = "leave_chat"
 
+SIGNAL_UPDATE_EVENT = "telegram_bot_update_event"
 EVENT_TELEGRAM_CALLBACK = "telegram_callback"
 EVENT_TELEGRAM_COMMAND = "telegram_command"
 EVENT_TELEGRAM_TEXT = "telegram_text"
+EVENT_TELEGRAM_ATTACHMENT = "telegram_attachment"
 EVENT_TELEGRAM_SENT = "telegram_sent"
 
 PARSER_HTML = "html"
@@ -90,6 +85,10 @@ ATTR_DISABLE_NOTIF = "disable_notification"
 ATTR_DISABLE_WEB_PREV = "disable_web_page_preview"
 ATTR_EDITED_MSG = "edited_message"
 ATTR_FILE = "file"
+ATTR_FILE_ID = "file_id"
+ATTR_FILE_MIME_TYPE = "file_mime_type"
+ATTR_FILE_NAME = "file_name"
+ATTR_FILE_SIZE = "file_size"
 ATTR_FROM_FIRST = "from_first"
 ATTR_FROM_LAST = "from_last"
 ATTR_KEYBOARD = "keyboard"

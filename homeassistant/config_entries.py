@@ -754,6 +754,7 @@ class ConfigEntry[_DataT = Any]:
         error_reason_translation_key = None
         error_reason_translation_placeholders = None
 
+        result = False
         try:
             with async_start_setup(
                 hass, integration=self.domain, group=self.entry_id, phase=setup_phase
@@ -775,8 +776,6 @@ class ConfigEntry[_DataT = Any]:
                 self.domain,
                 error_reason,
             )
-            await self._async_process_on_unload(hass)
-            result = False
         except ConfigEntryAuthFailed as exc:
             message = str(exc)
             auth_base_message = "could not authenticate"
@@ -792,9 +791,7 @@ class ConfigEntry[_DataT = Any]:
                 self.domain,
                 auth_message,
             )
-            await self._async_process_on_unload(hass)
             self.async_start_reauth(hass)
-            result = False
         except ConfigEntryNotReady as exc:
             message = str(exc)
             error_reason_translation_key = exc.translation_key
@@ -835,14 +832,39 @@ class ConfigEntry[_DataT = Any]:
                     functools.partial(self._async_setup_again, hass),
                 )
 
-            await self._async_process_on_unload(hass)
             return
-        # pylint: disable-next=broad-except
-        except (asyncio.CancelledError, SystemExit, Exception):
+
+        except asyncio.CancelledError:
+            # We want to propagate CancelledError if we are being cancelled.
+            if (task := asyncio.current_task()) and task.cancelling() > 0:
+                _LOGGER.exception(
+                    "Setup of config entry '%s' for %s integration cancelled",
+                    self.title,
+                    self.domain,
+                )
+                self._async_set_state(
+                    hass,
+                    ConfigEntryState.SETUP_ERROR,
+                    None,
+                    None,
+                    None,
+                )
+                raise
+
+            # This was not a "real" cancellation, log it and treat as a normal error.
             _LOGGER.exception(
                 "Error setting up entry %s for %s", self.title, integration.domain
             )
-            result = False
+
+        # pylint: disable-next=broad-except
+        except (SystemExit, Exception):
+            _LOGGER.exception(
+                "Error setting up entry %s for %s", self.title, integration.domain
+            )
+
+        finally:
+            if not result and domain_is_integration:
+                await self._async_process_on_unload(hass)
 
         #
         # After successfully calling async_setup_entry, it is important that this function
@@ -1418,10 +1440,8 @@ class ConfigEntriesFlowManager(
             SOURCE_REAUTH,
             SOURCE_RECONFIGURE,
         } and "entry_id" not in context:
-            # Deprecated in 2024.12, should fail in 2025.12
-            report_usage(
-                f"initialises a {source} flow without a link to the config entry",
-                breaks_in_ha_version="2025.12",
+            raise HomeAssistantError(
+                f"Cannot initialize a {source} flow without a link to the config entry"
             )
 
         flow_id = ulid_util.ulid_now()
@@ -1473,16 +1493,18 @@ class ConfigEntriesFlowManager(
                 if not self._pending_import_flows[handler]:
                     del self._pending_import_flows[handler]
 
-        if (
-            result["type"] != data_entry_flow.FlowResultType.ABORT
-            and source in DISCOVERY_SOURCES
-        ):
+        # Flows can abort or create an entry in their initial step, we do not want to
+        # fire a discovery event if no flow is actually in progress
+        flow_completed = result["type"] in {
+            data_entry_flow.FlowResultType.ABORT,
+            data_entry_flow.FlowResultType.CREATE_ENTRY,
+        }
+
+        if not flow_completed and source in DISCOVERY_SOURCES:
             # Fire discovery event
             await self._discovery_event_debouncer.async_call()
 
-        if result["type"] != data_entry_flow.FlowResultType.ABORT and source in (
-            DISCOVERY_SOURCES | {SOURCE_REAUTH}
-        ):
+        if not flow_completed and source in DISCOVERY_SOURCES | {SOURCE_REAUTH}:
             # Notify listeners that a flow is created
             for subscription in self._flow_subscriptions:
                 subscription("added", flow.flow_id)
@@ -3169,6 +3191,37 @@ class ConfigFlow(ConfigEntryBaseFlow):
         """Handle a flow initialized by Zeroconf discovery."""
         return await self._async_step_discovery_without_unique_id()
 
+    def _async_set_next_flow_if_valid(
+        self,
+        result: ConfigFlowResult,
+        next_flow: tuple[FlowType, str] | None,
+    ) -> None:
+        """Validate and set next_flow in result if provided."""
+        if next_flow is None:
+            return
+        flow_type, flow_id = next_flow
+        if flow_type != FlowType.CONFIG_FLOW:
+            raise HomeAssistantError("Invalid next_flow type")
+        # Raises UnknownFlow if the flow does not exist.
+        self.hass.config_entries.flow.async_get(flow_id)
+        result["next_flow"] = next_flow
+
+    @callback
+    def async_abort(
+        self,
+        *,
+        reason: str,
+        description_placeholders: Mapping[str, str] | None = None,
+        next_flow: tuple[FlowType, str] | None = None,
+    ) -> ConfigFlowResult:
+        """Abort the config flow."""
+        result = super().async_abort(
+            reason=reason,
+            description_placeholders=description_placeholders,
+        )
+        self._async_set_next_flow_if_valid(result, next_flow)
+        return result
+
     @callback
     def async_create_entry(  # type: ignore[override]
         self,
@@ -3183,13 +3236,11 @@ class ConfigFlow(ConfigEntryBaseFlow):
     ) -> ConfigFlowResult:
         """Finish config flow and create a config entry."""
         if self.source in {SOURCE_REAUTH, SOURCE_RECONFIGURE}:
-            report_usage(
-                f"creates a new entry in a '{self.source}' flow, "
-                "when it is expected to update an existing entry and abort",
-                core_behavior=ReportBehavior.LOG,
-                breaks_in_ha_version="2025.11",
-                integration_domain=self.handler,
+            raise HomeAssistantError(
+                f"Creates a new entry in a '{self.source}' flow, "
+                "when it is expected to update an existing entry and abort"
             )
+
         result = super().async_create_entry(
             title=title,
             data=data,
@@ -3198,13 +3249,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         )
 
         result["minor_version"] = self.MINOR_VERSION
-        if next_flow is not None:
-            flow_type, flow_id = next_flow
-            if flow_type != FlowType.CONFIG_FLOW:
-                raise HomeAssistantError("Invalid next_flow type")
-            # Raises UnknownFlow if the flow does not exist.
-            self.hass.config_entries.flow.async_get(flow_id)
-            result["next_flow"] = next_flow
+        self._async_set_next_flow_if_valid(result, next_flow)
         result["options"] = options or {}
         result["subentries"] = subentries or ()
         result["version"] = self.VERSION
@@ -3339,10 +3384,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         last_step: bool | None = None,
         preview: str | None = None,
     ) -> ConfigFlowResult:
-        """Return the definition of a form to gather user input.
-
-        The step_id parameter is deprecated and will be removed in a future release.
-        """
+        """Return the definition of a form to gather user input."""
         if self.source == SOURCE_REAUTH and "entry_id" in self.context:
             # If the integration does not provide a name for the reauth title,
             # we append it to the description placeholders.
@@ -3713,9 +3755,6 @@ class OptionsFlow(ConfigEntryBaseFlow):
 
     handler: str
 
-    _config_entry: ConfigEntry
-    """For compatibility only - to be removed in 2025.12"""
-
     @callback
     def _async_abort_entries_match(
         self, match_dict: dict[str, Any] | None = None
@@ -3756,25 +3795,9 @@ class OptionsFlow(ConfigEntryBaseFlow):
         Please note that this is not available inside `__init__` method, and
         can only be referenced after initialisation.
         """
-        # For compatibility only - to be removed in 2025.12
-        if hasattr(self, "_config_entry"):
-            return self._config_entry
-
         if self.hass is None:
             raise ValueError("The config entry is not available during initialisation")
         return self.hass.config_entries.async_get_known_entry(self._config_entry_id)
-
-    @config_entry.setter
-    def config_entry(self, value: ConfigEntry) -> None:
-        """Set the config entry value."""
-        report_usage(
-            "sets option flow config_entry explicitly, which is deprecated",
-            core_behavior=ReportBehavior.ERROR,
-            core_integration_behavior=ReportBehavior.ERROR,
-            custom_integration_behavior=ReportBehavior.LOG,
-            breaks_in_ha_version="2025.12",
-        )
-        self._config_entry = value
 
 
 class OptionsFlowWithConfigEntry(OptionsFlow):

@@ -74,7 +74,17 @@ class ZBT2FirmwareMixin(ConfigEntryBaseFlow, FirmwareInstallFlowProtocol):
     """Mixin for Home Assistant Connect ZBT-2 firmware methods."""
 
     context: ConfigFlowContext
-    BOOTLOADER_RESET_METHODS = [ResetTarget.RTS_DTR]
+
+    ZIGBEE_BAUDRATE = 460800
+
+    # Early ZBT-2 samples used RTS/DTR to trigger the bootloader, later ones use the
+    # baudrate method. Since the two are mutually exclusive we just use both.
+    BOOTLOADER_RESET_METHODS = [ResetTarget.RTS_DTR, ResetTarget.BAUDRATE]
+    APPLICATION_PROBE_METHODS = [
+        (ApplicationType.GECKO_BOOTLOADER, 115200),
+        (ApplicationType.EZSP, ZIGBEE_BAUDRATE),
+        (ApplicationType.SPINEL, 460800),
+    ]
 
     async def async_step_install_zigbee_firmware(
         self, user_input: dict[str, Any] | None = None
@@ -112,7 +122,6 @@ class HomeAssistantConnectZBT2ConfigFlow(
 
     VERSION = 1
     MINOR_VERSION = 1
-    ZIGBEE_BAUDRATE = 460800
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the config flow."""
@@ -196,14 +205,14 @@ class HomeAssistantConnectZBT2OptionsFlowHandler(
         """Instantiate options flow."""
         super().__init__(*args, **kwargs)
 
-        self._usb_info = get_usb_service_info(self.config_entry)
+        self._usb_info = get_usb_service_info(self._config_entry)
         self._hardware_name = HARDWARE_NAME
         self._device = self._usb_info.device
 
         self._probed_firmware_info = FirmwareInfo(
             device=self._device,
-            firmware_type=ApplicationType(self.config_entry.data[FIRMWARE]),
-            firmware_version=self.config_entry.data[FIRMWARE_VERSION],
+            firmware_type=ApplicationType(self._config_entry.data[FIRMWARE]),
+            firmware_version=self._config_entry.data[FIRMWARE_VERSION],
             source="guess",
             owners=[],
         )

@@ -86,6 +86,7 @@ DEFAULT_DATA = {
         CONF_LIMIT_REFETCH_TO_URL_CHANGE: False,
         CONF_FRAMERATE: 2,
         CONF_VERIFY_SSL: True,
+        CONF_RTSP_TRANSPORT: "tcp",
     },
 }
 

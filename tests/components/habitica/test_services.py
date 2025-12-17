@@ -7,7 +7,6 @@ from unittest.mock import AsyncMock, patch
 from uuid import UUID
 
 from aiohttp import ClientError
-from freezegun.api import freeze_time
 from habiticalib import (
     Checklist,
     Direction,
@@ -1845,7 +1844,7 @@ async def test_create_todo(
     ],
 )
 @pytest.mark.usefixtures("mock_uuid4")
-@freeze_time("2025-02-25T22:00:00.000Z")
+@pytest.mark.freeze_time("2025-02-25T22:00:00.000Z")
 async def test_update_daily(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -2023,7 +2022,7 @@ async def test_update_daily(
     ],
 )
 @pytest.mark.usefixtures("mock_uuid4")
-@freeze_time("2025-02-25T22:00:00.000Z")
+@pytest.mark.freeze_time("2025-02-25T22:00:00.000Z")
 async def test_create_daily(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -2064,7 +2063,7 @@ async def test_create_daily(
     ],
 )
 @pytest.mark.usefixtures("mock_uuid4")
-@freeze_time("2025-02-25T22:00:00.000Z")
+@pytest.mark.freeze_time("2025-02-25T22:00:00.000Z")
 async def test_update_daily_service_validation_errors(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
