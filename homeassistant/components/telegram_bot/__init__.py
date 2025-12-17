@@ -63,6 +63,7 @@ from .const import (
     ATTR_PASSWORD,
     ATTR_QUESTION,
     ATTR_REACTION,
+    ATTR_REPLY_TO_MSGID,
     ATTR_RESIZE_KEYBOARD,
     ATTR_SHOW_ALERT,
     ATTR_STICKER_ID,
@@ -126,21 +127,26 @@ BASE_SERVICE_SCHEMA = vol.Schema(
         vol.Optional(ATTR_TIMEOUT): cv.positive_int,
         vol.Optional(ATTR_MESSAGE_TAG): cv.string,
         vol.Optional(ATTR_MESSAGE_THREAD_ID): vol.Coerce(int),
-    },
-    extra=vol.ALLOW_EXTRA,
+    }
 )
 
 SERVICE_SCHEMA_SEND_MESSAGE = vol.All(
     cv.deprecated(ATTR_TIMEOUT),
     BASE_SERVICE_SCHEMA.extend(
-        {vol.Required(ATTR_MESSAGE): cv.string, vol.Optional(ATTR_TITLE): cv.string}
+        {
+            vol.Required(ATTR_MESSAGE): cv.string,
+            vol.Optional(ATTR_TITLE): cv.string,
+            vol.Optional(ATTR_REPLY_TO_MSGID): vol.Coerce(int),
+        }
     ),
 )
 
 SERVICE_SCHEMA_SEND_CHAT_ACTION = vol.All(
     cv.deprecated(ATTR_TIMEOUT),
-    BASE_SERVICE_SCHEMA.extend(
+    vol.Schema(
         {
+            vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
+            vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [vol.Coerce(int)]),
             vol.Required(ATTR_CHAT_ACTION): vol.In(
                 (
                     CHAT_ACTION_TYPING,
@@ -156,6 +162,7 @@ SERVICE_SCHEMA_SEND_CHAT_ACTION = vol.All(
                     CHAT_ACTION_UPLOAD_VIDEO_NOTE,
                 )
             ),
+            vol.Optional(ATTR_MESSAGE_THREAD_ID): vol.Coerce(int),
         }
     ),
 )
@@ -169,6 +176,7 @@ SERVICE_SCHEMA_BASE_SEND_FILE = BASE_SERVICE_SCHEMA.extend(
         vol.Optional(ATTR_PASSWORD): cv.string,
         vol.Optional(ATTR_AUTHENTICATION): cv.string,
         vol.Optional(ATTR_VERIFY_SSL): cv.boolean,
+        vol.Optional(ATTR_REPLY_TO_MSGID): vol.Coerce(int),
     }
 )
 
@@ -188,6 +196,7 @@ SERVICE_SCHEMA_SEND_LOCATION = vol.All(
         {
             vol.Required(ATTR_LONGITUDE): cv.string,
             vol.Required(ATTR_LATITUDE): cv.string,
+            vol.Optional(ATTR_REPLY_TO_MSGID): vol.Coerce(int),
         }
     ),
 )
@@ -205,18 +214,25 @@ SERVICE_SCHEMA_SEND_POLL = vol.All(
             vol.Optional(ATTR_ALLOWS_MULTIPLE_ANSWERS, default=False): cv.boolean,
             vol.Optional(ATTR_DISABLE_NOTIF): cv.boolean,
             vol.Optional(ATTR_MESSAGE_THREAD_ID): vol.Coerce(int),
+            vol.Optional(ATTR_REPLY_TO_MSGID): vol.Coerce(int),
         }
     ),
 )
 
 SERVICE_SCHEMA_EDIT_MESSAGE = vol.All(
     cv.deprecated(ATTR_TIMEOUT),
-    SERVICE_SCHEMA_BASE_SEND_FILE.extend(
+    vol.Schema(
         {
+            vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
+            vol.Optional(ATTR_TITLE): cv.string,
+            vol.Required(ATTR_MESSAGE): cv.string,
             vol.Required(ATTR_MESSAGEID): vol.Any(
                 cv.positive_int, vol.All(cv.string, "last")
             ),
             vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
+            vol.Optional(ATTR_PARSER): cv.string,
+            vol.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
+            vol.Optional(ATTR_DISABLE_WEB_PREV): cv.boolean,
         }
     ),
 )
