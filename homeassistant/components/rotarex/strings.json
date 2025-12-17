@@ -2,8 +2,8 @@
   "config": {
     "step": {
       "user": {
-        "title": "Rotarex Wave Login",
-        "description": "Enter your Rotarex Wave account credentials.",
+        "title": "Rotarex DIMES SRG Login",
+        "description": "Enter your Rotarex DIMES SRG account credentials.",
         "data": {
           "email": "Email",
           "password": "Password"
@@ -17,6 +17,32 @@
     },
     "abort": {
       "already_configured": "This Rotarex account is already configured."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "level": {
+        "name": "Level",
+        "state_attributes": {
+          "last_sync": {
+            "name": "Last synchronization"
+          },
+          "temperature": {
+            "name": "Temperature"
+          }
+        }
+      },
+      "battery": {
+        "name": "Battery",
+        "state_attributes": {
+          "last_sync": {
+            "name": "Last synchronization"
+          }
+        }
+      },
+      "last_sync": {
+        "name": "Last synchronization"
+      }
     }
   }
 }
