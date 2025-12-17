@@ -21,8 +21,8 @@ from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
 from .models import (
-    DPCodeBase64Wrapper,
     DPCodeEnumWrapper,
+    DPCodeRawWrapper,
     DPCodeStringWrapper,
     DPCodeTypeInformationWrapper,
 )
@@ -58,7 +58,7 @@ class _EventEnumWrapper(DPCodeEnumWrapper, _DPCodeEventWrapper):
     @property
     def event_types(self) -> list[str]:
         """Return the event types for the enum."""
-        return self.type_information.range
+        return self.options
 
     def get_event_type(
         self, device: CustomerDevice, updated_status_properties: list[str] | None
@@ -77,12 +77,12 @@ class _AlarmMessageWrapper(DPCodeStringWrapper, _DPCodeEventWrapper):
 
     def get_event_attributes(self, device: CustomerDevice) -> dict[str, Any] | None:
         """Return the event attributes for the alarm message."""
-        if (raw_value := self._read_device_status_raw(device)) is None:
+        if (raw_value := device.status.get(self.dpcode)) is None:
             return None
         return {"message": b64decode(raw_value).decode("utf-8")}
 
 
-class _DoorbellPicWrapper(DPCodeBase64Wrapper, _DPCodeEventWrapper):
+class _DoorbellPicWrapper(DPCodeRawWrapper, _DPCodeEventWrapper):
     """Wrapper for a RAW message on DPCode.DOORBELL_PIC.
 
     It is expected that the RAW data is base64/utf8 encoded URL of the picture.
@@ -90,9 +90,9 @@ class _DoorbellPicWrapper(DPCodeBase64Wrapper, _DPCodeEventWrapper):
 
     def get_event_attributes(self, device: CustomerDevice) -> dict[str, Any] | None:
         """Return the event attributes for the doorbell picture."""
-        if (raw_value := self._read_device_status_raw(device)) is None:
+        if (status := super().read_device_status(device)) is None:
             return None
-        return {"message": b64decode(raw_value).decode("utf-8")}
+        return {"message": status.decode("utf-8")}
 
 
 @dataclass(frozen=True)
