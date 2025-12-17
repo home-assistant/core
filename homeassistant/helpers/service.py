@@ -33,6 +33,7 @@ from homeassistant.core import (
     HassJob,
     HassJobType,
     HomeAssistant,
+    Service,
     ServiceCall,
     ServiceResponse,
     SupportsResponse,
@@ -79,7 +80,8 @@ ALL_SERVICE_DESCRIPTIONS_CACHE: HassKey[
 
 # batching
 BatchProcessingCallback = Callable[
-    [ServiceCall, list["Entity"], dict], EntityServiceResponse | None
+    [list["Entity"], ServiceCall],
+    Coroutine[Any, Any, EntityServiceResponse | None],
 ]
 
 # Callbacks are in the form func(entity: Entity, **kwargs)
@@ -755,6 +757,68 @@ def _get_permissible_entity_candidates(
     return [entities[entity_id] for entity_id in all_referenced.intersection(entities)]
 
 
+# batch helper functions
+def _get_service_or_raise(hass: HomeAssistant, call: ServiceCall) -> Service:
+    """Return the Service object for a call, or raise HomeAssistantError."""
+    services_by_domain = hass.services.async_services_internal()
+    if not services_by_domain:
+        raise HomeAssistantError(
+            f"Service registry unavailable while calling {call.domain}.{call.service}"
+        )
+
+    service_obj = services_by_domain.get(call.domain, {}).get(call.service)
+    if not service_obj:
+        raise HomeAssistantError(
+            f"Service {call.domain}.{call.service} not found in entity_service_call"
+        )
+
+    return service_obj
+
+
+def _add_to_batch_candidates(
+    entity: Entity,
+    service_obj: Service,
+    platform_candidates: dict[str, list[Entity]],
+) -> None:
+    """Add an entity to the platform_candidates dict if its platform has batch callbacks."""
+    platform_name = entity.platform.platform_name
+    if platform_name in service_obj.batch_processing_callbacks:
+        platform_candidates.setdefault(platform_name, []).append(entity)
+
+
+def _handle_batch_key(data: dict | ServiceCall, add: bool) -> None:
+    """Add or remove the _BATCH_KEY from data depending on `add`."""
+    d = data.data if isinstance(data, ServiceCall) else data
+    if add:
+        d[_BATCH_KEY] = True
+    else:
+        d.pop(_BATCH_KEY, None)
+
+
+async def _run_batch_callbacks(
+    hass: HomeAssistant,
+    service_obj: Service,
+    platform_candidates: dict[str, list[Entity]],
+    call: ServiceCall,
+) -> EntityServiceResponse:
+    """Run all batch-processing callbacks concurrently and return merged results."""
+    batch_tasks = []
+
+    for platform, batch_entities in platform_candidates.items():
+        batch_callback = service_obj.batch_processing_callbacks[platform]
+        batch_tasks.append(hass.async_create_task(batch_callback(batch_entities, call)))
+
+    response_data: EntityServiceResponse = {}
+    if batch_tasks:
+        batch_results = await asyncio.gather(*batch_tasks, return_exceptions=True)
+        for result in batch_results:
+            if isinstance(result, BaseException):
+                raise result
+            response_data.update(result or {})
+
+    return response_data
+
+
 @bind_hass
 async def entity_service_call(
     hass: HomeAssistant,
@@ -821,6 +885,9 @@ async def entity_service_call(
             missing.discard(entity.entity_id)
         referenced.log_missing(missing, _LOGGER)
 
+    # Look up the Service object first
+    service_obj = _get_service_or_raise(hass, call)
+    platform_candidates: dict[str, list[Entity]] = {}
     entities: list[Entity] = []
     for entity in entity_candidates:
         if not entity.available:
@@ -852,6 +919,7 @@ async def entity_service_call(
             continue
 
         entities.append(entity)
+        _add_to_batch_candidates(entity, service_obj, platform_candidates)
 
     if not entities:
         if return_response:
@@ -873,6 +941,8 @@ async def entity_service_call(
             await entity.async_update_ha_state(True)
         return {entity.entity_id: single_response} if return_response else None
 
+    # inject batch key to defer execution for batch aware entities
+    _handle_batch_key(data, add=True)
     # Use asyncio.gather here to ensure the returned results
     # are in the same order as the entities list
     results: list[ServiceResponse | BaseException] = await asyncio.gather(
@@ -885,11 +955,19 @@ async def entity_service_call(
         return_exceptions=True,
     )
 
+    # clean up batch key if needed
+    _handle_batch_key(data, add=False)
+
     response_data: EntityServiceResponse = {}
     for entity, result in zip(entities, results, strict=False):
         if isinstance(result, BaseException):
             raise result from None
         response_data[entity.entity_id] = result
+
+    batch_response = await _run_batch_callbacks(
+        hass, service_obj, platform_candidates, call
+    )
+    response_data.update(batch_response)
 
     tasks: list[asyncio.Task[None]] = []
 
