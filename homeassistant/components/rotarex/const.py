@@ -1,2 +1,3 @@
 DOMAIN = "rotarex"
+
 PLATFORMS = ["sensor"]
