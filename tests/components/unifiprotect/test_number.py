@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from operator import attrgetter
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -218,21 +219,33 @@ async def test_number_camera_simple(
 
     assert description.ufp_set_method is not None
 
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.NUMBER, camera, description
+    )
+
+    # Skip test if entity doesn't exist (feature not available on this camera)
+    if hass.states.get(entity_id) is None:
+        pytest.skip(f"Entity {entity_id} not available for this camera fixture")
+
+    # Skip test if entity is disabled (ufp_enabled condition not met)
+    if description.ufp_enabled is not None:
+        ufp_enabled_value = attrgetter(description.ufp_enabled)(camera)
+        if not ufp_enabled_value:
+            pytest.skip(f"Entity {entity_id} is disabled ({description.ufp_enabled})")
+
     camera.__pydantic_fields__[description.ufp_set_method] = Mock(
         final=False, frozen=False
     )
     mock_method = AsyncMock()
     with patch.object(camera, description.ufp_set_method, mock_method):
-        _, entity_id = await ids_from_device_description(
-            hass, Platform.NUMBER, camera, description
-        )
-
         await hass.services.async_call(
             "number",
             "set_value",
             {ATTR_ENTITY_ID: entity_id, "value": 1.0},
             blocking=True,
         )
+
+        mock_method.assert_called_once_with(1.0)
 
 
 async def test_number_lock_auto_close(
