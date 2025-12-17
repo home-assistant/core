@@ -21,7 +21,7 @@ class OpenEVSEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             charger = openevsewifi.Charger(host)
             result = await self.hass.async_add_executor_job(charger.getStatus)
-        except Exception:  # noqa: BLE001
+        except AttributeError:
             return False
         else:
             return result is not None
