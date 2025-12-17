@@ -101,6 +101,15 @@ def _is_location_already_configured(
     return False
 
 
+def _is_location_name_already_configured(hass: HomeAssistant, new_data: str) -> bool:
+    """Check if the location is already configured."""
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        for subentry in entry.subentries.values():
+            if subentry.title == new_data:
+                return True
+    return False
+
+
 class GoogleAirQualityConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Google AirQuality."""
 
@@ -179,6 +188,8 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
         if user_input is not None:
             if _is_location_already_configured(self.hass, user_input[CONF_LOCATION]):
                 return self.async_abort(reason="already_configured")
+            if _is_location_name_already_configured(self.hass, user_input[CONF_NAME]):
+                return self.async_abort(reason="name_already_in_use")
             api: GoogleAirQualityApi = self._get_entry().runtime_data.api
             if await _validate_input(user_input, api, errors, description_placeholders):
                 return self.async_create_entry(

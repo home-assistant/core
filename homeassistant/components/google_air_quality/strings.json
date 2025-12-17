@@ -48,6 +48,7 @@
     "location": {
       "abort": {
         "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
+        "name_already_in_use": "Location name is already in use.",
         "unable_to_fetch": "[%key:component::google_air_quality::common::unable_to_fetch%]"
       },
       "entry_type": "Air quality location",
