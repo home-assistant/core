@@ -114,7 +114,7 @@ async def _async_update_cloudflare(
     _LOGGER.debug("Records: %s", records)
 
     session = async_get_clientsession(
-        hass, family=socket.AF_INET, interface=entry.data.get(CONF_INTERFACE, None)
+        hass, family=socket.AF_INET, interface=entry.data.get(CONF_INTERFACE)
     )
     location_info = await async_detect_location_info(session)
 
