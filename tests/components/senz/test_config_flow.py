@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from aiosenz import AUTHORIZATION_ENDPOINT, TOKEN_ENDPOINT
+from pysenz import AUTHORIZATION_ENDPOINT, TOKEN_ENDPOINT
 import pytest
 
 from homeassistant import config_entries
