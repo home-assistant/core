@@ -4,7 +4,7 @@
   "codeowners": ["@ParemTech-Inc", "@frogman85978"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ptdevices",
-  "integration_type": "device",
+  "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["aioptdevices"],
   "quality_scale": "bronze",

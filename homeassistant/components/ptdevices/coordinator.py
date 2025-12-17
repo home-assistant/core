@@ -12,6 +12,7 @@ from aioptdevices.interface import Interface, PTDevicesResponse
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import (
     REQUEST_REFRESH_DEFAULT_IMMEDIATE,
@@ -56,6 +57,7 @@ class PTDevicesCoordinator(DataUpdateCoordinator[PTDevicesResponse]):
         )
 
         self.interface = ptdevices_interface
+        self.previous_devices: set[str] = set()
 
     async def _async_update_data(self) -> PTDevicesResponse:
         try:
@@ -79,8 +81,23 @@ class PTDevicesCoordinator(DataUpdateCoordinator[PTDevicesResponse]):
                 translation_placeholders={"error": repr(err)},
             ) from err
 
+        # Remove stale devices
+        current_devices = set(data["body"].keys())
+        if stale_devices := self.previous_devices - current_devices:
+            device_registry = dr.async_get(self.hass)
+            for device_id in stale_devices:
+                # Remove the device from the device registry
+                stale_device = device_registry.async_get_device(
+                    identifiers={(DOMAIN, device_id)}
+                )
+                if stale_device:
+                    device_registry.async_update_device(
+                        device_id=stale_device.id,
+                        remove_config_entry_id=self.config_entry.entry_id,
+                    )
+        self.previous_devices = current_devices
+
         # Verify that we have all keys required
-        body = data["body"]
         required_keys: list[str] = [
             "title",
             "device_id",
@@ -88,7 +105,7 @@ class PTDevicesCoordinator(DataUpdateCoordinator[PTDevicesResponse]):
             "units",
             "user_name",
         ]
-        for device in body.values():
+        for device in data["body"].values():
             missing_keys: list[str] = [
                 required_key
                 for required_key in required_keys
