@@ -92,7 +92,7 @@ async def test_not_configuring_sonos_not_creates_entry(hass: HomeAssistant) -> N
 async def test_create_upnp_disabled_issue(
     hass: HomeAssistant, async_setup_sonos, soco: MockSoCo, config_entry
 ) -> None:
-    """Test setting up Sonos loads the media player."""
+    """Test UPNP disabled issue is created when speaker initialization fails with 403."""
 
     resp = Response()
     resp.status_code = HTTPStatus.FORBIDDEN
@@ -108,7 +108,6 @@ async def test_create_upnp_disabled_issue(
         config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
-        # A 403 when reading household_id should result in a connection issue
         issue_registry = ir.async_get(hass)
         assert issue_registry.async_get_issue(sonos.DOMAIN, UPNP_ISSUE_ID) is not None
 
