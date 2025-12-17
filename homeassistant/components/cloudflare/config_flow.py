@@ -3,12 +3,14 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-import logging
+from ipaddress import ip_address
+from logging import getLogger
 from typing import Any
 
 import pycfdns
 import voluptuous as vol
 
+from homeassistant.components.network import async_get_loaded_adapters
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN, CONF_ZONE
 from homeassistant.core import HomeAssistant
@@ -16,10 +18,10 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_RECORDS, DOMAIN
+from .const import CONF_INTERFACE, CONF_RECORDS, DOMAIN
 from .helpers import get_zone_id
 
-_LOGGER = logging.getLogger(__name__)
+_LOGGER = getLogger(__name__)
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -40,12 +42,24 @@ def _zone_schema(zones: list[pycfdns.ZoneModel] | None = None) -> vol.Schema:
 
 def _records_schema(records: list[pycfdns.RecordModel] | None = None) -> vol.Schema:
     """Zone records selection schema."""
-    records_dict = {}
+    records_list = []
 
     if records:
-        records_dict = {name["name"]: name["name"] for name in records}
+        records_list = [name["name"] for name in records]
 
-    return vol.Schema({vol.Required(CONF_RECORDS): cv.multi_select(records_dict)})
+    return vol.Schema({vol.Required(CONF_RECORDS): cv.multi_select(records_list)})
+
+
+def _interface_schema(interfaces: list[str] | None = None) -> vol.Schema:
+    """Interface selection schema."""
+    interfaces_list = []
+
+    if interfaces:
+        if len(interfaces) > 1:
+            interfaces_list = ["Auto"]
+        interfaces_list.extend(interfaces)
+
+    return vol.Schema({vol.Required(CONF_INTERFACE): vol.In(interfaces_list)})
 
 
 async def _validate_input(
@@ -81,6 +95,7 @@ class CloudflareConfigFlow(ConfigFlow, domain=DOMAIN):
         self.cloudflare_config: dict[str, Any] = {}
         self.zones: list[pycfdns.ZoneModel] | None = None
         self.records: list[pycfdns.RecordModel] | None = None
+        self.interfaces: list[str] | None = None
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
@@ -160,12 +175,54 @@ class CloudflareConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self.cloudflare_config.update(user_input)
-            title = self.cloudflare_config[CONF_ZONE]
-            return self.async_create_entry(title=title, data=self.cloudflare_config)
+            self.interfaces = [
+                adapter["name"]
+                for adapter in async_get_loaded_adapters(self.hass)
+                if (
+                    adapter["index"] is not None
+                    and "hassio" not in adapter["name"]
+                    and "docker" not in adapter["name"]
+                    and adapter["ipv4"]
+                    and (
+                        addresses := [
+                            ip_address(ip["address"]) for ip in adapter["ipv4"]
+                        ]
+                    )
+                    and any(
+                        ip
+                        for ip in addresses
+                        if (
+                            not ip.is_loopback
+                            and not ip.is_link_local
+                            and not ip.is_multicast
+                        )
+                    )
+                )
+            ]
+
+            return await self.async_step_interface()
 
         return self.async_show_form(
             step_id="records",
             data_schema=_records_schema(self.records),
+        )
+
+    async def async_step_interface(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the picking the interface."""
+
+        if user_input is not None or not self.interfaces or len(self.interfaces) <= 1:
+            if user_input is not None and user_input.get("interface") != "Auto":
+                self.cloudflare_config.update(user_input)
+
+            return self.async_create_entry(
+                title=self.cloudflare_config[CONF_ZONE], data=self.cloudflare_config
+            )
+
+        return self.async_show_form(
+            step_id="interface",
+            data_schema=_interface_schema(self.interfaces),
         )
 
     async def _async_validate_or_error(

@@ -23,7 +23,13 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util.location import async_detect_location_info
 from homeassistant.util.network import is_ipv4_address
 
-from .const import CONF_RECORDS, DEFAULT_UPDATE_INTERVAL, DOMAIN, SERVICE_UPDATE_RECORDS
+from .const import (
+    CONF_INTERFACE,
+    CONF_RECORDS,
+    DEFAULT_UPDATE_INTERVAL,
+    DOMAIN,
+    SERVICE_UPDATE_RECORDS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -107,7 +113,9 @@ async def _async_update_cloudflare(
     records = await client.list_dns_records(zone_id=dns_zone["id"], type="A")
     _LOGGER.debug("Records: %s", records)
 
-    session = async_get_clientsession(hass, family=socket.AF_INET)
+    session = async_get_clientsession(
+        hass, family=socket.AF_INET, interface=entry.data.get(CONF_INTERFACE, None)
+    )
     location_info = await async_detect_location_info(session)
 
     if not location_info or not is_ipv4_address(location_info.ip):

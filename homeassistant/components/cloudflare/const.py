@@ -3,6 +3,7 @@
 DOMAIN = "cloudflare"
 
 # Config
+CONF_INTERFACE = "interface"
 CONF_RECORDS = "records"
 
 # Defaults

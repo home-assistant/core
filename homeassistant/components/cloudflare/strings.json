@@ -10,6 +10,12 @@
     },
     "flow_title": "{name}",
     "step": {
+      "interface": {
+        "data": {
+          "interface": "Interface"
+        },
+        "title": "Choose the interface"
+      },
       "reauth_confirm": {
         "data": {
           "api_token": "[%key:common::config_flow::data::api_token%]",
