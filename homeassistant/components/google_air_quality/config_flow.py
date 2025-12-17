@@ -102,7 +102,7 @@ def _is_location_already_configured(
 
 
 def _is_location_name_already_configured(hass: HomeAssistant, new_data: str) -> bool:
-    """Check if the location is already configured."""
+    """Check if the location name is already configured."""
     for entry in hass.config_entries.async_entries(DOMAIN):
         for subentry in entry.subentries.values():
             if subentry.title == new_data:
