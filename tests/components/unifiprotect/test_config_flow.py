@@ -678,6 +678,9 @@ async def test_discovered_by_unifi_discovery_direct_connect(
         "port": 443,
         "verify_ssl": True,
     }
+    assert result["result"].unique_id == _async_unifi_mac_from_hass(
+        DEVICE_MAC_ADDRESS.upper().replace(":", "")
+    )
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(mock_setup.mock_calls) == 1
 
@@ -885,6 +888,9 @@ async def test_discovered_by_unifi_discovery(
         "port": 443,
         "verify_ssl": False,
     }
+    assert result["result"].unique_id == _async_unifi_mac_from_hass(
+        DEVICE_MAC_ADDRESS.upper().replace(":", "")
+    )
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(mock_setup.mock_calls) == 1
 
@@ -952,6 +958,9 @@ async def test_discovered_by_unifi_discovery_partial(
         "port": 443,
         "verify_ssl": False,
     }
+    assert result["result"].unique_id == _async_unifi_mac_from_hass(
+        DEVICE_MAC_ADDRESS.upper().replace(":", "")
+    )
     assert len(mock_setup_entry.mock_calls) == 1
     assert len(mock_setup.mock_calls) == 1
 
@@ -1145,6 +1154,9 @@ async def test_discovered_by_unifi_discovery_direct_connect_on_different_interfa
         "port": 443,
         "verify_ssl": True,
     }
+    assert result["result"].unique_id == _async_unifi_mac_from_hass(
+        DEVICE_MAC_ADDRESS.upper().replace(":", "")
+    )
     assert len(mock_setup_entry.mock_calls) == 2
     assert len(mock_setup.mock_calls) == 1
 
@@ -1326,6 +1338,9 @@ async def test_discovery_confirm_fallback_to_ip(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"]["host"] == DEVICE_IP_ADDRESS
     assert result["data"]["verify_ssl"] is False
+    assert result["result"].unique_id == _async_unifi_mac_from_hass(
+        DEVICE_MAC_ADDRESS.upper().replace(":", "")
+    )
 
 
 async def test_discovery_confirm_with_api_key_error(
@@ -1390,6 +1405,9 @@ async def test_discovery_confirm_with_api_key_error(
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == _async_unifi_mac_from_hass(
+        DEVICE_MAC_ADDRESS.upper().replace(":", "")
+    )
 
 
 async def test_reconfigure(
