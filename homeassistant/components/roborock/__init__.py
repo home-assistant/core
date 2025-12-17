@@ -18,6 +18,7 @@ from roborock.data import UserData
 from roborock.devices.device import RoborockDevice
 from roborock.devices.device_manager import UserParams, create_device_manager
 from roborock.map.map_parser import MapParserConfig
+from roborock.mqtt.session import MqttSessionUnauthorized
 
 from homeassistant.const import CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
@@ -91,6 +92,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="no_user_agreement",
+        ) from err
+    except MqttSessionUnauthorized as err:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="mqtt_unauthorized",
         ) from err
     except RoborockException as err:
         _LOGGER.debug("Failed to get Roborock home data: %s", err)
