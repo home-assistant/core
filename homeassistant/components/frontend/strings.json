@@ -13,18 +13,18 @@
       "name": "Reload themes"
     },
     "set_theme": {
-      "description": "Sets the default theme Home Assistant uses. Can be overridden by a user.",
+      "description": "Sets the theme Home Assistant uses. Can be overridden by a user.",
       "fields": {
         "name": {
-          "description": "Name of the theme to use when a light mode client requests the default theme.",
+          "description": "Name of the theme that is used by default.",
           "name": "Theme"
         },
         "name_dark": {
-          "description": "Name of the theme to use when a dark mode client requests the default theme.",
-          "name": "Dark theme"
+          "description": "Alternative dark-mode theme that is used by default.",
+          "name": "Dark theme override"
         }
       },
-      "name": "Set the default theme"
+      "name": "Set the theme"
     }
   }
 }
