@@ -13,7 +13,7 @@ from aioptdevices.interface import Interface, PTDevicesResponse
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_API_TOKEN, CONF_DEVICE_ID
+from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -24,7 +24,6 @@ _LOGGER = logging.getLogger(__name__)
 
 _CONF_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_DEVICE_ID): str,
         vol.Required(CONF_API_TOKEN): str,
     }
 )
@@ -40,7 +39,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> str:
     ptdevices_interface = Interface(
         Configuration(
             auth_token=data[CONF_API_TOKEN],
-            device_id=data[CONF_DEVICE_ID],
+            device_id="*",  # Retrieve data for all devices in account
             url=DEFAULT_URL,
             session=session,
         )
@@ -61,14 +60,13 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> str:
     except aioptdevices.PTDevicesForbiddenError as err:
         raise InvalidAuth from err
 
-    body: dict[str, Any] = response.get("body", {})
+    title: str = list(response["body"].values())[0].get("user_name", "")
 
-    device_title: str = body.get("title", "")
-    if device_title == "":
-        raise MalformedResponse("Device title was not included in the response.")
+    if title == "":
+        raise MalformedResponse("Device user_name was not included in the response.")
 
     # Return info that you want to store in the config entry.
-    return device_title
+    return title
 
 
 class PTDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -86,12 +84,12 @@ class PTDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(step_id="user", data_schema=_CONF_SCHEMA)
 
         # Make sure the device isn't already configured
-        self._async_abort_entries_match({CONF_DEVICE_ID: user_input[CONF_DEVICE_ID]})
+        self._async_abort_entries_match({CONF_API_TOKEN: user_input[CONF_API_TOKEN]})
 
         # Test the connection
         errors: dict[str, str] = {}
         try:
-            device_title: str = await validate_input(self.hass, user_input)
+            title: str = await validate_input(self.hass, user_input)
         except CannotConnect:
             errors["base"] = "cannot_connect"
         except InvalidAuth:
@@ -100,7 +98,7 @@ class PTDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "malformed_response"
         else:
             # Connection Successful
-            return self.async_create_entry(title=device_title, data=user_input)
+            return self.async_create_entry(title=title, data=user_input)
 
         # Connection Unsuccessful, show errors
         return self.async_show_form(

@@ -5,7 +5,7 @@ from __future__ import annotations
 from asyncio import timeout
 from datetime import timedelta
 import logging
-from typing import Any, Final
+from typing import Final
 
 import aioptdevices
 from aioptdevices.interface import Interface, PTDevicesResponse
@@ -14,7 +14,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     REQUEST_REFRESH_DEFAULT_IMMEDIATE,
     DataUpdateCoordinator,
@@ -59,24 +58,6 @@ class PTDevicesCoordinator(DataUpdateCoordinator[PTDevicesResponse]):
 
         self.interface = ptdevices_interface
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the DeviceInfo from PTDevices."""
-
-        device_id: str = self.data.get("body", {}).get("id", "")
-
-        configuration_url: str = (
-            f"https://www.ptdevices.com/device/level/{device_id}" if device_id else ""
-        )
-
-        return DeviceInfo(
-            identifiers={(DOMAIN, device_id)},
-            configuration_url=configuration_url,
-            manufacturer="ParemTech inc.",
-            sw_version=self.data.get("body", {}).get("version", None),
-            name=self.data.get("body", {}).get("title", ""),
-        )
-
     async def _async_update_data(self) -> PTDevicesResponse:
         try:
             async with timeout(10):
@@ -100,19 +81,28 @@ class PTDevicesCoordinator(DataUpdateCoordinator[PTDevicesResponse]):
                 translation_placeholders={"error": repr(err)},
             ) from err
 
-        # Verify that we have the keys needed
-        body: dict[str, Any] = data.get("body", {})
-        required_keys: list[str] = ["title", "device_id", "version", "units"]
-        missing_keys: list[str] = [
-            required_key for required_key in required_keys if required_key not in body
+        # Verify that we have all keys required
+        body = data["body"]
+        required_keys: list[str] = [
+            "title",
+            "device_id",
+            "version",
+            "units",
+            "user_name",
         ]
-        if missing_keys:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="malformed_response_missing_key",
-                translation_placeholders={
-                    "missing_keys": ",".join(missing_keys),
-                },
-            )
+        for device in body.values():
+            missing_keys: list[str] = [
+                required_key
+                for required_key in required_keys
+                if required_key not in device
+            ]
+            if missing_keys:
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="malformed_response_missing_key",
+                    translation_placeholders={
+                        "missing_keys": ",".join(missing_keys),
+                    },
+                )
 
         return data

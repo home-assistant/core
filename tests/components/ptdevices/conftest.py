@@ -9,7 +9,7 @@ import pytest
 
 from homeassistant.components.ptdevices.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_API_TOKEN, CONF_DEVICE_ID
+from homeassistant.const import CONF_API_TOKEN
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -37,7 +37,7 @@ def mock_ptdevices_level() -> PTDevicesResponse:
 def mock_ptdevices_level_missing_title() -> PTDevicesResponse:
     """Mock a malformed PTLevel response."""
     data = json.loads(load_fixture("ptdevices_level.json", integration=DOMAIN))
-    data.pop("title")
+    data["C0FFEEC0FFEE"].pop("user_name")
     return PTDevicesResponse(
         code=200,
         body=data,
@@ -48,7 +48,7 @@ def mock_ptdevices_level_missing_title() -> PTDevicesResponse:
 def mock_ptdevices_level_missing_device_id() -> PTDevicesResponse:
     """Mock a malformed PTLevel response."""
     data = json.loads(load_fixture("ptdevices_level.json", integration=DOMAIN))
-    data.pop("id")
+    data["C0FFEEC0FFEE"].pop("id")
     return PTDevicesResponse(
         code=200,
         body=data,
@@ -81,7 +81,7 @@ def mock_ptdevices_config_entry(
         title="Home",
         data={
             CONF_API_TOKEN: "test-api-token",
-            CONF_DEVICE_ID: "test-device-id",
+            # CONF_DEVICE_ID: "test-device-id",
         },
         unique_id="test-device-id",
         source=SOURCE_USER,

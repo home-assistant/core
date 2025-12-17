@@ -5,7 +5,7 @@ from __future__ import annotations
 from aioptdevices.configuration import Configuration
 from aioptdevices.interface import Interface
 
-from homeassistant.const import CONF_API_TOKEN, CONF_DEVICE_ID, Platform
+from homeassistant.const import CONF_API_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -21,13 +21,12 @@ async def async_setup_entry(
     hass: HomeAssistant, config_entry: PTDevicesConfigEntry
 ) -> bool:
     """Set up PTDevices from a config entry."""
-    device_id: str = config_entry.data[CONF_DEVICE_ID]
     auth_token: str = config_entry.data[CONF_API_TOKEN]
     session = async_get_clientsession(hass)
     ptdevices_interface = Interface(
         Configuration(
             auth_token=auth_token,
-            device_id=device_id,
+            device_id="*",  # Retrieve data for all devices in account
             url=DEFAULT_URL,
             session=session,
         )

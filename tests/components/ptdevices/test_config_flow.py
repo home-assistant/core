@@ -11,7 +11,7 @@ from aioptdevices.interface import PTDevicesResponse
 
 from homeassistant.components.ptdevices.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_API_TOKEN, CONF_DEVICE_ID
+from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -44,16 +44,14 @@ async def test_flow_success(
             result["flow_id"],
             {
                 CONF_API_TOKEN: "test-api-token",
-                CONF_DEVICE_ID: "test-device-id",
             },
         )
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Home"
+    assert result["title"] == "User Name"
     assert result["data"] == {
         "api_token": "test-api-token",
-        "device_id": "test-device-id",
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
@@ -84,16 +82,14 @@ async def test_flow_duplicate_device(
             result1["flow_id"],
             {
                 CONF_API_TOKEN: "test-api-token",
-                CONF_DEVICE_ID: "test-device-id",
             },
         )
         await hass.async_block_till_done()
 
     assert result1["type"] is FlowResultType.CREATE_ENTRY
-    assert result1["title"] == "Home"
+    assert result1["title"] == "User Name"
     assert result1["data"] == {
         "api_token": "test-api-token",
-        "device_id": "test-device-id",
     }
 
     result2 = await hass.config_entries.flow.async_init(
@@ -116,7 +112,6 @@ async def test_flow_duplicate_device(
             result2["flow_id"],
             {
                 CONF_API_TOKEN: "test-api-token",
-                CONF_DEVICE_ID: "test-device-id",
             },
         )
         await hass.async_block_till_done()
@@ -148,7 +143,6 @@ async def test_flow_invalid_auth(hass: HomeAssistant) -> None:
             result["flow_id"],
             {
                 CONF_API_TOKEN: "test-api-tkn",
-                CONF_DEVICE_ID: "test-device-id",
             },
         )
         await hass.async_block_till_done()
@@ -182,7 +176,6 @@ async def test_flow_cannot_connect(
             result["flow_id"],
             {
                 CONF_API_TOKEN: "test-api-token",
-                CONF_DEVICE_ID: "test-device-id",
             },
         )
         await hass.async_block_till_done()
@@ -214,7 +207,6 @@ async def test_flow_resp_forbidden_error(hass: HomeAssistant) -> None:
             result["flow_id"],
             {
                 CONF_API_TOKEN: "test-api-tkn",
-                CONF_DEVICE_ID: "test-device-id",
             },
         )
         await hass.async_block_till_done()
@@ -249,7 +241,6 @@ async def test_flow_missing_title(
             result["flow_id"],
             {
                 CONF_API_TOKEN: "test-api-token",
-                CONF_DEVICE_ID: "test-device-id",
             },
         )
         await hass.async_block_till_done()
@@ -294,7 +285,6 @@ async def test_flow_reauth_success(
 
     # Check that the entry was updated with the new configuration
     assert mock_ptdevices_config_entry.data[CONF_API_TOKEN] == "test-api-token-new"
-    assert mock_ptdevices_config_entry.data[CONF_DEVICE_ID] == "test-device-id"
 
 
 async def test_flow_reauth_invalid_auth(
@@ -351,7 +341,6 @@ async def test_flow_reauth_invalid_auth(
 
     # Check that the entry was updated with the new configuration
     assert mock_ptdevices_config_entry.data[CONF_API_TOKEN] == "test-api-token"
-    assert mock_ptdevices_config_entry.data[CONF_DEVICE_ID] == "test-device-id"
 
 
 async def test_flow_reauth_cannot_connect(
@@ -393,7 +382,6 @@ async def test_flow_reauth_cannot_connect(
 
     # Check that the entry was updated with the new configuration
     assert mock_ptdevices_config_entry.data[CONF_API_TOKEN] == "test-api-token"
-    assert mock_ptdevices_config_entry.data[CONF_DEVICE_ID] == "test-device-id"
 
 
 async def test_flow_reauth_malformed_response(
@@ -442,4 +430,3 @@ async def test_flow_reauth_malformed_response(
 
     # Check that the entry was updated with the new configuration
     assert mock_ptdevices_config_entry.data[CONF_API_TOKEN] == "test-api-token"
-    assert mock_ptdevices_config_entry.data[CONF_DEVICE_ID] == "test-device-id"

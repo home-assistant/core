@@ -23,9 +23,11 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import DOMAIN
 from .coordinator import PTDevicesConfigEntry, PTDevicesCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -149,14 +151,18 @@ async def async_setup_entry(
     async_add_entity: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up PTDevices sensors from config entries."""
-    body: dict[str, Any] = _format_dict(config_entry.runtime_data.data["body"])
+    body = config_entry.runtime_data.data["body"]
 
-    # Add the entities
-    async_add_entity(
-        PTDevicesSensorEntity(config_entry.runtime_data, sensor)
-        for sensor in SENSOR_DESCRIPTIONS
-        if sensor.key in body
-    )
+    # Loop through all the devices available from the user account
+    for device_id, device in body.items():
+        formatted_device = _format_dict(device)
+
+        # Add entities belonging to device
+        async_add_entity(
+            PTDevicesSensorEntity(config_entry.runtime_data, sensor, device_id)
+            for sensor in SENSOR_DESCRIPTIONS
+            if sensor.key in formatted_device
+        )
 
 
 # Coordinator is used to centralize the data updates
@@ -169,26 +175,44 @@ class PTDevicesSensorEntity(SensorEntity, CoordinatorEntity[PTDevicesCoordinator
     _attr_has_entity_name = True
 
     def __init__(
-        self, coordinator: PTDevicesCoordinator, description: SensorEntityDescription
+        self,
+        coordinator: PTDevicesCoordinator,
+        description: SensorEntityDescription,
+        device_id: str,
     ) -> None:
         """Initialize sensor."""
         super().__init__(coordinator=coordinator, context=description.key.upper())
 
-        # Get the mac address for use in the device id
-        mac: str = self.coordinator.data.get("body", {}).get("device_id", "")
-
         self.entity_description = description
-        self._attr_device_info = coordinator.device_info
-        self._attr_unique_id = f"{mac}_{description.key}"
+        self._device_id = device_id
+        self._attr_unique_id = f"{device_id}_{description.key}"
 
         # Initial Update
         self._update_attrs()
 
     @property
+    def device_info(self) -> DeviceInfo:
+        """Return the DeviceInfo from PTDevices."""
+
+        configuration_url: str = (
+            f"https://www.ptdevices.com/device/level/{self._device_id}"
+        )
+
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._device_id)},
+            configuration_url=configuration_url,
+            manufacturer="ParemTech inc.",
+            sw_version=self.coordinator.data["body"][self._device_id].get(
+                "version", None
+            ),
+            name=self.coordinator.data["body"][self._device_id].get("title", ""),
+        )
+
+    @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self.entity_description.key in _format_dict(
-            self.coordinator.data.get("body", {})
+            self.coordinator.data["body"][self._device_id]
         )
 
     @callback
@@ -199,7 +223,7 @@ class PTDevicesSensorEntity(SensorEntity, CoordinatorEntity[PTDevicesCoordinator
 
     def _update_attrs(self) -> None:
         """Update sensor attributes based on coordinator data."""
-        data = _format_dict(self.coordinator.data.get("body", {}))
+        data = _format_dict(self.coordinator.data["body"][self._device_id])
         key = self.entity_description.key
 
         # If the key is not in the data received from the server, set the entity to unavailable and exit
