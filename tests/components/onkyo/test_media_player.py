@@ -71,6 +71,11 @@ async def auto_setup_integration(
         yield
 
 
+@pytest.mark.parametrize(
+    # Legacy service uses media_player domain
+    "ignore_missing_translations",
+    ["component.media_player.services.onkyo_select_hdmi_output."],
+)
 async def test_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -105,6 +110,11 @@ async def test_entities(
         ),
     ],
 )
+@pytest.mark.parametrize(
+    # Legacy service uses media_player domain
+    "ignore_missing_translations",
+    ["component.media_player.services.onkyo_select_hdmi_output."],
+)
 async def test_actions(
     hass: HomeAssistant,
     writes: list[Instruction],
@@ -122,6 +132,11 @@ async def test_actions(
     assert writes[0] == message
 
 
+@pytest.mark.parametrize(
+    # Legacy service uses media_player domain
+    "ignore_missing_translations",
+    ["component.media_player.services.onkyo_select_hdmi_output."],
+)
 async def test_select_source(hass: HomeAssistant, writes: list[Instruction]) -> None:
     """Test select source."""
     await hass.services.async_call(
@@ -143,6 +158,11 @@ async def test_select_source(hass: HomeAssistant, writes: list[Instruction]) -> 
     assert not writes
 
 
+@pytest.mark.parametrize(
+    # Legacy service uses media_player domain
+    "ignore_missing_translations",
+    ["component.media_player.services.onkyo_select_hdmi_output."],
+)
 async def test_select_sound_mode(
     hass: HomeAssistant, writes: list[Instruction]
 ) -> None:
@@ -168,6 +188,11 @@ async def test_select_sound_mode(
     assert not writes
 
 
+@pytest.mark.parametrize(
+    # Legacy service uses media_player domain
+    "ignore_missing_translations",
+    ["component.media_player.services.onkyo_select_hdmi_output."],
+)
 async def test_play_media(hass: HomeAssistant, writes: list[Instruction]) -> None:
     """Test play media (radio preset)."""
     await hass.services.async_call(
@@ -222,6 +247,11 @@ async def test_play_media(hass: HomeAssistant, writes: list[Instruction]) -> Non
     assert not writes
 
 
+@pytest.mark.parametrize(
+    # Legacy service uses media_player domain
+    "ignore_missing_translations",
+    ["component.media_player.services.onkyo_select_hdmi_output."],
+)
 async def test_select_hdmi_output(
     hass: HomeAssistant, writes: list[Instruction]
 ) -> None:
@@ -235,6 +265,11 @@ async def test_select_hdmi_output(
     assert writes[0] == command.HDMIOutput(command.HDMIOutput.Param.BOTH)
 
 
+@pytest.mark.parametrize(
+    # Legacy service uses media_player domain
+    "ignore_missing_translations",
+    ["component.media_player.services.onkyo_select_hdmi_output."],
+)
 async def test_query_state_task(
     read_queue: asyncio.Queue, writes: list[Instruction]
 ) -> None:
@@ -266,6 +301,11 @@ async def test_query_state_task(
     assert len(queries) == 1
 
 
+@pytest.mark.parametrize(
+    # Legacy service uses media_player domain
+    "ignore_missing_translations",
+    ["component.media_player.services.onkyo_select_hdmi_output."],
+)
 async def test_query_av_info_task(
     read_queue: asyncio.Queue, writes: list[Instruction]
 ) -> None:
