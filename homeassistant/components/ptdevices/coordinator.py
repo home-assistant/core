@@ -61,7 +61,7 @@ class PTDevicesCoordinator(DataUpdateCoordinator[PTDevicesResponse]):
 
     async def _async_update_data(self) -> PTDevicesResponse:
         try:
-            data: PTDevicesResponse = await self.interface.get_data()
+            data = await self.interface.get_data()
         except aioptdevices.PTDevicesRequestError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
