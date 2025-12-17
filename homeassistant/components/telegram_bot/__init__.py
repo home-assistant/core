@@ -490,6 +490,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ]:
             supports_response = SupportsResponse.OPTIONAL
 
+        if service_notif == SERVICE_DOWNLOAD_FILE:
+            supports_response = SupportsResponse.ONLY
+
         hass.services.async_register(
             DOMAIN,
             service_notif,
