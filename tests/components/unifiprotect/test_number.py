@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from uiprotect.data import Camera, Doorlock, IRLEDMode, Light
@@ -221,15 +221,18 @@ async def test_number_camera_simple(
     camera.__pydantic_fields__[description.ufp_set_method] = Mock(
         final=False, frozen=False
     )
-    setattr(camera, description.ufp_set_method, AsyncMock())
+    mock_method = AsyncMock()
+    with patch.object(camera, description.ufp_set_method, mock_method):
+        _, entity_id = await ids_from_device_description(
+            hass, Platform.NUMBER, camera, description
+        )
 
-    _, entity_id = await ids_from_device_description(
-        hass, Platform.NUMBER, camera, description
-    )
-
-    await hass.services.async_call(
-        "number", "set_value", {ATTR_ENTITY_ID: entity_id, "value": 1.0}, blocking=True
-    )
+        await hass.services.async_call(
+            "number",
+            "set_value",
+            {ATTR_ENTITY_ID: entity_id, "value": 1.0},
+            blocking=True,
+        )
 
 
 async def test_number_lock_auto_close(
