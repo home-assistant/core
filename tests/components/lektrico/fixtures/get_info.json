@@ -4,7 +4,7 @@
   "instant_power": 0,
   "session_energy": 0.0,
   "temperature": 34.5,
-  "total_charged_energy": 0,
+  "total_charged_energy": 1.123,
   "install_current": 6,
   "current_limit_reason": "installation_current",
   "voltage_l1": 220.0,

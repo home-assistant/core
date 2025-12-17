@@ -9,6 +9,7 @@ from wled import (
     WLEDConnectionClosedError,
     WLEDError,
     WLEDReleases,
+    WLEDUnsupportedVersionError,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -115,6 +116,14 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
         """Fetch data from WLED."""
         try:
             device = await self.wled.update()
+        except WLEDUnsupportedVersionError as error:
+            # Error message from WLED library contains version info
+            # better to show that to user, but it is not translatable.
+            raise ConfigEntryError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_version",
+                translation_placeholders={"error": str(error)},
+            ) from error
         except WLEDError as error:
             raise UpdateFailed(
                 translation_domain=DOMAIN,

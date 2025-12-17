@@ -151,7 +151,7 @@ async def test_reconfigure_walkthrough(
         result["flow_id"], user_input={CONF_HOST: "127.0.0.4"}
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert config_entry.data[CONF_HOST] == "127.0.0.4"
 
@@ -171,7 +171,7 @@ async def test_reconfigure_error_then_fix(
         result["flow_id"], user_input={CONF_HOST: "127.0.0.5"}
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"]["base"] == "cannot_connect"
 
@@ -180,7 +180,7 @@ async def test_reconfigure_error_then_fix(
         result["flow_id"], user_input={CONF_HOST: "127.0.0.4"}
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert config_entry.data[CONF_HOST] == "127.0.0.4"
 
@@ -204,7 +204,7 @@ async def test_reconfigure_duplicate_ip(
         result["flow_id"], user_input={CONF_HOST: "127.0.0.6"}
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     assert config_entry.data[CONF_HOST] == "127.0.0.1"

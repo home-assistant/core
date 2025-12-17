@@ -13,7 +13,7 @@ import inspect
 import logging
 import re
 import sys
-from typing import TYPE_CHECKING, Any, Protocol, cast
+from typing import TYPE_CHECKING, Any, Protocol, TypedDict, Unpack, cast, overload
 
 import voluptuous as vol
 
@@ -198,7 +198,12 @@ def async_subscribe_platform_events(
 async def _register_condition_platform(
     hass: HomeAssistant, integration_domain: str, platform: ConditionProtocol
 ) -> None:
-    """Register a condition platform."""
+    """Register a condition platform and notify listeners.
+
+    If the condition platform does not provide any conditions, or it is disabled,
+    listeners will not be notified.
+    """
+    from homeassistant.components import automation  # noqa: PLC0415
 
     new_conditions: set[str] = set()
 
@@ -209,11 +214,21 @@ async def _register_condition_platform(
             )
             hass.data[CONDITIONS][condition_key] = integration_domain
             new_conditions.add(condition_key)
+        if not new_conditions:
+            _LOGGER.debug(
+                "Integration %s returned no conditions in async_get_conditions",
+                integration_domain,
+            )
+            return
     else:
         _LOGGER.debug(
             "Integration %s does not provide condition support, skipping",
             integration_domain,
         )
+        return
+
+    if automation.is_disabled_experimental_condition(hass, integration_domain):
+        _LOGGER.debug("Conditions for integration %s are disabled", integration_domain)
         return
 
     # We don't use gather here because gather adds additional overhead
@@ -243,6 +258,8 @@ _CONDITION_SCHEMA = _CONDITION_BASE_SCHEMA.extend(
 
 class Condition(abc.ABC):
     """Condition class."""
+
+    _hass: HomeAssistant
 
     @classmethod
     async def async_validate_complete_config(
@@ -278,9 +295,10 @@ class Condition(abc.ABC):
 
     def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
         """Initialize condition."""
+        self._hass = hass
 
     @abc.abstractmethod
-    async def async_get_checker(self) -> ConditionCheckerType:
+    async def async_get_checker(self) -> ConditionChecker:
         """Get the condition checker."""
 
 
@@ -301,7 +319,23 @@ class ConditionConfig:
     target: dict[str, Any] | None = None
 
 
-type ConditionCheckerType = Callable[[HomeAssistant, TemplateVarsType], bool | None]
+class ConditionCheckParams(TypedDict, total=False):
+    """Condition check params."""
+
+    variables: TemplateVarsType
+
+
+class ConditionChecker(Protocol):
+    """Protocol for condition checker callable with typed kwargs."""
+
+    def __call__(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
+        """Check the condition."""
+
+
+type ConditionCheckerType = Callable[[HomeAssistant, TemplateVarsType], bool]
+type ConditionCheckerTypeOptional = Callable[
+    [HomeAssistant, TemplateVarsType], bool | None
+]
 
 
 def condition_trace_append(variables: TemplateVarsType, path: str) -> TraceElement:
@@ -356,7 +390,21 @@ def trace_condition(variables: TemplateVarsType) -> Generator[TraceElement]:
             trace_stack_pop(trace_stack_cv)
 
 
-def trace_condition_function(condition: ConditionCheckerType) -> ConditionCheckerType:
+@overload
+def trace_condition_function(
+    condition: ConditionCheckerType,
+) -> ConditionCheckerType: ...
+
+
+@overload
+def trace_condition_function(
+    condition: ConditionCheckerTypeOptional,
+) -> ConditionCheckerTypeOptional: ...
+
+
+def trace_condition_function(
+    condition: ConditionCheckerType | ConditionCheckerTypeOptional,
+) -> ConditionCheckerType | ConditionCheckerTypeOptional:
     """Wrap a condition function to enable basic tracing."""
 
     @ft.wraps(condition)
@@ -402,10 +450,20 @@ async def _async_get_condition_platform(
         ) from None
 
 
+async def _async_get_checker(condition: Condition) -> ConditionCheckerType:
+    new_checker = await condition.async_get_checker()
+
+    @trace_condition_function
+    def checker(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
+        return new_checker(variables=variables)
+
+    return checker
+
+
 async def async_from_config(
     hass: HomeAssistant,
     config: ConfigType,
-) -> ConditionCheckerType:
+) -> ConditionCheckerTypeOptional:
     """Turn a condition configuration into a method.
 
     Should be run on the event loop.
@@ -448,7 +506,7 @@ async def async_from_config(
                 target=config.get(CONF_TARGET),
             ),
         )
-        return await condition.async_get_checker()
+        return await _async_get_checker(condition)
 
     for fmt in (ASYNC_FROM_CONFIG_FORMAT, FROM_CONFIG_FORMAT):
         factory = getattr(sys.modules[__name__], fmt.format(condition_key), None)
@@ -1113,7 +1171,7 @@ async def async_conditions_from_config(
     name: str,
 ) -> Callable[[TemplateVarsType], bool]:
     """AND all conditions."""
-    checks: list[ConditionCheckerType] = [
+    checks = [
         await async_from_config(hass, condition_config)
         for condition_config in condition_configs
     ]
@@ -1312,7 +1370,6 @@ async def async_get_all_descriptions(
             continue
 
         description = {"fields": yaml_description.get("fields", {})}
-
         if (target := yaml_description.get("target")) is not None:
             description["target"] = target
 

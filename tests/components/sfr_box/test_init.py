@@ -82,7 +82,7 @@ async def test_setup_entry_invalid_auth(
     assert config_entry_with_auth.state is ConfigEntryState.SETUP_ERROR
 
 
-@patch("homeassistant.components.sfr_box.PLATFORMS", [])
+@pytest.mark.usefixtures("system_get_info", "dsl_get_info", "wan_get_info")
 async def test_device_registry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
