@@ -388,7 +388,7 @@
     },
     "apcupsd": {
       "name": "APC UPS Daemon",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -1478,7 +1478,7 @@
     },
     "duke_energy": {
       "name": "Duke Energy",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -2714,8 +2714,8 @@
       "name": "Hikvision",
       "integrations": {
         "hikvision": {
-          "integration_type": "hub",
-          "config_flow": false,
+          "integration_type": "device",
+          "config_flow": true,
           "iot_class": "local_push",
           "name": "Hikvision"
         },
@@ -2747,13 +2747,13 @@
     },
     "hko": {
       "name": "Hong Kong Observatory",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "hlk_sw16": {
       "name": "Hi-Link HLK-SW16",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -2868,7 +2868,7 @@
     },
     "huawei_lte": {
       "name": "Huawei LTE",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -2899,7 +2899,7 @@
           "name": "Husqvarna Automower"
         },
         "husqvarna_automower_ble": {
-          "integration_type": "hub",
+          "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_polling",
           "name": "Husqvarna Automower BLE"
@@ -2908,13 +2908,13 @@
     },
     "huum": {
       "name": "Huum",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "hvv_departures": {
       "name": "HVV Departures",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -2932,7 +2932,7 @@
     },
     "ialarm": {
       "name": "Antifurto365 iAlarm",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -3010,7 +3010,7 @@
     },
     "imap": {
       "name": "IMAP",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_push"
     },
@@ -3022,7 +3022,7 @@
     },
     "imgw_pib": {
       "name": "IMGW-PIB",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -3064,7 +3064,7 @@
     },
     "inkbird": {
       "name": "INKBIRD",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -3089,7 +3089,7 @@
     },
     "intellifire": {
       "name": "IntelliFire",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -3118,7 +3118,7 @@
     },
     "iotawatt": {
       "name": "IoTaWatt",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -3136,7 +3136,7 @@
     },
     "ipma": {
       "name": "Instituto Portugu\u00eas do Mar e Atmosfera (IPMA)",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -3176,7 +3176,7 @@
       "iot_class": "local_polling"
     },
     "islamic_prayer_times": {
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "calculated"
     },
@@ -3187,7 +3187,7 @@
     },
     "israel_rail": {
       "name": "Israel Railways",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -3200,7 +3200,7 @@
     },
     "ista_ecotrend": {
       "name": "ista EcoTrend",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -3249,7 +3249,7 @@
     },
     "justnimbus": {
       "name": "JustNimbus",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -3272,7 +3272,7 @@
     },
     "kaleidescape": {
       "name": "Kaleidescape",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -3290,7 +3290,7 @@
     },
     "keenetic_ndms2": {
       "name": "Keenetic NDMS2 Router",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -3302,7 +3302,7 @@
     },
     "kegtron": {
       "name": "Kegtron",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -6478,7 +6478,7 @@
       "iot_class": "cloud_polling"
     },
     "sun": {
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "calculated",
       "single_config_entry": true
