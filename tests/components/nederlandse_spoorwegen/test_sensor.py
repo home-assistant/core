@@ -216,7 +216,7 @@ async def test_sensor_with_custom_time_parsing(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_with_time_filtering(
     hass: HomeAssistant,
-    mock_nsapi_with_time_1641: AsyncMock,
+    mock_nsapi: AsyncMock,
 ) -> None:
     """Test that the time-based window filter correctly filters trips.
 
@@ -259,29 +259,22 @@ async def test_sensor_with_time_filtering(
     assert len(sensor_states) == 13
 
     # Find the actual departure time sensor and next departure sensor
-    actual_departure_sensor = None
-    next_departure_sensor = None
-
-    for state in sensor_states:
-        if state.entity_id.endswith("_next_departure"):
-            next_departure_sensor = state
-        elif state.entity_id.endswith("_departure") and not state.entity_id.endswith(
-            ("_time", "_platform", "_next_departure")
-        ):
-            actual_departure_sensor = state
+    actual_departure_sensor = hass.states.get("sensor.test_route_time_filter_departure")
+    next_departure_sensor = hass.states.get(
+        "sensor.test_route_time_filter_next_departure"
+    )
 
     assert actual_departure_sensor is not None, "Actual departure sensor not found"
-    assert actual_departure_sensor.state != STATE_UNKNOWN
+    assert actual_departure_sensor["state"] != STATE_UNKNOWN
 
     # The sensor state is a UTC timestamp, convert it to Amsterdam time
     ams_tz = zoneinfo.ZoneInfo("Europe/Amsterdam")
 
-    departure_dt = datetime.fromisoformat(actual_departure_sensor.state)
+    departure_dt = datetime.fromisoformat(actual_departure_sensor["state"])
     departure_local = departure_dt.astimezone(ams_tz)
 
-    hour = departure_local.hour
-    minute = departure_local.minute
-
+    hour = departure_local["hour"]
+    minute = departure_local["minute"]
     # Verify first trip: is NOT before 17:00 (i.e., filtered trips are excluded)
     assert hour >= 17, (
         f"Expected first trip at or after 17:00 Amsterdam time, but got {hour}:{minute:02d}. "
@@ -289,32 +282,24 @@ async def test_sensor_with_time_filtering(
         "were NOT filtered out by the time window filter."
     )
 
-    # Verify first trip: is AT or after 17:00 (i.e., matching trips are included)
-    # Based on fixture data, first trip at or after 17:00 should be 17:11
-    assert (hour, minute) >= (17, 0), (
-        f"Expected first trip at or after 17:00, got {hour}:{minute:02d}. "
-        "This means the window filter is not including trips at/after the configured time."
-    )
-
     # Verify next trip also passes the filter
     assert next_departure_sensor is not None, "Next departure sensor not found"
-    if next_departure_sensor.state != STATE_UNKNOWN:
-        next_departure_dt = datetime.fromisoformat(next_departure_sensor.state)
-        next_departure_local = next_departure_dt.astimezone(ams_tz)
+    next_departure_dt = datetime.fromisoformat(next_departure_sensor["state"])
+    next_departure_local = next_departure_dt.astimezone(ams_tz)
 
-        next_hour = next_departure_local.hour
-        next_minute = next_departure_local.minute
+    next_hour = next_departure_local["hour"]
+    next_minute = next_departure_local["minute"]
 
-        # Verify next trip is also at or after 17:00
-        assert next_hour >= 17, (
-            f"Expected next trip at or after 17:00 Amsterdam time, but got {next_hour}:{next_minute:02d}. "
-            "This means the window filter is not applied consistently to all trips."
-        )
+    # Verify next trip is also at or after 17:00
+    assert next_hour >= 17, (
+        f"Expected next trip at or after 17:00 Amsterdam time, but got {next_hour}:{next_minute:02d}. "
+        "This means the window filter is not applied consistently to all trips."
+    )
 
-        # Verify next trip is after the first trip
-        assert (next_hour, next_minute) > (hour, minute), (
-            f"Expected next trip ({next_hour}:{next_minute:02d}) to be after first trip ({hour}:{minute:02d})"
-        )
+    # Verify next trip is after the first trip
+    assert (next_hour, next_minute) > (hour, minute), (
+        f"Expected next trip ({next_hour}:{next_minute:02d}) to be after first trip ({hour}:{minute:02d})"
+    )
 
 
 @pytest.mark.freeze_time("2025-09-15 14:30:00+00:00")
@@ -365,19 +350,13 @@ async def test_sensor_with_time_filtering_next_day(
     assert len(sensor_states) == 13
 
     # Find the actual departure sensor
-    actual_departure_sensor = None
-    for state in sensor_states:
-        if state.entity_id.endswith("_departure") and not state.entity_id.endswith(
-            ("_time", "_platform", "_next_departure")
-        ):
-            actual_departure_sensor = state
-            break
+    actual_departure_sensor = hass.states.get("sensor.test_route_morning_departure")
 
     assert actual_departure_sensor is not None, "Actual departure sensor not found"
 
     # The sensor should have a valid trip (from tomorrow at or after 08:00)
     # We don't assert the exact time since it depends on the fixture data,
     # but it should not be STATE_UNKNOWN
-    assert actual_departure_sensor.state != STATE_UNKNOWN, (
+    assert actual_departure_sensor["state"] != STATE_UNKNOWN, (
         "Expected to have trips from tomorrow when configured time is in the past"
     )
