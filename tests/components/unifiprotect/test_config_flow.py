@@ -227,6 +227,7 @@ async def test_form_version_too_old(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == _async_unifi_mac_from_hass(nvr.mac)
 
 
 async def test_form_invalid_auth_password(
@@ -283,6 +284,7 @@ async def test_form_invalid_auth_password(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == _async_unifi_mac_from_hass(nvr.mac)
 
 
 async def test_form_invalid_auth_api_key(
@@ -339,6 +341,7 @@ async def test_form_invalid_auth_api_key(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == _async_unifi_mac_from_hass(nvr.mac)
 
 
 async def test_form_cloud_user(
@@ -404,6 +407,7 @@ async def test_form_cloud_user(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == _async_unifi_mac_from_hass(nvr.mac)
 
 
 async def test_form_cannot_connect(
@@ -460,6 +464,7 @@ async def test_form_cannot_connect(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == _async_unifi_mac_from_hass(nvr.mac)
 
 
 async def test_form_reauth_auth(
@@ -1290,6 +1295,9 @@ async def test_discovery_with_both_ignored_and_normal_entry(
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == _async_unifi_mac_from_hass(
+        DEVICE_MAC_ADDRESS.upper().replace(":", "")
+    )
 
 
 async def test_discovery_confirm_fallback_to_ip(
