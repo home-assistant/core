@@ -99,7 +99,7 @@ from tests.common import MockConfigEntry, async_capture_events, async_load_fixtu
 from tests.typing import ClientSessionGenerator
 
 
-async def test_webhook_platform_init(hass: HomeAssistant, webhook_platform) -> None:
+async def test_webhook_platform_init(hass: HomeAssistant, webhook_bot) -> None:
     """Test initialization of the webhooks platform."""
     assert hass.services.has_service(DOMAIN, SERVICE_SEND_MESSAGE) is True
 
@@ -158,7 +158,6 @@ async def test_polling_platform_init(
         (
             SERVICE_SEND_LOCATION,
             {
-                ATTR_MESSAGE: "test_message",
                 ATTR_MESSAGE_THREAD_ID: "123",
                 ATTR_LONGITUDE: "1.123",
                 ATTR_LATITUDE: "1.123",
@@ -414,6 +413,7 @@ async def test_send_chat_action(
                 CONF_CONFIG_ENTRY_ID: mock_broadcast_config_entry.entry_id,
                 ATTR_TARGET: [123456],
                 ATTR_CHAT_ACTION: CHAT_ACTION_TYPING,
+                ATTR_MESSAGE_THREAD_ID: 123,
             },
             blocking=True,
             return_response=True,
@@ -421,7 +421,9 @@ async def test_send_chat_action(
 
     await hass.async_block_till_done()
     mock.assert_called_once()
-    mock.assert_called_with(chat_id=123456, action=CHAT_ACTION_TYPING)
+    mock.assert_called_with(
+        chat_id=123456, action=CHAT_ACTION_TYPING, message_thread_id=123
+    )
 
 
 @pytest.mark.parametrize(
@@ -1505,7 +1507,6 @@ async def test_set_message_reaction(
             SERVICE_SEND_LOCATION,
             {
                 ATTR_TARGET: 654321,
-                ATTR_MESSAGE: "test_message",
                 ATTR_MESSAGE_THREAD_ID: "123",
                 ATTR_LONGITUDE: "1.123",
                 ATTR_LATITUDE: "1.123",

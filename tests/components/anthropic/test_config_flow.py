@@ -263,7 +263,7 @@ async def test_subentry_web_search_user_location(
             "recommended": False,
         },
     )
-    assert options["type"] == FlowResultType.FORM
+    assert options["type"] is FlowResultType.FORM
     assert options["step_id"] == "advanced"
 
     # Configure advanced step
@@ -274,7 +274,7 @@ async def test_subentry_web_search_user_location(
             "chat_model": "claude-sonnet-4-5",
         },
     )
-    assert options["type"] == FlowResultType.FORM
+    assert options["type"] is FlowResultType.FORM
     assert options["step_id"] == "model"
 
     hass.config.country = "US"
@@ -354,7 +354,7 @@ async def test_model_list(
             "recommended": False,
         },
     )
-    assert options["type"] == FlowResultType.FORM
+    assert options["type"] is FlowResultType.FORM
     assert options["step_id"] == "advanced"
     assert options["data_schema"].schema["chat_model"].config["options"] == [
         {
@@ -429,7 +429,7 @@ async def test_model_list_error(
                 "recommended": False,
             },
         )
-    assert options["type"] == FlowResultType.FORM
+    assert options["type"] is FlowResultType.FORM
     assert options["step_id"] == "advanced"
     assert options["data_schema"].schema["chat_model"].config["options"] == []
 
@@ -634,7 +634,7 @@ async def test_subentry_options_switching(
     assert subentry_flow["step_id"] == "init"
 
     for step_options in new_options:
-        assert subentry_flow["type"] == FlowResultType.FORM
+        assert subentry_flow["type"] is FlowResultType.FORM
         assert not subentry_flow["errors"]
 
         # Test that current options are showed as suggested values:
