@@ -143,8 +143,10 @@ SERVICE_SCHEMA_SEND_MESSAGE = vol.All(
 
 SERVICE_SCHEMA_SEND_CHAT_ACTION = vol.All(
     cv.deprecated(ATTR_TIMEOUT),
-    BASE_SERVICE_SCHEMA.extend(
+    vol.Schema(
         {
+            vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
+            vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [vol.Coerce(int)]),
             vol.Required(ATTR_CHAT_ACTION): vol.In(
                 (
                     CHAT_ACTION_TYPING,
@@ -160,6 +162,7 @@ SERVICE_SCHEMA_SEND_CHAT_ACTION = vol.All(
                     CHAT_ACTION_UPLOAD_VIDEO_NOTE,
                 )
             ),
+            vol.Optional(ATTR_MESSAGE_THREAD_ID): vol.Coerce(int),
         }
     ),
 )
