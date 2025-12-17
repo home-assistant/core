@@ -99,7 +99,7 @@ def async_get_light_motion_current(obj: Light) -> str:
         obj.light_mode_settings.mode is LightModeType.MOTION
         and obj.light_mode_settings.enable_at is LightModeEnableType.DARK
     ):
-        return f"{LightModeType.MOTION.value}Dark"
+        return f"{LightModeType.MOTION.value}_dark"
     return obj.light_mode_settings.mode.value
 
 
