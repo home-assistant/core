@@ -477,7 +477,6 @@
                 "description": "Group address to control the current speed step.",
                 "label": "Step"
               },
-              "label": "Fan speed",
               "max_step": {
                 "description": "Number of discrete fan speed steps (Off excluded).",
                 "label": "Fan steps"
@@ -491,7 +490,8 @@
                   "description": "Set the fan speed in discrete steps.",
                   "label": "Steps"
                 }
-              }
+              },
+              "title": "Fan speed"
             }
           }
         },
