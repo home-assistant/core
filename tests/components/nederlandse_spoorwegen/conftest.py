@@ -72,14 +72,6 @@ def mock_no_trips_nsapi(mock_nsapi: AsyncMock) -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_nsapi_with_time_1641(mock_nsapi: AsyncMock) -> Generator[AsyncMock]:
-    """Mock NS API with trips starting at 16:41 (for time=17:00 filter testing)."""
-    trips_data = load_json_object_fixture("trip_1650.json", DOMAIN)
-    mock_nsapi.get_trips.return_value = [Trip(trip) for trip in trips_data["trips"]]
-    return mock_nsapi
-
-
-@pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Mock config entry."""
     return MockConfigEntry(
