@@ -133,6 +133,7 @@ _EXPERIMENTAL_TRIGGER_PLATFORMS = {
     "lawn_mower",
     "light",
     "media_player",
+    "person",
     "switch",
     "text",
     "update",
