@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING
@@ -14,7 +15,7 @@ from visionpluspython.exceptions import (
     WattsVisionError,
     WattsVisionTimeoutError,
 )
-from visionpluspython.models import Device
+from visionpluspython.models import Device, ThermostatDevice
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -35,6 +36,13 @@ if TYPE_CHECKING:
     type WattsVisionConfigEntry = ConfigEntry[WattsVisionRuntimeData]
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class WattsVisionThermostatData:
+    """Data class for thermostat device coordinator."""
+
+    thermostat: ThermostatDevice
 
 
 class WattsVisionHubCoordinator(DataUpdateCoordinator[dict[str, Device]]):
@@ -160,8 +168,10 @@ class WattsVisionHubCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         return list((self.data or {}).keys())
 
 
-class WattsVisionDeviceCoordinator(DataUpdateCoordinator[Device]):
-    """Device coordinator for individual updates."""
+class WattsVisionThermostatCoordinator(
+    DataUpdateCoordinator[WattsVisionThermostatData]
+):
+    """Thermostat device coordinator for individual updates."""
 
     def __init__(
         self,
@@ -171,7 +181,7 @@ class WattsVisionDeviceCoordinator(DataUpdateCoordinator[Device]):
         hub_coordinator: WattsVisionHubCoordinator,
         device_id: str,
     ) -> None:
-        """Initialize the device coordinator."""
+        """Initialize the thermostat coordinator."""
         super().__init__(
             hass,
             _LOGGER,
@@ -193,10 +203,11 @@ class WattsVisionDeviceCoordinator(DataUpdateCoordinator[Device]):
         """Handle updates from hub coordinator."""
         if self.hub_coordinator.data and self.device_id in self.hub_coordinator.data:
             device = self.hub_coordinator.data[self.device_id]
-            self.async_set_updated_data(device)
+            assert isinstance(device, ThermostatDevice)
+            self.async_set_updated_data(WattsVisionThermostatData(thermostat=device))
 
-    async def _async_update_data(self) -> Device:
-        """Refresh specific device."""
+    async def _async_update_data(self) -> WattsVisionThermostatData:
+        """Refresh specific thermostat device."""
         if self._fast_polling_until and datetime.now() > self._fast_polling_until:
             self._fast_polling_until = None
             self.update_interval = None
@@ -223,8 +234,9 @@ class WattsVisionDeviceCoordinator(DataUpdateCoordinator[Device]):
         if not device:
             raise UpdateFailed(f"Device {self.device_id} not found")
 
-        _LOGGER.debug("Refreshed device %s", self.device_id)
-        return device
+        assert isinstance(device, ThermostatDevice)
+        _LOGGER.debug("Refreshed thermostat %s", self.device_id)
+        return WattsVisionThermostatData(thermostat=device)
 
     def trigger_fast_polling(self, duration: int = 60) -> None:
         """Activate fast polling for a specified duration after a command."""

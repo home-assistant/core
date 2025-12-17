@@ -2612,7 +2612,7 @@ victron-vrm==0.1.8
 vilfo-api-client==0.5.0
 
 # homeassistant.components.watts
-visionpluspython==1.0.1
+visionpluspython==1.0.2
 
 # homeassistant.components.caldav
 vobject==0.9.9

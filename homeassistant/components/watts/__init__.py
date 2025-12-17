@@ -9,6 +9,7 @@ import logging
 from aiohttp import ClientError, ClientResponseError
 from visionpluspython.auth import WattsVisionAuth
 from visionpluspython.client import WattsVisionClient
+from visionpluspython.models import ThermostatDevice
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -22,7 +23,11 @@ from homeassistant.helpers import (
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DOMAIN
-from .coordinator import WattsVisionDeviceCoordinator, WattsVisionHubCoordinator
+from .coordinator import (
+    WattsVisionHubCoordinator,
+    WattsVisionThermostatCoordinator,
+    WattsVisionThermostatData,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +40,7 @@ class WattsVisionRuntimeData:
 
     auth: WattsVisionAuth
     hub_coordinator: WattsVisionHubCoordinator
-    device_coordinators: dict[str, WattsVisionDeviceCoordinator]
+    thermostat_coordinators: dict[str, WattsVisionThermostatCoordinator]
     client: WattsVisionClient
 
 
@@ -43,14 +48,15 @@ type WattsVisionConfigEntry = ConfigEntry[WattsVisionRuntimeData]
 
 
 @callback
-def _handle_new_devices(
+def _handle_new_thermostats(
     hass: HomeAssistant,
     entry: WattsVisionConfigEntry,
     hub_coordinator: WattsVisionHubCoordinator,
 ) -> None:
-    """Check for new devices and create coordinators."""
+    """Check for new thermostat devices and create coordinators."""
+
     current_device_ids = set(hub_coordinator.data.keys())
-    known_device_ids = set(entry.runtime_data.device_coordinators.keys())
+    known_device_ids = set(entry.runtime_data.thermostat_coordinators.keys())
     new_device_ids = current_device_ids - known_device_ids
 
     if not new_device_ids:
@@ -58,17 +64,23 @@ def _handle_new_devices(
 
     _LOGGER.info("Discovered %d new device(s): %s", len(new_device_ids), new_device_ids)
 
-    device_coordinators = entry.runtime_data.device_coordinators
+    thermostat_coordinators = entry.runtime_data.thermostat_coordinators
     client = entry.runtime_data.client
 
     for device_id in new_device_ids:
-        device_coordinator = WattsVisionDeviceCoordinator(
+        device = hub_coordinator.data[device_id]
+        if not isinstance(device, ThermostatDevice):
+            continue
+
+        thermostat_coordinator = WattsVisionThermostatCoordinator(
             hass, client, entry, hub_coordinator, device_id
         )
-        device_coordinator.async_set_updated_data(hub_coordinator.data[device_id])
-        device_coordinators[device_id] = device_coordinator
+        thermostat_coordinator.async_set_updated_data(
+            WattsVisionThermostatData(thermostat=device)
+        )
+        thermostat_coordinators[device_id] = thermostat_coordinator
 
-        _LOGGER.debug("Created coordinator for device %s", device_id)
+        _LOGGER.debug("Created thermostat coordinator for device %s", device_id)
 
     async_dispatcher_send(hass, f"{DOMAIN}_{entry.entry_id}_new_device")
 
@@ -128,18 +140,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: WattsVisionConfigEntry) 
     # Stale device tracking
     hub_coordinator.previous_devices = set(hub_coordinator.data.keys())
 
-    device_coordinators = {}
+    thermostat_coordinators: dict[str, WattsVisionThermostatCoordinator] = {}
     for device_id in hub_coordinator.device_ids:
-        device_coordinator = WattsVisionDeviceCoordinator(
+        device = hub_coordinator.data[device_id]
+        if not isinstance(device, ThermostatDevice):
+            continue
+
+        thermostat_coordinator = WattsVisionThermostatCoordinator(
             hass, client, entry, hub_coordinator, device_id
         )
-        device_coordinator.async_set_updated_data(hub_coordinator.data[device_id])
-        device_coordinators[device_id] = device_coordinator
+        thermostat_coordinator.async_set_updated_data(
+            WattsVisionThermostatData(thermostat=device)
+        )
+        thermostat_coordinators[device_id] = thermostat_coordinator
 
     entry.runtime_data = WattsVisionRuntimeData(
         auth=auth,
         hub_coordinator=hub_coordinator,
-        device_coordinators=device_coordinators,
+        thermostat_coordinators=thermostat_coordinators,
         client=client,
     )
 
@@ -148,7 +166,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WattsVisionConfigEntry) 
     # Listener for dynamic device detection
     entry.async_on_unload(
         hub_coordinator.async_add_listener(
-            lambda: _handle_new_devices(hass, entry, hub_coordinator)
+            lambda: _handle_new_thermostats(hass, entry, hub_coordinator)
         )
     )
 
@@ -159,7 +177,7 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: WattsVisionConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    for device_coordinator in entry.runtime_data.device_coordinators.values():
-        device_coordinator.unsubscribe_hub_listener()
+    for thermostat_coordinator in entry.runtime_data.thermostat_coordinators.values():
+        thermostat_coordinator.unsubscribe_hub_listener()
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

@@ -20,8 +20,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import WattsVisionConfigEntry
 from .const import DOMAIN, HVAC_MODE_TO_THERMOSTAT, THERMOSTAT_MODE_TO_HVAC
-from .coordinator import WattsVisionDeviceCoordinator
-from .entity import WattsVisionEntity
+from .coordinator import WattsVisionThermostatCoordinator
+from .entity import WattsVisionThermostatEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,27 +35,27 @@ async def async_setup_entry(
 ) -> None:
     """Set up Watts Vision climate entities from a config entry."""
 
-    device_coordinators = entry.runtime_data.device_coordinators
+    thermostat_coordinators = entry.runtime_data.thermostat_coordinators
     known_device_ids: set[str] = set()
 
     @callback
-    def _check_new_devices() -> None:
-        """Check for new devices."""
-        current_device_ids = set(device_coordinators.keys())
+    def _check_new_thermostats() -> None:
+        """Check for new thermostat devices."""
+        current_device_ids = set(thermostat_coordinators.keys())
         new_device_ids = current_device_ids - known_device_ids
 
         if not new_device_ids:
             return
 
         _LOGGER.debug(
-            "Adding climate entities for %d new device(s)",
+            "Adding climate entities for %d new thermostat(s)",
             len(new_device_ids),
         )
 
         new_entities = [
             WattsVisionClimate(
-                device_coordinators[device_id],
-                device_coordinators[device_id].data,
+                thermostat_coordinators[device_id],
+                thermostat_coordinators[device_id].data.thermostat,
             )
             for device_id in new_device_ids
         ]
@@ -63,19 +63,19 @@ async def async_setup_entry(
         known_device_ids.update(new_device_ids)
         async_add_entities(new_entities)
 
-    _check_new_devices()
+    _check_new_thermostats()
 
-    # Listen for new devices
+    # Listen for new thermostats
     entry.async_on_unload(
         async_dispatcher_connect(
             hass,
             f"{DOMAIN}_{entry.entry_id}_new_device",
-            _check_new_devices,
+            _check_new_thermostats,
         )
     )
 
 
-class WattsVisionClimate(WattsVisionEntity, ClimateEntity):
+class WattsVisionClimate(WattsVisionThermostatEntity, ClimateEntity):
     """Representation of a Watts Vision heater as a climate entity."""
 
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
@@ -84,18 +84,17 @@ class WattsVisionClimate(WattsVisionEntity, ClimateEntity):
 
     def __init__(
         self,
-        coordinator: WattsVisionDeviceCoordinator,
-        device: ThermostatDevice,
+        coordinator: WattsVisionThermostatCoordinator,
+        thermostat: ThermostatDevice,
     ) -> None:
         """Initialize the climate entity."""
 
-        super().__init__(coordinator, device.device_id)
-        self._device = device
+        super().__init__(coordinator, thermostat.device_id)
 
-        self._attr_min_temp = device.min_allowed_temperature
-        self._attr_max_temp = device.max_allowed_temperature
+        self._attr_min_temp = thermostat.min_allowed_temperature
+        self._attr_max_temp = thermostat.max_allowed_temperature
 
-        if device.temperature_unit.upper() == "C":
+        if thermostat.temperature_unit.upper() == "C":
             self._attr_temperature_unit = UnitOfTemperature.CELSIUS
         else:
             self._attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
@@ -103,17 +102,17 @@ class WattsVisionClimate(WattsVisionEntity, ClimateEntity):
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        return self.device.current_temperature
+        return self.thermostat.current_temperature
 
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature setpoint."""
-        return self.device.setpoint
+        return self.thermostat.setpoint
 
     @property
     def hvac_mode(self) -> HVACMode | None:
         """Return hvac mode."""
-        return THERMOSTAT_MODE_TO_HVAC.get(self.device.thermostat_mode)
+        return THERMOSTAT_MODE_TO_HVAC.get(self.thermostat.thermostat_mode)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
