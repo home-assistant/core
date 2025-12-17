@@ -33,3 +33,23 @@ async def test_setup_retry_on_nodes_failure(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
     mock_pyvlx.load_scenes.assert_awaited_once()
     mock_pyvlx.load_nodes.assert_awaited_once()
+
+
+async def test_setup_retry_on_oserror_during_scenes(
+    mock_config_entry: ConfigEntry, hass: HomeAssistant, mock_pyvlx: AsyncMock
+) -> None:
+    """Test that OSError during scene loading triggers setup retry.
+
+    OSError typically indicates network/connection issues when the gateway
+    refuses connections or is unreachable.
+    """
+
+    mock_pyvlx.load_scenes.side_effect = OSError("Connection refused")
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    mock_pyvlx.load_scenes.assert_awaited_once()
+    mock_pyvlx.load_nodes.assert_not_called()
