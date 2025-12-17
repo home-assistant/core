@@ -1,0 +1,8 @@
+{
+  "issues": {
+    "yaml_deprecated": {
+      "description": "Configuring OpenEVSE using YAML is being removed. Your existing YAML configuration has been imported into the UI automatically. Remove the `openevse` configuration from your configuration.yaml file and restart Home Assistant to fix this issue.",
+      "title": "OpenEVSE YAML configuration is deprecated"
+    }
+  }
+}
