@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 from uiprotect.data import Camera, Light, Permission, RecordingMode, VideoMode
+from uiprotect.exceptions import ClientError, NotAuthorized
 
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
 from homeassistant.components.unifiprotect.switch import (
@@ -18,6 +19,7 @@ from homeassistant.components.unifiprotect.switch import (
 )
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ENTITY_ID, STATE_OFF, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .utils import (
@@ -462,3 +464,47 @@ async def test_switch_camera_privacy_already_on(
     )
 
     doorbell.set_privacy.assert_called_once_with(False, 100, RecordingMode.ALWAYS)
+
+
+async def test_switch_turn_on_client_error(
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+) -> None:
+    """Test switch turn on with ClientError raises HomeAssistantError."""
+
+    await init_entry(hass, ufp, [light])
+
+    description = LIGHT_SWITCHES[1]
+
+    light.__pydantic_fields__["set_status_light"] = Mock(final=False, frozen=False)
+    light.set_status_light = AsyncMock(side_effect=ClientError("Test error"))
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SWITCH, light, description
+    )
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "switch", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+
+
+async def test_switch_turn_on_not_authorized(
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+) -> None:
+    """Test switch turn on with NotAuthorized raises HomeAssistantError."""
+
+    await init_entry(hass, ufp, [light])
+
+    description = LIGHT_SWITCHES[1]
+
+    light.__pydantic_fields__["set_status_light"] = Mock(final=False, frozen=False)
+    light.set_status_light = AsyncMock(side_effect=NotAuthorized("Not authorized"))
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SWITCH, light, description
+    )
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "switch", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
