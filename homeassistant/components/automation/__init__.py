@@ -132,6 +132,7 @@ _EXPERIMENTAL_TRIGGER_PLATFORMS = {
     "fan",
     "lawn_mower",
     "light",
+    "lock",
     "media_player",
     "switch",
     "text",
