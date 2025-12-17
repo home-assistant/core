@@ -132,6 +132,10 @@
     "subscriptions_failed": {
       "description": "Falling back to polling, functionality may be limited.\n\nSonos device at {device_ip} cannot reach Home Assistant at {listener_address}.\n\nSee our [documentation]({sub_fail_url}) for more information on how to solve this issue.",
       "title": "Networking error: subscriptions failed"
+    },
+    "upnp_disabled": {
+      "description": "Unable to connect to Sonos speaker at {device_ip}.\n\n Please ensure that uPNP is enabled.\n\nSee our [documentation]({conn_fail_url}) for more information on how to solve this issue.",
+      "title": "Networking error: UPnP disabled"
     }
   },
   "services": {

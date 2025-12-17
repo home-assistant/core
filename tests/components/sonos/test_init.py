@@ -1,22 +1,26 @@
 """Tests for the Sonos config flow."""
 
 import asyncio
+from http import HTTPStatus
 import logging
 from unittest.mock import Mock, PropertyMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from requests import Response
+from requests.exceptions import HTTPError
 
 from homeassistant import config_entries
 from homeassistant.components import sonos
 from homeassistant.components.sonos.const import (
     DISCOVERY_INTERVAL,
     SONOS_SPEAKER_ACTIVITY,
+    UPNP_ISSUE_ID,
 )
 from homeassistant.components.sonos.exception import SonosUpdateError
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.setup import async_setup_component
@@ -83,6 +87,30 @@ async def test_not_configuring_sonos_not_creates_entry(hass: HomeAssistant) -> N
         await hass.async_block_till_done()
 
     assert len(mock_setup.mock_calls) == 0
+
+
+async def test_create_upnp_disabled_issue(
+    hass: HomeAssistant, async_setup_sonos, soco: MockSoCo, config_entry
+) -> None:
+    """Test setting up Sonos loads the media player."""
+
+    resp = Response()
+    resp.status_code = HTTPStatus.FORBIDDEN
+    resp._content = b"Forbidden"
+    resp.url = "http://10.10.10.1:1400/xml/DeviceProperties1.xml"
+
+    with patch(
+        "tests.components.sonos.conftest.MockSoCo.household_id",
+        new_callable=PropertyMock,
+        create=True,
+    ) as mock_household:
+        mock_household.side_effect = HTTPError(response=resp)
+        config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        # A 403 when reading household_id should result in a connection issue
+        issue_registry = ir.async_get(hass)
+        assert issue_registry.async_get_issue(sonos.DOMAIN, UPNP_ISSUE_ID) is not None
 
 
 async def test_async_poll_manual_hosts_warnings(

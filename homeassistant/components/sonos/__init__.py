@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import datetime
 from functools import partial
+from http import HTTPStatus
 from ipaddress import AddressValueError, IPv4Address
 import logging
 import socket
@@ -12,7 +13,7 @@ from typing import Any, cast
 from urllib.parse import urlparse
 
 from aiohttp import ClientError
-from requests.exceptions import Timeout
+from requests.exceptions import HTTPError, Timeout
 from soco import events_asyncio, zonegroupstate
 import soco.config as soco_config
 from soco.core import SoCo
@@ -54,6 +55,8 @@ from .const import (
     SUB_FAIL_ISSUE_ID,
     SUB_FAIL_URL,
     SUBSCRIPTION_TIMEOUT,
+    UPNP_FAIL_URL,
+    UPNP_ISSUE_ID,
     UPNP_ST,
 )
 from .exception import SonosUpdateError
@@ -184,6 +187,33 @@ class SonosDiscoveryManager:
         """Check if device at provided IP is known to be invisible."""
         return any(x for x in self._known_invisible if x.ip_address == ip_address)
 
+    async def async_get_household_id(self, soco: SoCo, ip_address: str) -> None:
+        """Attempt to get household ID, creating issue on 403 error."""
+        try:
+            await self.hass.async_add_executor_job(
+                getattr,
+                soco,
+                "household_id",
+            )
+        except HTTPError as ex:
+            status_code = getattr(
+                getattr(ex, "response", None), "status_code", getattr(ex, "code", None)
+            )
+            if status_code == HTTPStatus.FORBIDDEN:
+                ir.async_create_issue(
+                    self.hass,
+                    DOMAIN,
+                    UPNP_ISSUE_ID,
+                    is_fixable=False,
+                    severity=ir.IssueSeverity.ERROR,
+                    translation_key="upnp_disabled",
+                    translation_placeholders={
+                        "device_ip": ip_address,
+                        "conn_fail_url": UPNP_FAIL_URL,
+                    },
+                )
+            raise
+
     async def async_subscribe_to_zone_updates(self, ip_address: str) -> None:
         """Test subscriptions and create SonosSpeakers based on results."""
         try:
@@ -196,11 +226,7 @@ class SonosDiscoveryManager:
             return
         soco = SoCo(ip_address)
         # Cache now to avoid household ID lookup during first ZoneGroupState processing
-        await self.hass.async_add_executor_job(
-            getattr,
-            soco,
-            "household_id",
-        )
+        await self.async_get_household_id(soco, ip_address)
         sub = await soco.zoneGroupTopology.subscribe()
 
         @callback
@@ -386,6 +412,7 @@ class SonosDiscoveryManager:
             ip_addr = await self.hass.async_add_executor_job(socket.gethostbyname, host)
             soco = SoCo(ip_addr)
             try:
+                await self.async_get_household_id(soco, ip_addr)
                 visible_zones = await self.hass.async_add_executor_job(
                     sync_get_visible_zones,
                     soco,
