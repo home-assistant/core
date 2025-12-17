@@ -51,7 +51,8 @@ class OpowerData:
 
     account: Account
     forecast: Forecast | None
-    latest_read: datetime | None
+    last_changed: datetime | None
+    last_updated: datetime
 
 
 class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
@@ -126,19 +127,20 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
 
         # Because Opower provides historical usage/cost with a delay of a couple of days
         # we need to insert data into statistics.
-        latest_reads = await self._insert_statistics(accounts)
+        last_changed_per_account = await self._insert_statistics(accounts)
         return {
             account.utility_account_id: OpowerData(
                 account=account,
                 forecast=forecasts.get(account.utility_account_id),
-                latest_read=latest_reads.get(account.utility_account_id),
+                last_changed=last_changed_per_account.get(account.utility_account_id),
+                last_updated=dt_util.utcnow(),
             )
             for account in accounts
         }
 
     async def _insert_statistics(self, accounts: list[Account]) -> dict[str, datetime]:
         """Insert Opower statistics."""
-        latest_reads: dict[str, datetime] = {}
+        last_changed_per_account: dict[str, datetime] = {}
         for account in accounts:
             id_prefix = (
                 (
@@ -301,10 +303,12 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
                 last_stats_time = stats[consumption_statistic_id][0]["start"]
 
             if cost_reads:
-                latest_reads[account.utility_account_id] = cost_reads[-1].start_time
+                last_changed_per_account[account.utility_account_id] = cost_reads[
+                    -1
+                ].start_time
             elif last_stats_time is not None:
-                latest_reads[account.utility_account_id] = dt_util.utc_from_timestamp(
-                    last_stats_time
+                last_changed_per_account[account.utility_account_id] = (
+                    dt_util.utc_from_timestamp(last_stats_time)
                 )
 
             cost_statistics = []
@@ -373,7 +377,7 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, OpowerData]]):
             )
             async_add_external_statistics(self.hass, return_metadata, return_statistics)
 
-        return latest_reads
+        return last_changed_per_account
 
     async def _async_maybe_migrate_statistics(
         self,

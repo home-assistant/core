@@ -1,7 +1,7 @@
 """Tests for the Opower sensor platform."""
 
 from datetime import datetime
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from opower import CostRead
 import pytest
@@ -31,8 +31,12 @@ async def test_sensors(
         ),
     ]
 
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.opower.coordinator.dt_util.utcnow"
+    ) as mock_utcnow:
+        mock_utcnow.return_value = datetime(2023, 1, 2, 8, 0, 0, tzinfo=dt_util.UTC)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     entity_registry = er.async_get(hass)
 
@@ -61,12 +65,19 @@ async def test_sensors(
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "USD"
     assert state.state == "20.0"
 
-    entry = entity_registry.async_get("sensor.elec_account_111111_latest_read")
+    entry = entity_registry.async_get("sensor.elec_account_111111_last_changed")
     assert entry
-    assert entry.unique_id == "pge_111111_latest_read"
-    state = hass.states.get("sensor.elec_account_111111_latest_read")
+    assert entry.unique_id == "pge_111111_last_changed"
+    state = hass.states.get("sensor.elec_account_111111_last_changed")
     assert state
     assert state.state == "2023-01-01T16:00:00+00:00"
+
+    entry = entity_registry.async_get("sensor.elec_account_111111_last_updated")
+    assert entry
+    assert entry.unique_id == "pge_111111_last_updated"
+    state = hass.states.get("sensor.elec_account_111111_last_updated")
+    assert state
+    assert state.state == "2023-01-02T08:00:00+00:00"
 
     # Check gas sensors
     entry = entity_registry.async_get(
@@ -90,9 +101,16 @@ async def test_sensors(
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "USD"
     assert state.state == "15.0"
 
-    entry = entity_registry.async_get("sensor.gas_account_222222_latest_read")
+    entry = entity_registry.async_get("sensor.gas_account_222222_last_changed")
     assert entry
-    assert entry.unique_id == "pge_222222_latest_read"
-    state = hass.states.get("sensor.gas_account_222222_latest_read")
+    assert entry.unique_id == "pge_222222_last_changed"
+    state = hass.states.get("sensor.gas_account_222222_last_changed")
     assert state
     assert state.state == "2023-01-01T16:00:00+00:00"
+
+    entry = entity_registry.async_get("sensor.gas_account_222222_last_updated")
+    assert entry
+    assert entry.unique_id == "pge_222222_last_updated"
+    state = hass.states.get("sensor.gas_account_222222_last_updated")
+    assert state
+    assert state.state == "2023-01-02T08:00:00+00:00"

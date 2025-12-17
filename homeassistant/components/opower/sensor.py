@@ -36,11 +36,18 @@ class OpowerEntityDescription(SensorEntityDescription):
 
 COMMON_SENSORS: tuple[OpowerEntityDescription, ...] = (
     OpowerEntityDescription(
-        key="latest_read",
-        translation_key="latest_read",
+        key="last_changed",
+        translation_key="last_changed",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda data: data.latest_read,
+        value_fn=lambda data: data.last_changed,
+    ),
+    OpowerEntityDescription(
+        key="last_updated",
+        translation_key="last_updated",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda data: data.last_updated,
     ),
 )
 
