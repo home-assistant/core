@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PooldoseConfigEntry
-from .const import REVERSE_UNIT_MAPPING
+from .const import UNIT_MAPPING
 from .entity import PooldoseEntity
 
 if TYPE_CHECKING:
@@ -139,8 +139,7 @@ class PooldoseSelect(PooldoseEntity, SelectEntity):
         # Convert API value to Home Assistant unit if unit conversion is enabled
         if self.entity_description.use_unit_conversion:
             # Map API value (e.g., "m3") to HA unit (e.g., "m³")
-            reverse_map = {v: k for k, v in REVERSE_UNIT_MAPPING.items()}
-            self._attr_current_option = reverse_map.get(api_value, api_value)
+            self._attr_current_option = UNIT_MAPPING.get(api_value, api_value)
         else:
             self._attr_current_option = api_value
 
@@ -148,7 +147,9 @@ class PooldoseSelect(PooldoseEntity, SelectEntity):
         """Change the selected option."""
         # Convert Home Assistant unit to API value if unit conversion is enabled
         if self.entity_description.use_unit_conversion:
-            api_value = REVERSE_UNIT_MAPPING.get(option, option)
+            # Invert UNIT_MAPPING to get API value from HA unit
+            reverse_map = {v: k for k, v in UNIT_MAPPING.items()}
+            api_value = reverse_map.get(option, option)
         else:
             api_value = option
 

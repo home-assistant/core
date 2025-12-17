@@ -231,8 +231,8 @@ class PooldoseSensor(PooldoseEntity, SensorEntity):
             and (data := self.get_data()) is not None
             and (device_unit := data.get("unit"))
         ):
-            # Map device unit (upper case) to Home Assistant unit, return None if unknown
-            return UNIT_MAPPING.get(device_unit.upper())
+            # Map device unit to Home Assistant unit, return None if unknown
+            return UNIT_MAPPING.get(device_unit)
 
         # Fall back to static unit from entity description
         return super().native_unit_of_measurement

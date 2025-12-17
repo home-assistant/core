@@ -18,7 +18,7 @@
     },
     "flow_rate": {
       "value": 150,
-      "unit": "l/s"
+      "unit": "L/s"
     },
     "ph_type_dosing": {
       "value": "alcalyne",

@@ -39,7 +39,7 @@ async def test_all_selects(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_selects_created(
     hass: HomeAssistant,
 ) -> None:
@@ -78,7 +78,7 @@ async def test_select_entity_unavailable_no_coordinator_data(
     assert water_meter_state.state == "unavailable"
 
 
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_select_state_changes(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
@@ -198,7 +198,7 @@ async def test_select_option_no_conversion(
     assert ph_set_state.state == "alcalyne"
 
 
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_select_dosing_method_options(
     hass: HomeAssistant,
     mock_pooldose_client: AsyncMock,
@@ -229,7 +229,7 @@ async def test_select_dosing_method_options(
     assert orp_method_state.state == "proportional"
 
 
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_select_dosing_set_high_low(
     hass: HomeAssistant,
     mock_pooldose_client: AsyncMock,
