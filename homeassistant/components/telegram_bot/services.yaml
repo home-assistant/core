@@ -17,7 +17,7 @@ send_message:
           selector:
             config_entry:
               integration: telegram_bot
-        target:
+        chat_id:
           example: "[12345, 67890] or 12345"
           selector:
             text:
@@ -73,10 +73,26 @@ send_message:
 
 send_chat_action:
   fields:
-    config_entry_id:
+    entity_id:
       selector:
-        config_entry:
-          integration: telegram_bot
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
+    custom_targets:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "[12345, 67890] or 12345"
+          selector:
+            text:
+              multiple: true
     chat_action:
       selector:
         select:
@@ -93,11 +109,6 @@ send_chat_action:
             - "record_video_note"
             - "upload_video_note"
           translation_key: "chat_action"
-    target:
-      example: "[12345, 67890] or 12345"
-      selector:
-        text:
-          multiple: true
     message_thread_id:
       selector:
         number:
@@ -105,10 +116,26 @@ send_chat_action:
 
 send_photo:
   fields:
-    config_entry_id:
+    entity_id:
       selector:
-        config_entry:
-          integration: telegram_bot
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
+    custom_targets:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "[12345, 67890] or 12345"
+          selector:
+            text:
+              multiple: true
     url:
       example: "http://example.org/path/to/the/image.png"
       selector:
@@ -145,11 +172,6 @@ send_photo:
       example: "My image"
       selector:
         text:
-    target:
-      example: "[12345, 67890] or 12345"
-      selector:
-        text:
-          multiple: true
     parse_mode:
       selector:
         select:
@@ -188,10 +210,26 @@ send_photo:
 
 send_sticker:
   fields:
-    config_entry_id:
+    entity_id:
       selector:
-        config_entry:
-          integration: telegram_bot
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
+    custom_targets:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "[12345, 67890] or 12345"
+          selector:
+            text:
+              multiple: true
     url:
       example: "http://example.org/path/to/the/sticker.webp"
       selector:
@@ -228,11 +266,6 @@ send_sticker:
       example: CAACAgIAAxkBAAEDDldhZD-hqWclr6krLq-FWSfCrGNmOQAC9gAD9HsZAAFeYY-ltPYnrCEE
       selector:
         text:
-    target:
-      example: "[12345, 67890] or 12345"
-      selector:
-        text:
-          multiple: true
     disable_notification:
       selector:
         boolean:
@@ -262,10 +295,26 @@ send_sticker:
 
 send_animation:
   fields:
-    config_entry_id:
+    entity_id:
       selector:
-        config_entry:
-          integration: telegram_bot
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
+    custom_targets:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "[12345, 67890] or 12345"
+          selector:
+            text:
+              multiple: true
     url:
       example: "http://example.org/path/to/the/animation.gif"
       selector:
@@ -302,11 +351,6 @@ send_animation:
       example: "My animation"
       selector:
         text:
-    target:
-      example: "[12345, 67890] or 12345"
-      selector:
-        text:
-          multiple: true
     parse_mode:
       selector:
         select:
@@ -345,10 +389,26 @@ send_animation:
 
 send_video:
   fields:
-    config_entry_id:
+    entity_id:
       selector:
-        config_entry:
-          integration: telegram_bot
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
+    custom_targets:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "[12345, 67890] or 12345"
+          selector:
+            text:
+              multiple: true
     url:
       example: "http://example.org/path/to/the/video.mp4"
       selector:
@@ -385,11 +445,6 @@ send_video:
       example: "My video"
       selector:
         text:
-    target:
-      example: "[12345, 67890] or 12345"
-      selector:
-        text:
-          multiple: true
     parse_mode:
       selector:
         select:
@@ -428,10 +483,26 @@ send_video:
 
 send_voice:
   fields:
-    config_entry_id:
+    entity_id:
       selector:
-        config_entry:
-          integration: telegram_bot
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
+    custom_targets:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "[12345, 67890] or 12345"
+          selector:
+            text:
+              multiple: true
     url:
       example: "http://example.org/path/to/the/voice.opus"
       selector:
@@ -468,11 +539,6 @@ send_voice:
       example: "My microphone recording"
       selector:
         text:
-    target:
-      example: "[12345, 67890] or 12345"
-      selector:
-        text:
-          multiple: true
     disable_notification:
       selector:
         boolean:
@@ -502,10 +568,26 @@ send_voice:
 
 send_document:
   fields:
-    config_entry_id:
+    entity_id:
       selector:
-        config_entry:
-          integration: telegram_bot
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
+    custom_targets:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "[12345, 67890] or 12345"
+          selector:
+            text:
+              multiple: true
     url:
       example: "http://example.org/path/to/the/document.odf"
       selector:
@@ -542,11 +624,6 @@ send_document:
       example: Document Title xy
       selector:
         text:
-    target:
-      example: "[12345, 67890] or 12345"
-      selector:
-        text:
-          multiple: true
     parse_mode:
       selector:
         select:
@@ -585,10 +662,26 @@ send_document:
 
 send_location:
   fields:
-    config_entry_id:
+    entity_id:
       selector:
-        config_entry:
-          integration: telegram_bot
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
+    custom_targets:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "[12345, 67890] or 12345"
+          selector:
+            text:
+              multiple: true
     latitude:
       required: true
       selector:
@@ -605,11 +698,6 @@ send_location:
           max: 180
           step: 0.001
           unit_of_measurement: "°"
-    target:
-      example: "[12345, 67890] or 12345"
-      selector:
-        text:
-          multiple: true
     disable_notification:
       selector:
         boolean:
@@ -639,15 +727,26 @@ send_location:
 
 send_poll:
   fields:
-    config_entry_id:
+    entity_id:
       selector:
-        config_entry:
-          integration: telegram_bot
-    target:
-      example: "[12345, 67890] or 12345"
-      selector:
-        text:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
           multiple: true
+          reorder: true
+    custom_targets:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "[12345, 67890] or 12345"
+          selector:
+            text:
+              multiple: true
     question:
       required: true
       selector:
@@ -685,18 +784,28 @@ send_poll:
 
 edit_message:
   fields:
-    config_entry_id:
+    entity_id:
       selector:
-        config_entry:
-          integration: telegram_bot
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          reorder: true
+    custom_targets:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "[12345, 67890] or 12345"
+          selector:
+            text:
+              multiple: true
     message_id:
       required: true
       example: "{{ trigger.event.data.message.message_id }}"
-      selector:
-        text:
-    chat_id:
-      required: true
-      example: 12345
       selector:
         text:
     message:
@@ -728,18 +837,28 @@ edit_message:
 
 edit_message_media:
   fields:
-    config_entry_id:
+    entity_id:
       selector:
-        config_entry:
-          integration: telegram_bot
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          reorder: true
+    custom_targets:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "[12345, 67890] or 12345"
+          selector:
+            text:
+              multiple: true
     message_id:
       required: true
       example: "{{ trigger.event.data.message.message_id }}"
-      selector:
-        text:
-    chat_id:
-      required: true
-      example: 12345
       selector:
         text:
     media_type:
@@ -797,18 +916,28 @@ edit_message_media:
 
 edit_caption:
   fields:
-    config_entry_id:
+    entity_id:
       selector:
-        config_entry:
-          integration: telegram_bot
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          reorder: true
+    custom_targets:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "[12345, 67890] or 12345"
+          selector:
+            text:
+              multiple: true
     message_id:
       required: true
       example: "{{ trigger.event.data.message.message_id }}"
-      selector:
-        text:
-    chat_id:
-      required: true
-      example: 12345
       selector:
         text:
     caption:
@@ -825,18 +954,28 @@ edit_caption:
 
 edit_replymarkup:
   fields:
-    config_entry_id:
+    entity_id:
       selector:
-        config_entry:
-          integration: telegram_bot
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          reorder: true
+    custom_targets:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "[12345, 67890] or 12345"
+          selector:
+            text:
+              multiple: true
     message_id:
       required: true
       example: "{{ trigger.event.data.message.message_id }}"
-      selector:
-        text:
-    chat_id:
-      required: true
-      example: 12345
       selector:
         text:
     inline_keyboard:
@@ -870,47 +1009,77 @@ answer_callback_query:
 
 delete_message:
   fields:
-    config_entry_id:
+    entity_id:
       selector:
-        config_entry:
-          integration: telegram_bot
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          reorder: true
+    custom_targets:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "12345"
+          selector:
+            text:
+              multiple: true
     message_id:
       required: true
       example: "{{ trigger.event.data.message.message_id }}"
       selector:
         text:
-    chat_id:
-      required: true
-      example: 12345
-      selector:
-        text:
 
 leave_chat:
   fields:
-    config_entry_id:
+    entity_id:
       selector:
-        config_entry:
-          integration: telegram_bot
-    chat_id:
-      required: true
-      example: 12345
-      selector:
-        text:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          reorder: true
+    custom_targets:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "12345"
+          selector:
+            text:
+              multiple: true
 
 set_message_reaction:
   fields:
-    config_entry_id:
+    entity_id:
       selector:
-        config_entry:
-          integration: telegram_bot
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          reorder: true
+    custom_targets:
+      collapsed: true
+      fields:
+        config_entry_id:
+          selector:
+            config_entry:
+              integration: telegram_bot
+        chat_id:
+          example: "12345"
+          selector:
+            text:
+              multiple: true
     message_id:
       required: true
       example: 54321
-      selector:
-        text:
-    chat_id:
-      required: true
-      example: 12345
       selector:
         text:
     reaction:

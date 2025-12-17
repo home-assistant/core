@@ -120,8 +120,9 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 BASE_SERVICE_SCHEMA = vol.Schema(
     {
         vol.Optional(ATTR_ENTITY_ID): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
-        vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [vol.Coerce(int)]),
+        vol.Optional(ATTR_CHAT_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
         vol.Optional(ATTR_PARSER): cv.string,
         vol.Optional(ATTR_DISABLE_NOTIF): cv.boolean,
         vol.Optional(ATTR_DISABLE_WEB_PREV): cv.boolean,
@@ -179,7 +180,8 @@ SERVICE_SCHEMA_BASE_SEND_FILE = BASE_SERVICE_SCHEMA.extend(
 )
 
 SERVICE_SCHEMA_SEND_FILE = vol.All(
-    cv.deprecated(ATTR_TIMEOUT), SERVICE_SCHEMA_BASE_SEND_FILE
+    cv.deprecated(ATTR_TIMEOUT),
+    SERVICE_SCHEMA_BASE_SEND_FILE,
 )
 
 
@@ -203,6 +205,7 @@ SERVICE_SCHEMA_SEND_POLL = vol.All(
     vol.Schema(
         {
             vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
+            vol.Optional(ATTR_CHAT_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
             vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [vol.Coerce(int)]),
             vol.Required(ATTR_QUESTION): cv.string,
             vol.Required(ATTR_OPTIONS): vol.All(cv.ensure_list, [cv.string]),
@@ -584,7 +587,7 @@ def _build_targets(
 
     has_notify_targets = len(targets) > 0
 
-    # build target list using service data: `config_entry_id` and `target`
+    # build target list using service data: `config_entry_id` and `chat_id`
 
     config_entry: TelegramBotConfigEntry | None = None
     if CONF_CONFIG_ENTRY_ID in service.data:
@@ -599,11 +602,11 @@ def _build_targets(
         if len(config_entries) == 1:
             config_entry = config_entries[0]
 
-    # parse chat IDs from service data: `target`
+    # parse chat IDs from service data: `chat_id`
     if config_entry is not None:
         chat_ids: list[int] = []
-        if ATTR_TARGET in service.data:
-            target: int | list[int] = service.data[ATTR_TARGET]
+        if ATTR_CHAT_ID in service.data:
+            target: int | list[int] = service.data[ATTR_CHAT_ID]
             chat_ids = [target] if isinstance(target, int) else target
         elif not has_notify_targets:
             # no targets from service data, so we default to the first allowed chat IDs of the config entry

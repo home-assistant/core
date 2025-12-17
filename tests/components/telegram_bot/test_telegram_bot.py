@@ -311,7 +311,7 @@ async def test_send_sticker_partial_error(
                 SERVICE_SEND_STICKER,
                 {
                     ATTR_URL: "https://mock_sticker_url",
-                    ATTR_TARGET: [123456, 654321],
+                    ATTR_CHAT_ID: [123456, 654321],
                 },
                 blocking=True,
                 return_response=True,
@@ -873,7 +873,7 @@ async def test_send_message_with_config_entry(
             {
                 CONF_CONFIG_ENTRY_ID: mock_broadcast_config_entry.entry_id,
                 ATTR_MESSAGE: "mock message",
-                ATTR_TARGET: [123456, 1],
+                ATTR_CHAT_ID: [123456, 1],
             },
             blocking=True,
             return_response=True,
@@ -1446,7 +1446,7 @@ async def test_set_message_reaction(
         (
             SERVICE_SEND_MESSAGE,
             {
-                ATTR_TARGET: 654321,
+                ATTR_CHAT_ID: 654321,
                 ATTR_MESSAGE: "test_message",
                 ATTR_MESSAGE_THREAD_ID: "123",
             },
@@ -1454,42 +1454,42 @@ async def test_set_message_reaction(
         (
             SERVICE_SEND_PHOTO,
             {
-                ATTR_TARGET: 654321,
+                ATTR_CHAT_ID: 654321,
                 ATTR_FILE: "/media/dummy",
             },
         ),
         (
             SERVICE_SEND_VIDEO,
             {
-                ATTR_TARGET: 654321,
+                ATTR_CHAT_ID: 654321,
                 ATTR_FILE: "/media/dummy",
             },
         ),
         (
             SERVICE_SEND_ANIMATION,
             {
-                ATTR_TARGET: 654321,
+                ATTR_CHAT_ID: 654321,
                 ATTR_FILE: "/media/dummy",
             },
         ),
         (
             SERVICE_SEND_DOCUMENT,
             {
-                ATTR_TARGET: 654321,
+                ATTR_CHAT_ID: 654321,
                 ATTR_FILE: "/media/dummy",
             },
         ),
         (
             SERVICE_SEND_VOICE,
             {
-                ATTR_TARGET: 654321,
+                ATTR_CHAT_ID: 654321,
                 ATTR_FILE: "/media/dummy",
             },
         ),
         (
             SERVICE_SEND_STICKER,
             {
-                ATTR_TARGET: 654321,
+                ATTR_CHAT_ID: 654321,
                 ATTR_STICKER_ID: "1",
                 ATTR_MESSAGE_THREAD_ID: "123",
             },
@@ -1497,7 +1497,7 @@ async def test_set_message_reaction(
         (
             SERVICE_SEND_POLL,
             {
-                ATTR_TARGET: 654321,
+                ATTR_CHAT_ID: 654321,
                 ATTR_QUESTION: "Question",
                 ATTR_OPTIONS: ["Yes", "No"],
             },
@@ -1505,7 +1505,7 @@ async def test_set_message_reaction(
         (
             SERVICE_SEND_LOCATION,
             {
-                ATTR_TARGET: 654321,
+                ATTR_CHAT_ID: 654321,
                 ATTR_MESSAGE: "test_message",
                 ATTR_MESSAGE_THREAD_ID: "123",
                 ATTR_LONGITUDE: "1.123",
