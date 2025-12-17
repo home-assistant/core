@@ -374,9 +374,6 @@ aiorussound==4.9.0
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
 
-# homeassistant.components.senz
-aiosenz==1.0.0
-
 # homeassistant.components.shelly
 aioshelly==13.23.0
 
@@ -2005,6 +2002,9 @@ pyschlage==2025.9.0
 
 # homeassistant.components.sensibo
 pysensibo==1.2.1
+
+# homeassistant.components.senz
+pysenz==1.0.0
 
 # homeassistant.components.acer_projector
 # homeassistant.components.crownstone
