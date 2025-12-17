@@ -92,7 +92,7 @@ async def test_not_configuring_sonos_not_creates_entry(hass: HomeAssistant) -> N
 async def test_create_upnp_disabled_issue(
     hass: HomeAssistant, async_setup_sonos, soco: MockSoCo, config_entry
 ) -> None:
-    """Test UPNP disabled issue is created when speaker initialization fails with 403."""
+    """Test issue is created when speaker initialization fails with 403."""
 
     resp = Response()
     resp.status_code = HTTPStatus.FORBIDDEN
