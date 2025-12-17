@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
+from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.decorators import require_admin
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
@@ -45,6 +46,19 @@ from .const import (
     DOMAIN,
 )
 from .storage import DATA_CARPLAY_STORAGE, CarPlayStore, get_carplay_store
+
+# CarPlay update schema
+CARPLAY_UPDATE_SCHEMA = vol.Schema(
+    {
+        vol.Optional("enabled"): bool,
+        vol.Optional("quick_access"): [
+            {
+                vol.Required("entity_id"): cv.entity_id,
+                vol.Optional("display_name"): str,
+            }
+        ],
+    }
+)
 
 CONF_PUSH = "push"
 CONF_PUSH_CATEGORIES = "categories"
@@ -402,60 +416,11 @@ class iOSCarPlayUpdateView(HomeAssistantView):
     name = "api:ios:carplay:update"
 
     @require_admin
-    async def post(self, request: web.Request) -> web.Response:
+    @RequestDataValidator(CARPLAY_UPDATE_SCHEMA)
+    async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle the POST request for CarPlay configuration updates."""
-        try:
-            data = await request.json()
-        except ValueError:
-            return self.json_message("Invalid JSON", HTTPStatus.BAD_REQUEST)
-
         hass = request.app[KEY_HASS]
         store = get_carplay_store(hass)
-
-        # Validate the data structure
-        if not isinstance(data, dict):
-            return self.json_message("Data must be an object", HTTPStatus.BAD_REQUEST)
-
-        # Validate enabled field if present
-        if "enabled" in data and not isinstance(data["enabled"], bool):
-            return self.json_message(
-                "enabled must be a boolean", HTTPStatus.BAD_REQUEST
-            )
-
-        # Validate quick_access field if present
-        if "quick_access" in data:
-            if not isinstance(data["quick_access"], list):
-                return self.json_message(
-                    "quick_access must be an array", HTTPStatus.BAD_REQUEST
-                )
-
-            for item in data["quick_access"]:
-                if not isinstance(item, dict):
-                    return self.json_message(
-                        "quick_access items must be objects", HTTPStatus.BAD_REQUEST
-                    )
-                if "entity_id" not in item:
-                    return self.json_message(
-                        "quick_access items must have entity_id", HTTPStatus.BAD_REQUEST
-                    )
-                if not isinstance(item["entity_id"], str):
-                    return self.json_message(
-                        "entity_id must be a string", HTTPStatus.BAD_REQUEST
-                    )
-
-                # Validate entity_id format (domain.entity_name)
-                try:
-                    cv.entity_id(item["entity_id"])
-                except vol.Invalid:
-                    return self.json_message(
-                        f"Invalid entity_id format: {item['entity_id']}",
-                        HTTPStatus.BAD_REQUEST,
-                    )
-
-                if "display_name" in item and not isinstance(item["display_name"], str):
-                    return self.json_message(
-                        "display_name must be a string", HTTPStatus.BAD_REQUEST
-                    )
 
         # Update the configuration
         await store.async_set_data(data)
