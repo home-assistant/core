@@ -138,13 +138,20 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         discovery = self._discovered_adv
         name = name_from_discovery(discovery)
         model_name = discovery.data["modelName"]
+        sensor_type = SUPPORTED_MODEL_TYPES[model_name]
+
+        options: dict[str, Any] = {CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT}
+        if sensor_type == SupportedModels.CURTAIN:
+            options[CONF_CURTAIN_SPEED] = DEFAULT_CURTAIN_SPEED
+
         return self.async_create_entry(
             title=name,
             data={
                 **user_input,
                 CONF_ADDRESS: discovery.address,
-                CONF_SENSOR_TYPE: str(SUPPORTED_MODEL_TYPES[model_name]),
+                CONF_SENSOR_TYPE: str(sensor_type),
             },
+            options=options,
         )
 
     async def async_step_confirm(

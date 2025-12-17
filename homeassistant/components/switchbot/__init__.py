@@ -153,7 +153,6 @@ CLASS_BY_DEVICE = {
 
 
 _LOGGER = logging.getLogger(__name__)
-_OLD_CURTAIN_SLOW_MODE_OPTION = "curtain_slow_mode"
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) -> bool:
@@ -240,7 +239,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) ->
 
 async def async_migrate_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) -> bool:
     """Migrate SwitchBot config entries to the latest format."""
-
     version = entry.version
     minor_version = entry.minor_version
     _LOGGER.debug("Migrating from version %s.%s", version, minor_version)
@@ -248,20 +246,24 @@ async def async_migrate_entry(hass: HomeAssistant, entry: SwitchbotConfigEntry) 
     if version > 1:
         return False
 
-    new_data: dict[str, Any] = {**entry.data}
-
     if version == 1 and minor_version == 1:
-        if CONF_RETRY_COUNT not in new_data:
-            new_data[CONF_RETRY_COUNT] = DEFAULT_RETRY_COUNT
+        new_options: dict[str, Any] = {**entry.options}
 
-        if CONF_CURTAIN_SPEED not in new_data:
-            new_data[CONF_CURTAIN_SPEED] = DEFAULT_CURTAIN_SPEED
+        if CONF_RETRY_COUNT not in new_options:
+            new_options[CONF_RETRY_COUNT] = DEFAULT_RETRY_COUNT
 
-            hass.config_entries.async_update_entry(
-                entry,
-                minor_version=2,
-                version=version,
-            )
+        sensor_type = entry.data.get(CONF_SENSOR_TYPE)
+        if (
+            sensor_type == SupportedModels.CURTAIN
+            and CONF_CURTAIN_SPEED not in new_options
+        ):
+            new_options[CONF_CURTAIN_SPEED] = DEFAULT_CURTAIN_SPEED
+
+        hass.config_entries.async_update_entry(
+            entry,
+            options=new_options,
+            minor_version=2,
+        )
 
         _LOGGER.debug("Migration to version %s.%s successful", version, 2)
 
