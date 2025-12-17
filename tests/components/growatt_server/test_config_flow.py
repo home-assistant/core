@@ -39,6 +39,7 @@ FIXTURE_USER_INPUT_PASSWORD = {
 
 FIXTURE_USER_INPUT_TOKEN = {
     CONF_TOKEN: "test_api_token_12345",
+    CONF_URL: DEFAULT_URL,
 }
 
 GROWATT_PLANT_LIST_RESPONSE = {
@@ -110,7 +111,7 @@ async def test_show_auth_menu(hass: HomeAssistant) -> None:
     ("auth_type", "expected_fields"),
     [
         ("password_auth", [CONF_USERNAME, CONF_PASSWORD, CONF_URL]),
-        ("token_auth", [CONF_TOKEN]),
+        ("token_auth", [CONF_TOKEN, CONF_URL]),
     ],
 )
 async def test_auth_form_display(
