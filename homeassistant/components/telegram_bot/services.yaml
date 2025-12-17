@@ -2,7 +2,7 @@
 
 send_message:
   fields:
-    entity_id:
+    target:
       selector:
         entity:
           filter:
@@ -73,7 +73,7 @@ send_message:
 
 send_chat_action:
   fields:
-    entity_id:
+    target:
       selector:
         entity:
           filter:
@@ -116,7 +116,7 @@ send_chat_action:
 
 send_photo:
   fields:
-    entity_id:
+    target:
       selector:
         entity:
           filter:
@@ -210,7 +210,7 @@ send_photo:
 
 send_sticker:
   fields:
-    entity_id:
+    target:
       selector:
         entity:
           filter:
@@ -295,7 +295,7 @@ send_sticker:
 
 send_animation:
   fields:
-    entity_id:
+    target:
       selector:
         entity:
           filter:
@@ -389,7 +389,7 @@ send_animation:
 
 send_video:
   fields:
-    entity_id:
+    target:
       selector:
         entity:
           filter:
@@ -483,7 +483,7 @@ send_video:
 
 send_voice:
   fields:
-    entity_id:
+    target:
       selector:
         entity:
           filter:
@@ -568,7 +568,7 @@ send_voice:
 
 send_document:
   fields:
-    entity_id:
+    target:
       selector:
         entity:
           filter:
@@ -662,7 +662,7 @@ send_document:
 
 send_location:
   fields:
-    entity_id:
+    target:
       selector:
         entity:
           filter:
@@ -727,7 +727,7 @@ send_location:
 
 send_poll:
   fields:
-    entity_id:
+    target:
       selector:
         entity:
           filter:
@@ -784,7 +784,7 @@ send_poll:
 
 edit_message:
   fields:
-    entity_id:
+    target:
       selector:
         entity:
           filter:
@@ -837,7 +837,7 @@ edit_message:
 
 edit_message_media:
   fields:
-    entity_id:
+    target:
       selector:
         entity:
           filter:
@@ -916,7 +916,7 @@ edit_message_media:
 
 edit_caption:
   fields:
-    entity_id:
+    target:
       selector:
         entity:
           filter:
@@ -954,7 +954,7 @@ edit_caption:
 
 edit_replymarkup:
   fields:
-    entity_id:
+    target:
       selector:
         entity:
           filter:
@@ -1009,7 +1009,7 @@ answer_callback_query:
 
 delete_message:
   fields:
-    entity_id:
+    target:
       selector:
         entity:
           filter:
@@ -1036,7 +1036,7 @@ delete_message:
 
 leave_chat:
   fields:
-    entity_id:
+    target:
       selector:
         entity:
           filter:
@@ -1058,7 +1058,7 @@ leave_chat:
 
 set_message_reaction:
   fields:
-    entity_id:
+    target:
       selector:
         entity:
           filter:
