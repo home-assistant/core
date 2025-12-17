@@ -1,9 +1,11 @@
 """The tests for the Prometheus exporter."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 import datetime
 from http import HTTPStatus
-from typing import Any, Self
+from typing import Any
 from unittest import mock
 
 from freezegun import freeze_time
@@ -126,7 +128,7 @@ class EntityMetric:
             assert labelname in self.labels
             assert self.labels[labelname] != ""
 
-    def withValue(self, value: float) -> Self:
+    def withValue(self, value: float) -> EntityMetricWithValue:
         """Return a metric with value."""
         return EntityMetricWithValue(self, value)
 
@@ -847,7 +849,7 @@ async def test_climate_mode(
     climate_entities: dict[str, er.RegistryEntry | dict[str, Any]],
 ) -> None:
     """Test prometheus metrics for climate mode enum."""
-    data = {**climate_entities}
+    data: dict[str, Any] = {**climate_entities}
 
     # Set climate_2 to a specific HVAC mode from its available modes
     set_state_with_entry(
