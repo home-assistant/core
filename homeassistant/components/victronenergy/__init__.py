@@ -3,27 +3,31 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Sequence
+from collections.abc import Callable
 import json
 import logging
 import ssl
-import time
 from typing import Any
 
-import paho.mqtt.client as mqtt
+import paho.mqtt.client as mqtt_client
+import paho.mqtt.properties as mqtt_properties
+import paho.mqtt.subscribeoptions as mqtt_subscribeoptions
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_BROKER, CONF_PORT, CONF_USERNAME, DOMAIN
 from .binary_sensor import MQTTDiscoveredBinarySensor
+from .const import CONF_BROKER, CONF_PORT, CONF_USERNAME, DOMAIN
+from .entity import VictronBaseEntity
+from .mqtt_worker import MqttWorker
 from .number import MQTTDiscoveredNumber
 from .sensor import MQTTDiscoveredSensor
 from .switch import MQTTDiscoveredSwitch
+from .types import DeviceKey
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,41 +37,58 @@ _MQTT_ERROR_MESSAGES = {
     2: "Connection refused: Bad client identifier.",
     3: "Connection refused: Server unavailable.",
     4: "Connection refused: Bad username or password.",
-    5: "Connection refused: Not authorized. Check username/token configuration."
+    5: "Connection refused: Not authorized. Check username/token configuration.",
 }
 
+
 # Platform configuration: entity factory and Platform enum for each supported platform
-_PLATFORM_CONFIG = {
-    "sensor": {
-        "factory": lambda config, unique_id, manager: MQTTDiscoveredSensor(config, unique_id, manager),
-        "platform": Platform.SENSOR
-    },
-    "binary_sensor": {
-        "factory": lambda config, unique_id, manager: MQTTDiscoveredBinarySensor(config, unique_id, manager),
-        "platform": Platform.BINARY_SENSOR
-    },
-    "switch": {
-        "factory": lambda config, unique_id, manager: MQTTDiscoveredSwitch(config, unique_id, manager),
-        "platform": Platform.SWITCH
-    },
-    "number": {
-        "factory": lambda config, unique_id, manager: MQTTDiscoveredNumber(config, unique_id, manager),
-        "platform": Platform.NUMBER
-    }
+def _make_factory(
+    entity_cls: type[VictronBaseEntity],
+) -> Callable[
+    [VictronMqttManager, DeviceKey, dict[str, Any], str, dict[str, Any]],
+    VictronBaseEntity,
+]:
+    def factory(
+        manager: VictronMqttManager,
+        device_key: DeviceKey,
+        device_info: dict[str, Any],
+        unique_id: str,
+        config: dict[str, Any],
+    ) -> VictronBaseEntity:
+        # Factory parameter order now matches entity constructor
+        return entity_cls(manager, device_key, device_info, unique_id, config)
+
+    return factory
+
+
+_PLATFORM_CONFIG: dict[
+    Platform,
+    Callable[
+        [VictronMqttManager, DeviceKey, dict[str, Any], str, dict[str, Any]],
+        VictronBaseEntity,
+    ],
+] = {
+    Platform.BINARY_SENSOR: _make_factory(MQTTDiscoveredBinarySensor),
+    Platform.NUMBER: _make_factory(MQTTDiscoveredNumber),
+    Platform.SENSOR: _make_factory(MQTTDiscoveredSensor),
+    Platform.SWITCH: _make_factory(MQTTDiscoveredSwitch),
 }
 
 # Derived platforms list
-_PLATFORMS: list[Platform] = [config["platform"] for config in _PLATFORM_CONFIG.values()]
+_PLATFORMS: list[Platform] = list(_PLATFORM_CONFIG.keys())
 
-def _extract_device_key_from_identifiers(identifiers) -> tuple[str, str] | None:
+
+def _extract_device_key_from_discovery(device_info: dict[str, Any]) -> DeviceKey | None:
     """Extract device key tuple from identifiers list."""
+    identifiers = device_info.get("identifiers")
     if not identifiers or not isinstance(identifiers, list) or len(identifiers) == 0:
         return None
 
     # Use domain and first identifier as the device key
     return (DOMAIN, str(identifiers[0]))
 
-def _extract_via_device_from_discovery(device_info: dict[str, Any]) -> tuple[str, str] | None:
+
+def _extract_via_device_from_discovery(device_info: dict[str, Any]) -> DeviceKey | None:
     """Extract via_device as tuple from MQTT discovery message device info."""
     via_device = device_info.get("via_device")
     if not via_device:
@@ -76,56 +97,562 @@ def _extract_via_device_from_discovery(device_info: dict[str, Any]) -> tuple[str
     return (DOMAIN, str(via_device))
 
 
+def _configure_tls(client: mqtt_client.Client) -> None:
+    """Configure TLS settings for the MQTT client."""
+    client.tls_set(
+        ca_certs=None,
+        certfile=None,
+        keyfile=None,
+        cert_reqs=ssl.CERT_NONE,
+        tls_version=ssl.PROTOCOL_TLS,
+        ciphers=None,
+    )
+    client.tls_insecure_set(True)  # Allow self-signed certificates
+
+
 class VictronMqttManager:
     """Manages MQTT connection and dynamic entity creation."""
+
+    hass: HomeAssistant
+    entry: ConfigEntry
+    client: mqtt_client.Client | None
+    _platform_callbacks: dict[str, AddConfigEntryEntitiesCallback | None]
+    _topic_entity_map: dict[str, set[VictronBaseEntity]]
+    _entity_registry: dict[DeviceKey, dict[str, VictronBaseEntity]]
+    _device_registry: set[DeviceKey]
+    _topic_device_map: dict[str, DeviceKey]
+    _topic_payload_cache: dict[str, bytes]
+    _pending_via_device_discoveries: dict[DeviceKey, list[dict[str, Any]]]
+    _mqtt_worker: MqttWorker | None
+    _republish_timer_handle: asyncio.TimerHandle | None
+    _republish_task: asyncio.Task | None
+    _unique_id: str | None
+    _keepalive_task: asyncio.Task | None
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the MQTT manager."""
         self.hass = hass
         self.entry = entry
-        self.client: mqtt.Client | None = None
-        # Platform entity management
-        self._platform_callbacks: dict[str, Callable[[Sequence[Entity]], None] | None] = {
-            platform: None for platform in _PLATFORM_CONFIG
-        }
-        self._pending_entities: dict[str, list[Entity]] = {
-            platform: [] for platform in _PLATFORM_CONFIG
-        }
-        self._connected = asyncio.Event()
-        self._subscribed_topics: set[str] = set()
-        self._topic_entity_map: dict[str, list[Entity]] = {}
-        self._entity_registry: dict[str, Entity] = {}  # Track entities by unique_id
-        self._device_registry: dict[tuple[str, str], dict[str, Any]] = {}  # Track device info by identifiers
-        self._pending_via_device_entities: list[tuple[dict[str, Any], str, str]] = []  # Entity configs waiting for via_device
-        self._via_device_lock = asyncio.Lock()  # Synchronize via_device dependency operations
-        self._keepalive_timer_handle: asyncio.TimerHandle | None = None  # Resettable keepalive timer
-        self._retry_pending_task: asyncio.Task | None = None  # Task for retrying pending entities
-        self._unique_id: str | None = None
-        self._keepalive_task_started = False
-        self._platforms_setup_complete = False
+        self.client = None
+        self._platform_callbacks = dict.fromkeys(_PLATFORM_CONFIG)
+        self._topic_entity_map = {}
+        self._entity_registry = {}
+        self._device_registry = set()
+        self._topic_device_map = {}
+        self._topic_payload_cache = {}
+        self._pending_via_device_discoveries = {}
+        self._mqtt_worker = None
+        self._republish_timer_handle = None
+        self._republish_task = None
+        self._unique_id = None
+        self._keepalive_task = None
 
-    def set_platform_add_entities(
-        self, platform: str, add_entities: Callable[[Sequence[Entity]], None]
+    def _setup_and_run_client(self, broker: str, port: int) -> None:
+        """Set up TLS (if needed) and run the MQTT client loop."""
+        _LOGGER.debug("Setting up and connecting to MQTT broker at %s:%d", broker, port)
+        if self.client is not None:
+            # Configure TLS for secure MQTT (port 8883) in executor thread
+            if port == 8883:
+                _configure_tls(self.client)
+
+            self.client.connect_async(broker, port, 60)
+            _LOGGER.debug("Starting MQTT client background loop thread")
+            # Start the paho background network loop in its own thread.
+            # Using loop_start avoids blocking an executor thread with
+            # loop_forever and lets us stop the loop with loop_stop during cleanup.
+            try:
+                self.client.loop_start()
+            except Exception:
+                _LOGGER.exception("Failed to start MQTT background loop thread")
+
+    def _subscribe(
+        self,
+        topic: str
+        | tuple[str, int]
+        | tuple[str, mqtt_subscribeoptions.SubscribeOptions]
+        | list[tuple[str, int]]
+        | list[tuple[str, mqtt_subscribeoptions.SubscribeOptions]],
+        qos: int = 0,
+        options: mqtt_subscribeoptions.SubscribeOptions | None = None,
+        properties: mqtt_properties.Properties | None = None,
     ) -> None:
-        """Set the callback to add entities for a specific platform."""
-        if platform not in self._platform_callbacks:
-            _LOGGER.warning("Unknown platform: %s", platform)
+        """Enqueue a subscribe to the MQTT broker (fire-and-forget)."""
+        if self._mqtt_worker:
+            self._mqtt_worker.enqueue("subscribe", topic, qos, options, properties)
+
+    def _unsubscribe(
+        self,
+        topic: str | list[str],
+        properties: mqtt_properties.Properties | None = None,
+    ) -> None:
+        """Enqueue an unsubscribe to the MQTT broker (fire-and-forget)."""
+        if self._mqtt_worker:
+            self._mqtt_worker.enqueue("unsubscribe", topic, properties)
+
+    async def _keepalive_suppress_republish_task(self) -> None:
+        """Publish keepalive JSON payload every 30 seconds."""
+        topic = f"R/{self._unique_id}/keepalive"
+        payload = json.dumps({"keepalive-options": ["suppress-republish"]})
+        while True:
+            self.publish(topic, payload)
+            _LOGGER.debug(
+                "Published periodic keepalive to topic: %s with payload: %s",
+                topic,
+                payload,
+            )
+            await asyncio.sleep(30)
+
+    def _keepalive_task_done(self, task: asyncio.Task) -> None:
+        """Mark that the keepalive task is not running."""
+        self._keepalive_task = None
+
+    def _send_republish(self) -> None:
+        """Timer callback to send keepalive."""
+        # Timer fired — clear the timer handle so queue logic is accurate
+        self._republish_timer_handle = None
+
+        if not self._unique_id:
+            _LOGGER.warning("Cannot send keepalive - unique_id not available")
             return
 
-        self._platform_callbacks[platform] = add_entities
+        topic = f"R/{self._unique_id}/keepalive"
+        payload = json.dumps({"keepalive-options": []})
+        self.publish(topic, payload)
 
-    # Legacy methods for backward compatibility
-    def set_sensor_add_entities(self, add_entities: Callable[[Sequence[Entity]], None]) -> None:
-        self.set_platform_add_entities("sensor", add_entities)
+    def _queue_republish(self) -> None:
+        """Queue a keepalive request using a resettable timer (batches multiple requests).
 
-    def set_binary_sensor_add_entities(self, add_entities: Callable[[Sequence[Entity]], None]) -> None:
-        self.set_platform_add_entities("binary_sensor", add_entities)
+        This function should be called from the main event loop.
 
-    def set_switch_add_entities(self, add_entities: Callable[[Sequence[Entity]], None]) -> None:
-        self.set_platform_add_entities("switch", add_entities)
+        """
+        if self._republish_timer_handle:
+            # Cancel existing timer if running
+            self._republish_timer_handle.cancel()
+            _LOGGER.debug("Reset keepalive timer (batching multiple requests)")
+        else:
+            _LOGGER.debug("Started keepalive timer for device batch")
 
-    def set_number_add_entities(self, add_entities: Callable[[Sequence[Entity]], None]) -> None:
-        self.set_platform_add_entities("number", add_entities)
+        # Start/restart timer for 2 seconds from now
+        self._republish_timer_handle = self.hass.loop.call_later(
+            2.0, self._send_republish
+        )
+
+    def _store_device_info(
+        self, device_key: DeviceKey, device_info: dict[str, Any]
+    ) -> None:
+        """Store device information for via_device dependency resolution."""
+        if device_key:
+            identifiers = device_info.get("identifiers")
+            device_id = identifiers[0] if identifiers else "unknown"
+            # Generate discovery topic from device identifier for mapping purposes
+            topic = f"homeassistant/device/{device_id}/config"
+
+            # Store the original device_info and maintain topic-to-device mapping
+            self._device_registry.add(device_key)
+            self._topic_device_map[topic] = device_key
+
+            # Create entity registry entry for this device if it doesn't exist
+            if device_key not in self._entity_registry:
+                self._entity_registry[device_key] = {}
+
+            _LOGGER.info("Stored device info - %s", device_info)
+        else:
+            _LOGGER.warning("Cannot store device info - %s", device_info)
+
+    async def _ensure_device_registered(
+        self, device_key: DeviceKey, device_info: dict[str, Any]
+    ) -> None:
+        """Register device in Home Assistant device registry once per discovery message."""
+        if not device_info:
+            return
+
+        # Use the provided device_key for identifiers
+        identifiers: set[DeviceKey] = {device_key}
+
+        # Build device info for registration
+        registration_info = {
+            "config_entry_id": self.entry.entry_id,
+            "identifiers": identifiers,
+            "manufacturer": str(device_info.get("manufacturer", "")),
+            "model": str(device_info.get("model", "")),
+            "name": str(device_info.get("name", "")),
+        }
+
+        via_device = device_info.get("via_device")
+        if via_device is not None:
+            registration_info["via_device"] = (DOMAIN, str(via_device))
+
+        # Register/restore device in Home Assistant device registry
+        device_registry = dr.async_get(self.hass)
+        device = device_registry.async_get_or_create(**registration_info)
+
+        _LOGGER.info(
+            "Registered device in Home Assistant registry: %s (id: %s)",
+            identifiers,
+            device.id,
+        )
+
+    def _process_device_component(
+        self,
+        device_key: DeviceKey,
+        device_entities: dict[str, VictronBaseEntity],
+        unique_id: str,
+        component_cfg: dict[str, Any],
+        device_info: dict[str, Any],
+    ) -> None:
+        """Process a single device component - placeholder for future expansion."""
+        # Attach device info to component config for update
+        component_cfg = dict(component_cfg)  # shallow copy
+        component_cfg["device"] = device_info
+        platform = component_cfg.get("platform")
+        component_cfg["platform"] = platform  # Ensure platform key exists
+        is_empty_config = len(component_cfg) == 2  # only platform and device
+
+        # Check if entity already exists first to avoid unnecessary processing
+        existing_entity = device_entities.get(unique_id)
+        if existing_entity:
+            if is_empty_config:
+                # Empty component config, only platform and device - mark existing entity as unavailable
+                existing_entity.set_available(False)
+                _LOGGER.info(
+                    "Marked existing entity %s as unavailable due to empty config",
+                    unique_id,
+                )
+                return
+
+            # Entity exists, update its configuration with new discovery data
+            existing_entity.update_config(component_cfg)
+            _LOGGER.info("Updated existing entity %s with new configuration", unique_id)
+            # Trigger state update to reflect any changes
+            existing_entity.async_write_ha_state()
+            return
+
+        # Entity doesn't exist, validate platform and create entity directly
+        if not platform or platform not in _PLATFORM_CONFIG:
+            _LOGGER.warning(
+                "Missing or unknown platform %s for entity %s, skipping",
+                platform,
+                unique_id,
+            )
+            return
+        callback = self._platform_callbacks[platform]
+        if not callback:
+            _LOGGER.warning(
+                "No callback registered for platform %s, cannot register entity %s",
+                platform,
+                unique_id,
+            )
+            return
+        if is_empty_config:
+            # Empty component config, only platform and device - skip creation
+            _LOGGER.info(
+                "Skipping creation of entity %s due to empty config", unique_id
+            )
+            return
+
+        # Create entity
+        _LOGGER.debug("Creating entity: unique_id=%s, platform=%s", unique_id, platform)
+        # This invokes the registered factory callable to create the entity
+        entity_factory = _PLATFORM_CONFIG[platform]
+        entity = entity_factory(self, device_key, device_info, unique_id, component_cfg)
+        if entity:
+            # Store entity in nested registry structure
+            if entity.unique_id:
+                device_entities[entity.unique_id] = entity
+            # This registers the entity with Home Assistant
+            callback([entity])
+        else:
+            _LOGGER.warning(
+                "Failed to create entity: unique_id=%s, platform=%s",
+                unique_id,
+                platform,
+            )
+
+    async def _process_device_components(
+        self,
+        device_info: dict[str, Any],
+        components: dict[str, Any],
+        device_key: DeviceKey,
+    ) -> None:
+        """Process device components - shared logic for discovery and pending via_device processing."""
+        _LOGGER.info(
+            "Processing discovery message with %d components for device %s",
+            len(components),
+            device_key,
+        )
+
+        device_entities = self._entity_registry[device_key]
+
+        # Get current entities for this device to detect removals
+        current_entity_ids = set(device_entities.keys())
+        discovered_entity_ids = set(components.keys())
+
+        # Mark entities as unavailable before processing new/updated entities
+        entities_to_remove = current_entity_ids - discovered_entity_ids
+        _LOGGER.info(
+            "Marking as unavailable (no longer in discovery message) for device %s: %s",
+            device_key,
+            list(entities_to_remove),
+        )
+        for entity_id in entities_to_remove:
+            entity = device_entities.get(entity_id)
+            if entity:
+                entity.set_available(False)
+
+        # Process all components and create or update entities
+        for unique_id, component_cfg in components.items():
+            self._process_device_component(
+                device_key, device_entities, unique_id, component_cfg, device_info
+            )
+
+    async def _process_device_after_via_check(
+        self,
+        device_key: DeviceKey,
+        device_info: dict[str, Any],
+        components: dict[str, Any],
+    ) -> bool:
+        """Process device after via_device availability check passes."""
+        queue_republish = len(components) > 0
+        self._store_device_info(device_key, device_info)
+        await self._ensure_device_registered(device_key, device_info)
+        await self._process_device_components(device_info, components, device_key)
+
+        # Check if any pending via_device discoveries can now be processed for this specific device
+        pending_for_device = self._pending_via_device_discoveries.get(device_key, [])
+
+        for discovery_data in pending_for_device:
+            pending_device_info = discovery_data["device"]
+            pending_components = discovery_data["components"]
+
+            # Extract device key for this specific deferred device
+            pending_device_key = _extract_device_key_from_discovery(pending_device_info)
+            if not pending_device_key:
+                _LOGGER.warning(
+                    "Invalid pending discovery: device has no valid identifiers"
+                )
+                continue
+
+            _LOGGER.info(
+                "processing deferred discovery with %d components: via_device '%s' is now available",
+                len(pending_components),
+                device_key,
+            )
+
+            # Process deferred device and accumulate new entities count
+            queue_republish = (
+                queue_republish
+                | await self._process_device_after_via_check(
+                    pending_device_key, pending_device_info, pending_components
+                )
+            )
+
+        # Clean up processed pending discoveries
+        self._pending_via_device_discoveries.pop(device_key, None)
+        _LOGGER.info("Processed pending discoveries for via_device %s", device_key)
+
+        return queue_republish
+
+    async def _handle_discovery_message(self, topic: str, payload: bytes) -> None:
+        """Handle a Home Assistant MQTT discovery message."""
+        # Check payload cache to avoid reprocessing identical discovery messages
+        cached_payload = self._topic_payload_cache.get(topic)
+        if cached_payload is not None and cached_payload == payload:
+            _LOGGER.debug("Ignoring duplicate discovery payload for topic: %s", topic)
+            return
+
+        # Update cache with new payload
+        self._topic_payload_cache[topic] = payload
+        _LOGGER.debug(
+            "Cached new discovery payload for topic: %s (size: %d bytes)",
+            topic,
+            len(payload),
+        )
+
+        # Check for empty payload - this indicates device should be removed
+        if len(payload) == 0:
+            _LOGGER.debug("Received empty discovery config on topic: %s", topic)
+            # Look up which device this topic belongs to and remove it
+            device_key = self._topic_device_map.get(topic)
+            if device_key and device_key in self._device_registry:
+                # Mark all entities for this device as unavailable before removing
+                for entity in self._entity_registry.get(device_key, {}).values():
+                    entity.set_available(False)
+
+                # Remove device from our administration
+                self._device_registry.remove(device_key)
+                del self._topic_device_map[topic]
+                _LOGGER.debug("Removed device %s from registry", device_key)
+            else:
+                _LOGGER.debug("Empty config received for unknown topic: %s", topic)
+            return
+
+        # Decode and parse JSON payload
+        try:
+            payload_str = payload.decode()
+            data = json.loads(payload_str)
+            _LOGGER.debug("Received config on topic %s: %s", topic, data)
+        except json.JSONDecodeError as err:
+            _LOGGER.warning("Failed to process device discovery JSON: %s", err)
+            return
+        except UnicodeDecodeError as err:
+            _LOGGER.warning("Failed to decode discovery message bytes: %s", err)
+            return
+
+        components = data.get("components")
+        device_info = data.get("device")
+        if not components or not device_info:
+            _LOGGER.debug("Invalid discovery message: missing components or device")
+            return
+
+        # Check if device has valid identifiers
+        device_key = _extract_device_key_from_discovery(device_info)
+        if not device_key:
+            _LOGGER.debug("Invalid discovery message: device has no valid identifiers")
+            return
+
+        # Check via_device availability once for the entire device (not per component)
+        via_device = _extract_via_device_from_discovery(device_info)
+
+        # Handle discovery deferral based on via_device availability before processing components
+        if via_device and via_device not in self._device_registry:
+            # Via_device doesn't exist yet, defer entire discovery data processing
+            if via_device not in self._pending_via_device_discoveries:
+                self._pending_via_device_discoveries[via_device] = []
+            self._pending_via_device_discoveries[via_device].append(data)
+            _LOGGER.info(
+                "Deferring discovery data of %s until via_device %s is available",
+                device_key,
+                via_device,
+            )
+            return  # Exit early, don't process any components
+
+        # Process device after via_device check passes (store info, register, process components)
+        queue_republish = await self._process_device_after_via_check(
+            device_key, device_info, components
+        )
+
+        if queue_republish:
+            self._queue_republish()
+
+    def _handle_state_message(self, topic: str, payload: bytes) -> None:
+        """Handle state messages by passing them on to the entities."""
+        entities = self._topic_entity_map.get(topic, {})
+        for entity in entities:
+            entity.handle_mqtt_message(topic, payload)
+
+    def _handle_connect(self) -> None:
+        """Handle MQTT connection."""
+        if not self.client:
+            return
+
+        # CLear the discovery data cache so that all discovery messages are reprocessed
+        self._topic_payload_cache.clear()
+        _LOGGER.info("Cleared discovery payload cache on MQTT reconnect")
+
+        # Subscribe to all discovery topics
+        # When these are received, the entities will be created/updated accordingly
+        # which will also re-subscribe to their state topics
+        self._subscribe("homeassistant/#")
+        _LOGGER.info("Subscribed to homeassistant/# discovery topics")
+
+        # Start task to periodically send a keepalive with suppress-republish option.
+        # This keepalive is just to tell the GX MQTT broker that someone is still listening.
+        if self._unique_id and not self._keepalive_task:
+            # Start keepalive as a background task tied to the config entry.
+            # It needs to be a background tasks because during startup, Home Assistant
+            # waits until all created regular tasks are done.
+            try:
+                self._keepalive_task = self.entry.async_create_background_task(
+                    self.hass,
+                    self._keepalive_suppress_republish_task(),
+                    "victron keepalive",
+                )
+                self._keepalive_task.add_done_callback(self._keepalive_task_done)
+                _LOGGER.debug(
+                    "Started keepalive task for unique ID: %s", self._unique_id
+                )
+            except Exception:
+                _LOGGER.exception("Failed starting keepalive background task")
+        else:
+            _LOGGER.debug(
+                "Keepalive task already started for unique ID: %s", self._unique_id
+            )
+
+    def _handle_disconnect(self) -> None:
+        """Handle MQTT disconnection."""
+        if not self.client:
+            # Busy with the cleanup
+            return
+
+        _LOGGER.info(
+            "MQTT disconnection - marking all entities as unavailable and devices as removed"
+        )
+        # Mark all entities as unavailable
+        for entity_dict in self._entity_registry.values():
+            for entity in entity_dict.values():
+                entity.set_available(False)
+
+        # Clear the device registry to force re-registration on reconnect
+        self._device_registry.clear()
+        self._topic_device_map.clear()
+
+    def _on_connect(self, client, userdata, flags, rc) -> None:
+        """Handle MQTT connection."""
+        _LOGGER.info("MQTT connection callback - result code: %s", rc)
+        if rc != 0:
+            error_msg = _MQTT_ERROR_MESSAGES.get(rc, f"Unknown error (code {rc})")
+            _LOGGER.error(
+                "Failed to connect to MQTT broker - result code %s: %s. %s",
+                rc,
+                mqtt_client.connack_string(rc),
+                error_msg,
+            )
+            return
+
+        _LOGGER.info(
+            "Successfully connected to MQTT broker at %s:%d",
+            self.entry.data[CONF_BROKER],
+            self.entry.data[CONF_PORT],
+        )
+
+        try:
+            # schedule the in-loop handler
+            self.hass.loop.call_soon_threadsafe(self._handle_connect)
+        except Exception:
+            _LOGGER.exception("Failed scheduling connect handler")
+
+    def _on_message(self, client, userdata, msg) -> None:
+        """Handle all MQTT messages."""
+        _LOGGER.debug("_on_message: %s %s", msg.topic, msg.payload)
+        topic = msg.topic
+        payload = msg.payload
+        if topic.startswith("homeassistant/device/"):
+            try:
+                asyncio.run_coroutine_threadsafe(
+                    self._handle_discovery_message(topic, payload), self.hass.loop
+                )
+            except Exception:
+                _LOGGER.exception(
+                    "Failed scheduling discovery message handler for topic %s",
+                    topic,
+                )
+        else:
+            self.hass.loop.call_soon_threadsafe(
+                self._handle_state_message, topic, payload
+            )
+
+    def _on_disconnect(self, client, userdata, rc) -> None:
+        """Handle MQTT disconnection."""
+        _LOGGER.info("Disconnected from MQTT broker with result code: %s", rc)
+        if rc != 0:
+            _LOGGER.warning(
+                "Unexpected disconnection from MQTT broker with result code %s", rc
+            )
+        try:
+            # schedule the in-loop handler
+            self.hass.loop.call_soon_threadsafe(self._handle_disconnect)
+        except Exception:
+            _LOGGER.exception("Failed scheduling disconnect handler")
 
     def start(self) -> None:
         """Start the MQTT client in a background thread and prepare keepalive publishing."""
@@ -135,604 +662,199 @@ class VictronMqttManager:
         token = self.entry.data.get("token")  # Use token instead of password
         unique_id = self.entry.unique_id
 
-        _LOGGER.info("Starting MQTT connection to %s:%s", broker, port)
-        _LOGGER.info("Username: %s, Token available: %s", username, bool(token))
-        _LOGGER.info("Unique ID: %s", unique_id)
+        _LOGGER.debug(
+            "Starting MQTT connection to %s:%s with Unique ID %s",
+            broker,
+            port,
+            unique_id,
+        )
 
-        client = mqtt.Client()
+        client = mqtt_client.Client()
 
         # Set up authentication
         if username and token:
             client.username_pw_set(username, token)
-            _LOGGER.info("MQTT authentication configured with token")
+            _LOGGER.debug("MQTT authentication configured with token")
         else:
-            _LOGGER.info("No authentication configured (anonymous MQTT)")
+            _LOGGER.debug("No authentication configured (anonymous MQTT)")
 
         client.on_connect = self._on_connect
         client.on_message = self._on_message
+        client.on_disconnect = self._on_disconnect
 
         self.client = client
         self._unique_id = unique_id
 
-        # Run the MQTT client setup and connection in background thread
-        loop = asyncio.get_event_loop()
-        loop.run_in_executor(None, self._setup_and_run_client, broker, port)
-
-    def _configure_tls(self, client: mqtt.Client) -> None:
-        """Configure TLS settings for the MQTT client."""
-        client.tls_set(ca_certs=None, certfile=None, keyfile=None,
-                      cert_reqs=ssl.CERT_NONE, tls_version=ssl.PROTOCOL_TLS,
-                      ciphers=None)
-        client.tls_insecure_set(True)  # Allow self-signed certificates
-        _LOGGER.info("TLS configured for secure MQTT")
-
-    def _setup_and_run_client(self, broker: str, port: int) -> None:
-        """Set up TLS (if needed) and run the MQTT client loop."""
-        _LOGGER.debug("Setting up and connecting to MQTT broker at %s:%d", broker, port)
-        if self.client is not None:
-            # Configure TLS for secure MQTT (port 8883) in executor thread
-            if port == 8883:
-                self._configure_tls(self.client)
-
-            self.client.connect(broker, port, 60)
-            _LOGGER.debug("Starting MQTT client loop")
-            self.client.loop_forever()
-
-    def _on_connect(self, client, userdata, flags, rc) -> None:
-        """Handle MQTT connection."""
-        _LOGGER.info("MQTT connection callback - result code: %s", rc)
-        if rc == 0:
-            _LOGGER.info(
-                "Successfully connected to MQTT broker at %s:%d",
-                self.entry.data[CONF_BROKER],
-                self.entry.data[CONF_PORT],
-            )
-            # Subscribe to all discovery topics
-            result = client.subscribe("homeassistant/#")
-            _LOGGER.info("Subscribed to homeassistant/# discovery topics, result: %s", result)
-
-            # Re-subscribe to all state topics
-            for topic in self._subscribed_topics:
-                client.subscribe(topic)
-                _LOGGER.debug("Re-Subscribed to MQTT topic: %s", topic)
-            self._connected.set()
-            # Publish initial keepalive and start periodic task
-            if self._unique_id and not self._keepalive_task_started:
-                topic = f"R/{self._unique_id}/keepalive"
-                client.publish(topic, payload="", qos=0, retain=False)
-                _LOGGER.debug("Published initial keepalive to topic: %s", topic)
-                # Schedule keepalive task on main event loop
-                self.hass.loop.call_soon_threadsafe(
-                    lambda: asyncio.create_task(self._publish_keepalive_task())
-                )
-                self._keepalive_task_started = True
-                _LOGGER.debug(
-                    "Started keepalive task for unique ID: %s", self._unique_id
-                )
-            else:
-                _LOGGER.debug(
-                    "Keepalive task already started for unique ID: %s", self._unique_id
-                )
-        else:
-            error_msg = _MQTT_ERROR_MESSAGES.get(rc, f"Unknown error (code {rc})")
-            _LOGGER.error(
-                "Failed to connect to MQTT broker - result code %s: %s. %s",
-                rc, mqtt.connack_string(rc), error_msg
-            )
-
-    async def _publish_keepalive_task(self) -> None:
-        """Publish keepalive JSON payload every 30 seconds."""
-        topic = f"R/{self._unique_id}/keepalive"
-        while True:
-            if self.client is not None:
-                payload = json.dumps({"keepalive-options": ["suppress-republish"]})
-                self.client.publish(topic, payload=payload, qos=0, retain=False)
-                _LOGGER.debug(
-                    "Published periodic keepalive to topic: %s with payload: %s",
-                    topic,
-                    payload,
-                )
-            await asyncio.sleep(30)
-
-    def _on_message(self, client, userdata, msg) -> None:
-        """Handle all MQTT messages."""
-        _LOGGER.debug("Global on_message: %s %s", msg.topic, msg.payload)
-        entities = self._topic_entity_map.get(msg.topic)
-        if entities:
-            for entity in entities:
-                if hasattr(entity, "handle_mqtt_message"):
-                    entity.handle_mqtt_message(msg)
-        else:
-            try:
-                payload = msg.payload.decode()
-                data = json.loads(payload)
-                topic = msg.topic
-                self.hass.loop.call_soon_threadsafe(
-                    asyncio.create_task, self._handle_discovery_message(topic, data)
-                )
-            except json.JSONDecodeError as err:
-                _LOGGER.debug("Failed to process MQTT message JSON: %s", err)
-            except Exception as err:
-                _LOGGER.debug("Unexpected error processing MQTT message: %s", err)
-                raise err from err
-
-    async def _handle_discovery_message(self, topic: str, data: dict[str, Any]) -> None:
-        """Handle a Home Assistant MQTT discovery message."""
-        # New format: data contains "components" (dict of sensors/switches/numbers) and "device"
-        components = data.get("components")
-        device_info = data.get("device")
-        if not components or not device_info:
-            _LOGGER.debug("Invalid discovery message: missing components or device")
-            return
-
-        async with self._via_device_lock:
-            new_entities_by_platform = {platform: [] for platform in _PLATFORM_CONFIG}
-            updated_entities = []
-
-        # Store device info for via_device dependency resolution
-        self._store_device_info(device_info)
-
-        # Check via_device availability once for the entire device (not per component)
-        via_device_raw = device_info.get("via_device")
-        via_device = _extract_via_device_from_discovery(device_info) if via_device_raw else None
-        via_device_available = not via_device or self._is_via_device_available(via_device)
-
-        _LOGGER.info(
-            "Processing discovery message with %d components for device: %s (via_device: %s, available: %s)",
-            len(components), device_info.get("identifiers"), via_device, via_device_available
-        )
-
-        # Process all components to prepare entity configurations for creation
-        new_entity_configs = []  # List of (component_cfg, unique_id, platform) tuples for new entities
-
-        for unique_id, component_cfg in components.items():
-            # Validate component has unique_id attribute and it's not empty
-            component_unique_id = component_cfg.get("unique_id")
-            if not component_unique_id or not str(component_unique_id).strip():
-                _LOGGER.info(
-                    "Component missing or has empty unique_id attribute, skipping: %s", component_cfg
-                )
-                continue
-
-            # Attach device info to each component config
-            component_cfg = dict(component_cfg)  # shallow copy
-            component_cfg["device"] = device_info
-            platform = component_cfg.get("platform")
-
-            # Validate platform is present and supported
-            if not platform:
-                _LOGGER.warning(
-                    "Missing platform for entity %s, skipping", unique_id
-                )
-                continue
-
-            if platform not in _PLATFORM_CONFIG:
-                _LOGGER.warning(
-                    "Unsupported platform '%s' for entity %s, skipping",
-                    platform, unique_id
-                )
-                continue
-
-            # Check if entity already exists
-            existing_entity = self._entity_registry.get(unique_id)
-            if existing_entity:
-                # Update existing entity configuration
-                existing_entity.update_config(component_cfg)
-                updated_entities.append(existing_entity)
-                _LOGGER.debug(
-                    "Updated existing entity %s with new configuration", unique_id
-                )
-                # Trigger state update to reflect any changes
-                existing_entity.async_write_ha_state()
-            else:
-                # Store config for potential entity creation (deferred until via_device is available)
-                new_entity_configs.append((component_cfg, unique_id, platform))
-
-        # Handle new entity configurations based on via_device availability
-        if not via_device_available:
-            # All entities depend on via_device that doesn't exist yet, defer entity creation entirely
-            for component_cfg, unique_id, platform in new_entity_configs:
-                self._pending_via_device_entities.append((component_cfg, unique_id, platform))
-            _LOGGER.info(
-                "DEFERRING %d entity configs: waiting for via_device '%s' to become available. Current pending count: %d",
-                len(new_entity_configs), via_device, len(self._pending_via_device_entities)
-            )
-        else:
-            # Via_device is available or not needed, create entities and add to platforms immediately
-            new_entities = []
-            for component_cfg, unique_id, platform in new_entity_configs:
-                entity_factory = _PLATFORM_CONFIG[platform]["factory"]
-                entity = entity_factory(component_cfg, unique_id, self)
-                if entity:
-                    new_entities.append((entity, platform))
-                    if platform in new_entities_by_platform:
-                        new_entities_by_platform[platform].append(entity)
-                    self._entity_registry[entity.unique_id] = entity
-
-            if new_entities:
-                if via_device:
-                    _LOGGER.info(
-                        "CREATED and ADDING %d entities to platforms: via_device '%s' is available",
-                        len(new_entities), via_device
-                    )
-                else:
-                    _LOGGER.info(
-                        "CREATED and ADDING %d entities to platforms: no via_device dependency",
-                        len(new_entities)
-                    )
-
-            if updated_entities:
-                _LOGGER.info(
-                    "Updated configuration for %d existing entities", len(updated_entities)
-                )
-
-            # Check if any pending via_device entities can now be added to platforms
-            await self._process_pending_via_device_entities(new_entities_by_platform)
-
-            # Schedule a retry for remaining pending entities in case of timing issues
-            if self._pending_via_device_entities and not self._retry_pending_task:
-                self._retry_pending_task = asyncio.create_task(self._retry_pending_entities())
-
-        # Add entities to platforms outside the lock to prevent deadlock
-        self._add_entities_to_platforms(new_entities_by_platform)
-
-        # If we created new entities, queue a keepalive to get current values
-        if any(entities for entities in new_entities_by_platform.values()):
-            self._queue_keepalive_for_device(device_info.get("identifiers"))
-
-    def _store_device_info(self, device_info: dict[str, Any]) -> None:
-        """Store device information for via_device dependency resolution."""
-        identifiers = device_info.get("identifiers")
-        device_key = _extract_device_key_from_identifiers(identifiers)
-
-        if device_key:
-            self._device_registry[device_key] = device_info
-            _LOGGER.info(
-                "STORED device info: identifiers=%s -> device_key=%s, via_device=%s. Total devices stored: %d",
-                identifiers, device_key, device_info.get("via_device"), len(self._device_registry)
-            )
-        else:
-            _LOGGER.warning(
-                "Cannot store device info - invalid identifiers: %s (type: %s)",
-                identifiers, type(identifiers)
-            )
-
-    def _is_via_device_available(self, via_device: tuple[str, str]) -> bool:
-        """Check if a via_device is available in our stored device registry."""
-        _LOGGER.info("Checking via_device '%s' (type: %s) availability. Local registry: %s",
-                    via_device, type(via_device), list(self._device_registry.keys()))
-
-        # Check if device exists in our local registry
-        if via_device in self._device_registry:
-            _LOGGER.info("✅ Via device '%s' found in local registry", via_device)
-            return True
-
-        _LOGGER.debug(
-            "❌ Via device '%s' NOT found. Checked local registry (%d devices)",
-            via_device, len(self._device_registry)
-        )
-
-        return False
-
-    def _queue_keepalive_for_device(self, device_identifiers) -> None:
-        """Queue a keepalive request using a resettable timer (batches multiple requests)."""
-        if not device_identifiers or not self._unique_id:
-            return
-
-        # Cancel existing timer if running
-        if self._keepalive_timer_handle:
-            self._keepalive_timer_handle.cancel()
-            _LOGGER.debug("Reset keepalive timer (batching multiple requests)")
-        else:
-            _LOGGER.debug("Started keepalive timer for device batch")
-
-        # Start/restart timer for 2 seconds from now
-        loop = asyncio.get_running_loop()
-        self._keepalive_timer_handle = loop.call_later(2.0, self._send_keepalive_now)
-
-    def _send_keepalive_now(self) -> None:
-        """Timer callback to send keepalive."""
+        # Start background MQTT worker for blocking client calls
         try:
-            # Send the keepalive
-            if self.client and self._unique_id:
-                topic = f"R/{self._unique_id}/keepalive"
-                payload = json.dumps({"keepalive-options": []})
-                self.client.publish(topic, payload=payload, qos=0, retain=False)
-                _LOGGER.info("Sent batched keepalive to topic %s", topic)
-            else:
-                _LOGGER.warning("Cannot send keepalive - client or unique_id not available")
+            self._mqtt_worker = MqttWorker(self.client)
+            self._mqtt_worker.start()
+        except Exception:
+            _LOGGER.exception("Failed to start MQTT worker thread")
 
-        except Exception as err:
-            _LOGGER.error("Error sending keepalive: %s", err)
-        finally:
-            self._keepalive_timer_handle = None
+        self.hass.async_add_executor_job(self._setup_and_run_client, broker, port)
 
-
-
-    def _add_entities_to_platforms(self, new_entities_by_platform: dict[str, list[Entity]]) -> None:
-        """Add entities to their respective platforms."""
-        for platform, entities in new_entities_by_platform.items():
-            if not entities:
-                continue
-
-            callback = self._platform_callbacks[platform]
-            if callback:
-                callback(entities)
-            else:
-                self._pending_entities[platform].extend(entities)
-
-    async def _process_pending_via_device_entities(
-        self,
-        new_entities_by_platform: dict[str, list[Entity]]
-    ) -> None:
-        """Process entity configurations that were waiting for their via_device to become available."""
-        if not self._pending_via_device_entities:
-            return
-
-        _LOGGER.info("Processing %d pending via_device entity configs", len(self._pending_via_device_entities))
-        remaining_pending = []
-        created_count = 0
-
-        for component_cfg, unique_id, platform in self._pending_via_device_entities:
-            # Get the via_device from the component's device info
-            device_info = component_cfg.get("device")
-            via_device_tuple = _extract_via_device_from_discovery(device_info) if device_info else None
-            if via_device_tuple:
-                _LOGGER.info(
-                    "Checking deferred entity config %s (%s): via_device='%s'",
-                    unique_id, platform, via_device_tuple
-                )
-
-                if self._is_via_device_available(via_device_tuple):
-                    # Via device is now available, create entity and add to platform
-                    entity_factory = _PLATFORM_CONFIG[platform]["factory"]
-                    entity = entity_factory(component_cfg, unique_id, self)
-                    if entity:
-                        if platform not in new_entities_by_platform:
-                            new_entities_by_platform[platform] = []
-                        new_entities_by_platform[platform].append(entity)
-                        self._entity_registry[entity.unique_id] = entity
-                        created_count += 1
-                        _LOGGER.info(
-                            "✅ CREATED and ADDING deferred entity %s (%s) to platform: via_device '%s' is now available",
-                            unique_id, platform, via_device_tuple
-                        )
-                else:
-                    # Via device still not available, keep waiting
-                    remaining_pending.append((component_cfg, unique_id, platform))
-                    _LOGGER.debug(
-                        "⏳ STILL WAITING for entity %s (%s): via_device '%s' not yet available",
-                        unique_id, platform, via_device_tuple
-                    )
-            else:
-                # Entity config no longer has via_device dependency, create entity and add to platform
-                entity_factory = _PLATFORM_CONFIG[platform]["factory"]
-                entity = entity_factory(component_cfg, unique_id, self)
-                if entity:
-                    if platform not in new_entities_by_platform:
-                        new_entities_by_platform[platform] = []
-                    new_entities_by_platform[platform].append(entity)
-                    self._entity_registry[entity.unique_id] = entity
-                    created_count += 1
-                    _LOGGER.info("CREATED and ADDING entity %s to platform (no longer has via_device dependency)", unique_id)
-
-        self._pending_via_device_entities = remaining_pending
-
-        _LOGGER.info(
-            "Pending entity processing complete: %d created and added to platforms, %d configs still waiting. Remaining configs: %s",
-            created_count, len(remaining_pending),
-            [(unique_id, p) for cfg, unique_id, p in remaining_pending]
-        )
-
-    async def _retry_pending_entities(self) -> None:
-        """Periodically retry creating entities that are waiting for via_device dependencies."""
-        max_retries = 10
-        retry_count = 0
-
-        while retry_count < max_retries:
-            await asyncio.sleep(2)  # Wait 2 seconds between retries
-            retry_count += 1
-
-            async with self._via_device_lock:
-                if not self._pending_via_device_entities:
-                    _LOGGER.info("No more pending via_device entities, stopping retry task")
-                    self._retry_pending_task = None
-                    return
-
-                _LOGGER.info(
-                    "Retry %d/%d: Attempting to process %d pending via_device entities",
-                    retry_count, max_retries, len(self._pending_via_device_entities)
-                )
-
-                new_entities_by_platform = {platform: [] for platform in _PLATFORM_CONFIG}
-                await self._process_pending_via_device_entities(new_entities_by_platform)
-
-            # Add any newly created entities outside the lock
-            self._add_entities_to_platforms(new_entities_by_platform)
-            for platform, entities in new_entities_by_platform.items():
-                if entities:
-                    _LOGGER.info("Added %d deferred %ss during retry", len(entities), platform)
-
-            # If no pending entities remain, we're done
-            if not self._pending_via_device_entities:
-                break
-
-        if self._pending_via_device_entities:
-            _LOGGER.error(
-                "Failed to resolve %d via_device dependencies after %d retries: %s",
-                len(self._pending_via_device_entities), max_retries,
-                [(unique_id, p) for cfg, unique_id, p in self._pending_via_device_entities]
-            )
-
-        self._retry_pending_task = None
-
-    def register_entity_for_topic(self, topic: str, entity: Entity) -> None:
-        """Register an entity for a topic."""
-        if topic not in self._topic_entity_map:
-            self._topic_entity_map[topic] = []
-        self._topic_entity_map[topic].append(entity)
-
-    def subscribe_topic(self, topic: str) -> None:
-        """Subscribe to a topic."""
-        self._subscribed_topics.add(topic)
-        if self.client:
-            self.client.subscribe(topic)
-
-    def request_device_rediscovery(self) -> None:
-        """Request rediscovery of all devices by reconnecting MQTT."""
-        _LOGGER.info("Manual device rediscovery requested - reconnecting MQTT")
-        self.reconnect_mqtt()
-
-    def set_platforms_setup_complete(self) -> None:
-        """Mark that all platforms have been set up and send initial keepalive."""
-        self._platforms_setup_complete = True
-        # Restore devices from HA device registry first, then send keepalive
-        self.hass.loop.call_soon_threadsafe(
-            lambda: asyncio.create_task(self._restore_devices_from_registry())
-        )
-
-    async def _restore_devices_from_registry(self) -> None:
+    async def restore_devices_from_registry(self) -> None:
         """Restore devices from Home Assistant's device registry on startup."""
         _LOGGER.info("Restoring devices from Home Assistant device registry")
-
-        device_registry = dr.async_get(self.hass)
-
-        # Find all devices associated with this integration
-        devices = dr.async_entries_for_config_entry(
-            device_registry, self.entry.entry_id
-        )
-
-        restored_count = 0
-
-        for device in devices:
-            # Extract the device identifier from identifiers
-            device_identifiers = None
-            for identifier_set in device.identifiers:
-                if identifier_set[0] == DOMAIN:  # Our domain
-                    device_identifiers = [identifier_set[1]]  # Store as list for consistency
-                    break
-
-            if not device_identifiers:
-                _LOGGER.warning(
-                    "Device %s has no valid identifiers for domain %s, skipping restoration",
-                    device.name, DOMAIN
-                )
-                continue
-
-            # Create device info structure from registry data
-            device_info = {
-                "identifiers": device_identifiers,
-                "name": device.name,
-                "model": device.model,
-                "manufacturer": device.manufacturer,
-                "sw_version": device.sw_version,
-                "hw_version": device.hw_version,
-            }
-
-            # Add via_device if it exists
-            if device.via_device_id:
-                # Find the via_device in the registry
-                via_device = device_registry.async_get(device.via_device_id)
-                if via_device:
-                    # Extract via_device identifier
-                    _LOGGER.debug("Via device identifiers: %s", via_device.identifiers)
-                    for identifier_set in via_device.identifiers:
-                        _LOGGER.debug("Checking identifier_set: %s (type: %s)", identifier_set, type(identifier_set))
-                        if identifier_set[0] == DOMAIN:
-                            via_device_id = identifier_set[1]
-                            _LOGGER.debug("Extracted via_device_id: %s (type: %s)", via_device_id, type(via_device_id))
-                            device_info["via_device"] = str(via_device_id)
-                            break
-
-            # Store restored device info in our local registry
-            self._store_device_info(device_info)
-            restored_count += 1
-
-            _LOGGER.debug(
-                "Restored device from registry: %s (identifiers: %s, via_device: %s)",
-                device.name, device_identifiers, device_info.get("via_device")
-            )
-
-        _LOGGER.info(
-            "Restored %d devices from Home Assistant device registry. "
-            "Entities will be created when MQTT discovery messages are received.",
-            restored_count
-        )
-
-    def reconnect_mqtt(self) -> None:
-        """Reconnect MQTT to receive all retained discovery messages."""
-        if not self.client:
-            _LOGGER.warning("Cannot reconnect - no MQTT client available")
-            return
-
-        _LOGGER.info("Reconnecting MQTT to receive retained discovery messages")
-
-        # Disconnect and reconnect in background thread
-        def _reconnect():
-            try:
-                self.client.disconnect()
-                _LOGGER.debug("Disconnected from MQTT broker")
-
-                # Clear connection state
-                self._connected.clear()
-
-                # Reconnect (this will trigger _on_connect and resubscribe)
-                broker = self.entry.data[CONF_BROKER]
-                port = self.entry.data[CONF_PORT]
-                self.client.connect(broker, port, 60)
-                _LOGGER.info("Initiated MQTT reconnection to %s:%d", broker, port)
-            except Exception as err:
-                _LOGGER.error("Failed to reconnect MQTT: %s", err)
-
-        # Run reconnection in executor to avoid blocking
-        loop = asyncio.get_event_loop()
-        loop.run_in_executor(None, _reconnect)
 
     async def cleanup(self) -> None:
         """Clean up resources when the manager is being destroyed."""
         _LOGGER.info("Cleaning up VictronMqttManager resources")
 
-        # Cancel any running retry tasks
-        if self._retry_pending_task and not self._retry_pending_task.done():
-            _LOGGER.debug("Cancelling retry pending task")
-            self._retry_pending_task.cancel()
-            try:
-                await self._retry_pending_task
-            except asyncio.CancelledError:
-                pass
-            self._retry_pending_task = None
-
         # Cancel any running keepalive timer
-        if self._keepalive_timer_handle:
+        if self._republish_timer_handle:
             _LOGGER.debug("Cancelling keepalive timer")
-            self._keepalive_timer_handle.cancel()
-            self._keepalive_timer_handle = None
+            self._republish_timer_handle.cancel()
+            self._republish_timer_handle = None
+
+        # Cancel republish task if running and await its completion
+        if self._republish_task:
+            _LOGGER.debug("Cancelling republish task")
+            try:
+                self._republish_task.cancel()
+                try:
+                    await asyncio.wait_for(self._republish_task, timeout=10.0)
+                except asyncio.CancelledError:
+                    _LOGGER.debug("Republish task cancelled")
+                except TimeoutError:
+                    _LOGGER.warning("Timed out waiting for republish task to finish")
+                except Exception:
+                    _LOGGER.exception(
+                        "Error while waiting for republish task to finish"
+                    )
+            except Exception:
+                _LOGGER.exception("Error cancelling republish task")
+            finally:
+                self._republish_task = None
+
+        # Cancel keepalive task if running and await its completion
+        if self._keepalive_task:
+            _LOGGER.debug("Cancelling keepalive background task")
+            try:
+                self._keepalive_task.cancel()
+                try:
+                    await asyncio.wait_for(self._keepalive_task, timeout=10.0)
+                except asyncio.CancelledError:
+                    _LOGGER.debug("Keepalive task cancelled")
+                except TimeoutError:
+                    _LOGGER.warning("Timed out waiting for keepalive task to finish")
+                except Exception:
+                    _LOGGER.exception(
+                        "Error while waiting for keepalive task to finish"
+                    )
+            except Exception:
+                _LOGGER.exception("Error cancelling keepalive task")
+            finally:
+                self._keepalive_task = None
 
         # Clear all registries
         registries_to_clear = [
             self._entity_registry,
             self._device_registry,
-            self._pending_via_device_entities,
+            self._topic_device_map,
+            self._topic_payload_cache,
+            self._pending_via_device_discoveries,
             self._topic_entity_map,
-            self._subscribed_topics
         ]
         for registry in registries_to_clear:
             registry.clear()
 
-        # Clear pending entities for all platforms
-        for pending_list in self._pending_entities.values():
-            pending_list.clear()
-
         # Disconnect MQTT if still connected
+        # Stop the mqtt worker before disconnecting the client
+        if self._mqtt_worker:
+            try:
+                self._mqtt_worker.stop()
+            except Exception:  # pragma: no cover - defensive
+                _LOGGER.exception("Error stopping MQTT worker")
+            finally:
+                self._mqtt_worker = None
+
         if self.client:
             try:
-                self.client.disconnect()
-                self.client.loop_stop()
-            except Exception as err:
-                _LOGGER.debug("Error during MQTT cleanup: %s", err)
+                await self.hass.async_add_executor_job(self.client.loop_stop)
+            except Exception:
+                _LOGGER.exception("Error stopping MQTT loop")
+            try:
+                await self.hass.async_add_executor_job(self.client.disconnect)
+            except Exception:
+                _LOGGER.exception("Error disconnecting MQTT client")
             self.client = None
+        _LOGGER.info("VictronMqttManager cleanup completed")
 
-        _LOGGER.debug("VictronMqttManager cleanup completed")
+    def set_platform_add_entities(
+        self, platform: str, add_entities: AddConfigEntryEntitiesCallback
+    ) -> None:
+        """Set the callback to add entities for a specific platform."""
+        if platform not in self._platform_callbacks:
+            _LOGGER.warning("Unknown platform: %s", platform)
+            return
+
+        self._platform_callbacks[platform] = add_entities
+
+    def subscribe_entity(self, entity: VictronBaseEntity) -> None:
+        """Subscribe an entity to its state topic."""
+        if entity.state_topic is None:
+            return
+
+        if entity.state_topic not in self._topic_entity_map:
+            self._topic_entity_map[entity.state_topic] = set()
+            self._subscribe(entity.state_topic)
+
+        self._topic_entity_map[entity.state_topic].add(entity)
+
+    def unsubscribe_entity(self, entity: VictronBaseEntity) -> None:
+        """Unsubscribe an entity from its state topic."""
+        if entity.state_topic is None:
+            return
+        if entity.state_topic not in self._topic_entity_map:
+            return
+
+        entity_set = self._topic_entity_map[entity.state_topic]
+        if entity not in entity_set:
+            return
+
+        entity_set.remove(entity)
+        if not entity_set:
+            # No more entities for this topic, unsubscribe
+            del self._topic_entity_map[entity.state_topic]
+            self._unsubscribe(entity.state_topic)
+
+    def register_entity(self, entity: VictronBaseEntity) -> None:
+        """Register an entity with the manager."""
+        self.subscribe_entity(entity)
+
+    def unregister_entity(self, entity: VictronBaseEntity) -> None:
+        """Unregister an entity from the manager."""
+        self.unsubscribe_entity(entity)
+
+        if not entity.unique_id:
+            return
+        # Remove entity from device-specific registry
+        device_key = entity.device_key
+        if device_key not in self._entity_registry:
+            return
+        device_entities = self._entity_registry[device_key]
+        del device_entities[entity.unique_id]
+        _LOGGER.debug(
+            "Unregistered entity %s from device %s", entity.entity_id, device_key
+        )
+
+    def publish(
+        self,
+        topic: str,
+        payload: str | bytes | bytearray | float | None = None,
+        qos: int = 0,
+        retain: bool = False,
+        props: mqtt_properties.Properties | None = None,
+    ) -> None:
+        """Publish a message to the MQTT broker using the executor to avoid blocking."""
+        if self._mqtt_worker:
+            self._mqtt_worker.enqueue("publish", topic, payload, qos, retain, props)
+
+    def has_device_key(self, device_key: DeviceKey) -> bool:
+        """Return True if the device_key is in the device registry."""
+        return device_key in self._device_registry
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -743,25 +865,63 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.runtime_data = manager
         manager.start()
         await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
-
-        # Signal that all platforms are set up and ready
-        manager.set_platforms_setup_complete()
+        # Restore devices from HA device registry now that the platforms are set up
+        await manager.restore_devices_from_registry()
 
     except OSError as err:
         _LOGGER.debug("MQTT connection failed: %s", err)
         raise ConfigEntryNotReady from err
-    except Exception as err:
-        _LOGGER.debug("Unexpected setup error: %s", err)
+    except (ValueError, RuntimeError, TypeError) as err:
+        _LOGGER.debug("Unexpected setup error", exc_info=True)
         raise ConfigEntryError from err
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    manager: VictronMqttManager = hass.data[DOMAIN].pop(entry.entry_id)
+    # First unload platforms that were forwarded during setup
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
 
-    # Clean up all manager resources
-    await manager.cleanup()
+    manager: VictronMqttManager | None = hass.data.get(DOMAIN, {}).pop(
+        entry.entry_id, None
+    )
 
-    _LOGGER.info("Victron Energy integration unloaded successfully for entry %s", entry.entry_id)
-    return True
+    if manager:
+        # Clean up manager resources regardless of platform unload result
+        await manager.cleanup()
+
+    _LOGGER.info(
+        "Victron Energy integration unloaded for entry %s (platforms unloaded=%s)",
+        entry.entry_id,
+        unload_ok,
+    )
+    return unload_ok
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Return whether a user is allowed to remove this device."""
+
+    # Get the manager to check if this device is active
+    manager: VictronMqttManager = hass.data.get(DOMAIN, {}).get(config_entry.entry_id)
+    if not manager:
+        # Manager not available, allow removal
+        _LOGGER.info("Manager not available, allowing device removal")
+        return True
+
+    # Check if the manager has any identifier as device_key
+    # If any identifier is still present in the manager, we should NOT remove the
+    # device from the registry. Only allow removal when none of the identifiers
+    # are known to the manager.
+    has_active_identifier = any(
+        manager.has_device_key(identifier) for identifier in device_entry.identifiers
+    )
+    can_remove = not has_active_identifier
+    _LOGGER.info(
+        "Checking if device (%s) can be removed -> has_active_identifier=%s, can_remove=%s",
+        device_entry.identifiers,
+        has_active_identifier,
+        can_remove,
+    )
+    return can_remove
