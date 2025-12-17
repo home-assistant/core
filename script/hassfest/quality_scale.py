@@ -1459,7 +1459,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "hdmi_cec",
     "heatmiser",
     "here_travel_time",
-    "hikvision",
     "hikvisioncam",
     "hisense_aehw4a1",
     "history_stats",
