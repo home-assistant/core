@@ -593,12 +593,6 @@ _CONVERTED_VALUE: dict[
             UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR,
         ),
         (
-            0,
-            UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
-            0,
-            UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR,
-        ),
-        (
             20,
             UnitOfEnergyDistance.MILES_PER_KILO_WATT_HOUR,
             3.106856,
@@ -1270,6 +1264,30 @@ def test_unit_conversion_factory_allow_none_with_none() -> None:
         )(None)
         is None
     )
+
+
+def test_unit_conversion_factory_allow_none_with_zero_for_inverse_units() -> None:
+    """Test converter_factory_allow_none returns None for zero with inverse units."""
+    # Test EnergyDistanceConverter with inverse units (kWh/100km <-> km/kWh)
+    assert (
+        EnergyDistanceConverter.converter_factory_allow_none(
+            UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
+            UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR,
+        )(0)
+        is None
+    )
+    assert (
+        EnergyDistanceConverter.converter_factory_allow_none(
+            UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR,
+            UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
+        )(0)
+        is None
+    )
+    # Test with non-zero value to ensure normal conversion still works
+    assert EnergyDistanceConverter.converter_factory_allow_none(
+        UnitOfEnergyDistance.KILO_WATT_HOUR_PER_100_KM,
+        UnitOfEnergyDistance.KM_PER_KILO_WATT_HOUR,
+    )(25) == pytest.approx(4)
 
 
 @pytest.mark.parametrize(
