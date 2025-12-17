@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from asyncio import timeout
 from datetime import timedelta
 import logging
 from typing import Final
@@ -60,8 +59,7 @@ class PTDevicesCoordinator(DataUpdateCoordinator[PTDevicesResponse]):
 
     async def _async_update_data(self) -> PTDevicesResponse:
         try:
-            async with timeout(10):
-                data: PTDevicesResponse = await self.interface.get_data()
+            data: PTDevicesResponse = await self.interface.get_data()
         except aioptdevices.PTDevicesRequestError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,

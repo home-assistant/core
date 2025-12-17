@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -47,9 +46,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> str:
 
     # Test Connection
     try:
-        async with asyncio.timeout(10):
-            response: PTDevicesResponse = await ptdevices_interface.get_data()
-
+        response: PTDevicesResponse = await ptdevices_interface.get_data()
     # Catch any errors
     except aioptdevices.PTDevicesRequestError as err:
         raise CannotConnect from err
