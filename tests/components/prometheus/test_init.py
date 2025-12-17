@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import datetime
 from http import HTTPStatus
-from typing import Any
+from typing import Any, Self
 from unittest import mock
 
 from freezegun import freeze_time
@@ -94,10 +94,16 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+    floor_registry as fr,
+)
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
+from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator
 
 PROMETHEUS_PATH = "homeassistant.components.prometheus"
@@ -2963,3 +2969,226 @@ async def test_filtered_denylist(
         was_called = mock_client.labels.call_count == 1
         assert test.should_pass == was_called
         mock_client.labels.reset_mock()
+
+
+class InfoMetric(EntityMetric):
+    """Represents a Prometheus info metric."""
+
+    @classmethod
+    def required_labels(cls) -> list[str]:
+        """No required labels for info metrics."""
+        return []
+
+    @classmethod
+    def fromFloor(cls, floor: fr.FloorEntry) -> Self:
+        """Create new metric based on a floor entry."""
+        return cls(
+            metric_name="floor_info",
+            floor=floor.floor_id,
+            floor_level=str(floor.level) if floor.level is not None else "",
+            floor_name=floor.name,
+        )
+
+    @classmethod
+    def fromArea(cls, area: ar.AreaEntry) -> Self:
+        """Create new metric based on an area entry."""
+        return cls(
+            metric_name="area_info",
+            area=area.id,
+            area_name=area.name,
+            floor=area.floor_id if area.floor_id is not None else "",
+        )
+
+    @classmethod
+    def fromEntityAndArea(cls, entity: er.RegistryEntry, area: ar.AreaEntry) -> Self:
+        """Create new metric based on a floor entry."""
+        return cls(metric_name="entity_info", entity=entity.entity_id, area=area.id)
+
+
+@pytest.mark.parametrize("namespace", [""])
+async def test_floor_metric(
+    hass: HomeAssistant,
+    floor_registry: fr.FloorRegistry,
+    client: ClientSessionGenerator,
+) -> None:
+    """Test floor metric."""
+
+    # create a floor
+    floor = floor_registry.async_create("Floor", level=1)
+    floor_metric = InfoMetric.fromFloor(floor)
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    floor_metric.assert_in_metrics(body)
+
+    # update floor
+    updated = floor_registry.async_update(floor.floor_id, level=99, name="Updated")
+    updated_metric = InfoMetric.fromFloor(updated)
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    floor_metric.assert_not_in_metrics(body)
+    updated_metric.assert_in_metrics(body)
+
+    # delete floor
+    floor_registry.async_delete(floor.floor_id)
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    floor_metric.assert_not_in_metrics(body)
+    updated_metric.assert_not_in_metrics(body)
+
+
+@pytest.mark.parametrize("namespace", [""])
+async def test_area_metric(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    client: ClientSessionGenerator,
+) -> None:
+    """Test area metric."""
+    # create an area
+    area = area_registry.async_create("Area")
+    area_metric = InfoMetric.fromArea(area)
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    area_metric.assert_in_metrics(body)
+
+    # update area
+    updated = area_registry.async_update(area.id, name="Updated")
+    updated_metric = InfoMetric.fromArea(updated)
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    area_metric.assert_not_in_metrics(body)
+    updated_metric.assert_in_metrics(body)
+
+    # delete area
+    area_registry.async_delete(area.id)
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    area_metric.assert_not_in_metrics(body)
+    updated_metric.assert_not_in_metrics(body)
+
+
+@pytest.mark.parametrize("namespace", [""])
+async def test_delete_floor_of_area(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    floor_registry: fr.FloorRegistry,
+    client: ClientSessionGenerator,
+) -> None:
+    """Test entity/area correlation."""
+
+    # create floor and area
+    floor = floor_registry.async_create("Floor", level=1)
+    area = area_registry.async_create("Area", floor_id=floor.floor_id)
+    metric = InfoMetric.fromArea(area)
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    metric.assert_in_metrics(body)
+
+    # delete floor
+    floor_registry.async_delete(floor.floor_id)
+    updated = area_registry.async_get_area(area.id)
+    assert updated is not None
+    updated_metric = InfoMetric.fromArea(updated)
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    metric.assert_not_in_metrics(body)
+    updated_metric.assert_in_metrics(body)
+
+
+@pytest.mark.parametrize("namespace", [""])
+async def test_area_in_entity(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+    client: ClientSessionGenerator,
+    sensor_entities: dict[str, er.RegistryEntry],
+) -> None:
+    """Test entity/area correlation."""
+
+    # link an entity to an area
+    sensor = sensor_entities["sensor_1"]
+    area_1 = area_registry.async_create("Area 1")
+    metric_1 = InfoMetric.fromEntityAndArea(sensor, area_1)
+    entity_registry.async_update_entity(sensor.entity_id, area_id=area_1.id)
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    metric_1.assert_in_metrics(body)
+
+    # link entity to another area
+    area_2 = area_registry.async_create("Area 2")
+    metric_2 = InfoMetric.fromEntityAndArea(sensor, area_2)
+    entity_registry.async_update_entity(sensor.entity_id, area_id=area_2.id)
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    metric_1.assert_not_in_metrics(body)
+    metric_2.assert_in_metrics(body)
+
+    # delete current area
+    area_registry.async_delete(area_2.id)
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    metric_1.assert_not_in_metrics(body)
+    metric_2.assert_not_in_metrics(body)
+
+
+@pytest.mark.parametrize("namespace", [""])
+async def test_area_in_device(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    client: ClientSessionGenerator,
+    sensor_entities: dict[str, er.RegistryEntry],
+) -> None:
+    """Test entity/device/area correlation."""
+
+    # create a device
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("prometheus", "test-device")},
+    )
+
+    # link entity to device
+    sensor = sensor_entities["sensor_1"]
+    entity_registry.async_update_entity(sensor.entity_id, device_id=device.id)
+
+    # create areas
+    entity_area = area_registry.async_create("Entity Area")
+    entity_area_metric = InfoMetric.fromEntityAndArea(sensor, entity_area)
+    device_area = area_registry.async_create("Device Area")
+    device_area_metric = InfoMetric.fromEntityAndArea(sensor, device_area)
+
+    # no area yet
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    entity_area_metric.assert_not_in_metrics(body)
+    device_area_metric.assert_not_in_metrics(body)
+
+    # set device area
+    device_registry.async_update_device(device.id, area_id=device_area.id)
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    entity_area_metric.assert_not_in_metrics(body)
+    device_area_metric.assert_in_metrics(body)
+
+    # set entity area
+    entity_registry.async_update_entity(sensor.entity_id, area_id=entity_area.id)
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    entity_area_metric.assert_in_metrics(body)
+    device_area_metric.assert_not_in_metrics(body)
+
+    # unset entity area
+    entity_registry.async_update_entity(sensor.entity_id, area_id=None)
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    entity_area_metric.assert_not_in_metrics(body)
+    device_area_metric.assert_in_metrics(body)
+
+    # remove device
+    device_registry.async_remove_device(device.id)
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    entity_area_metric.assert_not_in_metrics(body)
+    device_area_metric.assert_not_in_metrics(body)
