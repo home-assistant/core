@@ -21,6 +21,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -100,6 +101,17 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the openevse platform."""
+
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "yaml_deprecated",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="yaml_deprecated",
+        breaks_in_ha_version="2026.6.0",
+    )
+
     for entry in hass.config_entries.async_entries(DOMAIN):
         if entry.data[CONF_HOST] == config[CONF_HOST]:
             return
