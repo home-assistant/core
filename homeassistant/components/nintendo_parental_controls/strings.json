@@ -93,6 +93,9 @@
     },
     "no_devices_found": {
       "message": "No Nintendo devices found for this account."
+    },
+    "update_required": {
+      "message": "The Nintendo Switch parental controls integration requires an update due to changes in Nintendo's API."
     }
   },
   "services": {
