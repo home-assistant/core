@@ -95,7 +95,6 @@ class PTDevicesCoordinator(DataUpdateCoordinator[PTDevicesResponse]):
                         device_id=stale_device.id,
                         remove_config_entry_id=self.config_entry.entry_id,
                     )
-        self.previous_devices = current_devices
 
         # Verify that we have all keys required
         required_keys: list[str] = [

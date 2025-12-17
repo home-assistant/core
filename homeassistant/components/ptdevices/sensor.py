@@ -151,18 +151,25 @@ async def async_setup_entry(
     async_add_entity: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up PTDevices sensors from config entries."""
-    body = config_entry.runtime_data.data["body"]
+    coordinator = config_entry.runtime_data
 
-    # Loop through all the devices available from the user account
-    for device_id, device in body.items():
-        formatted_device = _format_dict(device)
+    def _check_device() -> None:
+        current_devices = set(coordinator.data["body"].keys())
+        new_devices = current_devices - coordinator.previous_devices
+        if new_devices:
+            for device_id in new_devices:
+                _LOGGER.info("Adding new device %s", device_id)
+                device = coordinator.data["body"][device_id]
+                formatted_device = _format_dict(device)
+                async_add_entity(
+                    PTDevicesSensorEntity(config_entry.runtime_data, sensor, device_id)
+                    for sensor in SENSOR_DESCRIPTIONS
+                    if sensor.key in formatted_device
+                )
+        coordinator.previous_devices = current_devices
 
-        # Add entities belonging to device
-        async_add_entity(
-            PTDevicesSensorEntity(config_entry.runtime_data, sensor, device_id)
-            for sensor in SENSOR_DESCRIPTIONS
-            if sensor.key in formatted_device
-        )
+    _check_device()
+    config_entry.async_on_unload(coordinator.async_add_listener(_check_device))
 
 
 # Coordinator is used to centralize the data updates
