@@ -187,26 +187,19 @@ class PTDevicesSensorEntity(SensorEntity, CoordinatorEntity[PTDevicesCoordinator
         self._device_id = device_id
         self._attr_unique_id = f"{device_id}_{description.key}"
 
-        # Initial Update
-        self._update_attrs()
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the DeviceInfo from PTDevices."""
-
-        configuration_url: str = (
-            f"https://www.ptdevices.com/device/level/{self._device_id}"
-        )
-
-        return DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device_id)},
-            configuration_url=configuration_url,
+            configuration_url=f"https://www.ptdevices.com/device/level/{self._device_id}",
             manufacturer="ParemTech inc.",
+            model=self.coordinator.data["body"][self._device_id].get("device_type", ""),
             sw_version=self.coordinator.data["body"][self._device_id].get(
                 "version", None
             ),
             name=self.coordinator.data["body"][self._device_id].get("title", ""),
         )
+
+        # Initial Update
+        self._update_attrs()
 
     @property
     def available(self) -> bool:
