@@ -134,6 +134,10 @@ class OpenEVSESensor(SensorEntity):
         self.entity_description = description
         self.host = host
         self.entry = entry
+        self.entity_registry_enabled_default = self.entity_description.key in (
+            "ir_temp",
+            "rtc_temp",
+        )
 
     def update(self) -> None:
         """Get the monitored data from the charger."""
@@ -167,13 +171,6 @@ class OpenEVSESensor(SensorEntity):
                 self._attr_native_value = "Unknown"
         except (RequestException, ValueError, KeyError):
             _LOGGER.warning("Could not update status for %s", self.name)
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added."""
-        if self.entity_description.key in ["ir_temp", "rtc_temp"]:
-            return False
-        return True
 
     @property
     def device_info(self):
