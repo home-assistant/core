@@ -55,7 +55,7 @@ async def test_full_flow(
     assert result["url"] == (
         f"{AUTHORIZATION_ENDPOINT}?response_type=code&client_id={CLIENT_ID}"
         f"&redirect_uri={REDIRECT_URL}"
-        f"&state={state}&scope=restapi+offline_access"
+        f"&state={state}&scope=restapi+offline_access+openid"
     )
 
     client = await hass_client_no_auth()
@@ -106,7 +106,7 @@ async def test_duplicate_flow(
     assert result["url"] == (
         f"{AUTHORIZATION_ENDPOINT}?response_type=code&client_id={CLIENT_ID}"
         f"&redirect_uri={REDIRECT_URL}"
-        f"&state={state}&scope=restapi+offline_access"
+        f"&state={state}&scope=restapi+offline_access+openid"
     )
 
     client = await hass_client_no_auth()
@@ -177,7 +177,7 @@ async def test_reauth_flow(
     assert result["url"] == (
         f"{AUTHORIZATION_ENDPOINT}?response_type=code&client_id={CLIENT_ID}"
         f"&redirect_uri={REDIRECT_URL}"
-        f"&state={state}&scope=restapi+offline_access"
+        f"&state={state}&scope=restapi+offline_access+openid"
     )
 
     client = await hass_client_no_auth()
@@ -254,7 +254,7 @@ async def test_reconfiguration_flow(
     assert result["url"] == (
         f"{AUTHORIZATION_ENDPOINT}?response_type=code&client_id={CLIENT_ID}"
         f"&redirect_uri={REDIRECT_URL}"
-        f"&state={state}&scope=restapi+offline_access"
+        f"&state={state}&scope=restapi+offline_access+openid"
     )
 
     client = await hass_client_no_auth()
