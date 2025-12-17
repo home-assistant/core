@@ -11,7 +11,7 @@ from homeassistant.exceptions import ConfigEntryError
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Hello World from a config entry."""
+    """Set up openevse from a config entry."""
 
     entry.runtime_data = openevsewifi.Charger(entry.data[CONF_HOST])
     try:
@@ -26,7 +26,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    # This is called when an entry/configured device is to be removed. The class
-    # needs to unload itself, and remove callbacks. See the classes for further
-    # details
     return await hass.config_entries.async_unload_platforms(entry, [Platform.SENSOR])
