@@ -5,15 +5,23 @@
       "already_configured": "Device is already configured",
       "firmware_version_incompatible": "Device firmware version too old. Please update to at least version 0.9.5.",
       "firmware_version_missing": "Device missing firmware version information",
+      "no_connection": "Could not establish connection `{host}`",
       "not_supported": "Unsupported device type",
-      "unsupported_model": "Unsupported device model",
-      "no_connection": "Could not establish connection `{host}`"
+      "unsupported_model": "Unsupported device model"
     },
     "flow_title": "{name}-({model})",
     "step": {
       "discovery_confirm": {
         "description": "Do you want to add the device `{name}` to Home Assistant?",
         "title": "Discovered Nexa System 2 device"
+      },
+      "user": {
+        "data": {
+          "host": "Hostname"
+        },
+        "data_description": {
+          "host": "Hostname or IP Address of the device"
+        }
       }
     }
   },
