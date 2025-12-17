@@ -42,7 +42,6 @@ from typing import (
     overload,
 )
 
-from helpers.service import BatchProcessingCallback
 from propcache.api import cached_property, under_cached_property
 import voluptuous as vol
 
@@ -109,6 +108,7 @@ if TYPE_CHECKING:
     from .components.http import HomeAssistantHTTP
     from .config_entries import ConfigEntries
     from .helpers.entity import StateInfo
+    from .helpers.service import BatchProcessingCallback
 
 STOPPING_STAGE_SHUTDOWN_TIMEOUT = 20
 STOP_STAGE_SHUTDOWN_TIMEOUT = 100
