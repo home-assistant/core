@@ -377,9 +377,7 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
             entity_description.entity_category is not None
             and entity_description.ufp_options_fn is not None
         ):
-            _LOGGER.debug(
-                "Updating dynamic select options for %s", entity_description.name
-            )
+            _LOGGER.debug("Updating dynamic select options for %s", self.entity_id)
             self._async_set_options(self.data, entity_description)
         if (unifi_value := entity_description.get_ufp_value(device)) is None:
             unifi_value = TYPE_EMPTY_VALUE
