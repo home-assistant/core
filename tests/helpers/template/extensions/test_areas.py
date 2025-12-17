@@ -311,3 +311,79 @@ async def test_area_devices(
     info = render_to_info(hass, f"{{{{ '{area_entry.name}' | area_devices }}}}")
     assert_result_info(info, [device_entry.id])
     assert info.rate_limit is None
+
+
+async def test_area_temperature(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test area_temperature function."""
+    config_entry = MockConfigEntry(domain="sensor")
+    config_entry.add_to_hass(hass)
+
+    # Test non existing device id
+    info = render_to_info(hass, "{{ area_temperature('deadbeef') }}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    # Test wrong value type
+    info = render_to_info(hass, "{{ area_temperature(56) }}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    area_entry = area_registry.async_get_or_create("sensor.fake")
+    entity_entry = entity_registry.async_get_or_create(
+        "sensor", "fake", "ts01", original_device_class="temperature"
+    )
+    temp_sensor_entity_id = entity_entry.entity_id
+    hass.states.async_set(temp_sensor_entity_id, "21", {"device_class": "temperature"})
+    area_registry.async_update(
+        area_entry.id, temperature_entity_id=temp_sensor_entity_id
+    )
+
+    info = render_to_info(hass, f"{{{{ area_temperature('{area_entry.id}') }}}}")
+    assert_result_info(info, 21)
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, f"{{{{ '{area_entry.name}' | area_temperature }}}}")
+    assert_result_info(info, 21)
+    assert info.rate_limit is None
+
+
+async def test_area_humidity(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test area_humidity function."""
+    config_entry = MockConfigEntry(domain="sensor")
+    config_entry.add_to_hass(hass)
+
+    # Test non existing device id
+    info = render_to_info(hass, "{{ area_humidity('deadbeef') }}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    # Test wrong value type
+    info = render_to_info(hass, "{{ area_humidity(56) }}")
+    assert_result_info(info, None)
+    assert info.rate_limit is None
+
+    area_entry = area_registry.async_get_or_create("sensor.fake")
+    entity_entry = entity_registry.async_get_or_create(
+        "sensor", "fake", "hs01", original_device_class="humidity"
+    )
+    hum_sensor_entity_id = entity_entry.entity_id
+    hass.states.async_set(hum_sensor_entity_id, "48", {"device_class": "humidity"})
+    area_registry.async_update(area_entry.id, humidity_entity_id=hum_sensor_entity_id)
+
+    info = render_to_info(hass, f"{{{{ area_humidity('{area_entry.id}') }}}}")
+    assert_result_info(info, 48)
+    assert info.rate_limit is None
+
+    info = render_to_info(hass, f"{{{{ '{area_entry.name}' | area_humidity }}}}")
+    assert_result_info(info, 48)
+    assert info.rate_limit is None
