@@ -553,6 +553,9 @@ def _build_targets(
     """Build list of targets where each target is represented by its corresponding config entry, chat ID and notify entity id (if target is a notify entity)."""
 
     targets: list[tuple[TelegramBotConfigEntry, int, str | None]] = []
+    migrated_chat_ids: dict[str, list[int]] = {
+        ATTR_CHAT_ID: service.data.get(ATTR_CHAT_ID, [])
+    }
 
     # build target list from notify entities using service data: `entity_id`
 
@@ -562,6 +565,11 @@ def _build_targets(
 
         # parse entity IDs
         for notify_entity_id in notify_entity_ids:
+            # deprecation: chat IDs should be specified using `chat_id` instead of `target`
+            if notify_entity_id.isdigit():
+                migrated_chat_ids[ATTR_CHAT_ID].append(int(notify_entity_id))
+                continue
+
             # get config entry from notify entity
             registry_entry = entity_registry.async_get(notify_entity_id)
             if not registry_entry:
@@ -584,6 +592,8 @@ def _build_targets(
 
             targets.append((notify_config_entry, notify_chat_id, notify_entity_id))
 
+        _warn_chat_id_migration(hass, service, migrated_chat_ids[ATTR_CHAT_ID])
+
     has_notify_targets = len(targets) > 0
 
     # build target list using service data: `config_entry_id` and `chat_id`
@@ -604,8 +614,8 @@ def _build_targets(
     # parse chat IDs from service data: `chat_id`
     if config_entry is not None:
         chat_ids: list[int] = []
-        if ATTR_CHAT_ID in service.data:
-            target: int | list[int] = service.data[ATTR_CHAT_ID]
+        if migrated_chat_ids.get(ATTR_CHAT_ID):
+            target: int | list[int] = migrated_chat_ids[ATTR_CHAT_ID]
             chat_ids = [target] if isinstance(target, int) else target
         elif not has_notify_targets:
             # no targets from service data, so we default to the first allowed chat IDs of the config entry
@@ -637,6 +647,42 @@ def _build_targets(
     raise ServiceValidationError(
         translation_domain=DOMAIN,
         translation_key="no_targets_found",
+    )
+
+
+def _warn_chat_id_migration(
+    hass: HomeAssistant, service: ServiceCall, chat_ids: list[int]
+) -> None:
+    if not chat_ids:
+        return
+
+    # default: service was called using frontend such as developer tools or automation editor
+    service_call_origin = "call_service"
+
+    origin = service.context.origin_event
+    if origin and ATTR_ENTITY_ID in origin.data:
+        # automation
+        service_call_origin = origin.data[ATTR_ENTITY_ID]
+    elif origin and origin.data.get(ATTR_DOMAIN) == SCRIPT_DOMAIN:
+        # script
+        service_call_origin = f"{origin.data[ATTR_DOMAIN]}.{origin.data[ATTR_SERVICE]}"
+
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        f"migrate_chat_ids_in_target_{service_call_origin}_{service.service}",
+        breaks_in_ha_version="2026.7.0",
+        is_fixable=True,
+        is_persistent=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="migrate_chat_ids_in_target",
+        translation_placeholders={
+            "integration_title": "Telegram Bot",
+            "action": f"{DOMAIN}.{service.service}",
+            "chat_ids": ", ".join(str(chat_id) for chat_id in chat_ids),
+            "action_origin": service_call_origin,
+        },
+        learn_more_url="https://github.com/home-assistant/core/pull/154868",
     )
 
 

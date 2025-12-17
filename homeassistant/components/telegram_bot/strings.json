@@ -220,6 +220,17 @@
         }
       },
       "title": "The `timeout` parameter for {integration_title} is being removed"
+    },
+    "migrate_chat_ids_in_target": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "The `target` parameter is now used for specifying notify entities instead of chat IDs.\n\nTo fix this issue,\n1. Go to `{action_origin}`.\n1. Edit the `{action}` action and update the `target` parameter to use notify entities OR move chat IDs `{chat_ids}` in `target` to `chat_id`.\n1. Click SUBMIT to fix this issue.",
+            "title": "The `target` parameter for {integration_title} is being repurposed"
+          }
+        }
+      },
+      "title": "The `target` parameter for {integration_title} is being repurposed"
     }
   },
   "options": {
