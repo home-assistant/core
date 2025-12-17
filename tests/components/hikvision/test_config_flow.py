@@ -70,7 +70,7 @@ async def test_form_cannot_connect(
     mock_hikcamera: MagicMock,
 ) -> None:
     """Test we handle cannot connect error and can recover."""
-    mock_hikcamera.return_value.get_id.return_value = None
+    mock_hikcamera.return_value.get_id = None
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -91,7 +91,7 @@ async def test_form_cannot_connect(
     assert result["errors"] == {"base": "cannot_connect"}
 
     # Recover from error
-    mock_hikcamera.return_value.get_id.return_value = TEST_DEVICE_ID
+    mock_hikcamera.return_value.get_id = TEST_DEVICE_ID
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -138,7 +138,7 @@ async def test_form_exception(
 
     # Recover from error
     mock_hikcamera.side_effect = None
-    mock_hikcamera.return_value.get_id.return_value = TEST_DEVICE_ID
+    mock_hikcamera.return_value.get_id = TEST_DEVICE_ID
     mock_hikcamera.return_value.get_name = TEST_DEVICE_NAME
 
     result = await hass.config_entries.flow.async_configure(
@@ -269,7 +269,7 @@ async def test_import_flow_no_device_id(
     mock_hikcamera: MagicMock,
 ) -> None:
     """Test YAML import flow aborts when device_id is None."""
-    mock_hikcamera.return_value.get_id.return_value = None
+    mock_hikcamera.return_value.get_id = None
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
