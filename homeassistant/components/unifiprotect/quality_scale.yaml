@@ -53,7 +53,9 @@ rules:
     status: done
     comment: "Planned improvement: remove doorbell occupancy binary sensor and keep the event sensor after a solution for https://github.com/home-assistant/core/issues/145941 is available."
   entity-disabled-by-default: done
-  entity-translations: done
+  entity-translations:
+    status: done
+    comment: "Planned improvement: camera insecure is not translated but will be dropped soon with public api migration"
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
