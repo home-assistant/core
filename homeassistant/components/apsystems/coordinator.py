@@ -57,7 +57,7 @@ class ApSystemsDataCoordinator(DataUpdateCoordinator[ApSystemsSensorData]):
             LOGGER,
             config_entry=config_entry,
             name="APSystems Data",
-            update_interval=timedelta(seconds=12),
+            update_interval=timedelta(seconds=1),
         )
         self.api = api
 
