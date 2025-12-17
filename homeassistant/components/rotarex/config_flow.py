@@ -1,4 +1,7 @@
+import logging
+
 import voluptuous as vol
+
 from homeassistant import config_entries
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -6,6 +9,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .api import InvalidAuth, RotarexApi
 from .const import DOMAIN
 
+_LOGGER = logging.getLogger(__name__)
 
 class RotarexConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Rotarex."""
@@ -28,6 +32,7 @@ class RotarexConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
             except Exception:
+                _LOGGER.exception("Unexpected exception")
                 errors["base"] = "cannot_connect"
 
         return self.async_show_form(

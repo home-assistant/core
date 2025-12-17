@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-import hashlib
 from datetime import datetime, timedelta, timezone
+import hashlib
 from typing import Any
 
 import aiohttp
@@ -32,7 +32,7 @@ class RotarexApi:
         hashed_password = self.hash_message(password)
 
         payload = {
-            'grant_type': "password",
+            "grant_type": "password",
             "username": email,
             "password": hashed_password,
         }
@@ -57,7 +57,7 @@ class RotarexApi:
     @staticmethod
     def hash_message(message: str) -> str:
         """Hashes a message using SHA-256."""
-        bytes_message = message.encode('utf-8')
+        bytes_message = message.encode("utf-8")
         digest = hashlib.sha256(bytes_message).hexdigest()
 
         return digest

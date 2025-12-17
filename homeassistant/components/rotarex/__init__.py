@@ -4,6 +4,7 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -35,9 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         try:
             return await api.fetch_tanks()
         except InvalidAuth as err:
-            # This will trigger re-authentication within the API call
-            _LOGGER.warning("Token expired, attempting to re-login: %s", err)
-            return await api.fetch_tanks()
+            raise ConfigEntryAuthFailed from err
         except Exception as err:
             raise UpdateFailed(f"Error communicating with API: {err}")
 

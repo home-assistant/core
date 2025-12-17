@@ -112,7 +112,7 @@ class TankLevelSensor(BaseTankSensor):
         if not latest_sync:
             return None
         return {
-            "last_synch": latest_sync.get("SynchDate"),
+            "last_sync": latest_sync.get("SynchDate"),
             "temperature": latest_sync.get("Temperature"),
         }
 
@@ -141,7 +141,7 @@ class TankBatterySensor(BaseTankSensor):
         if not latest_sync:
             return None
         return {
-            "last_synch": latest_sync.get("SynchDate"),
+            "last_sync": latest_sync.get("SynchDate"),
         }
 
     def _update_internal_state(self, tank_data):
@@ -157,7 +157,7 @@ class TankBatterySensor(BaseTankSensor):
 class TankLastSyncDateSensor(BaseTankSensor):
     """Representation of a Tank Last Sync Date Sensor."""
 
-    _attr_icon = "mdi:calendar"
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
     _attr_translation_key = "last_sync"
 
     def _update_internal_state(self, tank_data):
@@ -166,6 +166,9 @@ class TankLastSyncDateSensor(BaseTankSensor):
         latest_sync = self._get_latest_sync()
         if latest_sync and latest_sync.get("SynchDate"):
             utc_dt = dt_util.parse_datetime(latest_sync["SynchDate"])
-            self._attr_native_value = utc_dt.strftime("%d-%m-%Y %H:%M:%S") + " UTC +1"
+            if utc_dt is not None:
+                self._attr_native_value = dt_util.as_local(utc_dt)
+            else:
+                self._attr_native_value = None
         else:
             self._attr_native_value = None
