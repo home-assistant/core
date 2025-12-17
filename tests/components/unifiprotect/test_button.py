@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from uiprotect.data.devices import Camera, Chime, Doorlock
@@ -56,9 +56,6 @@ async def test_chime_button(
     await init_entry(hass, ufp, [chime])
     assert_entity_counts(hass, Platform.BUTTON, 4, 2)
 
-    mock_api_method = AsyncMock()
-    setattr(ufp.api, api_method, mock_api_method)
-
     unique_id = f"{chime.mac}_{unique_id_suffix}"
 
     entity = entity_registry.async_get(entity_id)
@@ -73,10 +70,11 @@ async def test_chime_button(
     assert state
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
-    await hass.services.async_call(
-        "button", "press", {ATTR_ENTITY_ID: entity_id}, blocking=True
-    )
-    mock_api_method.assert_called_once()
+    with patch.object(ufp.api, api_method, AsyncMock()) as mock_api_method:
+        await hass.services.async_call(
+            "button", "press", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+        mock_api_method.assert_called_once()
 
 
 async def test_adopt_button(
