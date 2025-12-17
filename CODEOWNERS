@@ -308,8 +308,8 @@ build.json @home-assistant/supervisor
 /tests/components/config/ @home-assistant/core
 /homeassistant/components/configurator/ @home-assistant/core
 /tests/components/configurator/ @home-assistant/core
-/homeassistant/components/control4/ @lawtancool
-/tests/components/control4/ @lawtancool
+/homeassistant/components/control4/ @lawtancool @davidrecordon
+/tests/components/control4/ @lawtancool @davidrecordon
 /homeassistant/components/conversation/ @home-assistant/core @synesthesiam @arturpragacz
 /tests/components/conversation/ @home-assistant/core @synesthesiam @arturpragacz
 /homeassistant/components/cookidoo/ @miaucl
@@ -665,6 +665,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/here_travel_time/ @eifinger
 /tests/components/here_travel_time/ @eifinger
 /homeassistant/components/hikvision/ @mezz64
+/tests/components/hikvision/ @mezz64
 /homeassistant/components/hikvisioncam/ @fbradyirl
 /homeassistant/components/hisense_aehw4a1/ @bannhead
 /tests/components/hisense_aehw4a1/ @bannhead
