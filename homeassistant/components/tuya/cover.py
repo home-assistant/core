@@ -104,17 +104,17 @@ class _InstructionEnumWrapper(DPCodeEnumWrapper, _InstructionWrapper):
     stop_instruction = "stop"
 
     def get_open_command(self, device: CustomerDevice) -> dict[str, Any] | None:
-        if self.open_instruction in self.type_information.range:
+        if self.open_instruction in self.options:
             return {"code": self.dpcode, "value": self.open_instruction}
         return None
 
     def get_close_command(self, device: CustomerDevice) -> dict[str, Any] | None:
-        if self.close_instruction in self.type_information.range:
+        if self.close_instruction in self.options:
             return {"code": self.dpcode, "value": self.close_instruction}
         return None
 
     def get_stop_command(self, device: CustomerDevice) -> dict[str, Any] | None:
-        if self.stop_instruction in self.type_information.range:
+        if self.stop_instruction in self.options:
             return {"code": self.dpcode, "value": self.stop_instruction}
         return None
 
