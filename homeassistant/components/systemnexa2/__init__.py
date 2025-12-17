@@ -8,8 +8,6 @@ from sn2 import DeviceInitializationError
 from sn2.device import (
     ConnectionStatus,
     Device,
-    InformationData,
-    InformationUpdate,
     OnOffSetting,
     Setting,
     SettingsUpdate,
@@ -26,22 +24,17 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 
 from .helpers import NexaSystem2RuntimeData, SystemNexa2ConfigEntry
-from .light import SN2Light
-from .sensor import SensorValue
 from .switch import ConfigurationSwitch, SN2SwitchPlug
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "systemnexa2"
-SWITCH_MODELS = ["WBR-01"]
-PLUG_MODELS = ["WPR-01", "WPO-01"]
-LIGHT_MODELS = ["WBD-01", "WPD-01"]
 
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema({})},
     extra=vol.ALLOW_EXTRA,
 )
-PLATFORMS: Final = [Platform.LIGHT, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS: Final = [Platform.SWITCH]
 
 
 async def async_setup(hass: HomeAssistant, _config: ConfigType) -> bool:
@@ -100,9 +93,7 @@ def _handle_connection_status(
 def _handle_state_change(entry: SystemNexa2ConfigEntry, state: float) -> None:
     """Handle state change updates."""
     main_entry = entry.runtime_data.main_entry
-    if isinstance(main_entry, SN2Light):
-        main_entry.handle_state_update(state)
-    elif isinstance(main_entry, SN2SwitchPlug):
+    if isinstance(main_entry, SN2SwitchPlug):
         main_entry.handle_state_update(state=bool(state))
 
 
@@ -117,18 +108,6 @@ def _handle_settings_update(
                     entity.handle_state_update(is_on=setting.is_enabled())
 
 
-def _handle_information_update(
-    entry: SystemNexa2ConfigEntry, information: InformationData
-) -> None:
-    """Handle information updates."""
-    for entity in entry.runtime_data.config_entries:
-        if isinstance(entity, SensorValue):
-            if entity.name == "Wifi":
-                entity.handle_state_update(information.wifi_dbm)
-            elif entity.name == "Wifi SSID":
-                entity.handle_state_update(information.wifi_ssid)
-
-
 async def _process_update(
     entry: SystemNexa2ConfigEntry, update_event: UpdateEvent
 ) -> None:
@@ -139,8 +118,6 @@ async def _process_update(
             _handle_state_change(entry, state)
         case SettingsUpdate(settings):
             _handle_settings_update(entry, settings)
-        case InformationUpdate(information):
-            _handle_information_update(entry, information)
 
 
 async def async_unload_entry(
