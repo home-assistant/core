@@ -98,50 +98,28 @@ DEVICE_TYPE_TAGS = {
 }
 
 
-class StateStatus(IntEnum):
+class StateStatus(MieleEnum, missing_to_none=True):
     """Define appliance states."""
 
-    RESERVED = 0
-    OFF = 1
-    ON = 2
-    PROGRAMMED = 3
-    WAITING_TO_START = 4
-    IN_USE = 5
-    PAUSE = 6
-    PROGRAM_ENDED = 7
-    FAILURE = 8
-    PROGRAM_INTERRUPTED = 9
-    IDLE = 10
-    RINSE_HOLD = 11
-    SERVICE = 12
-    SUPERFREEZING = 13
-    SUPERCOOLING = 14
-    SUPERHEATING = 15
-    SUPERCOOLING_SUPERFREEZING = 146
-    AUTOCLEANING = 147
-    NOT_CONNECTED = 255
-
-
-STATE_STATUS_TAGS = {
-    StateStatus.OFF: "off",
-    StateStatus.ON: "on",
-    StateStatus.PROGRAMMED: "programmed",
-    StateStatus.WAITING_TO_START: "waiting_to_start",
-    StateStatus.IN_USE: "in_use",
-    StateStatus.PAUSE: "pause",
-    StateStatus.PROGRAM_ENDED: "program_ended",
-    StateStatus.FAILURE: "failure",
-    StateStatus.PROGRAM_INTERRUPTED: "program_interrupted",
-    StateStatus.IDLE: "idle",
-    StateStatus.RINSE_HOLD: "rinse_hold",
-    StateStatus.SERVICE: "service",
-    StateStatus.SUPERFREEZING: "superfreezing",
-    StateStatus.SUPERCOOLING: "supercooling",
-    StateStatus.SUPERHEATING: "superheating",
-    StateStatus.SUPERCOOLING_SUPERFREEZING: "supercooling_superfreezing",
-    StateStatus.AUTOCLEANING: "autocleaning",
-    StateStatus.NOT_CONNECTED: "not_connected",
-}
+    reserved = 0
+    off = 1
+    on = 2
+    programmed = 3
+    waiting_to_start = 4
+    in_use = 5
+    pause = 6
+    program_ended = 7
+    failure = 8
+    program_interrupted = 9
+    idle = 10
+    rinse_hold = 11
+    service = 12
+    superfreezing = 13
+    supercooling = 14
+    superheating = 15
+    supercooling_superfreezing = 146
+    autocleaning = 147
+    not_connected = 255
 
 
 class MieleActions(IntEnum):
