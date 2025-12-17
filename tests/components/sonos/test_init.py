@@ -28,7 +28,7 @@ from homeassistant.util import dt as dt_util
 
 from .conftest import MockSoCo, SoCoMockFactory
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_creating_entry_sets_up_media_player(
@@ -90,14 +90,12 @@ async def test_not_configuring_sonos_not_creates_entry(hass: HomeAssistant) -> N
 
 
 async def test_create_upnp_disabled_issue(
-    hass: HomeAssistant, async_setup_sonos, soco: MockSoCo, config_entry
+    hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Test issue is created when speaker initialization fails with 403."""
 
     resp = Response()
     resp.status_code = HTTPStatus.FORBIDDEN
-    resp._content = b"Forbidden"
-    resp.url = "http://10.10.10.1:1400/xml/DeviceProperties1.xml"
 
     with patch(
         "tests.components.sonos.conftest.MockSoCo.household_id",
