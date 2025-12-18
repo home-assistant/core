@@ -30,8 +30,20 @@
     }
   },
   "services": {
+    "create_issue": {
+      "service": "mdi:alert-plus"
+    },
+    "delete_issue": {
+      "service": "mdi:delete"
+    },
+    "get_issues": {
+      "service": "mdi:alert-octagon"
+    },
     "get_requests": {
       "service": "mdi:multimedia"
+    },
+    "update_issue": {
+      "service": "mdi:pencil"
     }
   }
 }
