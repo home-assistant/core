@@ -51,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) ->
 
     try:
         camera = await hass.async_add_executor_job(
-            HikCamera, url, port, username, password
+            HikCamera, url, port, username, password, ssl
         )
     except requests.exceptions.RequestException as err:
         raise ConfigEntryNotReady(f"Unable to connect to {host}") from err
