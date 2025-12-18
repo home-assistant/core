@@ -421,8 +421,10 @@ class PrometheusMetrics:
         _LOGGER.debug("Handling area update for %s (%s)", area_id, action)
 
         if action in {"update", "remove"}:
-            metric_name, label_values = astuple(self._area_info_metrics.pop(area_id))
-            self._metrics[metric_name].remove(*label_values)
+            metric = self._area_info_metrics.pop(area_id, None)
+            if metric is not None:
+                metric_name, label_values = astuple(metric)
+                self._metrics[metric_name].remove(*label_values)
         if action in {"update", "create"}:
             area = self.area_registry.async_get_area(area_id)
             if area is not None:
@@ -456,10 +458,10 @@ class PrometheusMetrics:
         _LOGGER.debug("Handling floor update for %s (%s)", floor_id, action)
 
         if action in {"update", "remove"}:
-            metric_name, label_values = astuple(
-                self._floor_info_metrics.pop(str(floor_id))
-            )
-            self._metrics[metric_name].remove(*label_values)
+            metric = self._floor_info_metrics.pop(str(floor_id), None)
+            if metric is not None:
+                metric_name, label_values = astuple(metric)
+                self._metrics[metric_name].remove(*label_values)
         if action in {"update", "create"}:
             floor = self.floor_registry.async_get_floor(str(floor_id))
             if floor is not None:
