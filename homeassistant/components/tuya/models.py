@@ -18,17 +18,17 @@ from .type_information import (
 )
 
 
-class DeviceWrapper:
+class DeviceWrapper[T]:
     """Base device wrapper."""
 
     options: list[str] | None = None
 
-    def read_device_status(self, device: CustomerDevice) -> Any | None:
+    def read_device_status(self, device: CustomerDevice) -> T | None:
         """Read device status and convert to a Home Assistant value."""
         raise NotImplementedError
 
     def get_update_commands(
-        self, device: CustomerDevice, value: Any
+        self, device: CustomerDevice, value: T
     ) -> list[dict[str, Any]]:
         """Generate update commands for a Home Assistant action."""
         raise NotImplementedError
