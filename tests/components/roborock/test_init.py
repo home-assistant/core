@@ -233,6 +233,7 @@ async def test_stale_device(
         "Roborock S7 2 Dock",
         "Dyad Pro",
         "Zeo One",
+        "Roborock Q7",
     }
     fake_devices.pop(0)  # Remove one robot
 
@@ -246,6 +247,7 @@ async def test_stale_device(
         "Roborock S7 2 Dock",
         "Dyad Pro",
         "Zeo One",
+        "Roborock Q7",
     }
 
 
@@ -269,6 +271,7 @@ async def test_no_stale_device(
         "Roborock S7 2 Dock",
         "Dyad Pro",
         "Zeo One",
+        "Roborock Q7",
     }
 
     await hass.config_entries.async_reload(mock_roborock_entry.entry_id)
@@ -283,6 +286,7 @@ async def test_no_stale_device(
         "Roborock S7 2 Dock",
         "Dyad Pro",
         "Zeo One",
+        "Roborock Q7",
     }
 
 
@@ -440,6 +444,7 @@ async def test_zeo_device_fails_setup(
         "Roborock S7 2",
         "Roborock S7 2 Dock",
         "Dyad Pro",
+        "Roborock Q7",
         # Zeo device is missing
     }
 
@@ -476,4 +481,5 @@ async def test_dyad_device_fails_setup(
         "Roborock S7 2 Dock",
         # Dyad device is missing
         "Zeo One",
+        "Roborock Q7",
     }
