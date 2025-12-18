@@ -5,7 +5,6 @@ from __future__ import annotations
 from enum import StrEnum
 import logging
 from string import ascii_letters
-from typing import Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -128,22 +127,6 @@ SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
 )
 
 
-def _format_dict(input: dict[str, Any]) -> dict[str, Any]:
-    result: dict[str, Any] = {}
-
-    # Recurse through key value pairs and convert from nested to flat
-    def recurse(sub_dict: dict[str, Any]) -> None:
-        for key, value in sub_dict.items():
-            if isinstance(value, dict):
-                recurse(value)
-            else:
-                result[key] = value
-
-    recurse(input)
-
-    return result
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: PTDevicesConfigEntry,
@@ -158,11 +141,10 @@ async def async_setup_entry(
         if new_devices:
             for device_id in new_devices:
                 device = coordinator.data["body"][device_id]
-                formatted_device = _format_dict(device)
                 async_add_entity(
                     PTDevicesSensorEntity(config_entry.runtime_data, sensor, device_id)
                     for sensor in SENSOR_DESCRIPTIONS
-                    if sensor.key in formatted_device
+                    if sensor.key in device
                 )
         coordinator.previous_devices = current_devices
 
@@ -216,8 +198,10 @@ class PTDevicesSensorEntity(SensorEntity, CoordinatorEntity[PTDevicesCoordinator
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return super().available and self.entity_description.key in _format_dict(
-            self.coordinator.data["body"][self._device_id]
+        return (
+            super().available
+            and self.entity_description.key
+            in self.coordinator.data["body"][self._device_id]
         )
 
     @callback
@@ -228,7 +212,7 @@ class PTDevicesSensorEntity(SensorEntity, CoordinatorEntity[PTDevicesCoordinator
 
     def _update_attrs(self) -> None:
         """Update sensor attributes based on coordinator data."""
-        data = _format_dict(self.coordinator.data["body"][self._device_id])
+        data = self.coordinator.data["body"][self._device_id]
         key = self.entity_description.key
 
         # If the key is not in the data received from the server, set the entity to unavailable and exit
