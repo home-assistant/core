@@ -27,37 +27,37 @@
   "entity": {
     "sensor": {
       "battery_status": {
-        "name": "Battery Status"
+        "name": "Battery status"
       },
       "battery_voltage": {
-        "name": "Battery Voltage"
+        "name": "Battery voltage"
       },
       "inch_level": {
-        "name": "Level Depth"
+        "name": "Level depth"
       },
       "percent_level": {
-        "name": "Level Percent"
+        "name": "Level percent"
       },
       "probe_temperature": {
-        "name": "Probe Temperature"
+        "name": "Probe temperature"
       },
       "reported": {
-        "name": "Last RX Report"
+        "name": "Last RX report"
       },
       "status": {
         "name": "Status"
       },
       "tx_reported": {
-        "name": "Last TX Report"
+        "name": "Last TX report"
       },
       "tx_signal": {
-        "name": "LoRa Signal Strength"
+        "name": "LoRa signal strength"
       },
       "volume_level": {
-        "name": "Level Volume"
+        "name": "Level volume"
       },
       "wifi_signal": {
-        "name": "WiFi Signal Strength"
+        "name": "WiFi signal strength"
       }
     }
   },
