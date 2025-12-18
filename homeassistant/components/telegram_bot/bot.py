@@ -1088,7 +1088,7 @@ class TelegramNotificationService:
             await self.hass.async_add_executor_job(
                 Path(custom_path).write_bytes, file_content
             )
-        except (RuntimeError, OSError) as exc:
+        except (RuntimeError, OSError, TelegramError) as exc:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="action_failed",
