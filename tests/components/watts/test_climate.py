@@ -122,7 +122,7 @@ async def test_fast_polling_stops_after_duration(
     # Reset mock to count only fast polling calls
     mock_watts_client.get_device.reset_mock()
 
-    # Should be in fast pooling 55s after
+    # Should be in fast polling 55s after
     mock_watts_client.get_device.reset_mock()
     freezer.tick(timedelta(seconds=55))
     async_fire_time_changed(hass)
