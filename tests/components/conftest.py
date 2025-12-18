@@ -811,6 +811,7 @@ async def _check_config_flow_result_translations(
         return
 
     key_prefix = ""
+    description_placeholders = result.get("description_placeholders")
     if isinstance(manager, ConfigEntriesFlowManager):
         category = "config"
         integration = flow.handler
@@ -823,6 +824,8 @@ async def _check_config_flow_result_translations(
         issue_id = flow.issue_id
         issue = ir.async_get(flow.hass).async_get_issue(integration, issue_id)
         key_prefix = f"{issue.translation_key}.fix_flow."
+        if description_placeholders is None:
+            description_placeholders = issue.translation_placeholders
     else:
         return
 
@@ -838,7 +841,7 @@ async def _check_config_flow_result_translations(
                 category,
                 integration,
                 f"{key_prefix}step.{step_id}",
-                result["description_placeholders"],
+                description_placeholders,
                 result["data_schema"],
                 ignore_translations_for_mock_domains,
             )
@@ -852,7 +855,7 @@ async def _check_config_flow_result_translations(
                     category,
                     integration,
                     f"{key_prefix}error.{error}",
-                    result["description_placeholders"],
+                    description_placeholders,
                 )
         return
 
@@ -868,7 +871,7 @@ async def _check_config_flow_result_translations(
             category,
             integration,
             f"{key_prefix}abort.{result['reason']}",
-            result["description_placeholders"],
+            description_placeholders,
         )
 
 
