@@ -12,6 +12,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
 from .const import DOMAIN, LOGGER, PLATFORMS
@@ -25,14 +26,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: VeluxConfigEntry) -> boo
     password = entry.data[CONF_PASSWORD]
     pyvlx = PyVLX(host=host, password=password)
 
-    LOGGER.debug("Velux interface started")
+    LOGGER.debug("Setting up Velux gateway %s", host)
     try:
+        LOGGER.debug("Retrieving scenes from %s", host)
         await pyvlx.load_scenes()
+        LOGGER.debug("Retrieving nodes from %s", host)
         await pyvlx.load_nodes()
-    except PyVLXException as ex:
-        LOGGER.exception("Can't connect to velux interface: %s", ex)
-        return False
+    except (OSError, PyVLXException) as ex:
+        # Defer setup and retry later as the bridge is not ready/available
+        raise ConfigEntryNotReady(
+            f"Unable to connect to Velux gateway at {host}. "
+            "If connection continues to fail, try power-cycling the gateway device."
+        ) from ex
 
+    LOGGER.debug("Velux connection to %s successful", host)
     entry.runtime_data = pyvlx
 
     connections = None
