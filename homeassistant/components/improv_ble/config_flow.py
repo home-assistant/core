@@ -31,9 +31,9 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.helpers import selector
 from homeassistant.helpers.device_registry import format_mac
 
-from ...helpers import selector
 from . import async_get_provisioning_futures
 from .const import DOMAIN, PROVISIONING_TIMEOUT
 
