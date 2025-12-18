@@ -39,3 +39,6 @@ rules:
   integration-owner: done
   docs-installation-parameters: todo
   docs-configuration-parameters: todo
+
+  # Platinum
+  inject-websession: done
