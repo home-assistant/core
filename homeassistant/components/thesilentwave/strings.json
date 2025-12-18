@@ -1,0 +1,23 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "TheSilentWave setup",
+        "description": "Set up TheSilentWave integration",
+        "data": {
+          "host": "IP Address"
+        },
+        "data_description": {
+          "host": "The IP address or hostname of your TheSilentWave device"
+        }
+      }
+    },
+    "error": {
+      "invalid_ip": "Invalid IP address format",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}
