@@ -188,13 +188,12 @@ class SonosDiscoveryManager:
         return any(x for x in self._known_invisible if x.ip_address == ip_address)
 
     async def _process_http_conection_error(
-        self, ex: HTTPError, ip_address: str
+        self, err: HTTPError, ip_address: str
     ) -> None:
         """Process HTTP Errors when connecting to a Sonos speaker."""
-        status_code = getattr(getattr(ex, "response", None), "status_code", None)
         # When UPnP is disabled, Sonos returns HTTP 403 Forbidden error.
         # Create issue advising user to enable UPnP on Sonos system.
-        if status_code == HTTPStatus.FORBIDDEN:
+        if err.response.status_code == HTTPStatus.FORBIDDEN:
             ir.async_create_issue(
                 self.hass,
                 DOMAIN,
@@ -210,7 +209,7 @@ class SonosDiscoveryManager:
         _LOGGER.error(
             "HTTP error connecting to Sonos speaker at %s: %s",
             ip_address,
-            ex,
+            err,
         )
 
     async def async_subscribe_to_zone_updates(self, ip_address: str) -> None:
@@ -232,18 +231,18 @@ class SonosDiscoveryManager:
                 "household_id",
             )
             sub = await soco.zoneGroupTopology.subscribe()
-        except HTTPError as ex:
-            await self._process_http_conection_error(ex, ip_address)
+        except HTTPError as err:
+            await self._process_http_conection_error(err, ip_address)
         except (
             OSError,
             SoCoException,
             Timeout,
             TimeoutError,
-        ) as ex:
+        ) as err:
             _LOGGER.error(
                 "Error connecting to discovered Sonos speaker at %s: %s",
                 ip_address,
-                ex,
+                err,
             )
 
         @callback
@@ -433,8 +432,8 @@ class SonosDiscoveryManager:
                     sync_get_visible_zones,
                     soco,
                 )
-            except HTTPError as ex:
-                await self._process_http_conection_error(ex, ip_addr)
+            except HTTPError as err:
+                await self._process_http_conection_error(err, ip_addr)
                 continue
             except (
                 OSError,
