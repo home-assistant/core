@@ -212,7 +212,6 @@ class SonosDiscoveryManager:
                         "conn_fail_url": UPNP_FAIL_URL,
                     },
                 )
-                return
             raise
 
     async def async_subscribe_to_zone_updates(self, ip_address: str) -> None:
@@ -237,7 +236,7 @@ class SonosDiscoveryManager:
             TimeoutError,
         ) as ex:
             _LOGGER.error(
-                "Error connecting to discoveredSonos speaker at %s: %s",
+                "Error connecting to discovered Sonos speaker at %s: %s",
                 ip_address,
                 ex,
             )
