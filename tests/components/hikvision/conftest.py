@@ -61,7 +61,6 @@ def mock_hikcamera() -> Generator[MagicMock]:
     with (
         patch(
             "homeassistant.components.hikvision.HikCamera",
-            autospec=True,
         ) as hikcamera_mock,
         patch(
             "homeassistant.components.hikvision.config_flow.HikCamera",
@@ -76,12 +75,14 @@ def mock_hikcamera() -> Generator[MagicMock]:
             "Motion": [(True, 1)],
             "Line Crossing": [(False, 1)],
         }
-        camera.fetch_attributes.return_value = (
-            False,
-            None,
-            None,
-            "2024-01-01T00:00:00Z",
+        camera.start_stream = MagicMock()
+        camera.disconnect = MagicMock()
+        camera.add_update_callback = MagicMock()
+        camera.fetch_attributes = MagicMock(
+            return_value=(False, None, None, "2024-01-01T00:00:00Z")
         )
+        camera.get_event_triggers = MagicMock(return_value={})
+        camera.inject_events = MagicMock()
         yield hikcamera_mock
 
 
