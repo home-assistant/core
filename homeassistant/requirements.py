@@ -254,27 +254,28 @@ class RequirementsManager:
         This method is a coroutine. It will raise RequirementsNotFound
         if an requirement can't be satisfied.
         """
-        if self.hass.config.skip_pip_packages:
-            skipped_requirements = {
-                req
-                for req in requirements
-                if Requirement(req).name in self.hass.config.skip_pip_packages
+        if DEPRECATED_PACKAGES or self.hass.config.skip_pip_packages:
+            all_requirements = {
+                requirement_string: Requirement(requirement_string)
+                for requirement_string in requirements
             }
-
-            for req in skipped_requirements:
-                _LOGGER.warning("Skipping requirement %s. This may cause issues", req)
-
-            requirements = [r for r in requirements if r not in skipped_requirements]
-
-        if DEPRECATED_PACKAGES:
-            for req in requirements:
-                if (req_name := Requirement(req).name) in DEPRECATED_PACKAGES:
-                    _LOGGER.warning(
-                        "Requirement %s for integration %s %s",
-                        req_name,
-                        name,
-                        DEPRECATED_PACKAGES[req_name],
-                    )
+            if DEPRECATED_PACKAGES:
+                for requirement_string, requirement_details in all_requirements.items():
+                    if requirement_details.name in DEPRECATED_PACKAGES:
+                        _LOGGER.warning(
+                            "Requirement %s for integration %s %s",
+                            requirement_string,
+                            name,
+                            DEPRECATED_PACKAGES[requirement_details.name],
+                        )
+            if skip_pip_packages := self.hass.config.skip_pip_packages:
+                for requirement_string, requirement_details in all_requirements.items():
+                    if requirement_details.name in skip_pip_packages:
+                        _LOGGER.warning(
+                            "Skipping requirement %s. This may cause issues",
+                            requirement_string,
+                        )
+                        requirements.remove(requirement_string)
 
         if not (missing := self._find_missing_requirements(requirements)):
             return

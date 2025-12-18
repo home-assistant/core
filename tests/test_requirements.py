@@ -678,10 +678,12 @@ async def test_install_deprecated_package(
     assert len(mock_inst.mock_calls) == 1
 
     assert (
-        "Requirement hello for integration test_component is deprecated for testing"
-        in caplog.text
-    )
+        "Requirement hello==1.0.0 for integration test_component is deprecated "
+        "for testing"
+    ) in caplog.text
+
     assert (
-        "Requirement pyserial-asyncio for integration test_component is deprecated, "
-        "will be rejected after 2026.2, and should be replaced by pyserial-asyncio-fast"
+        "Requirement pyserial-asyncio>=0.6 for integration test_component is "
+        "deprecated, will be rejected after 2026.2, and should be replaced by "
+        "pyserial-asyncio-fast"
     ) in caplog.text
