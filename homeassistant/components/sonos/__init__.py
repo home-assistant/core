@@ -233,6 +233,7 @@ class SonosDiscoveryManager:
             sub = await soco.zoneGroupTopology.subscribe()
         except HTTPError as err:
             await self._process_http_conection_error(err, ip_address)
+            return
         except (
             OSError,
             SoCoException,
@@ -244,6 +245,7 @@ class SonosDiscoveryManager:
                 ip_address,
                 err,
             )
+            return
 
         @callback
         def _async_add_visible_zones(subscription_succeeded: bool = False) -> None:
