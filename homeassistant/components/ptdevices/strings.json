@@ -20,7 +20,7 @@
         "data_description": {
           "api_token": "API Token for your PTDevices account."
         },
-        "description": "Enter your token API key from ParemTech"
+        "description": "Enter your Token API key from PTDevices"
       }
     }
   },
