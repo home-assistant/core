@@ -65,7 +65,9 @@
         "state": {
           "standby": "Standby",
           "to_full": "Manual charge mode",
-          "zero": "Zero mode"
+          "zero": "Zero mode",
+          "zero_charge_only": "Zero mode (charge only)",
+          "zero_discharge_only": "Zero mode (discharge only)"
         }
       }
     },
