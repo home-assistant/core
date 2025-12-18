@@ -6,10 +6,7 @@ rules:
       This integration does not provide additional actions.
   appropriate-polling: done
   brands: done
-  common-modules:
-    status: todo
-    comment: |
-      The entity.py file is not used in this integration.
+  common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
