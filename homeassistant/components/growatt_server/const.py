@@ -3,6 +3,7 @@
 from homeassistant.const import Platform
 
 CONF_PLANT_ID = "plant_id"
+CONF_REGION = "region"
 
 
 # API key support

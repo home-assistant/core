@@ -24,6 +24,7 @@ from .const import (
     AUTH_PASSWORD,
     CONF_AUTH_TYPE,
     CONF_PLANT_ID,
+    CONF_REGION,
     DEFAULT_URL,
     DOMAIN,
     ERROR_CANNOT_CONNECT,
@@ -69,7 +70,7 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Traditional username/password authentication
         # Convert region name to URL - guaranteed to exist since vol.In validates it
-        server_url = SERVER_URLS_NAMES[user_input[CONF_URL]]
+        server_url = SERVER_URLS_NAMES[user_input[CONF_REGION]]
 
         self.api = growattServer.GrowattApi(
             add_random_user_id=True, agent_identifier=user_input[CONF_USERNAME]
@@ -96,7 +97,7 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
         self.user_id = login_response["user"]["id"]
         self.data = user_input
         # Store the actual URL, not the region name
-        self.data[CONF_URL] = SERVER_URLS_NAMES[user_input[CONF_URL]]
+        self.data[CONF_URL] = server_url
         self.data[CONF_AUTH_TYPE] = self.auth_type
         return await self.async_step_plant()
 
@@ -111,7 +112,7 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Using token authentication
         # Convert region name to URL - guaranteed to exist since vol.In validates it
-        server_url = SERVER_URLS_NAMES[user_input[CONF_URL]]
+        server_url = SERVER_URLS_NAMES[user_input[CONF_REGION]]
 
         self.api = growattServer.OpenApiV1(token=user_input[CONF_TOKEN])
         self.api.server_url = server_url
@@ -150,7 +151,7 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(CONF_USERNAME): str,
                 vol.Required(CONF_PASSWORD): str,
-                vol.Required(CONF_URL, default=DEFAULT_URL): SelectSelector(
+                vol.Required(CONF_REGION, default=DEFAULT_URL): SelectSelector(
                     SelectSelectorConfig(
                         options=list(SERVER_URLS_NAMES.keys()),
                         translation_key="region",
@@ -171,7 +172,7 @@ class GrowattServerConfigFlow(ConfigFlow, domain=DOMAIN):
         data_schema = vol.Schema(
             {
                 vol.Required(CONF_TOKEN): str,
-                vol.Required(CONF_URL, default=DEFAULT_URL): SelectSelector(
+                vol.Required(CONF_REGION, default=DEFAULT_URL): SelectSelector(
                     SelectSelectorConfig(
                         options=list(SERVER_URLS_NAMES.keys()),
                         translation_key="region",
