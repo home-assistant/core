@@ -411,20 +411,21 @@ def verify_cleanup(
 @pytest.fixture(autouse=True)
 def reset_globals() -> Generator[None]:
     """Reset global objects for every test case."""
-    yield
+    try:
+        yield
+    finally:
+        # Reset the _Hass threading.local object
+        ha._hass.__dict__.clear()
 
-    # Reset the _Hass threading.local object
-    ha._hass.__dict__.clear()
+        # Reset the frame helper globals
+        frame.async_setup(None)
+        frame._REPORTED_INTEGRATIONS.clear()
 
-    # Reset the frame helper globals
-    frame.async_setup(None)
-    frame._REPORTED_INTEGRATIONS.clear()
-
-    # Reset patch_json
-    if patch_json.mock_objects:
-        obj = patch_json.mock_objects.pop()
-        patch_json.mock_objects.clear()
-        pytest.fail(f"Test attempted to serialize mock object {obj}")
+        # Reset patch_json
+        if patch_json.mock_objects:
+            obj = patch_json.mock_objects.pop()
+            patch_json.mock_objects.clear()
+            pytest.fail(f"Test attempted to serialize mock object {obj}")
 
 
 @pytest.fixture(autouse=True, scope="session")
@@ -436,8 +437,10 @@ def bcrypt_cost() -> Generator[None]:
         return gensalt_orig(4, prefix)
 
     bcrypt.gensalt = gensalt_mock
-    yield
-    bcrypt.gensalt = gensalt_orig
+    try:
+        yield
+    finally:
+        bcrypt.gensalt = gensalt_orig
 
 
 @pytest.fixture
@@ -1261,24 +1264,26 @@ def translations_once() -> Generator[_patch]:
 def evict_faked_translations(translations_once) -> Generator[_patch]:
     """Clear translations for mocked integrations from the cache after each module."""
     real_component_strings = translation_helper._async_get_component_strings
-    with patch(
-        "homeassistant.helpers.translation._async_get_component_strings",
-        wraps=real_component_strings,
-    ) as mock_component_strings:
-        yield
-    cache: _TranslationsCacheData = translations_once.kwargs["return_value"]
-    component_paths = components.__path__
+    try:
+        with patch(
+            "homeassistant.helpers.translation._async_get_component_strings",
+            wraps=real_component_strings,
+        ) as mock_component_strings:
+            yield
+    finally:
+        cache: _TranslationsCacheData = translations_once.kwargs["return_value"]
+        component_paths = components.__path__
 
-    for call in mock_component_strings.mock_calls:
-        integrations: dict[str, loader.Integration] = call.args[3]
-        for domain, integration in integrations.items():
-            if any(
-                pathlib.Path(f"{component_path}/{domain}") == integration.file_path
-                for component_path in component_paths
-            ):
-                continue
-            for loaded_for_lang in cache.loaded.values():
-                loaded_for_lang.discard(domain)
+        for call in mock_component_strings.mock_calls:
+            integrations: dict[str, loader.Integration] = call.args[3]
+            for domain, integration in integrations.items():
+                if any(
+                    pathlib.Path(f"{component_path}/{domain}") == integration.file_path
+                    for component_path in component_paths
+                ):
+                    continue
+                for loaded_for_lang in cache.loaded.values():
+                    loaded_for_lang.discard(domain)
 
 
 @pytest.fixture
