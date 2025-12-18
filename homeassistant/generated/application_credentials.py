@@ -40,6 +40,7 @@ APPLICATION_CREDENTIALS = [
     "tesla_fleet",
     "twitch",
     "volvo",
+    "watts",
     "weheat",
     "withings",
     "xbox",
