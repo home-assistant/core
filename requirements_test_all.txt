@@ -80,7 +80,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.sunricher_dali
-PySrDaliGateway==0.16.2
+PySrDaliGateway==0.18.0
 
 # homeassistant.components.switchbot
 PySwitchbot==0.74.0
@@ -124,7 +124,7 @@ WSDiscovery==2.1.2
 accuweather==4.2.2
 
 # homeassistant.components.actron_air
-actron-neo-api==0.2.0
+actron-neo-api==0.4.1
 
 # homeassistant.components.adax
 adax==0.4.0
@@ -2608,6 +2608,9 @@ victron-vrm==0.1.8
 # homeassistant.components.vilfo
 vilfo-api-client==0.5.0
 
+# homeassistant.components.watts
+visionpluspython==1.0.2
+
 # homeassistant.components.caldav
 vobject==0.9.9
 
@@ -2670,7 +2673,7 @@ wyoming==1.7.2
 xiaomi-ble==1.2.0
 
 # homeassistant.components.knx
-xknx==3.12.0
+xknx==3.13.0
 
 # homeassistant.components.knx
 xknxproject==3.8.2
