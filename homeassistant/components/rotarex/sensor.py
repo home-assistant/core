@@ -25,7 +25,7 @@ def get_tank_name(tank_data: dict) -> str:
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the sensor platform."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     entities = []
     if coordinator.data:
         for tank_data in coordinator.data:
