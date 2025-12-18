@@ -1,0 +1,48 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Rotarex DIMES SRG Anmeldung",
+        "description": "Geben Sie Ihre Anmeldeinformationen für das Rotarex DIMES SRG-Konto ein.",
+        "data": {
+          "email": "E-Mail",
+          "password": "Passwort"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Verbindung zur Rotarex-API fehlgeschlagen. Bitte überprüfen Sie Ihre Netzwerkverbindung.",
+      "invalid_auth": "Ungültige E-Mail oder ungültiges Passwort. Bitte überprüfen Sie Ihre Anmeldeinformationen und versuchen Sie es erneut.",
+      "unknown": "Ein unbekannter Fehler ist aufgetreten."
+    },
+    "abort": {
+      "already_configured": "Dieses Rotarex-Konto ist bereits konfiguriert."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "level": {
+        "name": "Füllstand",
+        "state_attributes": {
+          "last_sync": {
+            "name": "Letzte Synchronisierung"
+          },
+          "temperature": {
+            "name": "Temperatur"
+          }
+        }
+      },
+      "battery": {
+        "name": "Batterie",
+        "state_attributes": {
+          "last_sync": {
+            "name": "Letzte Synchronisierung"
+          }
+        }
+      },
+      "last_sync": {
+        "name": "Letzte Synchronisierung"
+      }
+    }
+  }
+}

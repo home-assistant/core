@@ -1,0 +1,48 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Вход в Rotarex DIMES SRG",
+        "description": "Введите учетные данные вашей учетной записи Rotarex DIMES SRG.",
+        "data": {
+          "email": "Электронная почта",
+          "password": "Пароль"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Не удалось подключиться к API Rotarex. Проверьте ваше сетевое соединение.",
+      "invalid_auth": "Неверный адрес электронной почты или пароль. Проверьте свои учетные данные и попробуйте снова.",
+      "unknown": "Произошла неизвестная ошибка."
+    },
+    "abort": {
+      "already_configured": "Эта учетная запись Rotarex уже настроена."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "level": {
+        "name": "Уровень",
+        "state_attributes": {
+          "last_sync": {
+            "name": "Последняя синхронизация"
+          },
+          "temperature": {
+            "name": "Температура"
+          }
+        }
+      },
+      "battery": {
+        "name": "Батарея",
+        "state_attributes": {
+          "last_sync": {
+            "name": "Последняя синхронизация"
+          }
+        }
+      },
+      "last_sync": {
+        "name": "Последняя синхронизация"
+      }
+    }
+  }
+}

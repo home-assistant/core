@@ -1,0 +1,48 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Prihlásenie do Rotarex DIMES SRG",
+        "description": "Zadajte svoje prihlasovacie údaje k účtu Rotarex DIMES SRG.",
+        "data": {
+          "email": "Email",
+          "password": "Heslo"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Nepodarilo sa pripojiť k Rotarex API. Skontrolujte sieťové pripojenie.",
+      "invalid_auth": "Neplatný e-mail alebo heslo. Skontrolujte svoje prihlasovacie údaje a skúste to znova.",
+      "unknown": "Vyskytla sa neznáma chyba."
+    },
+    "abort": {
+      "already_configured": "Tento účet Rotarex je už nakonfigurovaný."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "level": {
+        "name": "Hladina",
+        "state_attributes": {
+          "last_sync": {
+            "name": "Posledná synchronizácia"
+          },
+          "temperature": {
+            "name": "Teplota"
+          }
+        }
+      },
+      "battery": {
+        "name": "Batéria",
+        "state_attributes": {
+          "last_sync": {
+            "name": "Posledná synchronizácia"
+          }
+        }
+      },
+      "last_sync": {
+        "name": "Posledná synchronizácia"
+      }
+    }
+  }
+}
