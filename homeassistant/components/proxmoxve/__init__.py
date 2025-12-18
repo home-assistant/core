@@ -89,6 +89,22 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Import the Proxmox configuration from YAML."""
+    if DOMAIN not in config:
+        return True
+
+    for entry_config in config[DOMAIN]:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data=entry_config,
+            )
+        )
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a ProxmoxVE instance from a config entry."""
 
@@ -136,11 +152,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         node_coordinators = coordinators[host_name][node_name] = {}
 
         try:
-            vms = await hass.async_add_executor_job(
-                proxmox.nodes(node_config[CONF_NODE]).qemu.get
-            )
-            containers = await hass.async_add_executor_job(
-                proxmox.nodes(node_config[CONF_NODE]).lxc.get
+
+            def get_vms_containers(
+                node_config: dict[str, Any],
+            ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+                vms = proxmox.nodes(node_config[CONF_NODE]).qemu.get()
+                containers = proxmox.nodes(node_config[CONF_NODE]).lxc.get()
+                assert vms is not None and containers is not None
+                return vms, containers
+
+            vms, containers = await hass.async_add_executor_job(
+                get_vms_containers, node_config
             )
         except (ResourceException, requests.exceptions.ConnectionError) as err:
             _LOGGER.error(
@@ -178,22 +200,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    return True
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Import the Proxmox configuration from YAML."""
-    if DOMAIN not in config:
-        return True
-
-    for entry_config in config[DOMAIN]:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data=entry_config,
-            )
-        )
     return True
 
 
