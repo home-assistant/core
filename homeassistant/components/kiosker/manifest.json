@@ -1,0 +1,11 @@
+{
+  "domain": "kiosker",
+  "name": "Kiosker",
+  "codeowners": ["@Claeysson"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/kiosker",
+  "iot_class": "local_polling",
+  "quality_scale": "bronze",
+  "requirements": ["kiosker-python-api==1.2.6"],
+  "zeroconf": ["_kiosker._tcp.local."]
+}
