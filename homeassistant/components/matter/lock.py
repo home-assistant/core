@@ -23,7 +23,6 @@ from .const import LOGGER
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
-from .services import ATTR_CODE_SLOT, ATTR_USERCODE # Added imports
 
 DOOR_LOCK_OPERATION_SOURCE = {
     # mapping from operation source id's to textual representation
