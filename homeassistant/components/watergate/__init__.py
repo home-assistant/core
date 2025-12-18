@@ -51,9 +51,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: WatergateConfigEntry) ->
     )
 
     watergate_client = WatergateLocalApiClient(
-        sonic_address
-        if sonic_address.startswith("http")
-        else f"http://{sonic_address}",
+        base_url=(
+            sonic_address
+            if sonic_address.startswith("http")
+            else f"http://{sonic_address}"
+        ),
         session=async_get_clientsession(hass),
     )
 
