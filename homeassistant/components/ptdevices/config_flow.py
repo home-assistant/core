@@ -47,7 +47,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> str:
     # Test Connection
     try:
         response = await ptdevices_interface.get_data()
-    # Catch any errors
     except aioptdevices.PTDevicesRequestError as err:
         raise CannotConnect from err
 
@@ -59,10 +58,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> str:
 
     title: str = list(response["body"].values())[0].get("user_name", "")
 
-    if title == "":
-        raise MalformedResponse("Device user_name was not included in the response.")
-
-    # Return info that you want to store in the config entry.
+    # Return title to be used for hub name
     return title
 
 

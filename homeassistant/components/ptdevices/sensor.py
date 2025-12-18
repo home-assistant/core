@@ -198,11 +198,18 @@ class PTDevicesSensorEntity(SensorEntity, CoordinatorEntity[PTDevicesCoordinator
             identifiers={(DOMAIN, self._device_id)},
             configuration_url=f"https://www.ptdevices.com/device/level/{self._device_id}",
             manufacturer="ParemTech inc.",
-            model=self.coordinator.data["body"][self._device_id].get("device_type", ""),
-            sw_version=self.coordinator.data["body"][self._device_id].get(
-                "version", None
+            model=self.coordinator.data["body"][self._device_id].get(
+                "device_type",
+                None,
             ),
-            name=self.coordinator.data["body"][self._device_id].get("title", ""),
+            sw_version=self.coordinator.data["body"][self._device_id].get(
+                "version",
+                None,
+            ),
+            name=self.coordinator.data["body"][self._device_id].get(
+                "title",
+                None,
+            ),
         )
 
         # Initial Update

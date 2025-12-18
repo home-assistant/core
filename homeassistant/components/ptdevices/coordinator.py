@@ -96,27 +96,4 @@ class PTDevicesCoordinator(DataUpdateCoordinator[PTDevicesResponse]):
                         remove_config_entry_id=self.config_entry.entry_id,
                     )
 
-        # Verify that we have all keys required
-        required_keys: list[str] = [
-            "title",
-            "device_id",
-            "version",
-            "units",
-            "user_name",
-        ]
-        for device in data["body"].values():
-            missing_keys: list[str] = [
-                required_key
-                for required_key in required_keys
-                if required_key not in device
-            ]
-            if missing_keys:
-                raise UpdateFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="malformed_response_missing_key",
-                    translation_placeholders={
-                        "missing_keys": ",".join(missing_keys),
-                    },
-                )
-
         return data
