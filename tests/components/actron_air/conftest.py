@@ -100,3 +100,12 @@ def mock_config_entry() -> MockConfigEntry:
         data={CONF_API_TOKEN: "test_refresh_token"},
         unique_id="test_user_id",
     )
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Mock async_setup_entry."""
+    with patch(
+        "homeassistant.components.actron_air.async_setup_entry", return_value=True
+    ) as mock_setup:
+        yield mock_setup

@@ -14,9 +14,9 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import add_mock_config
+from . import setup_integration
 
-from tests.common import snapshot_platform
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 async def test_switch_entities(
@@ -24,11 +24,12 @@ async def test_switch_entities(
     mock_actron_api: MagicMock,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test switch entities."""
     with patch("homeassistant.components.actron_air.PLATFORMS", [Platform.SWITCH]):
-        entry = await add_mock_config(hass)
-        await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
+        await setup_integration(hass, mock_config_entry)
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 @pytest.mark.parametrize(
@@ -43,12 +44,13 @@ async def test_switch_entities(
 async def test_switch_toggles(
     hass: HomeAssistant,
     mock_actron_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
     entity_id: str,
     method: str,
 ) -> None:
     """Test switch toggles."""
     with patch("homeassistant.components.actron_air.PLATFORMS", [Platform.SWITCH]):
-        await add_mock_config(hass)
+        await setup_integration(hass, mock_config_entry)
 
     status = mock_actron_api.state_manager.get_status.return_value
     mock_method = getattr(status.user_aircon_settings, method)
@@ -74,13 +76,14 @@ async def test_switch_toggles(
 async def test_turbo_mode_not_supported(
     hass: HomeAssistant,
     mock_actron_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test turbo mode switch is not created when not supported."""
     status = mock_actron_api.state_manager.get_status.return_value
     status.user_aircon_settings.turbo_supported = False
 
-    await add_mock_config(hass)
+    await setup_integration(hass, mock_config_entry)
 
     entity_id = "switch.test_system_turbo_mode"
     assert not hass.states.get(entity_id)
