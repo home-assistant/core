@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from uiprotect.data import Camera, Light, Permission, RecordingMode, VideoMode
@@ -333,24 +333,23 @@ async def test_switch_camera_simple(
     doorbell.__pydantic_fields__[description.ufp_set_method] = Mock(
         final=False, frozen=False
     )
-    setattr(doorbell, description.ufp_set_method, AsyncMock())
-    set_method = getattr(doorbell, description.ufp_set_method)
+    mock_method = AsyncMock()
+    with patch.object(doorbell, description.ufp_set_method, mock_method):
+        _, entity_id = await ids_from_device_description(
+            hass, Platform.SWITCH, doorbell, description
+        )
 
-    _, entity_id = await ids_from_device_description(
-        hass, Platform.SWITCH, doorbell, description
-    )
+        await hass.services.async_call(
+            "switch", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
 
-    await hass.services.async_call(
-        "switch", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
-    )
+        mock_method.assert_called_once_with(True)
 
-    set_method.assert_called_once_with(True)
+        await hass.services.async_call(
+            "switch", "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
 
-    await hass.services.async_call(
-        "switch", "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
-    )
-
-    set_method.assert_called_with(False)
+        mock_method.assert_called_with(False)
 
 
 async def test_switch_camera_highfps(
