@@ -1,6 +1,6 @@
 {
   "domain": "met_eireann",
-  "name": "Met Éireann",
+  "name": "Met \u00c9ireann",
   "codeowners": ["@DylanGore"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/met_eireann",
