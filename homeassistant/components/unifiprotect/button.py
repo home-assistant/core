@@ -6,7 +6,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from functools import partial
 import logging
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING
 
 from uiprotect.data import ModelType, ProtectAdoptableDeviceModel
 
@@ -45,9 +45,6 @@ class ProtectButtonEntityDescription(
     ufp_press: str | None = None
 
 
-DEVICE_CLASS_CHIME_BUTTON: Final = "unifiprotect__chime_button"
-
-
 ALL_DEVICE_BUTTONS: tuple[ProtectButtonEntityDescription, ...] = (
     ProtectButtonEntityDescription(
         key="reboot",
@@ -60,7 +57,6 @@ ALL_DEVICE_BUTTONS: tuple[ProtectButtonEntityDescription, ...] = (
         key="unadopt",
         translation_key="unadopt_device",
         entity_registry_enabled_default=False,
-        icon="mdi:delete",
         ufp_press="unadopt",
         ufp_perm=PermRequired.DELETE,
     ),
@@ -69,7 +65,6 @@ ALL_DEVICE_BUTTONS: tuple[ProtectButtonEntityDescription, ...] = (
 ADOPT_BUTTON = ProtectButtonEntityDescription[ProtectAdoptableDeviceModel](
     key="adopt",
     translation_key="adopt_device",
-    icon="mdi:plus-circle",
     ufp_press="adopt",
 )
 
@@ -77,7 +72,6 @@ SENSOR_BUTTONS: tuple[ProtectButtonEntityDescription, ...] = (
     ProtectButtonEntityDescription(
         key="clear_tamper",
         translation_key="clear_tamper",
-        icon="mdi:notification-clear-all",
         ufp_press="clear_tamper",
         ufp_perm=PermRequired.WRITE,
     ),
@@ -87,14 +81,11 @@ CHIME_BUTTONS: tuple[ProtectButtonEntityDescription, ...] = (
     ProtectButtonEntityDescription(
         key="play",
         translation_key="play_chime",
-        device_class=DEVICE_CLASS_CHIME_BUTTON,
-        icon="mdi:play",
         ufp_press="play",
     ),
     ProtectButtonEntityDescription(
         key="play_buzzer",
         translation_key="play_buzzer",
-        icon="mdi:play",
         ufp_press="play_buzzer",
     ),
 )
