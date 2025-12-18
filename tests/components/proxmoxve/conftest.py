@@ -39,7 +39,12 @@ MOCK_TEST_CONFIG = {
             CONF_NODE: "pve1",
             CONF_VMS: [100, 101],
             CONF_CONTAINERS: [200, 201],
-        }
+        },
+        {
+            CONF_NODE: "pve2",
+            CONF_VMS: [100, 101],
+            CONF_CONTAINERS: [200, 201],
+        },
     ],
 }
 

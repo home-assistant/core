@@ -33,11 +33,7 @@ async def async_setup_entry(
         for dev_id in node_config[CONF_VMS] + node_config[CONF_CONTAINERS]:
             coordinator = host_name_coordinators[node_name][dev_id]
 
-            # unfound case
-            if (coordinator_data := coordinator.data) is None:
-                continue
-
-            name = coordinator_data["name"]
+            name = coordinator.data["name"]
             sensor = create_binary_sensor(
                 coordinator, host_name, node_name, dev_id, name
             )

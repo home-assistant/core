@@ -60,16 +60,6 @@ async def test_form(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "setup"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input=MOCK_USER_SETUP,
-    )
-
-    await hass.async_block_till_done()
-
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "127.0.0.1"
     assert result["data"] == MOCK_TEST_CONFIG
@@ -209,16 +199,6 @@ async def test_duplicate_entry(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "setup"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input=MOCK_USER_SETUP,
-    )
-
-    await hass.async_block_till_done()
-
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
@@ -238,15 +218,6 @@ async def test_import_flow(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data=MOCK_IMPORT_CONFIG[DOMAIN]
     )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "setup"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={"nodes": ["pve1"]},
-    )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "127.0.0.1"

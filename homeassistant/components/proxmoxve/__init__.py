@@ -105,23 +105,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             client.build_client()
         except AuthenticationError as ex:
             raise ConfigEntryAuthFailed("Invalid credentials") from ex
-        except SSLError:
-            _LOGGER.error(
-                "Unable to verify proxmox server SSL. Try using 'verify_ssl: false' for proxmox instance %s:%d",
-                host,
-                port,
-            )
+        except SSLError as ex:
+            raise ConfigEntryAuthFailed(
+                f"Unable to verify proxmox server SSL. Try using 'verify_ssl: false' for proxmox instance {host}:{port}"
+            ) from ex
         except ConnectTimeout as ex:
             raise ConfigEntryNotReady("Connection timed out") from ex
         except requests.exceptions.ConnectionError as ex:
             raise ConfigEntryNotReady(f"Host {host} is not reachable: {ex}") from ex
         else:
             return client
-        return None
 
     proxmox_client = await hass.async_add_executor_job(build_client)
     if proxmox_client is None:
-        return False
+        raise ConfigEntryNotReady("Failed to create Proxmox client")
 
     coordinators: dict[
         str, dict[str, dict[int, DataUpdateCoordinator[dict[str, Any] | None]]]

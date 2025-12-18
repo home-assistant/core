@@ -22,11 +22,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.selector import (
-    SelectSelector,
-    SelectSelectorConfig,
-    SelectSelectorMode,
-)
 
 from .common import ResourceException
 from .const import (
@@ -113,17 +108,16 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Proxmox VE."""
 
     VERSION = 1
-    _proxmox_nodes: list[dict[str, Any]] = []
-    _user_input: dict[str, Any] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
+        proxmox_nodes: list[dict[str, Any]] = []
         if user_input is not None:
             try:
-                self._proxmox_nodes = await _validate_input(self.hass, user_input)
+                proxmox_nodes = await _validate_input(self.hass, user_input)
             except ProxmoxConnectTimeout:
                 errors["base"] = "connect_timeout"
             except ProxmoxAuthenticationError:
@@ -134,55 +128,27 @@ class ProxmoxveConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "no_nodes_found"
 
             if "base" not in errors:
-                self._user_input = user_input
-                return await self.async_step_setup()
+                for node in proxmox_nodes:
+                    updated_node = {
+                        CONF_NODE: node["node"],
+                        CONF_VMS: [vm["vmid"] for vm in node["vms"]],
+                        CONF_CONTAINERS: [
+                            container["vmid"] for container in node["containers"]
+                        ],
+                    }
+                    user_input.setdefault(CONF_NODES, []).append(updated_node)
+
+                await self.async_set_unique_id(user_input[CONF_HOST])
+                self._abort_if_unique_id_configured()
+
+                return self.async_create_entry(
+                    title=user_input[CONF_HOST], data=user_input
+                )
 
         return self.async_show_form(
             step_id="user",
             data_schema=CONFIG_SCHEMA,
             errors=errors,
-        )
-
-    async def async_step_setup(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the setup step."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="setup",
-                data_schema=vol.Schema(
-                    {
-                        vol.Required(CONF_NODES): SelectSelector(
-                            SelectSelectorConfig(
-                                options=[node["node"] for node in self._proxmox_nodes],
-                                mode=SelectSelectorMode.LIST,
-                                multiple=True,
-                            )
-                        )
-                    }
-                ),
-            )
-
-        selected_nodes: list[dict[str, Any]] = []
-        for node in self._proxmox_nodes:
-            if node["node"] in user_input[CONF_NODES]:
-                updated_node = {
-                    CONF_NODE: node["node"],
-                    CONF_VMS: [vm["vmid"] for vm in node["vms"]],
-                    CONF_CONTAINERS: [
-                        container["vmid"] for container in node["containers"]
-                    ],
-                }
-                selected_nodes.append(updated_node)
-
-        user_input[CONF_NODES] = selected_nodes
-        self._user_input |= user_input
-
-        await self.async_set_unique_id(self._user_input[CONF_HOST])
-        self._abort_if_unique_id_configured()
-
-        return self.async_create_entry(
-            title=self._user_input[CONF_HOST], data=self._user_input
         )
 
     async def async_step_import(
