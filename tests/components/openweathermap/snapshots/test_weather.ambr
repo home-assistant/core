@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_get_minute_forecast[v3.0][mock_service_response]
+# name: test_get_minute_forecast[v30][mock_service_response]
   dict({
     'weather.openweathermap': dict({
       'forecast': list([
@@ -152,7 +152,7 @@
     'state': 'cloudy',
   })
 # ---
-# name: test_weather_states[v3.0][weather.openweathermap-entry]
+# name: test_weather_states[v30][weather.openweathermap-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -187,7 +187,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_weather_states[v3.0][weather.openweathermap-state]
+# name: test_weather_states[v30][weather.openweathermap-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'apparent_temperature': 2.1,
