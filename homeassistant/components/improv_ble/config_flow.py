@@ -33,6 +33,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.device_registry import format_mac
 
+from ...helpers import selector
 from . import async_get_provisioning_futures
 from .const import DOMAIN, PROVISIONING_TIMEOUT
 
@@ -362,7 +363,17 @@ class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="set_hostname",
                 data_schema=vol.Schema(
-                    {vol.Required("hostname", default=self._hostname): str}
+                    {
+                        vol.Required(
+                            "hostname", default=self._hostname
+                        ): selector.TextSelector(
+                            selector.TextSelectorConfig(
+                                multiline=False,
+                                type=selector.TextSelectorType.TEXT,
+                                multiple=False,
+                            )
+                        )
+                    }
                 ),
             )
 
