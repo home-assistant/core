@@ -139,6 +139,9 @@
       }
     },
     "number": {
+      "audio_volume_level": {
+        "name": "Audio volume level"
+      },
       "cool_select_plus_temperature": {
         "name": "CoolSelect+ temperature"
       },
@@ -748,6 +751,9 @@
       },
       "keep_fresh_mode": {
         "name": "Keep fresh mode"
+      },
+      "mute": {
+        "name": "Mute"
       },
       "power_cool": {
         "name": "Power cool"
