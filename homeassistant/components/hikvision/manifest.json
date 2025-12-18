@@ -1,7 +1,7 @@
 {
   "domain": "hikvision",
   "name": "Hikvision",
-  "codeowners": ["@mezz64"],
+  "codeowners": ["@mezz64", "@ptarjan"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/hikvision",
   "integration_type": "device",
