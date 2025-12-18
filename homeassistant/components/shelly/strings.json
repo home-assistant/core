@@ -538,10 +538,10 @@
         "name": "Voltmeter value"
       },
       "voltmeter_value_with_channel_name": {
-        "name": "Voltmeter value {channel_name}"
+        "name": "{channel_name} voltmeter value"
       },
       "voltmeter_with_channel_name": {
-        "name": "Voltmeter {channel_name}"
+        "name": "{channel_name} voltmeter"
       },
       "water_consumption": {
         "name": "Water consumption"
