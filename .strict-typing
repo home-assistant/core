@@ -45,7 +45,6 @@ homeassistant.components.acaia.*
 homeassistant.components.accuweather.*
 homeassistant.components.acer_projector.*
 homeassistant.components.acmeda.*
-homeassistant.components.actiontec.*
 homeassistant.components.adax.*
 homeassistant.components.adguard.*
 homeassistant.components.aftership.*
