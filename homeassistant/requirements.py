@@ -14,7 +14,12 @@ from packaging.requirements import Requirement
 from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
 from .helpers import singleton
-from .loader import Integration, IntegrationNotFound, async_get_integration
+from .loader import (
+    Integration,
+    IntegrationNotFound,
+    async_get_integration,
+    async_suggest_report_issue,
+)
 from .util import package as pkg_util
 
 # The default is too low when the internet connection is satellite or high latency
@@ -28,12 +33,9 @@ DISCOVERY_INTEGRATIONS: dict[str, Iterable[str]] = {
     "ssdp": ("ssdp",),
     "zeroconf": ("zeroconf", "homekit"),
 }
-DEPRECATED_PACKAGES: dict[str, str] = {
-    # old_package_name: reason
-    "pyserial-asyncio": (
-        "is deprecated, will be rejected after 2026.2, "
-        "and should be replaced by pyserial-asyncio-fast"
-    ),
+DEPRECATED_PACKAGES: dict[str, tuple[str, str]] = {
+    # old_package_name: (reason, breaks_in_ha_version)
+    "pyserial-asyncio": ("should be replaced by pyserial-asyncio-fast", "2026.2"),
 }
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,14 +64,16 @@ async def async_get_integration_with_requirements(
 
 
 async def async_process_requirements(
-    hass: HomeAssistant, name: str, requirements: list[str]
+    hass: HomeAssistant, name: str, requirements: list[str], is_built_in: bool = True
 ) -> None:
     """Install the requirements for a component or platform.
 
     This method is a coroutine. It will raise RequirementsNotFound
     if an requirement can't be satisfied.
     """
-    await _async_get_manager(hass).async_process_requirements(name, requirements)
+    await _async_get_manager(hass).async_process_requirements(
+        name, requirements, is_built_in
+    )
 
 
 async def async_load_installed_versions(
@@ -187,7 +191,7 @@ class RequirementsManager:
         """Process an integration and requirements."""
         if integration.requirements:
             await self.async_process_requirements(
-                integration.domain, integration.requirements
+                integration.domain, integration.requirements, integration.is_built_in
             )
 
         cache = self.integrations_with_reqs
@@ -247,7 +251,7 @@ class RequirementsManager:
             raise exceptions[0]
 
     async def async_process_requirements(
-        self, name: str, requirements: list[str]
+        self, name: str, requirements: list[str], is_built_in: bool
     ) -> None:
         """Install the requirements for a component or platform.
 
@@ -261,12 +265,18 @@ class RequirementsManager:
             }
             if DEPRECATED_PACKAGES:
                 for requirement_string, requirement_details in all_requirements.items():
-                    if requirement_details.name in DEPRECATED_PACKAGES:
+                    if deprecation := DEPRECATED_PACKAGES.get(requirement_details.name):
                         _LOGGER.warning(
-                            "Requirement %s for integration %s %s",
-                            requirement_string,
+                            "Detected that %sintegration '%s' %s. %s %s",
+                            "" if is_built_in else "custom ",
                             name,
-                            DEPRECATED_PACKAGES[requirement_details.name],
+                            f"has requirement '{requirement_string}' which {deprecation[0]}",
+                            f"This will stop working in Home Assistant {breaks_in_ha_version}, please"
+                            if (breaks_in_ha_version := deprecation[1])
+                            else "Please",
+                            async_suggest_report_issue(
+                                self.hass, integration_domain=name
+                            ),
                         )
             if skip_pip_packages := self.hass.config.skip_pip_packages:
                 for requirement_string, requirement_details in all_requirements.items():
