@@ -25,7 +25,6 @@ from electrolux_group_developer_sdk.client.appliances.td_appliance import TDAppl
 from electrolux_group_developer_sdk.client.appliances.wd_appliance import WDAppliance
 from electrolux_group_developer_sdk.client.appliances.wm_appliance import WMAppliance
 from electrolux_group_developer_sdk.feature_constants import (
-    ALERTS,
     APPLIANCE_STATE,
     DISPLAY_FOOD_PROBE_TEMPERATURE_C,
     DISPLAY_FOOD_PROBE_TEMPERATURE_F,
@@ -205,14 +204,6 @@ def build_entities_for_appliance(
             if description.is_supported_fn(appliance_data)
         )
 
-        if appliance_data.is_feature_supported(ALERTS):
-            entities.append(
-                ApplianceAlertSensor(
-                    appliance_data=appliance_data,
-                    coordinator=coordinator,
-                )
-            )
-
     return entities
 
 
@@ -230,6 +221,8 @@ async def async_setup_entry(
 class ElectroluxSensor(ElectroluxBaseEntity[ApplianceData], SensorEntity):
     """Representation of a generic sensor for Electrolux appliances."""
 
+    entity_description: ElectroluxSensorDescription
+
     def __init__(
         self,
         appliance_data: ApplianceData,
@@ -242,14 +235,13 @@ class ElectroluxSensor(ElectroluxBaseEntity[ApplianceData], SensorEntity):
         self._attr_unique_id = (
             f"{appliance_data.appliance.applianceId}_{description.key}"
         )
-        self._value_fn = description.value_fn
         self._update_attr_state()
 
     def _update_attr_state(self) -> None:
         self._attr_native_value = self._get_value()
 
     def _get_value(self) -> Any:
-        return self._value_fn(self._appliance_data)
+        return self.entity_description.value_fn(self._appliance_data)
 
 
 class ElectroluxTemperatureSensor(ElectroluxSensor):
@@ -275,52 +267,4 @@ class ElectroluxTemperatureSensor(ElectroluxSensor):
         self._attr_native_value = self._get_value()
 
     def _get_value(self) -> Any:
-        return self._value_fn(self._appliance_data)
-
-
-class ApplianceAlertSensor(ElectroluxBaseEntity[ApplianceData], SensorEntity):
-    """Representation of appliance alerts."""
-
-    def __init__(
-        self,
-        appliance_data: ApplianceData,
-        coordinator: ElectroluxDataUpdateCoordinator,
-    ) -> None:
-        """Initialize the alerts sensor."""
-        super().__init__(appliance_data, coordinator)
-        self._attr_name = "Alerts"
-        self._attr_icon = "mdi:alert-circle-outline"
-        self._attr_unique_id = f"{appliance_data.appliance.applianceId}_alerts"
-        self._attr_device_class = SensorDeviceClass.ENUM
-        self._appliance = cast(
-            WMAppliance
-            | WDAppliance
-            | TDAppliance
-            | DWAppliance
-            | OVAppliance
-            | SOAppliance
-            | CRAppliance
-            | HDAppliance
-            | HBAppliance,
-            appliance_data,
-        )
-        self._update_attr_state()
-
-    def _update_attr_state(self) -> None:
-        alerts = self._get_value()
-        if alerts:
-            self._attr_native_value = f"{len(alerts)} alert(s)"
-            self._attr_extra_state_attributes = {
-                f"alert_{i + 1}": {
-                    "code": alert["code"],
-                    "severity": alert["severity"],
-                    "acknowledge_status": alert["acknowledgeStatus"],
-                }
-                for i, alert in enumerate(alerts)
-            }
-        else:
-            self._attr_native_value = "No alerts"
-            self._attr_extra_state_attributes = {}
-
-    def _get_value(self) -> Any:
-        return self._appliance.get_current_alerts()
+        return self.entity_description.value_fn(self._appliance_data)
