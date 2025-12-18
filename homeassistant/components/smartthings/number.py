@@ -176,6 +176,7 @@ class SmartThingsRefrigeratorTemperatureNumberEntity(SmartThingsEntity, NumberEn
         self._attr_translation_key = {
             "cooler": "cooler_temperature",
             "freezer": "freezer_temperature",
+            "onedoor": "target_temperature",
         }.get(component)
 
     @property
