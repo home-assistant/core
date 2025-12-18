@@ -41,7 +41,7 @@ rules:
     comment: Integration does not support discovery.
   discovery:
     status: exempt
-    comment: Integration is a cloud service and does not support discovery.
+    comment: Device doesn't have discoverable properties
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
