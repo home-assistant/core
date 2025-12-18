@@ -1924,6 +1924,7 @@ async def test_download_file_directory_created_successfully(
 
 
 async def test_download_file_when_bot_failed_to_get_file(
+    tmp_path: Path,
     hass: HomeAssistant,
     mock_broadcast_config_entry: MockConfigEntry,
     mock_external_calls: None,
@@ -1933,9 +1934,12 @@ async def test_download_file_when_bot_failed_to_get_file(
     await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
     await hass.async_block_till_done()
 
+    allowlist_dir = tmp_path.as_posix()
+    hass.config.allowlist_external_dirs.add(allowlist_dir)
+
     schema_request = {
         ATTR_FILE_ID: "some-file-id",
-        ATTR_DIRECTORY_PATH: "/some/path",
+        ATTR_DIRECTORY_PATH: tmp_path.as_posix(),
         ATTR_FILE_NAME: "custom_name.jpg",
     }
 
@@ -1944,7 +1948,7 @@ async def test_download_file_when_bot_failed_to_get_file(
             "homeassistant.components.telegram_bot.bot.Bot.get_file",
             AsyncMock(side_effect=TelegramError("failed to get file")),
         ),
-        pytest.raises(HomeAssistantError),
+        pytest.raises(HomeAssistantError) as err,
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -1953,3 +1957,131 @@ async def test_download_file_when_bot_failed_to_get_file(
             blocking=True,
         )
     await hass.async_block_till_done()
+    assert err.value.translation_key == "action_failed"
+
+
+async def test_download_file_when_dir_not_allowed(
+    tmp_path: Path,
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Test download file when bot failed to get file."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+    telegram_file_name = "some_file.jpg"
+
+    schema_request = {
+        ATTR_FILE_ID: "some-file-id",
+        ATTR_DIRECTORY_PATH: tmp_path.as_posix(),
+        ATTR_FILE_NAME: telegram_file_name,
+    }
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            "download_file",
+            schema_request,
+            blocking=True,
+            return_response=True,
+        )
+
+    await hass.async_block_till_done()
+    assert err.value.translation_key == "allowlist_external_dirs_error"
+
+
+async def test_download_file_when_empty_file_path(
+    tmp_path: Path,
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+) -> None:
+    """Test download file when bot failed to get file."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    allowlist_dir = tmp_path.as_posix()
+    hass.config.allowlist_external_dirs.add(allowlist_dir)
+
+    schema_request = {
+        ATTR_FILE_ID: "some-file-id",
+        ATTR_DIRECTORY_PATH: tmp_path.as_posix(),
+        ATTR_FILE_NAME: "custom_name.jpg",
+    }
+    telegram_file = File(
+        file_id=schema_request[ATTR_FILE_ID],
+        file_unique_id="file_unique_id",
+    )
+
+    with pytest.raises(HomeAssistantError) as err:
+        await _run_download_file_service_with_mocks(
+            hass, schema_request, telegram_file, "file_content"
+        )
+    await hass.async_block_till_done()
+    assert err.value.translation_placeholders is not None
+    assert "error" in err.value.translation_placeholders
+    assert (
+        err.value.translation_placeholders["error"]
+        == "No file path returned from Telegram"
+    )
+
+
+@pytest.mark.parametrize(
+    "exception_class",
+    [
+        RuntimeError,
+        OSError,
+        TelegramError,
+    ],
+)
+async def test_download_file_when_error_when_downloading(
+    tmp_path: Path,
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+    exception_class: type[Exception],
+) -> None:
+    """Test download file when bot failed to get file."""
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    allowlist_dir = tmp_path.as_posix()
+    hass.config.allowlist_external_dirs.add(allowlist_dir)
+
+    schema_request = {
+        ATTR_FILE_ID: "some-file-id",
+        ATTR_DIRECTORY_PATH: tmp_path.as_posix(),
+        ATTR_FILE_NAME: "custom_name.jpg",
+    }
+
+    telegram_file = File(
+        file_id=schema_request[ATTR_FILE_ID],
+        file_unique_id="file_unique_id",
+        file_path=f"file/path/{schema_request[ATTR_FILE_NAME]}",
+    )
+
+    with (
+        patch(
+            "homeassistant.components.telegram_bot.bot.Bot.get_file",
+            AsyncMock(return_value=telegram_file),
+        ),
+        patch(
+            "telegram.File.download_as_bytearray",
+            AsyncMock(side_effect=exception_class("failed to download file")),
+        ),
+        pytest.raises(HomeAssistantError) as err,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "download_file",
+            schema_request,
+            blocking=True,
+            return_response=True,
+        )
+    await hass.async_block_till_done()
+    assert err.value.translation_placeholders is not None
+    assert "error" in err.value.translation_placeholders
+    assert err.value.translation_placeholders["error"] == "failed to download file"
