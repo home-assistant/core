@@ -174,7 +174,7 @@ async def test_user_flow_duplicate_account(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     # Should abort because the account is already configured
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -239,6 +239,9 @@ async def test_reauth_flow_wrong_account(
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "user"
     assert result["progress_action"] == "wait_for_authorization"
+
+    # Wait for the progress to complete
+    await hass.async_block_till_done()
 
     # Continue the flow after progress is done
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
