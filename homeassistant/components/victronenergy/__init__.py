@@ -12,11 +12,16 @@ from typing import Any
 import paho.mqtt.client as mqtt_client
 import paho.mqtt.properties as mqtt_properties
 import paho.mqtt.subscribeoptions as mqtt_subscribeoptions
+import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import (
+    ConfigEntryError,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -765,7 +770,7 @@ class VictronMqttManager:
         if self._mqtt_worker:
             try:
                 self._mqtt_worker.stop()
-            except Exception:  # pragma: no cover - defensive
+            except Exception:
                 _LOGGER.exception("Error stopping MQTT worker")
             finally:
                 self._mqtt_worker = None
@@ -864,6 +869,84 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data.setdefault(DOMAIN, {})[entry.entry_id] = manager
         entry.runtime_data = manager
         manager.start()
+
+        # Register a service to allow publishing arbitrary MQTT messages to
+        # the broker associated with a config entry. Register once for the
+        # domain and keep a marker in hass.data so we unregister when the
+        # last entry is removed.
+        domain_store = hass.data.setdefault(DOMAIN, {})
+        if not domain_store.get("_service_registered"):
+            def _resolve_entry_id_from_device(device_id: str) -> str | None:
+                device_registry = dr.async_get(hass)
+                device = device_registry.async_get(device_id)
+                if not device:
+                    return None
+                # Return the first config entry id attached to the device
+                for cfg in device.config_entries:
+                    return cfg
+                return None
+
+
+            def _handle_publish(call: ServiceCall) -> None:
+                data = call.data
+                entry_id = data["config_entry"]
+                topic = data["topic"]
+                payload = data["payload"]
+                qos = int(data.get("qos", 0))
+                retain = bool(data.get("retain", False))
+
+                # Ensure the config entry exists and is set up (has a manager)
+                entry_obj = hass.config_entries.async_get_entry(entry_id)
+                if entry_obj is None:
+                    raise HomeAssistantError(f"Config entry {entry_id} does not exist")
+
+                mgr: VictronMqttManager | None = hass.data.get(DOMAIN, {}).get(entry_id)
+                if not mgr:
+                    raise HomeAssistantError(
+                        f"Config entry {entry_id} exists but is not loaded/instantiated (cannot publish)"
+                    )
+
+                # Ensure topic is a string
+                if not isinstance(topic, str):
+                    _LOGGER.error("Invalid topic type: %s", type(topic))
+                    return
+
+                # Resolve unique_id for this entry (prefer manager.entry.unique_id)
+                unique_id = mgr.entry.unique_id
+                if not unique_id:
+                    _LOGGER.error("No unique_id for entry_id %s", entry_id)
+                    return
+
+                stripped = topic.lstrip("/")
+                topic = f"W/{unique_id}/{stripped}"
+
+                try:
+                    # If payload is a non-string (dict/list), encode to JSON string
+                    if not isinstance(payload, (str, bytes, bytearray)):
+                        payload_to_send: str | bytes | bytearray = json.dumps(payload)
+                    else:
+                        payload_to_send = payload
+                    mgr.publish(topic, payload_to_send, qos, retain)
+                except Exception:
+                    _LOGGER.exception("Failed publishing MQTT message to %s", topic)
+
+            publish_schema = vol.Schema(
+                {
+                    vol.Required("config_entry"): str,
+                    vol.Required("topic"): str,
+                    vol.Required("payload"): object,
+                    vol.Optional("qos", default=0): vol.All(
+                        int, vol.Range(min=0, max=2)
+                    ),
+                    vol.Optional("retain", default=False): bool,
+                }
+            )
+
+            hass.services.async_register(
+                DOMAIN, "publish", _handle_publish, schema=publish_schema
+            )
+
+            domain_store["_service_registered"] = True
         await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
         # Restore devices from HA device registry now that the platforms are set up
         await manager.restore_devices_from_registry()
@@ -889,6 +972,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if manager:
         # Clean up manager resources regardless of platform unload result
         await manager.cleanup()
+
+    # If there are no more entries left for this domain, remove the domain-level service
+    domain_store = hass.data.get(DOMAIN, {})
+    if not domain_store:
+        try:
+            hass.services.async_remove(DOMAIN, "publish")
+        except Exception:
+            _LOGGER.exception("Failed removing victronenergy.publish service")
 
     _LOGGER.info(
         "Victron Energy integration unloaded for entry %s (platforms unloaded=%s)",

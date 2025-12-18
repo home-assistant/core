@@ -40,5 +40,39 @@
       "no_discovery": "No Home Assistant discovery topics found within 30 seconds",
       "user_cancelled": "Setup cancelled by user"
     }
+  },
+  "services": {
+    "publish": {
+      "name": "Publish MQTT message",
+      "description": "Publish a message to the MQTT broker associated with a Victron Energy config entry.",
+      "fields": {
+        "config_entry": {
+          "name": "Config entry",
+          "description": "Configuration entry (hub) to select which broker to publish to."
+        },
+        "topic": {
+          "name": "Topic",
+          "description": "MQTT topic to publish to. The integration will automatically prefix the topic with 'W/..vrm_id../'."
+        },
+        "payload": {
+          "name": "Payload",
+          "description": "Payload to publish. If a non-string is supplied it will be JSON-encoded."
+        },
+        "qos": {
+          "name": "QoS",
+          "description": "QoS level (0-2)."
+        },
+        "retain": {
+          "name": "Retain",
+          "description": "Retain flag for MQTT publish."
+        }
+      },
+      "sections": {
+        "advanced_fields": {
+          "description": "Advanced options that are rarely needed",
+          "name": "Advanced options"
+        }
+      }
+    }
   }
 }
