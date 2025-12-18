@@ -1,9 +1,9 @@
 """Tests for Lytiva integration initialization."""
 from __future__ import annotations
 
-from unittest.mock import MagicMock, patch
-
+import json
 import pytest
+from unittest.mock import patch
 
 from homeassistant.components.lytiva.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -13,211 +13,215 @@ from tests.common import MockConfigEntry
 
 
 async def test_setup_entry(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_mqtt_client: MagicMock
+    hass: HomeAssistant, mqtt_mock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test successful setup of a config entry."""
     mock_config_entry.add_to_hass(hass)
     
-    with patch("homeassistant.components.lytiva.mqtt_client.Client", return_value=mock_mqtt_client):
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    
+    assert mock_config_entry.state == ConfigEntryState.LOADED
+    
+    # Verify online status was published
+    mqtt_mock.async_publish.assert_called_with(
+        "LYT/homeassistant/status", "online", 1, True
+    )
+    
+    # Verify discovery topic was subscribed
+    mqtt_mock.async_subscribe.assert_called()
+    # Topic could be in args[0] or args[1] depending on how mqtt_mock is patched
+    subscribed_topics = []
+    for call in mqtt_mock.async_subscribe.call_args_list:
+        for arg in call[0]:
+            if isinstance(arg, str) and arg.startswith("LYT/"):
+                subscribed_topics.append(arg)
+    assert "LYT/homeassistant/+/+/config" in subscribed_topics
+
+
+async def test_setup_entry_mqtt_not_available(
+    hass: HomeAssistant, mqtt_mock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test setup fails when MQTT is not available."""
+    mock_config_entry.add_to_hass(hass)
+    
+    mock_config_entry.add_to_hass(hass)
+    
+    with patch("homeassistant.components.mqtt.async_wait_for_mqtt_client", return_value=False):
+        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state == ConfigEntryState.SETUP_RETRY
+
+
+async def test_unload_entry(
+    hass: HomeAssistant, mqtt_mock, setup_integration
+) -> None:
+    """Test successful unload of a config entry."""
+    assert await hass.config_entries.async_unload(setup_integration.entry_id)
+    await hass.async_block_till_done()
+    
+    assert setup_integration.state == ConfigEntryState.NOT_LOADED
+    
+    # Verify offline status was published
+    mqtt_mock.async_publish.assert_any_call(
+        "LYT/homeassistant/status", "offline", 0, True # Default qos for unload publish might be 0 if not specified
+    )
+    # Wait, in __init__.py it was: await mqtt.async_publish(hass, "LYT/homeassistant/status", "offline", retain=True)
+    # So qos is default (0)
+
+
+async def test_remove_entity_via_discovery(
+    hass: HomeAssistant, mqtt_mock, setup_integration
+) -> None:
+    """Test removing an entity via empty discovery payload."""
+    from homeassistant.helpers import entity_registry as er, device_registry as dr
+    
+    # 1. First discover a light to create it
+    payload = {
+        "unique_id": "remove_me",
+        "name": "Removal Test",
+        "command_topic": "LYT/99/COMMAND",
+        "address": 99,
+        "device": {
+            "identifiers": ["dev_remove_me"],
+            "name": "Device to Remove",
+        }
+    }
+    
+    # Trigger discovery
+    # Find the callback from mqtt_mock calls
+    discovery_callback = None
+    for call in mqtt_mock.async_subscribe.call_args_list:
+        # Loop through args to find the topic and the callback
+        args = call[0]
+        if any(isinstance(arg, str) and arg == "LYT/homeassistant/+/+/config" for arg in args):
+            # The callback is usually the last or second to last arg
+            for arg in reversed(args):
+                if callable(arg):
+                    discovery_callback = arg
+                    break
+            if discovery_callback:
+                break
+            
+    assert discovery_callback is not None
+    
+    # Create the entity
+    class MockMsg:
+        def __init__(self, topic, payload):
+            self.topic = topic
+            self.payload = payload
+            
+    await discovery_callback(MockMsg("LYT/homeassistant/light/remove_me/config", json.dumps(payload)))
+    await hass.async_block_till_done()
+    
+    # Verify it exists
+    ent_reg = er.async_get(hass)
+    dev_reg = dr.async_get(hass)
+    
+    entity_id = ent_reg.async_get_entity_id("light", DOMAIN, "remove_me")
+    assert entity_id is not None
+    entry = ent_reg.async_get(entity_id)
+    device_id = entry.device_id
+    assert device_id is not None
+    
+    # 2. Now send empty payload to remove it
+    await discovery_callback(MockMsg("LYT/homeassistant/light/remove_me/config", "{}"))
+    await hass.async_block_till_done()
+    
+    # Verify entity is gone
+    assert ent_reg.async_get_entity_id("light", DOMAIN, "remove_me") is None
+    # Verify device is gone (since it was the only entity)
+    assert dev_reg.async_get(device_id) is None
+
+
+async def test_init_error_paths(
+    hass: HomeAssistant, mqtt_mock, setup_integration
+) -> None:
+    """Test error paths in __init__.py discovery."""
+    discovery_callback = None
+    for call in mqtt_mock.async_subscribe.call_args_list:
+        args = call[0]
+        if any(isinstance(arg, str) and arg == "LYT/homeassistant/+/+/config" for arg in args):
+            for arg in reversed(args):
+                if callable(arg):
+                    discovery_callback = arg
+                    break
+    assert discovery_callback is not None
+
+    class MockMsg:
+        def __init__(self, topic, payload):
+            self.topic = topic
+            self.payload = payload
+
+    # 1. Invalid JSON
+    await discovery_callback(MockMsg("LYT/homeassistant/light/invalid/config", "invalid{json}"))
+    await hass.async_block_till_done()
+
+    # 2. Short topic
+    await discovery_callback(MockMsg("LYT/config", "{}"))
+    await hass.async_block_till_done()
+
+    # 3. Payload without address/unique_id (should use topic ID)
+    await discovery_callback(MockMsg("LYT/homeassistant/light/auto_id/config", '{"name": "Auto ID"}'))
+    await hass.async_block_till_done()
+    
+    from homeassistant.helpers import entity_registry as er
+    ent_reg = er.async_get(hass)
+    assert ent_reg.async_get_entity_id("light", DOMAIN, "auto_id") is not None
+
+
+async def test_init_setup_publish_error(
+    hass: HomeAssistant, mqtt_mock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test publish error during setup."""
+    mock_config_entry.add_to_hass(hass)
+    
+    with patch("homeassistant.components.mqtt.async_publish", side_effect=Exception("Publish failed")):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
     
     assert mock_config_entry.state == ConfigEntryState.LOADED
-    assert DOMAIN in hass.data
-    assert mock_config_entry.entry_id in hass.data[DOMAIN]
-    
-    # Verify MQTT client was configured
-    mock_mqtt_client.username_pw_set.assert_called_once_with("test_user", "test_pass")
-    mock_mqtt_client.connect.assert_called_once()
-    mock_mqtt_client.loop_start.assert_called_once()
 
 
-async def test_setup_entry_connection_failed(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_mqtt_client: MagicMock
+async def test_init_remove_device_error(
+    hass: HomeAssistant, mqtt_mock, setup_integration
 ) -> None:
-    """Test setup fails when MQTT connection fails."""
-    mock_config_entry.add_to_hass(hass)
-    mock_mqtt_client.connect.side_effect = Exception("Connection failed")
+    """Test error during device removal."""
+    from homeassistant.helpers import entity_registry as er, device_registry as dr
     
-    with patch("homeassistant.components.lytiva.mqtt_client.Client", return_value=mock_mqtt_client):
-        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    # Setup entity
+    discovery_callback = None
+    for call in mqtt_mock.async_subscribe.call_args_list:
+        args = call[0]
+        if any(isinstance(arg, str) and arg == "LYT/homeassistant/+/+/config" for arg in args):
+            for arg in reversed(args):
+                if callable(arg):
+                    discovery_callback = arg
+                    break
     
-    assert mock_config_entry.state == ConfigEntryState.SETUP_ERROR
+    class MockMsg:
+        def __init__(self, topic, payload):
+            self.topic = topic
+            self.payload = payload
 
+    payload = {
+        "unique_id": "err_remove",
+        "name": "Error Remove",
+        "address": 77,
+        "device": {"identifiers": ["err_dev"]}
+    }
+    await discovery_callback(MockMsg("LYT/homeassistant/light/err_remove/config", json.dumps(payload)))
+    await hass.async_block_till_done()
 
-async def test_unload_entry(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_mqtt_client: MagicMock
-) -> None:
-    """Test successful unload of a config entry."""
-    mock_config_entry.add_to_hass(hass)
-    
-    with patch("homeassistant.components.lytiva.mqtt_client.Client", return_value=mock_mqtt_client):
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-        
-        assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-    
-    assert mock_config_entry.state == ConfigEntryState.NOT_LOADED
-    assert mock_config_entry.entry_id not in hass.data.get(DOMAIN, {})
-    
-    # Verify MQTT client was properly cleaned up
-    mock_mqtt_client.loop_stop.assert_called_once()
-    mock_mqtt_client.disconnect.assert_called_once()
+    ent_reg = er.async_get(hass)
+    entity_id = ent_reg.async_get_entity_id("light", DOMAIN, "err_remove")
+    entry = ent_reg.async_get(entity_id)
 
-
-async def test_platforms_loaded(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_mqtt_client: MagicMock
-) -> None:
-    """Test that all platforms are loaded."""
-    mock_config_entry.add_to_hass(hass)
-    
-    with patch("homeassistant.components.lytiva.mqtt_client.Client", return_value=mock_mqtt_client):
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-    
-    # Verify all expected platforms are loaded
-    expected_platforms = ["light"]
-    
-    for platform in expected_platforms:
-        assert f"{DOMAIN}.{platform}" in hass.config.components
-
-
-async def test_mqtt_subscriptions(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_mqtt_client: MagicMock
-) -> None:
-    """Test that MQTT subscriptions are set up correctly."""
-    mock_config_entry.add_to_hass(hass)
-    
-    with patch("homeassistant.components.lytiva.mqtt_client.Client", return_value=mock_mqtt_client):
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    # Mock device registry to fail removal
+    with patch("homeassistant.helpers.device_registry.DeviceRegistry.async_remove_device", side_effect=Exception("Remove failed")):
+        await discovery_callback(MockMsg("LYT/homeassistant/light/err_remove/config", "{}"))
         await hass.async_block_till_done()
 
-        # Trigger on_connect callback manually to fire subscriptions
-        mock_mqtt_client.on_connect(mock_mqtt_client, None, {}, 0)
-    
-    # Verify discovery and status topics are subscribed
-    subscribe_calls = [call[0][0] for call in mock_mqtt_client.subscribe.call_args_list]
-    assert "homeassistant/+/+/config" in subscribe_calls
-    assert "LYT/+/NODE/E/STATUS" in subscribe_calls
-    assert "LYT/+/GROUP/E/STATUS" in subscribe_calls
-
-
-async def test_discovery_prefix_option(
-    hass: HomeAssistant, mock_mqtt_client: MagicMock
-) -> None:
-    """Test custom discovery prefix from options."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="Lytiva Test",
-        data={
-            "broker": "192.168.1.100",
-            "port": 1883,
-        },
-        options={
-            "discovery_prefix": "custom_prefix",
-        },
-        unique_id="lytiva_test",
-    )
-    entry.add_to_hass(hass)
-    
-    with patch("homeassistant.components.lytiva.mqtt_client.Client", return_value=mock_mqtt_client):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-        # Trigger on_connect callback manually
-        mock_mqtt_client.on_connect(mock_mqtt_client, None, {}, 0)
-    
-    # Verify custom discovery prefix is used
-    subscribe_calls = [call[0][0] for call in mock_mqtt_client.subscribe.call_args_list]
-    assert "custom_prefix/+/+/config" in subscribe_calls
-
-
-async def test_mqtt_loop_start_failure(
-    hass: HomeAssistant, mock_mqtt_client: MagicMock, mock_config_entry
-) -> None:
-    """Test handling of MQTT loop_start failure."""
-    mock_config_entry.add_to_hass(hass)
-    
-    # Make loop_start fail
-    mock_mqtt_client.loop_start.side_effect = Exception("Loop start failed")
-    
-    with patch(
-        "homeassistant.components.lytiva.mqtt_client.Client",
-        return_value=mock_mqtt_client,
-    ):
-        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        assert result is False
-
-
-async def test_mqtt_disconnect_errors(
-    hass: HomeAssistant, mock_mqtt_client: MagicMock, setup_integration
-) -> None:
-    """Test error handling during MQTT disconnect."""
-    # Make disconnect operations fail
-    mock_mqtt_client.publish.side_effect = Exception("Publish failed")
-    mock_mqtt_client.loop_stop.side_effect = Exception("Loop stop failed")
-    mock_mqtt_client.disconnect.side_effect = Exception("Disconnect failed")
-    
-    # Should handle errors gracefully during unload
-    result = await hass.config_entries.async_unload(setup_integration.entry_id)
-    assert result is True
-
-
-async def test_mqtt_handler_publish_online_status_failure(
-    hass: HomeAssistant, mock_mqtt_client: MagicMock, mock_config_entry
-) -> None:
-    """Test handling of publish failure for online status."""
-    mock_config_entry.add_to_hass(hass)
-    
-    # Make publish fail
-    mock_mqtt_client.publish.side_effect = Exception("Publish failed")
-    
-    with patch(
-        "homeassistant.components.lytiva.mqtt_client.Client",
-        return_value=mock_mqtt_client,
-    ):
-        # Should still set up successfully even if publish fails
-        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        assert result is True
-        
-        # Trigger on_connect which tries to publish
-        if mock_mqtt_client.on_connect:
-            mock_mqtt_client.on_connect(mock_mqtt_client, None, {}, 0)
-            await hass.async_block_till_done()
-
-
-async def test_mqtt_fallback_message_handler(
-    hass: HomeAssistant, mock_mqtt_client: MagicMock, setup_integration
-) -> None:
-    """Test fallback message handler is called for unmatched topics."""
-    from tests.components.lytiva.test_mqtt_handler import MockMessage
-    
-    # Get the fallback handler
-    mqtt_handler = hass.data[DOMAIN][setup_integration.entry_id]["mqtt_handler"]
-    
-    # Create a message for an unmatched topic
-    msg = MockMessage("unmatched/topic", b"test")
-    
-    # Call the fallback handler directly
-    mqtt_handler._on_message_fallback(mock_mqtt_client, None, msg)
-    # Should just log debug, no error
-
-
-async def test_platform_forward_exception(
-    hass: HomeAssistant, mock_mqtt_client: MagicMock, mock_config_entry
-) -> None:
-    """Test exception during platform forwarding."""
-    mock_config_entry.add_to_hass(hass)
-    
-    with patch(
-        "homeassistant.components.lytiva.mqtt_client.Client",
-        return_value=mock_mqtt_client,
-    ):
-        with patch(
-            "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
-            side_effect=Exception("Platform forward failed"),
-        ):
-            result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
-            assert result is False
+    # Entity should be gone even if device removal failed
+    assert ent_reg.async_get_entity_id("light", DOMAIN, "err_remove") is None
