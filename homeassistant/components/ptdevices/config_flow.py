@@ -76,28 +76,29 @@ class PTDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
 
-        # Show user form when no input provided
-        if user_input is None:
-            return self.async_show_form(step_id="user", data_schema=_CONF_SCHEMA)
-
-        # Make sure the device isn't already configured
-        self._async_abort_entries_match({CONF_API_TOKEN: user_input[CONF_API_TOKEN]})
-
-        # Test the connection
         errors: dict[str, str] = {}
-        try:
-            title: str = await validate_input(self.hass, user_input)
-        except CannotConnect:
-            errors["base"] = "cannot_connect"
-        except InvalidAuth:
-            errors["base"] = "invalid_auth"
-        except MalformedResponse:
-            errors["base"] = "malformed_response"
-        else:
-            # Connection Successful
-            return self.async_create_entry(title=title, data=user_input)
 
-        # Connection Unsuccessful, show errors
+        # Test connection when user data is available
+        if user_input is not None:
+            # Make sure the device isn't already configured
+            self._async_abort_entries_match(
+                {CONF_API_TOKEN: user_input[CONF_API_TOKEN]}
+            )
+
+            # Test connection
+            try:
+                title: str = await validate_input(self.hass, user_input)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except MalformedResponse:
+                errors["base"] = "malformed_response"
+            else:
+                # Connection Successful
+                return self.async_create_entry(title=title, data=user_input)
+
+        # Show setup form
         return self.async_show_form(
             step_id="user", data_schema=_CONF_SCHEMA, errors=errors
         )
