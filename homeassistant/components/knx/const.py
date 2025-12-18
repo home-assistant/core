@@ -163,6 +163,7 @@ SUPPORTED_PLATFORMS_UI: Final = {
     Platform.CLIMATE,
     Platform.COVER,
     Platform.DATE,
+    Platform.FAN,
     Platform.DATETIME,
     Platform.LIGHT,
     Platform.SWITCH,
@@ -217,3 +218,9 @@ class ClimateConf:
     FAN_MAX_STEP: Final = "fan_max_step"
     FAN_SPEED_MODE: Final = "fan_speed_mode"
     FAN_ZERO_MODE: Final = "fan_zero_mode"
+
+
+class FanConf:
+    """Common config keys for fan."""
+
+    MAX_STEP: Final = "max_step"
