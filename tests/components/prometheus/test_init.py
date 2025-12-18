@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import datetime
 from http import HTTPStatus
-from typing import Any, Self
+from typing import Any
 from unittest import mock
 
 from freezegun import freeze_time
@@ -2979,31 +2979,6 @@ class InfoMetric(EntityMetric):
         """No required labels for info metrics."""
         return []
 
-    @classmethod
-    def fromFloor(cls, floor: fr.FloorEntry) -> Self:
-        """Create new metric based on a floor entry."""
-        return cls(
-            metric_name="floor_info",
-            floor=floor.floor_id,
-            floor_level=str(floor.level) if floor.level is not None else "",
-            floor_name=floor.name,
-        )
-
-    @classmethod
-    def fromArea(cls, area: ar.AreaEntry) -> Self:
-        """Create new metric based on an area entry."""
-        return cls(
-            metric_name="area_info",
-            area=area.id,
-            area_name=area.name,
-            floor=area.floor_id if area.floor_id is not None else "",
-        )
-
-    @classmethod
-    def fromEntityAndArea(cls, entity: er.RegistryEntry, area: ar.AreaEntry) -> Self:
-        """Create new metric based on a floor entry."""
-        return cls(metric_name="entity_info", entity=entity.entity_id, area=area.id)
-
 
 @pytest.mark.parametrize("namespace", [""])
 async def test_floor_metric(
@@ -3015,14 +2990,24 @@ async def test_floor_metric(
 
     # create a floor
     floor = floor_registry.async_create("Floor", level=1)
-    floor_metric = InfoMetric.fromFloor(floor)
+    floor_metric = InfoMetric(
+        metric_name="floor_info",
+        floor="floor",
+        floor_level="1",
+        floor_name="Floor",
+    )
     await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
     floor_metric.assert_in_metrics(body)
 
     # update floor
-    updated = floor_registry.async_update(floor.floor_id, level=99, name="Updated")
-    updated_metric = InfoMetric.fromFloor(updated)
+    floor_registry.async_update(floor.floor_id, level=99, name="Updated")
+    updated_metric = InfoMetric(
+        metric_name="floor_info",
+        floor="floor",
+        floor_level="99",
+        floor_name="Updated",
+    )
     await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
     floor_metric.assert_not_in_metrics(body)
@@ -3045,14 +3030,24 @@ async def test_area_metric(
     """Test area metric."""
     # create an area
     area = area_registry.async_create("Area")
-    area_metric = InfoMetric.fromArea(area)
+    area_metric = InfoMetric(
+        metric_name="area_info",
+        area="area",
+        area_name="Area",
+        floor="",
+    )
     await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
     area_metric.assert_in_metrics(body)
 
     # update area
-    updated = area_registry.async_update(area.id, name="Updated")
-    updated_metric = InfoMetric.fromArea(updated)
+    area_registry.async_update(area.id, name="Updated")
+    updated_metric = InfoMetric(
+        metric_name="area_info",
+        area="area",
+        area_name="Updated",
+        floor="",
+    )
     await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
     area_metric.assert_not_in_metrics(body)
@@ -3078,7 +3073,12 @@ async def test_delete_floor_of_area(
     # create floor and area
     floor = floor_registry.async_create("Floor", level=1)
     area = area_registry.async_create("Area", floor_id=floor.floor_id)
-    metric = InfoMetric.fromArea(area)
+    metric = InfoMetric(
+        metric_name="area_info",
+        area="area",
+        area_name="Area",
+        floor="floor",
+    )
     await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
     metric.assert_in_metrics(body)
@@ -3087,7 +3087,12 @@ async def test_delete_floor_of_area(
     floor_registry.async_delete(floor.floor_id)
     updated = area_registry.async_get_area(area.id)
     assert updated is not None
-    updated_metric = InfoMetric.fromArea(updated)
+    updated_metric = InfoMetric(
+        metric_name="area_info",
+        area="area",
+        area_name="Area",
+        floor="",
+    )
     await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
     metric.assert_not_in_metrics(body)
@@ -3107,7 +3112,9 @@ async def test_area_in_entity(
     # link an entity to an area
     sensor = sensor_entities["sensor_1"]
     area_1 = area_registry.async_create("Area 1")
-    metric_1 = InfoMetric.fromEntityAndArea(sensor, area_1)
+    metric_1 = InfoMetric(
+        metric_name="entity_info", entity="sensor.outside_temperature", area="area_1"
+    )
     entity_registry.async_update_entity(sensor.entity_id, area_id=area_1.id)
     await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
@@ -3115,7 +3122,9 @@ async def test_area_in_entity(
 
     # link entity to another area
     area_2 = area_registry.async_create("Area 2")
-    metric_2 = InfoMetric.fromEntityAndArea(sensor, area_2)
+    metric_2 = InfoMetric(
+        metric_name="entity_info", entity="sensor.outside_temperature", area="area_2"
+    )
     entity_registry.async_update_entity(sensor.entity_id, area_id=area_2.id)
     await hass.async_block_till_done()
     body = await generate_latest_metrics(client)
@@ -3155,9 +3164,17 @@ async def test_area_in_device(
 
     # create areas
     entity_area = area_registry.async_create("Entity Area")
-    entity_area_metric = InfoMetric.fromEntityAndArea(sensor, entity_area)
+    entity_area_metric = InfoMetric(
+        metric_name="entity_info",
+        entity="sensor.outside_temperature",
+        area="entity_area",
+    )
     device_area = area_registry.async_create("Device Area")
-    device_area_metric = InfoMetric.fromEntityAndArea(sensor, device_area)
+    device_area_metric = InfoMetric(
+        metric_name="entity_info",
+        entity="sensor.outside_temperature",
+        area="device_area",
+    )
 
     # no area yet
     await hass.async_block_till_done()
