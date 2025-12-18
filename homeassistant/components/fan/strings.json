@@ -1,4 +1,8 @@
 {
+  "common": {
+    "trigger_behavior_description": "The behavior of the targeted fans to trigger on.",
+    "trigger_behavior_name": "Behavior"
+  },
   "device_automation": {
     "action_type": {
       "toggle": "[%key:common::device_automation::action_type::toggle%]",
@@ -65,6 +69,13 @@
       "options": {
         "forward": "Forward",
         "reverse": "Reverse"
+      }
+    },
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
       }
     }
   },
@@ -152,5 +163,27 @@
       "name": "[%key:common::action::turn_on%]"
     }
   },
-  "title": "Fan"
+  "title": "Fan",
+  "triggers": {
+    "turned_off": {
+      "description": "Triggers after one or more fans turn off.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::fan::common::trigger_behavior_description%]",
+          "name": "[%key:component::fan::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Fan turned off"
+    },
+    "turned_on": {
+      "description": "Triggers after one or more fans turn on.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::fan::common::trigger_behavior_description%]",
+          "name": "[%key:component::fan::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Fan turned on"
+    }
+  }
 }

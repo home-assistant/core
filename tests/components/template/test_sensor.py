@@ -1456,7 +1456,7 @@ async def test_trigger_not_allowed_platform_config(
     state = hass.states.get(TEST_NAME)
     assert state is None
     assert (
-        "You can only add triggers to template entities if they are defined under `template:`."
+        "Invalid config for 'sensor' from integration 'template': 'trigger' is an invalid option for"
         in caplog_setup_text
     )
 

@@ -1,0 +1,21 @@
+.trigger_common: &trigger_common
+  target:
+    entity:
+      domain: climate
+  fields:
+    behavior:
+      required: true
+      default: any
+      selector:
+        select:
+          translation_key: trigger_behavior
+          options:
+            - first
+            - last
+            - any
+
+started_cooling: *trigger_common
+started_drying: *trigger_common
+started_heating: *trigger_common
+turned_off: *trigger_common
+turned_on: *trigger_common

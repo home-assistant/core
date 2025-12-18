@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 import datetime
+import logging
 
 from roborock.data import (
     DyadError,
@@ -16,12 +17,7 @@ from roborock.data import (
     ZeoError,
     ZeoState,
 )
-from roborock.roborock_message import (
-    RoborockDataProtocol,
-    RoborockDyadDataProtocol,
-    RoborockZeoProtocol,
-)
-from roborock.roborock_typing import DeviceProp
+from roborock.roborock_message import RoborockDyadDataProtocol, RoborockZeoProtocol
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -44,6 +40,9 @@ from .entity import (
     RoborockCoordinatedEntityV1,
     RoborockEntity,
 )
+from .models import DeviceState
+
+_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
@@ -52,9 +51,7 @@ PARALLEL_UPDATES = 0
 class RoborockSensorDescription(SensorEntityDescription):
     """A class that describes Roborock sensors."""
 
-    value_fn: Callable[[DeviceProp], StateType | datetime.datetime]
-
-    protocol_listener: RoborockDataProtocol | None = None
+    value_fn: Callable[[DeviceState], StateType | datetime.datetime]
 
     # If it is a dock entity
     is_dock_entity: bool = False
@@ -67,10 +64,10 @@ class RoborockSensorDescriptionA01(SensorEntityDescription):
     data_protocol: RoborockDyadDataProtocol | RoborockZeoProtocol
 
 
-def _dock_error_value_fn(properties: DeviceProp) -> str | None:
+def _dock_error_value_fn(state: DeviceState) -> str | None:
     if (
-        status := properties.status.dock_error_status
-    ) is not None and properties.status.dock_type != RoborockDockTypeCode.no_dock:
+        status := state.status.dock_error_status
+    ) is not None and state.status.dock_type != RoborockDockTypeCode.no_dock:
         return status.name
 
     return None
@@ -85,7 +82,6 @@ SENSOR_DESCRIPTIONS = [
         translation_key="main_brush_time_left",
         value_fn=lambda data: data.consumable.main_brush_time_left,
         entity_category=EntityCategory.DIAGNOSTIC,
-        protocol_listener=RoborockDataProtocol.MAIN_BRUSH_WORK_TIME,
     ),
     RoborockSensorDescription(
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -95,7 +91,6 @@ SENSOR_DESCRIPTIONS = [
         translation_key="side_brush_time_left",
         value_fn=lambda data: data.consumable.side_brush_time_left,
         entity_category=EntityCategory.DIAGNOSTIC,
-        protocol_listener=RoborockDataProtocol.SIDE_BRUSH_WORK_TIME,
     ),
     RoborockSensorDescription(
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -105,7 +100,6 @@ SENSOR_DESCRIPTIONS = [
         translation_key="filter_time_left",
         value_fn=lambda data: data.consumable.filter_time_left,
         entity_category=EntityCategory.DIAGNOSTIC,
-        protocol_listener=RoborockDataProtocol.FILTER_WORK_TIME,
     ),
     RoborockSensorDescription(
         native_unit_of_measurement=UnitOfTime.HOURS,
@@ -166,7 +160,6 @@ SENSOR_DESCRIPTIONS = [
         value_fn=lambda data: data.status.state_name,
         entity_category=EntityCategory.DIAGNOSTIC,
         options=RoborockStateCode.keys(),
-        protocol_listener=RoborockDataProtocol.STATE,
     ),
     RoborockSensorDescription(
         key="cleaning_area",
@@ -189,7 +182,6 @@ SENSOR_DESCRIPTIONS = [
         value_fn=lambda data: data.status.error_code_name,
         entity_category=EntityCategory.DIAGNOSTIC,
         options=RoborockErrorCode.keys(),
-        protocol_listener=RoborockDataProtocol.ERROR_CODE,
     ),
     RoborockSensorDescription(
         key="battery",
@@ -197,23 +189,26 @@ SENSOR_DESCRIPTIONS = [
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
-        protocol_listener=RoborockDataProtocol.BATTERY,
     ),
     RoborockSensorDescription(
         key="last_clean_start",
         translation_key="last_clean_start",
-        value_fn=lambda data: data.last_clean_record.begin_datetime
-        if data.last_clean_record is not None
-        else None,
+        value_fn=lambda data: (
+            data.clean_summary.last_clean_record.begin_datetime
+            if data.clean_summary.last_clean_record is not None
+            else None
+        ),
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
     RoborockSensorDescription(
         key="last_clean_end",
         translation_key="last_clean_end",
-        value_fn=lambda data: data.last_clean_record.end_datetime
-        if data.last_clean_record is not None
-        else None,
+        value_fn=lambda data: (
+            data.clean_summary.last_clean_record.end_datetime
+            if data.clean_summary.last_clean_record is not None
+            else None
+        ),
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
@@ -245,7 +240,6 @@ SENSOR_DESCRIPTIONS = [
         is_dock_entity=True,
     ),
 ]
-
 
 A01_SENSOR_DESCRIPTIONS: list[RoborockSensorDescriptionA01] = [
     RoborockSensorDescriptionA01(
@@ -340,6 +334,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Roborock vacuum sensors."""
     coordinators = config_entry.runtime_data
+
     entities: list[RoborockEntity] = [
         RoborockSensorEntity(
             coordinator,
@@ -347,7 +342,7 @@ async def async_setup_entry(
         )
         for coordinator in coordinators.v1
         for description in SENSOR_DESCRIPTIONS
-        if description.value_fn(coordinator.roborock_device_info.props) is not None
+        if description.value_fn(coordinator.data) is not None
     ]
     entities.extend(RoborockCurrentRoom(coordinator) for coordinator in coordinators.v1)
     entities.extend(
@@ -357,7 +352,7 @@ async def async_setup_entry(
         )
         for coordinator in coordinators.a01
         for description in A01_SENSOR_DESCRIPTIONS
-        if description.data_protocol in coordinator.data
+        if description.data_protocol in coordinator.request_protocols
     )
     async_add_entities(entities)
 
@@ -377,16 +372,13 @@ class RoborockSensorEntity(RoborockCoordinatedEntityV1, SensorEntity):
         super().__init__(
             f"{description.key}_{coordinator.duid_slug}",
             coordinator,
-            description.protocol_listener,
             is_dock_entity=description.is_dock_entity,
         )
 
     @property
     def native_value(self) -> StateType | datetime.datetime:
         """Return the value reported by the sensor."""
-        return self.entity_description.value_fn(
-            self.coordinator.roborock_device_info.props
-        )
+        return self.entity_description.value_fn(self.coordinator.data)
 
 
 class RoborockCurrentRoom(RoborockCoordinatedEntityV1, SensorEntity):
@@ -404,30 +396,29 @@ class RoborockCurrentRoom(RoborockCoordinatedEntityV1, SensorEntity):
         super().__init__(
             f"current_room_{coordinator.duid_slug}",
             coordinator,
-            None,
             is_dock_entity=False,
         )
+        self._home_trait = coordinator.properties_api.home
+        self._map_content_trait = coordinator.properties_api.map_content
 
     @property
     def options(self) -> list[str]:
         """Return the currently valid rooms."""
-        if (
-            self.coordinator.current_map is not None
-            and self.coordinator.current_map in self.coordinator.maps
-        ):
-            return list(
-                self.coordinator.maps[self.coordinator.current_map].rooms.values()
-            )
+        if self._home_trait.current_map_data is not None:
+            return [room.name for room in self._home_trait.current_map_data.rooms]
         return []
 
     @property
     def native_value(self) -> str | None:
         """Return the value reported by the sensor."""
         if (
-            self.coordinator.current_map is not None
-            and self.coordinator.current_map in self.coordinator.maps
+            self._home_trait.current_map_data is not None
+            and self._map_content_trait.map_data is not None
+            and self._map_content_trait.map_data.vacuum_room is not None
         ):
-            return self.coordinator.maps[self.coordinator.current_map].current_room
+            for room in self._home_trait.current_map_data.rooms:
+                if room.segment_id == self._map_content_trait.map_data.vacuum_room:
+                    return room.name
         return None
 
 

@@ -43,7 +43,14 @@ async def test_button(
 @pytest.mark.usefixtures("full_model")
 @pytest.mark.parametrize(
     "command",
-    ["start_climatization", "stop_climatization", "flash", "honk", "honk_flash"],
+    [
+        "start_climatization",
+        "stop_climatization",
+        "flash",
+        "honk",
+        "honk_flash",
+        "lock_reduced_guard",
+    ],
 )
 async def test_button_press(
     hass: HomeAssistant,
@@ -72,7 +79,14 @@ async def test_button_press(
 @pytest.mark.usefixtures("full_model")
 @pytest.mark.parametrize(
     "command",
-    ["start_climatization", "stop_climatization", "flash", "honk", "honk_flash"],
+    [
+        "start_climatization",
+        "stop_climatization",
+        "flash",
+        "honk",
+        "honk_flash",
+        "lock_reduced_guard",
+    ],
 )
 async def test_button_press_error(
     hass: HomeAssistant,
@@ -99,7 +113,14 @@ async def test_button_press_error(
 @pytest.mark.usefixtures("full_model")
 @pytest.mark.parametrize(
     "command",
-    ["start_climatization", "stop_climatization", "flash", "honk", "honk_flash"],
+    [
+        "start_climatization",
+        "stop_climatization",
+        "flash",
+        "honk",
+        "honk_flash",
+        "lock_reduced_guard",
+    ],
 )
 async def test_button_press_failure(
     hass: HomeAssistant,

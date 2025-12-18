@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator, Callable, Generator
+from collections.abc import AsyncGenerator, Callable, Coroutine, Generator, Mapping
 from functools import lru_cache
 from importlib.util import find_spec
 from pathlib import Path
@@ -34,7 +34,17 @@ from homeassistant.config_entries import (
     OptionsFlowManager,
 )
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.core import Context, HomeAssistant, ServiceRegistry, ServiceResponse
+from homeassistant.core import (
+    Context,
+    EntityServiceResponse,
+    HassJobType,
+    HomeAssistant,
+    ServiceCall,
+    ServiceRegistry,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
 from homeassistant.data_entry_flow import (
     FlowContext,
     FlowHandler,
@@ -45,6 +55,7 @@ from homeassistant.data_entry_flow import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.translation import async_get_translations
+from homeassistant.helpers.typing import VolSchemaType
 from homeassistant.util import yaml as yaml_util
 
 from tests.common import QualityScaleStatus, get_quality_scale
@@ -624,7 +635,7 @@ async def _validate_translation(
     category: str,
     component: str,
     key: str,
-    description_placeholders: dict[str, str] | None,
+    description_placeholders: Mapping[str, str] | None,
     *,
     translation_required: bool = True,
 ) -> None:
@@ -649,6 +660,13 @@ async def _validate_translation(
 
     translations = await async_get_translations(hass, "en", category, [component])
 
+    if full_key.endswith("."):
+        for subkey, translation in translations.items():
+            if subkey.startswith(full_key):
+                _validate_translation_placeholders(
+                    subkey, translation, description_placeholders, translation_errors
+                )
+        return
     if (translation := translations.get(full_key)) is not None:
         _validate_translation_placeholders(
             full_key, translation, description_placeholders, translation_errors
@@ -921,6 +939,27 @@ async def _check_exception_translation(
     )
 
 
+async def _check_service_registration_translation(
+    hass: HomeAssistant,
+    domain: str,
+    service_name: str,
+    description_placeholders: Mapping[str, str] | None,
+    translation_errors: dict[str, str],
+    ignore_translations_for_mock_domains: set[str],
+) -> None:
+    # Use trailing . to check all subkeys
+    # This validates placeholders only, and only if the translation exists
+    await _validate_translation(
+        hass,
+        translation_errors,
+        ignore_translations_for_mock_domains,
+        "services",
+        domain,
+        f"{service_name}.",
+        description_placeholders,
+    )
+
+
 @pytest.fixture(autouse=True)
 async def check_translations(
     ignore_missing_translations: str | list[str],
@@ -951,6 +990,7 @@ async def check_translations(
     _original_flow_manager_async_handle_step = FlowManager._async_handle_step
     _original_issue_registry_async_create_issue = ir.IssueRegistry.async_get_or_create
     _original_service_registry_async_call = ServiceRegistry.async_call
+    _original_service_registry_async_register = ServiceRegistry.async_register
 
     # Prepare override functions
     async def _flow_manager_async_handle_step(
@@ -964,7 +1004,7 @@ async def check_translations(
 
     def _issue_registry_async_create_issue(
         self: ir.IssueRegistry, domain: str, issue_id: str, *args, **kwargs
-    ) -> None:
+    ) -> ir.IssueEntry:
         result = _original_issue_registry_async_create_issue(
             self, domain, issue_id, *args, **kwargs
         )
@@ -1008,6 +1048,45 @@ async def check_translations(
             )
             raise
 
+    @callback
+    def _service_registry_async_register(
+        self: ServiceRegistry,
+        domain: str,
+        service: str,
+        service_func: Callable[
+            [ServiceCall],
+            Coroutine[Any, Any, ServiceResponse | EntityServiceResponse]
+            | ServiceResponse
+            | EntityServiceResponse
+            | None,
+        ],
+        schema: VolSchemaType | None = None,
+        supports_response: SupportsResponse = SupportsResponse.NONE,
+        job_type: HassJobType | None = None,
+        *,
+        description_placeholders: Mapping[str, str] | None = None,
+    ) -> None:
+        translation_coros.add(
+            _check_service_registration_translation(
+                self._hass,
+                domain,
+                service,
+                description_placeholders,
+                translation_errors,
+                ignored_domains,
+            )
+        )
+        _original_service_registry_async_register(
+            self,
+            domain,
+            service,
+            service_func,
+            schema,
+            supports_response,
+            job_type,
+            description_placeholders=description_placeholders,
+        )
+
     # Use override functions
     with (
         patch(
@@ -1021,6 +1100,10 @@ async def check_translations(
         patch(
             "homeassistant.core.ServiceRegistry.async_call",
             _service_registry_async_call,
+        ),
+        patch(
+            "homeassistant.core.ServiceRegistry.async_register",
+            _service_registry_async_register,
         ),
     ):
         yield

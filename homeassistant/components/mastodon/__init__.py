@@ -25,7 +25,7 @@ from homeassistant.util import slugify
 
 from .const import CONF_BASE_URL, DOMAIN, LOGGER
 from .coordinator import MastodonConfigEntry, MastodonCoordinator, MastodonData
-from .services import setup_services
+from .services import async_setup_services
 from .utils import construct_mastodon_username, create_mastodon_client
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -35,7 +35,7 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Mastodon component."""
-    setup_services(hass)
+    async_setup_services(hass)
     return True
 
 

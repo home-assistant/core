@@ -13,9 +13,9 @@ async def test_entry_unload(
 ) -> None:
     """Test unloading the entry."""
     entry = hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, "tibber")
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
     await hass.config_entries.async_unload(entry.entry_id)
     mock_tibber_setup.rt_disconnect.assert_called_once()
     await hass.async_block_till_done(wait_background_tasks=True)
-    assert entry.state == ConfigEntryState.NOT_LOADED
+    assert entry.state is ConfigEntryState.NOT_LOADED

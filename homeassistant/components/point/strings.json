@@ -33,5 +33,10 @@
         "title": "[%key:common::config_flow::title::reauth%]"
       }
     }
+  },
+  "exceptions": {
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    }
   }
 }

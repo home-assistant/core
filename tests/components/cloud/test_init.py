@@ -11,6 +11,7 @@ from homeassistant.components.cloud import (
     CloudNotAvailable,
     CloudNotConnected,
     async_get_or_create_cloudhook,
+    async_listen_cloudhook_change,
     async_listen_connection_change,
     async_remote_ui_url,
 )
@@ -47,6 +48,9 @@ async def test_constructor_loads_info_from_config(hass: HomeAssistant) -> None:
                     "accounts_server": "test-acounts-server",
                     "acme_server": "test-acme-server",
                     "remotestate_server": "test-remotestate-server",
+                    "discovery_service_actions": {
+                        "lorem_ipsum": "https://lorem.ipsum/test-url"
+                    },
                 },
             },
         )
@@ -63,6 +67,10 @@ async def test_constructor_loads_info_from_config(hass: HomeAssistant) -> None:
     assert cl.acme_server == "test-acme-server"
     assert cl.api_server == "test-api-server"
     assert cl.remotestate_server == "test-remotestate-server"
+    assert (
+        cl.service_discovery._action_overrides["lorem_ipsum"]
+        == "https://lorem.ipsum/test-url"
+    )
 
 
 @pytest.mark.usefixtures("mock_cloud_fixture")
@@ -304,3 +312,149 @@ async def test_cloud_logout(
     await hass.async_block_till_done()
 
     assert cloud.is_logged_in is False
+
+
+async def test_async_listen_cloudhook_change(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+    set_cloud_prefs: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
+) -> None:
+    """Test async_listen_cloudhook_change."""
+    assert await async_setup_component(hass, "cloud", {"cloud": {}})
+    await hass.async_block_till_done()
+    await cloud.login("test-user", "test-pass")
+
+    webhook_id = "mock-webhook-id"
+    cloudhook_url = "https://cloudhook.nabu.casa/abcdefg"
+
+    # Set up initial cloudhooks state
+    await set_cloud_prefs(
+        {
+            PREF_CLOUDHOOKS: {
+                webhook_id: {
+                    "webhook_id": webhook_id,
+                    "cloudhook_id": "random-id",
+                    "cloudhook_url": cloudhook_url,
+                    "managed": True,
+                }
+            }
+        }
+    )
+
+    # Track cloudhook changes
+    changes = []
+    changeInvoked = False
+
+    def on_change(cloudhook: dict[str, Any] | None) -> None:
+        """Handle cloudhook change."""
+        nonlocal changeInvoked
+        changes.append(cloudhook)
+        changeInvoked = True
+
+    # Register the change listener
+    unsubscribe = async_listen_cloudhook_change(hass, webhook_id, on_change)
+
+    # Verify no changes yet
+    assert len(changes) == 0
+    assert changeInvoked is False
+
+    # Delete the cloudhook by updating prefs
+    await set_cloud_prefs({PREF_CLOUDHOOKS: {}})
+    await hass.async_block_till_done()
+
+    # Verify deletion callback was called with None
+    assert len(changes) == 1
+    assert changes[-1] is None
+    assert changeInvoked is True
+
+    # Reset changeInvoked to detect next change
+    changeInvoked = False
+
+    # Add cloudhook back
+    cloudhook_data = {
+        "webhook_id": webhook_id,
+        "cloudhook_id": "random-id",
+        "cloudhook_url": cloudhook_url,
+        "managed": True,
+    }
+    await set_cloud_prefs({PREF_CLOUDHOOKS: {webhook_id: cloudhook_data}})
+    await hass.async_block_till_done()
+
+    # Verify callback called with cloudhook data
+    assert len(changes) == 2
+    assert changes[-1] == cloudhook_data
+    assert changeInvoked is True
+
+    # Reset changeInvoked to detect next change
+    changeInvoked = False
+
+    # Update cloudhook data with same cloudhook should not trigger callback
+    await set_cloud_prefs({PREF_CLOUDHOOKS: {webhook_id: cloudhook_data}})
+    await hass.async_block_till_done()
+
+    assert changeInvoked is False
+
+    # Unsubscribe from listener
+    unsubscribe()
+
+    # Delete cloudhook again
+    await set_cloud_prefs({PREF_CLOUDHOOKS: {}})
+    await hass.async_block_till_done()
+
+    # Verify change callback was NOT called after unsubscribe
+    assert len(changes) == 2
+    assert changeInvoked is False
+
+
+async def test_async_listen_cloudhook_change_cloud_setup_later(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+    set_cloud_prefs: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
+) -> None:
+    """Test async_listen_cloudhook_change works when cloud is set up after listener registration."""
+    webhook_id = "mock-webhook-id"
+    cloudhook_url = "https://cloudhook.nabu.casa/abcdefg"
+
+    # Track cloudhook changes
+    changes: list[dict[str, Any] | None] = []
+
+    def on_change(cloudhook: dict[str, Any] | None) -> None:
+        """Handle cloudhook change."""
+        changes.append(cloudhook)
+
+    # Register listener BEFORE cloud is set up
+    unsubscribe = async_listen_cloudhook_change(hass, webhook_id, on_change)
+
+    # Verify it returns a callable
+    assert callable(unsubscribe)
+
+    # No changes yet since cloud isn't set up
+    assert len(changes) == 0
+
+    # Now set up cloud
+    assert await async_setup_component(hass, "cloud", {"cloud": {}})
+    await hass.async_block_till_done()
+    await cloud.login("test-user", "test-pass")
+
+    # Add a cloudhook - this should trigger the listener
+    cloudhook_data = {
+        "webhook_id": webhook_id,
+        "cloudhook_id": "random-id",
+        "cloudhook_url": cloudhook_url,
+        "managed": True,
+    }
+    await set_cloud_prefs({PREF_CLOUDHOOKS: {webhook_id: cloudhook_data}})
+    await hass.async_block_till_done()
+
+    # Verify the listener received the update
+    assert len(changes) == 1
+    assert changes[-1] == cloudhook_data
+
+    # Unsubscribe and verify no more updates
+    unsubscribe()
+
+    await set_cloud_prefs({PREF_CLOUDHOOKS: {}})
+    await hass.async_block_till_done()
+
+    # Should not receive update after unsubscribe
+    assert len(changes) == 1

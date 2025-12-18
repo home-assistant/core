@@ -83,28 +83,28 @@ CONDITION_CLASSES = {
     ATTR_CONDITION_EXCEPTIONAL,
 }
 
-CONF_WEATHER = "weather"
-CONF_TEMPERATURE_TEMPLATE = "temperature_template"
-CONF_HUMIDITY_TEMPLATE = "humidity_template"
-CONF_CONDITION_TEMPLATE = "condition_template"
+CONF_APPARENT_TEMPERATURE_TEMPLATE = "apparent_temperature_template"
 CONF_ATTRIBUTION_TEMPLATE = "attribution_template"
-CONF_PRESSURE_TEMPLATE = "pressure_template"
-CONF_WIND_SPEED_TEMPLATE = "wind_speed_template"
-CONF_WIND_BEARING_TEMPLATE = "wind_bearing_template"
-CONF_OZONE_TEMPLATE = "ozone_template"
-CONF_UV_INDEX_TEMPLATE = "uv_index_template"
-CONF_VISIBILITY_TEMPLATE = "visibility_template"
+CONF_CLOUD_COVERAGE_TEMPLATE = "cloud_coverage_template"
+CONF_CONDITION_TEMPLATE = "condition_template"
+CONF_DEW_POINT_TEMPLATE = "dew_point_template"
 CONF_FORECAST_DAILY_TEMPLATE = "forecast_daily_template"
 CONF_FORECAST_HOURLY_TEMPLATE = "forecast_hourly_template"
 CONF_FORECAST_TWICE_DAILY_TEMPLATE = "forecast_twice_daily_template"
-CONF_PRESSURE_UNIT = "pressure_unit"
-CONF_WIND_SPEED_UNIT = "wind_speed_unit"
-CONF_VISIBILITY_UNIT = "visibility_unit"
+CONF_HUMIDITY_TEMPLATE = "humidity_template"
+CONF_OZONE_TEMPLATE = "ozone_template"
 CONF_PRECIPITATION_UNIT = "precipitation_unit"
+CONF_PRESSURE_TEMPLATE = "pressure_template"
+CONF_PRESSURE_UNIT = "pressure_unit"
+CONF_TEMPERATURE_TEMPLATE = "temperature_template"
+CONF_UV_INDEX_TEMPLATE = "uv_index_template"
+CONF_VISIBILITY_TEMPLATE = "visibility_template"
+CONF_VISIBILITY_UNIT = "visibility_unit"
+CONF_WEATHER = "weather"
+CONF_WIND_BEARING_TEMPLATE = "wind_bearing_template"
 CONF_WIND_GUST_SPEED_TEMPLATE = "wind_gust_speed_template"
-CONF_CLOUD_COVERAGE_TEMPLATE = "cloud_coverage_template"
-CONF_DEW_POINT_TEMPLATE = "dew_point_template"
-CONF_APPARENT_TEMPERATURE_TEMPLATE = "apparent_temperature_template"
+CONF_WIND_SPEED_TEMPLATE = "wind_speed_template"
+CONF_WIND_SPEED_UNIT = "wind_speed_unit"
 
 DEFAULT_NAME = "Template Weather"
 
@@ -198,27 +198,27 @@ class StateWeatherEntity(TemplateEntity, WeatherEntity):
         """Initialize the Template weather."""
         super().__init__(hass, config, unique_id)
 
-        self._condition_template = config[CONF_CONDITION_TEMPLATE]
-        self._temperature_template = config[CONF_TEMPERATURE_TEMPLATE]
-        self._humidity_template = config[CONF_HUMIDITY_TEMPLATE]
+        self._apparent_temperature_template = config.get(
+            CONF_APPARENT_TEMPERATURE_TEMPLATE
+        )
         self._attribution_template = config.get(CONF_ATTRIBUTION_TEMPLATE)
-        self._pressure_template = config.get(CONF_PRESSURE_TEMPLATE)
-        self._wind_speed_template = config.get(CONF_WIND_SPEED_TEMPLATE)
-        self._wind_bearing_template = config.get(CONF_WIND_BEARING_TEMPLATE)
-        self._ozone_template = config.get(CONF_OZONE_TEMPLATE)
-        self._uv_index_template = config.get(CONF_UV_INDEX_TEMPLATE)
-        self._visibility_template = config.get(CONF_VISIBILITY_TEMPLATE)
+        self._cloud_coverage_template = config.get(CONF_CLOUD_COVERAGE_TEMPLATE)
+        self._condition_template = config[CONF_CONDITION_TEMPLATE]
+        self._dew_point_template = config.get(CONF_DEW_POINT_TEMPLATE)
         self._forecast_daily_template = config.get(CONF_FORECAST_DAILY_TEMPLATE)
         self._forecast_hourly_template = config.get(CONF_FORECAST_HOURLY_TEMPLATE)
         self._forecast_twice_daily_template = config.get(
             CONF_FORECAST_TWICE_DAILY_TEMPLATE
         )
+        self._humidity_template = config[CONF_HUMIDITY_TEMPLATE]
+        self._ozone_template = config.get(CONF_OZONE_TEMPLATE)
+        self._pressure_template = config.get(CONF_PRESSURE_TEMPLATE)
+        self._temperature_template = config[CONF_TEMPERATURE_TEMPLATE]
+        self._uv_index_template = config.get(CONF_UV_INDEX_TEMPLATE)
+        self._visibility_template = config.get(CONF_VISIBILITY_TEMPLATE)
+        self._wind_bearing_template = config.get(CONF_WIND_BEARING_TEMPLATE)
         self._wind_gust_speed_template = config.get(CONF_WIND_GUST_SPEED_TEMPLATE)
-        self._cloud_coverage_template = config.get(CONF_CLOUD_COVERAGE_TEMPLATE)
-        self._dew_point_template = config.get(CONF_DEW_POINT_TEMPLATE)
-        self._apparent_temperature_template = config.get(
-            CONF_APPARENT_TEMPERATURE_TEMPLATE
-        )
+        self._wind_speed_template = config.get(CONF_WIND_SPEED_TEMPLATE)
 
         self._attr_native_precipitation_unit = config.get(CONF_PRECIPITATION_UNIT)
         self._attr_native_pressure_unit = config.get(CONF_PRESSURE_UNIT)
@@ -226,23 +226,23 @@ class StateWeatherEntity(TemplateEntity, WeatherEntity):
         self._attr_native_visibility_unit = config.get(CONF_VISIBILITY_UNIT)
         self._attr_native_wind_speed_unit = config.get(CONF_WIND_SPEED_UNIT)
 
-        self._condition = None
-        self._temperature = None
-        self._humidity = None
-        self._attribution = None
-        self._pressure = None
-        self._wind_speed = None
-        self._wind_bearing = None
-        self._ozone = None
-        self._uv_index = None
-        self._visibility = None
-        self._wind_gust_speed = None
-        self._cloud_coverage = None
-        self._dew_point = None
         self._apparent_temperature = None
+        self._attribution = None
+        self._cloud_coverage = None
+        self._condition = None
+        self._dew_point = None
         self._forecast_daily: list[Forecast] = []
         self._forecast_hourly: list[Forecast] = []
         self._forecast_twice_daily: list[Forecast] = []
+        self._humidity = None
+        self._ozone = None
+        self._pressure = None
+        self._temperature = None
+        self._uv_index = None
+        self._visibility = None
+        self._wind_bearing = None
+        self._wind_gust_speed = None
+        self._wind_speed = None
 
         self._attr_supported_features = 0
         if self._forecast_daily_template:
@@ -340,78 +340,32 @@ class StateWeatherEntity(TemplateEntity, WeatherEntity):
     def _async_setup_templates(self) -> None:
         """Set up templates."""
 
-        if self._condition_template:
+        if self._apparent_temperature_template:
             self.add_template_attribute(
-                "_condition",
-                self._condition_template,
-                lambda condition: condition if condition in CONDITION_CLASSES else None,
-            )
-        if self._temperature_template:
-            self.add_template_attribute(
-                "_temperature",
-                self._temperature_template,
-            )
-        if self._humidity_template:
-            self.add_template_attribute(
-                "_humidity",
-                self._humidity_template,
+                "_apparent_temperature",
+                self._apparent_temperature_template,
             )
         if self._attribution_template:
             self.add_template_attribute(
                 "_attribution",
                 self._attribution_template,
             )
-        if self._pressure_template:
-            self.add_template_attribute(
-                "_pressure",
-                self._pressure_template,
-            )
-        if self._wind_speed_template:
-            self.add_template_attribute(
-                "_wind_speed",
-                self._wind_speed_template,
-            )
-        if self._wind_bearing_template:
-            self.add_template_attribute(
-                "_wind_bearing",
-                self._wind_bearing_template,
-            )
-        if self._ozone_template:
-            self.add_template_attribute(
-                "_ozone",
-                self._ozone_template,
-            )
-        if self._uv_index_template:
-            self.add_template_attribute(
-                "_uv_index",
-                self._uv_index_template,
-            )
-        if self._visibility_template:
-            self.add_template_attribute(
-                "_visibility",
-                self._visibility_template,
-            )
-        if self._wind_gust_speed_template:
-            self.add_template_attribute(
-                "_wind_gust_speed",
-                self._wind_gust_speed_template,
-            )
         if self._cloud_coverage_template:
             self.add_template_attribute(
                 "_cloud_coverage",
                 self._cloud_coverage_template,
+            )
+        if self._condition_template:
+            self.add_template_attribute(
+                "_condition",
+                self._condition_template,
+                lambda condition: condition if condition in CONDITION_CLASSES else None,
             )
         if self._dew_point_template:
             self.add_template_attribute(
                 "_dew_point",
                 self._dew_point_template,
             )
-        if self._apparent_temperature_template:
-            self.add_template_attribute(
-                "_apparent_temperature",
-                self._apparent_temperature_template,
-            )
-
         if self._forecast_daily_template:
             self.add_template_attribute(
                 "_forecast_daily",
@@ -432,6 +386,51 @@ class StateWeatherEntity(TemplateEntity, WeatherEntity):
                 self._forecast_twice_daily_template,
                 on_update=partial(self._update_forecast, "twice_daily"),
                 validator=partial(self._validate_forecast, "twice_daily"),
+            )
+        if self._humidity_template:
+            self.add_template_attribute(
+                "_humidity",
+                self._humidity_template,
+            )
+        if self._ozone_template:
+            self.add_template_attribute(
+                "_ozone",
+                self._ozone_template,
+            )
+        if self._pressure_template:
+            self.add_template_attribute(
+                "_pressure",
+                self._pressure_template,
+            )
+        if self._temperature_template:
+            self.add_template_attribute(
+                "_temperature",
+                self._temperature_template,
+            )
+        if self._uv_index_template:
+            self.add_template_attribute(
+                "_uv_index",
+                self._uv_index_template,
+            )
+        if self._visibility_template:
+            self.add_template_attribute(
+                "_visibility",
+                self._visibility_template,
+            )
+        if self._wind_bearing_template:
+            self.add_template_attribute(
+                "_wind_bearing",
+                self._wind_bearing_template,
+            )
+        if self._wind_gust_speed_template:
+            self.add_template_attribute(
+                "_wind_gust_speed",
+                self._wind_gust_speed_template,
+            )
+        if self._wind_speed_template:
+            self.add_template_attribute(
+                "_wind_speed",
+                self._wind_speed_template,
             )
 
         super()._async_setup_templates()

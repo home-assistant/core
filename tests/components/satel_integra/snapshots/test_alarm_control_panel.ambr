@@ -1,0 +1,84 @@
+# serializer version: 1
+# name: test_alarm_control_panel[alarm_control_panel.home-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'alarm_control_panel',
+    'entity_category': None,
+    'entity_id': 'alarm_control_panel.home',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'satel_integra',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <AlarmControlPanelEntityFeature: 3>,
+    'translation_key': None,
+    'unique_id': '1234567890_alarm_panel_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_alarm_control_panel[alarm_control_panel.home-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'changed_by': None,
+      'code_arm_required': True,
+      'code_format': <CodeFormat.NUMBER: 'number'>,
+      'friendly_name': 'Home',
+      'supported_features': <AlarmControlPanelEntityFeature: 3>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'alarm_control_panel.home',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'disarmed',
+  })
+# ---
+# name: test_alarm_control_panel[device]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'satel_integra',
+        '1234567890_alarm_panel_1',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': None,
+    'model': None,
+    'model_id': None,
+    'name': 'Home',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---

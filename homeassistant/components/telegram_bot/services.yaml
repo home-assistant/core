@@ -35,12 +35,6 @@ send_message:
     disable_web_page_preview:
       selector:
         boolean:
-    timeout:
-      selector:
-        number:
-          min: 1
-          max: 3600
-          unit_of_measurement: seconds
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
@@ -157,12 +151,6 @@ send_photo:
     disable_notification:
       selector:
         boolean:
-    timeout:
-      selector:
-        number:
-          min: 1
-          max: 3600
-          unit_of_measurement: seconds
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
@@ -237,12 +225,6 @@ send_sticker:
     disable_notification:
       selector:
         boolean:
-    timeout:
-      selector:
-        number:
-          min: 1
-          max: 3600
-          unit_of_measurement: seconds
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
@@ -326,12 +308,6 @@ send_animation:
     disable_notification:
       selector:
         boolean:
-    timeout:
-      selector:
-        number:
-          min: 1
-          max: 3600
-          unit_of_measurement: seconds
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
@@ -415,12 +391,6 @@ send_video:
     disable_notification:
       selector:
         boolean:
-    timeout:
-      selector:
-        number:
-          min: 1
-          max: 3600
-          unit_of_measurement: seconds
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
@@ -495,12 +465,6 @@ send_voice:
     disable_notification:
       selector:
         boolean:
-    timeout:
-      selector:
-        number:
-          min: 1
-          max: 3600
-          unit_of_measurement: seconds
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
@@ -584,12 +548,6 @@ send_document:
     disable_notification:
       selector:
         boolean:
-    timeout:
-      selector:
-        number:
-          min: 1
-          max: 3600
-          unit_of_measurement: seconds
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
@@ -644,12 +602,6 @@ send_location:
     disable_notification:
       selector:
         boolean:
-    timeout:
-      selector:
-        number:
-          min: 1
-          max: 3600
-          unit_of_measurement: seconds
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
@@ -711,12 +663,6 @@ send_poll:
     disable_notification:
       selector:
         boolean:
-    timeout:
-      selector:
-        number:
-          min: 1
-          max: 3600
-          unit_of_measurement: seconds
     reply_to_message_id:
       selector:
         number:
@@ -785,12 +731,6 @@ edit_message_media:
       example: 12345
       selector:
         text:
-    timeout:
-      selector:
-        number:
-          min: 1
-          max: 3600
-          unit_of_measurement: seconds
     media_type:
       selector:
         select:
@@ -916,12 +856,6 @@ answer_callback_query:
       required: true
       selector:
         boolean:
-    timeout:
-      selector:
-        number:
-          min: 1
-          max: 3600
-          unit_of_measurement: seconds
 
 delete_message:
   fields:

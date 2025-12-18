@@ -42,7 +42,7 @@ async def test_set_webhooks_failed(
         assert mock_set_webhook.call_count == 2
 
         # SETUP_ERROR is result of ConfigEntryNotReady("Failed to register webhook with Telegram") in webhooks.py
-        assert mock_webhooks_config_entry.state == ConfigEntryState.SETUP_ERROR
+        assert mock_webhooks_config_entry.state is ConfigEntryState.SETUP_ERROR
 
         # test fail after retries
 
@@ -55,7 +55,7 @@ async def test_set_webhooks_failed(
         # 3 retries
         assert mock_set_webhook.call_count == 3
 
-        assert mock_webhooks_config_entry.state == ConfigEntryState.SETUP_ERROR
+        assert mock_webhooks_config_entry.state is ConfigEntryState.SETUP_ERROR
         await hass.async_block_till_done()
 
 
@@ -72,12 +72,12 @@ async def test_set_webhooks(
 
     await hass.async_block_till_done()
 
-    assert mock_webhooks_config_entry.state == ConfigEntryState.LOADED
+    assert mock_webhooks_config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_webhooks_update_invalid_json(
     hass: HomeAssistant,
-    webhook_platform,
+    webhook_bot,
     hass_client: ClientSessionGenerator,
     mock_generate_secret_token,
 ) -> None:
@@ -95,8 +95,7 @@ async def test_webhooks_update_invalid_json(
 
 async def test_webhooks_unauthorized_network(
     hass: HomeAssistant,
-    webhook_platform,
-    mock_external_calls: None,
+    webhook_bot,
     mock_generate_secret_token,
     hass_client: ClientSessionGenerator,
 ) -> None:
@@ -121,14 +120,12 @@ async def test_webhooks_unauthorized_network(
 
 async def test_webhooks_deregister_failed(
     hass: HomeAssistant,
-    webhook_platform,
-    mock_external_calls: None,
-    mock_generate_secret_token,
+    webhook_bot,
 ) -> None:
     """Test deregister webhooks."""
 
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     with patch(
         "homeassistant.components.telegram_bot.webhooks.Bot.delete_webhook",
@@ -137,4 +134,4 @@ async def test_webhooks_deregister_failed(
         await hass.config_entries.async_unload(config_entry.entry_id)
 
     mock_delete_webhook.assert_called_once()
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert config_entry.state is ConfigEntryState.NOT_LOADED

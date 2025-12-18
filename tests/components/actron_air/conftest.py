@@ -6,17 +6,22 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from homeassistant.components.actron_air.const import DOMAIN
+from homeassistant.const import CONF_API_TOKEN
+
+from tests.common import MockConfigEntry
+
 
 @pytest.fixture
 def mock_actron_api() -> Generator[AsyncMock]:
     """Mock the Actron Air API class."""
     with (
         patch(
-            "homeassistant.components.actron_air.ActronNeoAPI",
+            "homeassistant.components.actron_air.ActronAirAPI",
             autospec=True,
         ) as mock_api,
         patch(
-            "homeassistant.components.actron_air.config_flow.ActronNeoAPI",
+            "homeassistant.components.actron_air.config_flow.ActronAirAPI",
             new=mock_api,
         ),
     ):
@@ -53,3 +58,14 @@ def mock_actron_api() -> Generator[AsyncMock]:
         api.get_status = AsyncMock(return_value=None)
 
         yield api
+
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Return a mock config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="test@example.com",
+        data={CONF_API_TOKEN: "test_refresh_token"},
+        unique_id="test_user_id",
+    )

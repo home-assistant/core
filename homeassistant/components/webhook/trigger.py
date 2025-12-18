@@ -15,6 +15,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
+from homeassistant.util.json import json_loads
 
 from . import (
     DEFAULT_METHODS,
@@ -62,7 +63,9 @@ async def _handle_webhook(
     base_result: dict[str, Any] = {"platform": "webhook", "webhook_id": webhook_id}
 
     if "json" in request.headers.get(hdrs.CONTENT_TYPE, ""):
-        base_result["json"] = await request.json()
+        #  Always attempt to read the body; request.text() returns "" if empty
+        text = await request.text()
+        base_result["json"] = json_loads(text) if text else {}
     else:
         base_result["data"] = await request.post()
 

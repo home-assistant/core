@@ -71,14 +71,23 @@
       "breakfast": {
         "name": "Breakfast"
       },
+      "dessert": {
+        "name": "Dessert"
+      },
       "dinner": {
         "name": "Dinner"
+      },
+      "drink": {
+        "name": "Drink"
       },
       "lunch": {
         "name": "Lunch"
       },
       "side": {
         "name": "Side"
+      },
+      "snack": {
+        "name": "Snack"
       }
     },
     "sensor": {
@@ -126,6 +135,9 @@
     "integration_not_found": {
       "message": "Integration \"{target}\" not found in registry."
     },
+    "invalid_mealplan_entry_type": {
+      "message": "Entry type {mealplan_type} is not valid for this Mealie version."
+    },
     "item_not_found_error": {
       "message": "Item {shopping_list_item} not found."
     },
@@ -161,9 +173,12 @@
     "mealplan_entry_type": {
       "options": {
         "breakfast": "[%key:component::mealie::entity::calendar::breakfast::name%]",
+        "dessert": "[%key:component::mealie::entity::calendar::dessert::name%]",
         "dinner": "[%key:component::mealie::entity::calendar::dinner::name%]",
+        "drink": "[%key:component::mealie::entity::calendar::drink::name%]",
         "lunch": "[%key:component::mealie::entity::calendar::lunch::name%]",
-        "side": "[%key:component::mealie::entity::calendar::side::name%]"
+        "side": "[%key:component::mealie::entity::calendar::side::name%]",
+        "snack": "[%key:component::mealie::entity::calendar::snack::name%]"
       }
     }
   },

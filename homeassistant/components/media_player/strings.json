@@ -1,4 +1,8 @@
 {
+  "common": {
+    "trigger_behavior_description": "The behavior of the targeted media players to trigger on.",
+    "trigger_behavior_name": "Behavior"
+  },
   "device_automation": {
     "condition_type": {
       "is_buffering": "{entity_name} is buffering",
@@ -176,6 +180,13 @@
         "all": "Repeat all",
         "off": "[%key:common::state::off%]",
         "one": "Repeat one"
+      }
+    },
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
       }
     }
   },
@@ -367,5 +378,17 @@
       "name": "Turn up volume"
     }
   },
-  "title": "Media player"
+  "title": "Media player",
+  "triggers": {
+    "stopped_playing": {
+      "description": "Triggers after one or more media players stop playing media.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::media_player::common::trigger_behavior_description%]",
+          "name": "[%key:component::media_player::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Media player stopped playing"
+    }
+  }
 }

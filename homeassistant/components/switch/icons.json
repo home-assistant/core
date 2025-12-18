@@ -29,5 +29,13 @@
     "turn_on": {
       "service": "mdi:toggle-switch-variant"
     }
+  },
+  "triggers": {
+    "turned_off": {
+      "trigger": "mdi:toggle-switch-variant-off"
+    },
+    "turned_on": {
+      "trigger": "mdi:toggle-switch-variant"
+    }
   }
 }

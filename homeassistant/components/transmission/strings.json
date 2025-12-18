@@ -87,6 +87,17 @@
       }
     }
   },
+  "exceptions": {
+    "could_not_add_torrent": {
+      "message": "Could not add torrent: unsupported type or no permission."
+    },
+    "integration_not_found": {
+      "message": "Integration \"{target}\" not found in registry."
+    },
+    "not_loaded": {
+      "message": "{target} is not loaded."
+    }
+  },
   "options": {
     "step": {
       "init": {

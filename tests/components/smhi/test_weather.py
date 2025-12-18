@@ -3,7 +3,6 @@
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock
 
-from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 from pysmhi import (
     SMHIFirePointForecast,
@@ -66,7 +65,7 @@ async def test_setup_hass(
     "to_load",
     [1],
 )
-@freeze_time(datetime(2023, 8, 7, 1, tzinfo=dt_util.UTC))
+@pytest.mark.freeze_time(datetime(2023, 8, 7, 1, tzinfo=dt_util.UTC))
 async def test_clear_night(
     hass: HomeAssistant,
     mock_client: SMHIPointForecast,

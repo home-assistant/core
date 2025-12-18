@@ -46,6 +46,11 @@
       }
     }
   },
+  "exceptions": {
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    }
+  },
   "services": {
     "custom_cleaning": {
       "description": "Starts a custom cleaning of your house.",

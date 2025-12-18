@@ -45,6 +45,10 @@
     "append_sheet": {
       "description": "Appends data to a worksheet in Google Sheets.",
       "fields": {
+        "add_created_column": {
+          "description": "Add a \"created\" column with the current date-time to the appended data.",
+          "name": "Add created column"
+        },
         "config_entry": {
           "description": "The sheet to add data to.",
           "name": "Sheet"

@@ -5,7 +5,9 @@
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "reconfigure": {
@@ -24,6 +26,24 @@
           "host": "The hostname or IP address of the Niko Home Control controller."
         },
         "description": "Set up your Niko Home Control instance."
+      }
+    }
+  },
+  "entity": {
+    "climate": {
+      "nhc_thermostat": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "day": "Day",
+              "eco": "Eco",
+              "night": "Night",
+              "prog1": "Program 1",
+              "prog2": "Program 2",
+              "prog3": "Program 3"
+            }
+          }
+        }
       }
     }
   }

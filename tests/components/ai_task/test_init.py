@@ -4,7 +4,6 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import patch
 
-from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 import voluptuous as vol
@@ -292,7 +291,7 @@ async def test_generate_data_service_invalid_structure(
         ),
     ],
 )
-@freeze_time("2025-06-14 22:59:00")
+@pytest.mark.freeze_time("2025-06-14 22:59:00")
 async def test_generate_image_service(
     hass: HomeAssistant,
     init_components: None,

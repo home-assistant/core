@@ -263,6 +263,9 @@ class Panel:
     # Title to show in the sidebar
     sidebar_title: str | None = None
 
+    # If the panel should be visible by default in the sidebar
+    sidebar_default_visible: bool = True
+
     # Url to show the panel in the frontend
     frontend_url_path: str
 
@@ -280,6 +283,7 @@ class Panel:
         component_name: str,
         sidebar_title: str | None,
         sidebar_icon: str | None,
+        sidebar_default_visible: bool,
         frontend_url_path: str | None,
         config: dict[str, Any] | None,
         require_admin: bool,
@@ -293,6 +297,7 @@ class Panel:
         self.config = config
         self.require_admin = require_admin
         self.config_panel_domain = config_panel_domain
+        self.sidebar_default_visible = sidebar_default_visible
 
     @callback
     def to_response(self) -> PanelResponse:
@@ -301,6 +306,7 @@ class Panel:
             "component_name": self.component_name,
             "icon": self.sidebar_icon,
             "title": self.sidebar_title,
+            "default_visible": self.sidebar_default_visible,
             "config": self.config,
             "url_path": self.frontend_url_path,
             "require_admin": self.require_admin,
@@ -315,6 +321,7 @@ def async_register_built_in_panel(
     component_name: str,
     sidebar_title: str | None = None,
     sidebar_icon: str | None = None,
+    sidebar_default_visible: bool = True,
     frontend_url_path: str | None = None,
     config: dict[str, Any] | None = None,
     require_admin: bool = False,
@@ -327,6 +334,7 @@ def async_register_built_in_panel(
         component_name,
         sidebar_title,
         sidebar_icon,
+        sidebar_default_visible,
         frontend_url_path,
         config,
         require_admin,
@@ -452,9 +460,34 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.http.app.router.register_resource(IndexView(repo_path, hass))
 
-    async_register_built_in_panel(hass, "light")
-    async_register_built_in_panel(hass, "security")
-    async_register_built_in_panel(hass, "climate")
+    async_register_built_in_panel(
+        hass,
+        "light",
+        sidebar_icon="mdi:lamps",
+        sidebar_title="light",
+        sidebar_default_visible=False,
+    )
+    async_register_built_in_panel(
+        hass,
+        "security",
+        sidebar_icon="mdi:security",
+        sidebar_title="security",
+        sidebar_default_visible=False,
+    )
+    async_register_built_in_panel(
+        hass,
+        "climate",
+        sidebar_icon="mdi:home-thermometer",
+        sidebar_title="climate",
+        sidebar_default_visible=False,
+    )
+    async_register_built_in_panel(
+        hass,
+        "home",
+        sidebar_icon="mdi:home",
+        sidebar_title="home",
+        sidebar_default_visible=False,
+    )
 
     async_register_built_in_panel(hass, "profile")
 
@@ -744,7 +777,9 @@ class ManifestJSONView(HomeAssistantView):
 @websocket_api.websocket_command(
     {
         "type": "frontend/get_icons",
-        vol.Required("category"): vol.In({"entity", "entity_component", "services"}),
+        vol.Required("category"): vol.In(
+            {"conditions", "entity", "entity_component", "services", "triggers"}
+        ),
         vol.Optional("integration"): vol.All(cv.ensure_list, [str]),
     }
 )
@@ -879,6 +914,7 @@ class PanelResponse(TypedDict):
     component_name: str
     icon: str | None
     title: str | None
+    default_visible: bool
     config: dict[str, Any] | None
     url_path: str
     require_admin: bool

@@ -576,6 +576,11 @@
       "vehicle_state_valet_mode": {
         "name": "Valet mode"
       }
+    },
+    "update": {
+      "vehicle_state_software_update_status": {
+        "name": "[%key:component::update::title%]"
+      }
     }
   },
   "exceptions": {
@@ -608,6 +613,9 @@
     },
     "no_cable": {
       "message": "Charge cable will lock automatically when connected"
+    },
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     },
     "update_failed": {
       "message": "{endpoint} data request failed: {message}"

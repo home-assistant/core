@@ -5,19 +5,19 @@ import logging
 
 import pytest
 
-from homeassistant.components import duckdns
-from homeassistant.components.duckdns import async_track_time_interval_backoff
+from homeassistant.components.duckdns import ATTR_TXT, DOMAIN, SERVICE_SET_TXT
+from homeassistant.components.duckdns.coordinator import BACKOFF_INTERVALS
+from homeassistant.components.duckdns.helpers import UPDATE_URL
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from tests.common import async_fire_time_changed
+from .conftest import TEST_SUBDOMAIN, TEST_TOKEN
+
+from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-DOMAIN = "bla"
-TOKEN = "abcdefgh"
 _LOGGER = logging.getLogger(__name__)
-INTERVAL = duckdns.INTERVAL
 
 
 async def async_set_txt(hass: HomeAssistant, txt: str | None) -> None:
@@ -26,37 +26,40 @@ async def async_set_txt(hass: HomeAssistant, txt: str | None) -> None:
     This is a legacy helper method. Do not use it for new tests.
     """
     await hass.services.async_call(
-        duckdns.DOMAIN, duckdns.SERVICE_SET_TXT, {duckdns.ATTR_TXT: txt}, blocking=True
+        DOMAIN, SERVICE_SET_TXT, {ATTR_TXT: txt}, blocking=True
     )
 
 
 @pytest.fixture
 async def setup_duckdns(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry: MockConfigEntry,
 ) -> None:
     """Fixture that sets up DuckDNS."""
+
     aioclient_mock.get(
-        duckdns.UPDATE_URL, params={"domains": DOMAIN, "token": TOKEN}, text="OK"
+        UPDATE_URL,
+        params={"domains": TEST_SUBDOMAIN, "token": TEST_TOKEN},
+        text="OK",
     )
 
-    await async_setup_component(
-        hass, duckdns.DOMAIN, {"duckdns": {"domain": DOMAIN, "access_token": TOKEN}}
-    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
 
 
+@pytest.mark.usefixtures("setup_duckdns")
 async def test_setup(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     """Test setup works if update passes."""
     aioclient_mock.get(
-        duckdns.UPDATE_URL, params={"domains": DOMAIN, "token": TOKEN}, text="OK"
+        UPDATE_URL,
+        params={"domains": TEST_SUBDOMAIN, "token": TEST_TOKEN},
+        text="OK",
     )
 
-    result = await async_setup_component(
-        hass, duckdns.DOMAIN, {"duckdns": {"domain": DOMAIN, "access_token": TOKEN}}
-    )
-
-    await hass.async_block_till_done()
-
-    assert result
     assert aioclient_mock.call_count == 1
 
     async_fire_time_changed(hass, utcnow() + timedelta(minutes=5))
@@ -64,51 +67,60 @@ async def test_setup(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -
     assert aioclient_mock.call_count == 2
 
 
+@pytest.mark.freeze_time
 async def test_setup_backoff(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry: MockConfigEntry,
 ) -> None:
-    """Test setup fails if first update fails."""
+    """Test update fails with backoffs and recovers."""
     aioclient_mock.get(
-        duckdns.UPDATE_URL, params={"domains": DOMAIN, "token": TOKEN}, text="KO"
+        UPDATE_URL,
+        params={"domains": TEST_SUBDOMAIN, "token": TEST_TOKEN},
+        text="KO",
     )
 
-    result = await async_setup_component(
-        hass, duckdns.DOMAIN, {"duckdns": {"domain": DOMAIN, "access_token": TOKEN}}
-    )
-    assert result
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
     assert aioclient_mock.call_count == 1
 
-    # Copy of the DuckDNS intervals from duckdns/__init__.py
-    intervals = (
-        INTERVAL,
-        timedelta(minutes=1),
-        timedelta(minutes=5),
-        timedelta(minutes=15),
-        timedelta(minutes=30),
-    )
     tme = utcnow()
     await hass.async_block_till_done()
 
     _LOGGER.debug("Backoff")
-    for idx in range(1, len(intervals)):
-        tme += intervals[idx]
+    for idx in range(1, len(BACKOFF_INTERVALS)):
+        tme += BACKOFF_INTERVALS[idx]
         async_fire_time_changed(hass, tme)
         await hass.async_block_till_done()
 
         assert aioclient_mock.call_count == idx + 1
 
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        UPDATE_URL,
+        params={"domains": TEST_SUBDOMAIN, "token": TEST_TOKEN},
+        text="OK",
+    )
 
+    async_fire_time_changed(hass, tme)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.usefixtures("setup_duckdns")
 async def test_service_set_txt(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, setup_duckdns
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test set txt service call."""
     # Empty the fixture mock requests
     aioclient_mock.clear_requests()
 
     aioclient_mock.get(
-        duckdns.UPDATE_URL,
-        params={"domains": DOMAIN, "token": TOKEN, "txt": "some-txt"},
+        UPDATE_URL,
+        params={"domains": TEST_SUBDOMAIN, "token": TEST_TOKEN, "txt": "some-txt"},
         text="OK",
     )
 
@@ -117,16 +129,22 @@ async def test_service_set_txt(
     assert aioclient_mock.call_count == 1
 
 
+@pytest.mark.usefixtures("setup_duckdns")
 async def test_service_clear_txt(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, setup_duckdns
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test clear txt service call."""
     # Empty the fixture mock requests
     aioclient_mock.clear_requests()
 
     aioclient_mock.get(
-        duckdns.UPDATE_URL,
-        params={"domains": DOMAIN, "token": TOKEN, "txt": "", "clear": "true"},
+        UPDATE_URL,
+        params={
+            "domains": TEST_SUBDOMAIN,
+            "token": TEST_TOKEN,
+            "txt": "",
+            "clear": "true",
+        },
         text="OK",
     )
 
@@ -135,62 +153,26 @@ async def test_service_clear_txt(
     assert aioclient_mock.call_count == 1
 
 
-async def test_async_track_time_interval_backoff(hass: HomeAssistant) -> None:
-    """Test setup fails if first update fails."""
-    ret_val = False
-    call_count = 0
-    tme = None
+async def test_load_unload(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test loading and unloading of the config entry."""
 
-    async def _return(now):
-        nonlocal call_count, ret_val, tme
-        if tme is None:
-            tme = now
-        call_count += 1
-        return ret_val
-
-    intervals = (
-        INTERVAL,
-        INTERVAL * 2,
-        INTERVAL * 5,
-        INTERVAL * 9,
-        INTERVAL * 10,
-        INTERVAL * 11,
-        INTERVAL * 12,
+    aioclient_mock.get(
+        UPDATE_URL,
+        params={"domains": TEST_SUBDOMAIN, "token": TEST_TOKEN},
+        text="OK",
     )
-
-    async_track_time_interval_backoff(hass, _return, intervals)
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert call_count == 1
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
 
-    _LOGGER.debug("Backoff")
-    for idx in range(1, len(intervals)):
-        tme += intervals[idx]
-        async_fire_time_changed(hass, tme + timedelta(seconds=0.1))
-        await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
 
-        assert call_count == idx + 1
-
-    _LOGGER.debug("Max backoff reached - intervals[-1]")
-    for _idx in range(1, 10):
-        tme += intervals[-1]
-        async_fire_time_changed(hass, tme + timedelta(seconds=0.1))
-        await hass.async_block_till_done()
-
-        assert call_count == idx + 1 + _idx
-
-    _LOGGER.debug("Reset backoff")
-    call_count = 0
-    ret_val = True
-    tme += intervals[-1]
-    async_fire_time_changed(hass, tme + timedelta(seconds=0.1))
-    await hass.async_block_till_done()
-    assert call_count == 1
-
-    _LOGGER.debug("No backoff - intervals[0]")
-    for _idx in range(2, 10):
-        tme += intervals[0]
-        async_fire_time_changed(hass, tme + timedelta(seconds=0.1))
-        await hass.async_block_till_done()
-
-        assert call_count == _idx
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.NOT_LOADED

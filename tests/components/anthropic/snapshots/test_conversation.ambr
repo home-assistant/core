@@ -9,16 +9,19 @@
         Only if the user wants to control a device, tell them to expose entities to their voice assistant in Home Assistant.
         Current time is 16:00:00. Today's date is 2024-06-03.
       ''',
+      'created': HAFakeDatetime(2024, 6, 3, 23, 0, tzinfo=datetime.timezone.utc),
       'role': 'system',
     }),
     dict({
       'attachments': None,
       'content': 'Please call the test function',
+      'created': HAFakeDatetime(2024, 6, 3, 23, 0, tzinfo=datetime.timezone.utc),
       'role': 'user',
     }),
     dict({
       'agent_id': 'conversation.claude_conversation',
       'content': None,
+      'created': HAFakeDatetime(2024, 6, 3, 23, 0, tzinfo=datetime.timezone.utc),
       'native': ThinkingBlock(signature='ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==', thinking='', type='thinking'),
       'role': 'assistant',
       'thinking_content': 'The user asked me to call a test function.Is it a test? What would the function do? Would it violate any privacy or security policies?',
@@ -27,6 +30,7 @@
     dict({
       'agent_id': 'conversation.claude_conversation',
       'content': None,
+      'created': HAFakeDatetime(2024, 6, 3, 23, 0, tzinfo=datetime.timezone.utc),
       'native': RedactedThinkingBlock(data='EroBCkYIARgCKkBJDytPJhw//4vy3t7aE+LfIkxvkAh51cBPrAvBCo6AjgI57Zt9KWPnUVV50OQJ0KZzUFoGZG5sxg95zx4qMwkoEgz43Su3myJKckvj03waDBZLIBSeoAeRUeVsJCIwQ5edQN0sa+HNeB/KUBkoMUwV+IT0eIhcpFxnILdvxUAKM4R1o4KG3x+yO0eo/kyOKiKfrCPFQhvBVmTZPFhgA2Ow8L9gGDVipcz6x3Uu9YETGEny', type='redacted_thinking'),
       'role': 'assistant',
       'thinking_content': None,
@@ -35,6 +39,7 @@
     dict({
       'agent_id': 'conversation.claude_conversation',
       'content': 'Certainly, calling it now!',
+      'created': HAFakeDatetime(2024, 6, 3, 23, 0, tzinfo=datetime.timezone.utc),
       'native': ThinkingBlock(signature='ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==', thinking='', type='thinking'),
       'role': 'assistant',
       'thinking_content': "Okay, let's give it a shot. Will I pass the test?",
@@ -51,6 +56,7 @@
     }),
     dict({
       'agent_id': 'conversation.claude_conversation',
+      'created': HAFakeDatetime(2024, 6, 3, 23, 0, tzinfo=datetime.timezone.utc),
       'role': 'tool_result',
       'tool_call_id': 'toolu_0123456789AbCdEfGhIjKlM',
       'tool_name': 'test_tool',
@@ -59,6 +65,7 @@
     dict({
       'agent_id': 'conversation.claude_conversation',
       'content': 'I have successfully called the function',
+      'created': HAFakeDatetime(2024, 6, 3, 23, 0, tzinfo=datetime.timezone.utc),
       'native': None,
       'role': 'assistant',
       'thinking_content': None,
@@ -460,11 +467,13 @@
     dict({
       'attachments': None,
       'content': 'ANTHROPIC_MAGIC_STRING_TRIGGER_REDACTED_THINKING_46C9A13E193C177646C7398A98432ECCCE4C1253D5E2D82641AC0E52CC2876CB',
+      'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
       'role': 'user',
     }),
     dict({
       'agent_id': 'conversation.claude_conversation',
       'content': None,
+      'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
       'native': RedactedThinkingBlock(data='EroBCkYIARgCKkBJDytPJhw//4vy3t7aE+LfIkxvkAh51cBPrAvBCo6AjgI57Zt9KWPnUVV50OQJ0KZzUFoGZG5sxg95zx4qMwkoEgz43Su3myJKckvj03waDBZLIBSeoAeRUeVsJCIwQ5edQN0sa+HNeB/KUBkoMUwV+IT0eIhcpFxnILdvxUAKM4R1o4KG3x+yO0eo/kyOKiKfrCPFQhvBVmTZPFhgA2Ow8L9gGDVipcz6x3Uu9YETGEny', type='redacted_thinking'),
       'role': 'assistant',
       'thinking_content': None,
@@ -473,6 +482,7 @@
     dict({
       'agent_id': 'conversation.claude_conversation',
       'content': None,
+      'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
       'native': RedactedThinkingBlock(data='EroBCkYIARgCKkBJDytPJhw//4vy3t7aE+LfIkxvkAh51cBPrAvBCo6AjgI57Zt9KWPnUVV50OQJ0KZzUFoGZG5sxg95zx4qMwkoEgz43Su3myJKckvj03waDBZLIBSeoAeRUeVsJCIwQ5edQN0sa+HNeB/KUBkoMUwV+IT0eIhcpFxnILdvxUAKM4R1o4KG3x+yO0eo/kyOKiKfrCPFQhvBVmTZPFhgA2Ow8L9gGDVipcz6x3Uu9YETGEny', type='redacted_thinking'),
       'role': 'assistant',
       'thinking_content': None,
@@ -481,6 +491,7 @@
     dict({
       'agent_id': 'conversation.claude_conversation',
       'content': 'How can I help you today?',
+      'created': HAFakeDatetime(2024, 5, 24, 12, 0, tzinfo=datetime.timezone.utc),
       'native': RedactedThinkingBlock(data='EroBCkYIARgCKkBJDytPJhw//4vy3t7aE+LfIkxvkAh51cBPrAvBCo6AjgI57Zt9KWPnUVV50OQJ0KZzUFoGZG5sxg95zx4qMwkoEgz43Su3myJKckvj03waDBZLIBSeoAeRUeVsJCIwQ5edQN0sa+HNeB/KUBkoMUwV+IT0eIhcpFxnILdvxUAKM4R1o4KG3x+yO0eo/kyOKiKfrCPFQhvBVmTZPFhgA2Ow8L9gGDVipcz6x3Uu9YETGEny', type='redacted_thinking'),
       'role': 'assistant',
       'thinking_content': None,
@@ -527,11 +538,13 @@
     dict({
       'attachments': None,
       'content': "What's on the news today?",
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
       'role': 'user',
     }),
     dict({
       'agent_id': 'conversation.claude_conversation',
       'content': "To get today's news, I'll perform a web search",
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
       'native': ThinkingBlock(signature='ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/NoB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==', thinking='', type='thinking'),
       'role': 'assistant',
       'thinking_content': "The user is asking about today's news, which requires current, real-time information. This is clearly something that requires recent information beyond my knowledge cutoff. I should use the web_search tool to find today's news.",
@@ -548,6 +561,7 @@
     }),
     dict({
       'agent_id': 'conversation.claude_conversation',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
       'role': 'tool_result',
       'tool_call_id': 'srvtoolu_12345ABC',
       'tool_name': 'web_search',
@@ -578,6 +592,7 @@
         2. Something incredible happened
         Those are the main headlines making news today.
       ''',
+      'created': HAFakeDatetime(2025, 10, 31, 12, 0, tzinfo=datetime.timezone.utc),
       'native': dict({
         'citation_details': list([
           dict({

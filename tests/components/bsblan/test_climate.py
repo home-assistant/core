@@ -68,9 +68,9 @@ async def test_climate_entity_properties(
     state = hass.states.get(ENTITY_ID)
     assert state.attributes["temperature"] == 23.5
 
-    # Test hvac_mode
+    # Test hvac_mode - BSB-Lan returns integer: 1=auto
     mock_hvac_mode = MagicMock()
-    mock_hvac_mode.value = HVACMode.AUTO
+    mock_hvac_mode.value = 1  # auto mode
     mock_bsblan.state.return_value.hvac_mode = mock_hvac_mode
 
     freezer.tick(timedelta(minutes=1))
@@ -80,8 +80,8 @@ async def test_climate_entity_properties(
     state = hass.states.get(ENTITY_ID)
     assert state.state == HVACMode.AUTO
 
-    # Test preset_mode
-    mock_hvac_mode.value = PRESET_ECO
+    # Test preset_mode - BSB-Lan mode 2 is eco/reduced
+    mock_hvac_mode.value = 2  # eco mode
 
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
@@ -135,6 +135,62 @@ async def test_climate_without_target_temperature_sensor(
     assert state.attributes["temperature"] is None
 
 
+async def test_climate_hvac_mode_none_value(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test climate entity when hvac_mode value is None."""
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
+
+    # Set hvac_mode.value to None
+    mock_hvac_mode = MagicMock()
+    mock_hvac_mode.value = None
+    mock_bsblan.state.return_value.hvac_mode = mock_hvac_mode
+
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # State should be unknown when hvac_mode is None
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == "unknown"
+
+
+async def test_climate_hvac_mode_string_fallback(
+    hass: HomeAssistant,
+    mock_bsblan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test climate entity with string hvac_mode value (fallback path)."""
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
+
+    # Set hvac_mode.value to a string (non-integer fallback)
+    mock_hvac_mode = MagicMock()
+    mock_hvac_mode.value = "heat"
+    mock_bsblan.state.return_value.hvac_mode = mock_hvac_mode
+
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Should parse the string enum value
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == HVACMode.HEAT
+
+
+# Mapping from HA HVACMode to BSB-Lan integer values for test assertions
+HA_TO_BSBLAN_HVAC_MODE_TEST: dict[HVACMode, int] = {
+    HVACMode.OFF: 0,
+    HVACMode.AUTO: 1,
+    HVACMode.HEAT: 3,
+}
+
+
 @pytest.mark.parametrize(
     "mode",
     [HVACMode.HEAT, HVACMode.AUTO, HVACMode.OFF],
@@ -156,31 +212,34 @@ async def test_async_set_hvac_mode(
         blocking=True,
     )
 
-    # Assert that the thermostat method was called
-    mock_bsblan.thermostat.assert_called_once_with(hvac_mode=mode)
+    # Assert that the thermostat method was called with integer value
+    expected_int = HA_TO_BSBLAN_HVAC_MODE_TEST[mode]
+    mock_bsblan.thermostat.assert_called_once_with(hvac_mode=expected_int)
     mock_bsblan.thermostat.reset_mock()
 
 
 @pytest.mark.parametrize(
-    ("hvac_mode", "preset_mode"),
+    ("hvac_mode_int", "preset_mode"),
     [
-        (HVACMode.AUTO, PRESET_ECO),
-        (HVACMode.AUTO, PRESET_NONE),
+        (1, PRESET_ECO),  # 1 = auto mode
+        (1, PRESET_NONE),  # 1 = auto mode
+        (3, PRESET_ECO),  # 3 = heat mode - can also set eco preset
+        (0, PRESET_ECO),  # 0 = off mode - can also set eco preset
     ],
 )
-async def test_async_set_preset_mode_succes(
+async def test_async_set_preset_mode_success(
     hass: HomeAssistant,
     mock_bsblan: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    hvac_mode: HVACMode,
+    hvac_mode_int: int,
     preset_mode: str,
 ) -> None:
     """Test setting preset mode via service call."""
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
 
-    # patch hvac_mode
+    # patch hvac_mode with integer value (BSB-Lan returns integers)
     mock_hvac_mode = MagicMock()
-    mock_hvac_mode.value = hvac_mode
+    mock_hvac_mode.value = hvac_mode_int
     mock_bsblan.state.return_value.hvac_mode = mock_hvac_mode
 
     # Attempt to set the preset mode
@@ -191,41 +250,6 @@ async def test_async_set_preset_mode_succes(
         blocking=True,
     )
     await hass.async_block_till_done()
-
-
-@pytest.mark.parametrize(
-    ("hvac_mode", "preset_mode"),
-    [
-        (
-            HVACMode.HEAT,
-            PRESET_ECO,
-        )
-    ],
-)
-async def test_async_set_preset_mode_error(
-    hass: HomeAssistant,
-    mock_bsblan: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    hvac_mode: HVACMode,
-    preset_mode: str,
-) -> None:
-    """Test setting preset mode via service call."""
-    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
-
-    # patch hvac_mode
-    mock_hvac_mode = MagicMock()
-    mock_hvac_mode.value = hvac_mode
-    mock_bsblan.state.return_value.hvac_mode = mock_hvac_mode
-
-    # Attempt to set the preset mode
-    error_message = "Preset mode can only be set when HVAC mode is set to 'auto'"
-    with pytest.raises(HomeAssistantError, match=error_message):
-        await hass.services.async_call(
-            CLIMATE_DOMAIN,
-            SERVICE_SET_PRESET_MODE,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: preset_mode},
-            blocking=True,
-        )
 
 
 @pytest.mark.parametrize(
@@ -273,39 +297,39 @@ async def test_async_set_data(
     mock_bsblan.thermostat.assert_called_once_with(target_temperature=19)
     mock_bsblan.thermostat.reset_mock()
 
-    # Test setting HVAC mode
+    # Test setting HVAC mode - should convert to integer (3=heat)
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: HVACMode.HEAT},
         blocking=True,
     )
-    mock_bsblan.thermostat.assert_called_once_with(hvac_mode=HVACMode.HEAT)
+    mock_bsblan.thermostat.assert_called_once_with(hvac_mode=3)  # 3 = heat
     mock_bsblan.thermostat.reset_mock()
 
-    # Patch HVAC mode to AUTO
+    # Patch HVAC mode to AUTO (integer 1)
     mock_hvac_mode = MagicMock()
-    mock_hvac_mode.value = HVACMode.AUTO
+    mock_hvac_mode.value = 1  # 1 = auto mode
     mock_bsblan.state.return_value.hvac_mode = mock_hvac_mode
 
-    # Test setting preset mode to ECO
+    # Test setting preset mode to ECO - should use integer 2
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: PRESET_ECO},
         blocking=True,
     )
-    mock_bsblan.thermostat.assert_called_once_with(hvac_mode=PRESET_ECO)
+    mock_bsblan.thermostat.assert_called_once_with(hvac_mode=2)  # 2 = eco/reduced
     mock_bsblan.thermostat.reset_mock()
 
-    # Test setting preset mode to NONE
+    # Test setting preset mode to NONE - should use integer 1 (auto)
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: PRESET_NONE},
         blocking=True,
     )
-    mock_bsblan.thermostat.assert_called_once()
+    mock_bsblan.thermostat.assert_called_once_with(hvac_mode=1)  # 1 = auto
     mock_bsblan.thermostat.reset_mock()
 
     # Test error handling

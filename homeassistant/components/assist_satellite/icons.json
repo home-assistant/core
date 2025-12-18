@@ -14,5 +14,19 @@
     "start_conversation": {
       "service": "mdi:forum"
     }
+  },
+  "triggers": {
+    "idle": {
+      "trigger": "mdi:chat-sleep"
+    },
+    "listening": {
+      "trigger": "mdi:chat-question"
+    },
+    "processing": {
+      "trigger": "mdi:chat-processing"
+    },
+    "responding": {
+      "trigger": "mdi:chat-alert"
+    }
   }
 }

@@ -3,6 +3,7 @@
 from typing import Any
 from unittest.mock import AsyncMock
 
+from bosch_alarm_mode2.const import PanelModel
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
@@ -19,7 +20,7 @@ async def test_diagnostics(
     hass_client: ClientSessionGenerator,
     mock_panel: AsyncMock,
     area: AsyncMock,
-    model_name: str,
+    panel_model: PanelModel,
     serial_number: str,
     snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,

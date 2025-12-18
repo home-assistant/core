@@ -501,8 +501,12 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
     #
     KEY_MONITORING_CHECK_NOTIFICATIONS: HuaweiSensorGroup(
         exclude=re.compile(
-            r"^(onlineupdatestatus|smsstoragefull)$",
-            re.IGNORECASE,
+            r"""^(
+                OnlineUpdateStatus |  # Could be useful, but what are the values?
+                SimOperEvent |        # Unknown
+                SmsStorageFull        # Handled by binary sensor
+            )$""",
+            re.IGNORECASE | re.VERBOSE,
         ),
         descriptions={
             "UnreadMessage": HuaweiSensorEntityDescription(
@@ -624,6 +628,20 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 device_class=SensorDeviceClass.DATA_RATE,
                 state_class=SensorStateClass.MEASUREMENT,
             ),
+            "MaxDownloadRate": HuaweiSensorEntityDescription(
+                key="MaxDownloadRate",
+                translation_key="max_download_rate",
+                native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
+                device_class=SensorDeviceClass.DATA_RATE,
+                state_class=SensorStateClass.MEASUREMENT,
+            ),
+            "MaxUploadRate": HuaweiSensorEntityDescription(
+                key="MaxUploadRate",
+                translation_key="max_upload_rate",
+                native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
+                device_class=SensorDeviceClass.DATA_RATE,
+                state_class=SensorStateClass.MEASUREMENT,
+            ),
             "TotalConnectTime": HuaweiSensorEntityDescription(
                 key="TotalConnectTime",
                 translation_key="total_connected_duration",
@@ -709,6 +727,10 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 key="LocalUnread",
                 translation_key="sms_unread_device",
             ),
+            "NewMsg": HuaweiSensorEntityDescription(
+                key="NewMsg",
+                translation_key="sms_new",
+            ),
             "SimDraft": HuaweiSensorEntityDescription(
                 key="SimDraft",
                 translation_key="sms_drafts_sim",
@@ -754,17 +776,25 @@ async def async_setup_entry(
                 items = filter(key_meta.include.search, items)
             if key_meta.exclude:
                 items = [x for x in items if not key_meta.exclude.search(x)]
-        sensors.extend(
-            HuaweiLteSensor(
-                router,
-                key,
-                item,
-                SENSOR_META[key].descriptions.get(
-                    item, HuaweiSensorEntityDescription(key=item)
-                ),
-            )
-            for item in items
-        )
+        for item in items:
+            if not (desc := SENSOR_META[key].descriptions.get(item)):
+                _LOGGER.debug(  # pylint: disable=hass-logger-period # false positive
+                    (
+                        "Ignoring unknown sensor %s.%s. "
+                        "Opening an issue at GitHub against the "
+                        "huawei_lte integration would be appreciated, so we may be able to "
+                        "add support for it in a future release. "
+                        'Include the sensor name "%s.%s" in the issue, '
+                        "as well as any information you may have about it, "
+                        "such as values received for it as shown in the debug log."
+                    ),
+                    key,
+                    item,
+                    key,
+                    item,
+                )
+                continue
+            sensors.append(HuaweiLteSensor(router, key, item, desc))
 
     async_add_entities(sensors, True)
 

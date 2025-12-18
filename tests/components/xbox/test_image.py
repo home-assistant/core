@@ -115,12 +115,12 @@ async def test_load_image_from_url(
         "rgWHJigthrlsHCxEOMG9UGNdojCYasYt6MJHBjmxmtuAHJeo.sOkUiPmg4JHXvOS82c3UOrvdJTDaCKwCwHPJ0t0Plha8oHFC1i_o-&format=png"
     ).respond(status_code=HTTPStatus.OK, content_type="image/png", content=b"Test2")
 
-    freezer.tick(timedelta(seconds=10))
+    freezer.tick(timedelta(seconds=15))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert (state := hass.states.get("image.gsr_ae_gamerpic"))
-    assert state.state == "2025-06-16T00:00:10+00:00"
+    assert state.state == "2025-06-16T00:00:15+00:00"
 
     access_token = state.attributes["access_token"]
     assert (

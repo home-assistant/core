@@ -29,6 +29,8 @@ from .const import (
 from .coordinator import TransmissionConfigEntry, TransmissionDataUpdateCoordinator
 from .entity import TransmissionEntity
 
+PARALLEL_UPDATES = 0
+
 MODES: dict[str, list[str] | None] = {
     "started_torrents": ["downloading"],
     "completed_torrents": ["seeding"],

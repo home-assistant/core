@@ -167,6 +167,63 @@
     'state': 'on',
   })
 # ---
+# name: test_platform_setup_and_discovery[humidifier.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max_humidity': 80,
+      'min_humidity': 30,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'humidifier',
+    'entity_category': None,
+    'entity_id': 'humidifier.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <HumidifierDeviceClass.DEHUMIDIFIER: 'dehumidifier'>,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'tuya.ake0bre784zriw0uscswitch',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[humidifier.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_humidity': 72,
+      'device_class': 'dehumidifier',
+      'friendly_name': 'Déshumidificateur Silencieux OmniDry 20L avec Mode Linge',
+      'humidity': 65,
+      'max_humidity': 80,
+      'min_humidity': 30,
+      'supported_features': <HumidifierEntityFeature: 0>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'humidifier.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_platform_setup_and_discovery[humidifier.klarta_humea-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

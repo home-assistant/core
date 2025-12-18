@@ -99,6 +99,7 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_hook_delete)
     websocket_api.async_register_command(hass, websocket_remote_connect)
     websocket_api.async_register_command(hass, websocket_remote_disconnect)
+    websocket_api.async_register_command(hass, websocket_webrtc_ice_servers)
 
     websocket_api.async_register_command(hass, google_assistant_get)
     websocket_api.async_register_command(hass, google_assistant_list)
@@ -1107,6 +1108,7 @@ async def alexa_sync(
 
 
 @websocket_api.websocket_command({"type": "cloud/tts/info"})
+@callback
 def tts_info(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
@@ -1134,3 +1136,22 @@ def tts_info(
             )
 
     connection.send_result(msg["id"], {"languages": result})
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "cloud/webrtc/ice_servers",
+    }
+)
+@_require_cloud_login
+@callback
+def websocket_webrtc_ice_servers(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Handle get WebRTC ICE servers websocket command."""
+    connection.send_result(
+        msg["id"],
+        [server.to_dict() for server in hass.data[DATA_CLOUD].client.ice_servers],
+    )

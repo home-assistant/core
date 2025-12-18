@@ -345,7 +345,7 @@
           "name": "Icon URL"
         },
         "markdown": {
-          "description": "Enable Markdown formatting for the message body. See the Markdown guide for syntax details: https://www.markdownguide.org/basic-syntax/.",
+          "description": "Enable Markdown formatting for the message body. See the Markdown guide for syntax details: {markdown_guide_url}.",
           "name": "Format as Markdown"
         },
         "message": {

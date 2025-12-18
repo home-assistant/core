@@ -107,8 +107,12 @@ async def test_number_setup_camera_all(
     camera.feature_flags.has_led_ir = True
     camera.isp_settings.icr_custom_value = 1
     camera.isp_settings.ir_led_mode = IRLEDMode.CUSTOM
+    camera.feature_flags.has_speaker = True
+    camera.speaker_settings.volume = 1
+    camera.feature_flags.is_doorbell = True
+    camera.speaker_settings.ring_volume = 1
     await init_entry(hass, ufp, [camera])
-    assert_entity_counts(hass, Platform.NUMBER, 5, 5)
+    assert_entity_counts(hass, Platform.NUMBER, 7, 7)
 
     for description in CAMERA_NUMBERS:
         unique_id, entity_id = await ids_from_device_description(

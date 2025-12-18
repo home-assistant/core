@@ -5,7 +5,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 from syrupy.assertion import SnapshotAssertion
-from tplink_omada_client import SwitchPortOverrides
+from tplink_omada_client import SwitchPortSettings
 from tplink_omada_client.definitions import PoEMode
 from tplink_omada_client.devices import (
     OmadaGateway,
@@ -249,14 +249,16 @@ async def _test_poe_switch(
         device: OmadaSwitch,
         switch_port_details: OmadaSwitchPortDetails,
         poe_enabled: bool,
-        overrides: SwitchPortOverrides = None,
+        settings: SwitchPortSettings,
     ) -> None:
         assert device
         assert device.mac == network_switch_mac
         assert switch_port_details
         assert switch_port_details.port == port_num
-        assert overrides
-        assert overrides.enable_poe == poe_enabled
+        assert settings
+        assert settings.profile_override_enabled
+        assert settings.profile_overrides
+        assert settings.profile_overrides.enable_poe == poe_enabled
 
     entity = hass.states.get(entity_id)
     assert entity == snapshot

@@ -127,6 +127,9 @@ EVENT_TYPE_ALARM_STARTED = "alarm_started"
 EVENT_TYPE_DOOR_TAG_BIG_MOVE = "tag_big_move"
 EVENT_TYPE_DOOR_TAG_OPEN = "tag_open"
 EVENT_TYPE_DOOR_TAG_SMALL_MOVE = "tag_small_move"
+# Generic events
+EVENT_TYPE_CONNECTION = "connection"
+EVENT_TYPE_DISCONNECTION = "disconnection"
 EVENT_TYPE_OFF = "off"
 EVENT_TYPE_ON = "on"
 

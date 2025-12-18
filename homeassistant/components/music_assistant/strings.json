@@ -3,31 +3,48 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "reconfiguration_successful": "Successfully reconfigured the Music Assistant integration.",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
-    },
-    "error": {
+      "auth_error": "Authentication error, please try again",
+      "auth_failed": "Authentication failed, please try again",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_server_version": "The Music Assistant server is not the correct version",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "auth_failed": "[%key:component::music_assistant::config::abort::auth_failed%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_server_version": "[%key:component::music_assistant::config::abort::invalid_server_version%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "auth_manual": {
+        "data": {
+          "token": "Long-lived access token"
+        },
+        "data_description": {
+          "token": "Create a long-lived access token in your Music Assistant server settings and paste it here"
+        },
+        "title": "Enter long-lived access token"
+      },
       "discovery_confirm": {
         "description": "Do you want to add the Music Assistant server `{url}` to Home Assistant?",
         "title": "Discovered Music Assistant server"
       },
-      "init": {
+      "hassio_confirm": {
+        "description": "Do you want to add the Music Assistant server to Home Assistant?",
+        "title": "Discovered Music Assistant add-on"
+      },
+      "reauth_confirm": {
+        "description": "The authentication token for Music Assistant server `{url}` is no longer valid. Please re-authenticate to continue using the integration.",
+        "title": "Reauthentication required"
+      },
+      "user": {
         "data": {
+          "url": "[%key:common::config_flow::data::url%]"
+        },
+        "data_description": {
           "url": "URL of the Music Assistant server"
         }
-      },
-      "manual": {
-        "data": {
-          "url": "URL of the Music Assistant server"
-        },
-        "description": "Enter the URL to your already running Music Assistant server. If you do not have the Music Assistant server running, you should install it first.",
-        "title": "Manually add Music Assistant server"
       }
     }
   },

@@ -1,0 +1,76 @@
+# serializer version: 1
+# name: test_climate_entities[climate.test_thermostat-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'preset_modes': list([
+        'home',
+        'away',
+        'boost',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.test_thermostat',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'airobot',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 17>,
+    'translation_key': 'thermostat',
+    'unique_id': 'T01A1B2C3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_climate_entities[climate.test_thermostat-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_humidity': 45.0,
+      'current_temperature': 22.0,
+      'friendly_name': 'Test Thermostat',
+      'hvac_action': <HVACAction.IDLE: 'idle'>,
+      'hvac_modes': list([
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35.0,
+      'min_temp': 5.0,
+      'preset_mode': 'home',
+      'preset_modes': list([
+        'home',
+        'away',
+        'boost',
+      ]),
+      'supported_features': <ClimateEntityFeature: 17>,
+      'temperature': 22.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.test_thermostat',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
