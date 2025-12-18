@@ -108,8 +108,11 @@ class VictronBaseEntity(Entity):
                 return SensorDeviceClass.SPEED
             case MetricType.LIQUID_VOLUME:
                 return SensorDeviceClass.VOLUME
-            case MetricType.TIME:
+            case MetricType.DURATION:
                 return SensorDeviceClass.DURATION
+            case MetricType.TIME:
+                # Sadly, there is no SensorDeviceClass for time
+                return None
             case _:
                 return None
 
