@@ -1,0 +1,147 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "charge_pause": {
+        "default": "mdi:pause-circle"
+      },
+      "charge_permitted": {
+        "default": "mdi:check-circle"
+      },
+      "charging": {
+        "default": "mdi:battery-charging"
+      }
+    },
+    "number": {
+      "current_set": {
+        "default": "mdi:current-ac"
+      },
+      "energy_limit": {
+        "default": "mdi:battery-charging-100"
+      },
+      "phase_count": {
+        "default": "mdi:sine-wave"
+      }
+    },
+    "sensor": {
+      "charge_count": {
+        "default": "mdi:counter"
+      },
+      "charge_pause": {
+        "default": "mdi:pause-circle-outline"
+      },
+      "charge_permitted": {
+        "default": "mdi:check-circle"
+      },
+      "charged_energy": {
+        "default": "mdi:lightning-bolt"
+      },
+      "charging_current": {
+        "default": "mdi:current-ac"
+      },
+      "charging_rate": {
+        "default": "mdi:speedometer"
+      },
+      "charging_voltage": {
+        "default": "mdi:flash"
+      },
+      "connector_max_current": {
+        "default": "mdi:current-ac"
+      },
+      "connector_phase_count": {
+        "default": "mdi:sine-wave"
+      },
+      "connector_serial": {
+        "default": "mdi:barcode"
+      },
+      "connector_type": {
+        "default": "mdi:ev-plug-type2"
+      },
+      "current_set": {
+        "default": "mdi:current-ac"
+      },
+      "energy_limit": {
+        "default": "mdi:battery-charging-100"
+      },
+      "error_code": {
+        "default": "mdi:alert-circle"
+      },
+      "grid_frequency": {
+        "default": "mdi:sine-wave"
+      },
+      "grid_phases": {
+        "default": "mdi:sine-wave"
+      },
+      "grid_voltage": {
+        "default": "mdi:flash"
+      },
+      "network_ip_address": {
+        "default": "mdi:ip-network"
+      },
+      "network_mac_address": {
+        "default": "mdi:network"
+      },
+      "network_rssi": {
+        "default": "mdi:wifi-strength-3"
+      },
+      "network_ssid": {
+        "default": "mdi:wifi"
+      },
+      "peak_power": {
+        "default": "mdi:flash"
+      },
+      "phase_count": {
+        "default": "mdi:sine-wave"
+      },
+      "powerflow_grid_frequency": {
+        "default": "mdi:sine-wave"
+      },
+      "rated_current": {
+        "default": "mdi:current-ac"
+      },
+      "rcd_trigger": {
+        "default": "mdi:flash-alert"
+      },
+      "relay_state": {
+        "default": "mdi:toggle-switch"
+      },
+      "status": {
+        "default": "mdi:ev-station"
+      },
+      "total_active_power": {
+        "default": "mdi:flash"
+      },
+      "total_apparent_power": {
+        "default": "mdi:flash-outline"
+      },
+      "total_charged_energy": {
+        "default": "mdi:lightning-bolt"
+      },
+      "total_power_factor": {
+        "default": "mdi:percent"
+      },
+      "total_reactive_power": {
+        "default": "mdi:flash-outline"
+      },
+      "vehicle_charging_time": {
+        "default": "mdi:timer"
+      },
+      "vehicle_connect_time": {
+        "default": "mdi:timer-outline"
+      },
+      "versions_hw_sm": {
+        "default": "mdi:chip"
+      },
+      "versions_sw_sm": {
+        "default": "mdi:package-up"
+      },
+      "warning_code": {
+        "default": "mdi:alert"
+      }
+    },
+    "switch": {
+      "charge_pause": {
+        "default": "mdi:pause"
+      }
+    }
+  }
+}

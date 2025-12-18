@@ -770,6 +770,11 @@ ZEROCONF = {
             "domain": "nanoleaf",
         },
     ],
+    "_nrgkick._tcp.local.": [
+        {
+            "domain": "nrgkick",
+        },
+    ],
     "_nut._tcp.local.": [
         {
             "domain": "nut",
