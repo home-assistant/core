@@ -271,8 +271,8 @@ class PrometheusMetrics:
         )
         self._climate_units = climate_units
 
-        self._areas_by_id: dict[str, MetricNameWithLabelValues] = {}
-        self._floors_by_id: dict[str, MetricNameWithLabelValues] = {}
+        self._area_info_metrics: dict[str, MetricNameWithLabelValues] = {}
+        self._floor_info_metrics: dict[str, MetricNameWithLabelValues] = {}
 
         self.area_registry = area_registry
         self.device_registry = device_registry
@@ -421,7 +421,7 @@ class PrometheusMetrics:
         _LOGGER.debug("Handling area update for %s (%s)", area_id, action)
 
         if action in {"update", "remove"}:
-            metric_name, label_values = astuple(self._areas_by_id.pop(area_id))
+            metric_name, label_values = astuple(self._area_info_metrics.pop(area_id))
             self._metrics[metric_name].remove(*label_values)
         if action in {"update", "create"}:
             area = self.area_registry.async_get_area(area_id)
@@ -456,7 +456,9 @@ class PrometheusMetrics:
         _LOGGER.debug("Handling floor update for %s (%s)", floor_id, action)
 
         if action in {"update", "remove"}:
-            metric_name, label_values = astuple(self._floors_by_id.pop(str(floor_id)))
+            metric_name, label_values = astuple(
+                self._floor_info_metrics.pop(str(floor_id))
+            )
             self._metrics[metric_name].remove(*label_values)
         if action in {"update", "create"}:
             floor = self.floor_registry.async_get_floor(str(floor_id))
@@ -538,11 +540,11 @@ class PrometheusMetrics:
             )
             metric = cast(_MetricBaseT, self._metrics[metric_name])
         if metric_name == "area_info":
-            self._areas_by_id[labels["area"]] = MetricNameWithLabelValues(
+            self._area_info_metrics[labels["area"]] = MetricNameWithLabelValues(
                 metric_name, tuple(labels.values())
             )
         elif metric_name == "floor_info":
-            self._floors_by_id[labels["floor"]] = MetricNameWithLabelValues(
+            self._floor_info_metrics[labels["floor"]] = MetricNameWithLabelValues(
                 metric_name, tuple(labels.values())
             )
         else:
