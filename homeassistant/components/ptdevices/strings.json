@@ -3,8 +3,7 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -14,16 +13,6 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-      "reauth_confirm": {
-        "data": {
-          "api_token": "[%key:common::config_flow::data::api_token%]"
-        },
-        "data_description": {
-          "api_token": "API Token for your PTDevices account."
-        },
-        "description": "Your API key seem to be expired. Enter your new token API key from ParemTech to reconfigure your device",
-        "title": "PTDevices reauth"
-      },
       "user": {
         "data": {
           "api_token": "[%key:common::config_flow::data::api_token%]"

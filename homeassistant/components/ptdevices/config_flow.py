@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -97,58 +96,6 @@ class PTDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
         # Show setup form
         return self.async_show_form(
             step_id="user", data_schema=_CONF_SCHEMA, errors=errors
-        )
-
-    async def async_step_reauth(
-        self,
-        entry_data: Mapping[str, Any],
-    ) -> ConfigFlowResult:
-        """Perform reauth upon an API authentication error."""
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reauth confirmation."""
-        reauth_entry = self._get_reauth_entry()
-        reauth_data = {**reauth_entry.data}
-
-        # Show the user input form
-        if user_input is None:
-            return self.async_show_form(
-                step_id="reauth_confirm",
-                data_schema=vol.Schema(
-                    {
-                        vol.Required(CONF_API_TOKEN): str,
-                    }
-                ),
-            )
-
-        reauth_data.update(user_input)
-
-        # Test connection to server
-        errors: dict[str, str] = {}
-        try:
-            await validate_input(self.hass, reauth_data)
-        except CannotConnect:
-            errors["base"] = "cannot_connect"
-        except InvalidAuth:
-            errors["base"] = "invalid_auth"
-        except MalformedResponse:
-            errors["base"] = "malformed_response"
-        else:
-            # Connection Successful
-            return self.async_update_reload_and_abort(reauth_entry, data=reauth_data)
-
-        # Error occurred, Show form again
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_API_TOKEN): str,
-                }
-            ),
-            errors=errors,
         )
 
 
