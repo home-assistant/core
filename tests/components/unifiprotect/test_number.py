@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from operator import attrgetter
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -209,35 +208,24 @@ async def test_number_light_duration(
 async def test_number_camera_simple(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
-    camera: Camera,
+    camera_all_features: Camera,
     description: ProtectNumberEntityDescription,
 ) -> None:
-    """Tests all simple numbers for cameras."""
-
-    await init_entry(hass, ufp, [camera])
-    assert_entity_counts(hass, Platform.NUMBER, 4, 4)
+    """Tests simple numbers for cameras using the all features fixture."""
+    await init_entry(hass, ufp, [camera_all_features])
+    assert_entity_counts(hass, Platform.NUMBER, 7, 7)
 
     assert description.ufp_set_method is not None
 
     _, entity_id = await ids_from_device_description(
-        hass, Platform.NUMBER, camera, description
+        hass, Platform.NUMBER, camera_all_features, description
     )
 
-    # Skip test if entity doesn't exist (feature not available on this camera)
-    if hass.states.get(entity_id) is None:
-        pytest.skip(f"Entity {entity_id} not available for this camera fixture")
-
-    # Skip test if entity is disabled (ufp_enabled condition not met)
-    if description.ufp_enabled is not None:
-        ufp_enabled_value = attrgetter(description.ufp_enabled)(camera)
-        if not ufp_enabled_value:
-            pytest.skip(f"Entity {entity_id} is disabled ({description.ufp_enabled})")
-
-    camera.__pydantic_fields__[description.ufp_set_method] = Mock(
+    camera_all_features.__pydantic_fields__[description.ufp_set_method] = Mock(
         final=False, frozen=False
     )
     mock_method = AsyncMock()
-    with patch.object(camera, description.ufp_set_method, mock_method):
+    with patch.object(camera_all_features, description.ufp_set_method, mock_method):
         await hass.services.async_call(
             "number",
             "set_value",
