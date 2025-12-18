@@ -983,7 +983,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "touchline",
     "touchline_sl",
     "tplink_lte",
-    "tplink_omada",
     "traccar",
     "traccar_server",
     "tractive",
