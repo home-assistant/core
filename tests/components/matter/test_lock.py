@@ -261,3 +261,35 @@ async def test_lock_with_unbolt(
     state = hass.states.get("lock.mock_door_lock_with_unbolt")
     assert state
     assert state.state == LockState.OPEN
+
+
+@pytest.mark.parametrize("node_fixture", ["door_lock"])
+async def test_set_lock_usercode(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test setting a usercode on a Matter lock."""
+    await hass.services.async_call(
+        "matter",
+        "set_lock_usercode",
+        {
+            "entity_id": "lock.mock_door_lock",
+            "code_slot": 1,
+            "usercode": "1234",
+        },
+        blocking=True,
+    )
+
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.DoorLock.Commands.SetPinCode(
+            userIndex=0,  # code_slot 1 -> index 0 (0-based)
+            userStatus=clusters.DoorLock.Enums.UserStatusEnum.kEnabled,
+            userType=clusters.DoorLock.Enums.UserTypeEnum.kUnrestricted,
+            pin=b"1234",
+        ),
+        timed_request_timeout_ms=1000,
+    )
