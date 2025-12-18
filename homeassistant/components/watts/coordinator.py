@@ -19,7 +19,7 @@ from visionpluspython.models import Device, ThermostatDevice
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -70,9 +70,8 @@ class WattsVisionHubCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         """Set up the coordinator by discovering devices."""
         try:
             devices_list = await self.client.discover_devices()
-        except WattsVisionAuthError as err:
-            raise ConfigEntryAuthFailed("Authentication failed") from err
         except (
+            WattsVisionAuthError,
             WattsVisionConnectionError,
             WattsVisionTimeoutError,
             WattsVisionDeviceError,
@@ -98,10 +97,8 @@ class WattsVisionHubCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         ):
             try:
                 devices_list = await self.client.discover_devices()
-            except WattsVisionAuthError as err:
-                _LOGGER.warning("Periodic discovery failed with auth error: %s", err)
-                raise ConfigEntryAuthFailed("Authentication failed") from err
             except (
+                WattsVisionAuthError,
                 WattsVisionConnectionError,
                 WattsVisionTimeoutError,
                 WattsVisionDeviceError,
@@ -131,9 +128,8 @@ class WattsVisionHubCoordinator(DataUpdateCoordinator[dict[str, Device]]):
 
         try:
             devices = await self.client.get_devices_report(device_ids)
-        except WattsVisionAuthError as err:
-            raise ConfigEntryAuthFailed("Authentication failed") from err
         except (
+            WattsVisionAuthError,
             WattsVisionConnectionError,
             WattsVisionTimeoutError,
             WattsVisionDeviceError,
@@ -218,9 +214,8 @@ class WattsVisionThermostatCoordinator(
 
         try:
             device = await self.client.get_device(self.device_id, refresh=True)
-        except WattsVisionAuthError as err:
-            raise ConfigEntryAuthFailed("Authentication failed") from err
         except (
+            WattsVisionAuthError,
             WattsVisionConnectionError,
             WattsVisionTimeoutError,
             WattsVisionDeviceError,

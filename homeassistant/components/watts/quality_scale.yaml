@@ -30,12 +30,12 @@ rules:
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow: done
+  reauthentication-flow: todo
   test-coverage: done
 
   # Gold
   devices: done
-  diagnostics: done
+  diagnostics: todo
   discovery-update-info:
     status: exempt
     comment: Integration does not support discovery.
@@ -60,9 +60,7 @@ rules:
   icon-translations:
     status: exempt
     comment: Thermostat entities use standard HA Climate entity.
-  reconfiguration-flow:
-    status: exempt
-    comment: This integration uses OAuth2 and has no configurable settings beyond authentication.
+  reconfiguration-flow: todo
   repair-issues:
     status: exempt
     comment: No actionable repair scenarios, auth issues are handled by reauthentication flow.
