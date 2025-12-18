@@ -66,7 +66,7 @@ async def test_media_player_setup(
     assert entity
     assert entity.unique_id == unique_id
 
-    expected_volume = float(doorbell.speaker_settings.volume / 100)
+    expected_volume = float(doorbell.speaker_settings.speaker_volume / 100)
 
     state = hass.states.get(entity_id)
     assert state

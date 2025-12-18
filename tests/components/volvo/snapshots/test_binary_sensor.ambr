@@ -538,6 +538,55 @@
     'state': 'off',
   })
 # ---
+# name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_engine_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.volvo_ex30_engine_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': None,
+    'original_name': 'Engine status',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'engine_status',
+    'unique_id': 'yv1abcdefg1234567_engine_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_engine_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'running',
+      'friendly_name': 'Volvo EX30 Engine status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.volvo_ex30_engine_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_fog_light_front-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -4795,6 +4844,55 @@
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_door_rear_right',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_engine_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.volvo_xc40_engine_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': None,
+    'original_name': 'Engine status',
+    'platform': 'volvo',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'engine_status',
+    'unique_id': 'yv1abcdefg1234567_engine_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_engine_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'running',
+      'friendly_name': 'Volvo XC40 Engine status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.volvo_xc40_engine_status',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -91,6 +91,8 @@ DISPATCHER_REMOTE_UPDATE: SignalType[Any] = SignalType("cloud_remote_update")
 
 STT_ENTITY_UNIQUE_ID = "cloud-speech-to-text"
 TTS_ENTITY_UNIQUE_ID = "cloud-text-to-speech"
+AI_TASK_ENTITY_UNIQUE_ID = "cloud-ai-task"
+CONVERSATION_ENTITY_UNIQUE_ID = "cloud-conversation-agent"
 
 LOGIN_MFA_TIMEOUT = 60
 

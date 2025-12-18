@@ -119,7 +119,7 @@ async def test_options_flow(hass: HomeAssistant, user_input) -> None:
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     assert entry.options == {}
 
@@ -127,5 +127,5 @@ async def test_options_flow(hass: HomeAssistant, user_input) -> None:
         result["flow_id"], user_input=user_input
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == entry.options == DEFAULT_OPTIONS | user_input

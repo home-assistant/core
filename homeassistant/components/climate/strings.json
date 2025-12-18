@@ -1,4 +1,8 @@
 {
+  "common": {
+    "trigger_behavior_description": "The behavior of the targeted climates to trigger on.",
+    "trigger_behavior_name": "Behavior"
+  },
   "device_automation": {
     "action_type": {
       "set_hvac_mode": "Change HVAC mode on {entity_name}",
@@ -187,6 +191,13 @@
         "heat_cool": "Heat/cool",
         "off": "[%key:common::state::off%]"
       }
+    },
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
+      }
     }
   },
   "services": {
@@ -285,5 +296,57 @@
       "name": "[%key:common::action::turn_on%]"
     }
   },
-  "title": "Climate"
+  "title": "Climate",
+  "triggers": {
+    "started_cooling": {
+      "description": "Triggers after one or more climate-control devices start cooling.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::climate::common::trigger_behavior_description%]",
+          "name": "[%key:component::climate::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Climate-control device started cooling"
+    },
+    "started_drying": {
+      "description": "Triggers after one or more climate-control devices start drying.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::climate::common::trigger_behavior_description%]",
+          "name": "[%key:component::climate::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Climate-control device started drying"
+    },
+    "started_heating": {
+      "description": "Triggers after one or more climate-control devices start heating.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::climate::common::trigger_behavior_description%]",
+          "name": "[%key:component::climate::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Climate-control device started heating"
+    },
+    "turned_off": {
+      "description": "Triggers after one or more climate-control devices turn off.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::climate::common::trigger_behavior_description%]",
+          "name": "[%key:component::climate::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Climate-control device turned off"
+    },
+    "turned_on": {
+      "description": "Triggers after one or more climate-control devices turn on, regardless of the mode.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::climate::common::trigger_behavior_description%]",
+          "name": "[%key:component::climate::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Climate-control device turned on"
+    }
+  }
 }

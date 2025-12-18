@@ -107,7 +107,7 @@ async def test_action(
     service_data: dict[str, Any],
     expected_commands: list[dict[str, Any]],
 ) -> None:
-    """Test service action."""
+    """Test light action."""
     entity_id = "light.garage_light"
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 

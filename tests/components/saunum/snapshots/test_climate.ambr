@@ -5,6 +5,12 @@
     }),
     'area_id': None,
     'capabilities': dict({
+      'fan_modes': list([
+        'off',
+        'low',
+        'medium',
+        'high',
+      ]),
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.HEAT: 'heat'>,
@@ -35,7 +41,7 @@
     'platform': 'saunum',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <ClimateEntityFeature: 1>,
+    'supported_features': <ClimateEntityFeature: 9>,
     'translation_key': None,
     'unique_id': '01K98T2T85R5GN0ZHYV25VFMMA',
     'unit_of_measurement': None,
@@ -45,6 +51,13 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 75.0,
+      'fan_mode': 'medium',
+      'fan_modes': list([
+        'off',
+        'low',
+        'medium',
+        'high',
+      ]),
       'friendly_name': 'Saunum Leil',
       'hvac_action': <HVACAction.OFF: 'off'>,
       'hvac_modes': list([
@@ -53,7 +66,7 @@
       ]),
       'max_temp': 100,
       'min_temp': 40,
-      'supported_features': <ClimateEntityFeature: 1>,
+      'supported_features': <ClimateEntityFeature: 9>,
       'temperature': 80,
     }),
     'context': <ANY>,
