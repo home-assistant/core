@@ -165,7 +165,12 @@ class KnxYamlFan(_KnxFan, KnxYamlEntity):
                 group_address_oscillation_state=config.get(
                     FanSchema.CONF_OSCILLATION_STATE_ADDRESS
                 ),
+                group_address_switch=config.get(FanSchema.CONF_SWITCH_ADDRESS),
+                group_address_switch_state=config.get(
+                    FanSchema.CONF_SWITCH_STATE_ADDRESS
+                ),
                 max_step=max_step,
+                sync_state=config.get(CONF_SYNC_STATE, True),
             ),
         )
         # FanSpeedMode.STEP if max_step is set
