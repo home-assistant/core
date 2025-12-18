@@ -69,7 +69,7 @@ def mock_hikcamera() -> Generator[MagicMock]:
         ),
     ):
         camera = hikcamera_mock.return_value
-        camera.get_id.return_value = TEST_DEVICE_ID
+        camera.get_id = TEST_DEVICE_ID
         camera.get_name = TEST_DEVICE_NAME
         camera.get_type = "Camera"
         camera.current_event_states = {

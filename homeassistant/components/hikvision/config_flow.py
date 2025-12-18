@@ -51,12 +51,12 @@ class HikvisionConfigFlow(ConfigFlow, domain=DOMAIN):
                 camera = await self.hass.async_add_executor_job(
                     HikCamera, url, port, username, password
                 )
-                device_id = camera.get_id()
-                device_name = camera.get_name
             except requests.exceptions.RequestException:
                 _LOGGER.exception("Error connecting to Hikvision device")
                 errors["base"] = "cannot_connect"
             else:
+                device_id = camera.get_id
+                device_name = camera.get_name
                 if device_id is None:
                     errors["base"] = "cannot_connect"
                 else:
@@ -104,14 +104,14 @@ class HikvisionConfigFlow(ConfigFlow, domain=DOMAIN):
             camera = await self.hass.async_add_executor_job(
                 HikCamera, url, port, username, password
             )
-            device_id = camera.get_id()
-            device_name = camera.get_name
         except requests.exceptions.RequestException:
             _LOGGER.exception(
                 "Error connecting to Hikvision device during import, aborting"
             )
             return self.async_abort(reason="cannot_connect")
 
+        device_id = camera.get_id
+        device_name = camera.get_name
         if device_id is None:
             return self.async_abort(reason="cannot_connect")
 

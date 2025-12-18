@@ -241,7 +241,7 @@ async def test_yaml_import_abort_creates_issue(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test YAML import creates issue when import is aborted."""
-    mock_hikcamera.return_value.get_id.return_value = None
+    mock_hikcamera.return_value.get_id = None
 
     await async_setup_component(
         hass,
