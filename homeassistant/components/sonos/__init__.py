@@ -212,6 +212,7 @@ class SonosDiscoveryManager:
                         "conn_fail_url": UPNP_FAIL_URL,
                     },
                 )
+                return
             raise
 
     async def async_subscribe_to_zone_updates(self, ip_address: str) -> None:
@@ -225,9 +226,21 @@ class SonosDiscoveryManager:
             )
             return
         soco = SoCo(ip_address)
-        # Cache now to avoid household ID lookup during first ZoneGroupState processing
-        await self.async_get_household_id(soco, ip_address)
-        sub = await soco.zoneGroupTopology.subscribe()
+        try:
+            # Cache now to avoid household ID lookup during first ZoneGroupState processing
+            await self.async_get_household_id(soco, ip_address)
+            sub = await soco.zoneGroupTopology.subscribe()
+        except (
+            OSError,
+            SoCoException,
+            Timeout,
+            TimeoutError,
+        ) as ex:
+            _LOGGER.error(
+                "Error connecting to discoveredSonos speaker at %s: %s",
+                ip_address,
+                ex,
+            )
 
         @callback
         def _async_add_visible_zones(subscription_succeeded: bool = False) -> None:

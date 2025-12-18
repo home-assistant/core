@@ -94,21 +94,22 @@ async def test_create_upnp_disabled_issue(
 ) -> None:
     """Test issue is created when speaker initialization fails with 403."""
 
+    resp = Response()
+    resp.status_code = HTTPStatus.FORBIDDEN
+    http_error = HTTPError(response=resp)
+
     with patch(
         "tests.components.sonos.conftest.MockSoCo.household_id",
         new_callable=PropertyMock,
         create=True,
-    ) as mock_household:
-        resp = Response()
-        resp.status_code = HTTPStatus.FORBIDDEN
-        mock_household.side_effect = HTTPError(response=resp)
-
+        side_effect=http_error,
+    ):
         config_entry.add_to_hass(hass)
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done(wait_background_tasks=True)
 
-        issue_registry = ir.async_get(hass)
-        assert issue_registry.async_get_issue(sonos.DOMAIN, UPNP_ISSUE_ID) is not None
+    issue_registry = ir.async_get(hass)
+    assert issue_registry.async_get_issue(sonos.DOMAIN, UPNP_ISSUE_ID) is not None
 
 
 async def test_async_poll_manual_hosts_warnings(
