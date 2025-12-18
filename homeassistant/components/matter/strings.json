@@ -636,6 +636,30 @@
         }
       },
       "name": "Boost water heater"
+    },
+    "set_lock_usercode": {
+      "description": "Sets a PIN code on a Matter lock.",
+      "fields": {
+        "code_slot": {
+          "description": "The slot number to store the code (1-255).",
+          "name": "Code slot"
+        },
+        "usercode": {
+          "description": "The PIN code to set.",
+          "name": "Usercode"
+        }
+      },
+      "name": "Set lock usercode"
+    },
+    "clear_lock_usercode": {
+      "description": "Clears a PIN code from a Matter lock.",
+      "fields": {
+        "code_slot": {
+          "description": "The slot number to clear (1-255).",
+          "name": "Code slot"
+        }
+      },
+      "name": "Clear lock usercode"
     }
   }
 }
