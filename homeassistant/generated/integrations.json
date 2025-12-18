@@ -2409,7 +2409,7 @@
     },
     "gogogate2": {
       "name": "Gogogate2 and ismartgate",
-      "integration_type": "device",
+      "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
     },
