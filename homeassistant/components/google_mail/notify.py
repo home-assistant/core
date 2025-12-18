@@ -63,7 +63,6 @@ class GMailNotificationService(BaseNotificationService):
         if alias := data.get(ATTR_ALIAS_FROM):
             if email_from == ATTR_ME:
                 raise ServiceValidationError(
-                    "Missing 'from' email when defining alias",
                     translation_domain=DOMAIN,
                     translation_key="missing_from_for_alias",
                 )
