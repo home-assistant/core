@@ -3,12 +3,10 @@
 import logging
 from typing import Any
 
-from propcache.api import cached_property
 from PySrDaliGateway import Scene
 
 from homeassistant.components.scene import Scene as SceneEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -42,23 +40,6 @@ class DaliCenterScene(DaliCenterEntity, SceneEntity):
             identifiers={(DOMAIN, scene.gw_sn)},
         )
 
-    @cached_property
-    def extra_state_attributes(self) -> dict[str, list[str]]:
-        """Return the scene state attributes."""
-        ent_reg = er.async_get(self.hass)
-        return {
-            "entity_id": [
-                entity_id
-                for device in self._scene.devices
-                if (
-                    entity_id := ent_reg.async_get_entity_id(
-                        "light", DOMAIN, device["unique_id"]
-                    )
-                )
-            ]
-        }
-
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate the DALI scene."""
-        _LOGGER.debug("Activating scene: %s", self._attr_name)
         await self.hass.async_add_executor_job(self._scene.activate)

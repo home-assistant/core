@@ -37,8 +37,6 @@
 # name: test_entities[scene.test_gateway_kitchen_bright-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_id': list([
-      ]),
       'friendly_name': 'Test Gateway Kitchen Bright',
     }),
     'context': <ANY>,
@@ -87,8 +85,6 @@
 # name: test_entities[scene.test_gateway_living_room_evening-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'entity_id': list([
-      ]),
       'friendly_name': 'Test Gateway Living Room Evening',
     }),
     'context': <ANY>,

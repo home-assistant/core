@@ -14,7 +14,9 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
+    Platform,
 )
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -60,6 +62,24 @@ DEVICE_DATA: list[dict[str, Any]] = [
         "channel": 0,
     },
 ]
+
+
+@pytest.fixture
+async def init_integration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_gateway: MagicMock,
+    mock_devices: list[MagicMock],
+    platforms: list[Platform],
+) -> MockConfigEntry:
+    """Set up the integration for testing."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.sunricher_dali._PLATFORMS", platforms):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    return mock_config_entry
 
 
 @pytest.fixture
