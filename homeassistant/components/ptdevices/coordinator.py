@@ -33,7 +33,6 @@ class PTDevicesCoordinator(DataUpdateCoordinator[PTDevicesResponse]):
     """Class for interacting with PTDevices get_data."""
 
     config_entry: PTDevicesConfigEntry
-    data: PTDevicesResponse
 
     def __init__(
         self,
