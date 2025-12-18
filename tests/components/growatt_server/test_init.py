@@ -6,6 +6,7 @@ import json
 from freezegun.api import FrozenDateTimeFactory
 import growattServer
 import pytest
+import requests
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.growatt_server.const import (
@@ -199,3 +200,158 @@ async def test_migrate_legacy_config_no_auth_fields(
     # The ConfigEntryError is caught by the config entry system
     # and the entry state is set to SETUP_ERROR
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "return_value"),
+    [
+        (requests.exceptions.RequestException("Connection error"), None),
+        (json.decoder.JSONDecodeError("Invalid JSON", "", 0), None),
+        (None, {"success": False, "msg": "502"}),
+        (None, {"success": False, "msg": "Server maintenance"}),
+    ],
+    ids=["network_error", "json_error", "invalid_auth", "other_login_error"],
+)
+async def test_classic_api_login_errors(
+    hass: HomeAssistant,
+    mock_growatt_classic_api,
+    mock_config_entry_classic: MockConfigEntry,
+    side_effect: Exception | None,
+    return_value: dict | None,
+) -> None:
+    """Test Classic API setup with various login errors."""
+    if side_effect:
+        mock_growatt_classic_api.login.side_effect = side_effect
+    elif return_value:
+        mock_growatt_classic_api.login.return_value = return_value
+
+    await setup_integration(hass, mock_config_entry_classic)
+
+    assert mock_config_entry_classic.state is ConfigEntryState.SETUP_ERROR
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "return_value"),
+    [
+        (requests.exceptions.RequestException("Connection error"), None),
+        (json.decoder.JSONDecodeError("Invalid JSON", "", 0), None),
+        (None, {"data": []}),
+    ],
+    ids=["network_error", "json_error", "no_plants"],
+)
+async def test_classic_api_plant_list_errors(
+    hass: HomeAssistant,
+    mock_growatt_classic_api,
+    side_effect: Exception | None,
+    return_value: dict | None,
+) -> None:
+    """Test Classic API setup with plant list errors (default plant_id path)."""
+    # Create config entry with default plant ID to trigger plant_list call
+    config = {
+        CONF_USERNAME: "test_user",
+        CONF_PASSWORD: "test_password",
+        CONF_URL: "https://server.growatt.com/",
+        "plant_id": "0",  # DEFAULT_PLANT_ID
+        CONF_AUTH_TYPE: AUTH_PASSWORD,
+    }
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=config,
+        unique_id="plant_default",
+    )
+
+    # Login succeeds
+    mock_growatt_classic_api.login.return_value = {
+        "success": True,
+        "user": {"id": 123456},
+    }
+
+    # But plant_list fails
+    if side_effect:
+        mock_growatt_classic_api.plant_list.side_effect = side_effect
+    elif return_value:
+        mock_growatt_classic_api.plant_list.return_value = return_value
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        requests.exceptions.RequestException("Connection error"),
+        json.decoder.JSONDecodeError("Invalid JSON", "", 0),
+    ],
+    ids=["network_error", "json_error"],
+)
+async def test_classic_api_device_list_errors(
+    hass: HomeAssistant,
+    mock_growatt_classic_api,
+    mock_config_entry_classic: MockConfigEntry,
+    exception: Exception,
+) -> None:
+    """Test Classic API setup with device list errors."""
+    mock_growatt_classic_api.device_list.side_effect = exception
+
+    await setup_integration(hass, mock_config_entry_classic)
+
+    assert mock_config_entry_classic.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_unknown_api_version(
+    hass: HomeAssistant,
+) -> None:
+    """Test setup with unknown API version."""
+    # Create a config entry with invalid auth type
+    config = {
+        CONF_URL: "https://openapi.growatt.com/",
+        "plant_id": "plant_123",
+        CONF_AUTH_TYPE: "unknown_auth",  # Invalid auth type
+    }
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=config,
+        unique_id="plant_123",
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_classic_api_auto_select_plant(
+    hass: HomeAssistant,
+    mock_growatt_classic_api,
+) -> None:
+    """Test Classic API setup with default plant ID (auto-selects first plant)."""
+    # Create config entry with default plant ID to trigger auto-selection
+    config = {
+        CONF_USERNAME: "test_user",
+        CONF_PASSWORD: "test_password",
+        CONF_URL: "https://server.growatt.com/",
+        "plant_id": "0",  # DEFAULT_PLANT_ID
+        CONF_AUTH_TYPE: AUTH_PASSWORD,
+    }
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=config,
+        unique_id="plant_auto",
+    )
+
+    # Login succeeds and plant_list returns a plant
+    mock_growatt_classic_api.login.return_value = {
+        "success": True,
+        "user": {"id": 123456},
+    }
+    mock_growatt_classic_api.plant_list.return_value = {
+        "data": [{"plantId": "AUTO_PLANT_123", "plantName": "Auto Plant"}]
+    }
+    mock_growatt_classic_api.device_list.return_value = [
+        {"deviceSn": "TLX999999", "deviceType": "tlx"}
+    ]
+
+    await setup_integration(hass, mock_config_entry)
+
+    # Should be loaded successfully with auto-selected plant
+    assert mock_config_entry.state is ConfigEntryState.LOADED
