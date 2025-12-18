@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
+from datetime import datetime
 import logging
 from typing import cast
 
@@ -75,11 +78,20 @@ SERVER_STATUS_SENSORS: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
-PLAYER_SENSORS: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
+
+@dataclass(frozen=True, kw_only=True)
+class PlayerSensorEntityDescription(SensorEntityDescription):
+    """Describes player sensor entity."""
+
+    value_fn: Callable[[SqueezeboxSensorEntity], datetime | None]
+
+
+PLAYER_SENSORS: tuple[PlayerSensorEntityDescription, ...] = (
+    PlayerSensorEntityDescription(
         key=PLAYER_SENSOR_NEXT_ALARM,
         translation_key=PLAYER_SENSOR_NEXT_ALARM,
         device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda sensor: sensor.coordinator.player.alarm_next,
     ),
 )
 
@@ -132,12 +144,12 @@ class ServerStatusSensor(LMSStatusEntity, SensorEntity):
 class SqueezeboxSensorEntity(SqueezeboxEntity, SensorEntity):
     """Representation of player based sensors."""
 
-    description: SensorEntityDescription
+    entity_description: PlayerSensorEntityDescription
 
     def __init__(
         self,
         coordinator: SqueezeBoxPlayerUpdateCoordinator,
-        description: SensorEntityDescription,
+        description: PlayerSensorEntityDescription,
     ) -> None:
         """Initialize the SqueezeBox sensor."""
         super().__init__(coordinator)
@@ -145,9 +157,6 @@ class SqueezeboxSensorEntity(SqueezeboxEntity, SensorEntity):
         self._attr_unique_id = f"{format_mac(self._player.player_id)}_{description.key}"
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> datetime | None:
         """Sensor value directly from player coordinator."""
-        return cast(
-            StateType,
-            getattr(self.coordinator.player, self.entity_description.key, None),
-        )
+        return self.entity_description.value_fn(self)
