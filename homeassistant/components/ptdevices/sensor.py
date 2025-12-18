@@ -60,7 +60,6 @@ SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
         key=PTDevicesSensors.LEVEL_VOLUME,
         translation_key=PTDevicesSensors.LEVEL_VOLUME,
         native_unit_of_measurement=UnitOfVolume.LITERS,
-        suggested_unit_of_measurement=UnitOfVolume.LITERS,
         device_class=SensorDeviceClass.WATER,
         state_class=SensorStateClass.TOTAL,
     ),
