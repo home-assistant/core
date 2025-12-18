@@ -128,9 +128,9 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
         self._switch_wrapper = switch_wrapper
 
         self._attr_fan_speed_list = []
-        self._attr_supported_features = (
-            VacuumEntityFeature.SEND_COMMAND | VacuumEntityFeature.STATE
-        )
+        self._attr_supported_features = VacuumEntityFeature.SEND_COMMAND
+        if status_wrapper or pause_wrapper:
+            self._attr_supported_features |= VacuumEntityFeature.STATE
         if pause_wrapper:
             self._attr_supported_features |= VacuumEntityFeature.PAUSE
 
