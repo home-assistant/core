@@ -5,9 +5,11 @@ from unittest.mock import MagicMock
 import requests
 
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_SSL
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
+from .conftest import TEST_HOST, TEST_PASSWORD, TEST_PORT, TEST_USERNAME
 
 from tests.common import MockConfigEntry
 
@@ -23,11 +25,38 @@ async def test_setup_and_unload_entry(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     mock_hikcamera.return_value.start_stream.assert_called_once()
 
+    # Verify HikCamera was called with the ssl parameter
+    mock_hikcamera.assert_called_once_with(
+        f"http://{TEST_HOST}", TEST_PORT, TEST_USERNAME, TEST_PASSWORD, False
+    )
+
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     mock_hikcamera.return_value.disconnect.assert_called_once()
+
+
+async def test_setup_entry_with_ssl(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+) -> None:
+    """Test setup with ssl enabled passes ssl parameter to HikCamera."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, data={**mock_config_entry.data, CONF_SSL: True}
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    # Verify HikCamera was called with ssl=True
+    mock_hikcamera.assert_called_once_with(
+        f"https://{TEST_HOST}", TEST_PORT, TEST_USERNAME, TEST_PASSWORD, True
+    )
 
 
 async def test_setup_entry_connection_error(
