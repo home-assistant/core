@@ -27,6 +27,9 @@
   },
   "entity": {
     "sensor": {
+      "last_updated": {
+        "name": "Last updated"
+      },
       "latest_reading": {
         "name": "Latest reading"
       },
