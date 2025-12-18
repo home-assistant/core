@@ -11,7 +11,7 @@ def setup_devices(
     hass: HomeAssistant,
     entry: CompitConfigEntry,
 ) -> None:
-    """Set up devices in the device registry."""
+    """Register all devices from the coordinator in the device registry."""
     coordinator = entry.runtime_data
     device_registry = dr.async_get(hass)
 

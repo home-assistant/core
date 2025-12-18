@@ -44,7 +44,7 @@ async def test_device_cleanup_on_coordinator_update(
     init_integration: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test that devices are updated when coordinator updates."""
+    """Test that devices persist after coordinator refresh."""
     # Get initial device count
     initial_devices = dr.async_entries_for_config_entry(
         device_registry, init_integration.entry_id
