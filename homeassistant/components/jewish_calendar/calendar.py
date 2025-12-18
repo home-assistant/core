@@ -55,16 +55,16 @@ def _create_daily_event(
     # Time-based daily events using enum properties
     daily_event = DailyCalendarEventType(event_type)
     time_value = zmanim.zmanim.get(daily_event.value)
-    if time_value and time_value.local:
-        local_time = time_value.local
+
+    if time_value is not None:
         return CalendarEvent(
-            start=local_time.astimezone(UTC),
-            end=local_time.astimezone(UTC),
+            start=time_value.utc,
+            end=time_value.utc,
             summary=daily_event.summary,
-            description=f"{daily_event.description_prefix}: {local_time.strftime('%H:%M')}",
+            description=f"{daily_event.description_prefix}: {time_value.local.strftime('%H:%M')}",
         )
 
-    return None
+    return None  # Should never happen
 
 
 def _create_yearly_event(
