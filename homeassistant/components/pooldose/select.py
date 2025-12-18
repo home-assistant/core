@@ -33,6 +33,7 @@ SELECT_DESCRIPTIONS: tuple[PooldoseSelectEntityDescription, ...] = (
         key="water_meter_unit",
         translation_key="water_meter_unit",
         entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
         options=[UnitOfVolume.LITERS, UnitOfVolume.CUBIC_METERS],
         use_unit_conversion=True,
     ),
@@ -40,6 +41,7 @@ SELECT_DESCRIPTIONS: tuple[PooldoseSelectEntityDescription, ...] = (
         key="flow_rate_unit",
         translation_key="flow_rate_unit",
         entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
         options=[
             UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
             UnitOfVolumeFlowRate.LITERS_PER_SECOND,
