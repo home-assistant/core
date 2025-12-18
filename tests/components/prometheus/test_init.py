@@ -3209,3 +3209,55 @@ async def test_area_in_device(
     body = await generate_latest_metrics(client)
     entity_area_metric.assert_not_in_metrics(body)
     device_area_metric.assert_not_in_metrics(body)
+
+
+@pytest.mark.parametrize("namespace", [""])
+async def test_area_in_entity_on_entity_id_update(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+    client: ClientSessionGenerator,
+    sensor_entities: dict[str, er.RegistryEntry],
+) -> None:
+    """Test simultaneous update of entity_id and area_id."""
+
+    # link an entity to an area
+    sensor = sensor_entities["sensor_1"]
+    area_1 = area_registry.async_create("Area 1")
+    original_metric = InfoMetric(
+        metric_name="entity_info", entity="sensor.outside_temperature", area="area_1"
+    )
+    entity_registry.async_update_entity(sensor.entity_id, area_id=area_1.id)
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    original_metric.assert_in_metrics(body)
+
+    # link entity to another area and update entity_id
+    area_2 = area_registry.async_create("Area 2")
+    updated_metric_with_old_entity_id = InfoMetric(
+        metric_name="entity_info",
+        entity="sensor.outside_temperature",
+        area="area_2",
+    )
+    updated_metric_with_new_entity_id = InfoMetric(
+        metric_name="entity_info",
+        entity="sensor.outside_temperature_updated",
+        area="area_2",
+    )
+    updated_sensor = entity_registry.async_update_entity(
+        sensor.entity_id,
+        area_id=area_2.id,
+        new_entity_id="sensor.outside_temperature_updated",
+    )
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    original_metric.assert_not_in_metrics(body)
+    updated_metric_with_old_entity_id.assert_not_in_metrics(body)
+    updated_metric_with_new_entity_id.assert_not_in_metrics(body)
+
+    set_state_with_entry(hass, updated_sensor, 10)
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    original_metric.assert_not_in_metrics(body)
+    updated_metric_with_old_entity_id.assert_not_in_metrics(body)
+    updated_metric_with_new_entity_id.assert_in_metrics(body)
