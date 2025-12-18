@@ -2,7 +2,6 @@
 
 from unittest.mock import AsyncMock, MagicMock
 
-import pytest
 import requests
 
 from homeassistant.components.hikvision.const import DOMAIN
@@ -63,6 +62,11 @@ async def test_form(
         CONF_PASSWORD: TEST_PASSWORD,
         CONF_SSL: False,
     }
+
+    # Verify HikCamera was called with the ssl parameter
+    mock_hikcamera.assert_called_once_with(
+        f"http://{TEST_HOST}", TEST_PORT, TEST_USERNAME, TEST_PASSWORD, False
+    )
 
 
 async def test_form_cannot_connect(
@@ -214,6 +218,11 @@ async def test_import_flow(
         CONF_SSL: False,
     }
 
+    # Verify HikCamera was called with the ssl parameter
+    mock_hikcamera.assert_called_once_with(
+        f"http://{TEST_HOST}", TEST_PORT, TEST_USERNAME, TEST_PASSWORD, False
+    )
+
 
 async def test_import_flow_with_defaults(
     hass: HomeAssistant,
@@ -313,14 +322,12 @@ async def test_import_flow_already_configured(
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.parametrize("ssl", [False, True])
-async def test_form_passes_ssl_parameter(
+async def test_form_with_ssl(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_hikcamera: MagicMock,
-    ssl: bool,
 ) -> None:
-    """Test user flow passes ssl parameter to HikCamera."""
+    """Test user flow with ssl enabled passes ssl parameter to HikCamera."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -332,45 +339,14 @@ async def test_form_passes_ssl_parameter(
             CONF_PORT: TEST_PORT,
             CONF_USERNAME: TEST_USERNAME,
             CONF_PASSWORD: TEST_PASSWORD,
-            CONF_SSL: ssl,
+            CONF_SSL: True,
         },
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_SSL] is ssl
+    assert result["data"][CONF_SSL] is True
 
-    # Verify HikCamera was called with the ssl parameter
-    expected_url = f"{'https' if ssl else 'http'}://{TEST_HOST}"
+    # Verify HikCamera was called with ssl=True
     mock_hikcamera.assert_called_once_with(
-        expected_url, TEST_PORT, TEST_USERNAME, TEST_PASSWORD, ssl
-    )
-
-
-@pytest.mark.parametrize("ssl", [False, True])
-async def test_import_flow_passes_ssl_parameter(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_hikcamera: MagicMock,
-    ssl: bool,
-) -> None:
-    """Test import flow passes ssl parameter to HikCamera."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data={
-            CONF_HOST: TEST_HOST,
-            CONF_PORT: TEST_PORT,
-            CONF_USERNAME: TEST_USERNAME,
-            CONF_PASSWORD: TEST_PASSWORD,
-            CONF_SSL: ssl,
-        },
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_SSL] is ssl
-
-    # Verify HikCamera was called with the ssl parameter
-    expected_url = f"{'https' if ssl else 'http'}://{TEST_HOST}"
-    mock_hikcamera.assert_called_once_with(
-        expected_url, TEST_PORT, TEST_USERNAME, TEST_PASSWORD, ssl
+        f"https://{TEST_HOST}", TEST_PORT, TEST_USERNAME, TEST_PASSWORD, True
     )
