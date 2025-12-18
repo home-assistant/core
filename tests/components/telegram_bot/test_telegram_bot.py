@@ -158,7 +158,6 @@ async def test_polling_platform_init(
         (
             SERVICE_SEND_LOCATION,
             {
-                ATTR_MESSAGE: "test_message",
                 ATTR_MESSAGE_THREAD_ID: "123",
                 ATTR_LONGITUDE: "1.123",
                 ATTR_LATITUDE: "1.123",
@@ -414,6 +413,7 @@ async def test_send_chat_action(
                 CONF_CONFIG_ENTRY_ID: mock_broadcast_config_entry.entry_id,
                 ATTR_CHAT_ID: [123456],
                 ATTR_CHAT_ACTION: CHAT_ACTION_TYPING,
+                ATTR_MESSAGE_THREAD_ID: 123,
             },
             blocking=True,
             return_response=True,
@@ -421,7 +421,9 @@ async def test_send_chat_action(
 
     await hass.async_block_till_done()
     mock.assert_called_once()
-    mock.assert_called_with(chat_id=123456, action=CHAT_ACTION_TYPING)
+    mock.assert_called_with(
+        chat_id=123456, action=CHAT_ACTION_TYPING, message_thread_id=123
+    )
 
 
 @pytest.mark.parametrize(
@@ -1506,7 +1508,6 @@ async def test_set_message_reaction(
             SERVICE_SEND_LOCATION,
             {
                 ATTR_CHAT_ID: 654321,
-                ATTR_MESSAGE: "test_message",
                 ATTR_MESSAGE_THREAD_ID: "123",
                 ATTR_LONGITUDE: "1.123",
                 ATTR_LATITUDE: "1.123",

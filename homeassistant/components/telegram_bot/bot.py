@@ -767,6 +767,7 @@ class TelegramNotificationService:
                 None,
                 chat_id=chat_id,
                 action=chat_action,
+                message_thread_id=kwargs.get(ATTR_MESSAGE_THREAD_ID),
                 context=context,
             )
             result[chat_id] = is_successful

@@ -1176,7 +1176,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "aten_pe",
     "atome",
     "august",
-    "autarco",
     "aurora",
     "aurora_abb_powerone",
     "aussie_broadband",
