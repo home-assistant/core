@@ -40,22 +40,6 @@ async def test_all_selects(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
-async def test_selects_created(
-    hass: HomeAssistant,
-) -> None:
-    """Test that select entities are created."""
-    # Verify all eight select entities exist
-    assert hass.states.get("select.pool_device_water_meter_unit") is not None
-    assert hass.states.get("select.pool_device_flow_rate_unit") is not None
-    assert hass.states.get("select.pool_device_ph_dosing_set") is not None
-    assert hass.states.get("select.pool_device_ph_dosing_method") is not None
-    assert hass.states.get("select.pool_device_orp_dosing_set") is not None
-    assert hass.states.get("select.pool_device_orp_dosing_method") is not None
-    assert hass.states.get("select.pool_device_chlorine_dosing_set") is not None
-    assert hass.states.get("select.pool_device_chlorine_dosing_method") is not None
-
-
-@pytest.mark.usefixtures("init_integration")
 async def test_select_entity_unavailable_no_coordinator_data(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
@@ -109,7 +93,7 @@ async def test_select_state_changes(
     assert ph_method_state.state == "timed"
 
 
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_select_option_unit_conversion(
     hass: HomeAssistant,
     mock_pooldose_client: AsyncMock,
@@ -138,7 +122,7 @@ async def test_select_option_unit_conversion(
     assert water_meter_state.state == UnitOfVolume.LITERS
 
 
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_select_option_flow_rate_unit_conversion(
     hass: HomeAssistant,
     mock_pooldose_client: AsyncMock,
