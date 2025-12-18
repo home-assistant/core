@@ -85,7 +85,7 @@ ENTITIES: tuple[LaMarzoccoSwitchEntityDescription, ...] = (
     ),
 )
 
-SWITCH_ENTITY = LaMarzoccoSwitchEntityDescription(
+MAIN_SWITCH_ENTITY = LaMarzoccoSwitchEntityDescription(
     key="main",
     translation_key="main",
     name=None,
@@ -123,7 +123,7 @@ async def async_setup_entry(
     )
 
     entities.append(
-        LaMarzoccoMainSwitchEntity(coordinator, SWITCH_ENTITY, bluetooth_coordinator)
+        LaMarzoccoMainSwitchEntity(coordinator, MAIN_SWITCH_ENTITY, bluetooth_coordinator)
     )
 
     async_add_entities(entities)
