@@ -103,6 +103,7 @@ _AMBIENT_IDEAL_GAS_MOLAR_VOLUME = (  # m3⋅mol⁻¹
 )
 # Molar masses in g⋅mol⁻¹
 _CARBON_MONOXIDE_MOLAR_MASS = 28.01
+_OZONE_MOLAR_MASS = 48.00
 
 
 class BaseUnitConverter:
@@ -528,9 +529,9 @@ class OzoneConcentrationConverter(BaseUnitConverter):
     UNIT_CLASS = "ozone"
     _UNIT_CONVERSION: dict[str | None, float] = {
         CONCENTRATION_PARTS_PER_BILLION: 1,
-        # concentration (µg/m3) = 0.0409 x concentration (ppb) x molar mass
-        # Ozone molar mass: 48.00 g/mol
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: 0.0409 * 48.00,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: (
+            _OZONE_MOLAR_MASS / _AMBIENT_IDEAL_GAS_MOLAR_VOLUME * 1e6
+        ),
     }
     VALID_UNITS = {
         CONCENTRATION_PARTS_PER_BILLION,
