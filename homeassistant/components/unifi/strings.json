@@ -58,6 +58,9 @@
       },
       "wired_client_link_speed": {
         "name": "Link speed"
+      },
+      "wlan_password": {
+        "name": "Password"
       }
     }
   },
