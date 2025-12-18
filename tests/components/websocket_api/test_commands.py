@@ -3822,9 +3822,7 @@ async def test_get_triggers_conditions_for_target(
             assert msg["success"]
             assert sorted(msg["result"]) == sorted(expected)
 
-            assert (
-                "Using cached automation component lookup data" in caplog.text
-            ) == expect_lookup_cache
+            assert ("has no cache yet" not in caplog.text) == expect_lookup_cache
             caplog.clear()
 
         # Test entity target - unknown entity
@@ -4077,9 +4075,7 @@ async def test_get_services_for_target(
         assert msg["success"]
         assert sorted(msg["result"]) == sorted(expected)
 
-        assert (
-            "Using cached automation component lookup data" in caplog.text
-        ) == expect_lookup_cache
+        assert ("has no cache yet" not in caplog.text) == expect_lookup_cache
         caplog.clear()
 
     # Test entity target - unknown entity
