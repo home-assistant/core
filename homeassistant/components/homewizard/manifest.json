@@ -1,6 +1,6 @@
 {
   "domain": "homewizard",
-  "name": "HomeWizard Energy",
+  "name": "HomeWizard",
   "codeowners": ["@DCSBL"],
   "config_flow": true,
   "dhcp": [
