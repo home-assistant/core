@@ -26,6 +26,18 @@
         "name": "Air filter polluted"
       }
     },
+    "climate": {
+      "flexit_bacnet": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "fireplace": "Fireplace",
+              "high": "High"
+            }
+          }
+        }
+      }
+    },
     "number": {
       "away_extract_fan_setpoint": {
         "name": "Away extract fan setpoint"
@@ -138,6 +150,12 @@
     },
     "switch_turn": {
       "message": "Failed to turn the switch {state}."
+    }
+  },
+  "issues": {
+    "deprecated_fireplace_switch": {
+      "description": "The fireplace mode switch entity `{entity_id}` is deprecated and will be removed in a future version.\n\nFireplace mode has been moved to a climate preset on the `{climate_entity_id}` entity to better match the device interface.\n\nPlease update your automations to use the `climate.set_preset_mode` service with preset mode `fireplace` instead of using the switch entity.\n\nAfter updating your automations, you can safely disable this switch entity.",
+      "title": "Fireplace mode switch is deprecated"
     }
   }
 }
