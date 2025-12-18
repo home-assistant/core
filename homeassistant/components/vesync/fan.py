@@ -50,7 +50,7 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][VS_COORDINATOR]
 
     @callback
-    def discover(devices):
+    def discover(devices: list[VeSyncBaseDevice]) -> None:
         """Add new devices to platform."""
         _setup_entities(devices, async_add_entities, coordinator)
 
@@ -66,9 +66,9 @@ async def async_setup_entry(
 @callback
 def _setup_entities(
     devices: list[VeSyncBaseDevice],
-    async_add_entities,
+    async_add_entities: AddConfigEntryEntitiesCallback,
     coordinator: VeSyncDataCoordinator,
-):
+) -> None:
     """Check if device is fan and add entity."""
 
     async_add_entities(
@@ -115,7 +115,10 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
         """Return the currently set speed."""
 
         current_level = self.device.state.fan_level
-        if self.device.state.mode == VS_FAN_MODE_MANUAL and current_level is not None:
+        if (
+            self.device.state.mode in (VS_FAN_MODE_MANUAL, VS_FAN_MODE_NORMAL)
+            and current_level is not None
+        ):
             if current_level == 0:
                 return 0
             return ordered_list_item_to_percentage(
@@ -207,7 +210,7 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
                 )
 
         # Switch to manual mode if not already set
-        if self.device.state.mode != VS_FAN_MODE_MANUAL:
+        if self.device.state.mode not in (VS_FAN_MODE_MANUAL, VS_FAN_MODE_NORMAL):
             if not await self.device.set_manual_mode():
                 raise HomeAssistantError(
                     "An error occurred while setting manual mode."
@@ -264,8 +267,12 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
             await self.async_set_preset_mode(preset_mode)
             return
         if percentage is None:
-            percentage = 50
-        await self.async_set_percentage(percentage)
+            success = await self.device.turn_on()
+            if not success:
+                raise HomeAssistantError(self.device.last_response.message)
+            self.schedule_update_ha_state()
+        else:
+            await self.async_set_percentage(percentage)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""

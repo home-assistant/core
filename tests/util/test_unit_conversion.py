@@ -1054,6 +1054,12 @@ _CONVERTED_VALUE: dict[
             10,
             UnitOfVolumeFlowRate.LITERS_PER_SECOND,
         ),
+        (
+            24,
+            UnitOfVolumeFlowRate.GALLONS_PER_DAY,
+            1,
+            UnitOfVolumeFlowRate.GALLONS_PER_HOUR,
+        ),
     ],
 }
 
@@ -1302,11 +1308,19 @@ def test_unit_conversion_factory_allow_none(
     ],
 )
 def test_temperature_convert_with_interval(
-    value: float, from_unit: str, expected: float, to_unit: str
+    value: float,
+    from_unit: str,
+    expected: float,
+    to_unit: str,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test conversion to other units."""
     expected = pytest.approx(expected)
     assert TemperatureConverter.convert_interval(value, from_unit, to_unit) == expected
+    assert (
+        "The deprecated function convert_interval was called. It will be removed "
+        "in HA Core 2026.12.0. Use TemperatureDeltaConverter.convert instead"
+    ) in caplog.text
 
 
 @pytest.mark.parametrize(

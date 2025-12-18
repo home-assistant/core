@@ -7,7 +7,7 @@ import io
 import logging
 from ssl import SSLContext
 from types import MappingProxyType
-from typing import Any
+from typing import Any, cast
 
 import httpx
 from telegram import (
@@ -23,6 +23,7 @@ from telegram import (
     InputMediaVideo,
     InputPollOption,
     Message,
+    PhotoSize,
     ReplyKeyboardMarkup,
     ReplyKeyboardRemove,
     Update,
@@ -43,6 +44,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util.ssl import get_default_context, get_default_no_verify_context
 
 from .const import (
@@ -56,6 +58,10 @@ from .const import (
     ATTR_DISABLE_NOTIF,
     ATTR_DISABLE_WEB_PREV,
     ATTR_FILE,
+    ATTR_FILE_ID,
+    ATTR_FILE_MIME_TYPE,
+    ATTR_FILE_NAME,
+    ATTR_FILE_SIZE,
     ATTR_FROM_FIRST,
     ATTR_FROM_LAST,
     ATTR_INLINE_MESSAGE_ID,
@@ -86,6 +92,7 @@ from .const import (
     CONF_CHAT_ID,
     CONF_PROXY_URL,
     DOMAIN,
+    EVENT_TELEGRAM_ATTACHMENT,
     EVENT_TELEGRAM_CALLBACK,
     EVENT_TELEGRAM_COMMAND,
     EVENT_TELEGRAM_SENT,
@@ -102,6 +109,7 @@ from .const import (
     SERVICE_SEND_VIDEO,
     SERVICE_SEND_VOICE,
 )
+from .helpers import signal
 
 _FILE_TYPES = ("animation", "document", "photo", "sticker", "video", "voice")
 _LOGGER = logging.getLogger(__name__)
@@ -161,6 +169,7 @@ class BaseTelegramBot:
 
         _LOGGER.debug("Firing event %s: %s", event_type, event_data)
         self.hass.bus.async_fire(event_type, event_data, context=event_context)
+        async_dispatcher_send(self.hass, signal(self._bot), event_type, event_data)
         return True
 
     @staticmethod
@@ -183,6 +192,10 @@ class BaseTelegramBot:
             # This is a command message - set event type to command and split data into command and args
             event_type = EVENT_TELEGRAM_COMMAND
             event_data.update(self._get_command_event_data(message.text))
+        elif filters.ATTACHMENT.filter(message):
+            event_type = EVENT_TELEGRAM_ATTACHMENT
+            event_data[ATTR_TEXT] = message.caption
+            event_data.update(self._get_file_id_event_data(message))
         else:
             event_type = EVENT_TELEGRAM_TEXT
             event_data[ATTR_TEXT] = message.text
@@ -191,6 +204,26 @@ class BaseTelegramBot:
             event_data.update(self._get_user_event_data(message.from_user))
 
         return event_type, event_data
+
+    def _get_file_id_event_data(self, message: Message) -> dict[str, Any]:
+        """Extract file_id from a message attachment, if any."""
+        if filters.PHOTO.filter(message):
+            photos = cast(Sequence[PhotoSize], message.effective_attachment)
+            return {
+                ATTR_FILE_ID: photos[-1].file_id,
+                ATTR_FILE_MIME_TYPE: "image/jpeg",  # telegram always uses jpeg for photos
+                ATTR_FILE_SIZE: photos[-1].file_size,
+            }
+        return {
+            k: getattr(message.effective_attachment, v)
+            for k, v in (
+                (ATTR_FILE_ID, "file_id"),
+                (ATTR_FILE_NAME, "file_name"),
+                (ATTR_FILE_MIME_TYPE, "mime_type"),
+                (ATTR_FILE_SIZE, "file_size"),
+            )
+            if hasattr(message.effective_attachment, v)
+        }
 
     def _get_user_event_data(self, user: User) -> dict[str, Any]:
         return {
@@ -415,7 +448,7 @@ class TelegramNotificationService:
                 params[ATTR_MESSAGE_THREAD_ID] = data[ATTR_MESSAGE_THREAD_ID]
             # Keyboards:
             if ATTR_KEYBOARD in data:
-                keys = data.get(ATTR_KEYBOARD)
+                keys = data[ATTR_KEYBOARD]
                 keys = keys if isinstance(keys, list) else [keys]
                 if keys:
                     params[ATTR_REPLYMARKUP] = ReplyKeyboardMarkup(
@@ -517,6 +550,9 @@ class TelegramNotificationService:
                 self.hass.bus.async_fire(
                     EVENT_TELEGRAM_SENT, event_data, context=context
                 )
+                async_dispatcher_send(
+                    self.hass, signal(self.bot), EVENT_TELEGRAM_SENT, event_data
+                )
         except TelegramError as exc:
             if not suppress_error:
                 raise HomeAssistantError(
@@ -548,6 +584,7 @@ class TelegramNotificationService:
             "Error sending message",
             params[ATTR_MESSAGE_TAG],
             text,
+            target=target,
             parse_mode=params[ATTR_PARSER],
             disable_web_page_preview=params[ATTR_DISABLE_WEB_PREV],
             disable_notification=params[ATTR_DISABLE_NOTIF],
@@ -746,6 +783,7 @@ class TelegramNotificationService:
                 None,
                 chat_id=chat_id,
                 action=chat_action,
+                message_thread_id=kwargs.get(ATTR_MESSAGE_THREAD_ID),
                 context=context,
             )
             result[chat_id] = is_successful
@@ -886,6 +924,7 @@ class TelegramNotificationService:
                 self.bot.send_sticker,
                 "Error sending sticker",
                 params[ATTR_MESSAGE_TAG],
+                target=kwargs.get(ATTR_TARGET),
                 sticker=stickerid,
                 disable_notification=params[ATTR_DISABLE_NOTIF],
                 reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
@@ -912,6 +951,7 @@ class TelegramNotificationService:
             self.bot.send_location,
             "Error sending location",
             params[ATTR_MESSAGE_TAG],
+            target=target,
             latitude=latitude,
             longitude=longitude,
             disable_notification=params[ATTR_DISABLE_NOTIF],
@@ -938,6 +978,7 @@ class TelegramNotificationService:
             self.bot.send_poll,
             "Error sending poll",
             params[ATTR_MESSAGE_TAG],
+            target=target,
             question=question,
             options=options,
             is_anonymous=is_anonymous,

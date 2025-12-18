@@ -344,7 +344,7 @@ async def test_user_resolve_error(hass: HomeAssistant, mock_client: APIClient) -
         user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "test"
     assert result2["data"] == {
         CONF_HOST: "127.0.0.1",
@@ -434,7 +434,7 @@ async def test_user_connection_error(
         user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
     )
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "test"
     assert result2["data"] == {
         CONF_HOST: "127.0.0.1",
@@ -512,7 +512,7 @@ async def test_user_invalid_password(
         result["flow_id"], user_input={CONF_PASSWORD: "good"}
     )
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "test"
     assert result2["data"] == {
         CONF_HOST: "127.0.0.1",
@@ -765,7 +765,7 @@ async def test_login_connection_error(
         result["flow_id"], user_input={CONF_PASSWORD: "good"}
     )
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "test"
     assert result2["data"] == {
         CONF_HOST: "127.0.0.1",
@@ -2702,6 +2702,59 @@ async def test_user_flow_starts_zwave_discovery(
 
     # Verify next_flow was set
     assert result["next_flow"] == (config_entries.FlowType.CONFIG_FLOW, zwave_flow_id)
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "mock_zeroconf")
+async def test_user_flow_no_zwave_discovery_without_home_id(
+    hass: HomeAssistant, mock_client: APIClient
+) -> None:
+    """Test that the user flow does not start Z-Wave JS discovery when zwave_home_id is not set."""
+    # Mock device with Z-Wave capabilities but no home ID
+    mock_client.device_info = AsyncMock(
+        return_value=DeviceInfo(
+            uses_password=False,
+            name="test-zwave-device-no-id",
+            mac_address="11:22:33:44:55:CC",
+            zwave_proxy_feature_flags=1,
+            zwave_home_id=0,  # No home ID set (fresh adapter or unplugged)
+        )
+    )
+    mock_client.connected_address = "192.168.1.103"
+
+    # Track flow.async_init calls
+    original_async_init = hass.config_entries.flow.async_init
+    flow_init_calls = []
+
+    async def track_async_init(*args, **kwargs):
+        flow_init_calls.append((args, kwargs))
+        return await original_async_init(*args, **kwargs)
+
+    with patch.object(
+        hass.config_entries.flow, "async_init", side_effect=track_async_init
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data={CONF_HOST: "192.168.1.103", CONF_PORT: 6053},
+        )
+
+    # Verify the ESPHome entry was created
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "test-zwave-device-no-id"
+    assert result["data"] == {
+        CONF_HOST: "192.168.1.103",
+        CONF_PORT: 6053,
+        CONF_PASSWORD: "",
+        CONF_NOISE_PSK: "",
+        CONF_DEVICE_NAME: "test-zwave-device-no-id",
+    }
+
+    # Verify only ESPHome flow was initiated, no Z-Wave flow
+    assert len(flow_init_calls) == 1
+    assert flow_init_calls[0][0][0] == DOMAIN
+
+    # Verify next_flow was NOT set
+    assert "next_flow" not in result
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_zeroconf")

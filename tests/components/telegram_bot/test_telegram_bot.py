@@ -2,6 +2,7 @@
 
 import base64
 from datetime import datetime
+from http import HTTPStatus
 import io
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, mock_open, patch
@@ -46,7 +47,6 @@ from homeassistant.components.telegram_bot.const import (
     ATTR_SHOW_ALERT,
     ATTR_STICKER_ID,
     ATTR_TARGET,
-    ATTR_TIMEOUT,
     ATTR_URL,
     ATTR_USERNAME,
     ATTR_VERIFY_SSL,
@@ -75,35 +75,43 @@ from homeassistant.components.telegram_bot.const import (
     SERVICE_SEND_VOICE,
 )
 from homeassistant.components.telegram_bot.webhooks import TELEGRAM_WEBHOOK_URL
-from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import (
+    ATTR_DOMAIN,
+    ATTR_ENTITY_ID,
+    ATTR_SERVICE,
     CONF_API_KEY,
     CONF_PLATFORM,
     HTTP_BASIC_AUTHENTICATION,
     HTTP_BEARER_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
 )
-from homeassistant.core import Context, HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.core import Context, Event, HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     HomeAssistantError,
     ServiceValidationError,
 )
-from homeassistant.setup import async_setup_component
+from homeassistant.helpers.issue_registry import IssueRegistry
+from homeassistant.util import json as json_util
 from homeassistant.util.file import write_utf8_file
 
-from tests.common import MockConfigEntry, async_capture_events
+from tests.common import MockConfigEntry, async_capture_events, async_load_fixture
 from tests.typing import ClientSessionGenerator
 
 
-async def test_webhook_platform_init(hass: HomeAssistant, webhook_platform) -> None:
+async def test_webhook_platform_init(hass: HomeAssistant, webhook_bot) -> None:
     """Test initialization of the webhooks platform."""
     assert hass.services.has_service(DOMAIN, SERVICE_SEND_MESSAGE) is True
 
 
-async def test_polling_platform_init(hass: HomeAssistant, polling_platform) -> None:
+async def test_polling_platform_init(
+    hass: HomeAssistant, mock_polling_config_entry: MockConfigEntry
+) -> None:
     """Test initialization of the polling platform."""
+    mock_polling_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_polling_config_entry.entry_id)
+    await hass.async_block_till_done()
+
     assert hass.services.has_service(DOMAIN, SERVICE_SEND_MESSAGE) is True
 
 
@@ -120,7 +128,6 @@ async def test_polling_platform_init(hass: HomeAssistant, polling_platform) -> N
                 ATTR_KEYBOARD: ["/command1, /command2", "/command3"],
                 ATTR_MESSAGE: "test_message",
                 ATTR_PARSER: ParseMode.HTML,
-                ATTR_TIMEOUT: 15,
                 ATTR_DISABLE_NOTIF: True,
                 ATTR_DISABLE_WEB_PREV: True,
                 ATTR_MESSAGE_TAG: "mock_tag",
@@ -151,7 +158,6 @@ async def test_polling_platform_init(hass: HomeAssistant, polling_platform) -> N
         (
             SERVICE_SEND_LOCATION,
             {
-                ATTR_MESSAGE: "test_message",
                 ATTR_MESSAGE_THREAD_ID: "123",
                 ATTR_LONGITUDE: "1.123",
                 ATTR_LATITUDE: "1.123",
@@ -160,7 +166,7 @@ async def test_polling_platform_init(hass: HomeAssistant, polling_platform) -> N
     ],
 )
 async def test_send_message(
-    hass: HomeAssistant, webhook_platform, service: str, input: dict[str]
+    hass: HomeAssistant, webhook_bot, service: str, input: dict[str, Any]
 ) -> None:
     """Test the send_message service. Tests any service that does not require files to be sent."""
     context = Context()
@@ -179,17 +185,12 @@ async def test_send_message(
     assert len(events) == 1
     assert events[0].context == context
 
-    config_entry = hass.config_entries.async_entry_for_domain_unique_id(
-        DOMAIN, "1234567890:ABC"
-    )
-    assert events[0].data["bot"]["config_entry_id"] == config_entry.entry_id
     assert events[0].data["bot"]["id"] == 123456
     assert events[0].data["bot"]["first_name"] == "Testbot"
     assert events[0].data["bot"]["last_name"] == "mock last name"
     assert events[0].data["bot"]["username"] == "mock username"
 
-    assert len(response["chats"]) == 1
-    assert (response["chats"][0]["message_id"]) == 12345
+    assert response == {"chats": [{"chat_id": 12345678, "message_id": 12345}]}
 
 
 @pytest.mark.parametrize(
@@ -233,7 +234,7 @@ async def test_send_message(
 )
 async def test_send_message_with_inline_keyboard(
     hass: HomeAssistant,
-    webhook_platform,
+    webhook_bot,
     input: dict[str, Any],
     expected: InlineKeyboardMarkup,
 ) -> None:
@@ -250,7 +251,7 @@ async def test_send_message_with_inline_keyboard(
             return_value=Message(
                 message_id=12345,
                 date=datetime.now(),
-                chat=Chat(id=123456, type=ChatType.PRIVATE),
+                chat=Chat(id=12345678, type=ChatType.PRIVATE),
             )
         ),
     ) as mock_send_message:
@@ -279,8 +280,7 @@ async def test_send_message_with_inline_keyboard(
     assert len(events) == 1
     assert events[0].context == context
 
-    assert len(response["chats"]) == 1
-    assert (response["chats"][0]["message_id"]) == 12345
+    assert response == {"chats": [{"chat_id": 12345678, "message_id": 12345}]}
 
 
 async def test_send_sticker_partial_error(
@@ -324,7 +324,7 @@ async def test_send_sticker_partial_error(
     assert err.value.args[0] == "Failed targets: [123456, 654321]"
 
 
-async def test_send_sticker_error(hass: HomeAssistant, webhook_platform) -> None:
+async def test_send_sticker_error(hass: HomeAssistant, webhook_bot) -> None:
     """Test the send_message service with an error."""
     with patch(
         "homeassistant.components.telegram_bot.bot.Bot.send_sticker",
@@ -350,7 +350,7 @@ async def test_send_sticker_error(hass: HomeAssistant, webhook_platform) -> None
 
 async def test_send_message_with_invalid_inline_keyboard(
     hass: HomeAssistant,
-    webhook_platform,
+    webhook_bot,
 ) -> None:
     """Test the send_message service with invalid inline keyboard."""
 
@@ -394,7 +394,7 @@ def _read_file_as_bytesio_mock(file_path):
 
 async def test_send_chat_action(
     hass: HomeAssistant,
-    webhook_platform,
+    webhook_bot,
     mock_broadcast_config_entry: MockConfigEntry,
 ) -> None:
     """Test the send_chat_action service."""
@@ -413,6 +413,7 @@ async def test_send_chat_action(
                 CONF_CONFIG_ENTRY_ID: mock_broadcast_config_entry.entry_id,
                 ATTR_TARGET: [123456],
                 ATTR_CHAT_ACTION: CHAT_ACTION_TYPING,
+                ATTR_MESSAGE_THREAD_ID: 123,
             },
             blocking=True,
             return_response=True,
@@ -420,7 +421,9 @@ async def test_send_chat_action(
 
     await hass.async_block_till_done()
     mock.assert_called_once()
-    mock.assert_called_with(chat_id=123456, action=CHAT_ACTION_TYPING)
+    mock.assert_called_with(
+        chat_id=123456, action=CHAT_ACTION_TYPING, message_thread_id=123
+    )
 
 
 @pytest.mark.parametrize(
@@ -433,7 +436,7 @@ async def test_send_chat_action(
         SERVICE_SEND_DOCUMENT,
     ],
 )
-async def test_send_file(hass: HomeAssistant, webhook_platform, service: str) -> None:
+async def test_send_file(hass: HomeAssistant, webhook_bot, service: str) -> None:
     """Test the send_file service (photo, animation, video, document...)."""
     context = Context()
     events = async_capture_events(hass, "telegram_sent")
@@ -461,11 +464,10 @@ async def test_send_file(hass: HomeAssistant, webhook_platform, service: str) ->
     assert len(events) == 1
     assert events[0].context == context
 
-    assert len(response["chats"]) == 1
-    assert (response["chats"][0]["message_id"]) == 12345
+    assert response == {"chats": [{"chat_id": 12345678, "message_id": 12345}]}
 
 
-async def test_send_message_thread(hass: HomeAssistant, webhook_platform) -> None:
+async def test_send_message_thread(hass: HomeAssistant, webhook_bot) -> None:
     """Test the send_message service for threads."""
     context = Context()
     events = async_capture_events(hass, "telegram_sent")
@@ -486,7 +488,7 @@ async def test_send_message_thread(hass: HomeAssistant, webhook_platform) -> Non
 
 async def test_webhook_endpoint_generates_telegram_text_event(
     hass: HomeAssistant,
-    webhook_platform,
+    webhook_bot,
     hass_client: ClientSessionGenerator,
     update_message_text,
     mock_generate_secret_token,
@@ -513,7 +515,7 @@ async def test_webhook_endpoint_generates_telegram_text_event(
 
 async def test_webhook_endpoint_generates_telegram_command_event(
     hass: HomeAssistant,
-    webhook_platform,
+    webhook_bot,
     hass_client: ClientSessionGenerator,
     update_message_command,
     mock_generate_secret_token,
@@ -540,7 +542,7 @@ async def test_webhook_endpoint_generates_telegram_command_event(
 
 async def test_webhook_endpoint_generates_telegram_callback_event(
     hass: HomeAssistant,
-    webhook_platform,
+    webhook_bot,
     hass_client: ClientSessionGenerator,
     update_callback_query,
     mock_generate_secret_token,
@@ -565,9 +567,55 @@ async def test_webhook_endpoint_generates_telegram_callback_event(
     assert isinstance(events[0].context, Context)
 
 
+@pytest.mark.parametrize(
+    ("attachment_type"),
+    [
+        ("photo"),
+        ("document"),
+    ],
+)
+async def test_webhook_endpoint_generates_telegram_attachment_event(
+    hass: HomeAssistant,
+    webhook_bot: None,
+    hass_client: ClientSessionGenerator,
+    mock_generate_secret_token: str,
+    attachment_type: str,
+) -> None:
+    """POST to the configured webhook endpoint and assert fired `telegram_attachment` event for photo and document."""
+    client = await hass_client()
+    events = async_capture_events(hass, "telegram_attachment")
+    update_message_attachment = await async_load_fixture(
+        hass, f"update_message_attachment_{attachment_type}.json", DOMAIN
+    )
+
+    response = await client.post(
+        f"{TELEGRAM_WEBHOOK_URL}_123456",
+        data=update_message_attachment,
+        headers={
+            "X-Telegram-Bot-Api-Secret-Token": mock_generate_secret_token,
+            "Content-Type": "application/json",
+        },
+    )
+    assert response.status == 200
+    assert (await response.read()).decode("utf-8") == ""
+
+    # Make sure event has fired
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    loaded = json_util.json_loads(update_message_attachment)
+    if attachment_type == "photo":
+        expected_file_id = loaded["message"]["photo"][-1]["file_id"]
+    else:
+        expected_file_id = loaded["message"][attachment_type]["file_id"]
+
+    assert events[0].data["file_id"] == expected_file_id
+    assert isinstance(events[0].context, Context)
+
+
 async def test_polling_platform_message_text_update(
     hass: HomeAssistant,
-    config_polling,
+    mock_polling_config_entry: MockConfigEntry,
     update_message_text,
     mock_external_calls: None,
 ) -> None:
@@ -588,11 +636,8 @@ async def test_polling_platform_message_text_update(
         application.stop = AsyncMock()
         application.shutdown = AsyncMock()
 
-        await async_setup_component(
-            hass,
-            DOMAIN,
-            config_polling,
-        )
+        mock_polling_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_polling_config_entry.entry_id)
         await hass.async_block_till_done()
 
         # Then call the callback and assert events fired.
@@ -611,11 +656,9 @@ async def test_polling_platform_message_text_update(
 
     assert len(events) == 1
     assert events[0].data["text"] == update_message_text["message"]["text"]
-
-    config_entry = hass.config_entries.async_entry_for_domain_unique_id(
-        DOMAIN, "1234567890:ABC"
+    assert (
+        events[0].data["bot"]["config_entry_id"] == mock_polling_config_entry.entry_id
     )
-    assert events[0].data["bot"]["config_entry_id"] == config_entry.entry_id
     assert events[0].data["bot"]["id"] == 123456
     assert events[0].data["bot"]["first_name"] == "Testbot"
     assert events[0].data["bot"]["last_name"] == "mock last name"
@@ -638,7 +681,7 @@ async def test_polling_platform_message_text_update(
 )
 async def test_polling_platform_add_error_handler(
     hass: HomeAssistant,
-    config_polling: dict[str, Any],
+    mock_polling_config_entry: MockConfigEntry,
     update_message_text: dict[str, Any],
     mock_external_calls: None,
     caplog: pytest.LogCaptureFixture,
@@ -660,11 +703,8 @@ async def test_polling_platform_add_error_handler(
         application.shutdown = AsyncMock()
         application.bot.defaults.tzinfo = None
 
-        await async_setup_component(
-            hass,
-            DOMAIN,
-            config_polling,
-        )
+        mock_polling_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_polling_config_entry.entry_id)
         await hass.async_block_till_done()
 
         update = Update.de_json(update_message_text, application.bot)
@@ -688,7 +728,7 @@ async def test_polling_platform_add_error_handler(
 )
 async def test_polling_platform_start_polling_error_callback(
     hass: HomeAssistant,
-    config_polling: dict[str, Any],
+    mock_polling_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
     mock_external_calls: None,
     error: Exception,
@@ -708,13 +748,10 @@ async def test_polling_platform_start_polling_error_callback(
         application.stop = AsyncMock()
         application.shutdown = AsyncMock()
 
-        await async_setup_component(
-            hass,
-            DOMAIN,
-            config_polling,
-        )
-
+        mock_polling_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_polling_config_entry.entry_id)
         await hass.async_block_till_done()
+
         error_callback = application.updater.start_polling.call_args.kwargs[
             "error_callback"
         ]
@@ -726,7 +763,7 @@ async def test_polling_platform_start_polling_error_callback(
 
 async def test_webhook_endpoint_unauthorized_update_doesnt_generate_telegram_text_event(
     hass: HomeAssistant,
-    webhook_platform,
+    webhook_bot,
     hass_client: ClientSessionGenerator,
     unauthorized_update_message_text,
     mock_generate_secret_token,
@@ -751,7 +788,7 @@ async def test_webhook_endpoint_unauthorized_update_doesnt_generate_telegram_tex
 
 async def test_webhook_endpoint_without_secret_token_is_denied(
     hass: HomeAssistant,
-    webhook_platform,
+    webhook_bot,
     hass_client: ClientSessionGenerator,
     update_message_text,
 ) -> None:
@@ -768,7 +805,7 @@ async def test_webhook_endpoint_without_secret_token_is_denied(
 
 async def test_webhook_endpoint_invalid_secret_token_is_denied(
     hass: HomeAssistant,
-    webhook_platform,
+    webhook_bot,
     hass_client: ClientSessionGenerator,
     update_message_text,
     incorrect_secret_token,
@@ -787,13 +824,19 @@ async def test_webhook_endpoint_invalid_secret_token_is_denied(
 
 async def test_multiple_config_entries_error(
     hass: HomeAssistant,
+    mock_polling_config_entry: MockConfigEntry,
     mock_broadcast_config_entry: MockConfigEntry,
-    polling_platform,
     mock_external_calls: None,
+    mock_polling_calls: None,
 ) -> None:
     """Test multiple config entries error."""
 
-    # setup the second entry (polling_platform is first entry)
+    # setup the first entry
+    mock_polling_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_polling_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # setup the second entry
     mock_broadcast_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -840,6 +883,7 @@ async def test_send_message_with_config_entry(
     await hass.async_block_till_done()
 
     assert err.value.translation_key == "failed_chat_ids"
+    assert err.value.translation_placeholders is not None
     assert err.value.translation_placeholders["chat_ids"] == "1"
     assert err.value.translation_placeholders["bot_name"] == "Mock Title"
 
@@ -857,7 +901,7 @@ async def test_send_message_with_config_entry(
         return_response=True,
     )
 
-    assert response["chats"][0]["message_id"] == 12345
+    assert response == {"chats": [{"chat_id": 123456, "message_id": 12345}]}
 
 
 async def test_send_message_no_chat_id_error(
@@ -865,28 +909,25 @@ async def test_send_message_no_chat_id_error(
     mock_external_calls: None,
 ) -> None:
     """Test send message using config entry with no whitelisted chat id."""
-    data = {
-        CONF_PLATFORM: PLATFORM_BROADCAST,
-        CONF_API_KEY: "mock api key",
-        SECTION_ADVANCED_SETTINGS: {},
-    }
-
-    with patch("homeassistant.components.telegram_bot.config_flow.Bot.get_me"):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data=data,
-        )
-        await hass.async_block_till_done()
-
-        assert result["type"] is FlowResultType.CREATE_ENTRY
+    mock_config_entry = MockConfigEntry(
+        unique_id="mock api key",
+        domain=DOMAIN,
+        data={
+            CONF_PLATFORM: PLATFORM_BROADCAST,
+            CONF_API_KEY: "mock api key",
+            SECTION_ADVANCED_SETTINGS: {},
+        },
+        options={ATTR_PARSER: PARSER_PLAIN_TEXT},
+    )
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SEND_MESSAGE,
             {
-                CONF_CONFIG_ENTRY_ID: result["result"].entry_id,
                 ATTR_MESSAGE: "mock message",
             },
             blocking=True,
@@ -894,7 +935,8 @@ async def test_send_message_no_chat_id_error(
         )
 
     assert err.value.translation_key == "missing_allowed_chat_ids"
-    assert err.value.translation_placeholders["bot_name"] == "Testbot mock last name"
+    assert err.value.translation_placeholders is not None
+    assert err.value.translation_placeholders["bot_name"] == "Mock Title"
 
 
 async def test_send_message_config_entry_error(
@@ -948,6 +990,7 @@ async def test_delete_message(
     await hass.async_block_till_done()
 
     assert err.value.translation_key == "invalid_chat_ids"
+    assert err.value.translation_placeholders is not None
     assert err.value.translation_placeholders["chat_ids"] == "1"
     assert err.value.translation_placeholders["bot_name"] == "Mock Title"
 
@@ -960,7 +1003,7 @@ async def test_delete_message(
         blocking=True,
         return_response=True,
     )
-    assert response["chats"][0]["message_id"] == 12345
+    assert response == {"chats": [{"chat_id": 123456, "message_id": 12345}]}
 
     with patch(
         "homeassistant.components.telegram_bot.bot.Bot.delete_message",
@@ -1030,7 +1073,6 @@ async def test_edit_message_media(
                 ATTR_MEDIA_TYPE: media_type,
                 ATTR_MESSAGEID: 12345,
                 ATTR_CHAT_ID: 123456,
-                ATTR_TIMEOUT: 10,
                 ATTR_KEYBOARD_INLINE: "/mock",
             },
             blocking=True,
@@ -1045,7 +1087,6 @@ async def test_edit_message_media(
     assert mock.call_args[1]["reply_markup"] == InlineKeyboardMarkup(
         [[InlineKeyboardButton(callback_data="/mock", text="MOCK")]]
     )
-    assert mock.call_args[1]["read_timeout"] == 10
 
 
 async def test_edit_message(
@@ -1337,7 +1378,7 @@ async def test_send_video(
     )
 
     await hass.async_block_till_done()
-    assert response["chats"][0]["message_id"] == 12345
+    assert response == {"chats": [{"chat_id": 123456, "message_id": 12345}]}
 
     # test: success with url
 
@@ -1361,7 +1402,7 @@ async def test_send_video(
 
     await hass.async_block_till_done()
     assert mock_get.call_count > 0
-    assert response["chats"][0]["message_id"] == 12345
+    assert response == {"chats": [{"chat_id": 123456, "message_id": 12345}]}
 
 
 async def test_set_message_reaction(
@@ -1398,3 +1439,213 @@ async def test_set_message_reaction(
         is_big=True,
         read_timeout=None,
     )
+
+
+@pytest.mark.parametrize(
+    ("service", "input"),
+    [
+        (
+            SERVICE_SEND_MESSAGE,
+            {
+                ATTR_TARGET: 654321,
+                ATTR_MESSAGE: "test_message",
+                ATTR_MESSAGE_THREAD_ID: "123",
+            },
+        ),
+        (
+            SERVICE_SEND_PHOTO,
+            {
+                ATTR_TARGET: 654321,
+                ATTR_FILE: "/media/dummy",
+            },
+        ),
+        (
+            SERVICE_SEND_VIDEO,
+            {
+                ATTR_TARGET: 654321,
+                ATTR_FILE: "/media/dummy",
+            },
+        ),
+        (
+            SERVICE_SEND_ANIMATION,
+            {
+                ATTR_TARGET: 654321,
+                ATTR_FILE: "/media/dummy",
+            },
+        ),
+        (
+            SERVICE_SEND_DOCUMENT,
+            {
+                ATTR_TARGET: 654321,
+                ATTR_FILE: "/media/dummy",
+            },
+        ),
+        (
+            SERVICE_SEND_VOICE,
+            {
+                ATTR_TARGET: 654321,
+                ATTR_FILE: "/media/dummy",
+            },
+        ),
+        (
+            SERVICE_SEND_STICKER,
+            {
+                ATTR_TARGET: 654321,
+                ATTR_STICKER_ID: "1",
+                ATTR_MESSAGE_THREAD_ID: "123",
+            },
+        ),
+        (
+            SERVICE_SEND_POLL,
+            {
+                ATTR_TARGET: 654321,
+                ATTR_QUESTION: "Question",
+                ATTR_OPTIONS: ["Yes", "No"],
+            },
+        ),
+        (
+            SERVICE_SEND_LOCATION,
+            {
+                ATTR_TARGET: 654321,
+                ATTR_MESSAGE_THREAD_ID: "123",
+                ATTR_LONGITUDE: "1.123",
+                ATTR_LATITUDE: "1.123",
+            },
+        ),
+    ],
+)
+async def test_send_message_multi_target(
+    hass: HomeAssistant,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+    service: str,
+    input: dict[str, Any],
+) -> None:
+    """Test send message for entries with multiple chat_ids."""
+
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # we have 2 whitelisted chat ids in the config subentries: 123456 and 654321
+    # 123456 is the default target since it is the first in the list
+    # This test checks that the message is sent to the right target
+
+    hass.config.allowlist_external_dirs.add("/media/")
+    with patch(
+        "homeassistant.components.telegram_bot.bot._read_file_as_bytesio",
+        _read_file_as_bytesio_mock,
+    ):
+        response = await hass.services.async_call(
+            DOMAIN,
+            service,
+            input,
+            blocking=True,
+            return_response=True,
+        )
+
+    await hass.async_block_till_done()
+    assert response == {"chats": [{"chat_id": 654321, "message_id": 12345}]}
+
+
+@pytest.mark.parametrize(
+    ("event", "expected_action_origin"),
+    [
+        (
+            Event("automation_triggered", {ATTR_ENTITY_ID: "automation.automation_0"}),
+            "automation.automation_0",
+        ),
+        (
+            Event("call_service", {ATTR_DOMAIN: "script", ATTR_SERVICE: "mock_script"}),
+            "script.mock_script",
+        ),
+        (
+            None,
+            "call_service",
+        ),
+    ],
+)
+async def test_deprecated_timeout_parameter(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_broadcast_config_entry: MockConfigEntry,
+    mock_external_calls: None,
+    issue_registry: IssueRegistry,
+    event: Event | None,
+    expected_action_origin: str,
+) -> None:
+    """Test send message using the deprecated timeout parameter."""
+
+    mock_broadcast_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # trigger service call
+    context = Context()
+    context.origin_event = event
+    await hass.services.async_call(
+        DOMAIN,
+        "send_message",
+        {"message": "test message", "timeout": 5},
+        blocking=True,
+        context=context,
+    )
+
+    # check issue is created correctly
+    issue = issue_registry.async_get_issue(
+        domain=DOMAIN,
+        issue_id="deprecated_timeout_parameter",
+    )
+    assert issue is not None
+    assert issue.domain == DOMAIN
+    assert issue.translation_key == "deprecated_timeout_parameter"
+    assert issue.translation_placeholders == {
+        "integration_title": "Telegram Bot",
+        "action": "telegram_bot.send_message",
+        "action_origin": expected_action_origin,
+    }
+
+    # fix the issue via repair flow
+
+    client = await hass_client()
+    resp = await client.post(
+        "/api/repairs/issues/fix",
+        json={"handler": DOMAIN, "issue_id": issue.issue_id},
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    flow_id = data["flow_id"]
+    assert data == {
+        "type": "form",
+        "flow_id": flow_id,
+        "handler": DOMAIN,
+        "step_id": "confirm",
+        "data_schema": [],
+        "errors": None,
+        "description_placeholders": {
+            "integration_title": "Telegram Bot",
+            "action": "telegram_bot.send_message",
+            "action_origin": expected_action_origin,
+        },
+        "last_step": None,
+        "preview": None,
+    }
+
+    resp = await client.post(f"/api/repairs/issues/fix/{flow_id}")
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    flow_id = data["flow_id"]
+    assert data == {
+        "type": "create_entry",
+        "flow_id": flow_id,
+        "handler": DOMAIN,
+        "description": None,
+        "description_placeholders": None,
+    }
+
+    # verify issue is resolved
+    assert not issue_registry.async_get_issue(DOMAIN, "deprecated_timeout_parameter")

@@ -36,7 +36,7 @@ DEFAULT_URL = SERVER_URLS[0]
 
 DOMAIN = "growatt_server"
 
-PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [Platform.NUMBER, Platform.SENSOR, Platform.SWITCH]
 
 LOGIN_INVALID_AUTH_CODE = "502"
 
@@ -46,3 +46,8 @@ ERROR_INVALID_AUTH = "invalid_auth"
 
 # Config flow abort reasons
 ABORT_NO_PLANTS = "no_plants"
+
+# Battery modes for TOU (Time of Use) settings
+BATT_MODE_LOAD_FIRST = 0
+BATT_MODE_BATTERY_FIRST = 1
+BATT_MODE_GRID_FIRST = 2

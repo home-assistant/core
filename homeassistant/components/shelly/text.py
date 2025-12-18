@@ -15,7 +15,8 @@ from homeassistant.components.text import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import ShellyConfigEntry
+from .const import ROLE_GENERIC
+from .coordinator import ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     RpcEntityDescription,
     ShellyRpcAttributeEntity,
@@ -25,6 +26,7 @@ from .entity import (
 from .utils import (
     async_remove_orphaned_entities,
     get_device_entry_gen,
+    get_rpc_channel_name,
     get_virtual_component_ids,
     is_view_for_platform,
 )
@@ -44,7 +46,7 @@ RPC_TEXT_ENTITIES: Final = {
         removal_condition=lambda config, _status, key: not is_view_for_platform(
             config, key, TEXT_PLATFORM
         ),
-        role="generic",
+        role=ROLE_GENERIC,
     ),
 }
 
@@ -96,6 +98,17 @@ class RpcText(ShellyRpcAttributeEntity, TextEntity):
     entity_description: RpcTextDescription
     attribute_value: str | None
     _id: int
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcTextDescription,
+    ) -> None:
+        """Initialize sensor."""
+        super().__init__(coordinator, key, attribute, description)
+        self._attr_name = get_rpc_channel_name(coordinator.device, key)
 
     @property
     def native_value(self) -> str | None:
