@@ -49,7 +49,7 @@ class HikvisionConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 camera = await self.hass.async_add_executor_job(
-                    HikCamera, url, port, username, password
+                    HikCamera, url, port, username, password, ssl
                 )
             except requests.exceptions.RequestException:
                 _LOGGER.exception("Error connecting to Hikvision device")
@@ -102,7 +102,7 @@ class HikvisionConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             camera = await self.hass.async_add_executor_job(
-                HikCamera, url, port, username, password
+                HikCamera, url, port, username, password, ssl
             )
         except requests.exceptions.RequestException:
             _LOGGER.exception(
