@@ -208,7 +208,7 @@ class AbstractTemplateAlarmControlPanel(
         self.setup_state_template(
             CONF_STATE,
             "_attr_alarm_state",
-            validator=tcv.enum(self, CONF_STATE, AlarmControlPanelState),
+            validator=tcv.strenum(self, CONF_STATE, AlarmControlPanelState),
         )
 
         self._attr_supported_features: AlarmControlPanelEntityFeature = (

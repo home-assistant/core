@@ -209,6 +209,9 @@ class TemplateEntity(AbstractTemplateEntity):
             CONF_AVAILABILITY, "_attr_available", on_update=self._update_available
         )
 
+        # Render name, icon, and picture early. name is rendered early because it influences
+        # the entity_id.  icon and picture are rendered early to ensure they are populated even
+        # if the entity renders unavailable.
         self._attr_name = None
         for option, attribute, validator in (
             (CONF_ICON, "_attr_icon", vol.Or(cv.whitespace, cv.icon)),

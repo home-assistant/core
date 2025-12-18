@@ -132,7 +132,7 @@ class StateImageEntity(TemplateEntity, AbstractTemplateImage):
     @property
     def entity_picture(self) -> str | None:
         """Return entity picture."""
-        if CONF_PICTURE in self._templates:
+        if self._has_picture_template:
             return TemplateEntity.entity_picture.__get__(self)
         # mypy doesn't know about fget: https://github.com/python/mypy/issues/6185
         return ImageEntity.entity_picture.fget(self)  # type: ignore[attr-defined]

@@ -11,9 +11,11 @@ from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-from .const import RESULT_OFF, RESULT_ON
-
 _LOGGER = logging.getLogger(__name__)
+
+# Valid on/off values for booleans
+RESULT_ON = ("1", "true", "yes", "on", "enable")
+RESULT_OFF = ("0", "false", "no", "off", "disable")
 
 
 def _log_validation_result_error(
@@ -35,39 +37,43 @@ def _log_validation_result_error(
 
     _LOGGER.error(
         message,
-        expected if isinstance(expected, str) else "expected: " + ", ".join(expected),
+        expected
+        if isinstance(expected, str)
+        else "expected one of " + ", ".join(expected),
     )
 
 
-def _check_result_for_none(result: Any, none_on_unknown_unavailable: bool) -> bool:
+def _check_result_for_none(result: Any, **kwargs: Any) -> bool:
     """Checks the result for none, unknown, unavailable."""
     if result is None:
         return True
 
-    if none_on_unknown_unavailable and isinstance(result, str):
+    if kwargs.get("none_on_unknown_unavailable") and isinstance(result, str):
         return result.lower() in (STATE_UNAVAILABLE, STATE_UNKNOWN)
 
     return False
 
 
-def enum[T: StrEnum](
+def strenum[T: StrEnum](
     entity: Entity,
     attribute: str,
     state_enum: type[T],
     state_on: T | None = None,
     state_off: T | None = None,
-    none_on_unknown_unavailable: bool = False,
+    **kwargs: Any,
 ) -> Callable[[Any], T | None]:
     """Converts the template result to an StrEnum.
 
     All strings will attempt to convert to the StrEnum
     If state_on or state_off are provided, boolean values will return the
-     enum that represents each boolean value.
+    enum that represents each boolean value.
     Anything that cannot convert will result in None.
+
+    none_on_unknown_unavailable
     """
 
     def convert(result: Any) -> T | None:
-        if _check_result_for_none(result, none_on_unknown_unavailable):
+        if _check_result_for_none(result, **kwargs):
             return None
 
         if isinstance(result, str):
@@ -111,7 +117,7 @@ def boolean(
     attribute: str,
     as_true: tuple[str, ...] | None = None,
     as_false: tuple[str, ...] | None = None,
-    none_on_unknown_unavailable: bool = False,
+    **kwargs: Any,
 ) -> Callable[[Any], bool | None]:
     """Convert the result to a boolean.
 
@@ -123,7 +129,7 @@ def boolean(
     """
 
     def convert(result: Any) -> bool | None:
-        if _check_result_for_none(result, none_on_unknown_unavailable):
+        if _check_result_for_none(result, **kwargs):
             return None
 
         if isinstance(result, bool):
@@ -136,17 +142,19 @@ def boolean(
             if as_false and value in as_false:
                 return False
 
+        try:
+            return cv.boolean(result)
+        except vol.Invalid:
+            pass
+
         items: tuple[str, ...] = RESULT_ON + RESULT_OFF
         if as_true:
             items += as_true
         if as_false:
             items += as_false
 
-        try:
-            return cv.boolean(result)
-        except vol.Invalid:
-            _log_validation_result_error(entity, attribute, result, items)
-            return None
+        _log_validation_result_error(entity, attribute, result, items)
+        return None
 
     return convert
 
@@ -157,7 +165,7 @@ def number(
     minimum: float | None = None,
     maximum: float | None = None,
     return_type: type[float] | type[int] = float,
-    none_on_unknown_unavailable: bool = False,
+    **kwargs: Any,
 ) -> Callable[[Any], float | int | None]:
     """Convert the result to a number (float or int).
 
@@ -173,7 +181,7 @@ def number(
         message = f"{message} less than or equal to {maximum:0.1f}"
 
     def convert(result: Any) -> float | int | None:
-        if _check_result_for_none(result, none_on_unknown_unavailable):
+        if _check_result_for_none(result, **kwargs):
             return None
 
         if (result_type := type(result)) is bool:
@@ -219,7 +227,7 @@ def list_of_strings(
     entity: Entity,
     attribute: str,
     none_on_empty: bool = False,
-    none_on_unknown_unavailable: bool = False,
+    **kwargs: Any,
 ) -> Callable[[Any], list[str] | None]:
     """Convert the result to a list of strings.
 
@@ -230,7 +238,7 @@ def list_of_strings(
     """
 
     def convert(result: Any) -> list[str] | None:
-        if _check_result_for_none(result, none_on_unknown_unavailable):
+        if _check_result_for_none(result, **kwargs):
             return None
 
         if not isinstance(result, list):
@@ -256,16 +264,16 @@ def item_in_list[T](
     attribute: str,
     items: list[Any] | None,
     items_attribute: str | None = None,
-    none_on_unknown_unavailable: bool = False,
+    **kwargs: Any,
 ) -> Callable[[Any], Any | None]:
-    """Convert the result to an item inside a list.
+    """Assert the result of the template is an item inside a list.
 
     Returns the result if the result is inside the list.
     All results that are not inside the list will return None.
     """
 
     def convert(result: Any) -> Any | None:
-        if _check_result_for_none(result, none_on_unknown_unavailable):
+        if _check_result_for_none(result, **kwargs):
             return None
 
         if items is None or (len(items) == 0):

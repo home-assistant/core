@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @dataclass
 class EntityTemplate:
-    """Class to store template entity information."""
+    """Information class for properly handling template results."""
 
     attribute: str
     template: Template
