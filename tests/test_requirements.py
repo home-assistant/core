@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.loader import async_get_integration
 from homeassistant.requirements import (
     CONSTRAINT_FILE,
+    DEPRECATED_PACKAGES,
     RequirementsNotFound,
     _async_get_manager,
     async_clear_install_history,
@@ -657,3 +658,30 @@ async def test_discovery_requirements_dhcp(hass: HomeAssistant) -> None:
 
     assert len(mock_process.mock_calls) == 2  # dhcp does not depend on http
     assert mock_process.mock_calls[0][1][1] == dhcp.requirements
+
+
+async def test_install_deprecated_package(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test installation of a deprecated package."""
+    with (
+        patch.dict(DEPRECATED_PACKAGES, {"hello": "is deprecated for testing"}),
+        patch(
+            "homeassistant.util.package.install_package", return_value=True
+        ) as mock_inst,
+    ):
+        await async_process_requirements(hass, "test_component", ["hello==1.0.0"])
+        await async_process_requirements(
+            hass, "test_component", ["pyserial-asyncio>=0.6"]
+        )
+
+    assert len(mock_inst.mock_calls) == 1
+
+    assert (
+        "Requirement hello for integration test_component is deprecated for testing"
+        in caplog.text
+    )
+    assert (
+        "Requirement pyserial-asyncio for integration test_component is deprecated, "
+        "will be rejected after 2026.2, and should be replaced by pyserial-asyncio-fast"
+    ) in caplog.text

@@ -28,6 +28,13 @@ DISCOVERY_INTEGRATIONS: dict[str, Iterable[str]] = {
     "ssdp": ("ssdp",),
     "zeroconf": ("zeroconf", "homekit"),
 }
+DEPRECATED_PACKAGES: dict[str, str] = {
+    # old_package_name: reason
+    "pyserial-asyncio": (
+        "is deprecated, will be rejected after 2026.2, "
+        "and should be replaced by pyserial-asyncio-fast"
+    ),
+}
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -258,6 +265,16 @@ class RequirementsManager:
                 _LOGGER.warning("Skipping requirement %s. This may cause issues", req)
 
             requirements = [r for r in requirements if r not in skipped_requirements]
+
+        if DEPRECATED_PACKAGES:
+            for req in requirements:
+                if (req_name := Requirement(req).name) in DEPRECATED_PACKAGES:
+                    _LOGGER.warning(
+                        "Requirement %s for integration %s %s",
+                        req_name,
+                        name,
+                        DEPRECATED_PACKAGES[req_name],
+                    )
 
         if not (missing := self._find_missing_requirements(requirements)):
             return
