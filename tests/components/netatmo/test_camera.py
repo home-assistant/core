@@ -96,7 +96,7 @@ async def test_setup_component_with_webhook(
         "device_id": "12:34:56:10:b9:0e",
         "camera_id": "12:34:56:10:b9:0e",
         "event_id": "601dce1560abca1ebad9b723",
-        "push_type": "NOCamera-off",
+        "push_type": "NOC-off",
     }
     await simulate_webhook(hass, webhook_id, response)
 
@@ -107,7 +107,7 @@ async def test_setup_component_with_webhook(
         "device_id": "12:34:56:10:b9:0e",
         "camera_id": "12:34:56:10:b9:0e",
         "event_id": "646227f1dc0dfa000ec5f350",
-        "push_type": "NOCamera-on",
+        "push_type": "NOC-on",
     }
     await simulate_webhook(hass, webhook_id, response)
 
@@ -428,7 +428,7 @@ async def test_service_set_camera_light_invalid_type(
     ("camera_type", "camera_id", "camera_entity"),
     [
         ("NACamera", "12:34:56:00:f1:62", "camera.hall"),
-        ("NOCamera", "12:34:56:10:b9:0e", "camera.front"),
+        ("NOC", "12:34:56:10:b9:0e", "camera.front"),
     ],
 )
 async def test_camera_reconnect_webhook(

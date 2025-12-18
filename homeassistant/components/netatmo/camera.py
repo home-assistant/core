@@ -39,6 +39,7 @@ from .const import (
     SERVICE_SET_CAMERA_LIGHT,
     SERVICE_SET_PERSON_AWAY,
     SERVICE_SET_PERSONS_HOME,
+    WEBHOOK_PUSH_TYPE,
 )
 from .data_handler import EVENT, HOME, SIGNAL_NAME, NetatmoDevice
 from .entity import NetatmoModuleEntity
@@ -140,9 +141,14 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         """Handle webhook events."""
         data = event["data"]
         event_type = data.get(ATTR_EVENT_TYPE)
+        push_type = data.get(WEBHOOK_PUSH_TYPE)
 
         if not event_type:
             _LOGGER.debug("Event has no type, returning")
+            return
+
+        if not event_type:
+            _LOGGER.debug("Event has no push_type, returning")
             return
 
         if not data.get("camera_id"):
@@ -160,6 +166,16 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
             data["home_id"] == self.home.entity_id
             and data["camera_id"] == self.device.entity_id
         ):
+            # device_type to be stripped "DeviceType."
+            device_push_type = f"{self.device_type.name}-{event_type}"
+            if push_type != device_push_type:
+                _LOGGER.debug(
+                    "Event push_type %s does not match device push_type %s, returning",
+                    push_type,
+                    device_push_type,
+                )
+                return
+
             if event_type in [EVENT_TYPE_DISCONNECTION, EVENT_TYPE_OFF]:
                 _LOGGER.debug(
                     "Camera %s has received %s event, turning off and idleing streaming",
