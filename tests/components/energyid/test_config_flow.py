@@ -470,7 +470,7 @@ async def test_config_flow_reauth_success(
         )
         await hass.async_block_till_done()
 
-        assert result2["type"] == FlowResultType.ABORT
+        assert result2["type"] is FlowResultType.ABORT
         # Entry should be updated
         updated_entry = hass.config_entries.async_get_entry(entry.entry_id)
         assert updated_entry.data[CONF_PROVISIONING_KEY] == "new_key"
