@@ -15,11 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import (
-    aiohttp_client,
-    config_entry_oauth2_flow,
-    device_registry as dr,
-)
+from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DOMAIN
@@ -83,21 +79,6 @@ def _handle_new_thermostats(
         _LOGGER.debug("Created thermostat coordinator for device %s", device_id)
 
     async_dispatcher_send(hass, f"{DOMAIN}_{entry.entry_id}_new_device")
-
-
-async def async_remove_config_entry_device(
-    hass: HomeAssistant,
-    config_entry: WattsVisionConfigEntry,
-    device_entry: dr.DeviceEntry,
-) -> bool:
-    """Remove a config entry from a device."""
-    # Allow removal if device is not in coordinator data
-    return not any(
-        identifier
-        for identifier in device_entry.identifiers
-        if identifier[0] == DOMAIN
-        and identifier[1] in config_entry.runtime_data.hub_coordinator.data
-    )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: WattsVisionConfigEntry) -> bool:
