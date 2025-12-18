@@ -1,5 +1,6 @@
 """The tests for components."""
 
+from collections.abc import Iterable
 from enum import StrEnum
 import itertools
 from typing import TypedDict
@@ -345,6 +346,13 @@ def set_or_remove_state(
         )
 
 
-def other_states(state: StrEnum) -> list[str]:
+def other_states(state: StrEnum | Iterable[StrEnum]) -> list[str]:
     """Return a sorted list with all states except the specified one."""
-    return sorted({s.value for s in state.__class__} - {state.value})
+    if isinstance(state, StrEnum):
+        excluded_values = {state.value}
+        enum_class = state.__class__
+    else:
+        excluded_values = {s.value for s in state}
+        enum_class = list(state)[0].__class__
+
+    return sorted({s.value for s in enum_class} - excluded_values)

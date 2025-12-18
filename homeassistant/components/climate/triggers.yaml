@@ -1,9 +1,9 @@
 .trigger_common: &trigger_common
-  target:
+  target: &trigger_climate_target
     entity:
       domain: climate
   fields:
-    behavior:
+    behavior: &trigger_behavior
       required: true
       default: any
       selector:
@@ -19,3 +19,17 @@ started_drying: *trigger_common
 started_heating: *trigger_common
 turned_off: *trigger_common
 turned_on: *trigger_common
+
+hvac_mode_changed:
+  target: *trigger_climate_target
+  fields:
+    behavior: *trigger_behavior
+    hvac_mode:
+      context:
+        filter_target: target
+      selector:
+        state:
+          # Note: This should allow selecting multiple modes, but state selector does not support that yet.
+          hide_states:
+            - unavailable
+            - unknown
