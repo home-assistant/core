@@ -2332,7 +2332,7 @@ async def test_driver_ready_event(
     await hass.async_block_till_done()
 
     assert len(config_entry_state_changes) == 4
-    assert config_entry_state_changes[0] == ConfigEntryState.UNLOAD_IN_PROGRESS
-    assert config_entry_state_changes[1] == ConfigEntryState.NOT_LOADED
-    assert config_entry_state_changes[2] == ConfigEntryState.SETUP_IN_PROGRESS
-    assert config_entry_state_changes[3] == ConfigEntryState.LOADED
+    assert config_entry_state_changes[0] is ConfigEntryState.UNLOAD_IN_PROGRESS
+    assert config_entry_state_changes[1] is ConfigEntryState.NOT_LOADED
+    assert config_entry_state_changes[2] is ConfigEntryState.SETUP_IN_PROGRESS
+    assert config_entry_state_changes[3] is ConfigEntryState.LOADED

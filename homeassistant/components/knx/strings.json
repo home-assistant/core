@@ -639,6 +639,10 @@
         "name": "Telegrams",
         "unit_of_measurement": "telegrams"
       },
+      "telegrams_data_secure_undecodable": {
+        "name": "Undecodable Data Secure telegrams",
+        "unit_of_measurement": "[%key:component::knx::entity::sensor::telegrams_incoming_error::unit_of_measurement%]"
+      },
       "telegrams_incoming": {
         "name": "Incoming telegrams",
         "unit_of_measurement": "[%key:component::knx::entity::sensor::telegram_count::unit_of_measurement%]"
