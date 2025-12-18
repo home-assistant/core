@@ -2336,6 +2336,9 @@ sanix==1.0.6
 # homeassistant.components.satel_integra
 satel-integra==0.3.7
 
+# homeassistant.components.iss
+satellitetle==0.18.0
+
 # homeassistant.components.screenlogic
 screenlogicpy==0.10.2
 

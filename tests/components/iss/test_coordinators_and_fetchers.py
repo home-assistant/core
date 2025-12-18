@@ -10,18 +10,12 @@ from homeassistant.components.iss.const import DEFAULT_TLE_SOURCES, DOMAIN, TLE_
 from homeassistant.components.iss.coordinator.people import IssPeopleCoordinator
 from homeassistant.components.iss.coordinator.position import IssPositionCoordinator
 from homeassistant.components.iss.coordinator.tle import IssTleCoordinator
-from homeassistant.components.iss.tle_fetcher import TleFetcher
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from tests.common import MockConfigEntry
 
 # Sample valid TLE data for ISS
-SAMPLE_TLE_RESPONSE = """ISS (ZARYA)
-1 25544U 98067A   24001.50000000  .00012345  00000-0  12345-3 0  9999
-2 25544  51.6400 123.4567 0001234  12.3456 123.4567 15.49123456123456
-"""
-
 SAMPLE_TLE_LINE1 = (
     "1 25544U 98067A   24001.50000000  .00012345  00000-0  12345-3 0  9999"
 )
@@ -40,174 +34,6 @@ def mock_config_entry() -> MockConfigEntry:
     )
 
 
-class TestTleFetcher:
-    """Tests for TleFetcher class."""
-
-    async def test_fetch_tle_from_source_success(
-        self, hass: HomeAssistant, aioclient_mock
-    ) -> None:
-        """Test successfully fetching TLE from a single source."""
-        url = "http://example.com/tle.txt"
-        aioclient_mock.get(url, text=SAMPLE_TLE_RESPONSE)
-
-        session = MagicMock()
-        fetcher = TleFetcher(session, "TestAgent/1.0")
-
-        # Mock the session.get to use aioclient_mock
-        mock_response = AsyncMock()
-        mock_response.raise_for_status = MagicMock()
-        mock_response.text = AsyncMock(return_value=SAMPLE_TLE_RESPONSE)
-        session.get = AsyncMock(return_value=mock_response)
-
-        result = await fetcher.fetch_tle_from_source(url, 25544)
-
-        assert result is not None
-        assert result[0] == SAMPLE_TLE_LINE1
-        assert result[1] == SAMPLE_TLE_LINE2
-        session.get.assert_called_once()
-
-    async def test_fetch_tle_from_source_timeout(self, hass: HomeAssistant) -> None:
-        """Test timeout when fetching TLE."""
-        session = MagicMock()
-        fetcher = TleFetcher(session, "TestAgent/1.0")
-
-        session.get = AsyncMock(side_effect=TimeoutError())
-
-        result = await fetcher.fetch_tle_from_source(
-            "http://example.com/tle.txt", 25544
-        )
-
-        assert result is None
-
-    async def test_fetch_tle_from_source_client_error(
-        self, hass: HomeAssistant
-    ) -> None:
-        """Test client error when fetching TLE."""
-        session = MagicMock()
-        fetcher = TleFetcher(session, "TestAgent/1.0")
-
-        mock_response = AsyncMock()
-        mock_response.raise_for_status = MagicMock(side_effect=ClientError())
-        session.get = AsyncMock(return_value=mock_response)
-
-        result = await fetcher.fetch_tle_from_source(
-            "http://example.com/tle.txt", 25544
-        )
-
-        assert result is None
-
-    async def test_fetch_tle_from_source_invalid_data(
-        self, hass: HomeAssistant
-    ) -> None:
-        """Test invalid TLE data (missing lines)."""
-        session = MagicMock()
-        fetcher = TleFetcher(session, "TestAgent/1.0")
-
-        mock_response = AsyncMock()
-        mock_response.raise_for_status = MagicMock()
-        mock_response.text = AsyncMock(return_value="Invalid TLE data\nNo valid lines")
-        session.get = AsyncMock(return_value=mock_response)
-
-        result = await fetcher.fetch_tle_from_source(
-            "http://example.com/tle.txt", 25544
-        )
-
-        assert result is None
-
-    async def test_fetch_tle_multiple_sources_first_succeeds(
-        self, hass: HomeAssistant
-    ) -> None:
-        """Test fetching from multiple sources when first succeeds."""
-        session = MagicMock()
-        fetcher = TleFetcher(session, "TestAgent/1.0")
-
-        mock_response = AsyncMock()
-        mock_response.raise_for_status = MagicMock()
-        mock_response.text = AsyncMock(return_value=SAMPLE_TLE_RESPONSE)
-        session.get = AsyncMock(return_value=mock_response)
-
-        sources = [
-            "http://source1.com/tle.txt",
-            "http://source2.com/tle.txt",
-            "http://source3.com/tle.txt",
-        ]
-
-        result = await fetcher.fetch_tle(sources, 25544)
-
-        assert result is not None
-        assert result[0] == SAMPLE_TLE_LINE1
-        assert result[1] == SAMPLE_TLE_LINE2
-        # Should only call once since first source succeeds
-        assert session.get.call_count == 1
-
-    async def test_fetch_tle_multiple_sources_fallback(
-        self, hass: HomeAssistant
-    ) -> None:
-        """Test fetching from multiple sources with fallback."""
-        session = MagicMock()
-        fetcher = TleFetcher(session, "TestAgent/1.0")
-
-        # First call fails, second succeeds
-        mock_response_fail = AsyncMock()
-        mock_response_fail.raise_for_status = MagicMock(side_effect=ClientError())
-
-        mock_response_success = AsyncMock()
-        mock_response_success.raise_for_status = MagicMock()
-        mock_response_success.text = AsyncMock(return_value=SAMPLE_TLE_RESPONSE)
-
-        session.get = AsyncMock(side_effect=[mock_response_fail, mock_response_success])
-
-        sources = ["http://source1.com/tle.txt", "http://source2.com/tle.txt"]
-
-        result = await fetcher.fetch_tle(sources, 25544)
-
-        assert result is not None
-        assert result[0] == SAMPLE_TLE_LINE1
-        assert result[1] == SAMPLE_TLE_LINE2
-        assert session.get.call_count == 2
-
-    async def test_fetch_tle_all_sources_fail(self, hass: HomeAssistant) -> None:
-        """Test when all sources fail."""
-        session = MagicMock()
-        fetcher = TleFetcher(session, "TestAgent/1.0")
-
-        session.get = AsyncMock(side_effect=ClientError())
-
-        sources = [
-            "http://source1.com/tle.txt",
-            "http://source2.com/tle.txt",
-            "http://source3.com/tle.txt",
-        ]
-
-        result = await fetcher.fetch_tle(sources, 25544)
-
-        assert result is None
-        assert session.get.call_count == 3
-
-    async def test_fetch_tle_randomizes_sources(self, hass: HomeAssistant) -> None:
-        """Test that sources are randomized."""
-        session = MagicMock()
-        fetcher = TleFetcher(session, "TestAgent/1.0")
-
-        mock_response = AsyncMock()
-        mock_response.raise_for_status = MagicMock()
-        mock_response.text = AsyncMock(return_value=SAMPLE_TLE_RESPONSE)
-        session.get = AsyncMock(return_value=mock_response)
-
-        sources = [f"http://source{i}.com/tle.txt" for i in range(10)]
-
-        # Run multiple times to check randomization
-        called_urls = []
-        for _ in range(5):
-            session.get.reset_mock()
-            await fetcher.fetch_tle(sources, 25544)
-            called_urls.append(session.get.call_args[0][0])
-
-        # With 10 sources and 5 runs, we should see some variation
-        # (extremely unlikely to get the same source 5 times)
-        assert len(set(called_urls)) > 1
-
-
 class TestIssTleCoordinator:
     """Tests for IssTleCoordinator class."""
 
@@ -223,11 +49,14 @@ class TestIssTleCoordinator:
             update_interval=timedelta(hours=24),
         )
 
-        # Mock the fetcher to return valid TLE data
-        with patch.object(
-            coordinator._fetcher,
-            "fetch_tle",
-            return_value=(SAMPLE_TLE_LINE1, SAMPLE_TLE_LINE2),
+        # Mock satellitetle.fetch_latest_tles to return valid TLE data
+        mock_tle = MagicMock()
+        mock_tle.line1 = SAMPLE_TLE_LINE1
+        mock_tle.line2 = SAMPLE_TLE_LINE2
+
+        with patch(
+            "homeassistant.components.iss.coordinator.tle.fetch_latest_tles",
+            return_value={25544: mock_tle},
         ):
             result = await coordinator._async_update_data()
 
@@ -256,7 +85,10 @@ class TestIssTleCoordinator:
 
         with (
             patch.object(coordinator._store, "async_load", return_value=cached_data),
-            patch.object(coordinator._fetcher, "fetch_tle", return_value=None),
+            patch(
+                "homeassistant.components.iss.coordinator.tle.fetch_latest_tles",
+                side_effect=Exception("Fetch failed"),
+            ),
         ):
             result = await coordinator._async_update_data()
 
@@ -277,7 +109,10 @@ class TestIssTleCoordinator:
 
         with (
             patch.object(coordinator._store, "async_load", return_value=None),
-            patch.object(coordinator._fetcher, "fetch_tle", return_value=None),
+            patch(
+                "homeassistant.components.iss.coordinator.tle.fetch_latest_tles",
+                side_effect=Exception("Fetch failed"),
+            ),
             pytest.raises(UpdateFailed, match="No valid TLE data could be fetched"),
         ):
             await coordinator._async_update_data()
@@ -303,7 +138,9 @@ class TestIssTleCoordinator:
 
         with (
             patch.object(coordinator._store, "async_load", return_value=cached_data),
-            patch.object(coordinator._fetcher, "fetch_tle") as mock_fetch,
+            patch(
+                "homeassistant.components.iss.coordinator.tle.fetch_latest_tles"
+            ) as mock_fetch,
         ):
             result = await coordinator._async_update_data()
 
@@ -323,12 +160,15 @@ class TestIssTleCoordinator:
             update_interval=timedelta(hours=24),
         )
 
+        mock_tle = MagicMock()
+        mock_tle.line1 = SAMPLE_TLE_LINE1
+        mock_tle.line2 = SAMPLE_TLE_LINE2
+
         with (
             patch.object(coordinator._store, "async_load", return_value=None),
-            patch.object(
-                coordinator._fetcher,
-                "fetch_tle",
-                return_value=(SAMPLE_TLE_LINE1, SAMPLE_TLE_LINE2),
+            patch(
+                "homeassistant.components.iss.coordinator.tle.fetch_latest_tles",
+                return_value={25544: mock_tle},
             ),
             patch.object(coordinator._store, "async_save") as mock_save,
         ):
@@ -344,7 +184,7 @@ class TestIssTleCoordinator:
     async def test_coordinator_uses_configured_sources(
         self, hass: HomeAssistant, mock_config_entry: MockConfigEntry
     ) -> None:
-        """Test coordinator uses sources from const."""
+        """Test coordinator uses sources from configuration."""
         mock_config_entry.add_to_hass(hass)
 
         coordinator = IssTleCoordinator(
@@ -355,21 +195,21 @@ class TestIssTleCoordinator:
 
         with (
             patch.object(coordinator._store, "async_load", return_value=None),
-            patch.object(
-                coordinator._fetcher, "fetch_tle", return_value=None
+            patch(
+                "homeassistant.components.iss.coordinator.tle.fetch_latest_tles",
+                side_effect=Exception("Fetch failed"),
             ) as mock_fetch,
-            patch.object(coordinator._store, "async_load", return_value=None),
             pytest.raises(UpdateFailed),
         ):
             await coordinator._async_update_data()
 
-        # Verify it was called with list of TLE URLs and ISS_NORAD_ID
-        expected_urls = [
-            TLE_SOURCES[source]
+        # Verify it was called with correct sources and ISS NORAD ID
+        expected_sources = [
+            (source, TLE_SOURCES[source])
             for source in DEFAULT_TLE_SOURCES
             if source in TLE_SOURCES
         ]
-        mock_fetch.assert_called_once_with(expected_urls, 25544)
+        mock_fetch.assert_called_once_with([25544], expected_sources)
 
 
 class TestIssPeopleCoordinator:

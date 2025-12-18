@@ -6,15 +6,14 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any
 
+from satellite_tle import fetch_latest_tles
+
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import __version__ as ha_version
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from ..const import CONF_TLE_SOURCES, DEFAULT_TLE_SOURCES, TLE_SOURCES
-from ..tle_fetcher import TleFetcher
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,11 +42,6 @@ class IssTleCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             STORAGE_VERSION,
             store_path,
         )
-
-        # Initialize TLE fetcher with proper User-Agent
-        session = async_get_clientsession(hass)
-        user_agent = f"HomeAssistant/{ha_version} (ISS Integration)"
-        self._fetcher = TleFetcher(session, user_agent)
 
         super().__init__(
             hass,
@@ -82,11 +76,6 @@ class IssTleCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     "Using cached TLE data from %s",
                     timestamp_str or "unknown",
                 )
-
-                _LOGGER.debug("TLE data returned from cache")
-                _LOGGER.debug(
-                    "TLE data will be checked again in %s", self.update_interval
-                )
                 return cached_data  # type: ignore[return-value]
 
         # Build source list from configuration
@@ -96,40 +85,56 @@ class IssTleCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             enabled_sources = self.config_entry.options.get(
                 CONF_TLE_SOURCES, DEFAULT_TLE_SOURCES
             )
-        source_urls = [
-            TLE_SOURCES[source] for source in enabled_sources if source in TLE_SOURCES
+
+        # Convert to satellitetle format: list of (name, url) tuples
+        sources = [
+            (source, TLE_SOURCES[source])
+            for source in enabled_sources
+            if source in TLE_SOURCES
         ]
 
-        # Fetch fresh TLE data from sources
+        # Fetch fresh TLE data using satellitetle
         _LOGGER.debug("Fetching fresh TLE data for ISS (NORAD ID %d)", ISS_NORAD_ID)
         _LOGGER.debug("TLE sources configured: %s", enabled_sources)
-        _LOGGER.debug("TLE URLs to try: %s", source_urls)
 
-        valid_tle = await self._fetcher.fetch_tle(source_urls, ISS_NORAD_ID)
+        def _raise_no_tle_data() -> None:
+            raise UpdateFailed(f"No TLE data found for ISS (NORAD ID {ISS_NORAD_ID})")
 
-        # If no valid TLE found, fall back to cache
-        if not valid_tle:
+        try:
+            tles = await self.hass.async_add_executor_job(
+                fetch_latest_tles, [ISS_NORAD_ID], sources
+            )
+
+            if ISS_NORAD_ID not in tles:
+                _raise_no_tle_data()
+
+            tle = tles[ISS_NORAD_ID]
+
+            # Prepare fresh data
+            data: dict[str, Any] = {
+                "line1": tle.line1,
+                "line2": tle.line2,
+                "timestamp": datetime.now().isoformat(),
+            }
+
+            # Cache fresh data
+            await self._store.async_save(data)
+            _LOGGER.debug("TLE data has been refreshed and cached")
+
+        except Exception as ex:
+            # If fetch fails, fall back to cache
             if cached_data is not None:
                 _LOGGER.warning(
-                    "No valid TLE fetched from any source; using cached data from %s",
+                    "Failed to fetch TLE data (%s); using cached data from %s",
+                    ex,
                     cached_data.get("timestamp", "unknown"),
                 )
                 return cached_data
-            raise UpdateFailed("No valid TLE data could be fetched for ISS")
-
-        # Prepare fresh data
-        data: dict[str, Any] = {
-            "line1": valid_tle[0],
-            "line2": valid_tle[1],
-            "timestamp": datetime.now().isoformat(),
-        }
-
-        # Cache fresh data
-        await self._store.async_save(data)
-        _LOGGER.debug("TLE data has been refreshed and cached")
-        _LOGGER.debug("TLE data will be checked again in %s", self.update_interval)
-
-        return data
+            raise UpdateFailed(
+                f"No valid TLE data could be fetched for ISS: {ex}"
+            ) from ex
+        else:
+            return data
 
     async def async_clear_cache(self) -> None:
         """Clear the TLE cache."""

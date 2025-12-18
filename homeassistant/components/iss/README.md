@@ -15,10 +15,8 @@ data very frequently without putting load on external APIs
 
 TLE data is cached locally in the `Store` providing resiliency against
 network failures. In addition to caching the data, the integration will
-fetch this data using multiple sources. On refresh, the integration
-will randomize the order in a naive attempt to spread the load. Should
-a given source fail, an additional source will be tried. Should all
-sources fail, the local cache remains available.
+fetch this data using multiple sources. Should all sources fail, the local
+cache remains available.
 
 ## Sensors
 ### Position
