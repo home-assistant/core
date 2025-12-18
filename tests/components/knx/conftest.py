@@ -11,9 +11,15 @@ from xknx import XKNX
 from xknx.core import XknxConnectionState, XknxConnectionType
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.io import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
-from xknx.telegram import Telegram, TelegramDirection
+from xknx.telegram import Telegram, TelegramDirection, tpci
 from xknx.telegram.address import GroupAddress, IndividualAddress
-from xknx.telegram.apci import APCI, GroupValueRead, GroupValueResponse, GroupValueWrite
+from xknx.telegram.apci import (
+    APCI,
+    GroupValueRead,
+    GroupValueResponse,
+    GroupValueWrite,
+    SecureAPDU,
+)
 
 from homeassistant.components.knx.const import (
     CONF_KNX_AUTOMATIC,
@@ -313,6 +319,23 @@ class KNXTestKit:
             GroupValueWrite(payload_value),
             source=source,
         )
+
+    def receive_data_secure_issue(
+        self,
+        group_address: str,
+        source: str | None = None,
+    ) -> None:
+        """Inject incoming telegram with undecodable data secure payload."""
+        telegram = Telegram(
+            destination_address=GroupAddress(group_address),
+            direction=TelegramDirection.INCOMING,
+            source_address=IndividualAddress(source or self.INDIVIDUAL_ADDRESS),
+            tpci=tpci.TDataGroup(),
+            payload=SecureAPDU.from_knx(
+                bytes.fromhex("03f110002446cfef4ac085e7092ab062b44d")
+            ),
+        )
+        self.xknx.telegram_queue.received_data_secure_group_key_issue(telegram)
 
 
 @pytest.fixture
