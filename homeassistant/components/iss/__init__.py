@@ -20,7 +20,7 @@ from .coordinator.people import IssPeopleCoordinator
 from .coordinator.position import IssPositionCoordinator
 from .coordinator.tle import IssTleCoordinator
 
-PLATFORMS = [Platform.BUTTON, Platform.SENSOR]
+PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
