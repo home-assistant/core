@@ -148,7 +148,7 @@ class ActronSystemClimate(BaseClimateEntity):
     @property
     def fan_mode(self) -> str | None:
         """Return the current fan mode."""
-        fan_mode = self._status.user_aircon_settings.fan_mode
+        fan_mode = self._status.user_aircon_settings.base_fan_mode
         return FAN_MODE_MAPPING_ACTRONAIR_TO_HA.get(fan_mode)
 
     @property

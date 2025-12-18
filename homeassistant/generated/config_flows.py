@@ -752,6 +752,7 @@ FLOWS = {
         "wallbox",
         "waqi",
         "watergate",
+        "watts",
         "watttime",
         "waze_travel_time",
         "weatherflow",
