@@ -432,15 +432,20 @@ class PrometheusMetrics:
 
     def handle_area(self, area: AreaEntry) -> None:
         """Add/update an area in Prometheus."""
+        metric_name = "area_info"
+        labels = {
+            "area": area.id,
+            "area_name": area.name,
+            "floor": area.floor_id if area.floor_id is not None else "",
+        }
+        self._area_info_metrics[labels["area"]] = MetricNameWithLabelValues(
+            metric_name, tuple(labels.values())
+        )
         self._metric(
-            "area_info",
+            metric_name,
             prometheus_client.Gauge,
             "Area information",
-            {
-                "area": area.id,
-                "area_name": area.name,
-                "floor": area.floor_id if area.floor_id is not None else "",
-            },
+            labels,
         ).set(1.0)
 
     def handle_floor_registry_updated(
@@ -469,15 +474,20 @@ class PrometheusMetrics:
 
     def handle_floor(self, floor: FloorEntry) -> None:
         """Add/update a floor in Prometheus."""
+        metric_name = "floor_info"
+        labels = {
+            "floor": floor.floor_id,
+            "floor_name": floor.name,
+            "floor_level": str(floor.level) if floor.level is not None else "",
+        }
+        self._floor_info_metrics[labels["floor"]] = MetricNameWithLabelValues(
+            metric_name, tuple(labels.values())
+        )
         self._metric(
-            "floor_info",
+            metric_name,
             prometheus_client.Gauge,
             "Floor information",
-            {
-                "floor": floor.floor_id,
-                "floor_name": floor.name,
-                "floor_level": str(floor.level) if floor.level is not None else "",
-            },
+            labels,
         ).set(1.0)
 
     def _remove_labelsets(
@@ -541,15 +551,7 @@ class PrometheusMetrics:
                 registry=prometheus_client.REGISTRY,
             )
             metric = cast(_MetricBaseT, self._metrics[metric_name])
-        if metric_name == "area_info":
-            self._area_info_metrics[labels["area"]] = MetricNameWithLabelValues(
-                metric_name, tuple(labels.values())
-            )
-        elif metric_name == "floor_info":
-            self._floor_info_metrics[labels["floor"]] = MetricNameWithLabelValues(
-                metric_name, tuple(labels.values())
-            )
-        else:
+        if "entity" in labels:
             self._metrics_by_entity_id[labels["entity"]].add(
                 MetricNameWithLabelValues(metric_name, tuple(labels.values()))
             )
