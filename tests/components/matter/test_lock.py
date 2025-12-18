@@ -293,3 +293,31 @@ async def test_set_lock_usercode(
         ),
         timed_request_timeout_ms=1000,
     )
+
+
+@pytest.mark.parametrize("node_fixture", ["door_lock"])
+async def test_clear_lock_usercode(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test clearing a usercode on a Matter lock."""
+    await hass.services.async_call(
+        "matter",
+        "clear_lock_usercode",
+        {
+            "entity_id": "lock.mock_door_lock",
+            "code_slot": 3,
+        },
+        blocking=True,
+    )
+
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.DoorLock.Commands.ClearPinCode(
+            userIndex=2,  # code_slot 3 -> index 2 (0-based)
+        ),
+        timed_request_timeout_ms=1000,
+    )
