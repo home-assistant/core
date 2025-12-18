@@ -153,7 +153,7 @@ async def test_fan_oscillation(hass: HomeAssistant, knx: KNXTestKit) -> None:
 @pytest.mark.parametrize(
     ("knx_data", "expected_read_response", "expected_state"),
     [
-        (
+        (  # percent mode fan with oscillation
             {
                 "speed": {
                     "ga_speed": {"write": "1/1/0", "state": "1/1/1"},
@@ -164,7 +164,7 @@ async def test_fan_oscillation(hass: HomeAssistant, knx: KNXTestKit) -> None:
             [("1/1/1", (0x55,)), ("2/2/2", True)],
             {"state": STATE_ON, "percentage": 33, "oscillating": True},
         ),
-        (
+        (  # step only fan
             {
                 "speed": {
                     "ga_step": {"write": "1/1/0", "state": "1/1/1"},
@@ -174,6 +174,14 @@ async def test_fan_oscillation(hass: HomeAssistant, knx: KNXTestKit) -> None:
             },
             [("1/1/1", (2,))],
             {"state": STATE_ON, "percentage": 66},
+        ),
+        (  # switch only fan
+            {
+                "ga_switch": {"write": "1/1/0", "state": "1/1/1"},
+                "sync_state": True,
+            },
+            [("1/1/1", True)],
+            {"state": STATE_ON, "percentage": None},
         ),
     ],
 )
