@@ -134,11 +134,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WattsVisionConfigEntry) 
     client = WattsVisionClient(auth, session)
     hub_coordinator = WattsVisionHubCoordinator(hass, client, entry)
 
-    await hub_coordinator.async_setup()
     await hub_coordinator.async_config_entry_first_refresh()
-
-    # Stale device tracking
-    hub_coordinator.previous_devices = set(hub_coordinator.data.keys())
 
     thermostat_coordinators: dict[str, WattsVisionThermostatCoordinator] = {}
     for device_id in hub_coordinator.device_ids:

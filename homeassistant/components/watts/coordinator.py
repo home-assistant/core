@@ -66,40 +66,22 @@ class WattsVisionHubCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         self._last_discovery: datetime | None = None
         self.previous_devices: set[str] = set()
 
-    async def async_setup(self) -> None:
-        """Set up the coordinator by discovering devices."""
-        try:
-            devices_list = await self.client.discover_devices()
-        except WattsVisionAuthError as err:
-            raise ConfigEntryAuthFailed("Authentication failed") from err
-        except (
-            WattsVisionConnectionError,
-            WattsVisionTimeoutError,
-            WattsVisionDeviceError,
-            WattsVisionError,
-            ConnectionError,
-            TimeoutError,
-            ValueError,
-        ) as err:
-            raise ConfigEntryNotReady("Failed to discover devices") from err
-
-        devices = {device.device_id: device for device in devices_list}
-        _LOGGER.info("Initial discovery completed with %d devices", len(devices))
-        self.async_set_updated_data(devices)
-
-        self._last_discovery = datetime.now()
-
     async def _async_update_data(self) -> dict[str, Device]:
         """Fetch data and periodic device discovery."""
         now = datetime.now()
+        is_first_refresh = self._last_discovery is None
+        discovery_interval_elapsed = (
+            self._last_discovery is not None
+            and now - self._last_discovery
+            >= timedelta(minutes=DISCOVERY_INTERVAL_MINUTES)
+        )
 
-        if self._last_discovery is None or now - self._last_discovery >= timedelta(
-            minutes=DISCOVERY_INTERVAL_MINUTES
-        ):
+        if is_first_refresh or discovery_interval_elapsed:
             try:
                 devices_list = await self.client.discover_devices()
+            except WattsVisionAuthError as err:
+                raise ConfigEntryAuthFailed("Authentication failed") from err
             except (
-                WattsVisionAuthError,
                 WattsVisionConnectionError,
                 WattsVisionTimeoutError,
                 WattsVisionDeviceError,
@@ -108,6 +90,8 @@ class WattsVisionHubCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                 TimeoutError,
                 ValueError,
             ) as err:
+                if is_first_refresh:
+                    raise ConfigEntryNotReady("Failed to discover devices") from err
                 _LOGGER.warning(
                     "Periodic discovery failed: %s, falling back to update", err
                 )
@@ -129,8 +113,9 @@ class WattsVisionHubCoordinator(DataUpdateCoordinator[dict[str, Device]]):
 
         try:
             devices = await self.client.get_devices_report(device_ids)
+        except WattsVisionAuthError as err:
+            raise ConfigEntryAuthFailed("Authentication failed") from err
         except (
-            WattsVisionAuthError,
             WattsVisionConnectionError,
             WattsVisionTimeoutError,
             WattsVisionDeviceError,

@@ -22,7 +22,7 @@ from tests.common import (
 
 CLIENT_ID = "test_client_id"
 CLIENT_SECRET = "test_client_secret"
-TEST_DEVICE_ID = "test-device-id"
+TEST_USER_ID = "test-user-id"
 TEST_ACCESS_TOKEN = "test-access-token"
 TEST_REFRESH_TOKEN = "test-refresh-token"
 TEST_ID_TOKEN = "test-id-token"
@@ -66,17 +66,14 @@ def mock_watts_client() -> Generator[AsyncMock]:
         device_detail_data = load_json_object_fixture("device_detail.json", DOMAIN)
 
         discovered_devices = [
-            create_device_from_data(device_data)
+            create_device_from_data(device_data)  # type: ignore[arg-type]
             for device_data in discover_data
-            if isinstance(device_data, dict)
         ]
         device_report = {
-            device_id: create_device_from_data(device_data)
+            device_id: create_device_from_data(device_data)  # type: ignore[arg-type]
             for device_id, device_data in device_report_data.items()
-            if isinstance(device_data, dict)
         }
-        assert isinstance(device_detail_data, dict)
-        device_detail = create_device_from_data(device_detail_data)
+        device_detail = create_device_from_data(device_detail_data)  # type: ignore[arg-type]
 
         client.discover_devices.return_value = discovered_devices
         client.get_devices_report.return_value = device_report
@@ -92,7 +89,6 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         title="Watts Vision",
         data={
-            "device_id": TEST_DEVICE_ID,
             "auth_implementation": DOMAIN,
             "token": {
                 "access_token": TEST_ACCESS_TOKEN,
@@ -103,5 +99,5 @@ def mock_config_entry() -> MockConfigEntry:
             },
         },
         entry_id="01J0BC4QM2YBRP6H5G933CETI8",
-        unique_id=TEST_DEVICE_ID,
+        unique_id=TEST_USER_ID,
     )

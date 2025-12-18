@@ -54,7 +54,7 @@ async def test_full_flow(
     )
 
     with patch(
-        "visionpluspython.auth.WattsVisionAuth.extract_user_id_from_token",
+        "homeassistant.components.watts.config_flow.WattsVisionAuth.extract_user_id_from_token",
         return_value="user123",
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -99,7 +99,7 @@ async def test_invalid_token_flow(
     )
 
     with patch(
-        "visionpluspython.auth.WattsVisionAuth.extract_user_id_from_token",
+        "homeassistant.components.watts.config_flow.WattsVisionAuth.extract_user_id_from_token",
         return_value=None,
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
@@ -210,39 +210,38 @@ async def test_unique_config_entry(
     )
     mock_config_entry.add_to_hass(hass)
 
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == 200
+
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "refresh_token": "mock-refresh-token",
+            "access_token": "mock-access-token",
+            "token_type": "Bearer",
+            "expires_in": 3600,
+        },
+    )
+
     with patch(
-        "visionpluspython.auth.WattsVisionAuth.extract_user_id_from_token",
+        "homeassistant.components.watts.config_flow.WattsVisionAuth.extract_user_id_from_token",
         return_value="user123",
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_USER}
-        )
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-        if result.get("type") is FlowResultType.EXTERNAL_STEP:
-            state = config_entry_oauth2_flow._encode_jwt(
-                hass,
-                {
-                    "flow_id": result["flow_id"],
-                    "redirect_uri": "https://example.com/auth/external/callback",
-                },
-            )
-            client = await hass_client_no_auth()
-            resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
-            assert resp.status == 200
-
-            aioclient_mock.post(
-                OAUTH2_TOKEN,
-                json={
-                    "refresh_token": "mock-refresh-token",
-                    "access_token": "mock-access-token",
-                    "token_type": "Bearer",
-                    "expires_in": 3600,
-                },
-            )
-
-            result = await hass.config_entries.flow.async_configure(result["flow_id"])
-
-        assert result.get("type") is FlowResultType.ABORT
-        assert result.get("reason") == "already_configured"
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "already_configured"
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1

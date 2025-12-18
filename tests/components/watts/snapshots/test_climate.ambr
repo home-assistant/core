@@ -45,7 +45,7 @@
 # name: test_entities[climate.bedroom_thermostat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 19.2,
+      'current_temperature': 19.0,
       'friendly_name': 'Bedroom Thermostat',
       'hvac_modes': list([
         <HVACMode.HEAT: 'heat'>,
@@ -111,7 +111,7 @@
 # name: test_entities[climate.living_room_thermostat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 20.8,
+      'current_temperature': 20.5,
       'friendly_name': 'Living Room Thermostat',
       'hvac_modes': list([
         <HVACMode.HEAT: 'heat'>,
