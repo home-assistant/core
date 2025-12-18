@@ -5,7 +5,7 @@
   "documentation": "https://github.com/Rotarex/homeassistant/blob/main/README.md",
   "issue_tracker": "https://github.com/Rotarex/homeassistant/issues",
   "codeowners": ["@Rotarex"],
-  "requirements": ["aiohttp"],
+  "requirements": ["aiohttp", "rotarex-dimes-srg-api", "rotarex-api"],
   "version": "0.1.0",
   "iot_class": "cloud_polling"
 }

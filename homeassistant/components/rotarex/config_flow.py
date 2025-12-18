@@ -1,12 +1,12 @@
 import logging
 
+from rotarex_api import InvalidAuth, RotarexApi
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .api import InvalidAuth, RotarexApi
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
