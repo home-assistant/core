@@ -39,3 +39,8 @@ rules:
   integration-owner: done
   docs-installation-parameters: todo
   docs-configuration-parameters: todo
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: todo

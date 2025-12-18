@@ -243,7 +243,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==43.0.0
+aioesphomeapi==43.3.0
 
 # homeassistant.components.matrix
 # homeassistant.components.slack
@@ -1637,9 +1637,6 @@ pyaussiebb==0.1.5
 # homeassistant.components.balboa
 pybalboa==1.1.3
 
-# homeassistant.components.blackbird
-pyblackbird==0.6
-
 # homeassistant.components.bluesound
 pyblu==2.0.5
 
@@ -1941,7 +1938,7 @@ pypalazzetti==0.1.20
 pypaperless==4.1.1
 
 # homeassistant.components.lcn
-pypck==0.9.7
+pypck==0.9.8
 
 # homeassistant.components.pglab
 pypglab==0.0.5
@@ -2107,7 +2104,7 @@ python-google-weather-api==0.0.4
 python-homeassistant-analytics==0.9.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==9.3.0
+python-homewizard-energy==10.0.0
 
 # homeassistant.components.izone
 python-izone==1.2.9
