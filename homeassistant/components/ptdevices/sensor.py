@@ -157,7 +157,6 @@ async def async_setup_entry(
         new_devices = current_devices - coordinator.previous_devices
         if new_devices:
             for device_id in new_devices:
-                _LOGGER.info("Adding new device %s", device_id)
                 device = coordinator.data["body"][device_id]
                 formatted_device = _format_dict(device)
                 async_add_entity(
