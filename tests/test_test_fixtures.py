@@ -96,7 +96,8 @@ async def test_evict_faked_translations(hass: HomeAssistant, translations_once) 
     fake_domain = "test"
     real_domain = "homeassistant"
 
-    # Evict the real domain from the cache in case it's been loaded before
+    # Evict domains from the cache in case they've been loaded before
+    cache.loaded["en"].discard(fake_domain)
     cache.loaded["en"].discard(real_domain)
 
     assert fake_domain not in cache.loaded["en"]
