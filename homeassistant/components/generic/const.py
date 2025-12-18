@@ -9,3 +9,4 @@ CONF_STILL_IMAGE_URL = "still_image_url"
 CONF_STREAM_SOURCE = "stream_source"
 CONF_FRAMERATE = "framerate"
 GET_IMAGE_TIMEOUT = 10
+SECTION_ADVANCED = "advanced"
