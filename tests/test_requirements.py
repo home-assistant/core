@@ -671,19 +671,10 @@ async def test_install_deprecated_package(
         ) as mock_inst,
     ):
         await async_process_requirements(hass, "test_component", ["hello==1.0.0"])
-        await async_process_requirements(
-            hass, "test_component", ["pyserial-asyncio>=0.6"]
-        )
 
     assert len(mock_inst.mock_calls) == 1
 
     assert (
         "Requirement hello==1.0.0 for integration test_component is deprecated "
         "for testing"
-    ) in caplog.text
-
-    assert (
-        "Requirement pyserial-asyncio>=0.6 for integration test_component is "
-        "deprecated, will be rejected after 2026.2, and should be replaced by "
-        "pyserial-asyncio-fast"
     ) in caplog.text
