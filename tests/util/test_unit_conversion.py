@@ -163,7 +163,7 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
     OzoneConcentrationConverter: (
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         CONCENTRATION_PARTS_PER_BILLION,
-        1.9632,
+        1.995417,
     ),
     PowerConverter: (UnitOfPower.WATT, UnitOfPower.KILO_WATT, 1000),
     PressureConverter: (UnitOfPressure.HPA, UnitOfPressure.INHG, 33.86389),
@@ -922,13 +922,13 @@ _CONVERTED_VALUE: dict[
         (
             1,
             CONCENTRATION_PARTS_PER_BILLION,
-            1.9632,
+            1.995417,
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         ),
         (
             120,
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-            61.12469,
+            60.1378,
             CONCENTRATION_PARTS_PER_BILLION,
         ),
     ],
