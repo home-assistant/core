@@ -528,7 +528,7 @@ class OzoneConcentrationConverter(BaseUnitConverter):
 
     UNIT_CLASS = "ozone"
     _UNIT_CONVERSION: dict[str | None, float] = {
-        CONCENTRATION_PARTS_PER_BILLION: 1,
+        CONCENTRATION_PARTS_PER_BILLION: 1e9,
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: (
             _OZONE_MOLAR_MASS / _AMBIENT_IDEAL_GAS_MOLAR_VOLUME * 1e6
         ),
