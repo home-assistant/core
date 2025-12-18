@@ -1810,7 +1810,7 @@ py-dactyl==2.0.4
 py-dormakaba-dkey==1.0.6
 
 # homeassistant.components.improv_ble
-py-improv-ble-client==1.0.3
+py-improv-ble-client==2.0.1
 
 # homeassistant.components.madvr
 py-madvr2==1.6.40
@@ -2572,7 +2572,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==3.12.2
+python-roborock==3.18.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.46
