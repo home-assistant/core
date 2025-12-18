@@ -55,7 +55,7 @@ class _VacuumActivityWrapper(DeviceWrapper):
         pause_wrapper: DPCodeBooleanWrapper | None = None,
         status_wrapper: DPCodeEnumWrapper | None = None,
     ) -> None:
-        """Init DeviceWrapper."""
+        """Init _VacuumActivityWrapper."""
         self._pause_wrapper = pause_wrapper
         self._status_wrapper = status_wrapper
 
@@ -94,7 +94,7 @@ class _VacuumActionWrapper(DeviceWrapper):
         mode_wrapper: DPCodeEnumWrapper | None,
         switch_wrapper: DPCodeBooleanWrapper | None,
     ) -> None:
-        """Init DeviceWrapper."""
+        """Init _VacuumActionWrapper."""
         self._charge_wrapper = charge_wrapper
         self._locate_wrapper = locate_wrapper
         self._mode_wrapper = mode_wrapper
@@ -115,7 +115,7 @@ class _VacuumActionWrapper(DeviceWrapper):
 
     @classmethod
     def find_dpcode(cls, device: CustomerDevice) -> Self:
-        """Find and return a DPCodeTypeInformationWrapper for the given DP codes."""
+        """Find and return a _VacuumActionWrapper for the given DP codes."""
         return cls(
             charge_wrapper=DPCodeBooleanWrapper.find_dpcode(
                 device, DPCode.SWITCH_CHARGE, prefer_function=True
