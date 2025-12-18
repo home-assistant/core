@@ -68,7 +68,7 @@ class _SwingModeWrapper(DeviceWrapper):
     on_off: DPCodeBooleanWrapper | None = None
     horizontal: DPCodeBooleanWrapper | None = None
     vertical: DPCodeBooleanWrapper | None = None
-    modes: list[str]
+    options: list[str]
 
     @classmethod
     def find_dpcode(cls, device: CustomerDevice) -> Self | None:
@@ -83,18 +83,18 @@ class _SwingModeWrapper(DeviceWrapper):
             device, DPCode.SWITCH_VERTICAL, prefer_function=True
         )
         if on_off or horizontal or vertical:
-            modes = [SWING_OFF]
+            options = [SWING_OFF]
             if on_off:
-                modes.append(SWING_ON)
+                options.append(SWING_ON)
             if horizontal:
-                modes.append(SWING_HORIZONTAL)
+                options.append(SWING_HORIZONTAL)
             if vertical:
-                modes.append(SWING_VERTICAL)
+                options.append(SWING_VERTICAL)
             return cls(
                 on_off=on_off,
                 horizontal=horizontal,
                 vertical=vertical,
-                modes=modes,
+                options=options,
             )
         return None
 
@@ -403,7 +403,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         # Determine swing modes
         if swing_wrapper:
             self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
-            self._attr_swing_modes = swing_wrapper.modes
+            self._attr_swing_modes = swing_wrapper.options
 
         if switch_wrapper:
             self._attr_supported_features |= (
