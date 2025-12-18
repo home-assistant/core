@@ -110,10 +110,14 @@ class IssTleCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
             tle = tles[ISS_NORAD_ID]
 
+            # Extract TLE lines from the tuple structure: (source, (name, line1, line2))
+            _, tle_data = tle
+            _, line1, line2 = tle_data
+
             # Prepare fresh data
             data: dict[str, Any] = {
-                "line1": tle.line1,
-                "line2": tle.line2,
+                "line1": line1,
+                "line2": line2,
                 "timestamp": datetime.now().isoformat(),
             }
 
