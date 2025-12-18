@@ -214,14 +214,6 @@ ENERGY_SENSORS = [
         value_fn=lambda status: status.energy_in_heating,
     ),
     WeHeatSensorEntityDescription(
-        translation_key="electricity_used_dhw",
-        key="electricity_used_dhw",
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda status: status.energy_in_dhw,
-    ),
-    WeHeatSensorEntityDescription(
         translation_key="electricity_used_cooling",
         key="electricity_used_cooling",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -246,14 +238,6 @@ ENERGY_SENSORS = [
         value_fn=lambda status: status.energy_out_heating,
     ),
     WeHeatSensorEntityDescription(
-        translation_key="energy_output_dhw",
-        key="energy_output_dhw",
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda status: status.energy_out_dhw,
-    ),
-    WeHeatSensorEntityDescription(
         translation_key="energy_output_cooling",
         key="energy_output_cooling",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -268,6 +252,25 @@ ENERGY_SENSORS = [
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
         value_fn=lambda status: status.energy_out_defrost,
+    ),
+]
+
+DHW_ENERGY_SENSORS = [
+    WeHeatSensorEntityDescription(
+        translation_key="electricity_used_dhw",
+        key="electricity_used_dhw",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda status: status.energy_in_dhw,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="energy_output_dhw",
+        key="energy_output_dhw",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda status: status.energy_out_dhw,
     ),
 ]
 
@@ -299,6 +302,16 @@ async def async_setup_entry(
                 )
                 for entity_description in DHW_SENSORS
                 if entity_description.value_fn(weheatdata.data_coordinator.data)
+                is not None
+            )
+            entities.extend(
+                WeheatHeatPumpSensor(
+                    weheatdata.heat_pump_info,
+                    weheatdata.energy_coordinator,
+                    entity_description,
+                )
+                for entity_description in DHW_ENERGY_SENSORS
+                if entity_description.value_fn(weheatdata.energy_coordinator.data)
                 is not None
             )
         entities.extend(
