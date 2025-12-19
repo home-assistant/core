@@ -6,16 +6,8 @@ from kaleidescape import const as kaleidescape_const
 from kaleidescape.device import Movie
 import pytest
 
-from homeassistant.components.kaleidescape import media_player
-from homeassistant.components.kaleidescape.media_player import (
-    ATTR_VOLUME_CAPABILITIES,
-    EVENT_DATA_VOLUME_LEVEL,
-    EVENT_TYPE_USER_DEFINED_EVENT,
-    EVENT_TYPE_VOLUME_DOWN,
-    EVENT_TYPE_VOLUME_MUTE,
-    EVENT_TYPE_VOLUME_SET,
-    EVENT_TYPE_VOLUME_UP,
-)
+from homeassistant.components.kaleidescape.const import DOMAIN
+from homeassistant.components.kaleidescape.media_player import ATTR_VOLUME_CAPABILITIES
 from homeassistant.components.media_player import (
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
@@ -23,8 +15,6 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    CONF_COMMAND,
-    CONF_PARAMS,
     SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
@@ -39,7 +29,7 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from . import MOCK_SERIAL
@@ -223,110 +213,19 @@ async def test_async_handle_device_volume_query_event(
     second_call_caps = mock_device.set_volume_capabilities.call_args_list[1].args[0]
     assert second_call_caps == baseline_caps
 
-
-@pytest.mark.usefixtures("mock_integration")
-async def test_async_handle_device_volume_events(
-    hass: HomeAssistant, mock_device: MagicMock, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """Test handling of USER_DEFINED_EVENT device events."""
-    # Override volume_set debounce time to zero
-    monkeypatch.setattr(media_player, "DEBOUNCE_TIME", 0)
-
-    events: list[tuple[str, dict]] = []
-
-    @callback
-    def _capture(event):
-        events.append((event.event_type, dict(event.data)))
-
-    unsub1 = hass.bus.async_listen(EVENT_TYPE_VOLUME_SET, _capture)
-    unsub2 = hass.bus.async_listen(EVENT_TYPE_VOLUME_UP, _capture)
-    unsub3 = hass.bus.async_listen(EVENT_TYPE_VOLUME_DOWN, _capture)
-    unsub4 = hass.bus.async_listen(EVENT_TYPE_VOLUME_MUTE, _capture)
-    unsub5 = hass.bus.async_listen(EVENT_TYPE_USER_DEFINED_EVENT, _capture)
-
-    try:
-        # Test Non-list fields send no event
-        mock_device.dispatcher.send(
-            kaleidescape_const.USER_DEFINED_EVENT,
-            None,
-        )
-        await hass.async_block_till_done()
-        assert len(events) == 0
-
-        # Test empty fields send no event
-        mock_device.dispatcher.send(
-            kaleidescape_const.USER_DEFINED_EVENT,
-            [],
-        )
-        await hass.async_block_till_done()
-        assert len(events) == 0
-
-        # Generate SET_VOLUME events to test bad data and debouncing
-        for value in ("bad", "41", "42"):
-            mock_device.dispatcher.send(
-                kaleidescape_const.USER_DEFINED_EVENT,
-                [kaleidescape_const.USER_DEFINED_EVENT_SET_VOLUME_LEVEL, value],
-            )
-            await hass.async_block_till_done()
-
-        # Generate VOLUME_UP event
-        mock_device.dispatcher.send(
-            kaleidescape_const.USER_DEFINED_EVENT,
-            [kaleidescape_const.USER_DEFINED_EVENT_VOLUME_UP],
-        )
-        await hass.async_block_till_done()
-
-        # Generate VOLUME_DOWN event
-        mock_device.dispatcher.send(
-            kaleidescape_const.USER_DEFINED_EVENT,
-            [kaleidescape_const.USER_DEFINED_EVENT_VOLUME_DOWN],
-        )
-        await hass.async_block_till_done()
-
-        # Generate TOGGLE_MUTE event
-        mock_device.dispatcher.send(
-            kaleidescape_const.USER_DEFINED_EVENT,
-            [kaleidescape_const.USER_DEFINED_EVENT_TOGGLE_MUTE],
-        )
-        await hass.async_block_till_done()
-
-        # Generate USER_DEFINED_EVENT event
-        mock_device.dispatcher.send(
-            kaleidescape_const.USER_DEFINED_EVENT,
-            ["command", "value1", "value2"],
-        )
-        await hass.async_block_till_done()
-
-    finally:
-        unsub1()
-        unsub2()
-        unsub3()
-        unsub4()
-        unsub5()
-
-    # Validate events
-    event_types = [e[0] for e in events]
-    assert EVENT_TYPE_VOLUME_SET in event_types
-    assert EVENT_TYPE_VOLUME_UP in event_types
-    assert EVENT_TYPE_VOLUME_DOWN in event_types
-    assert EVENT_TYPE_VOLUME_MUTE in event_types
-    assert EVENT_TYPE_USER_DEFINED_EVENT in event_types
-
-    volume_events = [d for t, d in events if t == EVENT_TYPE_VOLUME_SET]
-    assert volume_events
-    assert volume_events[-1][EVENT_DATA_VOLUME_LEVEL] == 0.42
-
-    user_data_events = [d for t, d in events if t == EVENT_TYPE_USER_DEFINED_EVENT]
-    assert user_data_events
-    assert user_data_events[-1][CONF_COMMAND] == "command"
-    assert user_data_events[-1][CONF_PARAMS] == ["value1", "value2"]
+    # Test empty params are ignored
+    mock_device.dispatcher.send(
+        kaleidescape_const.USER_DEFINED_EVENT,
+        [],
+    )
+    await hass.async_block_till_done()
 
 
 @pytest.mark.usefixtures("mock_integration")
-async def test_async_update_volume_level(
+async def test_async_set_volume_level(
     hass: HomeAssistant, mock_device: MagicMock
 ) -> None:
-    """Test async_update_volume_level sends scaled level and updates capabilities."""
+    """Test test_async_set_volume_level sends scaled level and updates capabilities."""
     expected_caps = (
         kaleidescape_const.VOLUME_CAPABILITIES_SET_VOLUME
         | kaleidescape_const.VOLUME_CAPABILITIES_VOLUME_FEEDBACK
@@ -341,7 +240,7 @@ async def test_async_update_volume_level(
 
     # Test service call sets capabilities and sends volume level
     await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN,
+        DOMAIN,
         SERVICE_VOLUME_SET,
         {
             ATTR_ENTITY_ID: ENTITY_ID,
@@ -358,7 +257,7 @@ async def test_async_update_volume_level(
     # Test 2nd service call with runs without updating capabilities again
     mock_device.set_volume_capabilities.reset_mock()
     await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN,
+        DOMAIN,
         SERVICE_VOLUME_SET,
         {
             ATTR_ENTITY_ID: ENTITY_ID,
@@ -374,10 +273,8 @@ async def test_async_update_volume_level(
 
 
 @pytest.mark.usefixtures("mock_integration")
-async def test_async_update_volume_muted(
-    hass: HomeAssistant, mock_device: MagicMock
-) -> None:
-    """Test async_update_volume_muted updates capabilities and sends mute state."""
+async def test_async_mute_volume(hass: HomeAssistant, mock_device: MagicMock) -> None:
+    """Test test_async_mute_volume updates capabilities and sends mute state."""
     expected_caps = (
         kaleidescape_const.VOLUME_CAPABILITIES_MUTE_CONTROL
         | kaleidescape_const.VOLUME_CAPABILITIES_MUTE_FEEDBACK
@@ -392,7 +289,7 @@ async def test_async_update_volume_muted(
 
     # Test service call sets capabilities and sends mute state
     await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN,
+        DOMAIN,
         SERVICE_VOLUME_MUTE,
         {
             ATTR_ENTITY_ID: ENTITY_ID,
@@ -410,7 +307,7 @@ async def test_async_update_volume_muted(
     # Test 2nd service call runs without updating capabilities again
     mock_device.set_volume_capabilities.reset_mock()
     await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN,
+        DOMAIN,
         SERVICE_VOLUME_MUTE,
         {
             ATTR_ENTITY_ID: ENTITY_ID,
@@ -424,16 +321,3 @@ async def test_async_update_volume_muted(
     assert entity
     assert entity.attributes[ATTR_VOLUME_CAPABILITIES] & expected_caps == expected_caps
     mock_device.set_volume_muted.assert_called_with(False)
-
-
-@pytest.mark.usefixtures("mock_integration")
-async def test_async_will_remove_from_hass_cancels_debounce(
-    hass: HomeAssistant, mock_device: MagicMock
-) -> None:
-    """Test async_will_remove_from_hass cancels debounced volume events."""
-    # This is just forcing coverage
-    mock_device.dispatcher.send(
-        kaleidescape_const.USER_DEFINED_EVENT,
-        [kaleidescape_const.USER_DEFINED_EVENT_SET_VOLUME_LEVEL, "10"],
-    )
-    await hass.async_block_till_done()
