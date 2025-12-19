@@ -1,4 +1,8 @@
 {
+  "common": {
+    "trigger_behavior_description": "The behavior of the targeted schedules to trigger on.",
+    "trigger_behavior_name": "Behavior"
+  },
   "entity_component": {
     "_": {
       "name": "[%key:component::schedule::title%]",
@@ -20,6 +24,15 @@
       }
     }
   },
+  "selector": {
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
+      }
+    }
+  },
   "services": {
     "get_schedule": {
       "description": "Retrieves the configured time ranges of one or multiple schedules.",
@@ -30,5 +43,27 @@
       "name": "[%key:common::action::reload%]"
     }
   },
-  "title": "Schedule"
+  "title": "Schedule",
+  "triggers": {
+    "turned_off": {
+      "description": "Triggers after one or more schedules turn off.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::schedule::common::trigger_behavior_description%]",
+          "name": "[%key:component::schedule::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Schedule turned off"
+    },
+    "turned_on": {
+      "description": "Triggers after one or more schedules turn on.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::schedule::common::trigger_behavior_description%]",
+          "name": "[%key:component::schedule::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Schedule turned on"
+    }
+  }
 }

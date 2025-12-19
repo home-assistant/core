@@ -6,5 +6,13 @@
     "reload": {
       "service": "mdi:reload"
     }
+  },
+  "triggers": {
+    "turned_off": {
+      "trigger": "mdi:calendar-blank"
+    },
+    "turned_on": {
+      "trigger": "mdi:calendar-clock"
+    }
   }
 }
