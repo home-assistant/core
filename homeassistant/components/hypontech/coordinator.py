@@ -1,16 +1,17 @@
-"""The coordinator for APsystems local API integration."""
+"""The coordinator for Hypontech Cloud integration."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
 
+from hyponcloud import HyponCloud, OverviewData
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER
-from .hyponcloud import HyponCloud, OverviewData
 
 
 @dataclass
@@ -48,7 +49,7 @@ class HypontechDataCoordinator(DataUpdateCoordinator[HypontechSensorData]):
             hass,
             LOGGER,
             config_entry=config_entry,
-            name="APSystems Data",
+            name="Hypontech Data",
             update_interval=timedelta(seconds=60),
         )
         self.api = api

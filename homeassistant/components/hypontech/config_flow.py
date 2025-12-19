@@ -5,16 +5,16 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from hyponcloud import AuthenticationError, HyponCloud
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
-from .hyponcloud import HyponCloud
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     try:
         if not await hypon.connect():
             raise CannotConnect
-    except ConfigEntryAuthFailed:
+    except AuthenticationError:
         raise InvalidAuth from None
 
     return {"title": "Hypontech micro inverter"}

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from hyponcloud import HyponCloud
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
@@ -11,7 +13,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 from .coordinator import HypontechData, HypontechDataCoordinator
-from .hyponcloud import HyponCloud
 
 _PLATFORMS: list[Platform] = [Platform.SENSOR]
 

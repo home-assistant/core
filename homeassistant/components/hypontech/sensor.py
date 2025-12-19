@@ -5,6 +5,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
+from hyponcloud import OverviewData
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -18,7 +20,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import HypontechConfigEntry, HypontechDataCoordinator
-from .hyponcloud import OverviewData
 
 
 @dataclass(frozen=True, kw_only=True)
