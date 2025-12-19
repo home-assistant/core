@@ -568,6 +568,22 @@ NUMERICAL_ATTRIBUTE_CHANGED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.extend(
 )
 
 
+def _get_numerical_value(
+    hass: HomeAssistant, entity_or_float: float | str
+) -> float | None:
+    """Get numerical value from float or entity state."""
+    if isinstance(entity_or_float, str):
+        if not (state := hass.states.get(entity_or_float)):
+            # Entity not found
+            return None
+        try:
+            return float(state.state)
+        except (TypeError, ValueError):
+            # Entity state is not a valid number
+            return None
+    return entity_or_float
+
+
 class EntityNumericalStateAttributeChangedTriggerBase(EntityTriggerBase):
     """Trigger for numerical state attribute changes."""
 
@@ -594,38 +610,28 @@ class EntityNumericalStateAttributeChangedTriggerBase(EntityTriggerBase):
 
     def is_valid_state(self, state: State) -> bool:
         """Check if the new state attribute matches the expected one."""
+        # Handle missing or None attribute case first to avoid expensive exceptions
+        if (_attribute_value := state.attributes.get(self._attribute)) is None:
+            return False
+
         try:
-            current_value = float(state.attributes.get(self._attribute))  # type: ignore[arg-type]
+            current_value = float(_attribute_value)
         except (TypeError, ValueError):
             # Attribute is not a valid number, don't trigger
             return False
 
         if self._above is not None:
-            above = self._above
-            if isinstance(above, str):
-                if not (above_state := self._hass.states.get(above)):
-                    # Entity not found, don't trigger
-                    return False
-                try:
-                    above = float(above_state.state)
-                except ValueError:
-                    # Entity state is not a valid number, don't trigger
-                    return False
+            if (above := _get_numerical_value(self._hass, self._above)) is None:
+                # Entity not found or invalid number, don't trigger
+                return False
             if current_value <= above:
                 # The number is not above the limit, don't trigger
                 return False
 
         if self._below is not None:
-            below = self._below
-            if isinstance(below, str):
-                if not (below_state := self._hass.states.get(below)):
-                    # Entity not found, don't trigger
-                    return False
-                try:
-                    below = float(below_state.state)
-                except ValueError:
-                    # Entity state is not a valid number, don't trigger
-                    return False
+            if (below := _get_numerical_value(self._hass, self._below)) is None:
+                # Entity not found or invalid number, don't trigger
+                return False
             if current_value >= below:
                 # The number is not below the limit, don't trigger
                 return False
