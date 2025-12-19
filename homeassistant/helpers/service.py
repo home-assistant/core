@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Coroutine, Iterable, Mapping
+from collections.abc import Awaitable, Callable, Coroutine, Iterable, Mapping
 import dataclasses
 from enum import Enum
 from functools import cache, partial
@@ -33,6 +33,7 @@ from homeassistant.core import (
     HassJob,
     HassJobType,
     HomeAssistant,
+    Service,
     ServiceCall,
     ServiceResponse,
     SupportsResponse,
@@ -76,6 +77,41 @@ SERVICE_DESCRIPTION_CACHE: HassKey[dict[tuple[str, str], dict[str, Any] | None]]
 ALL_SERVICE_DESCRIPTIONS_CACHE: HassKey[
     tuple[set[tuple[str, str]], dict[str, dict[str, Any]]]
 ] = HassKey("all_service_descriptions_cache")
+
+# batching
+BatchProcessingCallback = Callable[
+    [list["Entity"], ServiceCall],
+    Coroutine[Any, Any, EntityServiceResponse | None],
+]
+
+# Callbacks are in the form func(entity: Entity, **kwargs)
+BatchAddCallback = Callable[["Entity", dict[str, Any]], None]
+
+# We're wrapping async_turn_on/off/etc
+EntityActionMethod = Callable[..., Awaitable[None]]
+
+_BATCH_KEY = "_batch_if_possible"
+
+
+def batch_aware(
+    add_to_batch: BatchAddCallback,
+) -> Callable[[EntityActionMethod], EntityActionMethod]:
+    """Wrapper to indicate an entity method is batch aware."""
+
+    def decorator(
+        method: EntityActionMethod,
+    ) -> EntityActionMethod:
+        async def wrapper(self: Entity, **kwargs: Any) -> None:
+            if kwargs.get(_BATCH_KEY):
+                add_to_batch(self, kwargs)
+                return  # defer execution
+
+            # Otherwise, call the original entity method
+            await method(self, **kwargs)
+
+        return wrapper
+
+    return decorator
 
 
 @cache
@@ -721,6 +757,173 @@ def _get_permissible_entity_candidates(
     return [entities[entity_id] for entity_id in all_referenced.intersection(entities)]
 
 
+# batch helper functions
+
+
+@dataclasses.dataclass(slots=True)
+class _BatchCandidate:
+    entities: list[Entity]
+    callback: BatchProcessingCallback
+
+
+def _classify_entity_type(
+    entity: Entity,
+    service_obj: Service | None,
+    unbatched_entities: list[Entity],
+    batchable_entities: dict[str, _BatchCandidate],
+) -> None:
+    """Classify a single entity as either unbatched or batchable, adding it to the appropriate collection."""
+    if service_obj is None:
+        unbatched_entities.append(entity)
+        return
+
+    platform_name = entity.platform.platform_name
+    batch_callback = service_obj.batch_processing_callbacks.get(platform_name)
+
+    if batch_callback is None:
+        unbatched_entities.append(entity)
+        return
+
+    if platform_name not in batchable_entities:
+        batchable_entities[platform_name] = _BatchCandidate([], batch_callback)
+
+    batchable_entities[platform_name].entities.append(entity)
+
+
+def _prune_single_entity_batches(
+    unbatched_entities: list[Entity],
+    batchable_entities: dict[str, _BatchCandidate],
+) -> None:
+    """Move single-entity batches back to unbatched_entities."""
+    for platform_name, batch_info in list(batchable_entities.items()):
+        if len(batch_info.entities) == 1:
+            unbatched_entities.append(batch_info.entities[0])
+            del batchable_entities[platform_name]
+
+
+def _handle_batch_key(data: dict | ServiceCall) -> dict | ServiceCall:
+    """Return a copy of data with _BATCH_KEY injected, without mutating originals."""
+    if isinstance(data, ServiceCall):
+        d: dict[str, Any] = {_BATCH_KEY: True}
+        d.update(data.data)
+        return ServiceCall(
+            data.hass,
+            data.domain,
+            data.service,
+            d,
+            data.context,
+            return_response=data.return_response,
+        )
+
+    d = {_BATCH_KEY: True}
+    d.update(data)
+    return d
+
+
+async def _run_service_phases(
+    hass: HomeAssistant,
+    unbatched_entities: list[Entity],
+    batchable_entities: dict[str, _BatchCandidate],
+    func: str | HassJob,
+    data: dict | ServiceCall,
+    call: ServiceCall,
+) -> EntityServiceResponse:
+    """Run the service phases for entities, assuming classification is done."""
+
+    response_data: EntityServiceResponse = {}
+
+    # Handle unbatched entities
+    if unbatched_entities:
+        results = await asyncio.gather(
+            *[
+                entity.async_request_call(
+                    _handle_entity_call(hass, entity, func, data, call.context)
+                )
+                for entity in unbatched_entities
+            ],
+            return_exceptions=True,
+        )
+        for entity, result in zip(unbatched_entities, results, strict=True):
+            if isinstance(result, BaseException):
+                raise result from None
+            response_data[entity.entity_id] = result
+    all_batch_entities: list[Entity] = []
+    # Handle batchable entities with _BATCH_KEY
+    if batchable_entities:
+        batched_data = _handle_batch_key(data)
+        all_batch_entities = [
+            entity
+            for candidate in batchable_entities.values()
+            for entity in candidate.entities
+        ]
+        batch_results: list[ServiceResponse | BaseException] = await asyncio.gather(
+            *[
+                entity.async_request_call(
+                    _handle_entity_call(hass, entity, func, batched_data, call.context)
+                )
+                for entity in all_batch_entities
+            ],
+            return_exceptions=True,
+        )
+        for entity, result in zip(all_batch_entities, batch_results, strict=True):
+            if isinstance(result, BaseException):
+                raise result from None
+            response_data[entity.entity_id] = result
+        # Run batch callbacks with original data
+        await _run_batch_callbacks(
+            hass, list(batchable_entities.values()), call, response_data
+        )
+    # Update HA state for polling entities
+    tasks: list[asyncio.Task[None]] = []
+
+    for entity in unbatched_entities + all_batch_entities:
+        if not entity.should_poll:
+            continue
+
+        # Context expires if the turn on commands took a long time.
+        # Set context again so it's there when we update
+        entity.async_set_context(call.context)
+        tasks.append(create_eager_task(entity.async_update_ha_state(True)))
+
+    if tasks:
+        done, pending = await asyncio.wait(tasks)
+        assert not pending
+        for future in done:
+            future.result()  # pop exception if have
+
+    return response_data
+
+
+async def _run_batch_callbacks(
+    hass: HomeAssistant,
+    batches: list[_BatchCandidate],
+    call: ServiceCall,
+    response_data: EntityServiceResponse,
+) -> None:
+    """Run all batch-processing callbacks concurrently and return merged results."""
+    if not batches:
+        return
+
+    results = await asyncio.gather(
+        *[
+            batch.entities[0].async_request_call(batch.callback(batch.entities, call))
+            for batch in batches
+        ],
+        return_exceptions=True,
+    )
+    for batch, result in zip(batches, results, strict=True):
+        if isinstance(result, BaseException):
+            # Raise the exception immediately
+            raise result from None
+        if result is None:
+            # Assign None to each entity in the batch
+            for entity in batch.entities:
+                response_data[entity.entity_id] = None
+        else:
+            # Merge the returned EntityServiceResponse
+            response_data.update(result)
+
+
 @bind_hass
 async def entity_service_call(
     hass: HomeAssistant,
@@ -787,7 +990,11 @@ async def entity_service_call(
             missing.discard(entity.entity_id)
         referenced.log_missing(missing, _LOGGER)
 
-    entities: list[Entity] = []
+    # Look up the Service object first, if we have none, assume not batching
+    services_by_domain = hass.services.async_services_internal()
+    service_obj = services_by_domain.get(call.domain, {}).get(call.service)
+    batchable_entities: dict[str, _BatchCandidate] = {}
+    unbatched_entities: list[Entity] = []
     for entity in entity_candidates:
         if not entity.available:
             continue
@@ -817,18 +1024,22 @@ async def entity_service_call(
 
             continue
 
-        entities.append(entity)
+        _classify_entity_type(
+            entity, service_obj, unbatched_entities, batchable_entities
+        )
 
-    if not entities:
+    if not unbatched_entities and not batchable_entities:
         if return_response:
             raise HomeAssistantError(
                 "Service call requested response data but did not match any entities"
             )
         return None
 
-    if len(entities) == 1:
+    _prune_single_entity_batches(unbatched_entities, batchable_entities)
+
+    if len(unbatched_entities) == 1 and not batchable_entities:
         # Single entity case avoids creating task
-        entity = entities[0]
+        entity = unbatched_entities[0]
         single_response = await _handle_entity_call(
             hass, entity, func, data, call.context
         )
@@ -839,41 +1050,10 @@ async def entity_service_call(
             await entity.async_update_ha_state(True)
         return {entity.entity_id: single_response} if return_response else None
 
-    # Use asyncio.gather here to ensure the returned results
-    # are in the same order as the entities list
-    results: list[ServiceResponse | BaseException] = await asyncio.gather(
-        *[
-            entity.async_request_call(
-                _handle_entity_call(hass, entity, func, data, call.context)
-            )
-            for entity in entities
-        ],
-        return_exceptions=True,
+    # perform batching and nonbatching calls
+    response_data = await _run_service_phases(
+        hass, unbatched_entities, batchable_entities, func, data, call
     )
-
-    response_data: EntityServiceResponse = {}
-    for entity, result in zip(entities, results, strict=False):
-        if isinstance(result, BaseException):
-            raise result from None
-        response_data[entity.entity_id] = result
-
-    tasks: list[asyncio.Task[None]] = []
-
-    for entity in entities:
-        if not entity.should_poll:
-            continue
-
-        # Context expires if the turn on commands took a long time.
-        # Set context again so it's there when we update
-        entity.async_set_context(call.context)
-        tasks.append(create_eager_task(entity.async_update_ha_state(True)))
-
-    if tasks:
-        done, pending = await asyncio.wait(tasks)
-        assert not pending
-        for future in done:
-            future.result()  # pop exception if have
-
     return response_data if return_response and response_data else None
 
 

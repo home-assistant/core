@@ -108,6 +108,7 @@ if TYPE_CHECKING:
     from .components.http import HomeAssistantHTTP
     from .config_entries import ConfigEntries
     from .helpers.entity import StateInfo
+    from .helpers.service import BatchProcessingCallback
 
 STOPPING_STAGE_SHUTDOWN_TIMEOUT = 20
 STOP_STAGE_SHUTDOWN_TIMEOUT = 100
@@ -2411,6 +2412,7 @@ class Service:
     """Representation of a callable service."""
 
     __slots__ = [
+        "batch_processing_callbacks",
         "description_placeholders",
         "domain",
         "job",
@@ -2441,6 +2443,17 @@ class Service:
         self.schema = schema
         self.supports_response = supports_response
         self.description_placeholders = description_placeholders
+        self.batch_processing_callbacks: dict[str, BatchProcessingCallback] = {}
+
+    @callback
+    def async_register_batch_processing_callback(
+        self, platform: str, batch_callback: BatchProcessingCallback
+    ) -> None:
+        """Adds a batch processing callback for a platform to a service.
+
+        This method must be run in the event loop.
+        """
+        self.batch_processing_callbacks[platform.lower()] = batch_callback
 
 
 class ServiceCall:
@@ -2867,3 +2880,23 @@ class ServiceRegistry:
         if TYPE_CHECKING:
             target = cast(Callable[..., ServiceResponse], target)
         return await self._hass.async_add_executor_job(target, service_call)
+
+    @callback
+    def async_register_batch_callback(
+        self,
+        platform: str,
+        domain: str,
+        service: str,
+        batch_callback: BatchProcessingCallback,
+    ) -> None:
+        """Register a platform batch callback for a service in a domain."""
+        service_obj = self._services.get(domain, {}).get(service)
+        if service_obj is None:
+            _LOGGER.error(
+                "Service %s.%s not found, skipping batch registration for platform %s",
+                domain,
+                service,
+                platform,
+            )
+            return
+        service_obj.async_register_batch_processing_callback(platform, batch_callback)
