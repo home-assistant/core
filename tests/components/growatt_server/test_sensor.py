@@ -17,6 +17,17 @@ from . import setup_integration
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
+@pytest.mark.parametrize(
+    ("device_type", "device_sn"),
+    [
+        ("min", "MIN123456"),
+        ("tlx", "TLX123456"),
+        ("inverter", "INV123456"),
+        ("storage", "STO123456"),
+        ("mix", "MIX123456"),
+    ],
+    ids=["min", "tlx", "inverter", "storage", "mix"],
+)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_all_sensors(
     hass: HomeAssistant,
@@ -24,10 +35,47 @@ async def test_all_sensors(
     mock_growatt_v1_api,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    device_type: str,
+    device_sn: str,
 ) -> None:
-    """Test all sensor entities with snapshot."""
-    with patch("homeassistant.components.growatt_server.PLATFORMS", [Platform.SENSOR]):
-        await setup_integration(hass, mock_config_entry)
+    """Test all sensor entities with snapshot for each device type."""
+    # Mock device list with specific device type
+    with patch(
+        "homeassistant.components.growatt_server.get_device_list"
+    ) as mock_get_devices:
+        mock_get_devices.return_value = (
+            [{"deviceSn": device_sn, "deviceType": device_type}],
+            "12345",
+        )
+
+        # Add appropriate mock data for each device type
+        if device_type == "inverter":
+            mock_growatt_v1_api.inverter_detail.return_value = {
+                "deviceSn": device_sn,
+                "status": 1,
+            }
+        elif device_type == "storage":
+            mock_growatt_v1_api.storage_detail.return_value = {
+                "deviceSn": device_sn,
+            }
+        elif device_type == "mix":
+            # Mix requires special handling with chartData
+            mock_growatt_v1_api.mix_detail.return_value = {
+                "deviceSn": device_sn,
+                "chartData": {"06:00": {}},  # At least one time entry needed
+            }
+        elif device_type == "tlx":
+            mock_growatt_v1_api.tlx_detail.return_value = {
+                "data": {
+                    "deviceSn": device_sn,
+                }
+            }
+        # min uses default mocks from conftest.py
+
+        with patch(
+            "homeassistant.components.growatt_server.PLATFORMS", [Platform.SENSOR]
+        ):
+            await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 

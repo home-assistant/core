@@ -9,6 +9,7 @@ import pytest
 import requests
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.growatt_server import get_device_list
 from homeassistant.components.growatt_server.const import (
     AUTH_API_TOKEN,
     AUTH_PASSWORD,
@@ -18,6 +19,7 @@ from homeassistant.components.growatt_server.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
@@ -355,3 +357,43 @@ async def test_classic_api_auto_select_plant(
 
     # Should be loaded successfully with auto-selected plant
     assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_v1_api_unsupported_device_type(
+    hass: HomeAssistant,
+    mock_growatt_v1_api,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test V1 API logs warning for unsupported device types (non-MIN)."""
+    config = {
+        CONF_TOKEN: "test_token_123",
+        CONF_URL: "https://openapi.growatt.com/",
+        "plant_id": "plant_123",
+        CONF_AUTH_TYPE: AUTH_API_TOKEN,
+    }
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=config,
+        unique_id="plant_123",
+    )
+
+    # Return mix of MIN (type 7) and other device types
+    mock_growatt_v1_api.device_list.return_value = {
+        "devices": [
+            {"device_sn": "MIN123456", "type": 7},  # Supported
+            {"device_sn": "TLX789012", "type": 5},  # Unsupported
+        ]
+    }
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    # Verify warning was logged for unsupported device
+    assert "Device TLX789012 with type 5 not supported in Open API V1" in caplog.text
+
+
+def test_get_device_list_unknown_api_version() -> None:
+    """Test get_device_list raises error for unknown API version."""
+
+    with pytest.raises(ConfigEntryError, match="Unknown API version: invalid"):
+        get_device_list(None, {}, "invalid")
