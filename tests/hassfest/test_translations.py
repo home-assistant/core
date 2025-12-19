@@ -1,7 +1,6 @@
 """Tests for hassfest translations."""
 
 import pytest
-from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from script.hassfest import translations
@@ -403,7 +402,6 @@ SAMPLE_STRINGS = {
 
 def test_gen_strings_schema(
     config: Config,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test gen_strings_schema validates all string types."""
     integration = get_integration("test_integration", config)
@@ -412,4 +410,4 @@ def test_gen_strings_schema(
     # Validate the sample strings - should not raise
     validated = schema(SAMPLE_STRINGS)
 
-    assert validated == snapshot
+    assert validated == SAMPLE_STRINGS
