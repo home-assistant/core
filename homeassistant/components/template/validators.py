@@ -13,7 +13,8 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-# Valid on/off values for booleans
+# Valid on/off values for booleans. These tuples are pulled
+# from cv.boolean and are used to produce logger errors for the user.
 RESULT_ON = ("1", "true", "yes", "on", "enable")
 RESULT_OFF = ("0", "false", "no", "off", "disable")
 
@@ -276,6 +277,9 @@ def item_in_list[T](
         if _check_result_for_none(result, **kwargs):
             return None
 
+        # items may be mutable based on another template field. Always
+        # perform this check when the items come from an configured
+        # attribute.
         if items is None or (len(items) == 0):
             if items_attribute:
                 _log_validation_result_error(
