@@ -449,11 +449,6 @@ class TibberDataAPISensor(CoordinatorEntity[TibberDataAPICoordinator], SensorEnt
         sensor = sensors.get(self.entity_description.key)
         return sensor.value if sensor else None
 
-    @property
-    def available(self) -> bool:
-        """Return whether the sensor is available."""
-        return super().available and self.native_value is not None
-
 
 class TibberSensor(SensorEntity):
     """Representation of a generic Tibber sensor."""
