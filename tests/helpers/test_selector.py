@@ -643,6 +643,23 @@ def test_choose_selector_schema(schema, valid_selections, invalid_selections) ->
             },
             pytest.raises(vol.Invalid),
         ),
+        (
+            {
+                "choices": {
+                    "invalid": {
+                        "selector": {
+                            "choose": {
+                                "choices": {
+                                    "text": {"selector": {"text": {}}},
+                                    "number": {"selector": {"number": {}}},
+                                }
+                            }
+                        }
+                    }  # Nested choose is not allowed
+                }
+            },
+            pytest.raises(vol.Invalid),
+        ),
     ],
 )
 def test_choose_selector_validate_schema(

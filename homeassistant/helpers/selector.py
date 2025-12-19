@@ -436,14 +436,26 @@ class ChooseSelector(Selector[ChooseSelectorConfig]):
 
     selector_type = "choose"
 
-    CONFIG_SCHEMA = make_selector_config_schema(
-        {
-            vol.Required("choices"): {
-                str: {
-                    vol.Required("selector"): vol.Any(Selector, validate_selector),
+    def reject_nested_choose_selector(self, config: dict[str, Any]) -> dict[str, Any]:
+        """Reject nested choose selectors."""
+        for choice in config.get("choices", {}).values():
+            if isinstance(choice["selector"], dict):
+                selector_type, _ = _get_selector_type_and_class(choice["selector"])
+                if selector_type == "choose":
+                    raise vol.Invalid("Nested choose selectors are not allowed")
+        return config
+
+    CONFIG_SCHEMA = vol.All(
+        make_selector_config_schema(
+            {
+                vol.Required("choices"): {
+                    str: {
+                        vol.Required("selector"): vol.Any(Selector, validate_selector),
+                    }
                 }
-            }
-        }
+            },
+        ),
+        reject_nested_choose_selector,
     )
 
     def __init__(self, config: ChooseSelectorConfig | None = None) -> None:
