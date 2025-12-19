@@ -1497,7 +1497,7 @@ moat-ble==0.1.1
 moehlenhoff-alpha2==1.4.0
 
 # homeassistant.components.route_b_smart_meter
-momonga==0.2.0
+momonga==0.3.0
 
 # homeassistant.components.monzo
 monzopy==1.5.1
