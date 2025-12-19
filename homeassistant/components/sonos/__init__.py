@@ -187,7 +187,7 @@ class SonosDiscoveryManager:
         """Check if device at provided IP is known to be invisible."""
         return any(x for x in self._known_invisible if x.ip_address == ip_address)
 
-    async def _process_http_conection_error(
+    async def _process_http_connection_error(
         self, err: HTTPError, ip_address: str
     ) -> None:
         """Process HTTP Errors when connecting to a Sonos speaker."""
@@ -232,7 +232,7 @@ class SonosDiscoveryManager:
             )
             sub = await soco.zoneGroupTopology.subscribe()
         except HTTPError as err:
-            await self._process_http_conection_error(err, ip_address)
+            await self._process_http_connection_error(err, ip_address)
             return
         except (
             OSError,
@@ -435,7 +435,7 @@ class SonosDiscoveryManager:
                     soco,
                 )
             except HTTPError as err:
-                await self._process_http_conection_error(err, ip_addr)
+                await self._process_http_connection_error(err, ip_addr)
                 continue
             except (
                 OSError,
