@@ -67,20 +67,29 @@ async def test_oauth_flow(
     assert resp.status == 200
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
+    response = {
+        "refresh_token": "test_refresh_token",
+        "access_token": "test_access_token",
+        "type": "Bearer",
+        "expires_in": 60,
+    }
+
     aioclient_mock.clear_requests()
     aioclient_mock.post(
         TOKEN_URL,
-        json={
-            "refresh_token": "test_refresh_token",
-            "access_token": "test_access_token",
-            "type": "Bearer",
-            "expires_in": 60,
-        },
+        json=response,
     )
 
     # Complete OAuth
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == UNIQUE_ID
+    assert result["data"]["auth_implementation"] == "teslemetry"
+    assert result["data"]["token"]["refresh_token"] == response["refresh_token"]
+    assert result["data"]["token"]["access_token"] == response["access_token"]
+    assert result["data"]["token"]["type"] == response["type"]
+    assert result["data"]["token"]["expires_in"] == response["expires_in"]
+    assert "expires_at" in result["result"].data["token"]
 
 
 @pytest.mark.usefixtures("current_request_with_host")
