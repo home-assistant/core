@@ -150,7 +150,7 @@
   "title": "Humidifier",
   "triggers": {
     "current_humidity_changed": {
-      "description": "Triggers after the humidity measured by one or more climate-control devices changes.",
+      "description": "Triggers after the humidity measured by one or more humidifiers changes.",
       "fields": {
         "above": {
           "description": "Trigger when the humidity is above this value.",
@@ -161,10 +161,10 @@
           "name": "Below"
         }
       },
-      "name": "Climate-control device current humidity changed"
+      "name": "Humidifier current humidity changed"
     },
     "current_humidity_crossed_threshold": {
-      "description": "Triggers after the humidity measured by one or more climate-control devices crosses a threshold.",
+      "description": "Triggers after the humidity measured by one or more humidifiers crosses a threshold.",
       "fields": {
         "behavior": {
           "description": "[%key:component::climate::common::trigger_behavior_description%]",
@@ -183,7 +183,7 @@
           "name": "Upper threshold"
         }
       },
-      "name": "Climate-control device current humidity crossed threshold"
+      "name": "Humidifier current humidity crossed threshold"
     },
     "started_drying": {
       "description": "Triggers after one or more humidifiers start drying.",
