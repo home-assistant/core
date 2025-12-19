@@ -7,6 +7,10 @@ on:
     types: ["published"]
   schedule:
     - cron: "0 2 * * *"
+  push:
+    branches:
+      - dev
+      - sync-fork
 
 env:
   BUILD_TYPE: core
