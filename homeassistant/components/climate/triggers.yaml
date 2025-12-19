@@ -33,6 +33,17 @@
               mode: box
       translation_key: number_or_entity
 
+.trigger_threshold_type: &trigger_threshold_type
+  required: true
+  selector:
+    select:
+      options:
+        - above
+        - below
+        - between
+        - outside
+      translation_key: trigger_threshold_type
+
 started_cooling: *trigger_common
 started_drying: *trigger_common
 started_heating: *trigger_common
@@ -59,3 +70,11 @@ target_temperature_changed:
   fields:
     above: *number_or_entity
     below: *number_or_entity
+
+target_temperature_crossed_threshold:
+  target: *trigger_climate_target
+  fields:
+    behavior: *trigger_behavior
+    threshold_type: *trigger_threshold_type
+    lower_limit: *number_or_entity
+    upper_limit: *number_or_entity

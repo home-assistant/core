@@ -113,6 +113,9 @@
     "target_temperature_changed": {
       "trigger": "mdi:thermometer"
     },
+    "target_temperature_crossed_threshold": {
+      "trigger": "mdi:thermometer"
+    },
     "turned_off": {
       "trigger": "mdi:power-off"
     },
