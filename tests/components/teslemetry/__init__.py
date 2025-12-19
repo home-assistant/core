@@ -39,9 +39,6 @@ async def setup_platform(
 ) -> MockConfigEntry:
     """Set up the Teslemetry platform."""
 
-    if expires_at is None:
-        expires_at = int(time.time()) + 3600
-
     mock_entry = mock_config_entry(expires_at)
     mock_entry.add_to_hass(hass)
 
