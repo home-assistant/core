@@ -133,6 +133,7 @@
 # name: test_switches[switch.gs012345-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'entity_picture': 'https://lion.lamarzocco.io/img/thing-model/detail/gs3av/gs3av-1.png',
       'friendly_name': 'GS012345',
     }),
     'context': <ANY>,
