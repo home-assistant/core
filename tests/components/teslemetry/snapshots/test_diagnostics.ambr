@@ -163,6 +163,7 @@
                 'OFF_PEAK': dict({
                   'periods': list([
                     dict({
+                      'fromDayOfWeek': 0,
                       'fromHour': 21,
                       'toDayOfWeek': 6,
                       'toHour': 16,
@@ -172,6 +173,7 @@
                 'ON_PEAK': dict({
                   'periods': list([
                     dict({
+                      'fromDayOfWeek': 0,
                       'fromHour': 16,
                       'toDayOfWeek': 6,
                       'toHour': 21,
