@@ -517,6 +517,259 @@ def test_boolean_selector_schema(schema, valid_selections, invalid_selections) -
     ("schema", "valid_selections", "invalid_selections"),
     [
         (
+            {
+                "choices": {
+                    "text_choice": {"selector": {"text": {}}},
+                    "number_choice": {"selector": {"number": {"min": 0, "max": 100}}},
+                }
+            },
+            (
+                # Direct value matching text selector
+                "some text",
+                # Direct value matching number selector
+                42,
+                # Explicit choice with active_choice key
+                {"active_choice": "text_choice", "text_choice": "hello world"},
+                {"active_choice": "number_choice", "number_choice": 50},
+            ),
+            (
+                # None doesn't match any selector
+                None,
+                # Missing active_choice key
+                {"text_choice": "hello"},
+                # Invalid active_choice key
+                {"active_choice": "invalid", "invalid": "value"},
+                # Missing value for active choice
+                {"active_choice": "text_choice"},
+                # Wrong value type for number selector
+                {"active_choice": "number_choice", "number_choice": "not a number"},
+            ),
+        ),
+        (
+            {
+                "choices": {
+                    "entity": {"selector": {"entity": {}}},
+                    "device": {"selector": {"device": {}}},
+                    "text": {"selector": {"text": {}}},
+                }
+            },
+            (
+                # Direct value matching entity selector
+                "sensor.abc123",
+                FAKE_UUID,
+                # Explicit choice
+                {"active_choice": "entity", "entity": "light.bedroom"},
+                {"active_choice": "device", "device": "device123"},
+                {"active_choice": "text", "text": "some text"},
+            ),
+            (
+                None,
+                # List doesn't match any selector
+                ["sensor.abc", "light.def"],
+                # Missing active_choice key
+                {"entity": "sensor.abc"},
+                # Invalid active_choice
+                {"active_choice": "area", "area": "area123"},
+            ),
+        ),
+    ],
+)
+def test_choose_selector_schema(schema, valid_selections, invalid_selections) -> None:
+    """Test choose selector."""
+
+    def get_selected_value(data):
+        """Get the selected value from the input."""
+        if isinstance(data, dict) and "active_choice" in data:
+            return data[data["active_choice"]]
+        return data
+
+    _test_selector(
+        "choose", schema, valid_selections, invalid_selections, get_selected_value
+    )
+
+
+@pytest.mark.parametrize(
+    ("schema", "raises"),
+    [
+        # Valid schemas
+        (
+            {
+                "choices": {
+                    "text": {"selector": {"text": {}}},
+                    "number": {"selector": {"number": {}}},
+                }
+            },
+            does_not_raise(),
+        ),
+        (
+            {
+                "choices": {
+                    "text": {"selector": selector.TextSelector()},
+                    "number": {"selector": selector.NumberSelector()},
+                }
+            },
+            does_not_raise(),
+        ),
+        # Invalid schemas
+        (
+            {},  # Missing required 'choices' key
+            pytest.raises(vol.Invalid),
+        ),
+        (
+            {
+                "choices": {}  # Empty choices dict
+            },
+            does_not_raise(),  # Empty dict is technically valid
+        ),
+        (
+            {
+                "choices": {
+                    "text": {}  # Missing required 'selector' key in choice
+                }
+            },
+            pytest.raises(vol.Invalid),
+        ),
+        (
+            {
+                "choices": {
+                    "invalid": {"selector": {"not_exist": {}}}  # Invalid selector type
+                }
+            },
+            pytest.raises(vol.Invalid),
+        ),
+        (
+            {
+                "choices": "not a dict"  # choices should be a dict
+            },
+            pytest.raises(vol.Invalid),
+        ),
+        (
+            {
+                "choices": {
+                    "invalid": {
+                        "selector": {
+                            "choose": {
+                                "choices": {
+                                    "text": {"selector": {"text": {}}},
+                                    "number": {"selector": {"number": {}}},
+                                }
+                            }
+                        }
+                    }  # Nested choose is not allowed
+                }
+            },
+            pytest.raises(vol.Invalid),
+        ),
+    ],
+)
+def test_choose_selector_validate_schema(
+    schema: dict, raises: AbstractContextManager
+) -> None:
+    """Test choose selector schema validation."""
+    with raises:
+        selector.validate_selector({"choose": schema})
+
+
+def test_choose_selector_serialize(snapshot: SnapshotAssertion) -> None:
+    """Test choose selector serialization."""
+    # Test with dict-based selectors
+    choose_selector = selector.ChooseSelector(
+        {
+            "choices": {
+                "text_choice": {"selector": {"text": {"multiline": True}}},
+                "number_choice": {"selector": {"number": {"min": 0, "max": 100}}},
+                "entity_choice": {"selector": {"entity": {"domain": "light"}}},
+                "object_choice": {
+                    "selector": {
+                        "object": {
+                            "fields": {
+                                "name": {
+                                    "required": True,
+                                    "selector": {"text": {}},
+                                },
+                                "percentage": {
+                                    "selector": {"number": {}},
+                                },
+                            },
+                            "multiple": False,
+                            "label_field": "name",
+                            "description_field": "percentage",
+                        }
+                    }
+                },
+            }
+        }
+    )
+    assert choose_selector.serialize() == snapshot
+
+    # Test with Selector object instances
+    choose_selector_objects = selector.ChooseSelector(
+        {
+            "choices": {
+                "text_choice": {"selector": selector.TextSelector({"multiline": True})},
+                "number_choice": {
+                    "selector": selector.NumberSelector({"min": 0, "max": 100})
+                },
+                "object_choice": {
+                    "selector": selector.ObjectSelector(
+                        {
+                            "fields": {
+                                "name": {
+                                    "required": True,
+                                    "selector": selector.TextSelector({}),
+                                },
+                                "percentage": {
+                                    "selector": selector.NumberSelector({}),
+                                },
+                                "object": {
+                                    "selector": selector.ObjectSelector(
+                                        {
+                                            "fields": {
+                                                "choose": {
+                                                    "required": True,
+                                                    "selector": selector.ChooseSelector(
+                                                        {
+                                                            "choices": {
+                                                                "text_choice": {
+                                                                    "selector": selector.TextSelector(
+                                                                        {
+                                                                            "multiline": True
+                                                                        }
+                                                                    )
+                                                                },
+                                                                "number_choice": {
+                                                                    "selector": selector.NumberSelector(
+                                                                        {
+                                                                            "min": 0,
+                                                                            "max": 100,
+                                                                        }
+                                                                    )
+                                                                },
+                                                            }
+                                                        }
+                                                    ),
+                                                },
+                                            }
+                                        }
+                                    ),
+                                },
+                            },
+                            "multiple": False,
+                            "label_field": "name",
+                            "description_field": "percentage",
+                        }
+                    )
+                },
+            }
+        }
+    )
+    assert choose_selector_objects.serialize() == snapshot
+
+
+@pytest.mark.parametrize(
+    ("schema", "valid_selections", "invalid_selections"),
+    [
+        (
             {},
             ("6b68b250388cbe0d620c92dd3acc93ec", "76f2e8f9a6491a1b580b3a8967c27ddd"),
             (None, True, 1),
