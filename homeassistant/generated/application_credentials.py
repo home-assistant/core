@@ -41,6 +41,7 @@ APPLICATION_CREDENTIALS = [
     "tibber",
     "twitch",
     "volvo",
+    "watts",
     "weheat",
     "withings",
     "xbox",
