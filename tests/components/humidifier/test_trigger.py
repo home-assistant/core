@@ -61,6 +61,8 @@ async def target_humidifiers(hass: HomeAssistant) -> list[str]:
 @pytest.mark.parametrize(
     "trigger_key",
     [
+        "humidifier.current_humidity_changed",
+        "humidifier.current_humidity_crossed_threshold",
         "humidifier.started_drying",
         "humidifier.started_humidifying",
         "humidifier.turned_off",
