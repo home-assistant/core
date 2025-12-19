@@ -1,17 +1,19 @@
 """Fixtures for Gentex HomeLink tests."""
 
 from collections.abc import Generator
+from http import HTTPStatus
 from unittest.mock import AsyncMock, patch
 
 from homelink.model.button import Button
 import homelink.model.device
 import pytest
 
-from homeassistant.components.gentex_homelink import DOMAIN
+from homeassistant.components.gentex_homelink.const import DOMAIN, OAUTH2_TOKEN_URL
 
 from . import TEST_ACCESS_JWT
 
 from tests.common import MockConfigEntry
+from tests.conftest import AiohttpClientMocker
 
 
 @pytest.fixture
@@ -30,6 +32,12 @@ def mock_srp_auth() -> Generator[AsyncMock]:
             }
         }
         yield instance
+
+
+@pytest.fixture
+def aioclient_mock_fixture(aioclient_mock: AiohttpClientMocker) -> None:
+    """Fixture to provide a aioclient mocker."""
+    aioclient_mock.post(OAUTH2_TOKEN_URL, status=HTTPStatus.OK, json={})
 
 
 @pytest.fixture

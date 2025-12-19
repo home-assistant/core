@@ -1,18 +1,22 @@
 """Test the homelink config flow."""
 
+from http import HTTPStatus
+import time
 from unittest.mock import AsyncMock
 
 import botocore.exceptions
 import pytest
 
-from homeassistant.components.gentex_homelink.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.components.gentex_homelink.const import DOMAIN, OAUTH2_TOKEN_URL
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
+from homeassistant.const import CONF_EMAIL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import TEST_ACCESS_JWT, TEST_CREDENTIALS, setup_integration
 
 from tests.common import MockConfigEntry
+from tests.conftest import AiohttpClientMocker
 
 
 async def test_full_flow(
@@ -42,7 +46,7 @@ async def test_full_flow(
             "expires_at": result["data"]["token"]["expires_at"],
         },
     }
-    assert result["title"] == "SRPAuth"
+    assert result["title"] == TEST_CREDENTIALS[CONF_EMAIL]
     assert result["result"].unique_id == "some-uuid"
 
 
@@ -110,3 +114,52 @@ async def test_exceptions(
         user_input=TEST_CREDENTIALS,
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_auth_error(
+    hass: HomeAssistant, mock_srp_auth: AsyncMock, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test if the auth server returns an error refreshing the token."""
+    aioclient_mock.clear_requests()
+    aioclient_mock.post(OAUTH2_TOKEN_URL, status=HTTPStatus.UNAUTHORIZED)
+
+    assert len(aioclient_mock.mock_calls) == 0
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"email": "test@test.com", "password": "SomePassword"},
+    )
+    assert len(aioclient_mock.mock_calls) == 1
+    assert aioclient_mock.mock_calls[0][0] == "POST"
+
+
+async def test_reauth_flow(
+    hass: HomeAssistant, mock_srp_auth: AsyncMock, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test the reauth flow."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="some-uuid",
+        version=1,
+        data={
+            "auth_implementation": "gentex_homelink",
+            "token": {
+                "expires_at": time.time() + 10000,
+                "access_token": "",
+                "refresh_token": "",
+            },
+            "last_update_id": None,
+        },
+        state=ConfigEntryState.LOADED,
+    )
+    config_entry.add_to_hass(hass)
+    result = await config_entry.start_reauth_flow(hass)
+    assert result["step_id"] == "reauth_confirm"
+    assert result["type"] == FlowResultType.FORM
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=TEST_CREDENTIALS,
+    )
+    assert result["reason"] == "reauth_successful"
