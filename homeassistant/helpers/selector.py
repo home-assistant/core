@@ -438,6 +438,7 @@ class ChooseSelectorConfig(BaseSelectorConfig):
     """Class to represent a choose selector config."""
 
     choices: Required[dict[str, ChooseSelectorChoiceConfig]]
+    translation_key: str
 
 
 @SELECTORS.register("choose")
@@ -453,7 +454,8 @@ class ChooseSelector(Selector[ChooseSelectorConfig]):
                     str: {
                         vol.Required("selector"): vol.Any(Selector, validate_selector),
                     }
-                }
+                },
+                vol.Optional("translation_key"): cv.string,
             },
         ),
         reject_nested_choose_selector,
