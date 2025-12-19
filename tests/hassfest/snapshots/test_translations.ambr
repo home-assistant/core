@@ -1,0 +1,377 @@
+# serializer version: 1
+# name: test_gen_strings_schema
+  dict({
+    'application_credentials': dict({
+      'description': 'To configure this integration, you need to create an application',
+    }),
+    'common': dict({
+      'off': 'Off',
+      'on': 'On',
+      'unknown': 'Unknown',
+    }),
+    'conditions': dict({
+      'is_on': dict({
+        'description': 'Test if the device is on',
+        'fields': dict({
+          'entity_id': dict({
+            'description': 'The entity to check',
+            'example': 'light.living_room',
+            'name': 'Entity',
+          }),
+        }),
+        'name': 'Is on',
+      }),
+    }),
+    'config': dict({
+      'abort': dict({
+        'already_configured': 'Device is already configured',
+        'reauth_successful': 'Reauthentication successful',
+      }),
+      'create_entry': dict({
+        'default': 'Successfully configured {name}',
+      }),
+      'error': dict({
+        'cannot_connect': 'Failed to connect',
+        'invalid_auth': 'Invalid authentication',
+        'unknown': 'Unexpected error',
+      }),
+      'flow_title': 'Configure {name}',
+      'progress': dict({
+        'discovery': 'Discovering devices',
+      }),
+      'step': dict({
+        'reauth_confirm': dict({
+          'data': dict({
+            'password': 'Password',
+          }),
+          'description': 'Please reauthenticate with {name}',
+          'title': 'Reauthenticate',
+        }),
+        'user': dict({
+          'data': dict({
+            'host': 'Host',
+            'password': 'Password',
+            'username': 'Username',
+          }),
+          'data_description': dict({
+            'host': 'The hostname or IP address of your device',
+            'password': 'The password for authentication',
+          }),
+          'description': 'Enter your credentials for {name}',
+          'menu_option_descriptions': dict({
+            'option_one': 'Description of first option',
+            'option_two': 'Description of second option',
+          }),
+          'menu_options': dict({
+            'option_one': 'First option',
+            'option_two': 'Second option',
+          }),
+          'sections': dict({
+            'advanced': dict({
+              'data': dict({
+                'timeout': 'Timeout',
+              }),
+              'data_description': dict({
+                'timeout': 'Connection timeout in seconds',
+              }),
+              'description': 'Configure advanced options',
+              'name': 'Advanced settings',
+            }),
+          }),
+          'submit': 'Connect',
+          'title': 'Set up Test Integration',
+        }),
+      }),
+    }),
+    'config_panel': dict({
+      '_': dict({
+        'common_key': 'Common value',
+      }),
+      'section_one': dict({
+        'subsection': dict({
+          'item': 'Subsection item',
+        }),
+        'title': 'Section one title',
+      }),
+    }),
+    'config_subentries': dict({
+      'device': dict({
+        'abort': dict({
+          'device_exists': 'Device already exists',
+        }),
+        'entry_type': 'Device',
+        'error': dict({
+          'invalid_device': 'Invalid device',
+        }),
+        'initiate_flow': dict({
+          'discovery': 'Add discovered device',
+          'user': 'Add device',
+        }),
+        'step': dict({
+          'user': dict({
+            'data': dict({
+              'device_id': 'Device ID',
+            }),
+            'description': 'Enter device details',
+            'title': 'Add device',
+          }),
+        }),
+      }),
+    }),
+    'conversation': dict({
+      'agent': dict({
+        'done': 'Done',
+      }),
+    }),
+    'device': dict({
+      'main_device': dict({
+        'name': 'Main device',
+      }),
+      'secondary_device': dict({
+        'name': 'Secondary device',
+      }),
+    }),
+    'device_automation': dict({
+      'action_type': dict({
+        'turn_off': 'Turn off {entity_name}',
+        'turn_on': 'Turn on {entity_name}',
+      }),
+      'condition_type': dict({
+        'is_off': '{entity_name} is off',
+        'is_on': '{entity_name} is on',
+      }),
+      'extra_fields': dict({
+        'brightness': 'Brightness',
+      }),
+      'extra_fields_descriptions': dict({
+        'brightness': 'The brightness level to set',
+      }),
+      'trigger_subtype': dict({
+        'button_one': 'Button one',
+        'button_two': 'Button two',
+      }),
+      'trigger_type': dict({
+        'turned_off': '{entity_name} turned off',
+        'turned_on': '{entity_name} turned on',
+      }),
+    }),
+    'entity': dict({
+      'binary_sensor': dict({
+        'motion': dict({
+          'name': 'Motion',
+          'state': dict({
+            'off': 'Clear',
+            'on': 'Detected',
+          }),
+        }),
+      }),
+      'sensor': dict({
+        'humidity': dict({
+          'name': 'Humidity',
+        }),
+        'temperature': dict({
+          'name': 'Temperature',
+          'state': dict({
+            'high': 'High',
+            'low': 'Low',
+          }),
+          'state_attributes': dict({
+            'trend': dict({
+              'name': 'Trend',
+              'state': dict({
+                'falling': 'Falling',
+                'rising': 'Rising',
+              }),
+            }),
+          }),
+          'unit_of_measurement': 'degrees',
+        }),
+      }),
+      'switch': dict({
+        'power': dict({
+          'name': 'Power',
+        }),
+      }),
+    }),
+    'entity_component': dict({
+      '_': dict({
+        'name': 'Test Integration',
+        'state': dict({
+          'off': 'Off',
+          'on': 'On',
+        }),
+        'state_attributes': dict({
+          'mode': dict({
+            'name': 'Mode',
+            'state': dict({
+              'auto': 'Automatic',
+              'manual': 'Manual',
+            }),
+          }),
+        }),
+      }),
+      'sensor': dict({
+        'name': 'Test Sensor',
+        'state': dict({
+          'active': 'Active',
+          'idle': 'Idle',
+        }),
+        'state_attributes': dict({
+          'status': dict({
+            'name': 'Status',
+            'state': dict({
+              'error': 'Error',
+              'ok': 'OK',
+            }),
+          }),
+        }),
+      }),
+    }),
+    'exceptions': dict({
+      'cannot_connect': dict({
+        'message': 'Cannot connect to {host}',
+      }),
+      'invalid_credentials': dict({
+        'message': 'Invalid credentials for {username}',
+      }),
+    }),
+    'issues': dict({
+      'deprecated_yaml': dict({
+        'description': 'YAML configuration is deprecated, please use the UI',
+        'title': 'Deprecated YAML configuration',
+      }),
+      'firmware_update_required': dict({
+        'fix_flow': dict({
+          'abort': dict({
+            'update_failed': 'Update failed',
+          }),
+          'step': dict({
+            'confirm': dict({
+              'data': dict({
+                'confirm': 'I understand',
+              }),
+              'description': 'Your device needs a firmware update',
+              'title': 'Confirm firmware update',
+            }),
+          }),
+        }),
+        'title': 'Firmware update required',
+      }),
+    }),
+    'options': dict({
+      'abort': dict({
+        'cannot_connect': 'Cannot connect to device',
+      }),
+      'error': dict({
+        'invalid_interval': 'Invalid scan interval',
+      }),
+      'step': dict({
+        'init': dict({
+          'data': dict({
+            'scan_interval': 'Scan interval',
+          }),
+          'data_description': dict({
+            'scan_interval': 'How often to poll the device',
+          }),
+          'description': 'Configure options for {name}',
+          'title': 'Options',
+        }),
+      }),
+    }),
+    'preview_features': dict({
+      'new_feature': dict({
+        'description': 'This is a new experimental feature',
+        'disable_confirmation': 'Are you sure you want to disable this feature?',
+        'enable_confirmation': 'Are you sure you want to enable this feature?',
+        'name': 'New feature',
+      }),
+    }),
+    'selector': dict({
+      '_': dict({
+        'options': dict({
+          'default_option': 'Default option',
+        }),
+      }),
+      'field_new': dict({
+        'fields': dict({
+          'field_one': dict({
+            'description': 'Description of field one',
+            'name': 'Field one',
+          }),
+        }),
+      }),
+      'field_old': dict({
+        'fields': dict({
+          'field_old': 'Description of field old',
+        }),
+      }),
+      'mode': dict({
+        'options': dict({
+          'auto': 'Automatic',
+          'eco': 'Eco mode',
+          'manual': 'Manual',
+        }),
+      }),
+      'speed': dict({
+        'choices': dict({
+          'high': 'High',
+          'low': 'Low',
+          'medium': 'Medium',
+        }),
+      }),
+      'temperature': dict({
+        'unit_of_measurement': dict({
+          'celsius': 'Celsius',
+          'fahrenheit': 'Fahrenheit',
+        }),
+      }),
+    }),
+    'services': dict({
+      'reload': dict({
+        'description': 'Reloads the integration',
+        'name': 'Reload',
+      }),
+      'set_value': dict({
+        'description': 'Sets a value on the device',
+        'fields': dict({
+          'target': dict({
+            'description': 'The target device',
+            'name': 'Target',
+          }),
+          'value': dict({
+            'description': 'The value to set',
+            'example': '100',
+            'name': 'Value',
+          }),
+        }),
+        'name': 'Set value',
+        'sections': dict({
+          'advanced': dict({
+            'description': 'Advanced configuration options',
+            'name': 'Advanced options',
+          }),
+        }),
+      }),
+    }),
+    'system_health': dict({
+      'info': dict({
+        'api_status': 'API status',
+        'connected_devices': 'Connected devices',
+      }),
+    }),
+    'title': 'Test Integration',
+    'triggers': dict({
+      'turned_on': dict({
+        'description': 'When the device turns on',
+        'fields': dict({
+          'entity_id': dict({
+            'description': 'The entity to monitor',
+            'example': 'light.living_room',
+            'name': 'Entity',
+          }),
+        }),
+        'name': 'Turned on',
+      }),
+    }),
+  })
+# ---
