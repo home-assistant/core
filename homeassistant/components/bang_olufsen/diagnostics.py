@@ -70,6 +70,6 @@ async def async_get_config_entry_diagnostics(
                     data[f"remote_{remote.serial_number}_{key_type}_event"] = state_dict
 
         # Add remote Mozart model
-        data[f"remote_{remote.serial_number}"] = remote.to_dict()
+        data[f"remote_{remote.serial_number}"] = dict(remote)
 
     return data
