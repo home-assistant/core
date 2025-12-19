@@ -2,6 +2,7 @@
 
 DOMAIN = "file"
 
+CONF_OVERWRITE = "overwrite"
 CONF_TIMESTAMP = "timestamp"
 
 DEFAULT_NAME = "File"

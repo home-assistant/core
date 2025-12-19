@@ -28,10 +28,12 @@ from tests.common import MockConfigEntry
     ],
 )
 @pytest.mark.parametrize("timestamp", [False, True], ids=["no_timestamp", "timestamp"])
+@pytest.mark.parametrize("overwrite", [False, True], ids=["no_overwrite", "overwrite"])
 async def test_notify_file(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_is_allowed_path: MagicMock,
+    overwrite: bool,
     timestamp: bool,
     domain: str,
     service: str,
@@ -69,7 +71,10 @@ async def test_notify_file(
         await hass.services.async_call(domain, service, params, blocking=True)
 
         assert m_open.call_count == 1
-        assert m_open.call_args == call(full_filename, "a", encoding="utf8")
+        if not overwrite:
+            assert m_open.call_args == call(full_filename, "a", encoding="utf8")
+        else:
+            assert m_open.call_args == call(full_filename, "w", encoding="utf8")
 
         assert m_open.return_value.write.call_count == 2
         if not timestamp:
