@@ -418,6 +418,43 @@ class BooleanSelector(Selector[BooleanSelectorConfig]):
         return value
 
 
+class ChooseSelectorConfig(BaseSelectorConfig):
+    """Class to represent a choose selector config."""
+
+    choices: Required[dict[str, Selector]]
+
+
+@SELECTORS.register("choose")
+class ChooseSelector(Selector[ChooseSelectorConfig]):
+    """Selector allowing to choose one of several selectors."""
+
+    selector_type = "choose"
+
+    CONFIG_SCHEMA = make_selector_config_schema(
+        {
+            vol.Required("choices"): {
+                str: {
+                    vol.Required("selector"): vol.Any(Selector, validate_selector),
+                }
+            }
+        }
+    )
+
+    def __init__(self, config: ChooseSelectorConfig | None = None) -> None:
+        """Instantiate a selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        if not isinstance(data, dict):
+            raise vol.Invalid("Value should be a dictionary")
+        if "active_choice" not in data:
+            raise vol.Invalid("Missing active_choice key")
+        if data["active_choice"] not in data:
+            raise vol.Invalid("Missing value for active choice")
+        return data
+
+
 class ColorRGBSelectorConfig(BaseSelectorConfig):
     """Class to represent a color RGB selector config."""
 
