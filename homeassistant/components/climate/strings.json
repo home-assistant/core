@@ -192,6 +192,12 @@
         "off": "[%key:common::state::off%]"
       }
     },
+    "number_or_entity": {
+      "choices": {
+        "entity": "Entity",
+        "number": "Number"
+      }
+    },
     "trigger_behavior": {
       "options": {
         "any": "Any",
@@ -341,6 +347,20 @@
         }
       },
       "name": "Climate-control device started heating"
+    },
+    "target_temperature_changed": {
+      "description": "Triggers after the temperature setpoint of one or more climate-control devices changes.",
+      "fields": {
+        "above": {
+          "description": "Trigger when the target temperature is above this value.",
+          "name": "Above"
+        },
+        "below": {
+          "description": "Trigger when the target temperature is below this value.",
+          "name": "Below"
+        }
+      },
+      "name": "Climate-control device target temperature changed"
     },
     "turned_off": {
       "description": "Triggers after one or more climate-control devices turn off.",
