@@ -352,6 +352,8 @@ def other_states(state: StrEnum | Iterable[StrEnum]) -> list[str]:
         excluded_values = {state.value}
         enum_class = state.__class__
     else:
+        if len(state) == 0:
+            raise ValueError("state iterable must not be empty")
         excluded_values = {s.value for s in state}
         enum_class = list(state)[0].__class__
 

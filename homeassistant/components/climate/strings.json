@@ -299,7 +299,7 @@
   "title": "Climate",
   "triggers": {
     "hvac_mode_changed": {
-      "description": "Triggers after the mode of one or more climate-control devices change.",
+      "description": "Triggers after the mode of one or more climate-control devices changes.",
       "fields": {
         "behavior": {
           "description": "[%key:component::climate::common::trigger_behavior_description%]",

@@ -27,6 +27,7 @@ hvac_mode_changed:
     hvac_mode:
       context:
         filter_target: target
+      required: true
       selector:
         state:
           # Note: This should allow selecting multiple modes, but state selector does not support that yet.

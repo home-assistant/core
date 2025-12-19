@@ -88,13 +88,13 @@ async def test_climate_triggers_gated_by_labs_flag(
             {CONF_HVAC_MODE: HVACMode.HEAT},
             does_not_raise(),
         ),
+        # Invalid configurations
         (
             "climate.hvac_mode_changed",
-            # Empty hvac_mode list, maybe this should not be allowed?
+            # Empty hvac_mode list
             {CONF_HVAC_MODE: []},
-            does_not_raise(),
+            pytest.raises(vol.Invalid),
         ),
-        # Invalid configurations
         (
             "climate.hvac_mode_changed",
             # Missing CONF_HVAC_MODE

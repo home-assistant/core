@@ -22,7 +22,9 @@ CONF_HVAC_MODE = "hvac_mode"
 HVAC_MODE_CHANGED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST.extend(
     {
         vol.Required(CONF_OPTIONS): {
-            vol.Required(CONF_HVAC_MODE): vol.All(cv.ensure_list, [HVACMode]),
+            vol.Required(CONF_HVAC_MODE): vol.All(
+                cv.ensure_list, vol.Length(min=1), [HVACMode]
+            ),
         },
     }
 )
