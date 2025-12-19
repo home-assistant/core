@@ -702,8 +702,8 @@ class EntityNumericalStateAttributeCrossedThresholdTriggerBase(EntityTriggerBase
     _attribute: str
     _schema = NUMERICAL_ATTRIBUTE_CROSSED_THRESHOLD_SCHEMA
 
-    _lower_limit: None | float | str = None
-    _upper_limit: None | float | str = None
+    _lower_limit: float | str | None = None
+    _upper_limit: float | str | None = None
     _threshold_type: ThresholdType
 
     def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
