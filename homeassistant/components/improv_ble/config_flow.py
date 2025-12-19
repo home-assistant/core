@@ -261,7 +261,8 @@ class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if self._can_identify is None:
             try:
-                self._can_identify = await self._try_call(device.can_identify())
+                await self._try_call(device.ensure_connected())
+                self._can_identify = device.can_identify
             except AbortFlow as err:
                 return self.async_abort(reason=err.reason)
         if self._can_identify:
