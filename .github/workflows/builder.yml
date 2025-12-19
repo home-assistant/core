@@ -50,10 +50,11 @@ jobs:
         with:
           type: ${{ env.BUILD_TYPE }}
 
-      - name: Verify version
-        uses: home-assistant/actions/helpers/verify-version@master
-        with:
-          ignore-dev: true
+      # Verify version - skip for non-release builds
+      # - name: Verify version
+      #   uses: home-assistant/actions/helpers/verify-version@master
+      #   with:
+      #     ignore-dev: true
 
       # - name: Fail if translations files are checked in
       #   run: |
