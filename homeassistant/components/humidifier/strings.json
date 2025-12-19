@@ -1,4 +1,8 @@
 {
+  "common": {
+    "trigger_behavior_description": "The behavior of the targeted humidifiers to trigger on.",
+    "trigger_behavior_name": "Behavior"
+  },
   "device_automation": {
     "action_type": {
       "set_humidity": "Set humidity for {entity_name}",
@@ -86,6 +90,15 @@
       "message": "Provided humidity {humidity} is not valid. Accepted range is {min_humidity} to {max_humidity}."
     }
   },
+  "selector": {
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
+      }
+    }
+  },
   "services": {
     "set_humidity": {
       "description": "Sets the target humidity.",
@@ -120,5 +133,47 @@
       "name": "[%key:common::action::turn_on%]"
     }
   },
-  "title": "Humidifier"
+  "title": "Humidifier",
+  "triggers": {
+    "started_drying": {
+      "description": "Triggers after one or more humidifiers start drying.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::humidifier::common::trigger_behavior_description%]",
+          "name": "[%key:component::humidifier::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Humidifier started drying"
+    },
+    "started_humidifying": {
+      "description": "Triggers after one or more humidifiers start humidifying.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::humidifier::common::trigger_behavior_description%]",
+          "name": "[%key:component::humidifier::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Humidifier started humidifying"
+    },
+    "turned_off": {
+      "description": "Triggers after one or more humidifiers turn off.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::humidifier::common::trigger_behavior_description%]",
+          "name": "[%key:component::humidifier::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Humidifier turned off"
+    },
+    "turned_on": {
+      "description": "Triggers after one or more humidifiers turn on.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::humidifier::common::trigger_behavior_description%]",
+          "name": "[%key:component::humidifier::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Humidifier turned on"
+    }
+  }
 }

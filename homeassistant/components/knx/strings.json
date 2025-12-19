@@ -467,6 +467,10 @@
               "description": "Toggle oscillation of the fan.",
               "label": "Oscillation"
             },
+            "ga_switch": {
+              "description": "Group address to turn the fan on/off.",
+              "label": "Switch"
+            },
             "speed": {
               "description": "Control the speed of the fan.",
               "ga_speed": {
