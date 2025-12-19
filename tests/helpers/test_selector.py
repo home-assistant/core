@@ -679,6 +679,24 @@ def test_choose_selector_serialize(snapshot: SnapshotAssertion) -> None:
                 "text_choice": {"selector": {"text": {"multiline": True}}},
                 "number_choice": {"selector": {"number": {"min": 0, "max": 100}}},
                 "entity_choice": {"selector": {"entity": {"domain": "light"}}},
+                "object_choice": {
+                    "selector": {
+                        "object": {
+                            "fields": {
+                                "name": {
+                                    "required": True,
+                                    "selector": {"text": {}},
+                                },
+                                "percentage": {
+                                    "selector": {"number": {}},
+                                },
+                            },
+                            "multiple": False,
+                            "label_field": "name",
+                            "description_field": "percentage",
+                        }
+                    }
+                },
             }
         }
     )
@@ -691,6 +709,56 @@ def test_choose_selector_serialize(snapshot: SnapshotAssertion) -> None:
                 "text_choice": {"selector": selector.TextSelector({"multiline": True})},
                 "number_choice": {
                     "selector": selector.NumberSelector({"min": 0, "max": 100})
+                },
+                "object_choice": {
+                    "selector": selector.ObjectSelector(
+                        {
+                            "fields": {
+                                "name": {
+                                    "required": True,
+                                    "selector": selector.TextSelector({}),
+                                },
+                                "percentage": {
+                                    "selector": selector.NumberSelector({}),
+                                },
+                                "object": {
+                                    "selector": selector.ObjectSelector(
+                                        {
+                                            "fields": {
+                                                "choose": {
+                                                    "required": True,
+                                                    "selector": selector.ChooseSelector(
+                                                        {
+                                                            "choices": {
+                                                                "text_choice": {
+                                                                    "selector": selector.TextSelector(
+                                                                        {
+                                                                            "multiline": True
+                                                                        }
+                                                                    )
+                                                                },
+                                                                "number_choice": {
+                                                                    "selector": selector.NumberSelector(
+                                                                        {
+                                                                            "min": 0,
+                                                                            "max": 100,
+                                                                        }
+                                                                    )
+                                                                },
+                                                            }
+                                                        }
+                                                    ),
+                                                },
+                                            }
+                                        }
+                                    ),
+                                },
+                            },
+                            "multiple": False,
+                            "label_field": "name",
+                            "description_field": "percentage",
+                        }
+                    )
                 },
             }
         }
