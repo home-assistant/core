@@ -187,10 +187,19 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
         description_placeholders: dict[str, str] = {}
         if user_input is not None:
             if _is_location_already_configured(self.hass, user_input[CONF_LOCATION]):
-                return self.async_abort(reason="already_configured")
+                errors["base"] = "location_already_configured"
             if _is_location_name_already_configured(self.hass, user_input[CONF_NAME]):
-                return self.async_abort(reason="name_already_in_use")
+                errors["base"] = "location_name_already_configured"
             api: GoogleAirQualityApi = self._get_entry().runtime_data.api
+            if errors:
+                return self.async_show_form(
+                    step_id="location",
+                    data_schema=self.add_suggested_values_to_schema(
+                        _get_location_schema(self.hass), user_input
+                    ),
+                    errors=errors,
+                    description_placeholders=description_placeholders,
+                )
             if await _validate_input(user_input, api, errors, description_placeholders):
                 return self.async_create_entry(
                     title=user_input[CONF_NAME],

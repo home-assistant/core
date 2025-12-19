@@ -349,8 +349,8 @@ async def test_subentry_flow_location_already_configured(
         },
     )
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"]["base"] == "location_already_configured"
 
     entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
     assert len(entry.subentries) == 1
@@ -384,8 +384,8 @@ async def test_subentry_flow_location_name_already_configured(
         },
     )
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "name_already_in_use"
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"]["base"] == "location_name_already_configured"
 
     entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
     assert len(entry.subentries) == 1
