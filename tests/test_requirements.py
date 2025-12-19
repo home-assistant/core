@@ -681,7 +681,7 @@ async def test_discovery_requirements_dhcp(hass: HomeAssistant) -> None:
             "pyserial-asyncio",
             False,
             "which should be replaced by pyserial-asyncio-fast. This will stop"
-            " working in Home Assistant 2026.4, please create a bug report at "
+            " working in Home Assistant 2026.7, please create a bug report at "
             "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+"
             "label%3A%22integration%3A+test_component%22",
         ),
@@ -689,7 +689,7 @@ async def test_discovery_requirements_dhcp(hass: HomeAssistant) -> None:
             "pyserial-asyncio>=0.6",
             True,
             "which should be replaced by pyserial-asyncio-fast. This will stop"
-            " working in Home Assistant 2026.4, please create a bug report at "
+            " working in Home Assistant 2026.7, please create a bug report at "
             "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+"
             "label%3A%22integration%3A+test_component%22",
         ),
