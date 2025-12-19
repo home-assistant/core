@@ -55,7 +55,7 @@ from .const import (
     SUB_FAIL_ISSUE_ID,
     SUB_FAIL_URL,
     SUBSCRIPTION_TIMEOUT,
-    UPNP_FAIL_URL,
+    UPNP_DOCUMENTATION_URL,
     UPNP_ISSUE_ID,
     UPNP_ST,
 )
@@ -203,7 +203,7 @@ class SonosDiscoveryManager:
                 translation_key="upnp_disabled",
                 translation_placeholders={
                     "device_ip": ip_address,
-                    "conn_fail_url": UPNP_FAIL_URL,
+                    "documentation_url": UPNP_DOCUMENTATION_URL,
                 },
             )
         _LOGGER.error(
