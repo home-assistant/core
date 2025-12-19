@@ -90,7 +90,7 @@ async def test_not_configuring_sonos_not_creates_entry(hass: HomeAssistant) -> N
 
 
 async def test_upnp_disabled_discovery(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant, config_entry: MockConfigEntry, soco: MockSoCo
 ) -> None:
     """Test issue creation when discovery processing fails with 403."""
 
@@ -109,7 +109,12 @@ async def test_upnp_disabled_discovery(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     issue_registry = ir.async_get(hass)
-    assert issue_registry.async_get_issue(sonos.DOMAIN, UPNP_ISSUE_ID) is not None
+    assert (
+        issue_registry.async_get_issue(
+            sonos.DOMAIN, f"{UPNP_ISSUE_ID}_{soco.ip_address}"
+        )
+        is not None
+    )
 
 
 async def test_upnp_disabled_manual_hosts(
@@ -133,7 +138,9 @@ async def test_upnp_disabled_manual_hosts(
         await _setup_hass(hass)
 
     issue_registry = ir.async_get(hass)
-    issue = issue_registry.async_get_issue(sonos.DOMAIN, UPNP_ISSUE_ID)
+    issue = issue_registry.async_get_issue(
+        sonos.DOMAIN, f"{UPNP_ISSUE_ID}_{soco.ip_address}"
+    )
     assert issue is not None
     assert issue.translation_placeholders.get("device_ip") == "10.10.10.1"
 

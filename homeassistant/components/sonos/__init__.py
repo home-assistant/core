@@ -198,7 +198,7 @@ class SonosDiscoveryManager:
             ir.async_create_issue(
                 self.hass,
                 DOMAIN,
-                UPNP_ISSUE_ID,
+                f"{UPNP_ISSUE_ID}_{ip_address}",
                 is_fixable=False,
                 severity=ir.IssueSeverity.ERROR,
                 translation_key="upnp_disabled",
