@@ -68,6 +68,7 @@ DEFAULT_NAME = "Template Binary Sensor"
 CONF_DELAY_ON = "delay_on"
 CONF_DELAY_OFF = "delay_off"
 CONF_AUTO_OFF = "auto_off"
+CONF_EXPIRE_AFTER = "expire_after"
 
 LEGACY_FIELDS = {
     CONF_FRIENDLY_NAME_TEMPLATE: CONF_NAME,
@@ -82,6 +83,7 @@ BINARY_SENSOR_COMMON_SCHEMA = vol.Schema(
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Required(CONF_STATE): cv.template,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
     }
 )
 
@@ -122,6 +124,8 @@ PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
         ),
     }
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(
@@ -301,6 +305,21 @@ class TriggerBinarySensorEntity(TriggerEntity, AbstractTemplateBinarySensor):
         self._auto_off_cancel: CALLBACK_TYPE | None = None
         self._auto_off_time: datetime | None = None
 
+        self._expire_after: int | None = config.get(CONF_EXPIRE_AFTER)
+        self._expired: bool = False
+        if self._expire_after is not None and self._expire_after > 0:
+            self._expired = True
+        self._expiration_trigger: CALLBACK_TYPE | None = None
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Remove expire triggers."""
+        if self._expiration_trigger:
+            _LOGGER.debug("Clean up expire after trigger for %s", self.entity_id)
+            self._expiration_trigger()
+            self._expiration_trigger = None
+            self._expired = False
+        await TriggerEntity.async_will_remove_from_hass(self)
+
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
         await super().async_added_to_hass()
@@ -436,6 +455,36 @@ class TriggerBinarySensorEntity(TriggerEntity, AbstractTemplateBinarySensor):
         if (restored_last_extra_data := await self.async_get_last_extra_data()) is None:
             return None
         return AutoOffExtraStoredData.from_dict(restored_last_extra_data.as_dict())
+
+    @callback
+    def _process_data(self) -> None:
+        """Process new data."""
+        super()._process_data()
+
+        if self._expire_after is not None and self._expire_after > 0:
+            self._expired = False
+
+            if self._expiration_trigger:
+                self._expiration_trigger()
+
+            self._expiration_trigger = async_call_later(
+                self.hass, self._expire_after, self._value_is_expired
+            )
+
+    @callback
+    def _value_is_expired(self, *_: datetime) -> None:
+        """Triggered when value is expired."""
+        self._expiration_trigger = None
+        self._expired = True
+        self.async_write_ha_state()
+
+    @property
+    def available(self) -> bool:
+        """Return true if the device is available and value has not expired."""
+        # mypy doesn't know about fget: https://github.com/python/mypy/issues/6185
+        return TriggerEntity.available.fget(self) and (  # type: ignore[attr-defined]
+            not self._expired
+        )
 
 
 @dataclass

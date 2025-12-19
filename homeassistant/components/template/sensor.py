@@ -40,13 +40,14 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
+from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
@@ -65,6 +66,8 @@ from .schemas import (
 )
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
+
+CONF_EXPIRE_AFTER = "expire_after"
 
 DEFAULT_NAME = "Template Sensor"
 
@@ -93,6 +96,7 @@ SENSOR_COMMON_SCHEMA = vol.Schema(
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_STATE_CLASS): STATE_CLASSES_SCHEMA,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+        vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
     }
 )
 
@@ -298,6 +302,21 @@ class TriggerSensorEntity(TriggerEntity, AbstractTemplateSensor):
             else:
                 self._to_render_simple.append(ATTR_LAST_RESET)
 
+        self._expire_after: int | None = config.get(CONF_EXPIRE_AFTER)
+        self._expired: bool = False
+        if self._expire_after is not None and self._expire_after > 0:
+            self._expired = True
+        self._expiration_trigger: CALLBACK_TYPE | None = None
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Remove expire triggers."""
+        if self._expiration_trigger:
+            _LOGGER.debug("Clean up expire after trigger for %s", self.entity_id)
+            self._expiration_trigger()
+            self._expiration_trigger = None
+            self._expired = False
+        await TriggerEntity.async_will_remove_from_hass(self)
+
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
         await super().async_added_to_hass()
@@ -317,9 +336,34 @@ class TriggerSensorEntity(TriggerEntity, AbstractTemplateSensor):
         """Process new data."""
         super()._process_data()
 
+        if self._expire_after is not None and self._expire_after > 0:
+            self._expired = False
+
+            if self._expiration_trigger:
+                self._expiration_trigger()
+
+            self._expiration_trigger = async_call_later(
+                self.hass, self._expire_after, self._value_is_expired
+            )
+
         # Update last_reset
         if (last_reset := self._rendered.get(ATTR_LAST_RESET)) is not None:
             self._update_last_reset(last_reset)
 
         rendered = self._rendered.get(CONF_STATE)
         self._handle_state(rendered)
+
+    @callback
+    def _value_is_expired(self, *_: datetime) -> None:
+        """Triggered when value is expired."""
+        self._expiration_trigger = None
+        self._expired = True
+        self.async_write_ha_state()
+
+    @property
+    def available(self) -> bool:
+        """Return true if the device is available and value has not expired."""
+        # mypy doesn't know about fget: https://github.com/python/mypy/issues/6185
+        return TriggerEntity.available.fget(self) and (  # type: ignore[attr-defined]
+            not self._expired
+        )

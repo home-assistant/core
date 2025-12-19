@@ -6,6 +6,7 @@ import logging
 from typing import Any
 from unittest.mock import Mock, patch
 
+from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -25,6 +26,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import dt as dt_util
 
 from .conftest import (
     ConfigurationStyle,
@@ -1735,3 +1737,104 @@ async def test_flow_preview(
         {"name": "My template", "state": "{{ 'on' }}"},
     )
     assert state["state"] == "on"
+
+
+@pytest.mark.parametrize(("count", "domain"), [(1, template.DOMAIN)])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "template": [
+                {
+                    "unique_id": "listening-test-event",
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "binary_sensor": [
+                        {
+                            "name": "Enough Name",
+                            "unique_id": "enough-id",
+                            "state": "{{ trigger.event.data.val }}",
+                            "expire_after": 4,
+                        }
+                    ],
+                },
+            ],
+        },
+    ],
+)
+@pytest.mark.usefixtures("start_ha")
+async def test_trigger_expire_after(hass: HomeAssistant) -> None:
+    """Test trigger binary sensor with expire_after configuration."""
+    state = hass.states.get("binary_sensor.enough_name")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
+
+    hass.bus.async_fire("test_event", {"val": False})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.enough_name")
+    assert state.state == "off"
+
+    realnow = dt_util.utcnow()
+    now = datetime(realnow.year + 1, 1, 1, 1, tzinfo=dt_util.UTC)
+    with freeze_time(now) as freezer:
+        freezer.move_to(now)
+        async_fire_time_changed(hass, now)
+        hass.bus.async_fire("test_event", {"val": True})
+        await hass.async_block_till_done()
+
+        # Value was set correctly.
+        state = hass.states.get("binary_sensor.enough_name")
+        assert state.state == "on"
+
+        # Time jump +3s
+        now += timedelta(seconds=3)
+        freezer.move_to(now)
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
+
+        # Value is not yet expired
+        state = hass.states.get("binary_sensor.enough_name")
+        assert state.state == "on"
+
+        # Next message resets timer
+        now += timedelta(seconds=0.5)
+        freezer.move_to(now)
+        async_fire_time_changed(hass, now)
+        hass.bus.async_fire("test_event", {"val": False})
+        await hass.async_block_till_done()
+
+        # Value was updated correctly.
+        state = hass.states.get("binary_sensor.enough_name")
+        assert state.state == "off"
+
+        # Time jump +3s
+        now += timedelta(seconds=3)
+        freezer.move_to(now)
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
+
+        # Value is not yet expired
+        state = hass.states.get("binary_sensor.enough_name")
+        assert state.state == "off"
+
+        # Time jump +2s
+        now += timedelta(seconds=2)
+        freezer.move_to(now)
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
+
+        # Value is expired now
+        state = hass.states.get("binary_sensor.enough_name")
+        assert state.state == STATE_UNAVAILABLE
+
+        # Send the last message again
+        # Time jump 0.5s
+        now += timedelta(seconds=0.5)
+        freezer.move_to(now)
+        async_fire_time_changed(hass, now)
+        hass.bus.async_fire("test_event", {"val": True})
+        await hass.async_block_till_done()
+
+        # Value was updated correctly.
+        state = hass.states.get("binary_sensor.enough_name")
+        assert state.state == "on"
