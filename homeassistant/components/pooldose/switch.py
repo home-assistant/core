@@ -18,6 +18,8 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 
 SWITCH_DESCRIPTIONS: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
