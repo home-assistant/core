@@ -1,6 +1,7 @@
 {
   "config": {
     "abort": {
+      "cannot_form_network": "Could not form a new Zigbee network.\n\nError: {error}",
       "cannot_resolve_path": "Could not resolve device path: {path}",
       "cannot_restore_backup": "The adapter you are restoring to does not properly support backup restoration. Please upgrade the firmware.\n\nError: {error}",
       "cannot_restore_backup_no_ieee_confirm": "The adapter you are restoring to has outdated firmware and cannot write the adapter IEEE address multiple times. Please upgrade the firmware or confirm permanent overwrite in the previous step.",
@@ -189,6 +190,8 @@
       "button_4": "Fourth button",
       "button_5": "Fifth button",
       "button_6": "Sixth button",
+      "button_7": "Seventh button",
+      "button_8": "Eighth button",
       "close": "[%key:common::action::close%]",
       "dim_down": "Dim down",
       "dim_up": "Dim up",
@@ -317,6 +320,9 @@
       },
       "valve_alarm": {
         "name": "Valve alarm"
+      },
+      "valve_state": {
+        "name": "Valve state"
       },
       "water_leak": {
         "name": "Water leak"
@@ -683,6 +689,9 @@
       "max_brightness": {
         "name": "Maximum brightness"
       },
+      "max_cool_setpoint_limit": {
+        "name": "Max cool setpoint limit"
+      },
       "max_heat_setpoint_limit": {
         "name": "Max heat setpoint limit"
       },
@@ -706,6 +715,9 @@
       },
       "min_brightness": {
         "name": "Minimum brightness"
+      },
+      "min_cool_setpoint_limit": {
+        "name": "Min cool setpoint limit"
       },
       "min_heat_setpoint_limit": {
         "name": "Min heat setpoint limit"
@@ -775,6 +787,9 @@
       },
       "opening_duration": {
         "name": "Opening duration"
+      },
+      "outdoor_temperature": {
+        "name": "Outdoor temperature"
       },
       "output_time": {
         "name": "Output time"
@@ -955,6 +970,9 @@
       }
     },
     "select": {
+      "actuator_type": {
+        "name": "Actuator type"
+      },
       "adaptation_run_command": {
         "name": "Adaptation run command"
       },
@@ -1060,6 +1078,9 @@
       "heat_transfer_medium": {
         "name": "Heat transfer medium"
       },
+      "heater_type": {
+        "name": "Heater type"
+      },
       "heating_emitter_type": {
         "name": "Heating emitter type"
       },
@@ -1120,6 +1141,9 @@
       "on_led_color": {
         "name": "On LED color"
       },
+      "operating_mode": {
+        "name": "Operating mode"
+      },
       "operation_mode": {
         "name": "Operation mode"
       },
@@ -1153,6 +1177,9 @@
       "screen_orientation": {
         "name": "Screen orientation"
       },
+      "sensor_connection": {
+        "name": "Sensor connection"
+      },
       "sensor_mode": {
         "name": "Sensor mode"
       },
@@ -1183,6 +1210,9 @@
       "switch_type": {
         "name": "Switch type"
       },
+      "temperature_display_mode": {
+        "name": "Temperature display mode"
+      },
       "thermostat_application": {
         "name": "Thermostat application"
       },
@@ -1191,6 +1221,9 @@
       },
       "valve_orientation": {
         "name": "Valve orientation"
+      },
+      "valve_status_led": {
+        "name": "Valve status LED"
       },
       "viewing_direction": {
         "name": "Viewing direction"
@@ -1284,8 +1317,14 @@
       "energy_produced_ph_c": {
         "name": "Energy produced phase C"
       },
+      "error_code": {
+        "name": "Error code"
+      },
       "error_status": {
         "name": "Error status"
+      },
+      "external_temperature": {
+        "name": "External temperature"
       },
       "fault_code": {
         "name": "Fault code"
@@ -1295,6 +1334,9 @@
       },
       "formaldehyde": {
         "name": "Formaldehyde concentration"
+      },
+      "heating_demand": {
+        "name": "Heating demand"
       },
       "hooks_state": {
         "name": "Hooks state"
@@ -1381,6 +1423,9 @@
       },
       "load_estimate": {
         "name": "Load estimate"
+      },
+      "local_temperature": {
+        "name": "Local temperature"
       },
       "local_temperature_floor": {
         "name": "Floor temperature"
@@ -1869,16 +1914,17 @@
       "title": "Zigbee network settings have changed"
     },
     "wrong_silabs_firmware_installed_nabucasa": {
-      "description": "Your Zigbee adapter was previously used with multiprotocol (Zigbee and Thread) and still has multiprotocol firmware installed: ({firmware_type}).\n\nTo run your adapter exclusively with ZHA, you need to install the Zigbee firmware:\n - Go to Settings > System > Hardware, select the device and select Configure.\n - Select the 'Migrate Zigbee to a new adapter' option and follow the instructions.",
-      "title": "Zigbee adapter with multiprotocol firmware detected"
+      "description": "Your Zigbee adapter is currently in an incorrect state: {firmware_type}.\n\nThe device may have Thread or multiprotocol firmware installed, or it may be stuck in the bootloader. To resolve this, try to unplug the adapter temporarily.\n\nIf the issue persists and you need to install Zigbee firmware:\n - Go to Settings > System > Hardware, select the device and select Configure.\n - Select the 'Migrate Zigbee to a new adapter' option and follow the instructions.",
+      "title": "Zigbee adapter in incorrect state"
     },
     "wrong_silabs_firmware_installed_other": {
-      "description": "Your Zigbee adapter was previously used with multiprotocol (Zigbee and Thread) and still has multiprotocol firmware installed: ({firmware_type}).\n\nTo run your adapter exclusively with ZHA, you need to install Zigbee firmware. Follow your Zigbee adapter manufacturer's instructions for how to do this.",
+      "description": "Your Zigbee adapter is currently in an incorrect state: {firmware_type}.\n\nThe device may have Thread or multiprotocol firmware installed, or it may be stuck in the bootloader. To resolve this, try to unplug the adapter temporarily.\n\nIf the issue persists and you need to install Zigbee firmware, follow your Zigbee adapter manufacturer's instructions for how to do this.",
       "title": "[%key:component::zha::issues::wrong_silabs_firmware_installed_nabucasa::title%]"
     }
   },
   "options": {
     "abort": {
+      "cannot_form_network": "[%key:component::zha::config::abort::cannot_form_network%]",
       "cannot_resolve_path": "[%key:component::zha::config::abort::cannot_resolve_path%]",
       "cannot_restore_backup": "[%key:component::zha::config::abort::cannot_restore_backup%]",
       "cannot_restore_backup_no_ieee_confirm": "[%key:component::zha::config::abort::cannot_restore_backup_no_ieee_confirm%]",

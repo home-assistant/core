@@ -448,7 +448,7 @@ class TelegramNotificationService:
                 params[ATTR_MESSAGE_THREAD_ID] = data[ATTR_MESSAGE_THREAD_ID]
             # Keyboards:
             if ATTR_KEYBOARD in data:
-                keys = data.get(ATTR_KEYBOARD)
+                keys = data[ATTR_KEYBOARD]
                 keys = keys if isinstance(keys, list) else [keys]
                 if keys:
                     params[ATTR_REPLYMARKUP] = ReplyKeyboardMarkup(
@@ -783,6 +783,7 @@ class TelegramNotificationService:
                 None,
                 chat_id=chat_id,
                 action=chat_action,
+                message_thread_id=kwargs.get(ATTR_MESSAGE_THREAD_ID),
                 context=context,
             )
             result[chat_id] = is_successful
@@ -923,6 +924,7 @@ class TelegramNotificationService:
                 self.bot.send_sticker,
                 "Error sending sticker",
                 params[ATTR_MESSAGE_TAG],
+                target=kwargs.get(ATTR_TARGET),
                 sticker=stickerid,
                 disable_notification=params[ATTR_DISABLE_NOTIF],
                 reply_to_message_id=params[ATTR_REPLY_TO_MSGID],
@@ -949,6 +951,7 @@ class TelegramNotificationService:
             self.bot.send_location,
             "Error sending location",
             params[ATTR_MESSAGE_TAG],
+            target=target,
             latitude=latitude,
             longitude=longitude,
             disable_notification=params[ATTR_DISABLE_NOTIF],
@@ -975,6 +978,7 @@ class TelegramNotificationService:
             self.bot.send_poll,
             "Error sending poll",
             params[ATTR_MESSAGE_TAG],
+            target=target,
             question=question,
             options=options,
             is_anonymous=is_anonymous,

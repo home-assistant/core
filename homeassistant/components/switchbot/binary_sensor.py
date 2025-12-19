@@ -2,6 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
+
+from switchbot import SwitchbotModel
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -16,54 +21,64 @@ from .entity import SwitchbotEntity
 
 PARALLEL_UPDATES = 0
 
-BINARY_SENSOR_TYPES: dict[str, BinarySensorEntityDescription] = {
-    "calibration": BinarySensorEntityDescription(
+
+@dataclass(frozen=True, kw_only=True)
+class SwitchbotBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Describes Switchbot binary sensor entity."""
+
+    device_class_fn: Callable[[SwitchbotModel], BinarySensorDeviceClass] | None = None
+
+
+BINARY_SENSOR_TYPES: dict[str, SwitchbotBinarySensorEntityDescription] = {
+    "calibration": SwitchbotBinarySensorEntityDescription(
         key="calibration",
         translation_key="calibration",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "motion_detected": BinarySensorEntityDescription(
+    "motion_detected": SwitchbotBinarySensorEntityDescription(
         key="pir_state",
-        device_class=BinarySensorDeviceClass.MOTION,
+        device_class_fn=lambda model: {
+            SwitchbotModel.PRESENCE_SENSOR: BinarySensorDeviceClass.OCCUPANCY,
+        }.get(model, BinarySensorDeviceClass.MOTION),
     ),
-    "contact_open": BinarySensorEntityDescription(
+    "contact_open": SwitchbotBinarySensorEntityDescription(
         key="contact_open",
         name=None,
         device_class=BinarySensorDeviceClass.DOOR,
     ),
-    "contact_timeout": BinarySensorEntityDescription(
+    "contact_timeout": SwitchbotBinarySensorEntityDescription(
         key="contact_timeout",
         translation_key="door_timeout",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "is_light": BinarySensorEntityDescription(
+    "is_light": SwitchbotBinarySensorEntityDescription(
         key="is_light",
         device_class=BinarySensorDeviceClass.LIGHT,
     ),
-    "door_open": BinarySensorEntityDescription(
+    "door_open": SwitchbotBinarySensorEntityDescription(
         key="door_status",
         name=None,
         device_class=BinarySensorDeviceClass.DOOR,
     ),
-    "unclosed_alarm": BinarySensorEntityDescription(
+    "unclosed_alarm": SwitchbotBinarySensorEntityDescription(
         key="unclosed_alarm",
         translation_key="door_unclosed_alarm",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=BinarySensorDeviceClass.PROBLEM,
     ),
-    "unlocked_alarm": BinarySensorEntityDescription(
+    "unlocked_alarm": SwitchbotBinarySensorEntityDescription(
         key="unlocked_alarm",
         translation_key="door_unlocked_alarm",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=BinarySensorDeviceClass.PROBLEM,
     ),
-    "auto_lock_paused": BinarySensorEntityDescription(
+    "auto_lock_paused": SwitchbotBinarySensorEntityDescription(
         key="auto_lock_paused",
         translation_key="door_auto_lock_paused",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "leak": BinarySensorEntityDescription(
+    "leak": SwitchbotBinarySensorEntityDescription(
         key="leak",
         name=None,
         device_class=BinarySensorDeviceClass.MOISTURE,
@@ -88,6 +103,8 @@ async def async_setup_entry(
 class SwitchBotBinarySensor(SwitchbotEntity, BinarySensorEntity):
     """Representation of a Switchbot binary sensor."""
 
+    entity_description: SwitchbotBinarySensorEntityDescription
+
     def __init__(
         self,
         coordinator: SwitchbotDataUpdateCoordinator,
@@ -98,6 +115,10 @@ class SwitchBotBinarySensor(SwitchbotEntity, BinarySensorEntity):
         self._sensor = binary_sensor
         self._attr_unique_id = f"{coordinator.base_unique_id}-{binary_sensor}"
         self.entity_description = BINARY_SENSOR_TYPES[binary_sensor]
+        if self.entity_description.device_class_fn:
+            self._attr_device_class = self.entity_description.device_class_fn(
+                coordinator.model
+            )
 
     @property
     def is_on(self) -> bool:

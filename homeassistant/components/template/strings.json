@@ -527,6 +527,10 @@
     "deprecated_battery_level": {
       "description": "The template vacuum options `battery_level` and `battery_level_template` are being removed in 2026.8.\n\nPlease remove the `battery_level` or `battery_level_template` option from the YAML configuration for {entity_id} ({entity_name}).",
       "title": "Deprecated battery level option in {entity_name}"
+    },
+    "deprecated_legacy_templates": {
+      "description": "The legacy `platform: template` syntax for `{domain}` is being removed. Please migrate `{breadcrumb}` to the modern template syntax.\n#### Step 1 - Remove legacy configuration\nRemove the `{breadcrumb}` template definition from the `configuration.yaml` `{domain}:` section.\n\n**Note:** If you are using `{domain}: !include {filename}.yaml` in `configuration.yaml`, remove the {domain} definition from the included `{filename}.yaml`.\n#### Step 2 -  Add the modern configuration\nAdd new template definition inside `configuration.yaml`:\n{config}\n**Note:** If there are any existing `template:` sections in your configuration, make sure to omit the `template:` line from the yaml above.  There can only be 1 `template:` section in `configuration.yaml`.  Also, ensure the indentation is aligned with the existing entities within the `template:` section.\n#### Step 3 - Restart Home Assistant or reload template entities",
+      "title": "Legacy {domain} template deprecation"
     }
   },
   "options": {
@@ -1111,6 +1115,7 @@
         "speed": "[%key:component::sensor::entity_component::speed::name%]",
         "sulphur_dioxide": "[%key:component::sensor::entity_component::sulphur_dioxide::name%]",
         "temperature": "[%key:component::sensor::entity_component::temperature::name%]",
+        "temperature_delta": "[%key:component::sensor::entity_component::temperature_delta::name%]",
         "timestamp": "[%key:component::sensor::entity_component::timestamp::name%]",
         "volatile_organic_compounds": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]",
         "volatile_organic_compounds_parts": "[%key:component::sensor::entity_component::volatile_organic_compounds_parts::name%]",

@@ -145,10 +145,10 @@
           "loop": "Loop",
           "off": "[%key:common::state::off%]",
           "seconds_1": "1 second",
-          "seconds_2": "2 second",
-          "seconds_3": "3 second",
-          "seconds_4": "4 second",
-          "seconds_5": "5 second"
+          "seconds_2": "2 seconds",
+          "seconds_3": "3 seconds",
+          "seconds_4": "4 seconds",
+          "seconds_5": "5 seconds"
         }
       },
       "min_dc_voltage_cells": {

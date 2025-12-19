@@ -28,6 +28,7 @@ from ..const import (
     ClimateConf,
     ColorTempModes,
     CoverConf,
+    FanConf,
     FanZeroMode,
 )
 from .const import (
@@ -46,6 +47,8 @@ from .const import (
     CONF_GA_COLOR_TEMP,
     CONF_GA_CONTROLLER_MODE,
     CONF_GA_CONTROLLER_STATUS,
+    CONF_GA_DATE,
+    CONF_GA_DATETIME,
     CONF_GA_FAN_SPEED,
     CONF_GA_FAN_SWING,
     CONF_GA_FAN_SWING_HORIZONTAL,
@@ -60,6 +63,7 @@ from .const import (
     CONF_GA_OP_MODE_PROTECTION,
     CONF_GA_OP_MODE_STANDBY,
     CONF_GA_OPERATION_MODE,
+    CONF_GA_OSCILLATION,
     CONF_GA_POSITION_SET,
     CONF_GA_POSITION_STATE,
     CONF_GA_RED_BRIGHTNESS,
@@ -67,16 +71,19 @@ from .const import (
     CONF_GA_SATURATION,
     CONF_GA_SENSOR,
     CONF_GA_SETPOINT_SHIFT,
+    CONF_GA_SPEED,
     CONF_GA_STEP,
     CONF_GA_STOP,
     CONF_GA_SWITCH,
     CONF_GA_TEMPERATURE_CURRENT,
     CONF_GA_TEMPERATURE_TARGET,
+    CONF_GA_TIME,
     CONF_GA_UP_DOWN,
     CONF_GA_VALVE,
     CONF_GA_WHITE_BRIGHTNESS,
     CONF_GA_WHITE_SWITCH,
     CONF_IGNORE_AUTO_MODE,
+    CONF_SPEED,
     CONF_TARGET_TEMPERATURE,
 )
 from .knx_selector import (
@@ -199,6 +206,60 @@ COVER_KNX_SCHEMA = AllSerializeFirst(
     ),
 )
 
+DATE_KNX_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_GA_DATE): GASelector(write_required=True, valid_dpt="11.001"),
+        vol.Optional(CONF_RESPOND_TO_READ, default=False): selector.BooleanSelector(),
+        vol.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
+    }
+)
+
+DATETIME_KNX_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_GA_DATETIME): GASelector(
+            write_required=True, valid_dpt="19.001"
+        ),
+        vol.Optional(CONF_RESPOND_TO_READ, default=False): selector.BooleanSelector(),
+        vol.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
+    }
+)
+
+FAN_KNX_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_SPEED): GroupSelect(
+            GroupSelectOption(
+                translation_key="percentage_mode",
+                schema={
+                    vol.Required(CONF_GA_SPEED): GASelector(
+                        write_required=True, valid_dpt="5.001"
+                    ),
+                },
+            ),
+            GroupSelectOption(
+                translation_key="step_mode",
+                schema={
+                    vol.Required(CONF_GA_STEP): GASelector(
+                        write_required=True, valid_dpt="5.010"
+                    ),
+                    vol.Required(FanConf.MAX_STEP, default=3): selector.NumberSelector(
+                        selector.NumberSelectorConfig(
+                            min=1,
+                            max=100,
+                            step=1,
+                            mode=selector.NumberSelectorMode.BOX,
+                        )
+                    ),
+                },
+            ),
+            collapsible=False,
+        ),
+        vol.Optional(CONF_GA_OSCILLATION): GASelector(
+            write_required=True, valid_dpt="1"
+        ),
+        vol.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
+    }
+)
+
 
 @unique
 class LightColorMode(StrEnum):
@@ -279,7 +340,7 @@ LIGHT_KNX_SCHEMA = AllSerializeFirst(
                     translation_key="hsv_addresses",
                     schema={
                         vol.Required(CONF_GA_HUE): GASelector(
-                            write_required=True, valid_dpt="5.001"
+                            write_required=True, valid_dpt="5.003"
                         ),
                         vol.Required(CONF_GA_SATURATION): GASelector(
                             write_required=True, valid_dpt="5.001"
@@ -334,6 +395,14 @@ SWITCH_KNX_SCHEMA = vol.Schema(
         vol.Optional(CONF_RESPOND_TO_READ, default=False): selector.BooleanSelector(),
         vol.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
     },
+)
+
+TIME_KNX_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_GA_TIME): GASelector(write_required=True, valid_dpt="10.001"),
+        vol.Optional(CONF_RESPOND_TO_READ, default=False): selector.BooleanSelector(),
+        vol.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
+    }
 )
 
 
@@ -482,8 +551,12 @@ KNX_SCHEMA_FOR_PLATFORM = {
     Platform.BINARY_SENSOR: BINARY_SENSOR_KNX_SCHEMA,
     Platform.CLIMATE: CLIMATE_KNX_SCHEMA,
     Platform.COVER: COVER_KNX_SCHEMA,
+    Platform.DATE: DATE_KNX_SCHEMA,
+    Platform.DATETIME: DATETIME_KNX_SCHEMA,
+    Platform.FAN: FAN_KNX_SCHEMA,
     Platform.LIGHT: LIGHT_KNX_SCHEMA,
     Platform.SWITCH: SWITCH_KNX_SCHEMA,
+    Platform.TIME: TIME_KNX_SCHEMA,
 }
 
 ENTITY_STORE_DATA_SCHEMA: VolSchemaType = vol.All(

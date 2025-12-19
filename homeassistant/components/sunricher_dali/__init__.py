@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 
 from PySrDaliGateway import DaliGateway
@@ -18,12 +19,12 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 from .const import CONF_SERIAL_NUMBER, DOMAIN, MANUFACTURER
 from .types import DaliCenterConfigEntry, DaliCenterData
 
-_PLATFORMS: list[Platform] = [Platform.LIGHT]
+_PLATFORMS: list[Platform] = [Platform.LIGHT, Platform.SCENE]
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -47,14 +48,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -
             "You can try to delete the gateway and add it again"
         ) from exc
 
-    def on_online_status(dev_id: str, available: bool) -> None:
-        signal = f"{DOMAIN}_update_available_{dev_id}"
-        hass.add_job(async_dispatcher_send, hass, signal, available)
-
-    gateway.on_online_status = on_online_status
-
     try:
-        devices = await gateway.discover_devices()
+        devices, scenes = await asyncio.gather(
+            gateway.discover_devices(),
+            gateway.discover_scenes(),
+        )
     except DaliGatewayError as exc:
         raise ConfigEntryNotReady(
             "Unable to discover devices from the gateway"
@@ -65,6 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -
     dev_reg = dr.async_get(hass)
     dev_reg.async_get_or_create(
         config_entry_id=entry.entry_id,
+        connections={(CONNECTION_NETWORK_MAC, gw_sn)},
         identifiers={(DOMAIN, gw_sn)},
         manufacturer=MANUFACTURER,
         name=gateway.name,
@@ -75,6 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -
     entry.runtime_data = DaliCenterData(
         gateway=gateway,
         devices=devices,
+        scenes=scenes,
     )
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
