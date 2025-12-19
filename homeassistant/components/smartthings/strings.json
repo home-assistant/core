@@ -353,6 +353,23 @@
           "stop": "[%key:common::state::stopped%]"
         }
       },
+      "dishwasher_washing_course": {
+        "name": "Cycle",
+        "state": {
+          "auto": "AUTO",
+          "babycare": "Baby Care",
+          "delicate": "Delicate",
+          "drinkware": "Drinkware",
+          "eco": "ECO",
+          "express_0_c": "Express",
+          "extra_silence": "Extra Silence",
+          "intensive": "Intensive",
+          "machine_care": "Machine Care",
+          "plastics": "Plastic",
+          "pots_and_pans": "Pots and Pans",
+          "pre_wash": "Pre Wash"
+        }
+      },
       "diverter_valve_position": {
         "name": "Valve position",
         "state": {
