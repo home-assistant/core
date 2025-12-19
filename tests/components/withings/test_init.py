@@ -348,7 +348,13 @@ async def test_setup_with_cloud(
         assert not hass.config_entries.async_entries(DOMAIN)
 
 
-@pytest.mark.parametrize("url", ["http://example.com", "https://example.com:444"])
+@pytest.mark.parametrize(
+    ("url", "expected_message"),
+    [
+        ("http://example.com", "HTTPS is required"),
+        ("https://example.com:444", "port 443 is required"),
+    ],
+)
 async def test_setup_no_webhook(
     hass: HomeAssistant,
     webhook_config_entry: MockConfigEntry,
@@ -356,6 +362,7 @@ async def test_setup_no_webhook(
     caplog: pytest.LogCaptureFixture,
     freezer: FrozenDateTimeFactory,
     url: str,
+    expected_message: str,
 ) -> None:
     """Test if set up with cloud link and without https."""
     hass.config.components.add("cloud")
@@ -378,7 +385,7 @@ async def test_setup_no_webhook(
         await hass.async_block_till_done()
         mock_async_generate_url.assert_called_once()
 
-    assert "https and port 443 is required to register the webhook" in caplog.text
+    assert expected_message in caplog.text
 
 
 async def test_cloud_disconnect(
