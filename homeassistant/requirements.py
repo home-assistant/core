@@ -279,13 +279,17 @@ class RequirementsManager:
                             ),
                         )
             if skip_pip_packages := self.hass.config.skip_pip_packages:
+                skipped_requirements: set[str] = set()
                 for requirement_string, requirement_details in all_requirements.items():
                     if requirement_details.name in skip_pip_packages:
                         _LOGGER.warning(
                             "Skipping requirement %s. This may cause issues",
                             requirement_string,
                         )
-                        requirements.remove(requirement_string)
+                        skipped_requirements.add(requirement_string)
+                requirements = [
+                    r for r in requirements if r not in skipped_requirements
+                ]
 
         if not (missing := self._find_missing_requirements(requirements)):
             return
