@@ -14,7 +14,15 @@ from homeassistant.components.climate.const import (
     HVACMode,
 )
 from homeassistant.components.climate.trigger import CONF_HVAC_MODE
-from homeassistant.const import ATTR_LABEL_ID, CONF_ENTITY_ID, CONF_OPTIONS, CONF_TARGET
+from homeassistant.const import (
+    ATTR_LABEL_ID,
+    ATTR_TEMPERATURE,
+    CONF_ABOVE,
+    CONF_BELOW,
+    CONF_ENTITY_ID,
+    CONF_OPTIONS,
+    CONF_TARGET,
+)
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.trigger import async_validate_trigger_config
 
@@ -54,6 +62,7 @@ async def target_climates(hass: HomeAssistant) -> list[str]:
     "trigger_key",
     [
         "climate.hvac_mode_changed",
+        "climate.target_temperature_changed",
         "climate.turned_off",
         "climate.turned_on",
         "climate.started_heating",
@@ -136,6 +145,7 @@ def parametrize_climate_trigger_states(
     other_states: list[str | None | tuple[str | None, dict]],
     additional_attributes: dict | None = None,
     trigger_from_none: bool = True,
+    retrigger_on_target_state: bool = False,
 ) -> list[tuple[str, dict[str, Any], list[StateDescription]]]:
     """Parametrize states and expected service call counts."""
     trigger_options = trigger_options or {}
@@ -147,6 +157,7 @@ def parametrize_climate_trigger_states(
             other_states=other_states,
             additional_attributes=additional_attributes,
             trigger_from_none=trigger_from_none,
+            retrigger_on_target_state=retrigger_on_target_state,
         )
     ]
 
@@ -230,19 +241,56 @@ async def test_climate_state_trigger_behavior_any(
     parametrize_target_entities("climate"),
 )
 @pytest.mark.parametrize(
-    ("trigger", "states"),
+    ("trigger", "trigger_options", "states"),
     [
-        *parametrize_trigger_states(
+        *parametrize_climate_trigger_states(
+            trigger="climate.target_temperature_changed",
+            trigger_options={},
+            target_states=[
+                (HVACMode.AUTO, {ATTR_TEMPERATURE: 0}),
+                (HVACMode.AUTO, {ATTR_TEMPERATURE: 50}),
+                (HVACMode.AUTO, {ATTR_TEMPERATURE: 100}),
+            ],
+            other_states=[(HVACMode.AUTO, {ATTR_TEMPERATURE: None})],
+            retrigger_on_target_state=True,
+        ),
+        *parametrize_climate_trigger_states(
+            trigger="climate.target_temperature_changed",
+            trigger_options={CONF_ABOVE: 10},
+            target_states=[
+                (HVACMode.AUTO, {ATTR_TEMPERATURE: 50}),
+                (HVACMode.AUTO, {ATTR_TEMPERATURE: 100}),
+            ],
+            other_states=[
+                (HVACMode.AUTO, {ATTR_TEMPERATURE: None}),
+                (HVACMode.AUTO, {ATTR_TEMPERATURE: 0}),
+            ],
+            retrigger_on_target_state=True,
+        ),
+        *parametrize_climate_trigger_states(
+            trigger="climate.target_temperature_changed",
+            trigger_options={CONF_BELOW: 90},
+            target_states=[
+                (HVACMode.AUTO, {ATTR_TEMPERATURE: 0}),
+                (HVACMode.AUTO, {ATTR_TEMPERATURE: 50}),
+            ],
+            other_states=[
+                (HVACMode.AUTO, {ATTR_TEMPERATURE: None}),
+                (HVACMode.AUTO, {ATTR_TEMPERATURE: 100}),
+            ],
+            retrigger_on_target_state=True,
+        ),
+        *parametrize_climate_trigger_states(
             trigger="climate.started_cooling",
             target_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.COOLING})],
             other_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.IDLE})],
         ),
-        *parametrize_trigger_states(
+        *parametrize_climate_trigger_states(
             trigger="climate.started_drying",
             target_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.DRYING})],
             other_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.IDLE})],
         ),
-        *parametrize_trigger_states(
+        *parametrize_climate_trigger_states(
             trigger="climate.started_heating",
             target_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.HEATING})],
             other_states=[(HVACMode.AUTO, {ATTR_HVAC_ACTION: HVACAction.IDLE})],
@@ -257,6 +305,7 @@ async def test_climate_state_attribute_trigger_behavior_any(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
+    trigger_options: dict[str, Any],
     states: list[StateDescription],
 ) -> None:
     """Test that the climate state trigger fires when any climate state changes to a specific state."""
@@ -267,7 +316,7 @@ async def test_climate_state_attribute_trigger_behavior_any(
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
-    await arm_trigger(hass, trigger, {}, trigger_target_config)
+    await arm_trigger(hass, trigger, trigger_options, trigger_target_config)
 
     for state in states[1:]:
         included_state = state["included"]
