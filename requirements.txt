@@ -3,7 +3,7 @@
 -c homeassistant/package_constraints.txt
 
 # Home Assistant Core
-aiodns==3.5.0
+aiodns==3.6.1
 aiohasupervisor==0.3.3
 aiohttp==3.13.2
 aiohttp_cors==0.8.1
