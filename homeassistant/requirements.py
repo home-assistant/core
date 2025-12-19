@@ -266,13 +266,14 @@ class RequirementsManager:
             if DEPRECATED_PACKAGES:
                 for requirement_string, requirement_details in all_requirements.items():
                     if deprecation := DEPRECATED_PACKAGES.get(requirement_details.name):
+                        reason, breaks_in_ha_version = deprecation
                         _LOGGER.warning(
                             "Detected that %sintegration '%s' %s. %s %s",
                             "" if is_built_in else "custom ",
                             name,
-                            f"has requirement '{requirement_string}' which {deprecation[0]}",
+                            f"has requirement '{requirement_string}' which {reason}",
                             f"This will stop working in Home Assistant {breaks_in_ha_version}, please"
-                            if (breaks_in_ha_version := deprecation[1])
+                            if breaks_in_ha_version
                             else "Please",
                             async_suggest_report_issue(
                                 self.hass, integration_domain=name
