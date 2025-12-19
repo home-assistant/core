@@ -5,6 +5,7 @@ from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from script.hassfest import translations
+from script.hassfest.model import Config
 
 from . import get_integration
 
@@ -401,7 +402,7 @@ SAMPLE_STRINGS = {
 
 
 def test_gen_strings_schema(
-    config,
+    config: Config,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test gen_strings_schema validates all string types."""
