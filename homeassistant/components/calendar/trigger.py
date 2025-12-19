@@ -42,9 +42,7 @@ _OPTIONS_SCHEMA_DICT = {
 
 _CONFIG_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_OPTIONS): vol.All(
-            _OPTIONS_SCHEMA_DICT,
-        ),
+        vol.Required(CONF_OPTIONS): _OPTIONS_SCHEMA_DICT,
     },
 )
 
