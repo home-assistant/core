@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from urllib.parse import urlparse
-
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -22,7 +20,6 @@ from .const import (
     CONF_TLE_SOURCES,
     DEFAULT_NAME,
     DEFAULT_PEOPLE_UPDATE_HOURS,
-    DEFAULT_PEOPLE_URL,
     DEFAULT_POSITION_UPDATE_SECONDS,
     DEFAULT_TLE_SOURCES,
     DOMAIN,
@@ -30,8 +27,6 @@ from .const import (
     MIN_POSITION_UPDATE_SECONDS,
     TLE_SOURCES,
 )
-
-CONF_PEOPLE_URL = "people_url"
 
 
 class ISSConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -55,9 +50,6 @@ class ISSConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={},
                 options={
                     CONF_SHOW_ON_MAP: user_input.get(CONF_SHOW_ON_MAP, False),
-                    CONF_PEOPLE_URL: user_input.get(
-                        CONF_PEOPLE_URL, DEFAULT_PEOPLE_URL
-                    ),
                     CONF_TLE_SOURCES: DEFAULT_TLE_SOURCES,
                 },
             )
@@ -78,13 +70,6 @@ class OptionsFlowHandler(OptionsFlow):
                     CONF_SHOW_ON_MAP,
                     default=self.config_entry.options.get(CONF_SHOW_ON_MAP, False),
                 ): bool,
-                vol.Optional(
-                    CONF_PEOPLE_URL,
-                    default=self.config_entry.options.get(
-                        CONF_PEOPLE_URL, DEFAULT_PEOPLE_URL
-                    ),
-                    description="The URL used to fetch the current number of people in space",
-                ): str,
                 vol.Optional(
                     CONF_PEOPLE_UPDATE_HOURS,
                     default=self.config_entry.options.get(
@@ -121,14 +106,6 @@ class OptionsFlowHandler(OptionsFlow):
                 errors[CONF_TLE_SOURCES] = "no_tle_sources"
             elif not all(source in TLE_SOURCES for source in tle_sources):
                 errors[CONF_TLE_SOURCES] = "invalid_tle_source"
-
-            # Validate people URL
-            try:
-                parsed_url = urlparse(user_input[CONF_PEOPLE_URL])
-                if not parsed_url.scheme or not parsed_url.netloc:
-                    errors[CONF_PEOPLE_URL] = "invalid_url"
-            except ValueError:
-                errors[CONF_PEOPLE_URL] = "invalid_url"
 
             # Validate people update hours
             if user_input[CONF_PEOPLE_UPDATE_HOURS] < MIN_PEOPLE_UPDATE_HOURS:
