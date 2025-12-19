@@ -6,7 +6,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from functools import partial
 import logging
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING
 
 from uiprotect.data import ModelType, ProtectAdoptableDeviceModel
 
@@ -46,9 +46,6 @@ class ProtectButtonEntityDescription(
     ufp_press: str | None = None
 
 
-DEVICE_CLASS_CHIME_BUTTON: Final = "unifiprotect__chime_button"
-
-
 ALL_DEVICE_BUTTONS: tuple[ProtectButtonEntityDescription, ...] = (
     ProtectButtonEntityDescription(
         key="reboot",
@@ -85,7 +82,6 @@ CHIME_BUTTONS: tuple[ProtectButtonEntityDescription, ...] = (
     ProtectButtonEntityDescription(
         key="play",
         translation_key="play_chime",
-        device_class=DEVICE_CLASS_CHIME_BUTTON,
         ufp_press="play",
     ),
     ProtectButtonEntityDescription(
