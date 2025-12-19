@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, call
 
 import pytest
 from roborock import RoborockCommand
+from roborock.data.v1 import RoborockDockDustCollectionModeCode
 from roborock.exceptions import RoborockException
 
 from homeassistant.components.roborock import DOMAIN
@@ -154,3 +155,30 @@ async def test_selected_map_without_name(
     select_entity = hass.states.get("select.roborock_s7_maxv_selected_map")
     assert select_entity
     assert select_entity.state == "Map 0"
+
+
+@pytest.mark.parametrize(
+    ("dust_collection_mode", "expected_state"),
+    [
+        (None, "unknown"),
+        (RoborockDockDustCollectionModeCode.smart, "smart"),
+        (RoborockDockDustCollectionModeCode.light, "light"),
+    ],
+)
+async def test_dust_collection_mode_none(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+    dust_collection_mode: RoborockDockDustCollectionModeCode | None,
+    expected_state: str,
+) -> None:
+    """Test that the dust collection mode entity correctly handles mode values."""
+    assert fake_vacuum.v1_properties
+    assert fake_vacuum.v1_properties.dust_collection_mode
+    fake_vacuum.v1_properties.dust_collection_mode.mode = dust_collection_mode
+
+    await async_setup_component(hass, DOMAIN, {})
+
+    select_entity = hass.states.get("select.roborock_s7_maxv_dock_empty_mode")
+    assert select_entity
+    assert select_entity.state == expected_state
