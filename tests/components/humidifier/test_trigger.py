@@ -262,7 +262,7 @@ async def test_humidifier_state_attribute_trigger_behavior_first(
     trigger: str,
     states: list[tuple[tuple[str, dict], int]],
 ) -> None:
-    """Test that the humidifier state trigger fires when any humidifier state changes to a specific state."""
+    """Test that the humidifier state trigger fires when the first humidifier state changes to a specific state."""
     other_entity_ids = set(target_humidifiers) - {entity_id}
 
     # Set all humidifiers, including the tested humidifier, to the initial state
@@ -373,7 +373,7 @@ async def test_humidifier_state_attribute_trigger_behavior_last(
     trigger: str,
     states: list[tuple[tuple[str, dict], int]],
 ) -> None:
-    """Test that the humidifier state trigger fires when any humidifier state changes to a specific state."""
+    """Test that the humidifier state trigger fires when the last humidifier state changes to a specific state."""
     other_entity_ids = set(target_humidifiers) - {entity_id}
 
     # Set all humidifiers, including the tested humidifier, to the initial state
