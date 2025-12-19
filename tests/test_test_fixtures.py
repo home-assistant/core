@@ -106,7 +106,7 @@ async def test_evict_faked_translations(
 ) -> None:
     """Test the evict_faked_translations fixture.
 
-    In this test, we load translations for a fake integration , then ensure that
+    In this test, we load translations for a fake integration, then ensure that
     after the fixture is torn down, only the real integration remains in the
     translations cache.
     """
