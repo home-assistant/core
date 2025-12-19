@@ -13,10 +13,8 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import MockConfigEntry
 
 
-def mock_config_entry(expires_at: int | None = None) -> MockConfigEntry:
+def mock_config_entry() -> MockConfigEntry:
     """Create a mock config entry."""
-    if expires_at is None:
-        expires_at = int(time.time()) + 3600
 
     return MockConfigEntry(
         domain=DOMAIN,
@@ -26,7 +24,7 @@ def mock_config_entry(expires_at: int | None = None) -> MockConfigEntry:
             "token": {
                 "access_token": "test_access_token",
                 "refresh_token": "test_refresh_token",
-                "expires_at": expires_at,
+                "expires_at": int(time.time()) + 3600,
             },
         },
     )
@@ -35,11 +33,10 @@ def mock_config_entry(expires_at: int | None = None) -> MockConfigEntry:
 async def setup_platform(
     hass: HomeAssistant,
     platforms: list[Platform] | None = None,
-    expires_at: int | None = None,
 ) -> MockConfigEntry:
     """Set up the Teslemetry platform."""
 
-    mock_entry = mock_config_entry(expires_at)
+    mock_entry = mock_config_entry()
     mock_entry.add_to_hass(hass)
 
     if platforms is None:

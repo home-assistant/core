@@ -22,6 +22,15 @@ from .const import (
 )
 
 
+@pytest.fixture(autouse=False)
+def mock_async_setup_entry():
+    """Mock Teslemetry async_setup_entry method."""
+    with patch(
+        "homeassistant.components.teslemetry.async_setup_entry", return_value=True
+    ) as mock_async_setup_entry:
+        yield mock_async_setup_entry
+
+
 @pytest.fixture(autouse=True)
 def mock_metadata():
     """Mock Tesla Fleet Api metadata method."""

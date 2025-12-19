@@ -22,6 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
+from . import setup_platform
 from .const import CONFIG_V1, UNIQUE_ID
 
 from tests.common import MockConfigEntry
@@ -32,6 +33,7 @@ REDIRECT = "https://example.com/auth/external/callback"
 
 
 @pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("mock_async_setup_entry")
 async def test_oauth_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -82,6 +84,8 @@ async def test_oauth_flow(
 
     # Complete OAuth
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == UNIQUE_ID
     assert result["data"]["auth_implementation"] == "teslemetry"
@@ -93,6 +97,7 @@ async def test_oauth_flow(
 
 
 @pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("mock_async_setup_entry")
 async def test_reauth(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -100,8 +105,7 @@ async def test_reauth(
 ) -> None:
     """Test reauth flow."""
 
-    mock_entry = MockConfigEntry(domain=DOMAIN, data={}, version=2, unique_id=UNIQUE_ID)
-    mock_entry.add_to_hass(hass)
+    mock_entry = await setup_platform(hass, [])
 
     result = await mock_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
@@ -110,14 +114,8 @@ async def test_reauth(
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
 
-    # Configure the reauth_confirm step
-    result = await hass.config_entries.flow.async_configure(flows[0]["flow_id"], {})
-
-    if result["type"] is FlowResultType.FORM:
-        assert result["step_id"] == "pick_implementation"
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"implementation": DOMAIN}
-        )
+    # Progress from reauth_confirm to external OAuth step
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -139,10 +137,7 @@ async def test_reauth(
         },
     )
 
-    with patch(
-        "homeassistant.components.teslemetry.async_setup_entry", return_value=True
-    ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result
     assert result["type"] is FlowResultType.ABORT
@@ -163,12 +158,6 @@ async def test_reauth_account_mismatch(
 
     flows = hass.config_entries.flow.async_progress()
     result = await hass.config_entries.flow.async_configure(flows[0]["flow_id"], {})
-
-    if result["type"] is FlowResultType.FORM:
-        assert result["step_id"] == "pick_implementation"
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"implementation": DOMAIN}
-        )
 
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -207,23 +196,11 @@ async def test_duplicate_unique_id_abort(
 ) -> None:
     """Test duplicate unique ID aborts flow."""
     # Create existing entry
-    existing_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=UNIQUE_ID,
-        version=1,
-        data={},
-    )
-    existing_entry.add_to_hass(hass)
+    await setup_platform(hass, [])
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-
-    if result["type"] is FlowResultType.FORM:
-        assert result["step_id"] == "pick_implementation"
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"implementation": DOMAIN}
-        )
 
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -332,12 +309,6 @@ async def test_oauth_error_handling(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-
-    if result["type"] is FlowResultType.FORM:
-        assert result["step_id"] == "pick_implementation"
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"implementation": DOMAIN}
-        )
 
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
