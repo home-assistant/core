@@ -95,6 +95,27 @@
       }),
     }),
     'Volvo medium interval coordinator': dict({
+      'averageEnergyConsumption': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:53:44.785000+00:00',
+        'unit': 'kWh/100km',
+        'value': 22.6,
+      }),
+      'averageSpeed': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:18:56.849000+00:00',
+        'unit': 'km/h',
+        'value': 53,
+      }),
+      'averageSpeedAutomatic': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:18:56.849000+00:00',
+        'unit': 'km/h',
+        'value': 26,
+      }),
       'batteryChargeLevel': dict({
         'extra_data': dict({
           'updated_at': '2025-07-02T08:51:23Z',
@@ -158,6 +179,13 @@
         'unit': None,
         'value': 'AC',
       }),
+      'distanceToEmptyBattery': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:30:08.338000+00:00',
+        'unit': 'km',
+        'value': 250,
+      }),
       'electricRange': dict({
         'extra_data': dict({
           'updated_at': '2025-07-02T08:51:23Z',
@@ -192,14 +220,35 @@
         'unit': 'percentage',
         'value': 90,
       }),
-    }),
-    'Volvo slow interval coordinator': dict({
-      'availabilityStatus': dict({
+      'tripMeterAutomatic': dict({
         'extra_data': dict({
         }),
-        'timestamp': '2024-12-30T14:32:26.169000+00:00',
+        'timestamp': '2024-12-30T14:18:56.849000+00:00',
+        'unit': 'km',
+        'value': 18.2,
+      }),
+      'tripMeterManual': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:18:56.849000+00:00',
+        'unit': 'km',
+        'value': 3822.9,
+      }),
+    }),
+    'Volvo slow interval coordinator': dict({
+      'brakeFluidLevelWarning': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:18:56.849000+00:00',
         'unit': None,
-        'value': 'AVAILABLE',
+        'value': 'NO_WARNING',
+      }),
+      'engineCoolantLevelWarning': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:18:56.849000+00:00',
+        'unit': None,
+        'value': 'NO_WARNING',
       }),
       'location': dict({
         'extra_data': dict({
@@ -218,40 +267,33 @@
         }),
         'type': 'Feature',
       }),
-    }),
-    'Volvo very slow interval coordinator': dict({
-      'averageEnergyConsumption': dict({
-        'extra_data': dict({
-        }),
-        'timestamp': '2024-12-30T14:53:44.785000+00:00',
-        'unit': 'kWh/100km',
-        'value': 22.6,
-      }),
-      'averageSpeed': dict({
+      'odometer': dict({
         'extra_data': dict({
         }),
         'timestamp': '2024-12-30T14:18:56.849000+00:00',
-        'unit': 'km/h',
-        'value': 53,
+        'unit': 'km',
+        'value': 30000,
       }),
-      'averageSpeedAutomatic': dict({
-        'extra_data': dict({
-        }),
-        'timestamp': '2024-12-30T14:18:56.849000+00:00',
-        'unit': 'km/h',
-        'value': 26,
-      }),
-      'battery_capacity_kwh': dict({
-        'extra_data': dict({
-        }),
-        'value': 81.608,
-      }),
-      'brakeFluidLevelWarning': dict({
+      'oilLevelWarning': dict({
         'extra_data': dict({
         }),
         'timestamp': '2024-12-30T14:18:56.849000+00:00',
         'unit': None,
         'value': 'NO_WARNING',
+      }),
+    }),
+    'Volvo very slow interval coordinator': dict({
+      'availabilityStatus': dict({
+        'extra_data': dict({
+        }),
+        'timestamp': '2024-12-30T14:32:26.169000+00:00',
+        'unit': None,
+        'value': 'AVAILABLE',
+      }),
+      'battery_capacity_kwh': dict({
+        'extra_data': dict({
+        }),
+        'value': 81.608,
       }),
       'brakeLightCenterWarning': dict({
         'extra_data': dict({
@@ -288,26 +330,12 @@
         'unit': None,
         'value': 'NO_WARNING',
       }),
-      'distanceToEmptyBattery': dict({
-        'extra_data': dict({
-        }),
-        'timestamp': '2024-12-30T14:30:08.338000+00:00',
-        'unit': 'km',
-        'value': 250,
-      }),
       'distanceToService': dict({
         'extra_data': dict({
         }),
         'timestamp': '2024-12-30T14:18:56.849000+00:00',
         'unit': 'km',
         'value': 29000,
-      }),
-      'engineCoolantLevelWarning': dict({
-        'extra_data': dict({
-        }),
-        'timestamp': '2024-12-30T14:18:56.849000+00:00',
-        'unit': None,
-        'value': 'NO_WARNING',
       }),
       'engineHoursToService': dict({
         'extra_data': dict({
@@ -373,20 +401,6 @@
         'value': 'NO_WARNING',
       }),
       'lowBeamRightWarning': dict({
-        'extra_data': dict({
-        }),
-        'timestamp': '2024-12-30T14:18:56.849000+00:00',
-        'unit': None,
-        'value': 'NO_WARNING',
-      }),
-      'odometer': dict({
-        'extra_data': dict({
-        }),
-        'timestamp': '2024-12-30T14:18:56.849000+00:00',
-        'unit': 'km',
-        'value': 30000,
-      }),
-      'oilLevelWarning': dict({
         'extra_data': dict({
         }),
         'timestamp': '2024-12-30T14:18:56.849000+00:00',
@@ -469,20 +483,6 @@
         'timestamp': '2024-12-30T14:18:56.849000+00:00',
         'unit': 'months',
         'value': 23,
-      }),
-      'tripMeterAutomatic': dict({
-        'extra_data': dict({
-        }),
-        'timestamp': '2024-12-30T14:18:56.849000+00:00',
-        'unit': 'km',
-        'value': 18.2,
-      }),
-      'tripMeterManual': dict({
-        'extra_data': dict({
-        }),
-        'timestamp': '2024-12-30T14:18:56.849000+00:00',
-        'unit': 'km',
-        'value': 3822.9,
       }),
       'turnIndicationFrontLeftWarning': dict({
         'extra_data': dict({
