@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from asyncio import TimerHandle
 from datetime import datetime
 from random import randint
 from typing import Any
@@ -20,6 +21,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import (
     DOMAIN,
+    ESTIMATE_REFRESH_DELAY,
+    ESTIMATE_REFRESH_JITTER,
     LOGGER,
     MINUTE_ALIGNED_REFRESH_DELAY,
     MINUTE_ALIGNED_REFRESH_JITTER,
@@ -79,6 +82,7 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
         )
         self._api = api
         self.site_id = site_id
+        self._eager_refresh_handle: TimerHandle | None = None
 
     async def _async_setup(self) -> None:
         """Set up coordinator resources."""
@@ -96,6 +100,11 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
         """Refresh the coordinator on minute boundaries."""
         if not self.config_entry:
             return
+
+        # Cancel any pending eager refreshes
+        if self._eager_refresh_handle is not None:
+            self._eager_refresh_handle.cancel()
+            self._eager_refresh_handle = None
 
         # Add jitter to reduce request bursts against the Amber API.
         delay = randint(
@@ -116,8 +125,45 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
 
         self.hass.loop.call_later(delay, _do_refresh)
 
+    @callback
+    def _schedule_eager_refresh(self) -> None:
+        """Schedule a refresh after a short jitter while estimates are present."""
+        delay = randint(
+            max(0, ESTIMATE_REFRESH_DELAY - ESTIMATE_REFRESH_JITTER),
+            ESTIMATE_REFRESH_DELAY + ESTIMATE_REFRESH_JITTER,
+        )
+        LOGGER.debug(
+            "Scheduled refresh in %s seconds due to estimate pricing for current interval",
+            delay,
+        )
+
+        @callback
+        def _do_refresh() -> None:
+            self._eager_refresh_handle = None
+            if not self.config_entry or self.hass.is_stopping:
+                return
+            self.config_entry.async_create_background_task(
+                self.hass,
+                self.async_request_refresh(),
+                name=f"{DOMAIN} - {self.config_entry.title} - estimate refresh",
+                eager_start=True,
+            )
+
+        self._eager_refresh_handle = self.hass.loop.call_later(delay, _do_refresh)
+
+    def _has_estimate(self, data: dict[str, Any]) -> bool:
+        """Return true when current data contains estimated prices."""
+        current = data.get("current", {})
+        general = current.get("general")
+        feed_in = current.get("feed_in")
+        return any(
+            interval is not None and interval.estimate
+            for interval in (general, feed_in)
+        )
+
     def update_price_data(self) -> dict[str, dict[str, Any]]:
         """Update callback."""
+        LOGGER.debug("Fetching Amber data")
         result: dict[str, dict[str, Any]] = {
             "current": {},
             "descriptors": {},
@@ -174,9 +220,24 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
                 interval for interval in forecasts if is_feed_in(interval)
             ]
 
-        LOGGER.debug("Fetched new Amber data: %s", intervals)
+        LOGGER.debug(
+            "Fetched new Amber data: %s",
+            intervals[0] if intervals else None,
+        )
         return result
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Async update wrapper."""
-        return await self.hass.async_add_executor_job(self.update_price_data)
+        data = await self.hass.async_add_executor_job(self.update_price_data)
+
+        if self._has_estimate(data):
+            self._schedule_eager_refresh()
+
+        return data
+
+    async def async_shutdown(self) -> None:
+        """Cancel pending refreshes and shut down the coordinator."""
+        if self._eager_refresh_handle is not None:
+            self._eager_refresh_handle.cancel()
+            self._eager_refresh_handle = None
+        await super().async_shutdown()
