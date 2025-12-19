@@ -338,7 +338,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         hvac_mode_wrapper: DPCodeEnumWrapper | None,
         set_temperature_wrapper: DPCodeIntegerWrapper | None,
         swing_wrapper: _SwingModeWrapper | None,
-        switch_wrapper: DPCodeBooleanWrapper | None,
+        switch_wrapper: DeviceWrapper[bool] | None,
         target_humidity_wrapper: _RoundedIntegerWrapper | None,
         temperature_unit: UnitOfTemperature,
     ) -> None:

@@ -20,7 +20,12 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .models import DPCodeBooleanWrapper, DPCodeEnumWrapper, DPCodeIntegerWrapper
+from .models import (
+    DeviceWrapper,
+    DPCodeBooleanWrapper,
+    DPCodeEnumWrapper,
+    DPCodeIntegerWrapper,
+)
 from .util import ActionDPCodeNotFoundError, get_dpcode
 
 
@@ -138,7 +143,7 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
         *,
         current_humidity_wrapper: _RoundedIntegerWrapper | None = None,
         mode_wrapper: DPCodeEnumWrapper | None = None,
-        switch_wrapper: DPCodeBooleanWrapper | None = None,
+        switch_wrapper: DeviceWrapper[bool] | None = None,
         target_humidity_wrapper: _RoundedIntegerWrapper | None = None,
     ) -> None:
         """Init Tuya (de)humidifier."""
