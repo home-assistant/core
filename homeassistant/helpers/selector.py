@@ -418,10 +418,16 @@ class BooleanSelector(Selector[BooleanSelectorConfig]):
         return value
 
 
+class ChooseSelectorChoiceConfig(TypedDict, total=False):
+    """Class to represent a choose selector choice config."""
+
+    selector: Required[Selector | dict[str, Any]]
+
+
 class ChooseSelectorConfig(BaseSelectorConfig):
     """Class to represent a choose selector config."""
 
-    choices: Required[dict[str, Selector]]
+    choices: Required[dict[str, ChooseSelectorChoiceConfig]]
 
 
 @SELECTORS.register("choose")
@@ -444,15 +450,40 @@ class ChooseSelector(Selector[ChooseSelectorConfig]):
         """Instantiate a selector."""
         super().__init__(config)
 
+    def serialize(self) -> dict[str, dict[str, ChooseSelectorConfig]]:
+        """Serialize ChooseSelectorConfig for voluptuous_serialize."""
+        _config = deepcopy(self.config)
+        if "choices" in _config:
+            for choice in _config["choices"].values():
+                if isinstance(choice["selector"], Selector):
+                    choice["selector"] = {
+                        choice["selector"].selector_type: choice["selector"].config
+                    }
+        return {"selector": {self.selector_type: _config}}
+
     def __call__(self, data: Any) -> Any:
         """Validate the passed selection."""
         if not isinstance(data, dict):
-            raise vol.Invalid("Value should be a dictionary")
+            for choice in self.config["choices"].values():
+                try:
+                    validated = selector(choice["selector"])(data)  # type: ignore[operator]
+                except:  # noqa: E722
+                    continue
+                else:
+                    return validated
+
+            raise vol.Invalid("Value does not match any choice selector")
+
         if "active_choice" not in data:
             raise vol.Invalid("Missing active_choice key")
         if data["active_choice"] not in data:
             raise vol.Invalid("Missing value for active choice")
-        return data
+
+        selector(self.config["choices"][data["active_choice"]]["selector"])(  # type: ignore[operator]
+            data[data["active_choice"]]
+        )
+
+        return data[data["active_choice"]]
 
 
 class ColorRGBSelectorConfig(BaseSelectorConfig):
