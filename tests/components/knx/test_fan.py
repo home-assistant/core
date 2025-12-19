@@ -1,10 +1,15 @@
 """Test KNX fan."""
 
-from homeassistant.components.knx.const import KNX_ADDRESS
+from typing import Any
+
+import pytest
+
+from homeassistant.components.knx.const import KNX_ADDRESS, FanConf
 from homeassistant.components.knx.schema import FanSchema
-from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON
+from homeassistant.const import CONF_NAME, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 
+from . import KnxEntityGenerator
 from .conftest import KNXTestKit
 
 
@@ -59,7 +64,7 @@ async def test_fan_step(hass: HomeAssistant, knx: KNXTestKit) -> None:
             FanSchema.PLATFORM: {
                 CONF_NAME: "test",
                 KNX_ADDRESS: "1/2/3",
-                FanSchema.CONF_MAX_STEP: 4,
+                FanConf.MAX_STEP: 4,
             }
         }
     )
@@ -143,3 +148,70 @@ async def test_fan_oscillation(hass: HomeAssistant, knx: KNXTestKit) -> None:
     await knx.receive_write("2/2/2", False)
     state = hass.states.get("fan.test")
     assert state.attributes.get("oscillating") is False
+
+
+@pytest.mark.parametrize(
+    ("knx_data", "expected_read_response", "expected_state"),
+    [
+        (
+            {
+                "speed": {
+                    "ga_speed": {"write": "1/1/0", "state": "1/1/1"},
+                },
+                "ga_oscillation": {"write": "2/2/0", "state": "2/2/2"},
+                "sync_state": True,
+            },
+            [("1/1/1", (0x55,)), ("2/2/2", True)],
+            {"state": STATE_ON, "percentage": 33, "oscillating": True},
+        ),
+        (
+            {
+                "speed": {
+                    "ga_step": {"write": "1/1/0", "state": "1/1/1"},
+                    "max_step": 3,
+                },
+                "sync_state": True,
+            },
+            [("1/1/1", (2,))],
+            {"state": STATE_ON, "percentage": 66},
+        ),
+    ],
+)
+async def test_fan_ui_create(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    create_ui_entity: KnxEntityGenerator,
+    knx_data: dict[str, Any],
+    expected_read_response: list[tuple[str, int | tuple[int, ...]]],
+    expected_state: dict[str, Any],
+) -> None:
+    """Test creating a fan."""
+    await knx.setup_integration()
+    await create_ui_entity(
+        platform=Platform.FAN,
+        entity_data={"name": "test"},
+        knx_data=knx_data,
+    )
+    for address, response in expected_read_response:
+        await knx.assert_read(address, response=response)
+    knx.assert_state("fan.test", **expected_state)
+
+
+async def test_fan_ui_load(knx: KNXTestKit) -> None:
+    """Test loading a fan from storage."""
+    await knx.setup_integration(config_store_fixture="config_store_fan.json")
+
+    await knx.assert_read("1/1/0", response=(2,), ignore_order=True)  # speed step
+    await knx.assert_read("1/2/0", response=True, ignore_order=True)  # oscillation
+    await knx.assert_read("2/2/0", response=(0xFF,), ignore_order=True)  # speed percent
+    knx.assert_state(
+        "fan.test_step_oscillate",
+        STATE_ON,
+        percentage=50,
+        oscillating=True,
+    )
+    knx.assert_state(
+        "fan.test_percent",
+        STATE_ON,
+        percentage=100,
+    )
