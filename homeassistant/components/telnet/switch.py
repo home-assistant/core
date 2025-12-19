@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 from typing import Any
 
@@ -52,8 +51,6 @@ SWITCH_SCHEMA = vol.Schema(
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_SWITCHES): cv.schema_with_slug_keys(SWITCH_SCHEMA)}
 )
-
-SCAN_INTERVAL = timedelta(seconds=10)
 
 
 def setup_platform(
