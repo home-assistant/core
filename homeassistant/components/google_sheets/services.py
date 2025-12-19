@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 from google.auth.exceptions import RefreshError
 from google.oauth2.credentials import Credentials
-from gspread import Client
+from gspread import Client, Spreadsheet, Worksheet
 from gspread.exceptions import APIError
 from gspread.utils import ValueInputOption
 import voluptuous as vol
@@ -35,7 +35,9 @@ ADD_CREATED_COLUMN = "add_created_column"
 DATA = "data"
 DATA_CONFIG_ENTRY = "config_entry"
 ROWS = "rows"
+WORKSHEET_IDENTIFIER_GROUP = "worksheet_identifier_group"
 WORKSHEET = "worksheet"
+WORKSHEET_ID = "worksheet_id"
 
 SERVICE_APPEND_SHEET = "append_sheet"
 SERVICE_GET_SHEET = "get_sheet"
@@ -43,7 +45,10 @@ SERVICE_GET_SHEET = "get_sheet"
 SHEET_SERVICE_SCHEMA = vol.All(
     {
         vol.Required(DATA_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
-        vol.Optional(WORKSHEET): cv.string,
+        vol.Exclusive(vol.Optional(WORKSHEET), WORKSHEET_IDENTIFIER_GROUP): cv.string,
+        vol.Exclusive(
+            vol.Optional(WORKSHEET_ID), WORKSHEET_IDENTIFIER_GROUP
+        ): cv.positive_int,
         vol.Optional(ADD_CREATED_COLUMN, default=True): cv.boolean,
         vol.Required(DATA): vol.Any(cv.ensure_list, [dict]),
     },
@@ -52,10 +57,24 @@ SHEET_SERVICE_SCHEMA = vol.All(
 get_SHEET_SERVICE_SCHEMA = vol.All(
     {
         vol.Required(DATA_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
-        vol.Optional(WORKSHEET): cv.string,
+        vol.Exclusive(vol.Optional(WORKSHEET), WORKSHEET_IDENTIFIER_GROUP): cv.string,
+        vol.Exclusive(
+            vol.Optional(WORKSHEET_ID), WORKSHEET_IDENTIFIER_GROUP
+        ): cv.positive_int,
         vol.Required(ROWS): cv.positive_int,
     },
 )
+
+
+def select_worksheet(sheet: Spreadsheet, call: ServiceCall) -> Worksheet:
+    """Select the worksheet based on the service call data."""
+    if WORKSHEET in call.data:
+        return sheet.worksheet(call.data[WORKSHEET])
+
+    if WORKSHEET_ID in call.data:
+        return sheet.get_worksheet_by_id(int(call.data[WORKSHEET_ID]))
+
+    return sheet.worksheet(sheet.sheet1.title)
 
 
 def _append_to_sheet(call: ServiceCall, entry: GoogleSheetsConfigEntry) -> None:
@@ -69,7 +88,7 @@ def _append_to_sheet(call: ServiceCall, entry: GoogleSheetsConfigEntry) -> None:
     except APIError as ex:
         raise HomeAssistantError("Failed to write data") from ex
 
-    worksheet = sheet.worksheet(call.data.get(WORKSHEET, sheet.sheet1.title))
+    worksheet = select_worksheet(sheet, call)
     columns: list[str] = next(iter(worksheet.get_values("A1:ZZ1")), [])
     add_created_column = call.data[ADD_CREATED_COLUMN]
     now = str(datetime.now())
@@ -99,7 +118,7 @@ def _get_from_sheet(
     except APIError as ex:
         raise HomeAssistantError("Failed to retrieve data") from ex
 
-    worksheet = sheet.worksheet(call.data.get(WORKSHEET, sheet.sheet1.title))
+    worksheet = select_worksheet(sheet, call)
     all_values = worksheet.get_values()
     return {"range": all_values[-call.data[ROWS] :]}
 
