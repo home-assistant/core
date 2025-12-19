@@ -334,7 +334,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         ):
             raise ConfigEntryError(
                 f"`async_config_entry_first_refresh` called when config entry state is {self.config_entry.state}, "
-                f"but must be called during {config_entries.ConfigEntryState.SETUP_IN_PROGRESS}"
+                f"but should only be called in state {config_entries.ConfigEntryState.SETUP_IN_PROGRESS}"
             )
         if await self.__wrap_async_setup():
             await self._async_refresh(
