@@ -75,10 +75,24 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+def temporary_fix(hass: HomeAssistant, entry: TeslemetryConfigEntry):
+    """TEMPORARY: Handle existing entries that don't have auth_implementation."""
+    # This is needed to migrate beta users to the new OAuth credential system.
+    # Remove this block before merging to main.
+    if "auth_implementation" not in entry.data:
+        hass.config_entries.async_update_entry(
+            entry,
+            data={**entry.data, "auth_implementation": DOMAIN},
+        )
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> bool:
     """Set up Teslemetry config."""
 
     session = async_get_clientsession(hass)
+
+    temporary_fix(hass, entry)
+
     implementation = await async_get_config_entry_implementation(hass, entry)
     oauth_session = OAuth2Session(hass, entry, implementation)
 
