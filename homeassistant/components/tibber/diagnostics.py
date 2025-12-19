@@ -4,11 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-import aiohttp
-import tibber
-
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from .const import TibberConfigEntry
 
@@ -32,26 +28,12 @@ async def async_get_config_entry_diagnostics(
         ]
     }
 
-    devices: dict[str, Any] = {}
-    error: str | None = None
-    try:
-        coordinator = runtime.data_api_coordinator
-        if coordinator is not None:
-            devices = coordinator.data
-    except ConfigEntryAuthFailed:
-        error = "Authentication failed"
-    except TimeoutError:
-        error = "Timeout error"
-    except aiohttp.ClientError:
-        error = "Client error"
-    except tibber.InvalidLoginError:
-        error = "Invalid login"
-    except tibber.RetryableHttpExceptionError as err:
-        error = f"Retryable HTTP error ({err.status})"
-    except tibber.FatalHttpExceptionError as err:
-        error = f"Fatal HTTP error ({err.status})"
+    devices = (
+        runtime.data_api_coordinator.data
+        if runtime.data_api_coordinator is not None
+        else {}
+    ) or {}
 
-    result["error"] = error
     result["devices"] = [
         {
             "id": device.id,
