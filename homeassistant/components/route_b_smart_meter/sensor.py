@@ -22,6 +22,7 @@ from .const import (
     ATTR_API_INSTANTANEOUS_CURRENT_T_PHASE,
     ATTR_API_INSTANTANEOUS_POWER,
     ATTR_API_TOTAL_CONSUMPTION,
+    ATTR_API_TOTAL_EXPORTED,
     DOMAIN,
 )
 from .coordinator import BRouteData, BRouteUpdateCoordinator
@@ -66,6 +67,14 @@ SENSOR_DESCRIPTIONS = (
         state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value_accessor=lambda data: data.total_consumption,
+    ),
+    SensorEntityDescriptionWithValueAccessor(
+        key=ATTR_API_TOTAL_EXPORTED,
+        translation_key=ATTR_API_TOTAL_EXPORTED,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        value_accessor=lambda data: data.total_exported,
     ),
 )
 
