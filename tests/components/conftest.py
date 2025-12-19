@@ -824,8 +824,12 @@ async def _check_config_flow_result_translations(
         issue_id = flow.issue_id
         issue = ir.async_get(flow.hass).async_get_issue(integration, issue_id)
         key_prefix = f"{issue.translation_key}.fix_flow."
-        if description_placeholders is None:
-            description_placeholders = issue.translation_placeholders
+        description_placeholders = {
+            # Both are used in issue translations, and description_placeholders
+            # takes precedence over translation_placeholders
+            **(issue.translation_placeholders or {}),
+            **(description_placeholders or {}),
+        }
     else:
         return
 
