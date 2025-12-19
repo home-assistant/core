@@ -352,7 +352,7 @@ _CONVERTED_VALUE: dict[
         (
             120,
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-            62.7449,
+            62.744976,
             CONCENTRATION_PARTS_PER_BILLION,
         ),
     ],
