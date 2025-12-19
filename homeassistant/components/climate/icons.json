@@ -110,6 +110,9 @@
     "started_heating": {
       "trigger": "mdi:fire"
     },
+    "target_temperature_changed": {
+      "trigger": "mdi:thermometer"
+    },
     "turned_off": {
       "trigger": "mdi:power-off"
     },

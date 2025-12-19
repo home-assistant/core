@@ -14,6 +14,25 @@
             - last
             - any
 
+.number_or_entity: &number_or_entity
+  required: false
+  selector:
+    choose:
+      choices:
+        entity:
+          selector:
+            entity:
+              filter:
+                domain:
+                  - input_number
+                  - number
+                  - sensor
+        number:
+          selector:
+            number:
+              mode: box
+      translation_key: number_or_entity
+
 started_cooling: *trigger_common
 started_drying: *trigger_common
 started_heating: *trigger_common
@@ -34,3 +53,9 @@ hvac_mode_changed:
             - unavailable
             - unknown
           multiple: true
+
+target_temperature_changed:
+  target: *trigger_climate_target
+  fields:
+    above: *number_or_entity
+    below: *number_or_entity
