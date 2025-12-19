@@ -20,6 +20,8 @@ from homeassistant.helpers.event import async_track_utc_time_change
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
+    API_ERROR_REFRESH_DELAY,
+    API_ERROR_REFRESH_JITTER,
     DOMAIN,
     ESTIMATE_REFRESH_DELAY,
     ESTIMATE_REFRESH_JITTER,
@@ -126,16 +128,23 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
         self.hass.loop.call_later(delay, _do_refresh)
 
     @callback
-    def _schedule_eager_refresh(self) -> None:
-        """Schedule a refresh after a short jitter while estimates are present."""
-        delay = randint(
-            max(0, ESTIMATE_REFRESH_DELAY - ESTIMATE_REFRESH_JITTER),
-            ESTIMATE_REFRESH_DELAY + ESTIMATE_REFRESH_JITTER,
-        )
-        LOGGER.debug(
-            "Scheduled refresh in %s seconds due to estimate pricing for current interval",
-            delay,
-        )
+    def _schedule_eager_refresh(
+        self, delay: int, jitter: int, reason: str, name_suffix: str
+    ) -> None:
+        """Schedule an eager refresh after a short delay."""
+        if (
+            not self.config_entry
+            or self.config_entry.pref_disable_polling
+            or self.hass.is_stopping
+        ):
+            return
+
+        if self._eager_refresh_handle is not None:
+            self._eager_refresh_handle.cancel()
+            self._eager_refresh_handle = None
+
+        delay = randint(max(0, delay - jitter), delay + jitter)
+        LOGGER.debug("Scheduled refresh in %s seconds due to %s", delay, reason)
 
         @callback
         def _do_refresh() -> None:
@@ -145,7 +154,7 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
             self.config_entry.async_create_background_task(
                 self.hass,
                 self.async_request_refresh(),
-                name=f"{DOMAIN} - {self.config_entry.title} - estimate refresh",
+                name=f"{DOMAIN} - {self.config_entry.title} - {name_suffix}",
                 eager_start=True,
             )
 
@@ -170,15 +179,12 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
             "forecasts": {},
             "grid": {},
         }
-        try:
-            data = self._api.get_current_prices(
-                self.site_id,
-                next=288,
-                _request_timeout=REQUEST_TIMEOUT,
-            )
-            intervals = [interval.actual_instance for interval in data]
-        except ApiException as api_exception:
-            raise UpdateFailed("Missing price data, skipping update") from api_exception
+        data = self._api.get_current_prices(
+            self.site_id,
+            next=288,
+            _request_timeout=REQUEST_TIMEOUT,
+        )
+        intervals = [interval.actual_instance for interval in data]
 
         current = [interval for interval in intervals if is_current(interval)]
         forecasts = [interval for interval in intervals if is_forecast(interval)]
@@ -228,10 +234,34 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Async update wrapper."""
-        data = await self.hass.async_add_executor_job(self.update_price_data)
+        try:
+            data = await self.hass.async_add_executor_job(self.update_price_data)
+        except ApiException as api_exception:
+            LOGGER.debug(
+                "Error fetching Amber data from API",
+                exc_info=api_exception,
+            )
+            self._schedule_eager_refresh(
+                API_ERROR_REFRESH_DELAY,
+                API_ERROR_REFRESH_JITTER,
+                "API errors",
+                "api error refresh",
+            )
+            raise UpdateFailed(
+                "Missing price data, skipping update"
+            ) from api_exception
+
+        if self._eager_refresh_handle is not None:
+            self._eager_refresh_handle.cancel()
+            self._eager_refresh_handle = None
 
         if self._has_estimate(data):
-            self._schedule_eager_refresh()
+            self._schedule_eager_refresh(
+                ESTIMATE_REFRESH_DELAY,
+                ESTIMATE_REFRESH_JITTER,
+                "estimate pricing for current interval",
+                "estimate refresh",
+            )
 
         return data
 
