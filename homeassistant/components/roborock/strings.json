@@ -424,6 +424,9 @@
     "map_failure": {
       "message": "Something went wrong creating the map"
     },
+    "mqtt_unauthorized": {
+      "message": "Roborock MQTT servers rejected the connection due to rate limiting or invalid credentials. You may either attempt to reauthenticate or wait and reload the integration."
+    },
     "no_coordinators": {
       "message": "No devices were able to successfully setup"
     },

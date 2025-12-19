@@ -5,7 +5,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/nintendo_parental_controls",
   "iot_class": "cloud_polling",
-  "loggers": ["pynintendoparental"],
+  "loggers": ["pynintendoauth", "pynintendoparental"],
   "quality_scale": "bronze",
-  "requirements": ["pynintendoparental==1.1.3"]
+  "requirements": ["pynintendoauth==1.0.2", "pynintendoparental==2.1.3"]
 }

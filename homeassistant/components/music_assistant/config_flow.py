@@ -179,6 +179,7 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
                     ConfigEntryState.LOADED,
                     ConfigEntryState.SETUP_ERROR,
                     ConfigEntryState.SETUP_RETRY,
+                    ConfigEntryState.SETUP_IN_PROGRESS,
                 ):
                     self.hass.config_entries.async_schedule_reload(entry.entry_id)
 

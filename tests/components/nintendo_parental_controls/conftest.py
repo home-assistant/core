@@ -6,7 +6,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pynintendoparental import NintendoParental
 from pynintendoparental.device import Device
-from pynintendoparental.exceptions import InvalidOAuthConfigurationException
 import pytest
 
 from homeassistant.components.nintendo_parental_controls.const import DOMAIN
@@ -71,11 +70,9 @@ def mock_nintendo_authenticator() -> Generator[MagicMock]:
         mock_auth._at_expiry = datetime(2099, 12, 31, 23, 59, 59)
         mock_auth.account_id = ACCOUNT_ID
         mock_auth.login_url = LOGIN_URL
-        mock_auth.get_session_token = API_TOKEN
-        # Patch complete_login as an AsyncMock on both instance and class as this is a class method
-        mock_auth.complete_login = AsyncMock()
-        type(mock_auth).complete_login = mock_auth.complete_login
-        mock_auth_class.generate_login.return_value = mock_auth
+        mock_auth.session_token = API_TOKEN
+        mock_auth.async_complete_login = AsyncMock()
+        mock_auth_class.return_value = mock_auth
         yield mock_auth
 
 
@@ -91,34 +88,6 @@ def mock_nintendo_api() -> Generator[AsyncMock]:
         mock_api_instance.async_get_account_devices = AsyncMock()
         mock_api_class.return_value = mock_api_instance
         yield mock_api_instance
-
-
-@pytest.fixture
-def mock_failed_nintendo_authenticator() -> Generator[MagicMock]:
-    """Mock a failed Nintendo Authenticator."""
-    with (
-        patch(
-            "homeassistant.components.nintendo_parental_controls.Authenticator",
-            autospec=True,
-        ) as mock_auth_class,
-        patch(
-            "homeassistant.components.nintendo_parental_controls.config_flow.Authenticator",
-            new=mock_auth_class,
-        ),
-        patch(
-            "homeassistant.components.nintendo_parental_controls.coordinator.NintendoParental.update",
-            return_value=None,
-        ),
-    ):
-        mock_auth = MagicMock()
-        mock_auth.complete_login = AsyncMock(
-            side_effect=InvalidOAuthConfigurationException(
-                status_code=401,
-                message="Authentication failed",
-            )
-        )
-        mock_auth_class.complete_login = mock_auth.complete_login
-        yield mock_auth
 
 
 @pytest.fixture

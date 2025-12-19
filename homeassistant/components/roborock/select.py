@@ -73,7 +73,9 @@ SELECT_DESCRIPTIONS: list[RoborockSelectDescription] = [
         key="dust_collection_mode",
         translation_key="dust_collection_mode",
         api_command=RoborockCommand.SET_DUST_COLLECTION_MODE,
-        value_fn=lambda api: api.dust_collection_mode.mode.name,  # type: ignore[union-attr]
+        value_fn=lambda api: (
+            mode.name if (mode := api.dust_collection_mode.mode) is not None else None  # type: ignore[union-attr]
+        ),
         entity_category=EntityCategory.CONFIG,
         options_lambda=lambda api: (
             RoborockDockDustCollectionModeCode.keys()

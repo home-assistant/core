@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from pynintendoparental import Authenticator
-from pynintendoparental.exceptions import (
+from pynintendoauth.exceptions import (
     InvalidOAuthConfigurationException,
     InvalidSessionTokenException,
 )
+from pynintendoparental import Authenticator
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -39,13 +39,12 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: NintendoParentalControlsConfigEntry
 ) -> bool:
     """Set up Nintendo Switch parental controls from a config entry."""
+    nintendo_auth = Authenticator(
+        session_token=entry.data[CONF_SESSION_TOKEN],
+        client_session=async_get_clientsession(hass),
+    )
     try:
-        nintendo_auth = await Authenticator.complete_login(
-            auth=None,
-            response_token=entry.data[CONF_SESSION_TOKEN],
-            is_session_token=True,
-            client_session=async_get_clientsession(hass),
-        )
+        await nintendo_auth.async_complete_login(use_session_token=True)
     except (InvalidSessionTokenException, InvalidOAuthConfigurationException) as err:
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,

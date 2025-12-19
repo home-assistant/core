@@ -2,10 +2,8 @@
 
 from unittest.mock import AsyncMock
 
-from pynintendoparental.exceptions import (
-    InvalidOAuthConfigurationException,
-    NoDevicesFoundException,
-)
+from pynintendoauth.exceptions import InvalidOAuthConfigurationException
+from pynintendoparental.exceptions import NoDevicesFoundException
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant

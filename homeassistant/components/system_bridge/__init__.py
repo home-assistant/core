@@ -13,12 +13,12 @@ from systembridgeconnector.exceptions import (
     ConnectionErrorException,
     DataMissingException,
 )
+from systembridgeconnector.models.keyboard_key import KeyboardKey
+from systembridgeconnector.models.keyboard_text import KeyboardText
+from systembridgeconnector.models.modules.processes import Process
+from systembridgeconnector.models.open_path import OpenPath
+from systembridgeconnector.models.open_url import OpenUrl
 from systembridgeconnector.version import Version
-from systembridgemodels.keyboard_key import KeyboardKey
-from systembridgemodels.keyboard_text import KeyboardText
-from systembridgemodels.modules.processes import Process
-from systembridgemodels.open_path import OpenPath
-from systembridgemodels.open_url import OpenUrl
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry

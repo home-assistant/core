@@ -14,10 +14,11 @@ from tests.common import MockConfigEntry
 async def test_invalid_authentication(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_failed_nintendo_authenticator: AsyncMock,
+    mock_nintendo_authenticator: AsyncMock,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test handling of invalid authentication."""
+    mock_nintendo_authenticator.async_complete_login.side_effect = ValueError
     await setup_integration(hass, mock_config_entry)
 
     # Ensure no entities are created
