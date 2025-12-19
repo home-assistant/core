@@ -190,6 +190,9 @@ MODE_LIGHT_OFF = "off"
 MODE_LIGHT_ON = "on"
 CAMERA_LIGHT_MODES = [MODE_LIGHT_ON, MODE_LIGHT_OFF, MODE_LIGHT_AUTO]
 
+# Webhook push_types MUST follow exactly Netatmo's naming on products!
+# See https://dev.netatmo.com/apidocumentation
+# e.g. cameras: NACamera, NOC, etc.
 WEBHOOK_ACTIVATION = "webhook_activation"
 WEBHOOK_DEACTIVATION = "webhook_deactivation"
 WEBHOOK_NACAMERA_CONNECTION = "NACamera-connection"

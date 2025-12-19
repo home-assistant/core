@@ -1,4 +1,7 @@
 """The tests for Netatmo camera."""
+# Webhook push_types MUST follow exactly Netatmo's naming on products!
+# See https://dev.netatmo.com/apidocumentation
+# e.g. cameras: NACamera, NOC, etc.
 
 from datetime import timedelta
 from typing import Any
