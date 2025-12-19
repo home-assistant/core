@@ -7,10 +7,6 @@ on:
     types: ["published"]
   schedule:
     - cron: "0 2 * * *"
-  push:
-    branches:
-      - dev
-      - sync-fork
 
 env:
   BUILD_TYPE: core
@@ -25,7 +21,7 @@ jobs:
     # if: github.repository_owner == 'home-assistant'
     runs-on: ubuntu-latest
     outputs:
-      architectures: ${{ steps.set-arch.outputs.architectures || steps.info.outputs.architectures }}
+      architectures: ${{ steps.info.outputs.architectures }}
       version: ${{ steps.version.outputs.version }}
       channel: ${{ steps.version.outputs.channel }}
       publish: ${{ steps.version.outputs.publish }}
@@ -44,28 +40,16 @@ jobs:
         id: info
         uses: home-assistant/actions/helpers/info@master
 
-      - name: Set default architectures if empty
-        id: set-arch
-        shell: bash
-        run: |
-          ARCH="${{ steps.info.outputs.architectures }}"
-          if [ -z "$ARCH" ] || [ "$ARCH" == "[]" ]; then
-            echo "architectures=[\"amd64\"]" >> $GITHUB_OUTPUT
-          else
-            echo "architectures=$ARCH" >> $GITHUB_OUTPUT
-          fi
-
       - name: Get version
         id: version
         uses: home-assistant/actions/helpers/version@master
         with:
           type: ${{ env.BUILD_TYPE }}
 
-      # Verify version - skip for non-release builds
-      # - name: Verify version
-      #   uses: home-assistant/actions/helpers/verify-version@master
-      #   with:
-      #     ignore-dev: true
+      - name: Verify version
+        uses: home-assistant/actions/helpers/verify-version@master
+        with:
+          ignore-dev: true
 
       # - name: Fail if translations files are checked in
       #   run: |
@@ -93,7 +77,7 @@ jobs:
 
   build_base:
     name: Build ${{ matrix.arch }} base core image
-    if: github.event_name == 'release' # Only build Docker images on releases
+    # if: github.repository_owner == 'home-assistant'
     needs: init
     runs-on: ubuntu-latest
     permissions:
@@ -476,7 +460,7 @@ jobs:
   build_python:
     name: Build PyPi package
     environment: ${{ needs.init.outputs.channel }}
-    needs: ["init"]  # Remove dependency on build_base
+    needs: ["init", "build_base"]
     runs-on: ubuntu-latest
     permissions:
       contents: read
