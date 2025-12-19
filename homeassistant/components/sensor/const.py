@@ -409,7 +409,7 @@ class SensorDeviceClass(StrEnum):
     SULPHUR_DIOXIDE = "sulphur_dioxide"
     """Amount of SO2.
 
-    Unit of measurement: `ppb` (parts per billion), `μg/m³`
+    Unit of measurement: `μg/m³`
     """
 
     TEMPERATURE = "temperature"
@@ -657,10 +657,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
     },
     SensorDeviceClass.SOUND_PRESSURE: set(UnitOfSoundPressure),
     SensorDeviceClass.SPEED: {*UnitOfSpeed, *UnitOfVolumetricFlux},
-    SensorDeviceClass.SULPHUR_DIOXIDE: {
-        CONCENTRATION_PARTS_PER_BILLION,
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    },
+    SensorDeviceClass.SULPHUR_DIOXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     SensorDeviceClass.TEMPERATURE: set(UnitOfTemperature),
     SensorDeviceClass.TEMPERATURE_DELTA: set(UnitOfTemperature),
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: {
