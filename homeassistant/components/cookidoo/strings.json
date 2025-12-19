@@ -54,6 +54,11 @@
         "name": "Clear shopping list and additional purchases"
       }
     },
+    "calendar": {
+      "meal_plan": {
+        "name": "Meal plan"
+      }
+    },
     "sensor": {
       "expires": {
         "name": "Subscription expiration date"
