@@ -57,6 +57,8 @@ async def target_lights(hass: HomeAssistant) -> list[str]:
 @pytest.mark.parametrize(
     "trigger_key",
     [
+        "light.brightness_changed",
+        "light.brightness_crossed_threshold",
         "light.turned_off",
         "light.turned_on",
     ],
