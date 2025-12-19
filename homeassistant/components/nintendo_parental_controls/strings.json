@@ -37,6 +37,15 @@
         "name": "Max screentime today"
       }
     },
+    "select": {
+      "timer_mode": {
+        "name": "Restriction mode",
+        "state": {
+          "daily": "Same for all days",
+          "each_day_of_the_week": "Different for each day"
+        }
+      }
+    },
     "sensor": {
       "playing_time": {
         "name": "Used screen time"
@@ -74,6 +83,9 @@
     },
     "no_devices_found": {
       "message": "No Nintendo devices found for this account."
+    },
+    "update_required": {
+      "message": "The Nintendo Switch parental controls integration requires an update due to changes in Nintendo's API."
     }
   },
   "services": {

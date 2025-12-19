@@ -28,6 +28,7 @@ from ..const import (
     ClimateConf,
     ColorTempModes,
     CoverConf,
+    FanConf,
     FanZeroMode,
 )
 from .const import (
@@ -62,6 +63,7 @@ from .const import (
     CONF_GA_OP_MODE_PROTECTION,
     CONF_GA_OP_MODE_STANDBY,
     CONF_GA_OPERATION_MODE,
+    CONF_GA_OSCILLATION,
     CONF_GA_POSITION_SET,
     CONF_GA_POSITION_STATE,
     CONF_GA_RED_BRIGHTNESS,
@@ -69,6 +71,7 @@ from .const import (
     CONF_GA_SATURATION,
     CONF_GA_SENSOR,
     CONF_GA_SETPOINT_SHIFT,
+    CONF_GA_SPEED,
     CONF_GA_STEP,
     CONF_GA_STOP,
     CONF_GA_SWITCH,
@@ -80,6 +83,7 @@ from .const import (
     CONF_GA_WHITE_BRIGHTNESS,
     CONF_GA_WHITE_SWITCH,
     CONF_IGNORE_AUTO_MODE,
+    CONF_SPEED,
     CONF_TARGET_TEMPERATURE,
 )
 from .knx_selector import (
@@ -218,6 +222,60 @@ DATETIME_KNX_SCHEMA = vol.Schema(
         vol.Optional(CONF_RESPOND_TO_READ, default=False): selector.BooleanSelector(),
         vol.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
     }
+)
+
+FAN_KNX_SCHEMA = AllSerializeFirst(
+    vol.Schema(
+        {
+            vol.Optional(CONF_GA_SWITCH): GASelector(
+                write_required=True, valid_dpt="1"
+            ),
+            vol.Optional(CONF_SPEED): GroupSelect(
+                GroupSelectOption(
+                    translation_key="percentage_mode",
+                    schema={
+                        vol.Required(CONF_GA_SPEED): GASelector(
+                            write_required=True, valid_dpt="5.001"
+                        ),
+                    },
+                ),
+                GroupSelectOption(
+                    translation_key="step_mode",
+                    schema={
+                        vol.Required(CONF_GA_STEP): GASelector(
+                            write_required=True, valid_dpt="5.010"
+                        ),
+                        vol.Required(
+                            FanConf.MAX_STEP, default=3
+                        ): selector.NumberSelector(
+                            selector.NumberSelectorConfig(
+                                min=1,
+                                max=100,
+                                step=1,
+                                mode=selector.NumberSelectorMode.BOX,
+                            )
+                        ),
+                    },
+                ),
+                collapsible=False,
+            ),
+            vol.Optional(CONF_GA_OSCILLATION): GASelector(
+                write_required=True, valid_dpt="1"
+            ),
+            vol.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
+        }
+    ),
+    vol.Any(
+        vol.Schema(
+            {vol.Required(CONF_GA_SWITCH): object},
+            extra=vol.ALLOW_EXTRA,
+        ),
+        vol.Schema(
+            {vol.Required(CONF_SPEED): object},
+            extra=vol.ALLOW_EXTRA,
+        ),
+        msg=("At least one of 'Switch' or 'Fan speed' is required."),
+    ),
 )
 
 
@@ -513,6 +571,7 @@ KNX_SCHEMA_FOR_PLATFORM = {
     Platform.COVER: COVER_KNX_SCHEMA,
     Platform.DATE: DATE_KNX_SCHEMA,
     Platform.DATETIME: DATETIME_KNX_SCHEMA,
+    Platform.FAN: FAN_KNX_SCHEMA,
     Platform.LIGHT: LIGHT_KNX_SCHEMA,
     Platform.SWITCH: SWITCH_KNX_SCHEMA,
     Platform.TIME: TIME_KNX_SCHEMA,

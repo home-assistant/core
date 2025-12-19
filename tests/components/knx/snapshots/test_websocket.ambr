@@ -1033,6 +1033,140 @@
     'type': 'result',
   })
 # ---
+# name: test_knx_get_schema[fan]
+  dict({
+    'id': 1,
+    'result': list([
+      dict({
+        'name': 'ga_switch',
+        'optional': True,
+        'options': dict({
+          'passive': True,
+          'state': dict({
+            'required': False,
+          }),
+          'validDPTs': list([
+            dict({
+              'main': 1,
+              'sub': None,
+            }),
+          ]),
+          'write': dict({
+            'required': True,
+          }),
+        }),
+        'required': False,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'collapsible': False,
+        'name': 'speed',
+        'optional': True,
+        'required': False,
+        'schema': list([
+          dict({
+            'schema': list([
+              dict({
+                'name': 'ga_speed',
+                'options': dict({
+                  'passive': True,
+                  'state': dict({
+                    'required': False,
+                  }),
+                  'validDPTs': list([
+                    dict({
+                      'main': 5,
+                      'sub': 1,
+                    }),
+                  ]),
+                  'write': dict({
+                    'required': True,
+                  }),
+                }),
+                'required': True,
+                'type': 'knx_group_address',
+              }),
+            ]),
+            'translation_key': 'percentage_mode',
+            'type': 'knx_group_select_option',
+          }),
+          dict({
+            'schema': list([
+              dict({
+                'name': 'ga_step',
+                'options': dict({
+                  'passive': True,
+                  'state': dict({
+                    'required': False,
+                  }),
+                  'validDPTs': list([
+                    dict({
+                      'main': 5,
+                      'sub': 10,
+                    }),
+                  ]),
+                  'write': dict({
+                    'required': True,
+                  }),
+                }),
+                'required': True,
+                'type': 'knx_group_address',
+              }),
+              dict({
+                'default': 3,
+                'name': 'max_step',
+                'required': True,
+                'selector': dict({
+                  'number': dict({
+                    'max': 100.0,
+                    'min': 1.0,
+                    'mode': 'box',
+                    'step': 1.0,
+                  }),
+                }),
+                'type': 'ha_selector',
+              }),
+            ]),
+            'translation_key': 'step_mode',
+            'type': 'knx_group_select_option',
+          }),
+        ]),
+        'type': 'knx_group_select',
+      }),
+      dict({
+        'name': 'ga_oscillation',
+        'optional': True,
+        'options': dict({
+          'passive': True,
+          'state': dict({
+            'required': False,
+          }),
+          'validDPTs': list([
+            dict({
+              'main': 1,
+              'sub': None,
+            }),
+          ]),
+          'write': dict({
+            'required': True,
+          }),
+        }),
+        'required': False,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'allow_false': False,
+        'default': True,
+        'name': 'sync_state',
+        'optional': True,
+        'required': False,
+        'type': 'knx_sync_state',
+      }),
+    ]),
+    'success': True,
+    'type': 'result',
+  })
+# ---
 # name: test_knx_get_schema[light]
   dict({
     'id': 1,
