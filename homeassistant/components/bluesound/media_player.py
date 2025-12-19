@@ -589,8 +589,6 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
             match entity_ids:
                 case [entity_id]:
                     grouped_entity_ids.append(entity_id)
-                case _:
-                    pass
 
         return grouped_entity_ids
 
