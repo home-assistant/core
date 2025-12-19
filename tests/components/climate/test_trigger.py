@@ -444,7 +444,7 @@ async def test_climate_state_attribute_trigger_behavior_first(
     trigger: str,
     states: list[tuple[tuple[str, dict], int]],
 ) -> None:
-    """Test that the climate state trigger fires when any climate state changes to a specific state."""
+    """Test that the climate state trigger fires when the first climate state changes to a specific state."""
     other_entity_ids = set(target_climates) - {entity_id}
 
     # Set all climates, including the tested climate, to the initial state
@@ -578,7 +578,7 @@ async def test_climate_state_attribute_trigger_behavior_last(
     trigger: str,
     states: list[tuple[tuple[str, dict], int]],
 ) -> None:
-    """Test that the climate state trigger fires when any climate state changes to a specific state."""
+    """Test that the climate state trigger fires when the last climate state changes to a specific state."""
     other_entity_ids = set(target_climates) - {entity_id}
 
     # Set all climates, including the tested climate, to the initial state

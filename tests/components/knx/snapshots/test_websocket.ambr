@@ -1038,9 +1038,31 @@
     'id': 1,
     'result': list([
       dict({
+        'name': 'ga_switch',
+        'optional': True,
+        'options': dict({
+          'passive': True,
+          'state': dict({
+            'required': False,
+          }),
+          'validDPTs': list([
+            dict({
+              'main': 1,
+              'sub': None,
+            }),
+          ]),
+          'write': dict({
+            'required': True,
+          }),
+        }),
+        'required': False,
+        'type': 'knx_group_address',
+      }),
+      dict({
         'collapsible': False,
         'name': 'speed',
-        'required': True,
+        'optional': True,
+        'required': False,
         'schema': list([
           dict({
             'schema': list([

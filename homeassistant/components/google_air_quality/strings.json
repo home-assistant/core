@@ -47,12 +47,12 @@
   "config_subentries": {
     "location": {
       "abort": {
-        "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
         "unable_to_fetch": "[%key:component::google_air_quality::common::unable_to_fetch%]"
       },
       "entry_type": "Air quality location",
       "error": {
-        "no_data_for_location": "Information is unavailable for this location. Please try a different location.",
+        "location_already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
+        "location_name_already_configured": "Location name already configured.",
         "unknown": "[%key:common::config_flow::error::unknown%]"
       },
       "initiate_flow": {
