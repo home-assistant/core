@@ -1,7 +1,7 @@
 """template conftest."""
 
 from dataclasses import dataclass
-from enum import Enum
+from enum import Enum, StrEnum
 
 import pytest
 
@@ -23,6 +23,15 @@ class ConfigurationStyle(Enum):
     LEGACY = "Legacy"
     MODERN = "Modern"
     TRIGGER = "Trigger"
+
+
+class Brewery(StrEnum):
+    """Test enum."""
+
+    MMMM = "mmmm"
+    BEER = "beer"
+    IS = "is"
+    GOOD = "good"
 
 
 def make_test_trigger(*entities: str) -> dict:
