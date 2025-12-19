@@ -6,6 +6,7 @@ from typing import Any
 
 import voluptuous as vol
 
+from ..dpt import HaDptClass, get_supported_dpts
 from ..validation import ga_validator, maybe_ga_validator, sync_state_validator
 from .const import CONF_DPT, CONF_GA_PASSIVE, CONF_GA_STATE, CONF_GA_WRITE
 from .util import dpt_string_to_dict
@@ -162,7 +163,7 @@ class GASelector(KNXSelectorBase):
         passive: bool = True,
         write_required: bool = False,
         state_required: bool = False,
-        dpt: type[Enum] | None = None,
+        dpt: type[Enum] | list[HaDptClass] | None = None,
         valid_dpt: str | Iterable[str] | None = None,
     ) -> None:
         """Initialize the group address selector."""
@@ -186,14 +187,17 @@ class GASelector(KNXSelectorBase):
             "passive": self.passive,
         }
         if self.dpt is not None:
-            options["dptSelect"] = [
-                {
-                    "value": item.value,
-                    "translation_key": item.value.replace(".", "_"),
-                    "dpt": dpt_string_to_dict(item.value),  # used for filtering GAs
-                }
-                for item in self.dpt
-            ]
+            if isinstance(self.dpt, list):
+                options["dptClasses"] = self.dpt
+            else:
+                options["dptSelect"] = [
+                    {
+                        "value": item.value,
+                        "translation_key": item.value.replace(".", "_"),
+                        "dpt": dpt_string_to_dict(item.value),  # used for filtering GAs
+                    }
+                    for item in self.dpt
+                ]
         if self.valid_dpt is not None:
             options["validDPTs"] = [dpt_string_to_dict(dpt) for dpt in self.valid_dpt]
 
@@ -254,7 +258,12 @@ class GASelector(KNXSelectorBase):
     def _add_dpt(self, schema: dict[vol.Marker, Any]) -> None:
         """Add DPT validator to the schema."""
         if self.dpt is not None:
-            schema[vol.Required(CONF_DPT)] = vol.In({item.value for item in self.dpt})
+            if isinstance(self.dpt, list):
+                schema[vol.Required(CONF_DPT)] = vol.In(get_supported_dpts())
+            else:
+                schema[vol.Required(CONF_DPT)] = vol.In(
+                    {item.value for item in self.dpt}
+                )
         else:
             schema[vol.Remove(CONF_DPT)] = object
 
