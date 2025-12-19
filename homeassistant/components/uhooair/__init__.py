@@ -2,6 +2,9 @@
 
 import asyncio
 
+from uhooapi import Client
+from uhooapi.errors import UhooError, UnauthorizedError
+
 from homeassistant import core
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
@@ -10,8 +13,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, LOGGER, PLATFORMS, STARTUP_MESSAGE
 from .coordinator import UhooDataUpdateCoordinator
-from .uhooapi.client import Client
-from .uhooapi.errors import UhooError, UnauthorizedError
 
 
 async def async_setup_entry(

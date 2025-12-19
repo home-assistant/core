@@ -2,12 +2,12 @@
 
 import asyncio
 
+from uhooapi import Client, Device
+
 from homeassistant import core
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER, UPDATE_INTERVAL
-from .uhooapi.client import Client
-from .uhooapi.device import Device
 
 
 class UhooDataUpdateCoordinator(DataUpdateCoordinator):

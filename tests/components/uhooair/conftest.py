@@ -3,9 +3,8 @@
 from unittest.mock import patch
 
 import pytest
-
-from homeassistant.components.uhooair.uhooapi.device import Device
-from homeassistant.components.uhooair.uhooapi.errors import UnauthorizedError
+from uhooapi import Device
+from uhooapi.errors import UnauthorizedError
 
 from .const import MOCK_DEVICE, MOCK_DEVICE_DATA
 

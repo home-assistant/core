@@ -1,5 +1,7 @@
 """imports for sensor.py file."""
 
+from uhooapi import Device
+
 from homeassistant import core
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -26,7 +28,6 @@ from .const import (
     SENSOR_TYPES,
     UnitOfTemperature,
 )
-from .uhooapi.device import Device
 
 PARALLEL_UPDATES = True
 

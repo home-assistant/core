@@ -2,6 +2,8 @@
 
 from typing import Any
 
+from uhooapi import Client
+from uhooapi.errors import UnauthorizedError
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -18,8 +20,6 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import DOMAIN, LOGGER
-from .uhooapi.client import Client
-from .uhooapi.errors import UnauthorizedError
 
 
 class UhooFlowHandler(ConfigFlow, domain=DOMAIN):
