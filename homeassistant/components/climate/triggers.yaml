@@ -30,7 +30,7 @@ hvac_mode_changed:
       required: true
       selector:
         state:
-          # Note: This should allow selecting multiple modes, but state selector does not support that yet.
           hide_states:
             - unavailable
             - unknown
+          multiple: true
