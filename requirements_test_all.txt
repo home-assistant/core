@@ -197,7 +197,7 @@ aioaquacell==0.2.0
 aioaseko==1.0.0
 
 # homeassistant.components.asuswrt
-aioasuswrt==1.5.2
+aioasuswrt==1.5.4
 
 # homeassistant.components.husqvarna_automower
 aioautomower==2.7.1
@@ -222,7 +222,7 @@ aiodhcpwatcher==1.2.1
 aiodiscover==2.7.1
 
 # homeassistant.components.dnsip
-aiodns==3.5.0
+aiodns==3.6.1
 
 # homeassistant.components.duke_energy
 aiodukeenergy==0.3.0
@@ -304,7 +304,7 @@ aiolookin==1.0.0
 aiolyric==2.0.2
 
 # homeassistant.components.mealie
-aiomealie==1.1.0
+aiomealie==1.1.1
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
@@ -512,7 +512,7 @@ asusrouter==1.21.3
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.46.0
+async-upnp-client==0.46.1
 
 # homeassistant.components.arve
 asyncarve==0.1.1
@@ -585,7 +585,7 @@ bleak==1.0.1
 blebox-uniapi==2.5.0
 
 # homeassistant.components.blink
-blinkpy==0.25.1
+blinkpy==0.25.2
 
 # homeassistant.components.blue_current
 bluecurrent-api==1.3.2
@@ -754,7 +754,7 @@ easyenergy==2.1.2
 eheimdigital==1.4.0
 
 # homeassistant.components.ekeybionyx
-ekey-bionyxpy==1.0.0
+ekey-bionyxpy==1.0.1
 
 # homeassistant.components.electric_kiwi
 electrickiwi-api==0.9.14
@@ -1056,7 +1056,7 @@ hole==0.9.0
 holidays==0.84
 
 # homeassistant.components.frontend
-home-assistant-frontend==20251203.2
+home-assistant-frontend==20251203.3
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.12.2
@@ -1086,7 +1086,7 @@ ibeacon-ble==1.2.0
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 # homeassistant.components.remote_calendar
-ical==12.1.1
+ical==12.1.2
 
 # homeassistant.components.caldav
 icalendar==6.3.1
@@ -1864,7 +1864,10 @@ pynetgear==0.10.10
 pynina==0.3.6
 
 # homeassistant.components.nintendo_parental_controls
-pynintendoparental==1.1.3
+pynintendoauth==1.0.2
+
+# homeassistant.components.nintendo_parental_controls
+pynintendoparental==2.1.3
 
 # homeassistant.components.nobo_hub
 pynobo==1.8.1
@@ -1920,7 +1923,7 @@ pypalazzetti==0.1.20
 pypaperless==4.1.1
 
 # homeassistant.components.lcn
-pypck==0.9.7
+pypck==0.9.8
 
 # homeassistant.components.pglab
 pypglab==0.0.5
@@ -2026,7 +2029,7 @@ pysmhi==1.1.0
 pysml==0.1.5
 
 # homeassistant.components.smlight
-pysmlight==0.2.11
+pysmlight==0.2.13
 
 # homeassistant.components.snmp
 pysnmp==7.1.22
@@ -2135,7 +2138,7 @@ python-pooldose==0.7.8
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==3.12.2
+python-roborock==3.19.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.45
@@ -2380,7 +2383,7 @@ smart-meter-texas==0.5.5
 snapcast==2.3.6
 
 # homeassistant.components.sonos
-soco==0.30.12
+soco==0.30.13
 
 # homeassistant.components.solaredge
 solaredge-web==0.0.1
@@ -2440,7 +2443,7 @@ surepy==0.9.0
 switchbot-api==2.8.0
 
 # homeassistant.components.system_bridge
-systembridgeconnector==5.1.0
+systembridgeconnector==5.2.4
 
 # homeassistant.components.tailscale
 tailscale==0.6.2
@@ -2701,7 +2704,7 @@ zeroconf==0.148.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.80
+zha==0.0.81
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.67.1

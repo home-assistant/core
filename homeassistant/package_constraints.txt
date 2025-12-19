@@ -2,7 +2,7 @@
 
 aiodhcpwatcher==1.2.1
 aiodiscover==2.7.1
-aiodns==3.5.0
+aiodns==3.6.1
 aiohasupervisor==0.3.3
 aiohttp-asyncmdnsresolver==0.1.1
 aiohttp-fast-zlib==0.3.0
@@ -13,7 +13,7 @@ aiozoneinfo==0.2.3
 annotatedyaml==1.0.2
 astral==2.2
 async-interrupt==1.2.2
-async-upnp-client==0.46.0
+async-upnp-client==0.46.1
 atomicwrites-homeassistant==1.4.1
 attrs==25.4.0
 audioop-lts==0.2.1
@@ -39,7 +39,7 @@ habluetooth==5.7.0
 hass-nabucasa==1.7.0
 hassil==3.5.0
 home-assistant-bluetooth==1.13.1
-home-assistant-frontend==20251203.2
+home-assistant-frontend==20251203.3
 home-assistant-intents==2025.12.2
 httpx==0.28.1
 ifaddr==0.2.0
