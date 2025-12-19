@@ -25,7 +25,7 @@ jobs:
     # if: github.repository_owner == 'home-assistant'
     runs-on: ubuntu-latest
     outputs:
-      architectures: ${{ steps.info.outputs.architectures }}
+      architectures: ${{ steps.set-arch.outputs.architectures || steps.info.outputs.architectures }}
       version: ${{ steps.version.outputs.version }}
       channel: ${{ steps.version.outputs.channel }}
       publish: ${{ steps.version.outputs.publish }}
@@ -43,6 +43,17 @@ jobs:
       - name: Get information
         id: info
         uses: home-assistant/actions/helpers/info@master
+
+      - name: Set default architectures if empty
+        id: set-arch
+        shell: bash
+        run: |
+          ARCH="${{ steps.info.outputs.architectures }}"
+          if [ -z "$ARCH" ] || [ "$ARCH" == "[]" ]; then
+            echo "architectures=[\"amd64\"]" >> $GITHUB_OUTPUT
+          else
+            echo "architectures=$ARCH" >> $GITHUB_OUTPUT
+          fi
 
       - name: Get version
         id: version
