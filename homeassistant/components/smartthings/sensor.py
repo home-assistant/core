@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, cast
 
+from humps import decamelize
 from pysmartthings import Attribute, Capability, ComponentStatus, SmartThings, Status
 
 from homeassistant.components.sensor import (
@@ -135,6 +136,20 @@ HEALTH_CONCERN = {
 }
 
 WASHER_OPTIONS = ["pause", "run", "stop"]
+
+
+class DecamelizingMap(dict):
+    """dict subclass that calls the decamelize function to supply missing values."""
+
+    def __missing__(self, key):
+        """Decamelizes the key, inserts the result as value for key and returns the value."""
+        val = decamelize(key)
+        self[key] = val
+        return val
+
+    def __bool__(self):
+        """Make this map True, even if empty."""
+        return True
 
 
 def power_attributes(status: dict[str, Any]) -> dict[str, Any]:
@@ -381,6 +396,18 @@ CAPABILITY_TO_SENSORS: dict[
                 value_fn=dt_util.parse_datetime,
             )
         ],
+    },
+    Capability.SAMSUNG_CE_DISHWASHER_WASHING_COURSE: {
+        Attribute.WASHING_COURSE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.WASHING_COURSE,
+                translation_key="dishwasher_washing_course",
+                options_attribute=Attribute.SUPPORTED_COURSES,
+                options_map=DecamelizingMap(),
+                device_class=SensorDeviceClass.ENUM,
+                value_fn=decamelize,
+            )
+        ]
     },
     # part of the proposed spec, Haven't seen at devices yet
     Capability.DRYER_MODE: {
