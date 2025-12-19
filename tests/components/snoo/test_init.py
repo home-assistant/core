@@ -15,7 +15,7 @@ async def test_async_setup_entry(hass: HomeAssistant, bypass_api: AsyncMock) -> 
     """Test a successful setup entry."""
     entry = await async_init_integration(hass)
     assert len(hass.states.async_all("sensor")) == 2
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
 
 
 async def test_cannot_auth(hass: HomeAssistant, bypass_api: AsyncMock) -> None:

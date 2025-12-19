@@ -460,6 +460,45 @@
             }
           }
         },
+        "fan": {
+          "description": "The KNX fan platform is used as an interface to fan actuators.",
+          "knx": {
+            "ga_oscillation": {
+              "description": "Toggle oscillation of the fan.",
+              "label": "Oscillation"
+            },
+            "ga_switch": {
+              "description": "Group address to turn the fan on/off.",
+              "label": "Switch"
+            },
+            "speed": {
+              "description": "Control the speed of the fan.",
+              "ga_speed": {
+                "description": "Group address to control the current speed of the fan as a percentage value.",
+                "label": "Speed"
+              },
+              "ga_step": {
+                "description": "Group address to control the current speed step.",
+                "label": "Step"
+              },
+              "max_step": {
+                "description": "Number of discrete fan speed steps (Off excluded).",
+                "label": "Fan steps"
+              },
+              "options": {
+                "percentage_mode": {
+                  "description": "Set the fan speed as a percentage value (0-100%).",
+                  "label": "Percentage"
+                },
+                "step_mode": {
+                  "description": "Set the fan speed in discrete steps.",
+                  "label": "Steps"
+                }
+              },
+              "title": "Fan speed"
+            }
+          }
+        },
         "header": "Create new entity",
         "light": {
           "description": "The KNX light platform is used as an interface to dimming actuators, LED controllers, DALI gateways and similar.",
@@ -673,6 +712,30 @@
     },
     "service_send_invalid_type": {
       "message": "Invalid type for `knx.send` service: {type}"
+    }
+  },
+  "issues": {
+    "data_secure_group_key_issue": {
+      "fix_flow": {
+        "error": {
+          "keyfile_invalid_signature": "[%key:component::knx::config::error::keyfile_invalid_signature%]"
+        },
+        "step": {
+          "secure_knxkeys": {
+            "data": {
+              "knxkeys_file": "[%key:component::knx::config::step::secure_knxkeys::data::knxkeys_file%]",
+              "knxkeys_password": "[%key:component::knx::config::step::secure_knxkeys::data::knxkeys_password%]"
+            },
+            "data_description": {
+              "knxkeys_file": "[%key:component::knx::config::step::secure_knxkeys::data_description::knxkeys_file%]",
+              "knxkeys_password": "[%key:component::knx::config::step::secure_knxkeys::data_description::knxkeys_password%]"
+            },
+            "description": "Telegrams for group addresses used in Home Assistant could not be decrypted because Data Secure keys are missing or invalid:\n\n{addresses}\n\nTo fix this, update the sending devices configurations via ETS and provide an updated KNX Keyring file. Make sure that the group addresses used in Home Assistant are associated with the interface used by Home Assistant (`{interface}` when the issue last occurred).",
+            "title": "Update KNX Keyring"
+          }
+        }
+      },
+      "title": "KNX Data Secure telegrams can't be decrypted"
     }
   },
   "options": {
