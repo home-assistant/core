@@ -143,7 +143,7 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
         event_type = data.get(ATTR_EVENT_TYPE)
         push_type = data.get(WEBHOOK_PUSH_TYPE)
 
-        if not event_type:
+        if not push_type:
             _LOGGER.debug("Event has no push_type, returning")
             return
 
@@ -151,13 +151,6 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
             _LOGGER.debug("Event %s has no camera ID, returning", event_type)
             return
 
-        if not data.get("home_id"):
-            _LOGGER.debug(
-                "Event %s for camera %s has no home ID, returning",
-                event_type,
-                data["camera_id"],
-            )
-            return
         if (
             data["home_id"] == self.home.entity_id
             and data["camera_id"] == self.device.entity_id

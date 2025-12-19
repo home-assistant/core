@@ -141,6 +141,7 @@ async def test_setup_component_with_webhook(
     response = {
         "event_type": "light_mode",
         "device_id": "12:34:56:10:b9:0e",
+        "camera_id": "12:34:56:10:b9:0e",
         "event_id": "601dce1560abca1ebad9b723",
         "push_type": "NOC-light_mode",
     }
@@ -536,6 +537,8 @@ async def test_camera_reconnect_webhook(
         (None, "12:34:56:10:b9:0e", "camera.front", "91763b24c43d3e344f424e8b"),
         # Test5: missing camera_id
         ("NOC", None, "camera.front", "91763b24c43d3e344f424e8b"),
+        # Note: missing home_id is not possible as it's mandatory in the webhook payload
+        # (by experience it is filled by some logic even if missing)
     ],
 )
 async def test_camera_webhook_consistency(
@@ -591,25 +594,25 @@ async def test_camera_webhook_consistency(
         # Fake camera reconnect
         if camera_type is None:
             response = {
-                "event_type": "connection",
+                "event_type": "disconnection",
                 "home_id": home_id,
                 "device_id": camera_id,
                 "camera_id": camera_id,
             }
         elif camera_id is None:
             response = {
-                "event_type": "connection",
+                "event_type": "disconnection",
                 "home_id": home_id,
                 "device_id": camera_id,
-                "push_type": f"{camera_type}-connection",
+                "push_type": f"{camera_type}-disconnection",
             }
         else:
             response = {
-                "event_type": "connection",
+                "event_type": "disconnection",
                 "home_id": home_id,
                 "device_id": camera_id,
                 "camera_id": camera_id,
-                "push_type": f"{camera_type}-connection",
+                "push_type": f"{camera_type}-disconnection",
             }
         await simulate_webhook(hass, webhook_id, response)
         await hass.async_block_till_done()
@@ -620,6 +623,8 @@ async def test_camera_webhook_consistency(
         )
         await hass.async_block_till_done()
         assert fake_post_hits >= calls
+
+        assert hass.states.get(camera_entity).state == "streaming"
 
 
 async def test_webhook_person_event(
