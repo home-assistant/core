@@ -93,7 +93,7 @@ jobs:
 
   build_base:
     name: Build ${{ matrix.arch }} base core image
-    # if: github.repository_owner == 'home-assistant'
+    if: github.event_name == 'release' # Only build Docker images on releases
     needs: init
     runs-on: ubuntu-latest
     permissions:
@@ -476,7 +476,7 @@ jobs:
   build_python:
     name: Build PyPi package
     environment: ${{ needs.init.outputs.channel }}
-    needs: ["init", "build_base"]
+    needs: ["init"]  # Remove dependency on build_base
     runs-on: ubuntu-latest
     permissions:
       contents: read
