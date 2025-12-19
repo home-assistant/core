@@ -17,6 +17,7 @@ from homeassistant.const import UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import HypontechConfigEntry, HypontechDataCoordinator
@@ -70,7 +71,9 @@ async def async_setup_entry(
     )
 
 
-class HypontechSensorWithDescription(SensorEntity):
+class HypontechSensorWithDescription(
+    CoordinatorEntity[HypontechDataCoordinator], SensorEntity
+):
     """Class describing Hypontech sensor entities."""
 
     entity_description: HypontechSensorDescription
@@ -82,7 +85,7 @@ class HypontechSensorWithDescription(SensorEntity):
         description: HypontechSensorDescription,
     ) -> None:
         """Initialize the sensor."""
-        self.coordinator = coordinator
+        super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
@@ -93,18 +96,3 @@ class HypontechSensorWithDescription(SensorEntity):
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data.overview_data)
-
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        return self.coordinator.last_update_success
-
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to hass."""
-        self.async_on_remove(
-            self.coordinator.async_add_listener(self._handle_coordinator_update)
-        )
-
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self.async_write_ha_state()
