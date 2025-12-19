@@ -109,6 +109,72 @@ async def test_fan_step(hass: HomeAssistant, knx: KNXTestKit) -> None:
     await knx.assert_telegram_count(0)
 
 
+async def test_fan_switch(hass: HomeAssistant, knx: KNXTestKit) -> None:
+    """Test KNX fan with switch only."""
+    await knx.setup_integration(
+        {
+            FanSchema.PLATFORM: {
+                CONF_NAME: "test",
+                FanSchema.CONF_SWITCH_ADDRESS: "1/2/3",
+            }
+        }
+    )
+
+    # turn on fan
+    await hass.services.async_call(
+        "fan", "turn_on", {"entity_id": "fan.test"}, blocking=True
+    )
+    await knx.assert_write("1/2/3", True)
+
+    # turn off fan
+    await hass.services.async_call(
+        "fan", "turn_off", {"entity_id": "fan.test"}, blocking=True
+    )
+    await knx.assert_write("1/2/3", False)
+
+
+async def test_fan_switch_step(hass: HomeAssistant, knx: KNXTestKit) -> None:
+    """Test KNX fan with speed steps and switch address."""
+    await knx.setup_integration(
+        {
+            FanSchema.PLATFORM: {
+                CONF_NAME: "test",
+                KNX_ADDRESS: "1/1/1",
+                FanSchema.CONF_SWITCH_ADDRESS: "2/2/2",
+                FanConf.MAX_STEP: 4,
+            }
+        }
+    )
+
+    # turn on fan without percentage - actuator sets default speed
+    await hass.services.async_call(
+        "fan", "turn_on", {"entity_id": "fan.test"}, blocking=True
+    )
+    await knx.assert_write("2/2/2", True)
+
+    # turn on with speed 75% - step 3 - turn_on sends switch ON again
+    await hass.services.async_call(
+        "fan", "turn_on", {"entity_id": "fan.test", "percentage": 75}, blocking=True
+    )
+    await knx.assert_write("2/2/2", True)
+    await knx.assert_write("1/1/1", (3,))
+
+    # set speed to 25% - step 1 - set_percentage doesn't send switch ON
+    await hass.services.async_call(
+        "fan",
+        "set_percentage",
+        {"entity_id": "fan.test", "percentage": 25},
+        blocking=True,
+    )
+    await knx.assert_write("1/1/1", (1,))
+
+    # turn off fan - no percentage change sent
+    await hass.services.async_call(
+        "fan", "turn_off", {"entity_id": "fan.test"}, blocking=True
+    )
+    await knx.assert_write("2/2/2", False)
+
+
 async def test_fan_oscillation(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test KNX fan oscillation."""
     await knx.setup_integration(
@@ -153,7 +219,7 @@ async def test_fan_oscillation(hass: HomeAssistant, knx: KNXTestKit) -> None:
 @pytest.mark.parametrize(
     ("knx_data", "expected_read_response", "expected_state"),
     [
-        (
+        (  # percent mode fan with oscillation
             {
                 "speed": {
                     "ga_speed": {"write": "1/1/0", "state": "1/1/1"},
@@ -164,7 +230,7 @@ async def test_fan_oscillation(hass: HomeAssistant, knx: KNXTestKit) -> None:
             [("1/1/1", (0x55,)), ("2/2/2", True)],
             {"state": STATE_ON, "percentage": 33, "oscillating": True},
         ),
-        (
+        (  # step only fan
             {
                 "speed": {
                     "ga_step": {"write": "1/1/0", "state": "1/1/1"},
@@ -174,6 +240,14 @@ async def test_fan_oscillation(hass: HomeAssistant, knx: KNXTestKit) -> None:
             },
             [("1/1/1", (2,))],
             {"state": STATE_ON, "percentage": 66},
+        ),
+        (  # switch only fan
+            {
+                "ga_switch": {"write": "1/1/0", "state": "1/1/1"},
+                "sync_state": True,
+            },
+            [("1/1/1", True)],
+            {"state": STATE_ON, "percentage": None},
         ),
     ],
 )

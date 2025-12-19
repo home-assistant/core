@@ -576,19 +576,40 @@ class FanSchema(KNXPlatformSchema):
     CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
     CONF_OSCILLATION_ADDRESS = "oscillation_address"
     CONF_OSCILLATION_STATE_ADDRESS = "oscillation_state_address"
+    CONF_SWITCH_ADDRESS = "switch_address"
+    CONF_SWITCH_STATE_ADDRESS = "switch_state_address"
 
     DEFAULT_NAME = "KNX Fan"
 
-    ENTITY_SCHEMA = vol.Schema(
-        {
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Required(KNX_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_OSCILLATION_ADDRESS): ga_list_validator,
-            vol.Optional(CONF_OSCILLATION_STATE_ADDRESS): ga_list_validator,
-            vol.Optional(FanConf.MAX_STEP): cv.byte,
-            vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
-        }
+    ENTITY_SCHEMA = vol.All(
+        vol.Schema(
+            {
+                vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+                vol.Optional(KNX_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_SWITCH_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_SWITCH_STATE_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_OSCILLATION_ADDRESS): ga_list_validator,
+                vol.Optional(CONF_OSCILLATION_STATE_ADDRESS): ga_list_validator,
+                vol.Optional(FanConf.MAX_STEP): cv.byte,
+                vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
+                vol.Optional(CONF_SYNC_STATE, default=True): sync_state_validator,
+            }
+        ),
+        vol.Any(
+            vol.Schema(
+                {vol.Required(KNX_ADDRESS): object},
+                extra=vol.ALLOW_EXTRA,
+            ),
+            vol.Schema(
+                {vol.Required(CONF_SWITCH_ADDRESS): object},
+                extra=vol.ALLOW_EXTRA,
+            ),
+            msg=(
+                f"At least one of '{KNX_ADDRESS}' or"
+                f" '{CONF_SWITCH_ADDRESS}' is required."
+            ),
+        ),
     )
 
 

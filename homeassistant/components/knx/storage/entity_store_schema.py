@@ -224,40 +224,58 @@ DATETIME_KNX_SCHEMA = vol.Schema(
     }
 )
 
-FAN_KNX_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_SPEED): GroupSelect(
-            GroupSelectOption(
-                translation_key="percentage_mode",
-                schema={
-                    vol.Required(CONF_GA_SPEED): GASelector(
-                        write_required=True, valid_dpt="5.001"
-                    ),
-                },
+FAN_KNX_SCHEMA = AllSerializeFirst(
+    vol.Schema(
+        {
+            vol.Optional(CONF_GA_SWITCH): GASelector(
+                write_required=True, valid_dpt="1"
             ),
-            GroupSelectOption(
-                translation_key="step_mode",
-                schema={
-                    vol.Required(CONF_GA_STEP): GASelector(
-                        write_required=True, valid_dpt="5.010"
-                    ),
-                    vol.Required(FanConf.MAX_STEP, default=3): selector.NumberSelector(
-                        selector.NumberSelectorConfig(
-                            min=1,
-                            max=100,
-                            step=1,
-                            mode=selector.NumberSelectorMode.BOX,
-                        )
-                    ),
-                },
+            vol.Optional(CONF_SPEED): GroupSelect(
+                GroupSelectOption(
+                    translation_key="percentage_mode",
+                    schema={
+                        vol.Required(CONF_GA_SPEED): GASelector(
+                            write_required=True, valid_dpt="5.001"
+                        ),
+                    },
+                ),
+                GroupSelectOption(
+                    translation_key="step_mode",
+                    schema={
+                        vol.Required(CONF_GA_STEP): GASelector(
+                            write_required=True, valid_dpt="5.010"
+                        ),
+                        vol.Required(
+                            FanConf.MAX_STEP, default=3
+                        ): selector.NumberSelector(
+                            selector.NumberSelectorConfig(
+                                min=1,
+                                max=100,
+                                step=1,
+                                mode=selector.NumberSelectorMode.BOX,
+                            )
+                        ),
+                    },
+                ),
+                collapsible=False,
             ),
-            collapsible=False,
+            vol.Optional(CONF_GA_OSCILLATION): GASelector(
+                write_required=True, valid_dpt="1"
+            ),
+            vol.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
+        }
+    ),
+    vol.Any(
+        vol.Schema(
+            {vol.Required(CONF_GA_SWITCH): object},
+            extra=vol.ALLOW_EXTRA,
         ),
-        vol.Optional(CONF_GA_OSCILLATION): GASelector(
-            write_required=True, valid_dpt="1"
+        vol.Schema(
+            {vol.Required(CONF_SPEED): object},
+            extra=vol.ALLOW_EXTRA,
         ),
-        vol.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
-    }
+        msg=("At least one of 'Switch' or 'Fan speed' is required."),
+    ),
 )
 
 
