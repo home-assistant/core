@@ -2,7 +2,6 @@
 
 import asyncio
 from collections.abc import Callable
-import time
 from typing import Final
 
 from aiohttp import ClientResponseError
@@ -33,7 +32,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CLIENT_ID, DOMAIN, LOGGER, TOKEN_URL
+from .const import CLIENT_ID, DOMAIN, LOGGER
 from .coordinator import (
     TeslemetryEnergyHistoryCoordinator,
     TeslemetryEnergySiteInfoCoordinator,
@@ -322,10 +321,13 @@ async def async_migrate_entry(
 
     if config_entry.version == 1:
         access_token = config_entry.data[CONF_ACCESS_TOKEN]
+        session = async_get_clientsession(hass)
 
         # Convert legacy access token to OAuth tokens using migrate endpoint
         try:
-            data = await _migrate_token_to_oauth(hass, access_token)
+            data = await Teslemetry(session, access_token).migrate_to_oauth(
+                CLIENT_ID, access_token, hass.config.location_name
+            )
         except ClientResponseError as e:
             raise ConfigEntryAuthFailed from e
 
@@ -338,29 +340,6 @@ async def async_migrate_entry(
             version=2,
         )
     return True
-
-
-async def _migrate_token_to_oauth(
-    hass: HomeAssistant, access_token: str
-) -> dict[str, str]:
-    """Migrate legacy access token to OAuth format using Teslemetry migrate endpoint."""
-    session = async_get_clientsession(hass)
-
-    migrate_data = {
-        "grant_type": "migrate",
-        "client_id": CLIENT_ID,
-        "access_token": access_token.strip(),
-        "name": hass.config.location_name,
-    }
-
-    async with session.post(TOKEN_URL, data=migrate_data) as response:
-        response.raise_for_status()
-
-        new_token = await response.json()
-        new_token["expires_in"] = int(new_token["expires_in"])
-        new_token["expires_at"] = time.time() + new_token["expires_in"]
-
-        return {"token": new_token}
 
 
 def create_handle_vehicle_stream(vin: str, coordinator) -> Callable[[dict], None]:

@@ -13,7 +13,7 @@ from tesla_fleet_api.exceptions import (
     TeslaFleetError,
 )
 
-from homeassistant.components.teslemetry.const import DOMAIN
+from homeassistant.components.teslemetry.const import CLIENT_ID, DOMAIN
 from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
 from homeassistant.components.teslemetry.models import TeslemetryData
 from homeassistant.config_entries import ConfigEntryState
@@ -302,7 +302,8 @@ async def test_migrate_from_version_1_success(hass: HomeAssistant) -> None:
 
     # Mock the migrate token endpoint response
     with patch(
-        "homeassistant.components.teslemetry._migrate_token_to_oauth"
+        "homeassistant.components.teslemetry.Teslemetry.migrate_to_oauth",
+        new_callable=AsyncMock,
     ) as mock_migrate:
         mock_migrate.return_value = {
             "token": {
@@ -318,8 +319,9 @@ async def test_migrate_from_version_1_success(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
-        # Verify migration function was called with the correct token
-        mock_migrate.assert_called_once_with(hass, CONFIG_V1[CONF_ACCESS_TOKEN])
+        mock_migrate.assert_called_once_with(
+            CLIENT_ID, CONFIG_V1[CONF_ACCESS_TOKEN], hass.config.location_name
+        )
 
     entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
     assert entry is not None
@@ -344,7 +346,8 @@ async def test_migrate_from_version_1_token_endpoint_error(hass: HomeAssistant) 
 
     # Mock the migrate token endpoint to raise an HTTP error
     with patch(
-        "homeassistant.components.teslemetry._migrate_token_to_oauth"
+        "homeassistant.components.teslemetry.Teslemetry.migrate_to_oauth",
+        new_callable=AsyncMock,
     ) as mock_migrate:
         mock_migrate.side_effect = ClientResponseError(
             request_info=MagicMock(), history=(), status=400
@@ -354,8 +357,9 @@ async def test_migrate_from_version_1_token_endpoint_error(hass: HomeAssistant) 
         await hass.config_entries.async_setup(mock_entry.entry_id)
         await hass.async_block_till_done()
 
-        # Verify migration function was called
-        mock_migrate.assert_called_once_with(hass, CONFIG_V1[CONF_ACCESS_TOKEN])
+        mock_migrate.assert_called_once_with(
+            CLIENT_ID, CONFIG_V1[CONF_ACCESS_TOKEN], hass.config.location_name
+        )
 
     entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
     assert entry is not None
@@ -385,7 +389,8 @@ async def test_migrate_version_2_no_migration_needed(hass: HomeAssistant) -> Non
 
     # Should not call the migrate endpoint since already version 2
     with patch(
-        "homeassistant.components.teslemetry._migrate_token_to_oauth"
+        "homeassistant.components.teslemetry.Teslemetry.migrate_to_oauth",
+        new_callable=AsyncMock,
     ) as mock_migrate:
         mock_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(mock_entry.entry_id)

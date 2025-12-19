@@ -230,65 +230,6 @@ async def test_duplicate_unique_id_abort(
     assert result["reason"] == "already_configured"
 
 
-async def test_migrate_from_v1(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    mock_metadata: AsyncMock,
-) -> None:
-    """Test config migration."""
-
-    aioclient_mock.post(
-        TOKEN_URL,
-        json={
-            "refresh_token": "test_refresh_token",
-            "access_token": "test_access_token",
-            "type": "Bearer",
-            "expires_in": 60,
-        },
-    )
-
-    mock_entry = MockConfigEntry(
-        domain=DOMAIN,
-        version=1,
-        minor_version=1,
-        unique_id=UNIQUE_ID,
-        data=CONFIG_V1,
-    )
-
-    mock_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_entry.entry_id)
-    await hass.async_block_till_done()
-
-    entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
-    assert entry.version == 2
-    assert entry.minor_version == 1
-    assert entry.unique_id == UNIQUE_ID
-
-
-async def test_migrate_error_from_v1(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-) -> None:
-    """Test config migration handles errors."""
-
-    aioclient_mock.post(TOKEN_URL, status=400)
-
-    mock_entry = MockConfigEntry(
-        domain=DOMAIN,
-        version=1,
-        minor_version=1,
-        unique_id=None,
-        data=CONFIG_V1,
-    )
-
-    mock_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_entry.entry_id)
-    await hass.async_block_till_done()
-
-    entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
-    assert entry.state is ConfigEntryState.MIGRATION_ERROR
-
-
 @pytest.mark.usefixtures("current_request_with_host")
 @pytest.mark.parametrize(
     "exception",
