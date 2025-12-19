@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime
+from random import randint
 from typing import Any
 
 import amberelectric
@@ -13,10 +14,17 @@ from amberelectric.models.forecast_interval import ForecastInterval
 from amberelectric.rest import ApiException
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.event import async_track_utc_time_change
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import LOGGER, REQUEST_TIMEOUT
+from .const import (
+    DOMAIN,
+    LOGGER,
+    MINUTE_ALIGNED_REFRESH_DELAY,
+    MINUTE_ALIGNED_REFRESH_JITTER,
+    REQUEST_TIMEOUT,
+)
 from .helpers import normalize_descriptor
 
 type AmberConfigEntry = ConfigEntry[AmberUpdateCoordinator]
@@ -67,14 +75,49 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
             LOGGER,
             config_entry=config_entry,
             name="amberelectric",
-            update_interval=timedelta(minutes=1),
+            update_interval=None,
         )
         self._api = api
         self.site_id = site_id
 
+    async def _async_setup(self) -> None:
+        """Set up coordinator resources."""
+        if self.config_entry and not self.config_entry.pref_disable_polling:
+            self.config_entry.async_on_unload(
+                async_track_utc_time_change(
+                    self.hass,
+                    self._handle_minute_tick,
+                    second=0,
+                )
+            )
+
+    @callback
+    def _handle_minute_tick(self, _: datetime) -> None:
+        """Refresh the coordinator on minute boundaries."""
+        if not self.config_entry:
+            return
+
+        # Add jitter to reduce request bursts against the Amber API.
+        delay = randint(
+            max(0, MINUTE_ALIGNED_REFRESH_DELAY - MINUTE_ALIGNED_REFRESH_JITTER),
+            MINUTE_ALIGNED_REFRESH_DELAY + MINUTE_ALIGNED_REFRESH_JITTER,
+        )
+
+        @callback
+        def _do_refresh() -> None:
+            if not self.config_entry:
+                return
+            self.config_entry.async_create_background_task(
+                self.hass,
+                self.async_request_refresh(),
+                name=f"{DOMAIN} - {self.config_entry.title} - refresh",
+                eager_start=True,
+            )
+
+        self.hass.loop.call_later(delay, _do_refresh)
+
     def update_price_data(self) -> dict[str, dict[str, Any]]:
         """Update callback."""
-
         result: dict[str, dict[str, Any]] = {
             "current": {},
             "descriptors": {},
