@@ -16,7 +16,9 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    CONF_ABOVE,
     CONF_ALIAS,
+    CONF_BELOW,
     CONF_ENABLED,
     CONF_ID,
     CONF_OPTIONS,
@@ -504,6 +506,139 @@ class EntityTargetStateAttributeTriggerBase(EntityTriggerBase):
         return state.attributes.get(self._attribute) == self._attribute_to_state
 
 
+def _validate_range[_T: dict[str, Any]](
+    lower_limit: str, upper_limit: str
+) -> Callable[[_T], _T]:
+    """Generate range validator."""
+
+    def _validate_range(value: _T) -> _T:
+        above = value.get(lower_limit)
+        below = value.get(upper_limit)
+
+        if above is None or below is None:
+            return value
+
+        if isinstance(above, str) or isinstance(below, str):
+            return value
+
+        if above > below:
+            raise vol.Invalid(
+                (
+                    f"A value can never be above {above} and below {below} at the same"
+                    " time. You probably want two different triggers."
+                ),
+            )
+
+        return value
+
+    return _validate_range
+
+
+_NUMBER_OR_ENTITY_CHOOSE_SCHEMA = vol.Schema(
+    {
+        vol.Required("chosen_selector"): vol.In(["number", "entity"]),
+        vol.Optional("entity"): cv.entity_id,
+        vol.Optional("number"): vol.Coerce(float),
+    }
+)
+
+
+def _validate_number_or_entity(value: dict | float | str) -> float | str:
+    """Validate number or entity selector result."""
+    if isinstance(value, dict):
+        _NUMBER_OR_ENTITY_CHOOSE_SCHEMA(value)
+        return value[value["chosen_selector"]]  # type: ignore[no-any-return]
+    return value
+
+
+_number_or_entity = vol.All(
+    _validate_number_or_entity, vol.Any(vol.Coerce(float), cv.entity_id)
+)
+
+NUMERICAL_ATTRIBUTE_CHANGED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.extend(
+    {
+        vol.Required(CONF_OPTIONS): vol.All(
+            {
+                vol.Optional(CONF_ABOVE): _number_or_entity,
+                vol.Optional(CONF_BELOW): _number_or_entity,
+            },
+            _validate_range(CONF_ABOVE, CONF_BELOW),
+        )
+    }
+)
+
+
+def _get_numerical_value(
+    hass: HomeAssistant, entity_or_float: float | str
+) -> float | None:
+    """Get numerical value from float or entity state."""
+    if isinstance(entity_or_float, str):
+        if not (state := hass.states.get(entity_or_float)):
+            # Entity not found
+            return None
+        try:
+            return float(state.state)
+        except (TypeError, ValueError):
+            # Entity state is not a valid number
+            return None
+    return entity_or_float
+
+
+class EntityNumericalStateAttributeChangedTriggerBase(EntityTriggerBase):
+    """Trigger for numerical state attribute changes."""
+
+    _attribute: str
+    _schema = NUMERICAL_ATTRIBUTE_CHANGED_TRIGGER_SCHEMA
+
+    _above: None | float | str
+    _below: None | float | str
+
+    def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
+        """Initialize the state trigger."""
+        super().__init__(hass, config)
+        self._above = self._options.get(CONF_ABOVE)
+        self._below = self._options.get(CONF_BELOW)
+
+    def is_valid_transition(self, from_state: State, to_state: State) -> bool:
+        """Check if the origin state is valid and the state has changed."""
+        if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            return False
+
+        return from_state.attributes.get(self._attribute) != to_state.attributes.get(
+            self._attribute
+        )
+
+    def is_valid_state(self, state: State) -> bool:
+        """Check if the new state attribute matches the expected one."""
+        # Handle missing or None attribute case first to avoid expensive exceptions
+        if (_attribute_value := state.attributes.get(self._attribute)) is None:
+            return False
+
+        try:
+            current_value = float(_attribute_value)
+        except (TypeError, ValueError):
+            # Attribute is not a valid number, don't trigger
+            return False
+
+        if self._above is not None:
+            if (above := _get_numerical_value(self._hass, self._above)) is None:
+                # Entity not found or invalid number, don't trigger
+                return False
+            if current_value <= above:
+                # The number is not above the limit, don't trigger
+                return False
+
+        if self._below is not None:
+            if (below := _get_numerical_value(self._hass, self._below)) is None:
+                # Entity not found or invalid number, don't trigger
+                return False
+            if current_value >= below:
+                # The number is not below the limit, don't trigger
+                return False
+
+        return True
+
+
 def make_entity_target_state_trigger(
     domain: str, to_states: str | set[str]
 ) -> type[EntityTargetStateTriggerBase]:
@@ -548,6 +683,20 @@ def make_entity_origin_state_trigger(
 
         _domain = domain
         _from_state = from_state
+
+    return CustomTrigger
+
+
+def make_entity_numerical_state_attribute_changed_trigger(
+    domain: str, attribute: str
+) -> type[EntityNumericalStateAttributeChangedTriggerBase]:
+    """Create a trigger for numerical state attribute change."""
+
+    class CustomTrigger(EntityNumericalStateAttributeChangedTriggerBase):
+        """Trigger for numerical state attribute changes."""
+
+        _domain = domain
+        _attribute = attribute
 
     return CustomTrigger
 

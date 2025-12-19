@@ -1,6 +1,8 @@
 """The tests for the trigger helper."""
 
+from contextlib import AbstractContextManager, nullcontext as does_not_raise
 import io
+from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, call, patch
 
 import pytest
@@ -11,6 +13,13 @@ from homeassistant.components.sun import DOMAIN as DOMAIN_SUN
 from homeassistant.components.system_health import DOMAIN as DOMAIN_SYSTEM_HEALTH
 from homeassistant.components.tag import DOMAIN as DOMAIN_TAG
 from homeassistant.components.text import DOMAIN as DOMAIN_TEXT
+from homeassistant.const import (
+    CONF_ABOVE,
+    CONF_BELOW,
+    CONF_ENTITY_ID,
+    CONF_OPTIONS,
+    CONF_TARGET,
+)
 from homeassistant.core import (
     CALLBACK_TYPE,
     Context,
@@ -29,6 +38,7 @@ from homeassistant.helpers.trigger import (
     _async_get_trigger_platform,
     async_initialize_triggers,
     async_validate_trigger_config,
+    make_entity_numerical_state_attribute_changed_trigger,
 )
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import Integration, async_get_integration
@@ -1131,3 +1141,109 @@ async def test_subscribe_triggers_no_triggers(
     assert await async_setup_component(hass, "light", {})
     await hass.async_block_till_done()
     assert trigger_events == []
+
+
+@pytest.mark.parametrize(
+    ("trigger_options", "expected_result"),
+    [
+        # Test validating climate.target_temperature_changed
+        # Valid configurations
+        (
+            {},
+            does_not_raise(),
+        ),
+        (
+            {CONF_ABOVE: 10},
+            does_not_raise(),
+        ),
+        (
+            {CONF_ABOVE: "sensor.test"},
+            does_not_raise(),
+        ),
+        (
+            {CONF_BELOW: 90},
+            does_not_raise(),
+        ),
+        (
+            {CONF_BELOW: "sensor.test"},
+            does_not_raise(),
+        ),
+        (
+            {CONF_ABOVE: 10, CONF_BELOW: 90},
+            does_not_raise(),
+        ),
+        (
+            {CONF_ABOVE: "sensor.test", CONF_BELOW: 90},
+            does_not_raise(),
+        ),
+        (
+            {CONF_ABOVE: 10, CONF_BELOW: "sensor.test"},
+            does_not_raise(),
+        ),
+        (
+            {CONF_ABOVE: "sensor.test", CONF_BELOW: "sensor.test"},
+            does_not_raise(),
+        ),
+        # Test verbose choose selector options
+        (
+            {CONF_ABOVE: {"chosen_selector": "entity", "entity": "sensor.test"}},
+            does_not_raise(),
+        ),
+        (
+            {CONF_ABOVE: {"chosen_selector": "number", "number": 10}},
+            does_not_raise(),
+        ),
+        (
+            {CONF_BELOW: {"chosen_selector": "entity", "entity": "sensor.test"}},
+            does_not_raise(),
+        ),
+        (
+            {CONF_BELOW: {"chosen_selector": "number", "number": 90}},
+            does_not_raise(),
+        ),
+        # Test invalid configurations
+        (
+            # Must be valid entity id
+            {CONF_ABOVE: "cat", CONF_BELOW: "dog"},
+            pytest.raises(vol.Invalid),
+        ),
+        (
+            # Above must be smaller than below
+            {CONF_ABOVE: 90, CONF_BELOW: 10},
+            pytest.raises(vol.Invalid),
+        ),
+        (
+            # Invalid choose selector option
+            {CONF_BELOW: {"chosen_selector": "cat", "cat": 90}},
+            pytest.raises(vol.Invalid),
+        ),
+    ],
+)
+async def test_numerical_state_attribute_changed_trigger_config_validation(
+    hass: HomeAssistant,
+    trigger_options: dict[str, Any],
+    expected_result: AbstractContextManager,
+) -> None:
+    """Test numerical state attribute change trigger config validation."""
+
+    async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
+        return {
+            "test_trigger": make_entity_numerical_state_attribute_changed_trigger(
+                "test", "test_attribute"
+            ),
+        }
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
+
+    with expected_result:
+        await async_validate_trigger_config(
+            hass,
+            [
+                {
+                    "platform": "test.test_trigger",
+                    CONF_TARGET: {CONF_ENTITY_ID: "test.test_entity"},
+                    CONF_OPTIONS: trigger_options,
+                }
+            ],
+        )
