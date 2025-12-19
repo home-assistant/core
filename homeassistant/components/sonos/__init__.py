@@ -191,9 +191,10 @@ class SonosDiscoveryManager:
         self, err: HTTPError, ip_address: str
     ) -> None:
         """Process HTTP Errors when connecting to a Sonos speaker."""
+        response = err.response
         # When UPnP is disabled, Sonos returns HTTP 403 Forbidden error.
         # Create issue advising user to enable UPnP on Sonos system.
-        if err.response.status_code == HTTPStatus.FORBIDDEN:
+        if response is not None and response.status_code == HTTPStatus.FORBIDDEN:
             ir.async_create_issue(
                 self.hass,
                 DOMAIN,
