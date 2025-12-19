@@ -11,7 +11,10 @@ from tuya_device_handlers.device_wrapper.common import (
     DPCodeEnumWrapper,
     DPCodeIntegerWrapper,
 )
-from tuya_device_handlers.type_information import IntegerTypeInformation
+from tuya_device_handlers.type_information import (
+    EnumTypeInformation,
+    IntegerTypeInformation,
+)
 from tuya_device_handlers.utils import RemapHelper
 from tuya_sharing import CustomerDevice, Manager
 
@@ -84,7 +87,7 @@ class _InstructionBooleanWrapper(DPCodeBooleanWrapper):
     options = ["open", "close"]
     _ACTION_MAPPINGS = {"open": True, "close": False}
 
-    def _convert_value_to_raw_value(self, device: CustomerDevice, value: str) -> bool:
+    def _convert_value_to_raw_value(self, device: CustomerDevice, value: str) -> bool:  # type: ignore[override]
         return self._ACTION_MAPPINGS[value]
 
 

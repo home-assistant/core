@@ -173,7 +173,7 @@ class _ColorDataWrapper(DPCodeJsonWrapper):
     s_type = DEFAULT_S_TYPE
     v_type = DEFAULT_V_TYPE
 
-    def read_device_status(
+    def read_device_status(  # type: ignore[override]
         self, device: CustomerDevice
     ) -> tuple[float, float, float] | None:
         """Return a tuple (H, S, V) from this color data."""
