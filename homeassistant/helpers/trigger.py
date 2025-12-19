@@ -433,11 +433,21 @@ class EntityTriggerBase(Trigger):
 class EntityTargetStateTriggerBase(EntityTriggerBase):
     """Trigger for entity state changes to a specific state."""
 
-    _to_state: str
+    _to_states: set[str]
+
+    def is_valid_transition(self, from_state: State, to_state: State) -> bool:
+        """Check if the origin state is valid and the state has changed."""
+        if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            return False
+
+        return (
+            from_state.state != to_state.state
+            and from_state.state not in self._to_states
+        )
 
     def is_valid_state(self, state: State) -> bool:
         """Check if the new state matches the expected state."""
-        return state.state == self._to_state
+        return state.state in self._to_states
 
 
 class EntityTransitionTriggerBase(EntityTriggerBase):
@@ -495,15 +505,20 @@ class EntityTargetStateAttributeTriggerBase(EntityTriggerBase):
 
 
 def make_entity_target_state_trigger(
-    domain: str, to_state: str
+    domain: str, to_states: str | set[str]
 ) -> type[EntityTargetStateTriggerBase]:
-    """Create a trigger for entity state changes to a specific state."""
+    """Create a trigger for entity state changes to specific state(s)."""
+
+    if isinstance(to_states, str):
+        to_states_set = {to_states}
+    else:
+        to_states_set = to_states
 
     class CustomTrigger(EntityTargetStateTriggerBase):
         """Trigger for entity state changes."""
 
         _domain = domain
-        _to_state = to_state
+        _to_states = to_states_set
 
     return CustomTrigger
 
