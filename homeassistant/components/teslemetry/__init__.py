@@ -16,13 +16,20 @@ from tesla_fleet_api.exceptions import (
 from tesla_fleet_api.teslemetry import Teslemetry
 from teslemetry_stream import TeslemetryStream
 
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    OAuth2Session,
+    async_get_config_entry_implementation,
+)
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 
@@ -35,7 +42,6 @@ from .coordinator import (
 )
 from .helpers import flatten
 from .models import TeslemetryData, TeslemetryEnergyData, TeslemetryVehicleData
-from .oauth import TeslemetryImplementation
 from .services import async_setup_services
 
 PLATFORMS: Final = [
@@ -60,6 +66,11 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Telemetry integration."""
+    await async_import_client_credential(
+        hass,
+        DOMAIN,
+        ClientCredential(CLIENT_ID, "", name="Teslemetry"),
+    )
     async_setup_services(hass)
     return True
 
@@ -68,7 +79,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
     """Set up Teslemetry config."""
 
     session = async_get_clientsession(hass)
-    oauth_session = OAuth2Session(hass, entry, TeslemetryImplementation(hass))
+    implementation = await async_get_config_entry_implementation(hass, entry)
+    oauth_session = OAuth2Session(hass, entry, implementation)
 
     async def _get_access_token() -> str:
         try:
@@ -302,6 +314,9 @@ async def async_migrate_entry(
             data = await _migrate_token_to_oauth(hass, access_token)
         except ClientResponseError as e:
             raise ConfigEntryAuthFailed from e
+
+        # Add auth_implementation for OAuth2 flow compatibility
+        data["auth_implementation"] = DOMAIN
 
         return hass.config_entries.async_update_entry(
             config_entry,

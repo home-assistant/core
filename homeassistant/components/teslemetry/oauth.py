@@ -7,7 +7,7 @@ from typing import Any
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 
-from .const import AUTHORIZE_URL, CLIENT_ID, DOMAIN, TOKEN_URL
+from .const import AUTHORIZE_URL, TOKEN_URL
 
 
 class TeslemetryImplementation(
@@ -15,13 +15,13 @@ class TeslemetryImplementation(
 ):
     """Teslemetry OAuth2 implementation."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, domain: str, client_id: str) -> None:
         """Initialize OAuth2 implementation."""
 
         super().__init__(
             hass,
-            DOMAIN,
-            CLIENT_ID,
+            domain,
+            client_id,
             AUTHORIZE_URL,
             TOKEN_URL,
         )

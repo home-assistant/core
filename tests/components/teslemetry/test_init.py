@@ -328,6 +328,8 @@ async def test_migrate_from_version_1_success(hass: HomeAssistant) -> None:
     assert "token" in entry.data
     assert entry.data["token"]["access_token"] == "migrated_token"
     assert entry.data["token"]["refresh_token"] == "migrated_refresh_token"
+    # Verify auth_implementation was added for OAuth2 flow compatibility
+    assert entry.data["auth_implementation"] == DOMAIN
     assert entry.state is ConfigEntryState.LOADED
 
 
@@ -364,13 +366,14 @@ async def test_migrate_from_version_1_token_endpoint_error(hass: HomeAssistant) 
 async def test_migrate_version_2_no_migration_needed(hass: HomeAssistant) -> None:
     """Test that version 2 entries don't need migration."""
     oauth_config = {
+        "auth_implementation": DOMAIN,
         "token": {
             "access_token": "existing_oauth_token",
             "token_type": "Bearer",
             "refresh_token": "existing_refresh_token",
             "expires_in": 3600,
             "expires_at": 1234567890,
-        }
+        },
     }
 
     mock_entry = MockConfigEntry(

@@ -21,6 +21,7 @@ def mock_config_entry() -> MockConfigEntry:
         version=2,
         unique_id="abc-123",
         data={
+            "auth_implementation": DOMAIN,
             "token": {
                 "access_token": "test_access_token",
                 "refresh_token": "test_refresh_token",

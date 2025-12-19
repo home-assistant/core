@@ -14,12 +14,15 @@ from tesla_fleet_api.exceptions import (
 )
 from tesla_fleet_api.teslemetry import Teslemetry
 
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN, LOGGER
-from .oauth import TeslemetryImplementation
+from .const import CLIENT_ID, DOMAIN, LOGGER
 
 
 class OAuth2FlowHandler(
@@ -35,7 +38,6 @@ class OAuth2FlowHandler(
         super().__init__()
         self.data: dict[str, Any] = {}
         self.uid: str | None = None
-        self._oauth_impl: TeslemetryImplementation | None = None
 
     @property
     def logger(self) -> logging.Logger:
@@ -46,9 +48,11 @@ class OAuth2FlowHandler(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow start."""
-        self._oauth_impl = TeslemetryImplementation(self.hass)
-        self.async_register_implementation(self.hass, self._oauth_impl)
-
+        await async_import_client_credential(
+            self.hass,
+            DOMAIN,
+            ClientCredential(CLIENT_ID, "", name="Teslemetry"),
+        )
         return await super().async_step_user()
 
     async def async_oauth_create_entry(
@@ -104,8 +108,11 @@ class OAuth2FlowHandler(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauth on failure."""
-        self._oauth_impl = TeslemetryImplementation(self.hass)
-        self.async_register_implementation(self.hass, self._oauth_impl)
+        await async_import_client_credential(
+            self.hass,
+            DOMAIN,
+            ClientCredential(CLIENT_ID, "", name="Teslemetry"),
+        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
