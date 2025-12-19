@@ -31,7 +31,7 @@
           selector:
             number:
               mode: box
-  translation_key: number_or_entity
+      translation_key: number_or_entity
 
 started_cooling: *trigger_common
 started_drying: *trigger_common
