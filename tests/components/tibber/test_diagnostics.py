@@ -88,14 +88,14 @@ async def test_data_api_diagnostics_with_devices(
 
 
 @pytest.mark.parametrize(
-    ("exception", "expected_error"),
+    "exception",
     [
-        (ConfigEntryAuthFailed("Auth failed"), "Authentication failed"),
-        (TimeoutError(), "Timeout error"),
-        (aiohttp.ClientError("Connection error"), "Client error"),
-        (tibber.InvalidLoginError(401), "Invalid login"),
-        (tibber.RetryableHttpExceptionError(503), "Retryable HTTP error (503)"),
-        (tibber.FatalHttpExceptionError(404), "Fatal HTTP error (404)"),
+        ConfigEntryAuthFailed("Auth failed"),
+        TimeoutError(),
+        aiohttp.ClientError("Connection error"),
+        tibber.InvalidLoginError(401),
+        tibber.RetryableHttpExceptionError(503),
+        tibber.FatalHttpExceptionError(404),
     ],
 )
 async def test_data_api_diagnostics_exceptions(
@@ -103,7 +103,6 @@ async def test_data_api_diagnostics_exceptions(
     hass: HomeAssistant,
     data_api_entry: MockConfigEntry,
     exception: Exception,
-    expected_error: str,
 ) -> None:
     """Test Data API diagnostics with various exception scenarios."""
     runtime = create_mock_runtime()
@@ -112,7 +111,5 @@ async def test_data_api_diagnostics_exceptions(
     )
     data_api_entry.runtime_data = runtime
 
-    result = await async_get_config_entry_diagnostics(hass, data_api_entry)
-
-    assert result["error"] == expected_error
-    assert result["devices"] == []
+    with pytest.raises(type(exception)):
+        await async_get_config_entry_diagnostics(hass, data_api_entry)
