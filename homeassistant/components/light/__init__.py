@@ -8,7 +8,7 @@ import dataclasses
 from functools import partial
 import logging
 import os
-from typing import TYPE_CHECKING, Any, Final, Self, cast, final
+from typing import TYPE_CHECKING, Any, Final, Self, cast, final, override
 
 from propcache.api import cached_property
 import voluptuous as vol
@@ -670,10 +670,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         light: LightEntity, call: ServiceCall
     ) -> None:
         """Handle toggling a light."""
-        if light.is_on:
-            await async_handle_light_off_service(light, call)
-        else:
-            await async_handle_light_on_service(light, call)
+        params = dict(call.data["params"])
+        await light.async_toggle(**params)
 
     # Listen for light on and light off service calls.
 
@@ -1430,6 +1428,18 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return True
         # philips_js has known issues, we don't need users to open issues
         return self.platform.platform_name not in {"philips_js"}
+
+    @override
+    async def async_toggle(self, **kwargs: Any) -> None:
+        params = kwargs
+        if not self.is_on:
+            params = process_turn_on_params(self.hass, self, params)
+            if params.get(ATTR_BRIGHTNESS) != 0 and params.get(ATTR_WHITE) != 0:
+                await self.async_turn_on(**filter_turn_on_params(self, params))
+                return
+
+        params = process_turn_off_params(self.hass, self, params)
+        await self.async_turn_off(**params)
 
 
 # These can be removed if no deprecated constant are in this module anymore
