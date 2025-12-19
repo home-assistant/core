@@ -50,6 +50,10 @@ class IssPeopleCoordinator(DataUpdateCoordinator[dict]):
         """Fetch the latest people-in-space data from the API with retries."""
         backoff = INITIAL_BACKOFF
 
+        # Inner function to comply with TRY301 linting rule
+        def _raise_invalid_payload() -> None:
+            raise UpdateFailed("Invalid people-in-space payload")
+
         for attempt in range(MAX_RETRIES):
             _LOGGER.debug(
                 "Fetching people data (attempt %d/%d)", attempt + 1, MAX_RETRIES
@@ -65,10 +69,10 @@ class IssPeopleCoordinator(DataUpdateCoordinator[dict]):
                         attempt + 1,
                         MAX_RETRIES,
                     )
-                    raise UpdateFailed("Invalid people-in-space payload")
-            except (OSError, TimeoutError) as err:
+                    _raise_invalid_payload()
+            except Exception as err:
                 _LOGGER.warning(
-                    "Network error fetching people data (attempt %d/%d): %s",
+                    "Error fetching people data (attempt %d/%d): %s",
                     attempt + 1,
                     MAX_RETRIES,
                     err,

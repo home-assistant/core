@@ -7,7 +7,6 @@ from homeassistant.components.iss.const import (
     CONF_POSITION_UPDATE_SECONDS,
     CONF_TLE_SOURCES,
     DEFAULT_PEOPLE_UPDATE_HOURS,
-    DEFAULT_PEOPLE_URL,
     DEFAULT_POSITION_UPDATE_SECONDS,
     DEFAULT_TLE_SOURCES,
     DOMAIN,
@@ -18,8 +17,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
-
-CONF_PEOPLE_URL = "people_url"
 
 
 async def test_create_entry(hass: HomeAssistant) -> None:
@@ -42,28 +39,6 @@ async def test_create_entry(hass: HomeAssistant) -> None:
         assert result.get("result").data == {}
 
 
-async def test_options_flow_invalid_url(hass: HomeAssistant) -> None:
-    """Test options flow with invalid URL."""
-    entry = MockConfigEntry(domain=DOMAIN, data={}, options={})
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    assert result["type"] is FlowResultType.FORM
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        {
-            CONF_PEOPLE_URL: "invalid-url",
-            CONF_PEOPLE_UPDATE_HOURS: DEFAULT_PEOPLE_UPDATE_HOURS,
-            CONF_POSITION_UPDATE_SECONDS: DEFAULT_POSITION_UPDATE_SECONDS,
-            CONF_SHOW_ON_MAP: False,
-        },
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {CONF_PEOPLE_URL: "invalid_url"}
-
-
 async def test_options_flow_tle_sources(hass: HomeAssistant) -> None:
     """Test options flow with TLE source configuration."""
     entry = MockConfigEntry(domain=DOMAIN, data={}, options={})
@@ -75,7 +50,6 @@ async def test_options_flow_tle_sources(hass: HomeAssistant) -> None:
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         {
-            CONF_PEOPLE_URL: DEFAULT_PEOPLE_URL,
             CONF_PEOPLE_UPDATE_HOURS: DEFAULT_PEOPLE_UPDATE_HOURS,
             CONF_POSITION_UPDATE_SECONDS: DEFAULT_POSITION_UPDATE_SECONDS,
             CONF_SHOW_ON_MAP: False,
@@ -128,7 +102,6 @@ async def test_options(hass: HomeAssistant) -> None:
         assert configured.get("type") is FlowResultType.CREATE_ENTRY
         expected_options = {
             CONF_SHOW_ON_MAP: True,
-            CONF_PEOPLE_URL: DEFAULT_PEOPLE_URL,
             CONF_PEOPLE_UPDATE_HOURS: DEFAULT_PEOPLE_UPDATE_HOURS,
             CONF_POSITION_UPDATE_SECONDS: DEFAULT_POSITION_UPDATE_SECONDS,
             CONF_TLE_SOURCES: DEFAULT_TLE_SOURCES,

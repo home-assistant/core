@@ -4,10 +4,6 @@ DOMAIN = "iss"
 
 DEFAULT_NAME = "ISS"
 
-# The URL used to determine who is currently in space, and by
-# extension how many people there are.
-DEFAULT_PEOPLE_URL = "http://api.open-notify.org/astros.json"
-
 # Update people data every X hours
 CONF_PEOPLE_UPDATE_HOURS = "people_update_hours"
 

@@ -97,6 +97,7 @@ class IssTleCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         _LOGGER.debug("Fetching fresh TLE data for ISS (NORAD ID %d)", ISS_NORAD_ID)
         _LOGGER.debug("TLE sources configured: %s", enabled_sources)
 
+        # Inner function to comply with TRY301 linting rule
         def _raise_no_tle_data() -> None:
             raise UpdateFailed(f"No TLE data found for ISS (NORAD ID {ISS_NORAD_ID})")
 

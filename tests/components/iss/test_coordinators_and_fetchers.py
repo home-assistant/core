@@ -49,13 +49,12 @@ class TestIssTleCoordinator:
         )
 
         # Mock satellitetle.fetch_latest_tles to return valid TLE data
-        mock_tle = MagicMock()
-        mock_tle.line1 = SAMPLE_TLE_LINE1
-        mock_tle.line2 = SAMPLE_TLE_LINE2
+        # The expected format is: {norad_id: (source, (name, line1, line2))}
+        mock_tle_data = ("test_source", ("ISS", SAMPLE_TLE_LINE1, SAMPLE_TLE_LINE2))
 
         with patch(
             "homeassistant.components.iss.coordinator.tle.fetch_latest_tles",
-            return_value={25544: mock_tle},
+            return_value={25544: mock_tle_data},
         ):
             result = await coordinator._async_update_data()
 
@@ -159,15 +158,14 @@ class TestIssTleCoordinator:
             update_interval=timedelta(hours=24),
         )
 
-        mock_tle = MagicMock()
-        mock_tle.line1 = SAMPLE_TLE_LINE1
-        mock_tle.line2 = SAMPLE_TLE_LINE2
+        # The expected format is: {norad_id: (source, (name, line1, line2))}
+        mock_tle_data = ("test_source", ("ISS", SAMPLE_TLE_LINE1, SAMPLE_TLE_LINE2))
 
         with (
             patch.object(coordinator._store, "async_load", return_value=None),
             patch(
                 "homeassistant.components.iss.coordinator.tle.fetch_latest_tles",
-                return_value={25544: mock_tle},
+                return_value={25544: mock_tle_data},
             ),
             patch.object(coordinator._store, "async_save") as mock_save,
         ):
@@ -379,7 +377,7 @@ class TestIssPeopleCoordinator:
             ),
             patch("asyncio.sleep") as mock_sleep,
             pytest.raises(
-                UpdateFailed, match="Failed to fetch people data after retries"
+                UpdateFailed, match="Error fetching people in space: Network error"
             ),
         ):
             await coordinator._async_update_data()
