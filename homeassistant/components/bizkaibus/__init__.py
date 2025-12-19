@@ -1,6 +1,6 @@
 """The Bizkaibus bus tracker component."""
 
-from bizkaibus.bizkaibus import BizkaibusData
+from bizkaibus.bizkaibusAPI import BizkaibusAPI, BizkaibusLanguages
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA
@@ -28,7 +28,7 @@ async def async_setup(hass: HomeAssistant, entry: BizkaibusConfigEntry) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: BizkaibusConfigEntry) -> bool:
     """Config entry example."""
 
-    my_api = BizkaibusData(entry.data[CONF_STOP_ID])
+    my_api = BizkaibusAPI(BizkaibusLanguages.ES, entry.data[CONF_STOP_ID])
     coordinator = BizkaibusUpdateCoordinator(hass, my_api, entry)
 
     await coordinator.async_config_entry_first_refresh()

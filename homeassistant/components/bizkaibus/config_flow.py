@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from bizkaibus.bizkaibus import BizkaibusData
+from bizkaibus.bizkaibusAPI import BizkaibusAPI, BizkaibusLanguages
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -30,10 +30,13 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the user step of the config flow."""
         if user_input:
-            api = BizkaibusData(user_input[CONF_STOP_ID])
+            api = BizkaibusAPI(BizkaibusLanguages.ES, user_input[CONF_STOP_ID])
 
             isOnline = await api.TestConnection()
             if isOnline:
+                bizkaibus_lines = await api.GetLinesOnStop()
+                lines = [line.id for line in bizkaibus_lines]
+
                 timetable = await api.GetTimetable()
 
                 if timetable is not None:
@@ -42,8 +45,7 @@ class BizkaibusConfigFlow(ConfigFlow, domain=DOMAIN):
                     title = f"{DOMAIN.capitalize()} {user_input[CONF_STOP_ID]}"
 
                 return self.async_create_entry(
-                    title=title,
-                    data=user_input,
+                    title=title, data=user_input, options={"lines": lines}
                 )
 
         return self.async_show_form(step_id="user", data_schema=USER_DATA_SCHEMA)

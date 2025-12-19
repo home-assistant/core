@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 
-from bizkaibus.bizkaibus import BizkaibusArrivalTime, BizkaibusData
+from bizkaibus.bizkaibusAPI import BizkaibusAPI, BizkaibusArrivalTime
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -35,7 +35,7 @@ class BizkaibusUpdateCoordinator(DataUpdateCoordinator[list[ArrivalData]]):
     def __init__(
         self,
         hass: HomeAssistant,
-        api: BizkaibusData,
+        api: BizkaibusAPI,
         config_entry: BizkaibusConfigEntry,
     ) -> None:
         """Initialize the data service."""
@@ -71,11 +71,11 @@ class BizkaibusUpdateCoordinator(DataUpdateCoordinator[list[ArrivalData]]):
 
         arrivals = []
         for arrival in timetable.arrivals.values():
-            nearest_arrival = self.__arrival_time(arrival.closestArrival)
+            nearest_arrival = self.__arrival_time(arrival.nearestArrival)
             nearest_arrival = (
                 nearest_arrival if nearest_arrival is not None else dt_util.utcnow()
             )
-            next_arrival = self.__arrival_time(arrival.farestArrival)
+            next_arrival = self.__arrival_time(arrival.nextArrival)
 
             arrivalData = ArrivalData(
                 nearest_arrival=nearest_arrival,
