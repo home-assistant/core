@@ -4,6 +4,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/rotarex",
   "codeowners": ["@Rotarex"],
-  "requirements": ["rotarex-api"],
+  "requirements": ["rotarex-api==0.1.0"],
   "iot_class": "cloud_polling"
 }
