@@ -55,7 +55,7 @@ class HypontechDataCoordinator(DataUpdateCoordinator[HypontechSensorData]):
 
     async def _async_update_data(self) -> HypontechSensorData:
         try:
-            data = self.api.get_overview()
+            data = await self.api.get_overview()
         except Exception:  # noqa: BLE001
             raise UpdateFailed(
                 translation_domain=DOMAIN, translation_key="update_error"

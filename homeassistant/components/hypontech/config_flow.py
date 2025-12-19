@@ -8,11 +8,12 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import DOMAIN
 from .hyponcloud import HyponCloud
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,9 +31,10 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    hypon = HyponCloud(data[CONF_USERNAME], data[CONF_PASSWORD])
+    session = async_get_clientsession(hass)
+    hypon = HyponCloud(data[CONF_USERNAME], data[CONF_PASSWORD], session)
     try:
-        if not hypon.connect():
+        if not await hypon.connect():
             raise CannotConnect
     except ConfigEntryAuthFailed:
         raise InvalidAuth from None
@@ -64,9 +66,6 @@ class HypontechConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=info["title"],
                     data=user_input,
-                    options={
-                        CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
-                    },
                 )
 
         return self.async_show_form(

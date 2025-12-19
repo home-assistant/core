@@ -1,10 +1,11 @@
 """Hypon Cloud API integration."""
 
+import asyncio
 from dataclasses import dataclass
 import logging
-from time import sleep, time
+from time import time
 
-import requests
+import aiohttp
 
 from homeassistant.exceptions import ConfigEntryAuthFailed
 
@@ -105,83 +106,101 @@ class PlantData:
 class HyponCloud:
     """HyponCloud class."""
 
-    def __init__(self, username: str, password: str) -> None:
+    def __init__(
+        self, username: str, password: str, session: aiohttp.ClientSession
+    ) -> None:
         """Initialize the HyponCloud class.
 
         Args:
             username: The username for Hypon Cloud.
             password: The password for Hypon Cloud.
+            session: The aiohttp client session.
         """
         self.base_url = "https://api.hypon.cloud/v2"
         self.token_validity = 3600
-        self.timeout = 10
+        self.timeout = aiohttp.ClientTimeout(total=10)
 
+        self._session = session
         self.__username = username
         self.__password = password
         self.__token = ""
         self.__token_expires_at = 0
 
-    def connect(self) -> bool:
+    async def connect(self) -> bool:
         """Connect to Hypon Cloud and retrieve token."""
 
         if self.__token and self.__token_expires_at > time():
             return True
 
-        url = self.base_url + "/login"
+        url = f"{self.base_url}/login"
         data = {"username": self.__username, "password": self.__password}
-        response = requests.post(url, json=data, timeout=self.timeout)
-        if response.status_code != 200:
-            # Temporary error, it could be the requests are being sent too fast from the same IP address.
-            return False
+
         try:
-            self.__token = response.json()["data"]["token"]
-            self.__token_expires_at = int(time()) + self.token_validity
+            async with self._session.post(
+                url, json=data, timeout=self.timeout
+            ) as response:
+                if response.status != 200:
+                    # Temporary error, it could be the requests are being sent too fast from the same IP address.
+                    return False
+
+                result = await response.json()
+                self.__token = result["data"]["token"]
+                self.__token_expires_at = int(time()) + self.token_validity
+                return True
         except Exception as e:
             _LOGGER.error("Error connecting: %s", e)
             raise ConfigEntryAuthFailed("Can not log into Hypon Cloud.") from e
-        return True
 
-    def get_overview(self, retries: int = 3) -> OverviewData:
+    async def get_overview(self, retries: int = 3) -> OverviewData:
         """Get plant overview."""
 
-        if not self.connect():
+        if not await self.connect():
             return OverviewData()
 
-        url = self.base_url + "/plant/overview"
-        headers = {"authorization": "Bearer " + self.__token}
-        response = requests.get(url, headers=headers, timeout=self.timeout)
-        if response.status_code != 200:
-            # Temporary error, it could be the requests are being sent too fast from the same IP address.
-            if retries > 0:
-                sleep(10)
-                return self.get_overview(retries - 1)
-            raise ConfigEntryAuthFailed("Can not get plant overview.")
+        url = f"{self.base_url}/plant/overview"
+        headers = {"authorization": f"Bearer {self.__token}"}
+
         try:
-            data = response.json()["data"]
+            async with self._session.get(
+                url, headers=headers, timeout=self.timeout
+            ) as response:
+                if response.status != 200:
+                    # Temporary error, it could be the requests are being sent too fast from the same IP address.
+                    if retries > 0:
+                        await asyncio.sleep(10)
+                        return await self.get_overview(retries - 1)
+                    raise ConfigEntryAuthFailed("Can not get plant overview.")
+
+                result = await response.json()
+                data = result["data"]
+                return OverviewData(**data)
         except KeyError as e:
-            _LOGGER.error("Error getting plant list: %s", e)
+            _LOGGER.error("Error getting plant overview: %s", e)
             # Unknown error. Try again.
             if retries > 0:
-                return self.get_overview(retries - 1)
-        return OverviewData(**data)
+                return await self.get_overview(retries - 1)
+            return OverviewData()
 
-    def get_list(self, retries: int = 3) -> list[dict]:
+    async def get_list(self, retries: int = 3) -> list[dict]:
         """Get plant list."""
-        url = self.base_url + "/plant/list2?page=1&page_size=10&refresh=true"
-        headers = {"authorization": "Bearer " + self.__token}
-        response = requests.get(url, headers=headers, timeout=self.timeout)
-        if response.status_code != 200:
-            # Temporary error, it could be the requests are being sent too fast from the same IP address.
-            if retries > 0:
-                sleep(10)
-                return self.get_list(retries - 1)
-            raise ConfigEntryAuthFailed("Can not get plant list.")
+        url = f"{self.base_url}/plant/list2?page=1&page_size=10&refresh=true"
+        headers = {"authorization": f"Bearer {self.__token}"}
+
         try:
-            data = response.json()["data"]
+            async with self._session.get(
+                url, headers=headers, timeout=self.timeout
+            ) as response:
+                if response.status != 200:
+                    # Temporary error, it could be the requests are being sent too fast from the same IP address.
+                    if retries > 0:
+                        await asyncio.sleep(10)
+                        return await self.get_list(retries - 1)
+
+                result = await response.json()
+                return result["data"]
         except Exception as e:
             _LOGGER.error("Error getting plant list: %s", e)
             # Unknown error. Try again.
             if retries > 0:
-                return self.get_list(retries - 1)
-            raise
-        return data
+                return await self.get_list(retries - 1)
+            raise ConfigEntryAuthFailed("Can not get plant list.") from e
