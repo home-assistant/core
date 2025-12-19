@@ -412,5 +412,4 @@ def test_gen_strings_schema(
     # Validate the sample strings - should not raise
     validated = schema(SAMPLE_STRINGS)
 
-    # Use snapshot to verify the schema accepts the expected structure
     assert validated == snapshot
