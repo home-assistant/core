@@ -1,4 +1,71 @@
 # serializer version: 1
+# name: test_choose_selector_serialize
+  dict({
+    'selector': dict({
+      'choose': dict({
+        'choices': dict({
+          'entity_choice': dict({
+            'selector': dict({
+              'entity': dict({
+                'domain': list([
+                  'light',
+                ]),
+                'multiple': False,
+                'reorder': False,
+              }),
+            }),
+          }),
+          'number_choice': dict({
+            'selector': dict({
+              'number': dict({
+                'max': 100.0,
+                'min': 0.0,
+                'mode': 'slider',
+                'step': 1.0,
+              }),
+            }),
+          }),
+          'text_choice': dict({
+            'selector': dict({
+              'text': dict({
+                'multiline': True,
+                'multiple': False,
+              }),
+            }),
+          }),
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_choose_selector_serialize.1
+  dict({
+    'selector': dict({
+      'choose': dict({
+        'choices': dict({
+          'number_choice': dict({
+            'selector': dict({
+              'number': dict({
+                'max': 100.0,
+                'min': 0.0,
+                'mode': 'slider',
+                'step': 1.0,
+              }),
+            }),
+          }),
+          'text_choice': dict({
+            'selector': dict({
+              'text': dict({
+                'multiline': True,
+                'multiple': False,
+              }),
+            }),
+          }),
+        }),
+      }),
+    }),
+  })
+# ---
 # name: test_nested_object_selectors
   dict({
     'selector': dict({
