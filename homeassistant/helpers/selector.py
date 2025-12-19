@@ -1305,9 +1305,7 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
         _config = deepcopy(self.config)
         if "fields" in _config:
             for field_items in _config["fields"].values():
-                if isinstance(field_items["selector"], ObjectSelector):
-                    field_items["selector"] = field_items["selector"].serialize()
-                elif isinstance(field_items["selector"], Selector):
+                if isinstance(field_items["selector"], Selector):
                     field_items["selector"] = field_items["selector"].serialize()[
                         "selector"
                     ]
