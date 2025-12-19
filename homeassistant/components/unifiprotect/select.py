@@ -41,7 +41,7 @@ from .entity import (
     T,
     async_all_device_entities,
 )
-from .utils import async_get_light_motion_current
+from .utils import async_get_light_motion_current, async_ufp_instance_command
 
 _LOGGER = logging.getLogger(__name__)
 _KEY_LIGHT_MOTION = "light_motion"
@@ -397,6 +397,7 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
         self._hass_to_unifi_options = {item["name"]: item["id"] for item in options}
         self._unifi_to_hass_options = {item["id"]: item["name"] for item in options}
 
+    @async_ufp_instance_command
     async def async_select_option(self, option: str) -> None:
         """Change the Select Entity Option."""
 
