@@ -141,7 +141,7 @@ class TuyaHumidifierEntity(TuyaEntity, HumidifierEntity):
         device_manager: Manager,
         description: TuyaHumidifierEntityDescription,
         *,
-        current_humidity_wrapper: _RoundedIntegerWrapper | None = None,
+        current_humidity_wrapper: DeviceWrapper[int] | None = None,
         mode_wrapper: DPCodeEnumWrapper | None = None,
         switch_wrapper: DeviceWrapper[bool] | None = None,
         target_humidity_wrapper: _RoundedIntegerWrapper | None = None,
