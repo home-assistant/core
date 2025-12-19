@@ -98,6 +98,9 @@
     }
   },
   "triggers": {
+    "hvac_mode_changed": {
+      "trigger": "mdi:thermostat"
+    },
     "started_cooling": {
       "trigger": "mdi:snowflake"
     },
