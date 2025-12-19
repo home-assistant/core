@@ -467,7 +467,7 @@ class ChooseSelector(Selector[ChooseSelectorConfig]):
             for choice in self.config["choices"].values():
                 try:
                     validated = selector(choice["selector"])(data)  # type: ignore[operator]
-                except:  # noqa: E722
+                except (vol.Invalid, vol.MultipleInvalid):
                     continue
                 else:
                     return validated
@@ -479,11 +479,12 @@ class ChooseSelector(Selector[ChooseSelectorConfig]):
         if data["active_choice"] not in data:
             raise vol.Invalid("Missing value for active choice")
 
-        selector(self.config["choices"][data["active_choice"]]["selector"])(  # type: ignore[operator]
+        choices = self.config.get("choices", {})
+        if data["active_choice"] not in choices:
+            raise vol.Invalid("Invalid active_choice key")
+        return selector(choices[data["active_choice"]]["selector"])(  # type: ignore[operator]
             data[data["active_choice"]]
         )
-
-        return data[data["active_choice"]]
 
 
 class ColorRGBSelectorConfig(BaseSelectorConfig):
