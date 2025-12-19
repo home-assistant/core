@@ -6,7 +6,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import datetime
 import logging
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import voluptuous as vol
 
@@ -285,7 +285,10 @@ class EventTrigger(Trigger):
     def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
         """Initialize trigger."""
         super().__init__(hass, config)
-        self._options = config.options or {}
+
+        if TYPE_CHECKING:
+            assert config.options is not None
+        self._options = config.options
 
     async def async_attach_runner(
         self, run_action: TriggerActionRunner
