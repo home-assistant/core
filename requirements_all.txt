@@ -2117,6 +2117,9 @@ pyirishrail==0.0.2
 # homeassistant.components.iskra
 pyiskra==0.1.27
 
+# homeassistant.components.iss
+pyiss==1.0.1
+
 # homeassistant.components.isy994
 pyisy==3.4.1
 

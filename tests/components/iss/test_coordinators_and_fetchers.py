@@ -1,9 +1,8 @@
 """Test ISS coordinators."""
 
 from datetime import datetime, timedelta
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
-from aiohttp import ClientError
 import pytest
 
 from homeassistant.components.iss.const import DEFAULT_TLE_SOURCES, DOMAIN, TLE_SOURCES
@@ -227,16 +226,10 @@ class TestIssPeopleCoordinator:
             update_interval=timedelta(hours=24),
         )
 
-        # Mock successful response
-        mock_response = AsyncMock()
-        mock_response.status = 200
-        mock_response.json = AsyncMock(
-            return_value={"number": 7, "people": [{"name": "Alice", "craft": "ISS"}]}
-        )
+        # Mock successful pyiss response
+        mock_data = {"number": 7, "people": [{"name": "Alice", "craft": "ISS"}]}
 
-        with patch.object(
-            coordinator._session, "get", new=AsyncMock(return_value=mock_response)
-        ):
+        with patch.object(coordinator._iss, "people_in_space", return_value=mock_data):
             result = await coordinator._async_update_data()
 
         assert result["number"] == 7
@@ -255,21 +248,19 @@ class TestIssPeopleCoordinator:
             update_interval=timedelta(hours=24),
         )
 
-        # First two attempts timeout, third succeeds
-        mock_response_success = AsyncMock()
-        mock_response_success.status = 200
-        mock_response_success.json = AsyncMock(return_value={"number": 7, "people": []})
-
-        mock_get = AsyncMock(
-            side_effect=[
-                TimeoutError(),
-                TimeoutError(),
-                mock_response_success,
-            ]
-        )
+        # First two attempts fail, third succeeds
+        mock_data = {"number": 7, "people": []}
 
         with (
-            patch.object(coordinator._session, "get", new=mock_get),
+            patch.object(
+                coordinator._iss,
+                "people_in_space",
+                side_effect=[
+                    Exception("Network error"),
+                    Exception("Network error"),
+                    mock_data,
+                ],
+            ),
             patch("asyncio.sleep") as mock_sleep,
         ):
             result = await coordinator._async_update_data()
@@ -294,14 +285,14 @@ class TestIssPeopleCoordinator:
         )
 
         # First attempt fails, second succeeds
-        mock_response_success = AsyncMock()
-        mock_response_success.status = 200
-        mock_response_success.json = AsyncMock(return_value={"number": 7, "people": []})
-
-        mock_get = AsyncMock(side_effect=[ClientError(), mock_response_success])
+        mock_data = {"number": 7, "people": []}
 
         with (
-            patch.object(coordinator._session, "get", new=mock_get),
+            patch.object(
+                coordinator._iss,
+                "people_in_space",
+                side_effect=[Exception("Connection error"), mock_data],
+            ),
             patch("asyncio.sleep") as mock_sleep,
         ):
             result = await coordinator._async_update_data()
@@ -323,18 +314,15 @@ class TestIssPeopleCoordinator:
             update_interval=timedelta(hours=24),
         )
 
-        # First attempt returns 500, second succeeds
-        mock_response_error = AsyncMock()
-        mock_response_error.status = 500
-
-        mock_response_success = AsyncMock()
-        mock_response_success.status = 200
-        mock_response_success.json = AsyncMock(return_value={"number": 7, "people": []})
-
-        mock_get = AsyncMock(side_effect=[mock_response_error, mock_response_success])
+        # First attempt fails with HTTP error, second succeeds
+        mock_data = {"number": 7, "people": []}
 
         with (
-            patch.object(coordinator._session, "get", new=mock_get),
+            patch.object(
+                coordinator._iss,
+                "people_in_space",
+                side_effect=[Exception("Error server n 500"), mock_data],
+            ),
             patch("asyncio.sleep") as mock_sleep,
         ):
             result = await coordinator._async_update_data()
@@ -355,18 +343,14 @@ class TestIssPeopleCoordinator:
         )
 
         # First attempt returns invalid data, second succeeds
-        mock_response_invalid = AsyncMock()
-        mock_response_invalid.status = 200
-        mock_response_invalid.json = AsyncMock(return_value={"invalid": "data"})
-
-        mock_response_success = AsyncMock()
-        mock_response_success.status = 200
-        mock_response_success.json = AsyncMock(return_value={"number": 7, "people": []})
-
-        mock_get = AsyncMock(side_effect=[mock_response_invalid, mock_response_success])
+        mock_data_success = {"number": 7, "people": []}
 
         with (
-            patch.object(coordinator._session, "get", new=mock_get),
+            patch.object(
+                coordinator._iss,
+                "people_in_space",
+                side_effect=[{"invalid": "data"}, mock_data_success],
+            ),
             patch("asyncio.sleep") as mock_sleep,
         ):
             result = await coordinator._async_update_data()
@@ -386,13 +370,17 @@ class TestIssPeopleCoordinator:
             update_interval=timedelta(hours=24),
         )
 
-        # All attempts timeout
-        mock_get = AsyncMock(side_effect=TimeoutError())
-
+        # All attempts fail
         with (
-            patch.object(coordinator._session, "get", new=mock_get),
+            patch.object(
+                coordinator._iss,
+                "people_in_space",
+                side_effect=Exception("Network error"),
+            ),
             patch("asyncio.sleep") as mock_sleep,
-            pytest.raises(UpdateFailed, match="Timeout fetching people in space"),
+            pytest.raises(
+                UpdateFailed, match="Failed to fetch people data after retries"
+            ),
         ):
             await coordinator._async_update_data()
 
@@ -416,11 +404,13 @@ class TestIssPeopleCoordinator:
                 update_interval=timedelta(hours=24),
             )
 
-            # All attempts timeout
-            mock_get = AsyncMock(side_effect=TimeoutError())
-
+            # All attempts fail
             with (
-                patch.object(coordinator._session, "get", new=mock_get),
+                patch.object(
+                    coordinator._iss,
+                    "people_in_space",
+                    side_effect=Exception("Network error"),
+                ),
                 patch("asyncio.sleep") as mock_sleep,
                 pytest.raises(UpdateFailed),
             ):

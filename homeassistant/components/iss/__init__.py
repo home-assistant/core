@@ -12,7 +12,6 @@ from .const import (
     CONF_PEOPLE_UPDATE_HOURS,
     CONF_POSITION_UPDATE_SECONDS,
     DEFAULT_PEOPLE_UPDATE_HOURS,
-    DEFAULT_PEOPLE_URL,
     DEFAULT_POSITION_UPDATE_SECONDS,
     DOMAIN,
 )
@@ -64,7 +63,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     people_coordinator = IssPeopleCoordinator(
         hass,
         config_entry=entry,
-        url=entry.options.get("people_url", DEFAULT_PEOPLE_URL),
         update_interval=timedelta(
             hours=entry.options.get(
                 CONF_PEOPLE_UPDATE_HOURS, DEFAULT_PEOPLE_UPDATE_HOURS
