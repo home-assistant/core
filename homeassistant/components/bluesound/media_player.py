@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from asyncio import Task
-from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING, Any
@@ -97,14 +96,6 @@ async def async_setup_entry(
     )
 
     async_add_entities([bluesound_player], update_before_add=True)
-
-
-@dataclass
-class EnityIdWithSyncStatus:
-    """For grouping feature."""
-
-    entity_id: str
-    sync_status: SyncStatus
 
 
 class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity):
@@ -456,11 +447,12 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
 
         paired_players = []
         for group_member in group_members:
-            for entity_id, sync_status in entity_ids_with_sync_status:
-                if group_member == entity_id:
-                    paired_player = id_to_paired_player(sync_status.id)
-                    if paired_player:
-                        paired_players.append(paired_player)
+            sync_status = entity_ids_with_sync_status.get(group_member)
+            if sync_status is None:
+                continue
+            paired_player = id_to_paired_player(sync_status.id)
+            if paired_player:
+                paired_players.append(paired_player)
 
         if paired_players:
             await self._player.add_followers(paired_players)
@@ -577,7 +569,7 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
             followers = self.sync_status.followers
         elif self.sync_status.leader is not None:
             leader_id = f"{self.sync_status.leader.ip}:{self.sync_status.leader.port}"
-            for entity_id, sync_status in entity_ids_with_sync_status:
+            for entity_id, sync_status in entity_ids_with_sync_status.items():
                 if sync_status.id == leader_id:
                     leader_entity_id = entity_id
                     followers = sync_status.followers
@@ -591,7 +583,7 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
             follower_id = f"{follower.ip}:{follower.port}"
             entity_ids = [
                 entity_id
-                for entity_id, sync_status in entity_ids_with_sync_status
+                for entity_id, sync_status in entity_ids_with_sync_status.items()
                 if sync_status.id == follower_id
             ]
             match entity_ids:
@@ -602,8 +594,8 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
 
         return grouped_entity_ids
 
-    def _entity_ids_with_sync_status(self) -> list[tuple[str, SyncStatus]]:
-        result = []
+    def _entity_ids_with_sync_status(self) -> dict[str, SyncStatus]:
+        result = {}
 
         entity_registry = er.async_get(self.hass)
 
@@ -616,13 +608,8 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
             )
             for entity_entry in entity_entries:
                 if entity_entry.domain == "media_player":
-                    result.extend(
-                        [
-                            (
-                                entity_entry.entity_id,
-                                config_entry.runtime_data.coordinator.data.sync_status,
-                            )
-                        ]
+                    result[entity_entry.entity_id] = (
+                        config_entry.runtime_data.coordinator.data.sync_status
                     )
 
         return result

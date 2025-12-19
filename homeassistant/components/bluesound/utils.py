@@ -24,7 +24,7 @@ def dispatcher_unjoin_signal(leader_id: str) -> str:
 
 
 def id_to_paired_player(id: str) -> PairedPlayer | None:
-    """Try to convert id in format 'ip:port' to PariedPlayer. Returns None if unable to do so."""
+    """Try to convert id in format 'ip:port' to PairedPlayer. Returns None if unable to do so."""
     match id.rsplit(":", 1):
         case [str() as ip, str() as port] if port.isdigit():
             return PairedPlayer(ip, int(port))
