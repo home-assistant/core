@@ -674,10 +674,10 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         device_manager: Manager,
         description: TuyaLightEntityDescription,
         *,
-        brightness_wrapper: _BrightnessWrapper | None,
-        color_data_wrapper: _ColorDataWrapper | None,
+        brightness_wrapper: DeviceWrapper[int] | None,
+        color_data_wrapper: DeviceWrapper[tuple[float, float, float]] | None,
         color_mode_wrapper: DPCodeEnumWrapper | None,
-        color_temp_wrapper: _ColorTempWrapper | None,
+        color_temp_wrapper: DeviceWrapper[int] | None,
         switch_wrapper: DeviceWrapper[bool],
     ) -> None:
         """Init TuyaHaLight."""
