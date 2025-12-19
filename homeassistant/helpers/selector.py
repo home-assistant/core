@@ -456,9 +456,7 @@ class ChooseSelector(Selector[ChooseSelectorConfig]):
         if "choices" in _config:
             for choice in _config["choices"].values():
                 if isinstance(choice["selector"], Selector):
-                    choice["selector"] = {
-                        choice["selector"].selector_type: choice["selector"].config
-                    }
+                    choice["selector"] = choice["selector"].serialize()
         return {"selector": {self.selector_type: _config}}
 
     def __call__(self, data: Any) -> Any:
@@ -1292,14 +1290,8 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
         _config = deepcopy(self.config)
         if "fields" in _config:
             for field_items in _config["fields"].values():
-                if isinstance(field_items["selector"], ObjectSelector):
+                if isinstance(field_items["selector"], Selector):
                     field_items["selector"] = field_items["selector"].serialize()
-                elif isinstance(field_items["selector"], Selector):
-                    field_items["selector"] = {
-                        field_items["selector"].selector_type: field_items[
-                            "selector"
-                        ].config
-                    }
         return {"selector": {self.selector_type: _config}}
 
     def __call__(self, data: Any) -> Any:
