@@ -180,7 +180,7 @@ _GET_UNIT_RATIO: dict[type[BaseUnitConverter], tuple[str | None, str | None, flo
     SulphurDioxideConcentrationConverter: (
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         CONCENTRATION_PARTS_PER_BILLION,
-        1.915019,
+        2.6633,
     ),
     TemperatureConverter: (
         UnitOfTemperature.CELSIUS,
@@ -857,13 +857,13 @@ _CONVERTED_VALUE: dict[
         (
             1,
             CONCENTRATION_PARTS_PER_BILLION,
-            1.915019,
+            2.6633,
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         ),
         (
             120,
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-            62.6625,
+            45.056879,
             CONCENTRATION_PARTS_PER_BILLION,
         ),
     ],
