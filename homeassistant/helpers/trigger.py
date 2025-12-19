@@ -337,18 +337,21 @@ class EntityTriggerBase(Trigger):
         self._options = config.options or {}
         self._target = config.target
 
-    def is_from_state(self, from_state: State, to_state: State) -> bool:
-        """Check if the state matches the origin state."""
-        return not self.is_to_state(from_state)
+    def is_valid_transition(self, from_state: State, to_state: State) -> bool:
+        """Check if the origin state is valid and the state has changed."""
+        if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            return False
+
+        return from_state.state != to_state.state
 
     @abc.abstractmethod
-    def is_to_state(self, state: State) -> bool:
-        """Check if the state matches the target state."""
+    def is_valid_state(self, state: State) -> bool:
+        """Check if the new state matches the expected state(s)."""
 
     def check_all_match(self, entity_ids: set[str]) -> bool:
         """Check if all entity states match."""
         return all(
-            self.is_to_state(state)
+            self.is_valid_state(state)
             for entity_id in entity_ids
             if (state := self._hass.states.get(entity_id)) is not None
         )
@@ -357,7 +360,7 @@ class EntityTriggerBase(Trigger):
         """Check that only one entity state matches."""
         return (
             sum(
-                self.is_to_state(state)
+                self.is_valid_state(state)
                 for entity_id in entity_ids
                 if (state := self._hass.states.get(entity_id)) is not None
             )
@@ -390,16 +393,15 @@ class EntityTriggerBase(Trigger):
             from_state = event.data["old_state"]
             to_state = event.data["new_state"]
 
-            # The trigger should never fire if the previous state was not a valid state
-            if not from_state or from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            if not from_state or not to_state:
                 return
 
-            # The trigger should never fire if the previous state was not the from state
-            if not to_state or not self.is_from_state(from_state, to_state):
+            # The trigger should never fire if the new state is not valid
+            if not self.is_valid_state(to_state):
                 return
 
-            # The trigger should never fire if the new state is not the to state
-            if not self.is_to_state(to_state):
+            # The trigger should never fire if the transition is not valid
+            if not self.is_valid_transition(from_state, to_state):
                 return
 
             if behavior == BEHAVIOR_LAST:
@@ -428,62 +430,105 @@ class EntityTriggerBase(Trigger):
         )
 
 
-class EntityStateTriggerBase(EntityTriggerBase):
-    """Trigger for entity state changes."""
+class EntityTargetStateTriggerBase(EntityTriggerBase):
+    """Trigger for entity state changes to a specific state."""
 
-    _to_state: str
+    _to_states: set[str]
 
-    def is_to_state(self, state: State) -> bool:
-        """Check if the state matches the target state."""
-        return state.state == self._to_state
+    def is_valid_transition(self, from_state: State, to_state: State) -> bool:
+        """Check if the origin state is valid and the state has changed."""
+        if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            return False
+
+        return (
+            from_state.state != to_state.state
+            and from_state.state not in self._to_states
+        )
+
+    def is_valid_state(self, state: State) -> bool:
+        """Check if the new state matches the expected state."""
+        return state.state in self._to_states
 
 
-class ConditionalEntityStateTriggerBase(EntityTriggerBase):
-    """Class for entity state changes where the from state is restricted."""
+class EntityTransitionTriggerBase(EntityTriggerBase):
+    """Trigger for entity state changes between specific states."""
 
     _from_states: set[str]
     _to_states: set[str]
 
-    def is_from_state(self, from_state: State, to_state: State) -> bool:
-        """Check if the state matches the origin state."""
+    def is_valid_transition(self, from_state: State, to_state: State) -> bool:
+        """Check if the origin state matches the expected ones."""
+        if not super().is_valid_transition(from_state, to_state):
+            return False
+
         return from_state.state in self._from_states
 
-    def is_to_state(self, state: State) -> bool:
-        """Check if the state matches the target state."""
+    def is_valid_state(self, state: State) -> bool:
+        """Check if the new state matches the expected states."""
         return state.state in self._to_states
 
 
-class EntityStateAttributeTriggerBase(EntityTriggerBase):
-    """Trigger for entity state attribute changes."""
+class EntityOriginStateTriggerBase(EntityTriggerBase):
+    """Trigger for entity state changes from a specific state."""
+
+    _from_state: str
+
+    def is_valid_transition(self, from_state: State, to_state: State) -> bool:
+        """Check if the origin state matches the expected one and that the state changed."""
+        return (
+            from_state.state == self._from_state and to_state.state != self._from_state
+        )
+
+    def is_valid_state(self, state: State) -> bool:
+        """Check if the new state is not the same as the expected origin state."""
+        return state.state != self._from_state
+
+
+class EntityTargetStateAttributeTriggerBase(EntityTriggerBase):
+    """Trigger for entity state attribute changes to a specific state."""
 
     _attribute: str
     _attribute_to_state: str
 
-    def is_to_state(self, state: State) -> bool:
-        """Check if the state matches the target state."""
+    def is_valid_transition(self, from_state: State, to_state: State) -> bool:
+        """Check if the origin state is valid and the state has changed."""
+        if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            return False
+
+        return from_state.attributes.get(self._attribute) != to_state.attributes.get(
+            self._attribute
+        )
+
+    def is_valid_state(self, state: State) -> bool:
+        """Check if the new state attribute matches the expected one."""
         return state.attributes.get(self._attribute) == self._attribute_to_state
 
 
-def make_entity_state_trigger(
-    domain: str, to_state: str
-) -> type[EntityStateTriggerBase]:
-    """Create an entity state trigger class."""
+def make_entity_target_state_trigger(
+    domain: str, to_states: str | set[str]
+) -> type[EntityTargetStateTriggerBase]:
+    """Create a trigger for entity state changes to specific state(s)."""
 
-    class CustomTrigger(EntityStateTriggerBase):
+    if isinstance(to_states, str):
+        to_states_set = {to_states}
+    else:
+        to_states_set = to_states
+
+    class CustomTrigger(EntityTargetStateTriggerBase):
         """Trigger for entity state changes."""
 
         _domain = domain
-        _to_state = to_state
+        _to_states = to_states_set
 
     return CustomTrigger
 
 
-def make_conditional_entity_state_trigger(
+def make_entity_transition_trigger(
     domain: str, *, from_states: set[str], to_states: set[str]
-) -> type[ConditionalEntityStateTriggerBase]:
-    """Create a conditional entity state trigger class."""
+) -> type[EntityTransitionTriggerBase]:
+    """Create a trigger for entity state changes between specific states."""
 
-    class CustomTrigger(ConditionalEntityStateTriggerBase):
+    class CustomTrigger(EntityTransitionTriggerBase):
         """Trigger for conditional entity state changes."""
 
         _domain = domain
@@ -493,12 +538,26 @@ def make_conditional_entity_state_trigger(
     return CustomTrigger
 
 
-def make_entity_state_attribute_trigger(
-    domain: str, attribute: str, to_state: str
-) -> type[EntityStateAttributeTriggerBase]:
-    """Create an entity state attribute trigger class."""
+def make_entity_origin_state_trigger(
+    domain: str, *, from_state: str
+) -> type[EntityOriginStateTriggerBase]:
+    """Create a trigger for entity state changes from a specific state."""
 
-    class CustomTrigger(EntityStateAttributeTriggerBase):
+    class CustomTrigger(EntityOriginStateTriggerBase):
+        """Trigger for entity "from state" changes."""
+
+        _domain = domain
+        _from_state = from_state
+
+    return CustomTrigger
+
+
+def make_entity_target_state_attribute_trigger(
+    domain: str, attribute: str, to_state: str
+) -> type[EntityTargetStateAttributeTriggerBase]:
+    """Create a trigger for entity state attribute changes to a specific state."""
+
+    class CustomTrigger(EntityTargetStateAttributeTriggerBase):
         """Trigger for entity state changes."""
 
         _domain = domain
@@ -1091,6 +1150,5 @@ async def async_get_all_descriptions(
             description["target"] = target
 
         new_descriptions_cache[missing_trigger] = description
-
     hass.data[TRIGGER_DESCRIPTION_CACHE] = new_descriptions_cache
     return new_descriptions_cache

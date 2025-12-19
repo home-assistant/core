@@ -298,6 +298,20 @@
   },
   "title": "Climate",
   "triggers": {
+    "hvac_mode_changed": {
+      "description": "Triggers after the mode of one or more climate-control devices changes.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::climate::common::trigger_behavior_description%]",
+          "name": "[%key:component::climate::common::trigger_behavior_name%]"
+        },
+        "hvac_mode": {
+          "description": "The HVAC modes to trigger on.",
+          "name": "Modes"
+        }
+      },
+      "name": "Climate-control device mode changed"
+    },
     "started_cooling": {
       "description": "Triggers after one or more climate-control devices start cooling.",
       "fields": {

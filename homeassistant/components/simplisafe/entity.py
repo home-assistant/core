@@ -13,6 +13,7 @@ from simplipy.websocket import (
     EVENT_LOCK_UNLOCKED,
     EVENT_POWER_OUTAGE,
     EVENT_POWER_RESTORED,
+    EVENT_SECRET_ALERT_TRIGGERED,
     WebsocketEvent,
 )
 
@@ -41,7 +42,11 @@ DEFAULT_CONFIG_URL = "https://webapp.simplisafe.com/new/#/dashboard"
 DEFAULT_ENTITY_MODEL = "Alarm control panel"
 DEFAULT_ERROR_THRESHOLD = 2
 
-WEBSOCKET_EVENTS_REQUIRING_SERIAL = [EVENT_LOCK_LOCKED, EVENT_LOCK_UNLOCKED]
+WEBSOCKET_EVENTS_REQUIRING_SERIAL = [
+    EVENT_LOCK_LOCKED,
+    EVENT_LOCK_UNLOCKED,
+    EVENT_SECRET_ALERT_TRIGGERED,
+]
 
 
 class SimpliSafeEntity(CoordinatorEntity[DataUpdateCoordinator[None]]):
