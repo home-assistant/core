@@ -1,0 +1,26 @@
+# Describes the services for the Kaleidescape integration
+
+volume_set:
+  target:
+    entity:
+      domain: media_player
+  fields:
+    volume_level:
+      required: true
+      example: 0.5
+      selector:
+        number:
+          min: 0
+          max: 1
+          step: 0.001
+
+volume_mute:
+  target:
+    entity:
+      domain: media_player
+  fields:
+    is_volume_muted:
+      required: true
+      example: true
+      selector:
+        boolean:

@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
@@ -45,27 +44,12 @@ class KaleidescapeEntity(Entity):
         """Register update listener."""
 
         @callback
-        def _update(event: str, params: list[str] | None = None) -> None:
+        def _update(event: str, *args: Any) -> None:
             """Handle device state changes."""
             self.async_write_ha_state()
-
-            self.hass.async_create_task(self._async_handle_device_event(event, params))
+            self.hass.async_create_task(self._async_handle_event(event, *args))
 
         self.async_on_remove(self._device.dispatcher.connect(_update).disconnect)
 
-    async def _async_handle_device_event(
-        self, event: str, params: list[str] | None = None
-    ) -> None:
+    async def _async_handle_event(self, event: str, *args: Any) -> None:
         """Abstract method to handle device events."""
-
-    @callback
-    def _fire_hass_bus_event(self, event_type: str, event_data: dict[str, Any]) -> None:
-        """Fire a bus event for this entity."""
-        _LOGGER.debug("Firing bus event %s %s", event_type, event_data)
-        self.hass.bus.async_fire(
-            event_type,
-            {
-                ATTR_ENTITY_ID: self.entity_id,
-                **event_data,
-            },
-        )
