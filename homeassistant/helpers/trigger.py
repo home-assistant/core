@@ -693,7 +693,11 @@ NUMERICAL_ATTRIBUTE_CROSSED_THRESHOLD_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.exten
 
 
 class EntityNumericalStateAttributeCrossedThresholdTriggerBase(EntityTriggerBase):
-    """Trigger for entity state changes."""
+    """Trigger for numerical state attribute changes.
+
+    This trigger only fires when the observed attribute changes from not within to within
+    the defined threshold.
+    """
 
     _attribute: str
     _schema = NUMERICAL_ATTRIBUTE_CROSSED_THRESHOLD_SCHEMA
