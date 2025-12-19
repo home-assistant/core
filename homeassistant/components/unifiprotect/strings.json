@@ -653,11 +653,17 @@
     "api_key_required": {
       "message": "API key is required. Please reauthenticate this integration to provide an API key."
     },
+    "command_error": {
+      "message": "Error communicating with UniFi Protect while sending command: {error}"
+    },
     "device_not_found": {
       "message": "No device found for device id: {device_id}"
     },
     "no_users_found": {
       "message": "No users found, please check Protect permissions"
+    },
+    "not_authorized": {
+      "message": "Not authorized to perform this action on the UniFi Protect controller"
     },
     "only_music_supported": {
       "message": "Only music media type is supported"
