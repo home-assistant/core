@@ -664,7 +664,8 @@ build.json @home-assistant/supervisor
 /tests/components/heos/ @andrewsayre
 /homeassistant/components/here_travel_time/ @eifinger
 /tests/components/here_travel_time/ @eifinger
-/homeassistant/components/hikvision/ @mezz64
+/homeassistant/components/hikvision/ @mezz64 @ptarjan
+/tests/components/hikvision/ @mezz64 @ptarjan
 /homeassistant/components/hikvisioncam/ @fbradyirl
 /homeassistant/components/hisense_aehw4a1/ @bannhead
 /tests/components/hisense_aehw4a1/ @bannhead
@@ -1194,8 +1195,8 @@ build.json @home-assistant/supervisor
 /tests/components/ourgroceries/ @OnFreund
 /homeassistant/components/overkiz/ @imicknl
 /tests/components/overkiz/ @imicknl
-/homeassistant/components/overseerr/ @joostlek
-/tests/components/overseerr/ @joostlek
+/homeassistant/components/overseerr/ @joostlek @AmGarera
+/tests/components/overseerr/ @joostlek @AmGarera
 /homeassistant/components/ovo_energy/ @timmo001
 /tests/components/ovo_energy/ @timmo001
 /homeassistant/components/p1_monitor/ @klaasnicolaas
@@ -1799,6 +1800,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/watergate/ @adam-the-hero
 /tests/components/watergate/ @adam-the-hero
 /homeassistant/components/watson_tts/ @rutkai
+/homeassistant/components/watts/ @theobld-ww @devender-verma-ww @ssi-spyro
+/tests/components/watts/ @theobld-ww @devender-verma-ww @ssi-spyro
 /homeassistant/components/watttime/ @bachya
 /tests/components/watttime/ @bachya
 /homeassistant/components/waze_travel_time/ @eifinger
