@@ -746,6 +746,8 @@ class EntityNumericalStateAttributeCrossedThresholdTriggerBase(EntityTriggerBase
             # Attribute is not a valid number, don't trigger
             return False
 
+        # Note: We do not need to check for lower_limit/upper_limit being None here
+        # because of the validation done in the schema.
         if self._threshold_type == ThresholdType.ABOVE:
             return current_value > lower_limit  # type: ignore[operator]
         if self._threshold_type == ThresholdType.BELOW:
