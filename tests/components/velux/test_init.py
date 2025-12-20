@@ -8,6 +8,8 @@ They also verify that unloading the integration properly disconnects.
 
 from __future__ import annotations
 
+from unittest.mock import patch
+
 import pytest
 from pyvlx.exception import PyVLXException
 
@@ -77,3 +79,24 @@ async def test_unload_calls_disconnect(
 
     # Verify disconnect was called
     mock_pyvlx.disconnect.assert_awaited_once()
+
+
+@pytest.mark.usefixtures("setup_integration")
+async def test_unload_does_not_disconnect_if_platform_unload_fails(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_pyvlx
+) -> None:
+    """Test that disconnect is not called if platform unload fails."""
+
+    # Mock platform unload to fail
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_unload_platforms",
+        return_value=False,
+    ):
+        result = await hass.config_entries.async_unload(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Verify unload failed
+    assert result is False
+
+    # Verify disconnect was NOT called since platform unload failed
+    mock_pyvlx.disconnect.assert_not_awaited()
