@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pyvlx import PyVLX, PyVLXException
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
@@ -12,12 +12,44 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, LOGGER, PLATFORMS
 
 type VeluxConfigEntry = ConfigEntry[PyVLX]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Velux component."""
+
+    async def async_reboot_gateway(service_call: ServiceCall) -> None:
+        """Reboot the gateway (deprecated - use button entity instead)."""
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_reboot_service",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_reboot_service",
+            breaks_in_ha_version="2026.6.0",
+        )
+
+        # Find a loaded config entry to get the PyVLX instance
+        # We assume only one gateway is set up or we just reboot the first one found
+        # (this is no change to the previous behavior, the alternative would be to reboot all)
+        for entry in hass.config_entries.async_entries(DOMAIN):
+            if entry.state is ConfigEntryState.LOADED:
+                await entry.runtime_data.reboot_gateway()
+                return
+
+        raise ServiceValidationError("No loaded Velux gateway found")
+
+    hass.services.async_register(DOMAIN, "reboot_gateway", async_reboot_gateway)
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: VeluxConfigEntry) -> bool:
@@ -67,26 +99,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: VeluxConfigEntry) -> boo
         LOGGER.debug("Velux interface terminated")
         await pyvlx.disconnect()
 
-    async def async_reboot_gateway(service_call: ServiceCall) -> None:
-        """Reboot the gateway (deprecated - use button entity instead)."""
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            "deprecated_reboot_service",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="deprecated_reboot_service",
-            breaks_in_ha_version="2026.6.0",
-        )
-
-        await pyvlx.reboot_gateway()
-
     entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
     )
-
-    hass.services.async_register(DOMAIN, "reboot_gateway", async_reboot_gateway)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
