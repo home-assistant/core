@@ -64,7 +64,7 @@ class VeluxRainSensor(VeluxEntity, BinarySensorEntity):
         """Fetch the latest state from the device."""
         try:
             limitation = await self.node.get_limitation()
-        except PyVLXException as err:
+        except (OSError, PyVLXException) as err:
             if not self._unavailable_logged:
                 LOGGER.info(
                     "Rain sensor %s is unavailable: %s",
