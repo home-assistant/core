@@ -50,14 +50,37 @@ class VeluxRainSensor(VeluxEntity, BinarySensorEntity):
         """Initialize VeluxRainSensor."""
         super().__init__(node, config_entry_id)
         self._attr_unique_id = f"{self._attr_unique_id}_rain_sensor"
+        self._unavailable_logged = False
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available.
+
+        Rain sensor is polled, so we just use _attr_available
+        """
+        return self._attr_available
 
     async def async_update(self) -> None:
         """Fetch the latest state from the device."""
         try:
             limitation = await self.node.get_limitation()
-        except PyVLXException:
-            LOGGER.error("Error fetching limitation data for cover %s", self.name)
+        except PyVLXException as err:
+            if not self._unavailable_logged:
+                LOGGER.info(
+                    "Rain sensor %s is unavailable: %s",
+                    self.entity_id,
+                    err,
+                )
+                self._unavailable_logged = True
+            self._attr_available = False
             return
+
+        # Log when entity comes back online after being unavailable
+        if self._unavailable_logged:
+            LOGGER.info("Rain sensor %s is back online", self.entity_id)
+            self._unavailable_logged = False
+
+        self._attr_available = True
 
         # Velux windows with rain sensors report an opening limitation of 93 or 100 (Velux GPU) when rain is detected.
         # So far, only 93 and 100 have been observed in practice, documentation on this is non-existent AFAIK.
