@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Final
 
+from homewizard_energy.const import Model
 from homewizard_energy.models import CombinedModels, ExternalDevice
 
 from homeassistant.components.sensor import (
@@ -689,6 +690,33 @@ EXTERNAL_SENSORS = {
     ),
 }
 
+PRODUCTION_POWER_SENSOR_DESCRIPTION = HomeWizardSensorEntityDescription(
+    key="active_production_power_w",
+    translation_key="active_production_power_w",
+    native_unit_of_measurement=UnitOfPower.WATT,
+    device_class=SensorDeviceClass.POWER,
+    state_class=SensorStateClass.MEASUREMENT,
+    suggested_display_precision=0,
+    has_fn=lambda data: data.measurement.power_w is not None,
+    value_fn=lambda data: power_w * -1
+    if (power_w := data.measurement.power_w)
+    else power_w,
+)
+
+PRODUCTION_POWER_SENSOR_DESCRIPTION_OPTIONAL = HomeWizardSensorEntityDescription(
+    key="active_production_power_w",
+    translation_key="active_production_power_w",
+    native_unit_of_measurement=UnitOfPower.WATT,
+    device_class=SensorDeviceClass.POWER,
+    state_class=SensorStateClass.MEASUREMENT,
+    suggested_display_precision=0,
+    entity_registry_enabled_default=False,
+    has_fn=lambda data: data.measurement.power_w is not None,
+    value_fn=lambda data: power_w * -1
+    if (power_w := data.measurement.power_w)
+    else power_w,
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -703,6 +731,26 @@ async def async_setup_entry(
         for description in SENSORS
         if description.has_fn(entry.runtime_data.data)
     ]
+    # Add optional production power sensor for supported energy monitoring devices
+    if entry.runtime_data.data.device.product_type in (
+        Model.ENERGY_SOCKET,
+        Model.ENERGY_METER_1_PHASE,
+        Model.ENERGY_METER_3_PHASE,
+        Model.ENERGY_METER_EASTRON_SDM230,
+        Model.ENERGY_METER_EASTRON_SDM630,
+    ):
+        entities.append(
+            HomeWizardSensorEntity(
+                entry.runtime_data, PRODUCTION_POWER_SENSOR_DESCRIPTION_OPTIONAL
+            )
+        )
+    # Add production power sensor for plug-in battery
+    if entry.runtime_data.data.device.product_type == Model.BATTERY:
+        entities.append(
+            HomeWizardSensorEntity(
+                entry.runtime_data, PRODUCTION_POWER_SENSOR_DESCRIPTION
+            )
+        )
 
     # Initialize external devices
     measurement = entry.runtime_data.data.measurement
