@@ -1,8 +1,6 @@
 rules:
   # Bronze
-  action-setup:
-    status: todo
-    comment: needs to move to async_setup
+  action-setup: done
   appropriate-polling: done
   brands: done
   common-modules: done
