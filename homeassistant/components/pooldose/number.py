@@ -26,7 +26,7 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-PARALLEL_UPDATES = 0
+PARALLEL_UPDATES = 1
 
 
 NUMBER_DESCRIPTIONS: tuple[NumberEntityDescription, ...] = (
