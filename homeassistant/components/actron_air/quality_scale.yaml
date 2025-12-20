@@ -26,7 +26,9 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: todo
+  action-exceptions:
+    status: exempt
+    comment: This integration does not have custom service actions.
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
@@ -57,10 +59,12 @@ rules:
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
-  entity-translations: todo
-  exception-translations: todo
+  entity-translations: done
+  exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow:
+    status: exempt
+    comment: This integration does not have settings in the configuration flow.
   repair-issues:
     status: exempt
     comment: This integration does not have any known issues that require repair.
