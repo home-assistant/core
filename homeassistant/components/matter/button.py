@@ -52,6 +52,34 @@ class MatterCommandButton(MatterEntity, ButtonEntity):
         await self.send_device_command(self.entity_description.command())
 
 
+class WindowCoveringCalibrationModeButton(MatterEntity, ButtonEntity):
+    """Button to set WindowCovering calibration mode bit to 1."""
+
+    async def async_press(self) -> None:
+        """Enable calibration mode by setting the CalibrationMode bit (bit 1)."""
+        # Prefer the defined bitmap constant; fallback to 0x2 (bit 1)
+        mode_bitmap = getattr(clusters.WindowCovering.Bitmaps, "Mode", None)
+        calibration_bit_obj = (
+            getattr(mode_bitmap, "kCalibrationMode", None)
+            if mode_bitmap is not None
+            else None
+        )
+        calibration_bit = (
+            int(calibration_bit_obj) if calibration_bit_obj is not None else 0x2
+        )
+
+        current_mode = self.get_matter_attribute_value(
+            clusters.WindowCovering.Attributes.Mode
+        )
+
+        if not isinstance(current_mode, int):
+            current_mode = 0
+
+        new_mode = current_mode | calibration_bit
+
+        await self.write_attribute(new_mode, clusters.WindowCovering.Attributes.Mode)
+
+
 # Discovery schema(s) to map Matter Attributes to HA entities
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
@@ -154,6 +182,16 @@ DISCOVERY_SCHEMAS = [
         entity_class=MatterCommandButton,
         required_attributes=(clusters.SmokeCoAlarm.Attributes.AcceptedCommandList,),
         value_contains=clusters.SmokeCoAlarm.Commands.SelfTestRequest.command_id,
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.BUTTON,
+        entity_description=MatterButtonEntityDescription(
+            key="WindowCoveringCalibrationMode",
+            translation_key="calibration_mode",
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        entity_class=WindowCoveringCalibrationModeButton,
+        required_attributes=(clusters.WindowCovering.Attributes.Mode,),
     ),
     MatterDiscoverySchema(
         platform=Platform.BUTTON,
