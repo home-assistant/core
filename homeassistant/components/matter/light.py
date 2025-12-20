@@ -15,8 +15,6 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
-    DEFAULT_MAX_KELVIN,
-    DEFAULT_MIN_KELVIN,
     ColorMode,
     LightEntity,
     LightEntityDescription,
@@ -46,6 +44,14 @@ COLOR_MODE_MAP = {
     clusters.ColorControl.Enums.ColorModeEnum.kCurrentXAndCurrentY: ColorMode.XY,
     clusters.ColorControl.Enums.ColorModeEnum.kColorTemperatureMireds: ColorMode.COLOR_TEMP,
 }
+
+# Default color temperature limits.
+# Most real devices are not properly calibrated and report the full mired range as being supported.
+# This sets a more realistic default range that can be further limited by the device.
+# Values based on latest Hue devices as of Nov. 2025.
+# Note that these defaults restrain the UI even if the device reports a wider range.
+DEFAULT_MAX_KELVIN = 20000
+DEFAULT_MIN_KELVIN = 1000
 
 # there's a bug in (at least) Espressif's implementation of light transitions
 # on devices based on Matter 1.0. Mark potential devices with this issue.
@@ -150,6 +156,16 @@ class MatterLight(MatterEntity, LightEntity):
         color_temp_mired = color_util.color_temperature_kelvin_to_mired(
             color_temp_kelvin
         )
+        # clamp to permitted device range.
+        device_max_mireds = self.get_matter_attribute_value(
+            clusters.ColorControl.Attributes.ColorTempPhysicalMaxMireds
+        )
+        device_min_mireds = self.get_matter_attribute_value(
+            clusters.ColorControl.Attributes.ColorTempPhysicalMinMireds
+        )
+        color_temp_mired = min(color_temp_mired, device_max_mireds, 65279)
+        color_temp_mired = max(color_temp_mired, device_min_mireds, 1)
+
         await self.send_device_command(
             clusters.ColorControl.Commands.MoveToColorTemperature(
                 colorTemperatureMireds=color_temp_mired,
@@ -380,15 +396,17 @@ class MatterLight(MatterEntity, LightEntity):
                         clusters.ColorControl.Attributes.ColorTempPhysicalMinMireds
                     )
                     if min_mireds > 0:
-                        self._attr_max_color_temp_kelvin = (
-                            color_util.color_temperature_mired_to_kelvin(min_mireds)
+                        self._attr_max_color_temp_kelvin = min(
+                            color_util.color_temperature_mired_to_kelvin(min_mireds),
+                            DEFAULT_MAX_KELVIN,
                         )
                     max_mireds = self.get_matter_attribute_value(
                         clusters.ColorControl.Attributes.ColorTempPhysicalMaxMireds
                     )
                     if max_mireds > 0:
-                        self._attr_min_color_temp_kelvin = (
-                            color_util.color_temperature_mired_to_kelvin(max_mireds)
+                        self._attr_min_color_temp_kelvin = max(
+                            color_util.color_temperature_mired_to_kelvin(max_mireds),
+                            DEFAULT_MIN_KELVIN,
                         )
 
             supported_color_modes = filter_supported_color_modes(supported_color_modes)
