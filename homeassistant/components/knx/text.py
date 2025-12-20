@@ -24,7 +24,6 @@ from homeassistant.helpers.entity_platform import (
 )
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.enum import try_parse_enum
 
 from .const import (
     CONF_RESPOND_TO_READ,
@@ -156,6 +155,4 @@ class KnxUiText(_KnxText, KnxUiEntity):
             sync_state=knx_conf.get(CONF_SYNC_STATE),
             value_type=knx_conf.get_dpt(CONF_GA_TEXT),
         )
-        mode = try_parse_enum(TextMode, knx_conf.get(CONF_MODE))
-        assert mode is not None
-        self._attr_mode = mode
+        self._attr_mode = TextMode(knx_conf.get(CONF_MODE))
