@@ -229,6 +229,22 @@ def camera_all_fixture(camera: Camera):
     return all_camera
 
 
+@pytest.fixture(name="camera_all_features")
+def camera_all_features_fixture(fixed_now: datetime):
+    """Mock UniFi Protect Camera device with all features enabled."""
+
+    # disable pydantic validation so mocking can happen
+    Camera.model_config["validate_assignment"] = False
+
+    data = load_json_object_fixture("sample_camera_all_features.json", DOMAIN)
+    camera = Camera.from_unifi_dict(**data)
+    camera.last_motion = fixed_now - timedelta(hours=1)
+
+    yield camera
+
+    Camera.model_config["validate_assignment"] = True
+
+
 @pytest.fixture(name="doorbell")
 def doorbell_fixture(camera: Camera, fixed_now: datetime):
     """Mock UniFi Protect Camera device (with chime)."""

@@ -16,7 +16,7 @@ from .entity import HomeWizardEntity
 def homewizard_exception_handler[_HomeWizardEntityT: HomeWizardEntity, **_P](
     func: Callable[Concatenate[_HomeWizardEntityT, _P], Coroutine[Any, Any, Any]],
 ) -> Callable[Concatenate[_HomeWizardEntityT, _P], Coroutine[Any, Any, None]]:
-    """Decorate HomeWizard Energy calls to handle HomeWizardEnergy exceptions.
+    """Decorate HomeWizard calls to handle HomeWizardEnergy exceptions.
 
     A decorator that wraps the passed in function, catches HomeWizardEnergy errors,
     and reloads the integration when the API was disabled so the reauth flow is

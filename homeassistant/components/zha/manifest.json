@@ -22,7 +22,7 @@
     "zha",
     "universal_silabs_flasher"
   ],
-  "requirements": ["zha==0.0.80"],
+  "requirements": ["zha==0.0.81"],
   "usb": [
     {
       "description": "*2652*",
