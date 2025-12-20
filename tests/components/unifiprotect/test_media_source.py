@@ -1066,6 +1066,9 @@ async def test_build_days_whole_month_date_calculation(
     This test verifies the monthrange-based date calculation in _build_days,
     especially for December which previously used manual year/month increment logic.
     """
+    # Initialize the integration entry to get ProtectData
+    await init_entry(hass, ufp, [], regenerate_ids=False)
+
     # Create a start date for the first day of the month
     start = datetime(year=year, month=month, day=1).date()
     start_dt = datetime(
@@ -1096,7 +1099,7 @@ async def test_build_days_whole_month_date_calculation(
     # Build the media source with is_all=True (whole month)
     source = ProtectMediaSource(hass, {})
     result = await source._build_days(
-        data=ufp.api.bootstrap,
+        data=ufp.entry.runtime_data,
         camera_id="test_camera",
         event_type=SimpleEventType.ALL,
         start=start,
