@@ -118,6 +118,7 @@ async def async_setup_entry(
     async def disconnect_callback() -> None:
         for entity in entities.values():
             if entity.enabled:
+                entity.cancel_tasks()
                 entity.async_write_ha_state()
 
     async def update_callback(message: Status) -> None:
@@ -231,13 +232,8 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         await self.query_state()
 
     async def async_will_remove_from_hass(self) -> None:
-        """Cancel the tasks when the entity is removed."""
-        if self._query_state_task is not None:
-            self._query_state_task.cancel()
-            self._query_state_task = None
-        if self._query_av_info_task is not None:
-            self._query_av_info_task.cancel()
-            self._query_av_info_task = None
+        """Entity will be removed from hass."""
+        self.cancel_tasks()
 
     @property
     def available(self) -> bool:
@@ -257,6 +253,15 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
             await self._manager.write(query.HDMIOutput())
             await self._manager.write(query.AudioInformation())
             await self._manager.write(query.VideoInformation())
+
+    def cancel_tasks(self) -> None:
+        """Cancel the tasks."""
+        if self._query_state_task is not None:
+            self._query_state_task.cancel()
+            self._query_state_task = None
+        if self._query_av_info_task is not None:
+            self._query_av_info_task.cancel()
+            self._query_av_info_task = None
 
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
