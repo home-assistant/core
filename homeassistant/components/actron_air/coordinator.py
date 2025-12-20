@@ -60,6 +60,7 @@ class ActronAirSystemCoordinator(DataUpdateCoordinator[ActronAirACSystem]):
         self.api = api
         self.status = self.api.state_manager.get_status(self.serial_number)
         self.last_seen = dt_util.utcnow()
+        self._unavailable_logged = False
 
     async def _async_update_data(self) -> ActronAirStatus:
         """Fetch updates and merge incremental changes into the full state."""
@@ -70,6 +71,18 @@ class ActronAirSystemCoordinator(DataUpdateCoordinator[ActronAirACSystem]):
                 translation_domain=DOMAIN,
                 translation_key="auth_error",
             ) from err
+        except Exception as err:
+            if not self._unavailable_logged:
+                _LOGGER.info(
+                    "The coordinator is unavailable: %s",
+                    err,
+                )
+                self._unavailable_logged = True
+            raise
+
+        if self._unavailable_logged:
+            _LOGGER.info("The coordinator is back online")
+            self._unavailable_logged = False
 
         self.status = self.api.state_manager.get_status(self.serial_number)
         self.last_seen = dt_util.utcnow()
