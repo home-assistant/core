@@ -361,13 +361,18 @@
           "delicate": "Delicate",
           "drinkware": "Drinkware",
           "eco": "ECO",
+          "express": "Express",
           "express_0_c": "Express",
           "extra_silence": "Extra Silence",
+          "heavy": "Heavy",
           "intensive": "Intensive",
           "machine_care": "Machine Care",
+          "normal": "Normal",
           "plastics": "Plastic",
           "pots_and_pans": "Pots and Pans",
-          "pre_wash": "Pre Wash"
+          "pre_wash": "Pre Wash",
+          "rinse_only": "Rinse Only",
+          "self_clean": "Self Clean"
         }
       },
       "diverter_valve_position": {
