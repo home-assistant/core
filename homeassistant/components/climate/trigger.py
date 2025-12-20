@@ -11,6 +11,7 @@ from homeassistant.helpers.trigger import (
     Trigger,
     TriggerConfig,
     make_entity_numerical_state_attribute_changed_trigger,
+    make_entity_numerical_state_attribute_crossed_threshold_trigger,
     make_entity_target_state_attribute_trigger,
     make_entity_target_state_trigger,
     make_entity_transition_trigger,
@@ -52,6 +53,9 @@ TRIGGERS: dict[str, type[Trigger]] = {
         DOMAIN, ATTR_HVAC_ACTION, HVACAction.DRYING
     ),
     "target_temperature_changed": make_entity_numerical_state_attribute_changed_trigger(
+        DOMAIN, ATTR_TEMPERATURE
+    ),
+    "target_temperature_crossed_threshold": make_entity_numerical_state_attribute_crossed_threshold_trigger(
         DOMAIN, ATTR_TEMPERATURE
     ),
     "turned_off": make_entity_target_state_trigger(DOMAIN, HVACMode.OFF),

@@ -9,6 +9,7 @@ import pytest
 from pytest_unordered import unordered
 import voluptuous as vol
 
+from homeassistant.components import automation
 from homeassistant.components.sun import DOMAIN as DOMAIN_SUN
 from homeassistant.components.system_health import DOMAIN as DOMAIN_SYSTEM_HEALTH
 from homeassistant.components.tag import DOMAIN as DOMAIN_TAG
@@ -18,7 +19,10 @@ from homeassistant.const import (
     CONF_BELOW,
     CONF_ENTITY_ID,
     CONF_OPTIONS,
+    CONF_PLATFORM,
     CONF_TARGET,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -31,14 +35,19 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, trigger
 from homeassistant.helpers.automation import move_top_level_schema_fields_to_options
 from homeassistant.helpers.trigger import (
+    CONF_LOWER_LIMIT,
+    CONF_THRESHOLD_TYPE,
+    CONF_UPPER_LIMIT,
     DATA_PLUGGABLE_ACTIONS,
     PluggableAction,
+    ThresholdType,
     Trigger,
     TriggerActionRunner,
     _async_get_trigger_platform,
     async_initialize_triggers,
     async_validate_trigger_config,
     make_entity_numerical_state_attribute_changed_trigger,
+    make_entity_numerical_state_attribute_crossed_threshold_trigger,
 )
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import Integration, async_get_integration
@@ -1229,6 +1238,315 @@ async def test_numerical_state_attribute_changed_trigger_config_validation(
     async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
         return {
             "test_trigger": make_entity_numerical_state_attribute_changed_trigger(
+                "test", "test_attribute"
+            ),
+        }
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
+
+    with expected_result:
+        await async_validate_trigger_config(
+            hass,
+            [
+                {
+                    "platform": "test.test_trigger",
+                    CONF_TARGET: {CONF_ENTITY_ID: "test.test_entity"},
+                    CONF_OPTIONS: trigger_options,
+                }
+            ],
+        )
+
+
+async def test_numerical_state_attribute_changed_error_handling(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test numerical state attribute change error handling."""
+
+    async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
+        return {
+            "attribute_changed": make_entity_numerical_state_attribute_changed_trigger(
+                "test", "test_attribute"
+            ),
+        }
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
+
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": 20})
+
+    options = {
+        CONF_OPTIONS: {CONF_ABOVE: "sensor.above", CONF_BELOW: "sensor.below"},
+    }
+
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    CONF_PLATFORM: "test.attribute_changed",
+                    CONF_TARGET: {CONF_ENTITY_ID: "test.test_entity"},
+                }
+                | options,
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {CONF_ENTITY_ID: "{{ trigger.entity_id }}"},
+                },
+            }
+        },
+    )
+
+    assert len(service_calls) == 0
+
+    # Test the trigger works
+    hass.states.async_set("sensor.above", "10")
+    hass.states.async_set("sensor.below", "90")
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+    service_calls.clear()
+
+    # Test the trigger fires again when still within limits
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": 51})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+    service_calls.clear()
+
+    # Test the trigger does not fire when the from-state is unknown or unavailable
+    for from_state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+        hass.states.async_set("test.test_entity", from_state)
+        hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
+        await hass.async_block_till_done()
+        assert len(service_calls) == 0
+
+    # Test the trigger does not fire when the attribute value is outside the limits
+    for value in (5, 95):
+        hass.states.async_set("test.test_entity", "on", {"test_attribute": value})
+        await hass.async_block_till_done()
+        assert len(service_calls) == 0
+
+    # Test the trigger does not fire when the attribute value is missing
+    hass.states.async_set("test.test_entity", "on", {})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    # Test the trigger does not fire when the attribute value is invalid
+    for value in ("cat", None):
+        hass.states.async_set("test.test_entity", "on", {"test_attribute": value})
+        await hass.async_block_till_done()
+        assert len(service_calls) == 0
+
+    # Test the trigger does not fire when the above sensor does not exist
+    hass.states.async_remove("sensor.above")
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": None})
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    # Test the trigger does not fire when the above sensor state is not numeric
+    for invalid_value in ("cat", None):
+        hass.states.async_set("sensor.above", invalid_value)
+        hass.states.async_set("test.test_entity", "on", {"test_attribute": None})
+        hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
+        await hass.async_block_till_done()
+        assert len(service_calls) == 0
+
+    # Reset the above sensor state to a valid numeric value
+    hass.states.async_set("sensor.above", "10")
+
+    # Test the trigger does not fire when the below sensor does not exist
+    hass.states.async_remove("sensor.below")
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": None})
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    # Test the trigger does not fire when the below sensor state is not numeric
+    for invalid_value in ("cat", None):
+        hass.states.async_set("sensor.below", invalid_value)
+        hass.states.async_set("test.test_entity", "on", {"test_attribute": None})
+        hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
+        await hass.async_block_till_done()
+        assert len(service_calls) == 0
+
+
+@pytest.mark.parametrize(
+    ("trigger_options", "expected_result"),
+    [
+        # Valid configurations
+        (
+            {CONF_THRESHOLD_TYPE: ThresholdType.ABOVE, CONF_LOWER_LIMIT: 10},
+            does_not_raise(),
+        ),
+        (
+            {CONF_THRESHOLD_TYPE: ThresholdType.ABOVE, CONF_LOWER_LIMIT: "sensor.test"},
+            does_not_raise(),
+        ),
+        (
+            {CONF_THRESHOLD_TYPE: ThresholdType.BELOW, CONF_UPPER_LIMIT: 90},
+            does_not_raise(),
+        ),
+        (
+            {CONF_THRESHOLD_TYPE: ThresholdType.BELOW, CONF_UPPER_LIMIT: "sensor.test"},
+            does_not_raise(),
+        ),
+        (
+            {
+                CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN,
+                CONF_LOWER_LIMIT: 10,
+                CONF_UPPER_LIMIT: 90,
+            },
+            does_not_raise(),
+        ),
+        (
+            {
+                CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN,
+                CONF_LOWER_LIMIT: 10,
+                CONF_UPPER_LIMIT: "sensor.test",
+            },
+            does_not_raise(),
+        ),
+        (
+            {
+                CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN,
+                CONF_LOWER_LIMIT: "sensor.test",
+                CONF_UPPER_LIMIT: 90,
+            },
+            does_not_raise(),
+        ),
+        (
+            {
+                CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN,
+                CONF_LOWER_LIMIT: "sensor.test",
+                CONF_UPPER_LIMIT: "sensor.test",
+            },
+            does_not_raise(),
+        ),
+        (
+            {
+                CONF_THRESHOLD_TYPE: ThresholdType.OUTSIDE,
+                CONF_LOWER_LIMIT: 10,
+                CONF_UPPER_LIMIT: 90,
+            },
+            does_not_raise(),
+        ),
+        (
+            {
+                CONF_THRESHOLD_TYPE: ThresholdType.OUTSIDE,
+                CONF_LOWER_LIMIT: 10,
+                CONF_UPPER_LIMIT: "sensor.test",
+            },
+            does_not_raise(),
+        ),
+        (
+            {
+                CONF_THRESHOLD_TYPE: ThresholdType.OUTSIDE,
+                CONF_LOWER_LIMIT: "sensor.test",
+                CONF_UPPER_LIMIT: 90,
+            },
+            does_not_raise(),
+        ),
+        (
+            {
+                CONF_THRESHOLD_TYPE: ThresholdType.OUTSIDE,
+                CONF_LOWER_LIMIT: "sensor.test",
+                CONF_UPPER_LIMIT: "sensor.test",
+            },
+            does_not_raise(),
+        ),
+        # Test verbose choose selector options
+        # Test invalid configurations
+        (
+            # Missing threshold type
+            {},
+            pytest.raises(vol.Invalid),
+        ),
+        (
+            # Invalid threshold type
+            {CONF_THRESHOLD_TYPE: "cat"},
+            pytest.raises(vol.Invalid),
+        ),
+        (
+            # Must provide lower limit for ABOVE
+            {CONF_THRESHOLD_TYPE: ThresholdType.ABOVE},
+            pytest.raises(vol.Invalid),
+        ),
+        (
+            # Must provide lower limit for ABOVE
+            {CONF_THRESHOLD_TYPE: ThresholdType.ABOVE, CONF_UPPER_LIMIT: 90},
+            pytest.raises(vol.Invalid),
+        ),
+        (
+            # Must provide upper limit for BELOW
+            {CONF_THRESHOLD_TYPE: ThresholdType.BELOW},
+            pytest.raises(vol.Invalid),
+        ),
+        (
+            # Must provide upper limit for BELOW
+            {CONF_THRESHOLD_TYPE: ThresholdType.BELOW, CONF_LOWER_LIMIT: 10},
+            pytest.raises(vol.Invalid),
+        ),
+        (
+            # Must provide upper and lower limits for BETWEEN
+            {CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN},
+            pytest.raises(vol.Invalid),
+        ),
+        (
+            # Must provide upper and lower limits for BETWEEN
+            {CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN, CONF_LOWER_LIMIT: 10},
+            pytest.raises(vol.Invalid),
+        ),
+        (
+            # Must provide upper and lower limits for BETWEEN
+            {CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN, CONF_UPPER_LIMIT: 90},
+            pytest.raises(vol.Invalid),
+        ),
+        (
+            # Must provide upper and lower limits for OUTSIDE
+            {CONF_THRESHOLD_TYPE: ThresholdType.OUTSIDE},
+            pytest.raises(vol.Invalid),
+        ),
+        (
+            # Must provide upper and lower limits for OUTSIDE
+            {CONF_THRESHOLD_TYPE: ThresholdType.OUTSIDE, CONF_LOWER_LIMIT: 10},
+            pytest.raises(vol.Invalid),
+        ),
+        (
+            # Must provide upper and lower limits for OUTSIDE
+            {CONF_THRESHOLD_TYPE: ThresholdType.OUTSIDE, CONF_UPPER_LIMIT: 90},
+            pytest.raises(vol.Invalid),
+        ),
+        (
+            # Must be valid entity id
+            {
+                CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN,
+                CONF_ABOVE: "cat",
+                CONF_BELOW: "dog",
+            },
+            pytest.raises(vol.Invalid),
+        ),
+        (
+            # Above must be smaller than below
+            {
+                CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN,
+                CONF_ABOVE: 90,
+                CONF_BELOW: 10,
+            },
+            pytest.raises(vol.Invalid),
+        ),
+    ],
+)
+async def test_numerical_state_attribute_crossed_threshold_trigger_config_validation(
+    hass: HomeAssistant,
+    trigger_options: dict[str, Any],
+    expected_result: AbstractContextManager,
+) -> None:
+    """Test numerical state attribute change trigger config validation."""
+
+    async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
+        return {
+            "test_trigger": make_entity_numerical_state_attribute_crossed_threshold_trigger(
                 "test", "test_attribute"
             ),
         }
