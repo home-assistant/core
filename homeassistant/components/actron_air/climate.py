@@ -92,6 +92,11 @@ class BaseClimateEntity(CoordinatorEntity[ActronAirSystemCoordinator], ClimateEn
         super().__init__(coordinator)
         self._serial_number = coordinator.serial_number
 
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and not self.coordinator.is_device_stale()
+
 
 class ActronSystemClimate(BaseClimateEntity):
     """Representation of the Actron Air system."""

@@ -8,6 +8,7 @@ from datetime import timedelta
 from actron_neo_api import (
     ActronAirACSystem,
     ActronAirAPI,
+    ActronAirAPIError,
     ActronAirAuthError,
     ActronAirStatus,
 )
@@ -70,8 +71,14 @@ class ActronAirSystemCoordinator(DataUpdateCoordinator[ActronAirACSystem]):
                 translation_domain=DOMAIN,
                 translation_key="auth_error",
             ) from err
-        except Exception as err:
-            raise UpdateFailed(f"The coordinator is unavailable: {err}") from err
+        except ActronAirAPIError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+                translation_placeholders={
+                    "error": repr(err),
+                },
+            ) from err
 
         self.status = self.api.state_manager.get_status(self.serial_number)
         self.last_seen = dt_util.utcnow()

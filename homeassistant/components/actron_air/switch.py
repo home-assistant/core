@@ -97,6 +97,11 @@ class ActronAirSwitch(CoordinatorEntity[ActronAirSystemCoordinator], SwitchEntit
         )
 
     @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return super().available and not self.coordinator.is_device_stale()
+
+    @property
     def is_on(self) -> bool:
         """Return true if the switch is on."""
         return self.entity_description.is_on_fn(self.coordinator)
