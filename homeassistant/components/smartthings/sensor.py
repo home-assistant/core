@@ -138,20 +138,6 @@ HEALTH_CONCERN = {
 WASHER_OPTIONS = ["pause", "run", "stop"]
 
 
-class DecamelizingMap(dict):
-    """dict subclass that calls the decamelize function to supply missing values."""
-
-    def __missing__(self, key):
-        """Decamelizes the key, inserts the result as value for key and returns the value."""
-        val = decamelize(key)
-        self[key] = val
-        return val
-
-    def __bool__(self):
-        """Make this map True, even if empty."""
-        return True
-
-
 def power_attributes(status: dict[str, Any]) -> dict[str, Any]:
     """Return the power attributes."""
     state = {}
@@ -170,6 +156,7 @@ class SmartThingsSensorEntityDescription(SensorEntityDescription):
     capability_ignore_list: list[set[Capability]] | None = None
     options_attribute: Attribute | None = None
     options_map: dict[str, str] | None = None
+    options_fn: Callable[[str], str] | None = None
     translation_placeholders_fn: Callable[[str], dict[str, str]] | None = None
     component_fn: Callable[[str], bool] | None = None
     exists_fn: Callable[[Status], bool] | None = None
@@ -403,7 +390,7 @@ CAPABILITY_TO_SENSORS: dict[
                 key=Attribute.WASHING_COURSE,
                 translation_key="dishwasher_washing_course",
                 options_attribute=Attribute.SUPPORTED_COURSES,
-                options_map=DecamelizingMap(),
+                options_fn=decamelize,
                 device_class=SensorDeviceClass.ENUM,
                 value_fn=decamelize,
             )
@@ -1375,5 +1362,7 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
                 return []
             if options_map := self.entity_description.options_map:
                 return [options_map[option] for option in options]
+            if options_fn := self.entity_description.options_fn:
+                return [options_fn(option) for option in options]
             return [option.lower() for option in options]
         return super().options
