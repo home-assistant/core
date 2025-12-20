@@ -41,6 +41,17 @@
       }
     }
   },
+  "exceptions": {
+    "config_entry_not_loaded": {
+      "message": "Config entry for Google Sheets service is not loaded"
+    },
+    "missing_config_entry": {
+      "message": "No config entry found for Google Sheets service"
+    },
+    "multiple_config_entries": {
+      "message": "Multiple config entries found for Google Sheets service"
+    }
+  },
   "services": {
     "append_sheet": {
       "description": "Appends data to a worksheet in Google Sheets.",
@@ -49,13 +60,13 @@
           "description": "Add a \"created\" column with the current date-time to the appended data.",
           "name": "Add created column"
         },
-        "config_entry": {
-          "description": "The sheet to add data to.",
-          "name": "Sheet"
-        },
         "data": {
           "description": "Data to be appended to the worksheet. This puts the values on new rows underneath the matching column (key). Any new key is placed on the top of a new column.",
           "name": "Data"
+        },
+        "spreadsheet_id": {
+          "description": "The ID of the spreadsheet to add data to. If not specified, the default spreadsheet created alongside this integration is used.",
+          "name": "Spreadsheet ID"
         },
         "worksheet": {
           "description": "Name of the worksheet. Defaults to the first one in the document.",
@@ -67,13 +78,13 @@
     "get_sheet": {
       "description": "Gets data from a worksheet in Google Sheets.",
       "fields": {
-        "config_entry": {
-          "description": "The sheet to get data from.",
-          "name": "[%key:component::google_sheets::services::append_sheet::fields::config_entry::name%]"
-        },
         "rows": {
           "description": "Maximum number of rows from the end of the worksheet to return.",
           "name": "Rows"
+        },
+        "spreadsheet_id": {
+          "description": "The ID of the spreadsheet to get data from. If not specified, the default spreadsheet created alongside this integration is used.",
+          "name": "[%key:component::google_sheets::services::append_sheet::fields::spreadsheet_id::name%]"
         },
         "worksheet": {
           "description": "[%key:component::google_sheets::services::append_sheet::fields::worksheet::description%]",

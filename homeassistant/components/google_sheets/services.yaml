@@ -1,10 +1,8 @@
 append_sheet:
   fields:
-    config_entry:
-      required: true
+    spreadsheet_id:
       selector:
-        config_entry:
-          integration: google_sheets
+        text:
     worksheet:
       example: "Sheet1"
       selector:
@@ -21,11 +19,9 @@ append_sheet:
         object:
 get_sheet:
   fields:
-    config_entry:
-      required: true
+    spreadsheet_id:
       selector:
-        config_entry:
-          integration: google_sheets
+        text:
     worksheet:
       example: "Sheet1"
       selector:
