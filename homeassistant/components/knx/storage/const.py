@@ -74,3 +74,6 @@ CONF_GA_SATURATION: Final = "ga_saturation"
 
 # Sensor
 CONF_ALWAYS_CALLBACK: Final = "always_callback"
+
+# Text
+CONF_GA_TEXT: Final = "ga_text"
