@@ -3956,13 +3956,13 @@
     },
     "meteoclimatic": {
       "name": "Meteoclimatic",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "metoffice": {
       "name": "Met Office",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },

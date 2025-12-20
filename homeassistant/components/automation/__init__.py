@@ -134,6 +134,7 @@ _EXPERIMENTAL_TRIGGER_PLATFORMS = {
     "humidifier",
     "lawn_mower",
     "light",
+    "lock",
     "media_player",
     "siren",
     "switch",
