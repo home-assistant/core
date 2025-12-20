@@ -50,9 +50,10 @@ class FileNotifyEntity(NotifyEntity):
         file: TextIO
         filepath = self._file_path
         try:
+            file_was_empty = not os.path.exists(filepath) or os.stat(filepath).st_size == 0
             file_mode = "w" if self._overwrite else "a"
             with open(filepath, file_mode, encoding="utf8") as file:
-                if os.stat(filepath).st_size == 0:
+                if file_was_empty:
                     title = (
                         f"{title or ATTR_TITLE_DEFAULT} notifications (Log"
                         f" started: {dt_util.utcnow().isoformat()})\n{'-' * 80}\n"
