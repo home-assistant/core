@@ -107,7 +107,7 @@ async def async_register_insteon_frontend(hass: HomeAssistant):
             frontend_url_path=DOMAIN,
             webcomponent_name="insteon-frontend",
             config_panel_domain=DOMAIN,
-            module_url=f"{URL_BASE}/entrypoint-{build_id}.js",
+            module_url=f"{URL_BASE}/entrypoint.{build_id}.js",
             embed_iframe=True,
             require_admin=True,
         )
