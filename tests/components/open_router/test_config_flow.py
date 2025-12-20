@@ -118,7 +118,7 @@ async def test_create_conversation_agent(
     )
     assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "init"
 
     assert result["data_schema"].schema["model"].config["options"] == [
         {"value": "openai/gpt-3.5-turbo", "label": "OpenAI: GPT-3.5 Turbo"},
@@ -157,7 +157,7 @@ async def test_create_conversation_agent_no_control(
     )
     assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "init"
 
     assert result["data_schema"].schema["model"].config["options"] == [
         {"value": "openai/gpt-3.5-turbo", "label": "OpenAI: GPT-3.5 Turbo"},
@@ -195,7 +195,7 @@ async def test_create_ai_task(
     )
     assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "init"
 
     assert result["data_schema"].schema["model"].config["options"] == [
         {"value": "openai/gpt-4", "label": "OpenAI: GPT-4"},
