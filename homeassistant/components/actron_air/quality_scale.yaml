@@ -26,7 +26,9 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: todo
+  action-exceptions:
+    status: exempt
+    comment: This integration does not have custom service actions.
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
