@@ -6,7 +6,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from enum import Enum
 import logging
-from typing import Any, Final
+from typing import Any
 
 from uiprotect.api import ProtectApiClient
 from uiprotect.data import (
@@ -41,7 +41,7 @@ from .entity import (
     T,
     async_all_device_entities,
 )
-from .utils import async_get_light_motion_current
+from .utils import async_get_light_motion_current, async_ufp_instance_command
 
 _LOGGER = logging.getLogger(__name__)
 _KEY_LIGHT_MOTION = "light_motion"
@@ -101,8 +101,6 @@ MOTION_MODE_TO_LIGHT_MODE = [
 DEVICE_RECORDING_MODES = [
     {"id": mode.value, "name": mode.value.title()} for mode in list(RecordingMode)
 ]
-
-DEVICE_CLASS_LCD_MESSAGE: Final = "unifiprotect__lcd_message"
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -217,7 +215,6 @@ CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         key="doorbell_text",
         translation_key="doorbell_text",
         entity_category=EntityCategory.CONFIG,
-        device_class=DEVICE_CLASS_LCD_MESSAGE,
         ufp_required_field="feature_flags.has_lcd_screen",
         ufp_value_fn=_get_doorbell_current,
         ufp_options_fn=_get_doorbell_options,
@@ -400,6 +397,7 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
         self._hass_to_unifi_options = {item["name"]: item["id"] for item in options}
         self._unifi_to_hass_options = {item["id"]: item["name"] for item in options}
 
+    @async_ufp_instance_command
     async def async_select_option(self, option: str) -> None:
         """Change the Select Entity Option."""
 
