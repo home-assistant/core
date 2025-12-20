@@ -99,11 +99,28 @@ class AmberPriceSensor(AmberSensor):
             data["range_min"] = format_cents_to_dollars(interval.range.min)
             data["range_max"] = format_cents_to_dollars(interval.range.max)
 
+        data["advanced_price_low"] = None
+        data["advanced_price_predicted"] = None
+        data["advanced_price_high"] = None
+        if interval.advanced_price is not None:
+            multiplier = -1 if interval.channel_type == ChannelType.FEEDIN else 1
+            data["advanced_price_low"] = multiplier * format_cents_to_dollars(
+                interval.advanced_price.low
+            )
+            data["advanced_price_predicted"] = multiplier * format_cents_to_dollars(
+                interval.advanced_price.predicted
+            )
+            data["advanced_price_high"] = multiplier * format_cents_to_dollars(
+                interval.advanced_price.high
+            )
+
         return data
 
 
 class AmberForecastSensor(AmberSensor):
     """Amber Forecast Sensor."""
+
+    _unrecorded_attributes = frozenset({"forecasts"})
 
     @property
     def native_value(self) -> float | None:
@@ -152,6 +169,21 @@ class AmberForecastSensor(AmberSensor):
             if interval.range is not None:
                 datum["range_min"] = format_cents_to_dollars(interval.range.min)
                 datum["range_max"] = format_cents_to_dollars(interval.range.max)
+
+            datum["advanced_price_low"] = None
+            datum["advanced_price_predicted"] = None
+            datum["advanced_price_high"] = None
+            if interval.advanced_price is not None:
+                multiplier = -1 if interval.channel_type == ChannelType.FEEDIN else 1
+                datum["advanced_price_low"] = multiplier * format_cents_to_dollars(
+                    interval.advanced_price.low
+                )
+                datum["advanced_price_predicted"] = multiplier * format_cents_to_dollars(
+                    interval.advanced_price.predicted
+                )
+                datum["advanced_price_high"] = multiplier * format_cents_to_dollars(
+                    interval.advanced_price.high
+                )
 
             data["forecasts"].append(datum)
 
