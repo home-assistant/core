@@ -11,6 +11,7 @@ from homeassistant.components.actron_air.coordinator import (
     ActronAirRuntimeData,
     ActronAirSystemCoordinator,
 )
+from homeassistant.components.actron_air.sensor import PERIPHERAL_SENSORS
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -94,25 +95,31 @@ async def test_sensor_setup_creates_all_entities(
     assert len(added) == 11
 
     # Verify AC system sensors
-    assert any(
-        isinstance(entity, actron_sensor.AirconCleanFilterSensor) for entity in added
-    )
-    assert any(
-        isinstance(entity, actron_sensor.AirconOutdoorTemperatureSensor)
-        for entity in added
-    )
+    ac_sensors = [
+        entity for entity in added if isinstance(entity, actron_sensor.ActronAirSensor)
+    ]
+    assert len(ac_sensors) == 8
+
+    # Verify we have the expected sensor keys
+    ac_sensor_keys = {entity.entity_description.key for entity in ac_sensors}
+    assert "clean_filter" in ac_sensor_keys
+    assert "outdoor_temperature" in ac_sensor_keys
 
     # Verify peripheral sensors
-    assert any(
-        isinstance(entity, actron_sensor.PeripheralBatterySensor) for entity in added
-    )
-    assert any(
-        isinstance(entity, actron_sensor.PeripheralHumiditySensor) for entity in added
-    )
-    assert any(
-        isinstance(entity, actron_sensor.PeripheralTemperatureSensor)
+    peripheral_sensors = [
+        entity
         for entity in added
-    )
+        if isinstance(entity, actron_sensor.ActronAirPeripheralSensorEntity)
+    ]
+    assert len(peripheral_sensors) == 3
+
+    # Verify we have the expected peripheral sensor keys
+    peripheral_sensor_keys = {
+        entity.entity_description.key for entity in peripheral_sensors
+    }
+    assert "battery" in peripheral_sensor_keys
+    assert "humidity" in peripheral_sensor_keys
+    assert "temperature" in peripheral_sensor_keys
 
 
 async def test_peripheral_battery_sensor_properties(
@@ -121,7 +128,15 @@ async def test_peripheral_battery_sensor_properties(
     """Test peripheral battery sensor returns correct values."""
     peripheral = MockPeripheral()
     coordinator = await _create_coordinator(hass, [peripheral])
-    entity = actron_sensor.PeripheralBatterySensor(coordinator, peripheral)
+
+    battery_description = next(
+        description
+        for description in PERIPHERAL_SENSORS
+        if description.key == "battery"
+    )
+    entity = actron_sensor.ActronAirPeripheralSensorEntity(
+        coordinator, peripheral, battery_description
+    )
 
     assert entity.native_value == 85
     assert entity.available is True
@@ -136,6 +151,13 @@ async def test_peripheral_sensor_unavailable_when_stale(
     coordinator = await _create_coordinator(hass, [peripheral])
     coordinator.is_device_stale = MagicMock(return_value=True)
 
-    entity = actron_sensor.PeripheralBatterySensor(coordinator, peripheral)
+    battery_description = next(
+        description
+        for description in PERIPHERAL_SENSORS
+        if description.key == "battery"
+    )
+    entity = actron_sensor.ActronAirPeripheralSensorEntity(
+        coordinator, peripheral, battery_description
+    )
 
     assert entity.available is False
