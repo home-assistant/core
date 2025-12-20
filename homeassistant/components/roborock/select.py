@@ -336,6 +336,11 @@ class RoborockSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
             ),
         )
 
+    def _update_from_latest_data(self) -> None:
+        self._attr_current_option = self.entity_description.value_fn(
+            self.coordinator.properties_api
+        )
+
     @property
     def current_option(self) -> str | None:
         """Get the current status of the select entity from device props."""
@@ -359,6 +364,17 @@ class RoborockCurrentMapSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
         super().__init__(unique_id, coordinator)
         self._home_trait = home_trait
         self._maps_trait = maps_trait
+        self._attr_options = []
+
+    def _update_from_latest_data(self) -> None:
+        self._attr_options = list(self._available_map_names.values())
+        if current_map_info := self._home_trait.current_map_data:
+            if current_map_info.name:
+                self._attr_current_option = current_map_info.name
+            else:
+                self._attr_current_option = f"Map {current_map_info.map_flag}"
+        else:
+            self._attr_current_option = None
 
     @property
     def _available_map_names(self) -> dict[int, str]:

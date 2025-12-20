@@ -3,7 +3,7 @@
 import logging
 from typing import Any
 
-from roborock.data import RoborockStateCode, SCWindMapping, WorkStatusMapping
+from roborock.data import RoborockStateCode, Status, SCWindMapping, WorkStatusMapping
 from roborock.exceptions import RoborockException
 from roborock.roborock_typing import RoborockCommand
 
@@ -79,7 +79,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Roborock sensor."""
     async_add_entities(
-        RoborockVacuum(coordinator) for coordinator in config_entry.runtime_data.v1
+        (RoborockVacuum(coordinator) for coordinator in config_entry.runtime_data.v1),
     )
     async_add_entities(
         RoborockQ7Vacuum(coordinator)
@@ -121,13 +121,12 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
         self._maps_trait = coordinator.properties_api.maps
 
     @callback
-    def _handle_coordinator_update(self) -> None:
+    def _update_from_latest_data(self) -> None:
         """Handle updated data from the coordinator.
 
         Creates a repair issue when the vacuum reports different segments than
         what was available when the area mapping was last configured.
         """
-        super()._handle_coordinator_update()
         last_seen = self.last_seen_segments
         if last_seen is None:
             # No area mapping has been configured yet; nothing to check.
@@ -158,6 +157,10 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
 
     async def async_start(self) -> None:
         """Start the vacuum."""
+        if self._device_status is None:
+            await self.send(RoborockCommand.APP_START)
+            return
+        # Attempt to restore previous cleaning mode
         if self._device_status.in_returning == 1:
             await self.send(RoborockCommand.APP_CHARGE)
         elif self._device_status.in_cleaning == 2:
@@ -191,6 +194,11 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
 
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set vacuum fan speed."""
+        if self._device_status is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="update_options_failed",
+            )
         await self.send(
             RoborockCommand.SET_CUSTOM_MODE,
             [

@@ -1,5 +1,6 @@
 """Support for Roborock device base class."""
 
+from abc import abstractmethod
 from typing import Any
 
 from roborock.devices.traits.v1.command import CommandTrait
@@ -7,6 +8,7 @@ from roborock.devices.traits.v1.status import StatusTrait
 from roborock.exceptions import RoborockException
 from roborock.roborock_typing import RoborockCommand
 
+from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
@@ -108,6 +110,22 @@ class RoborockCoordinatedEntityV1(
         res = await super().send(command, params)
         await self.coordinator.async_refresh()
         return res
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        # Entity platform will handle updating state
+        self._update_from_latest_data()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._update_from_latest_data()
+        super()._handle_coordinator_update()  # Will update state
+
+    @abstractmethod
+    def _update_from_latest_data(self) -> None:
+        """Handles updating entity state from latest coordinator data."""
 
 
 class RoborockCoordinatedEntityA01(

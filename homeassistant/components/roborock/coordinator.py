@@ -80,7 +80,7 @@ class RoborockCoordinators:
 type RoborockConfigEntry = ConfigEntry[RoborockCoordinators]
 
 
-class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState]):
+class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
     """Class to manage fetching data from the API."""
 
     config_entry: RoborockConfigEntry
@@ -226,7 +226,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState]):
         )
         _LOGGER.debug("Updated device properties")
 
-    async def _async_update_data(self) -> DeviceState:
+    async def _async_update_data(self) -> DeviceState | None:
         """Update data via library."""
         await self._verify_api()
         try:

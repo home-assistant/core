@@ -159,7 +159,6 @@ async def async_setup_entry(
         )
         for coordinator in config_entry.runtime_data.v1
         for description in BINARY_SENSOR_DESCRIPTIONS
-        if description.value_fn(coordinator.data) is not None
     ]
     entities.extend(
         RoborockBinarySensorEntityA01(
@@ -195,7 +194,17 @@ class RoborockBinarySensorEntity(RoborockCoordinatedEntityV1, BinarySensorEntity
     @property
     def is_on(self) -> bool:
         """Return the value reported by the sensor."""
-        return bool(self.entity_description.value_fn(self.coordinator.data))
+        if (data := self.coordinator.data) is not None:
+            return bool(self.entity_description.value_fn(data))
+        return None
+
+    def _update_from_latest_data(self) -> None:
+        """Handles updating entity state from latest coordinator data."""
+        # XXX: Why do here instead of within is_on?
+        if (data := self.coordinator.data) is not None:
+            self._attr_is_on = bool(self.entity_description.value_fn(data))
+        else:
+            self._attr_is_on = None
 
 
 class RoborockBinarySensorEntityA01(RoborockCoordinatedEntityA01, BinarySensorEntity):

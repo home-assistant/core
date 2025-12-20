@@ -74,12 +74,6 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
         self.cached_map: bytes | None = None
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to hass load any previously cached maps from disk."""
-        await super().async_added_to_hass()
-        self._attr_image_last_updated = self.coordinator.last_home_update
-        self.async_write_ha_state()
-
     @property
     def _map_content(self) -> MapContent | None:
         if self._home_trait.home_map_content and (
@@ -88,18 +82,21 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
             return map_content
         return None
 
-    def _handle_coordinator_update(self) -> None:
+    def _update_from_latest_data(self) -> None:
         """Handle updated data from the coordinator.
 
         If the coordinator has updated the map, we can update the image.
         """
+        if self._attr_image_last_updated is None:
+            self._attr_image_last_updated = self.coordinator.last_home_update
+        if self.coordinator.data is None:
+            # Parent will mark entity unavailable
+            return
         if (map_content := self._map_content) is None:
             return
         if self.cached_map != map_content.image_content:
             self.cached_map = map_content.image_content
             self._attr_image_last_updated = self.coordinator.last_home_update
-
-        super()._handle_coordinator_update()
 
     async def async_image(self) -> bytes | None:
         """Get the cached image."""
