@@ -15,7 +15,6 @@ async def test_setup_entry(
 ) -> None:
     """Test successful setup of entry."""
     mock_config_entry.add_to_hass(hass)
-    mock_actron_api.update_status = AsyncMock()
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
