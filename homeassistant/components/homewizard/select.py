@@ -44,9 +44,8 @@ class HomeWizardBatteryModeSelectEntity(HomeWizardEntity, SelectEntity):
         """Initialize the switch."""
         super().__init__(coordinator)
 
-        battery_count = getattr(
-            getattr(coordinator.data, "batteries", None), "battery_count", None
-        )
+        batteries = coordinator.data.batteries
+        battery_count = batteries.battery_count if batteries is not None else None
         entity_registry_enabled_default = (
             battery_count is not None and battery_count > 0
         )
