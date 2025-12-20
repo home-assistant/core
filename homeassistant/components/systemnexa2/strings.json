@@ -1,12 +1,9 @@
 {
   "config": {
     "abort": {
-      "already_auto_configured": "This integration automatically discovers and configures all supported devices on your network. No manual setup required.",
-      "already_configured": "Device is already configured",
-      "firmware_version_incompatible": "Device firmware version too old. Please update to at least version 0.9.5.",
-      "firmware_version_missing": "Device missing firmware version information",
-      "no_connection": "Could not establish connection `{host}`",
-      "not_supported": "Unsupported device type",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "invalid_host": "[%key:common::config_flow::error::invalid_host%]",
+      "no_connection": "Could not establish connection to `{host}`",
       "unsupported_model": "Unsupported device model"
     },
     "flow_title": "{name}-({model})",
@@ -17,7 +14,7 @@
       },
       "user": {
         "data": {
-          "host": "Hostname"
+          "host": "IP/Hostname"
         },
         "data_description": {
           "host": "Hostname or IP Address of the device"
@@ -29,6 +26,15 @@
     "switch": {
       "433mhz": {
         "name": "433Mhz"
+      },
+      "cloud_access": {
+        "name": "Cloud Access"
+      },
+      "led": {
+        "name": "Led"
+      },
+      "physical_button": {
+        "name": "Physical Button"
       }
     }
   }

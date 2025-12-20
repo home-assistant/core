@@ -1,120 +1,133 @@
 """Switch entity for the SystemNexa2 integration."""
 
-from typing import Any
+from dataclasses import dataclass
+from typing import Any, Final
 
-from sn2.device import Device, OnOffSetting
+from sn2.device import OnOffSetting
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .coordinator import SystemNexa2ConfigEntry, SystemNexa2DataUpdateCoordinator
 from .entity import SystemNexa2Entity
-from .helpers import SystemNexa2ConfigEntry
+
+
+@dataclass(frozen=True, kw_only=True)
+class SystemNexa2SwitchEntityDescription(SwitchEntityDescription):
+    """Entity description for SystemNexa switch entities."""
+
+
+SWITCH_TYPES: Final = [
+    SystemNexa2SwitchEntityDescription(
+        key="433Mhz",
+        translation_key="433mhz",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    SystemNexa2SwitchEntityDescription(
+        key="Cloud Access",
+        translation_key="cloud_access",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    SystemNexa2SwitchEntityDescription(
+        key="Led",
+        translation_key="led",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    SystemNexa2SwitchEntityDescription(
+        key="Physical Button",
+        translation_key="physical_button",
+        entity_category=EntityCategory.CONFIG,
+    ),
+]
 
 
 async def async_setup_entry(
-    _hass: HomeAssistant,
+    hass: HomeAssistant,
     entry: SystemNexa2ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up switch based on a config entry."""
-    device = entry.runtime_data.device
+    """Set up switch and configuration options based on a config entry."""
+    coordinator = entry.runtime_data.coordinator
     entities: list[SystemNexa2Entity] = [
-        ConfigurationSwitch(
-            device=entry.runtime_data.device,
-            device_info=entry.runtime_data.device_info,
-            unique_id=f"setting-{setting.name}",
-            name=setting.name,
-            entry_id=entry.entry_id,
-            setting=setting,
-        )
-        for setting in device.settings
-        if isinstance(setting, OnOffSetting)
+        SystemNexa2ConfigurationSwitch(coordinator, switch_type, setting)
+        for setting_name, setting in entry.runtime_data.coordinator.data.on_off_settings.items()
+        for switch_type in SWITCH_TYPES
+        if switch_type.key == setting_name
     ]
 
-    entry.runtime_data.config_entries.extend(entities)
-    if device.info_data and device.info_data.dimmable is False:
-        entry.runtime_data.main_entry = SN2SwitchPlug(
-            device=device,
-            device_info=entry.runtime_data.device_info,
-            entry_id=entry.entry_id,
+    if coordinator.data.info_data.dimmable is False:
+        main_entry = SystemNexa2SwitchPlug(
+            coordinator=coordinator,
         )
-        entities.append(entry.runtime_data.main_entry)
+        entities.append(main_entry)
     async_add_entities(entities)
 
 
-class ConfigurationSwitch(SystemNexa2Entity, SwitchEntity):
+class SystemNexa2ConfigurationSwitch(SystemNexa2Entity, SwitchEntity):
     """Configuration switch entity for SystemNexa2 devices."""
+
+    entity_description: SystemNexa2SwitchEntityDescription
 
     def __init__(
         self,
-        device: Device,
-        device_info: DeviceInfo,
-        name: str,
-        entry_id: str,
-        unique_id: str,
+        coordinator: SystemNexa2DataUpdateCoordinator,
+        description: SystemNexa2SwitchEntityDescription,
         setting: OnOffSetting,
     ) -> None:
         """Initialize the configuration switch."""
-        super().__init__(
-            device,
-            entry_id=entry_id,
-            unique_entity_id=unique_id,
-            device_info=device_info,
-            name=name,
-        )
-        self.entity_description = SwitchEntityDescription(key=unique_id)
-        self._attr_entity_category = EntityCategory.CONFIG
-        self._attr_translation_key = name
+        self.entity_description = description
         self._setting = setting
+        super().__init__(
+            coordinator=coordinator,
+            unique_entity_id=description.key,
+        )
+        self._attr_entity_category = EntityCategory.CONFIG
 
     async def async_turn_on(self, **_kwargs: Any) -> None:
         """Turn on the switch."""
-        await self._setting.enable(self._device)
+        await self._setting.enable(self.coordinator.device)
 
     async def async_turn_off(self, **_kwargs: Any) -> None:
         """Turn off the switch."""
-        await self._setting.disable(self._device)
+        await self._setting.disable(self.coordinator.device)
 
-    @callback
-    def handle_state_update(self, is_on: bool) -> None:
-        """Handle state update from the device."""
-        self._attr_is_on = is_on
-        self.async_write_ha_state()
+    @property
+    def is_on(self) -> bool:
+        """Return true if the switch is on."""
+        return self.coordinator.data.on_off_settings[
+            self.entity_description.key
+        ].is_enabled()
 
 
-class SN2SwitchPlug(SystemNexa2Entity, SwitchEntity):
+class SystemNexa2SwitchPlug(SystemNexa2Entity, SwitchEntity):
     """Representation of a Switch."""
 
-    def __init__(self, device: Device, device_info: DeviceInfo, entry_id: str) -> None:
+    def __init__(
+        self,
+        coordinator: SystemNexa2DataUpdateCoordinator,
+    ) -> None:
         """Initialize the switch."""
         super().__init__(
-            device,
-            entry_id=entry_id,
-            unique_entity_id="switch1",
-            name="Switch",
-            device_info=device_info,
+            coordinator=coordinator,
+            unique_entity_id="relay1",
+            name="Relay",
         )
-
-        self._attr_available = True
 
     async def async_turn_on(self, **_kwargs: Any) -> None:
         """Turn on the switch."""
-        await self._device.turn_on()
+        await self.coordinator.device.turn_on()
 
     async def async_turn_off(self, **_kwargs: Any) -> None:
         """Turn off the switch."""
-        await self._device.turn_off()
+        await self.coordinator.device.turn_off()
 
     async def async_toggle(self, **_kwargs: Any) -> None:
         """Toggle the switch."""
-        await self._device.toggle()
+        await self.coordinator.device.toggle()
 
-    @callback
-    def handle_state_update(self, *, state: bool) -> None:
-        """Handle state updates from the device."""
-        if self._attr_is_on != state:
-            self._attr_is_on = state
-            self.async_write_ha_state()
+    @property
+    def is_on(self) -> bool:
+        """Return true if the switch is on."""
+        return bool(self.coordinator.data.state)

@@ -11,7 +11,7 @@ from sn2 import InformationData, InformationUpdate
 def mock_system_nexa_2_device() -> Generator[MagicMock]:
     """Mock the System Nexa 2 API."""
     with (
-        patch("homeassistant.components.systemnexa2.Device") as mock_device,
+        patch("homeassistant.components.systemnexa2.coordinator.Device") as mock_device,
         patch(
             "homeassistant.components.systemnexa2.config_flow.Device", new=mock_device
         ),
@@ -34,7 +34,7 @@ def mock_system_nexa_2_device() -> Generator[MagicMock]:
 def mock_system_nexa_2_device_timeout() -> Generator[MagicMock]:
     """Mock an System Nexa 2 device with connection issues."""
     with (
-        patch("homeassistant.components.systemnexa2.Device") as mock_device,
+        patch("homeassistant.components.systemnexa2.coordinator.Device") as mock_device,
         patch(
             "homeassistant.components.systemnexa2.config_flow.Device", new=mock_device
         ),
@@ -50,7 +50,7 @@ def mock_system_nexa_2_device_timeout() -> Generator[MagicMock]:
 def mock_system_nexa_2_device_unsupported() -> Generator[MagicMock]:
     """Mock an unsupported System Nexa 2 device."""
     with (
-        patch("homeassistant.components.systemnexa2.Device") as mock_device,
+        patch("homeassistant.components.systemnexa2.coordinator.Device") as mock_device,
         patch(
             "homeassistant.components.systemnexa2.config_flow.Device", new=mock_device
         ),
