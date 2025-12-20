@@ -2,22 +2,37 @@
 
 from dataclasses import dataclass
 import logging
+import socket
 from typing import Any
 
 from sn2.device import Device
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    CONN_CLASS_LOCAL_PUSH,
-    ConfigFlow,
-    ConfigFlowResult,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_MODEL, CONF_NAME
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+from homeassistant.util.network import is_ip_address
 
 from . import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_HOST): str,
+    }
+)
+
+
+def _is_valid_host(ip_or_hostname: str) -> bool:
+    if is_ip_address(ip_or_hostname):
+        return True
+    try:
+        socket.gethostbyname(ip_or_hostname)
+    except socket.gaierror:
+        return False
+    return True
 
 
 @dataclass
@@ -29,19 +44,14 @@ class _DiscoveryInfo:
     device_version: str
 
 
-class SN2ConfigFlow(ConfigFlow, domain=DOMAIN):
+class SystemNexa2ConfigFlownfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for the devices."""
 
     VERSION = 1
 
-    CONNECTION_CLASS = CONN_CLASS_LOCAL_PUSH
-
     def __init__(self) -> None:
         """Initialize the config flow."""
         self._discovered_device: _DiscoveryInfo
-        self.data_schema = {
-            vol.Required(CONF_HOST): str,
-        }
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -49,14 +59,15 @@ class SN2ConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle user-initiated flow."""
 
         if user_input is None:
-            return self.async_show_form(data_schema=vol.Schema(self.data_schema))
+            return self.async_show_form(step_id="user", data_schema=_SCHEMA)
 
-        return await self._async_step_add_by_ip_or_hostname(user_input[CONF_HOST])
+        return await self._async_add_by_ip_or_hostname(user_input[CONF_HOST])
 
-    async def _async_step_add_by_ip_or_hostname(
-        self, host_or_ip: str
-    ) -> ConfigFlowResult:
+    async def _async_add_by_ip_or_hostname(self, host_or_ip: str) -> ConfigFlowResult:
         temp_dev = Device(host=host_or_ip)
+        if not _is_valid_host(host_or_ip):
+            return self.async_abort(reason="invalid_host")
+
         try:
             info = await temp_dev.get_info()
             device_id = info.information.unique_id
@@ -83,9 +94,8 @@ class SN2ConfigFlow(ConfigFlow, domain=DOMAIN):
                 reason="no_connection", description_placeholders={"host": host_or_ip}
             )
 
-        res = await self._async_step_try_add()
-        if res is not None:
-            return res
+        await self._async_validate_discovered_device()
+
         return await self._async_create_device_entry()
 
     async def async_step_zeroconf(
@@ -110,17 +120,18 @@ class SN2ConfigFlow(ConfigFlow, domain=DOMAIN):
             model=device_model,
             device_version=device_version,
         )
-        res = await self._async_step_try_add()
-        if res is not None:
-            return res
+        await self._async_validate_discovered_device()
+
         return await self.async_step_discovery_confirm()
 
-    async def _async_step_try_add(self) -> ConfigFlowResult | None:
-        if not Device.is_device_supported(
+    async def _async_validate_discovered_device(self) -> None:
+        supported, error = Device.is_device_supported(
             model=self._discovered_device.model,
             device_version=self._discovered_device.device_version,
-        ):
-            return self.async_abort(
+        )
+        if not supported:
+            _LOGGER.error("Unsupported model: %s", error)
+            raise AbortFlow(
                 reason="unsupported_model",
                 description_placeholders={
                     "model": str(self._discovered_device.model),
@@ -143,7 +154,6 @@ class SN2ConfigFlow(ConfigFlow, domain=DOMAIN):
             "name": self._discovered_device.name,
             "model": self._discovered_device.model or "Unknown model",
         }
-        return None
 
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
