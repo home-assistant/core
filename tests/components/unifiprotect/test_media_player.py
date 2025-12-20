@@ -295,6 +295,3 @@ async def test_media_player_play_error(
 
         assert mock_play.called
         assert not mock_wait.called
-
-        assert mock_play.called
-        assert not mock_wait.called
