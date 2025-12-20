@@ -42,6 +42,9 @@
     "number": {
       "cook_time": {
         "default": "mdi:microwave"
+      },
+      "speaker_setpoint": {
+        "default": "mdi:speaker"
       }
     },
     "select": {

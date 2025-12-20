@@ -3,30 +3,27 @@
 from __future__ import annotations
 
 from homeassistant.components.event import EventDeviceClass, EventEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, EVENT_PRESSED
-from .coordinator import HomeLinkCoordinator, HomeLinkEventData
+from .coordinator import HomeLinkConfigEntry, HomeLinkCoordinator, HomeLinkEventData
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: HomeLinkConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Add the entities for the binary sensor."""
-    coordinator = config_entry.runtime_data.coordinator
-    for device in coordinator.device_data:
-        buttons = [
-            HomeLinkEventEntity(b.id, b.name, device.id, device.name, coordinator)
-            for b in device.buttons
-        ]
-        coordinator.buttons.extend(buttons)
+    """Add the entities for the event platform."""
+    coordinator = config_entry.runtime_data
 
-    async_add_entities(coordinator.buttons)
+    async_add_entities(
+        HomeLinkEventEntity(coordinator, button.id, button.name, device.id, device.name)
+        for device in coordinator.device_data
+        for button in device.buttons
+    )
 
 
 # Updates are centralized by the coordinator.
@@ -42,17 +39,17 @@ class HomeLinkEventEntity(EventEntity):
 
     def __init__(
         self,
-        id: str,
+        coordinator: HomeLinkCoordinator,
+        button_id: str,
         param_name: str,
         device_id: str,
         device_name: str,
-        coordinator: HomeLinkCoordinator,
     ) -> None:
         """Initialize the event entity."""
 
-        self.id: str = id
-        self._attr_name: str = param_name
-        self._attr_unique_id: str = id
+        self.button_id = button_id
+        self._attr_name = param_name
+        self._attr_unique_id = button_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_id)},
             name=device_name,
@@ -65,7 +62,7 @@ class HomeLinkEventEntity(EventEntity):
         await super().async_added_to_hass()
         self.async_on_remove(
             self.coordinator.async_add_event_listener(
-                self._handle_event_data_update, self.id
+                self._handle_event_data_update, self.button_id
             )
         )
 
@@ -76,8 +73,4 @@ class HomeLinkEventEntity(EventEntity):
         if update_data["requestId"] != self.last_request_id:
             self._trigger_event(EVENT_PRESSED)
             self.last_request_id = update_data["requestId"]
-
-        self.async_write_ha_state()
-
-    async def async_update(self):
-        """Request early polling. Left intentionally blank because it's not possible in this implementation."""
+            self.async_write_ha_state()
