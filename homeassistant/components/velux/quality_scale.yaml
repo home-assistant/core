@@ -20,9 +20,7 @@ rules:
   has-entity-name: done
   runtime-data: done
   test-before-configure: done
-  test-before-setup:
-    status: todo
-    comment: needs rework, failure to setup currently only returns false
+  test-before-setup: done
   unique-config-entry: done
 
   # Silver

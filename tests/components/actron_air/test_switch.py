@@ -1,149 +1,90 @@
 """Tests for the Actron Air switch platform."""
 
-from __future__ import annotations
-
-from types import SimpleNamespace
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.actron_air import switch as actron_switch
-from homeassistant.components.actron_air.const import DOMAIN
-from homeassistant.components.actron_air.coordinator import (
-    ActronAirRuntimeData,
-    ActronAirSystemCoordinator,
+from homeassistant.components.switch import (
+    DOMAIN as SWITCH_DOMAIN,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
 )
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+from . import setup_integration
 
-
-class MockUserAirconSettings:
-    """Mock Actron Air user aircon settings object."""
-
-    def __init__(self, *, turbo_supported: bool = True) -> None:
-        """Initialize mock settings with default values."""
-        self.away_mode = False
-        self.continuous_fan_enabled = False
-        self.quiet_mode_enabled = False
-        self.turbo_enabled = False
-        self.turbo_supported = turbo_supported
-
-        self.set_away_mode = AsyncMock()
-        self.set_continuous_mode = AsyncMock()
-        self.set_quiet_mode = AsyncMock()
-        self.set_turbo_mode = AsyncMock()
+from tests.common import MockConfigEntry, snapshot_platform
 
 
-async def _create_coordinator(
-    hass: HomeAssistant, user_settings: MockUserAirconSettings
-) -> ActronAirSystemCoordinator:
-    """Create a coordinator instance backed by mocked API data."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data={})
-    api = MagicMock()
-    api.update_status = AsyncMock()
-    api.state_manager = MagicMock()
-
-    status = SimpleNamespace(user_aircon_settings=user_settings)
-    api.state_manager.get_status.return_value = status
-
-    coordinator = ActronAirSystemCoordinator(
-        hass,
-        config_entry,
-        api,
-        {"serial": "ABC123"},
-    )
-    coordinator.data = status
-    return coordinator
-
-
-async def test_switch_setup_adds_all_entities_when_turbo_supported(
+async def test_switch_entities(
     hass: HomeAssistant,
+    mock_actron_api: MagicMock,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that switch setup adds all entities when turbo is supported."""
-    user_settings = MockUserAirconSettings(turbo_supported=True)
-    coordinator = await _create_coordinator(hass, user_settings)
-
-    entry = MockConfigEntry(domain=DOMAIN, data={})
-    entry.runtime_data = ActronAirRuntimeData(
-        api=MagicMock(),
-        system_coordinators={coordinator.serial_number: coordinator},
-    )
-
-    added: list = []
-
-    def _async_add_entities(entities):
-        added.extend(entities)
-
-    await actron_switch.async_setup_entry(hass, entry, _async_add_entities)
-
-    assert len(added) == 4
-    assert any(isinstance(entity, actron_switch.TurboModeSwitch) for entity in added)
-    assert {type(entity) for entity in added} == {
-        actron_switch.AwayModeSwitch,
-        actron_switch.ContinuousFanSwitch,
-        actron_switch.QuietModeSwitch,
-        actron_switch.TurboModeSwitch,
-    }
-
-
-async def test_switch_setup_excludes_turbo_when_not_supported(
-    hass: HomeAssistant,
-) -> None:
-    """Test that the turbo switch is not added when unsupported."""
-    user_settings = MockUserAirconSettings(turbo_supported=False)
-    coordinator = await _create_coordinator(hass, user_settings)
-
-    entry = MockConfigEntry(domain=DOMAIN, data={})
-    entry.runtime_data = ActronAirRuntimeData(
-        api=MagicMock(),
-        system_coordinators={coordinator.serial_number: coordinator},
-    )
-
-    added: list = []
-
-    def _async_add_entities(entities):
-        added.extend(entities)
-
-    await actron_switch.async_setup_entry(hass, entry, _async_add_entities)
-
-    assert len(added) == 3
-    assert not any(
-        isinstance(entity, actron_switch.TurboModeSwitch) for entity in added
-    )
+    """Test switch entities."""
+    with patch("homeassistant.components.actron_air.PLATFORMS", [Platform.SWITCH]):
+        await setup_integration(hass, mock_config_entry)
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 @pytest.mark.parametrize(
-    ("entity_cls", "attr_name", "method_name"),
+    ("entity_id", "method"),
     [
-        (actron_switch.AwayModeSwitch, "away_mode", "set_away_mode"),
-        (
-            actron_switch.ContinuousFanSwitch,
-            "continuous_fan_enabled",
-            "set_continuous_mode",
-        ),
-        (actron_switch.QuietModeSwitch, "quiet_mode_enabled", "set_quiet_mode"),
-        (actron_switch.TurboModeSwitch, "turbo_enabled", "set_turbo_mode"),
+        ("switch.test_system_away_mode", "set_away_mode"),
+        ("switch.test_system_continuous_fan", "set_continuous_mode"),
+        ("switch.test_system_quiet_mode", "set_quiet_mode"),
+        ("switch.test_system_turbo_mode", "set_turbo_mode"),
     ],
 )
-async def test_switch_turn_on_off_calls_api(
-    hass: HomeAssistant, entity_cls, attr_name, method_name
+async def test_switch_toggles(
+    hass: HomeAssistant,
+    mock_actron_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_id: str,
+    method: str,
 ) -> None:
-    """Ensure turning switches on/off calls the expected API helpers."""
-    user_settings = MockUserAirconSettings(turbo_supported=True)
-    setattr(user_settings, attr_name, False)
+    """Test switch toggles."""
+    with patch("homeassistant.components.actron_air.PLATFORMS", [Platform.SWITCH]):
+        await setup_integration(hass, mock_config_entry)
 
-    coordinator = await _create_coordinator(hass, user_settings)
-    entity = entity_cls(coordinator)
+    status = mock_actron_api.state_manager.get_status.return_value
+    mock_method = getattr(status.user_aircon_settings, method)
 
-    assert entity.is_on is False
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: [entity_id]},
+        blocking=True,
+    )
+    mock_method.assert_awaited_once_with(True)
+    mock_method.reset_mock()
 
-    api_method = getattr(user_settings, method_name)
-    api_method.assert_not_called()
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: [entity_id]},
+        blocking=True,
+    )
+    mock_method.assert_awaited_once_with(False)
 
-    await entity.async_turn_on()
-    api_method.assert_awaited_once_with(True)
 
-    await entity.async_turn_off()
-    assert api_method.await_count == 2
-    assert api_method.await_args_list[-1].args == (False,)
+async def test_turbo_mode_not_supported(
+    hass: HomeAssistant,
+    mock_actron_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test turbo mode switch is not created when not supported."""
+    status = mock_actron_api.state_manager.get_status.return_value
+    status.user_aircon_settings.turbo_supported = False
+
+    await setup_integration(hass, mock_config_entry)
+
+    entity_id = "switch.test_system_turbo_mode"
+    assert not hass.states.get(entity_id)
+    assert not entity_registry.async_get(entity_id)

@@ -448,7 +448,7 @@ class TelegramNotificationService:
                 params[ATTR_MESSAGE_THREAD_ID] = data[ATTR_MESSAGE_THREAD_ID]
             # Keyboards:
             if ATTR_KEYBOARD in data:
-                keys = data.get(ATTR_KEYBOARD)
+                keys = data[ATTR_KEYBOARD]
                 keys = keys if isinstance(keys, list) else [keys]
                 if keys:
                     params[ATTR_REPLYMARKUP] = ReplyKeyboardMarkup(
@@ -783,6 +783,7 @@ class TelegramNotificationService:
                 None,
                 chat_id=chat_id,
                 action=chat_action,
+                message_thread_id=kwargs.get(ATTR_MESSAGE_THREAD_ID),
                 context=context,
             )
             result[chat_id] = is_successful

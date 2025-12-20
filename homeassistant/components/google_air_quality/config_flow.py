@@ -26,7 +26,7 @@ from homeassistant.const import (
     CONF_NAME,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import section
+from homeassistant.data_entry_flow import SectionConfig, section
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import LocationSelector, LocationSelectorConfig
 
@@ -38,7 +38,8 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_API_KEY): str,
         vol.Optional(SECTION_API_KEY_OPTIONS): section(
-            vol.Schema({vol.Optional(CONF_REFERRER): str}), {"collapsed": True}
+            vol.Schema({vol.Optional(CONF_REFERRER): str}),
+            SectionConfig(collapsed=True),
         ),
     }
 )
@@ -51,9 +52,9 @@ async def _validate_input(
     description_placeholders: dict[str, str],
 ) -> bool:
     try:
-        await api.async_air_quality(
+        await api.async_get_current_conditions(
             lat=user_input[CONF_LOCATION][CONF_LATITUDE],
-            long=user_input[CONF_LOCATION][CONF_LONGITUDE],
+            lon=user_input[CONF_LOCATION][CONF_LONGITUDE],
         )
     except GoogleAirQualityApiError as err:
         errors["base"] = "cannot_connect"
@@ -96,6 +97,15 @@ def _is_location_already_configured(
                 and abs(subentry.data[CONF_LONGITUDE] - new_data[CONF_LONGITUDE])
                 <= epsilon
             ):
+                return True
+    return False
+
+
+def _is_location_name_already_configured(hass: HomeAssistant, new_data: str) -> bool:
+    """Check if the location name is already configured."""
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        for subentry in entry.subentries.values():
+            if subentry.title.lower() == new_data.lower():
                 return True
     return False
 
@@ -177,8 +187,19 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
         description_placeholders: dict[str, str] = {}
         if user_input is not None:
             if _is_location_already_configured(self.hass, user_input[CONF_LOCATION]):
-                return self.async_abort(reason="already_configured")
+                errors["base"] = "location_already_configured"
+            if _is_location_name_already_configured(self.hass, user_input[CONF_NAME]):
+                errors["base"] = "location_name_already_configured"
             api: GoogleAirQualityApi = self._get_entry().runtime_data.api
+            if errors:
+                return self.async_show_form(
+                    step_id="location",
+                    data_schema=self.add_suggested_values_to_schema(
+                        _get_location_schema(self.hass), user_input
+                    ),
+                    errors=errors,
+                    description_placeholders=description_placeholders,
+                )
             if await _validate_input(user_input, api, errors, description_placeholders):
                 return self.async_create_entry(
                     title=user_input[CONF_NAME],
