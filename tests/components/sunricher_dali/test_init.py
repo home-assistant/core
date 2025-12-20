@@ -105,13 +105,13 @@ async def test_remove_stale_devices(
     mock_config_entry: MockConfigEntry,
     mock_gateway: MagicMock,
     mock_devices: list[MagicMock],
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test stale devices are removed when device list decreases."""
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device_registry = dr.async_get(hass)
     devices_before = dr.async_entries_for_config_entry(
         device_registry, mock_config_entry.entry_id
     )
