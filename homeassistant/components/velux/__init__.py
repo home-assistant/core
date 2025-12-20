@@ -51,7 +51,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 await entry.runtime_data.reboot_gateway()
                 return
 
-        raise ServiceValidationError("No loaded Velux gateway found")
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="no_gateway_loaded",
+        )
 
     hass.services.async_register(DOMAIN, "reboot_gateway", async_reboot_gateway)
 
