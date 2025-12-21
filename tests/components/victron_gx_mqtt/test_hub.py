@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from victron_mqtt import (
+    AuthenticationError,
     CannotConnectError,
     Device as VictronVenusDevice,
     Hub as VictronVenusHub,
@@ -121,6 +122,24 @@ async def test_hub_start_connection_error(
 
         # Verify the config entry is in SETUP_RETRY state (not loaded due to error)
         assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_hub_start_authentication_error(
+    hass: HomeAssistant, mock_config_entry
+) -> None:
+    """Test hub start with authentication error."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.victron_gx_mqtt.hub.VictronVenusHub.connect",
+        side_effect=AuthenticationError("Authentication failed"),
+    ):
+        # Attempt to set up the config entry - should fail with auth error
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        # Verify the config entry is in SETUP_ERROR state (auth failed)
+        assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_hub_stop(hass: HomeAssistant, init_integration) -> None:
