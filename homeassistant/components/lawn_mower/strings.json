@@ -41,48 +41,44 @@
   "title": "Lawn mower",
   "triggers": {
     "docked": {
-      "description": "Triggers when a lawn mower has docked.",
-      "description_configured": "[%key:component::lawn_mower::triggers::docked::description%]",
+      "description": "Triggers after one or more lawn mowers return to dock.",
       "fields": {
         "behavior": {
           "description": "[%key:component::lawn_mower::common::trigger_behavior_description%]",
           "name": "[%key:component::lawn_mower::common::trigger_behavior_name%]"
         }
       },
-      "name": "When a lawn mower has docked"
+      "name": "Lawn mower returned to dock"
     },
     "errored": {
-      "description": "Triggers when a lawn mower has errored.",
-      "description_configured": "[%key:component::lawn_mower::triggers::errored::description%]",
+      "description": "Triggers after one or more lawn mowers encounter an error.",
       "fields": {
         "behavior": {
           "description": "[%key:component::lawn_mower::common::trigger_behavior_description%]",
           "name": "[%key:component::lawn_mower::common::trigger_behavior_name%]"
         }
       },
-      "name": "When a lawn mower has errored"
+      "name": "Lawn mower encountered an error"
     },
     "paused_mowing": {
-      "description": "Triggers when a lawn mower has paused mowing.",
-      "description_configured": "[%key:component::lawn_mower::triggers::paused_mowing::description%]",
+      "description": "Triggers after one or more lawn mowers pause mowing.",
       "fields": {
         "behavior": {
           "description": "[%key:component::lawn_mower::common::trigger_behavior_description%]",
           "name": "[%key:component::lawn_mower::common::trigger_behavior_name%]"
         }
       },
-      "name": "When a lawn mower has paused mowing"
+      "name": "Lawn mower paused mowing"
     },
     "started_mowing": {
-      "description": "Triggers when a lawn mower has started mowing.",
-      "description_configured": "[%key:component::lawn_mower::triggers::started_mowing::description%]",
+      "description": "Triggers after one or more lawn mowers start mowing.",
       "fields": {
         "behavior": {
           "description": "[%key:component::lawn_mower::common::trigger_behavior_description%]",
           "name": "[%key:component::lawn_mower::common::trigger_behavior_name%]"
         }
       },
-      "name": "When a lawn mower has started mowing"
+      "name": "Lawn mower started mowing"
     }
   }
 }

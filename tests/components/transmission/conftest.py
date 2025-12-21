@@ -47,6 +47,8 @@ def mock_transmission_client() -> Generator[AsyncMock]:
     ):
         client = mock_client_class.return_value
 
+        client.server_version = "4.0.5 (a6fe2a64aa)"
+
         session_stats_data = {
             "uploadSpeed": 1,
             "downloadSpeed": 1,
@@ -99,3 +101,10 @@ def mock_torrent():
         return Torrent(fields=torrent_data)
 
     return _create_mock_torrent
+
+
+@pytest.fixture(autouse=True)
+def patch_sleep() -> Generator[None]:
+    """Fixture to remove sleep in tests."""
+    with patch("homeassistant.components.transmission.switch.AFTER_WRITE_SLEEP", 0):
+        yield
