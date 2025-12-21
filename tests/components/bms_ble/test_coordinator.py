@@ -10,11 +10,14 @@ import pytest
 
 from homeassistant.components.bms_ble.const import (
     ATTR_CURRENT,
+    ATTR_CYCLE_CAP,
     ATTR_CYCLE_CHRG,
     ATTR_CYCLES,
+    ATTR_POWER,
+    ATTR_PROBLEM,
 )
 from homeassistant.components.bms_ble.coordinator import BTBmsCoordinator
-from homeassistant.const import ATTR_VOLTAGE
+from homeassistant.const import ATTR_BATTERY_CHARGING, ATTR_VOLTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
@@ -32,7 +35,7 @@ async def test_update(
 ) -> None:
     """Test setting up creates the sensors."""
 
-    def mock_last_service_info(hass, address, connectable) -> None:
+    def mock_last_service_info(hass: HomeAssistant, address, connectable) -> None:
         assert (
             isinstance(hass, HomeAssistant)
             and connectable is True
@@ -41,7 +44,7 @@ async def test_update(
 
     if (advertisement_avail := bool_fixture) is False:
         monkeypatch.setattr(
-            "custom_components.bms_ble.coordinator.async_last_service_info",
+            "homeassistant.components.bms_ble.coordinator.async_last_service_info",
             mock_last_service_info,
         )
 
@@ -58,8 +61,12 @@ async def test_update(
     assert result == {
         ATTR_VOLTAGE: 13,
         ATTR_CURRENT: 1.7,
+        ATTR_CYCLE_CAP: 247,
         ATTR_CYCLE_CHRG: 19,
         ATTR_CYCLES: 23,
+        ATTR_POWER: 22.1,
+        ATTR_PROBLEM: False,
+        ATTR_BATTERY_CHARGING: True,
     }
     assert coordinator.rssi == (-61 if advertisement_avail else None)
     assert coordinator.link_quality == 50
@@ -102,7 +109,7 @@ async def test_nodata(
 @pytest.mark.usefixtures("enable_bluetooth", "patch_default_bleak_client")
 async def test_update_exception(
     bt_discovery: BluetoothServiceInfoBleak,
-    mock_coordinator_exception,
+    mock_coordinator_exception: Exception,
     hass: HomeAssistant,
 ) -> None:
     """Test if coordinator raises appropriate exception from BMS."""
@@ -118,7 +125,12 @@ async def test_update_exception(
     assert not coordinator.last_update_success
     assert isinstance(
         coordinator.last_exception,
-        TimeoutError if mock_coordinator_exception is TimeoutError else UpdateFailed,
+        (
+            TimeoutError
+            if isinstance(mock_coordinator_exception, type)
+            and issubclass(mock_coordinator_exception, TimeoutError)
+            else UpdateFailed
+        ),
     )
 
 

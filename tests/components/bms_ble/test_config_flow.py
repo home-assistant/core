@@ -105,11 +105,18 @@ async def test_bluetooth_discovery(
 @pytest.mark.parametrize(
     ("sensor_set", "sensor_count"),
     [
-        ("min", (1, SENSORS - 3, 1 + (SENSORS - 1) + LINK_SENSORS)),
+        (
+            "min",
+            (
+                min(BINARY_SENSORS, 1),
+                SENSORS - 3,
+                min(BINARY_SENSORS, 1) + (SENSORS - 1) + LINK_SENSORS,
+            ),
+        ),
         (
             "full",
             (
-                BINARY_SENSORS - 4,
+                max(BINARY_SENSORS - 4, 0),
                 SENSORS - 2,  # link sensors are disabled by default
                 BINARY_SENSORS + SENSORS + LINK_SENSORS,
             ),
@@ -331,7 +338,7 @@ async def test_user_setup_double_configure(
         return {None if include_ignore else "cc:cc:cc:cc:cc:cc"}
 
     monkeypatch.setattr(
-        "custom_components.bms_ble.config_flow.ConfigFlow._async_current_ids",
+        "homeassistant.components.bms_ble.config_flow.ConfigFlow._async_current_ids",
         patch_async_current_ids,
     )
 

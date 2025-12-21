@@ -1,6 +1,6 @@
 {
   "domain": "bms_ble",
-  "name": "BLE Battery Management",
+  "name": "BLE Battery Management System",
   "bluetooth": [
     {
       "service_uuid": "0000af30-0000-1000-8000-00805f9b34fb"
@@ -102,5 +102,5 @@
   "iot_class": "local_polling",
   "loggers": ["bleak_retry_connector", "aiobmsble"],
   "quality_scale": "silver",
-  "requirements": ["aiobmsble==0.14.0"]
+  "requirements": ["aiobmsble==0.14.1"]
 }
