@@ -24,8 +24,13 @@ def mock_system_nexa_2_device() -> Generator[MagicMock]:
                 model="Test Model",
                 unique_id="test_device_id",
                 sw_version="Test Model Version",
+                hw_version="Test HW Version",
+                wifi_dbm=-50,
+                wifi_ssid="Test WiFi SSID",
+                dimmable=False,
             )
         )
+        mock_device.is_device_supported = MagicMock(return_value=(True, ""))
 
         yield mock_device
 
@@ -42,6 +47,7 @@ def mock_system_nexa_2_device_timeout() -> Generator[MagicMock]:
         device = mock_device.return_value
         device.get_info = AsyncMock()
         device.get_info.side_effect = RuntimeError
+        mock_device.is_device_supported = MagicMock(return_value=(True, ""))
 
         yield mock_device
 
@@ -63,7 +69,11 @@ def mock_system_nexa_2_device_unsupported() -> Generator[MagicMock]:
                 model="Test Model",
                 unique_id="test_device_id",
                 sw_version="Test Model Version",
+                hw_version="Test HW Version",
+                wifi_dbm=-50,
+                wifi_ssid="Test WiFi SSID",
+                dimmable=False,
             )
         )
-        mock_device.is_device_supported = MagicMock(return_value=False)
+        mock_device.is_device_supported = MagicMock(return_value=(False, "Err"))
         yield mock_device
