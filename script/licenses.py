@@ -182,6 +182,7 @@ EXCEPTIONS = {
     "PyXiaomiGateway",  # https://github.com/Danielhiversen/PyXiaomiGateway/pull/201
     "chacha20poly1305",  # LGPL
     "commentjson",  # https://github.com/vaidik/commentjson/pull/55
+    "commonregex",  # https://github.com/madisonmay/CommonRegex/blob/master/LICENSE
     "crownstone-cloud",  # https://github.com/crownstone/crownstone-lib-python-cloud/pull/5
     "crownstone-core",  # https://github.com/crownstone/crownstone-lib-python-core/pull/6
     "crownstone-sse",  # https://github.com/crownstone/crownstone-lib-python-sse/pull/2
