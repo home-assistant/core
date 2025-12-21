@@ -95,7 +95,7 @@ async def test_select_setup_light(
     await init_entry(hass, ufp, [light])
     assert_entity_counts(hass, Platform.SELECT, 2, 2)
 
-    expected_values = ("On Motion - When Dark", "Not Paired")
+    expected_values = ("motion_dark", "Not Paired")
 
     for index, description in enumerate(LIGHT_SELECTS):
         unique_id, entity_id = await ids_from_device_description(
@@ -153,11 +153,11 @@ async def test_select_setup_camera_all(
     assert_entity_counts(hass, Platform.SELECT, 5, 5)
 
     expected_values = (
-        "Always",
-        "Auto",
+        "always",
+        "auto",
         "Default Message (Welcome)",
-        "None",
-        "Always Off",
+        "none",
+        "off",
     )
 
     for index, description in enumerate(CAMERA_SELECTS):
@@ -186,7 +186,7 @@ async def test_select_setup_camera_none(
     await init_entry(hass, ufp, [camera])
     assert_entity_counts(hass, Platform.SELECT, 2, 2)
 
-    expected_values = ("Always", "Auto", "Default Message (Welcome)")
+    expected_values = ("always", "auto", "Default Message (Welcome)")
 
     for index, description in enumerate(CAMERA_SELECTS):
         if index == 2:
@@ -403,7 +403,7 @@ async def test_select_set_option_camera_recording(
     await hass.services.async_call(
         "select",
         "select_option",
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "Never"},
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "never"},
         blocking=True,
     )
 
@@ -428,7 +428,7 @@ async def test_select_set_option_camera_ir(
     await hass.services.async_call(
         "select",
         "select_option",
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "Always Enable"},
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "on"},
         blocking=True,
     )
 

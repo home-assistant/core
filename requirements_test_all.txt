@@ -354,7 +354,7 @@ aiopvpc==4.2.2
 aiopyarr==23.4.0
 
 # homeassistant.components.qnap_qsw
-aioqsw==0.4.1
+aioqsw==0.4.2
 
 # homeassistant.components.rainforest_raven
 aioraven==0.7.1
@@ -1137,7 +1137,7 @@ influxdb==5.3.1
 inkbird-ble==1.1.1
 
 # homeassistant.components.insteon
-insteon-frontend-home-assistant==0.5.0
+insteon-frontend-home-assistant==0.6.0
 
 # homeassistant.components.intellifire
 intellifire4py==4.2.1
