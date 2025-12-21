@@ -12,7 +12,10 @@
       },
       "user": {
         "data": {
-          "address": "Bluetooth name (MAC address) - Model"
+          "address": "[%key:common::config_flow::data::device%]"
+        },
+        "data_description": {
+          "address": "Bluetooth name (MAC address) - model"
         },
         "description": "[%key:component::bluetooth::config::step::user::description%]"
       }
