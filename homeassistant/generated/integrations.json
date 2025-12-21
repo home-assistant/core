@@ -6350,7 +6350,7 @@
           "name": "Sony Songpal"
         },
         "playstation_network": {
-          "integration_type": "service",
+          "integration_type": "hub",
           "config_flow": true,
           "iot_class": "cloud_polling",
           "name": "PlayStation Network"
