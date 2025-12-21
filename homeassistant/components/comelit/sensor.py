@@ -104,7 +104,7 @@ async def async_setup_entry(
 
     # Alarm sensors (both via Bridge or VedoSystem)
     if isinstance(coordinator, ComelitVedoSystem) or (
-        isinstance(coordinator, ComelitSerialBridge) and coordinator.vedo_pin,
+        isinstance(coordinator, ComelitSerialBridge) and coordinator.vedo_pin
     ):
         config_entry.async_on_unload(
             new_device_listener(coordinator, _add_new_vedo_entities, ALARM_ZONE)

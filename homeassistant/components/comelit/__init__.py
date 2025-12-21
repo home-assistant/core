@@ -22,6 +22,16 @@ BRIDGE_PLATFORMS = [
     Platform.SENSOR,
     Platform.SWITCH,
 ]
+BRIDGE_AND_VEDO_PLATFORMS = [
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.HUMIDIFIER,
+    Platform.LIGHT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 VEDO_PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
@@ -50,7 +60,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ComelitConfigEntry) -> b
         platforms = BRIDGE_PLATFORMS
         # Add VEDO platforms if vedo_pin is configured
         if vedo_pin:
-            platforms = list(set(platforms + VEDO_PLATFORMS))
+            platforms = BRIDGE_AND_VEDO_PLATFORMS
     else:
         coordinator = ComelitVedoSystem(
             hass,
@@ -78,7 +88,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ComelitConfigEntry) -> 
         platforms = BRIDGE_PLATFORMS
         # Add VEDO platforms if vedo_pin was configured
         if entry.data.get(CONF_VEDO_PIN):
-            platforms = list(set(platforms + VEDO_PLATFORMS))
+            platforms = BRIDGE_AND_VEDO_PLATFORMS
     else:
         platforms = VEDO_PLATFORMS
 

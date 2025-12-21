@@ -39,6 +39,8 @@ async def async_setup_entry(
     coordinator: ComelitBaseCoordinator
     if config_entry.data.get(CONF_TYPE, BRIDGE) == BRIDGE:
         coordinator = cast(ComelitSerialBridge, config_entry.runtime_data)
+        if not coordinator.vedo_pin:
+            return
     else:
         coordinator = cast(ComelitVedoSystem, config_entry.runtime_data)
 
