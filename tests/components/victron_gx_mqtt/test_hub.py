@@ -242,6 +242,7 @@ async def test_on_new_metric_sensor(
 
     # Verify state updated
     state = hass.states.get(entity_id)
+    assert state is not None
     assert float(state.state) == 13.2
 
     # Update with same value - state should remain the same
@@ -249,6 +250,7 @@ async def test_on_new_metric_sensor(
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
+    assert state is not None
     assert float(state.state) == 13.2
 
 
