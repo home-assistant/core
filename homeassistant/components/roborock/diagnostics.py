@@ -20,7 +20,12 @@ TO_REDACT_CONFIG = [
     CONF_UNIQUE_ID,
     "username",
     "uid",
-    "rriot",
+    "h",
+    "k",
+    "s",
+    "u",
+    "avatarurl",
+    "nickname",
     "tuyaUuid",
     "extra",
 ]
