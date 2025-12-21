@@ -71,3 +71,6 @@ CONF_GA_WHITE_BRIGHTNESS: Final = "ga_white_brightness"
 CONF_GA_WHITE_SWITCH: Final = "ga_white_switch"
 CONF_GA_HUE: Final = "ga_hue"
 CONF_GA_SATURATION: Final = "ga_saturation"
+
+# Sensor
+CONF_ALWAYS_CALLBACK: Final = "always_callback"

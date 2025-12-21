@@ -171,6 +171,7 @@ def parametrize_trigger_states(
     other_states: list[str | None | tuple[str | None, dict]],
     additional_attributes: dict | None = None,
     trigger_from_none: bool = True,
+    retrigger_on_target_state: bool = False,
 ) -> list[tuple[str, list[StateDescription]]]:
     """Parametrize states and expected service call counts.
 
@@ -179,6 +180,9 @@ def parametrize_trigger_states(
 
     Set `trigger_from_none` to False if the trigger is not expected to fire
     when the initial state is None.
+
+    Set `retrigger_on_target_state` to True if the trigger is expected to fire
+    when the state changes to another target state.
 
     Returns a list of tuples with (trigger, list of states),
     where states is a list of StateDescription dicts.
@@ -214,7 +218,7 @@ def parametrize_trigger_states(
             "count": count,
         }
 
-    return [
+    tests = [
         # Initial state None
         (
             trigger,
@@ -260,6 +264,9 @@ def parametrize_trigger_states(
                         state_with_attributes(target_state, 0),
                         state_with_attributes(other_state, 0),
                         state_with_attributes(target_state, 1),
+                        # Repeat target state to test retriggering
+                        state_with_attributes(target_state, 0),
+                        state_with_attributes(STATE_UNAVAILABLE, 0),
                     )
                     for target_state in target_states
                     for other_state in other_states
@@ -298,6 +305,34 @@ def parametrize_trigger_states(
             ),
         ),
     ]
+
+    if len(target_states) > 1:
+        # If more than one target state, test state change between target states
+        tests.append(
+            (
+                trigger,
+                list(
+                    itertools.chain.from_iterable(
+                        (
+                            state_with_attributes(target_states[idx - 1], 0),
+                            state_with_attributes(
+                                target_state, 1 if retrigger_on_target_state else 0
+                            ),
+                            state_with_attributes(other_state, 0),
+                            state_with_attributes(target_states[idx - 1], 1),
+                            state_with_attributes(
+                                target_state, 1 if retrigger_on_target_state else 0
+                            ),
+                            state_with_attributes(STATE_UNAVAILABLE, 0),
+                        )
+                        for idx, target_state in enumerate(target_states[1:], start=1)
+                        for other_state in other_states
+                    )
+                ),
+            ),
+        )
+
+    return tests
 
 
 async def arm_trigger(

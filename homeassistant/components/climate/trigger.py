@@ -2,7 +2,7 @@
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_OPTIONS
+from homeassistant.const import ATTR_TEMPERATURE, CONF_OPTIONS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.trigger import (
@@ -10,6 +10,8 @@ from homeassistant.helpers.trigger import (
     EntityTargetStateTriggerBase,
     Trigger,
     TriggerConfig,
+    make_entity_numerical_state_attribute_changed_trigger,
+    make_entity_numerical_state_attribute_crossed_threshold_trigger,
     make_entity_target_state_attribute_trigger,
     make_entity_target_state_trigger,
     make_entity_transition_trigger,
@@ -49,6 +51,12 @@ TRIGGERS: dict[str, type[Trigger]] = {
     ),
     "started_drying": make_entity_target_state_attribute_trigger(
         DOMAIN, ATTR_HVAC_ACTION, HVACAction.DRYING
+    ),
+    "target_temperature_changed": make_entity_numerical_state_attribute_changed_trigger(
+        DOMAIN, ATTR_TEMPERATURE
+    ),
+    "target_temperature_crossed_threshold": make_entity_numerical_state_attribute_crossed_threshold_trigger(
+        DOMAIN, ATTR_TEMPERATURE
     ),
     "turned_off": make_entity_target_state_trigger(DOMAIN, HVACMode.OFF),
     "turned_on": make_entity_transition_trigger(
