@@ -10,15 +10,24 @@ from homeassistant.components.icloud.config_flow import (
     CONF_VERIFICATION_CODE,
 )
 from homeassistant.components.icloud.const import (
+    CONF_ALBUM_ID,
+    CONF_ALBUM_NAME,
+    CONF_ALBUM_TYPE,
     CONF_GPS_ACCURACY_THRESHOLD,
     CONF_MAX_INTERVAL,
+    CONF_PICTURE_INTERVAL,
+    CONF_RANDOM_ORDER,
     CONF_WITH_FAMILY,
     DEFAULT_GPS_ACCURACY_THRESHOLD,
     DEFAULT_MAX_INTERVAL,
     DEFAULT_WITH_FAMILY,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import (
+    SOURCE_USER,
+    ConfigFlowResult,
+    SubentryFlowResult,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -317,7 +326,7 @@ async def test_validate_verification_code_failed(
     hass: HomeAssistant, service_validate_verification_code_failed: MagicMock
 ) -> None:
     """Test when we have errors during validate_verification_code."""
-    result = await hass.config_entries.flow.async_init(
+    result: ConfigFlowResult = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
         data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
@@ -418,3 +427,369 @@ async def test_password_update_wrong_password(hass: HomeAssistant) -> None:
 
         assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}
+
+
+# SubEntry flow tests
+async def test_entry_has_camera_subentry_flow(hass: HomeAssistant) -> None:
+    """Test that config entry has camera subentry flow."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    result: dict[str, dict[str, bool]] = config_entry.supported_subentry_types
+
+    assert "camera" in result
+
+
+async def test_subentry_flow_user_step(hass: HomeAssistant) -> None:
+    """Test the user step shows menu for album type selection."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    result: SubentryFlowResult = await hass.config_entries.subentries.async_init(
+        handler=(config_entry.entry_id, "camera"),
+        context={"source": "user"},
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+    assert result["menu_options"] == ["album", "shared_stream"]
+
+
+async def test_subentry_flow_no_albums(hass: HomeAssistant) -> None:
+    """Test when no albums are found."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    mock_api = MagicMock()
+    mock_api.photos.albums = []
+    config_entry.runtime_data = MagicMock(api=mock_api)
+
+    result: SubentryFlowResult = await hass.config_entries.subentries.async_init(
+        handler=(config_entry.entry_id, "camera"),
+        context={
+            "source": "user",
+        },
+    )
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"next_step_id": "album"}
+    )
+
+    # Wait for progress to complete
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_albums"
+
+
+async def test_subentry_flow_no_shared_streams(hass: HomeAssistant) -> None:
+    """Test when no shared streams are found."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    mock_api = MagicMock()
+    mock_api.photos.shared_streams = []
+    config_entry.runtime_data = MagicMock(api=mock_api)
+
+    result: SubentryFlowResult = await hass.config_entries.subentries.async_init(
+        handler=(config_entry.entry_id, "camera"),
+        context={
+            "source": "user",
+        },
+    )
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"next_step_id": "shared_stream"}
+    )
+
+    # Wait for progress to complete
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_shared_streams"
+
+
+async def test_subentry_flow_single_album(hass: HomeAssistant) -> None:
+    """Test when only one album is found."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    mock_album = MagicMock()
+    mock_album.id = "album_1"
+    mock_album.title = "My Album"
+
+    mock_api = MagicMock()
+    mock_api.photos.albums = [mock_album]
+    config_entry.runtime_data = MagicMock(api=mock_api)
+
+    result: SubentryFlowResult = await hass.config_entries.subentries.async_init(
+        handler=(config_entry.entry_id, "camera"),
+        context={
+            "source": "user",
+        },
+    )
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"next_step_id": "album"}
+    )
+
+    # Wait for progress to complete
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "options"
+
+
+async def test_subentry_flow_multiple_albums(hass: HomeAssistant) -> None:
+    """Test when multiple albums are found."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    mock_album_1 = MagicMock()
+    mock_album_1.id = "album_1"
+    mock_album_1.title = "Album 1"
+
+    mock_album_2 = MagicMock()
+    mock_album_2.id = "album_2"
+    mock_album_2.title = "Album 2"
+
+    mock_api = MagicMock()
+    mock_api.photos.albums = [mock_album_1, mock_album_2]
+    config_entry.runtime_data = MagicMock(api=mock_api)
+
+    result: SubentryFlowResult = await hass.config_entries.subentries.async_init(
+        handler=(config_entry.entry_id, "camera"),
+        context={
+            "source": "user",
+        },
+    )
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"next_step_id": "album"}
+    )
+
+    # Wait for progress to complete
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "select_album"
+
+
+async def test_subentry_flow_select_album_and_complete(
+    hass: HomeAssistant,
+) -> None:
+    """Test selecting an album and completing configuration."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    mock_album_1 = MagicMock()
+    mock_album_1.id = "album_1"
+    mock_album_1.title = "Album 1"
+
+    mock_album_2 = MagicMock()
+    mock_album_2.id = "album_2"
+    mock_album_2.title = "Album 2"
+
+    mock_albums = MagicMock()
+    mock_albums.get.return_value = mock_album_1
+    mock_albums.__iter__.return_value = iter([mock_album_1, mock_album_2])
+    mock_albums.__len__.return_value = 2
+
+    mock_api = MagicMock()
+    mock_api.photos.albums = mock_albums
+    config_entry.runtime_data = MagicMock(api=mock_api)
+
+    result: SubentryFlowResult = await hass.config_entries.subentries.async_init(
+        handler=(config_entry.entry_id, "camera"),
+        context={
+            "source": "user",
+        },
+    )
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"next_step_id": "album"}
+    )
+
+    # Wait for progress to complete
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "select_album"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_ALBUM_ID: "album_1"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "options"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_RANDOM_ORDER: True, CONF_PICTURE_INTERVAL: 30.0},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Album 1"
+
+
+async def test_subentry_flow_already_configured(hass: HomeAssistant) -> None:
+    """Test when album is already configured."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG,
+        entry_id="test",
+        unique_id=USERNAME,
+        subentries_data=[
+            {
+                "subentry_type": "camera",
+                "title": "Album 1",
+                "data": {
+                    CONF_ALBUM_ID: "album_1",
+                    CONF_ALBUM_TYPE: "album",
+                    CONF_ALBUM_NAME: "Album 1",
+                    CONF_RANDOM_ORDER: False,
+                    CONF_PICTURE_INTERVAL: 60.0,
+                },
+            }
+        ],
+    )
+
+    config_entry.add_to_hass(hass)
+
+    mock_album = MagicMock()
+    mock_album.id = "album_1"
+    mock_album.title = "Album 1"
+
+    mock_api = MagicMock()
+    mock_api.photos.albums = [mock_album]
+    config_entry.runtime_data = MagicMock(api=mock_api)
+
+    result: SubentryFlowResult = await hass.config_entries.subentries.async_init(
+        handler=(config_entry.entry_id, "camera"),
+        context={
+            "source": "user",
+        },
+    )
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"next_step_id": "album"}
+    )
+
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_subentry_flow_album_not_found(hass: HomeAssistant) -> None:
+    """Test when selected album is not found."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+
+    mock_album_1 = MagicMock()
+    mock_album_1.id = "album_1"
+    mock_album_1.title = "Album 1"
+
+    mock_albums = MagicMock()
+    mock_albums.get.return_value = None
+    mock_albums.__iter__.return_value = iter([mock_album_1])
+    mock_albums.__len__.return_value = 1
+
+    mock_api = MagicMock()
+    mock_api.photos.albums = mock_albums
+    config_entry.runtime_data = MagicMock(api=mock_api)
+
+    result: SubentryFlowResult = await hass.config_entries.subentries.async_init(
+        handler=(config_entry.entry_id, "camera"),
+        context={
+            "source": "user",
+        },
+    )
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"next_step_id": "album"}
+    )
+
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_configure(result["flow_id"])
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_RANDOM_ORDER: True, CONF_PICTURE_INTERVAL: 30.0},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "album_not_found"
+
+
+async def test_subentry_flow_reconfigure(hass: HomeAssistant) -> None:
+    """Test reconfiguring an existing camera subentry."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG,
+        entry_id="test",
+        unique_id=USERNAME,
+        subentries_data=[
+            {
+                "subentry_type": "camera",
+                "title": "Album 1",
+                "subentry_id": "album_1",
+                "data": {
+                    CONF_ALBUM_ID: "album_1",
+                    CONF_ALBUM_TYPE: "album",
+                    CONF_ALBUM_NAME: "Album 1",
+                    CONF_RANDOM_ORDER: False,
+                    CONF_PICTURE_INTERVAL: 60.0,
+                },
+            }
+        ],
+    )
+    config_entry.add_to_hass(hass)
+
+    result: SubentryFlowResult = await hass.config_entries.subentries.async_init(
+        handler=(config_entry.entry_id, "camera"),
+        context={
+            "source": "reconfigure",
+            "subentry_id": "album_1",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_RANDOM_ORDER: True, CONF_PICTURE_INTERVAL: 45.0},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"

@@ -11,6 +11,9 @@
     },
     "update": {
       "service": "mdi:update"
+    },
+    "next_media": {
+      "service": "mdi:picture"
     }
   }
 }

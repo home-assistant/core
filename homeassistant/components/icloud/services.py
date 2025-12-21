@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import voluptuous as vol
 
+from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.service import async_register_platform_entity_service
 from homeassistant.util import slugify
 
 from .account import IcloudAccount, IcloudConfigEntry
@@ -23,6 +25,9 @@ SERVICE_ICLOUD_PLAY_SOUND = "play_sound"
 SERVICE_ICLOUD_DISPLAY_MESSAGE = "display_message"
 SERVICE_ICLOUD_LOST_DEVICE = "lost_device"
 SERVICE_ICLOUD_UPDATE = "update"
+
+SERVICE_ICLOUD_NEXT_MEDIA = "next_media"
+SERVICE_MODE_RANDOMIZE = "mode"
 
 SERVICE_SCHEMA = vol.Schema({vol.Optional(ATTR_ACCOUNT): cv.string})
 
@@ -115,6 +120,17 @@ def _get_account(hass: HomeAssistant, account_identifier: str) -> IcloudAccount:
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register iCloud services."""
+
+    async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_ICLOUD_NEXT_MEDIA,
+        entity_domain=CAMERA_DOMAIN,
+        schema={
+            vol.Optional(SERVICE_MODE_RANDOMIZE): bool,
+        },
+        func="next_image",
+    )
 
     hass.services.async_register(
         DOMAIN, SERVICE_ICLOUD_PLAY_SOUND, play_sound, schema=SERVICE_SCHEMA_PLAY_SOUND
