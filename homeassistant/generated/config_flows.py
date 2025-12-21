@@ -279,6 +279,7 @@ FLOWS = {
         "harmony",
         "heos",
         "here_travel_time",
+        "hikvision",
         "hisense_aehw4a1",
         "hive",
         "hko",
