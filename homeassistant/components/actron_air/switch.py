@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import ActronAirConfigEntry, ActronAirSystemCoordinator
-from .entity import ActronAirEntity
+from .entity import ActronAirAcEntity
 
 PARALLEL_UPDATES = 0
 
@@ -72,7 +72,7 @@ async def async_setup_entry(
     )
 
 
-class ActronAirSwitch(ActronAirEntity, SwitchEntity):
+class ActronAirSwitch(ActronAirAcEntity, SwitchEntity):
     """Actron Air switch."""
 
     _attr_entity_category = EntityCategory.CONFIG

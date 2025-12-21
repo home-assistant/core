@@ -15,12 +15,10 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
 from .coordinator import ActronAirConfigEntry, ActronAirSystemCoordinator
-from .entity import ActronAirEntity
+from .entity import ActronAirAcEntity, ActronAirZoneEntity
 
 PARALLEL_UPDATES = 0
 
@@ -67,7 +65,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ActronAirClimateEntity(ActronAirEntity, ClimateEntity):
+class ActronAirClimateEntity(ClimateEntity):
     """Base class for Actron Air climate entities."""
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
@@ -82,7 +80,7 @@ class ActronAirClimateEntity(ActronAirEntity, ClimateEntity):
     _attr_hvac_modes = list(HVAC_MODE_MAPPING_ACTRONAIR_TO_HA.values())
 
 
-class ActronSystemClimate(ActronAirClimateEntity):
+class ActronSystemClimate(ActronAirAcEntity, ActronAirClimateEntity):
     """Representation of the Actron Air system."""
 
     def __init__(
@@ -154,7 +152,7 @@ class ActronSystemClimate(ActronAirClimateEntity):
         await self._status.user_aircon_settings.set_temperature(temperature=temp)
 
 
-class ActronZoneClimate(ActronAirClimateEntity):
+class ActronZoneClimate(ActronAirZoneEntity, ActronAirClimateEntity):
     """Representation of a zone within the Actron Air system."""
 
     _attr_supported_features = (
@@ -169,17 +167,8 @@ class ActronZoneClimate(ActronAirClimateEntity):
         zone: ActronAirZone,
     ) -> None:
         """Initialize an Actron Air unit."""
-        super().__init__(coordinator)
-        self._zone_id: int = zone.zone_id
-        self._attr_unique_id: str = f"{self._serial_number}_zone_{zone.zone_id}"
-        self._attr_device_info: DeviceInfo = DeviceInfo(
-            identifiers={(DOMAIN, self._attr_unique_id)},
-            name=zone.title,
-            manufacturer="Actron Air",
-            model="Zone",
-            suggested_area=zone.title,
-            via_device=(DOMAIN, self._serial_number),
-        )
+        super().__init__(coordinator, zone)
+        self._attr_unique_id: str = self._zone_identifier
 
     @property
     def min_temp(self) -> float:
