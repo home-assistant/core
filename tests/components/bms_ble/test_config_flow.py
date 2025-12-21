@@ -17,6 +17,7 @@ from homeassistant.components.bms_ble.const import (
 from homeassistant.config_entries import (
     SOURCE_BLUETOOTH,
     SOURCE_USER,
+    ConfigEntry,
     ConfigEntryState,
     ConfigFlowResult,
 )
@@ -304,7 +305,7 @@ async def test_user_setup(
     assert result.get("type") == FlowResultType.CREATE_ENTRY
     assert result.get("title") == "SmartBat-B12345"
 
-    result_detail = result.get("result")
+    result_detail: ConfigEntry | None = result.get("result")
     assert result_detail is not None
     assert result_detail.unique_id == "cc:cc:cc:cc:cc:cc"
     assert (

@@ -39,7 +39,8 @@ async def test_init_fail(
         trace_fct["stop_called"] = True
 
     monkeypatch.setattr(
-        "custom_components.bms_ble.BTBmsCoordinator.async_shutdown", mock_coord_shutdown
+        "homeassistant.components.bms_ble.BTBmsCoordinator.async_shutdown",
+        mock_coord_shutdown,
     )
 
     inject_bluetooth_service_info_bleak(hass, bt_discovery)
@@ -100,7 +101,7 @@ async def test_unload_entry(
         )
 
     monkeypatch.setattr(
-        "custom_components.bms_ble.BTBmsCoordinator.async_shutdown",
+        "homeassistant.components.bms_ble.BTBmsCoordinator.async_shutdown",
         mock_coord_shutdown,
     )
 
