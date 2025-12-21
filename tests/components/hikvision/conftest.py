@@ -82,7 +82,18 @@ def mock_hikcamera() -> Generator[MagicMock]:
             None,
             "2024-01-01T00:00:00Z",
         )
+        camera.get_event_triggers.return_value = {}
         yield hikcamera_mock
+
+
+@pytest.fixture
+def mock_hik_nvr(mock_hikcamera: MagicMock) -> MagicMock:
+    """Return a mocked HikCamera configured as an NVR."""
+    camera = mock_hikcamera.return_value
+    camera.get_type = "NVR"
+    camera.current_event_states = {}
+    camera.get_event_triggers.return_value = {"Motion": [1, 2]}
+    return mock_hikcamera
 
 
 @pytest.fixture
