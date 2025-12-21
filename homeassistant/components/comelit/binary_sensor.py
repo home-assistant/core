@@ -39,9 +39,6 @@ async def async_setup_entry(
         else:
             assert isinstance(coordinator, ComelitVedoSystem)
 
-    if not coordinator.vedo_pin:
-        return
-
     def _add_new_entities(new_devices: list[ObjectClassType], dev_type: str) -> None:
         """Add entities for new monitors."""
         entities = [

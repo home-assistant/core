@@ -65,9 +65,6 @@ async def async_setup_entry(
         else:
             assert isinstance(coordinator, ComelitVedoSystem)
 
-    if not coordinator.vedo_pin:
-        return
-
     if data := coordinator.data[ALARM_AREA]:
         async_add_entities(
             ComelitAlarmEntity(coordinator, device, config_entry.entry_id)
