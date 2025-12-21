@@ -213,7 +213,15 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
                     errors=errors,
                     description_placeholders=description_placeholders,
                 )
-            if await _validate_input(user_input, api, errors, description_placeholders):
+            location = user_input[CONF_LOCATION]
+            if await _validate_input(
+                request_fn=lambda: api.async_get_current_conditions(
+                    lat=location[CONF_LATITUDE],
+                    lon=location[CONF_LONGITUDE],
+                ),
+                errors=errors,
+                description_placeholders=description_placeholders,
+            ):
                 return self.async_create_entry(
                     title=user_input[CONF_NAME],
                     data=user_input[CONF_LOCATION],
