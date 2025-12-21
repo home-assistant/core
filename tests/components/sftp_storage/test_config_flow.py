@@ -53,13 +53,14 @@ def mock_process_uploaded_file():
 @pytest.mark.xdist_group("sftp_storage")
 @pytest.mark.usefixtures("current_request_with_host")
 @pytest.mark.usefixtures("mock_process_uploaded_file")
-@pytest.mark.usefixtures("mock_ssh_connection")
 async def test_backup_sftp_full_flow(
     hass: HomeAssistant,
+    mock_ssh_connection: SSHClientConnectionMock,
 ) -> None:
     """Test the full backup_sftp config flow with valid user input."""
 
     user_input = USER_INPUT.copy()
+    mock_ssh_connection._sftp._mock_getcwd = user_input[CONF_BACKUP_LOCATION]
     # Start the configuration flow
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}

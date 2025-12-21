@@ -179,7 +179,11 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
                     )
                     await sftp.chdir(user_config.backup_location)
                     await sftp.listdir()
-                    test_file = f"{user_config.backup_location}/.ha_sftp_storage_test"
+                    # Overwrite `backup_location` by using full directory path.
+                    # This prevents issues when user uses relative directory to
+                    # store backups.
+                    user_input[CONF_BACKUP_LOCATION] = await sftp.getcwd()
+                    test_file = ".ha_sftp_storage_test"
                     LOGGER.debug("Attempting to write to test file: %s", test_file)
                     try:
                         async with sftp.open(test_file, "w") as f:
