@@ -13,7 +13,22 @@ from .coordinator import RoborockConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
-TO_REDACT_CONFIG = ["token", "sn", "rruid", CONF_UNIQUE_ID, "username", "uid"]
+TO_REDACT_CONFIG = [
+    "token",
+    "sn",
+    "rruid",
+    CONF_UNIQUE_ID,
+    "username",
+    "uid",
+    "h",
+    "k",
+    "s",
+    "u",
+    "avatarurl",
+    "nickname",
+    "tuyaUuid",
+    "extra",
+]
 
 
 async def async_get_config_entry_diagnostics(
