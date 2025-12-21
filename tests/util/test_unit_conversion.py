@@ -299,7 +299,7 @@ _CONVERTED_VALUE: dict[
         (
             1,
             CONCENTRATION_PARTS_PER_BILLION,
-            0.001,
+            1000,
             CONCENTRATION_PARTS_PER_MILLION,
         ),
         (
@@ -311,7 +311,7 @@ _CONVERTED_VALUE: dict[
         (
             1,
             CONCENTRATION_PARTS_PER_BILLION,
-            1.1644092,
+            1164409.2490,
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         ),
         # PPM to other units
