@@ -295,6 +295,25 @@ _CONVERTED_VALUE: dict[
         ),
     ],
     CarbonMonoxideConcentrationConverter: [
+        # PPB to other units
+        (
+            1,
+            CONCENTRATION_PARTS_PER_BILLION,
+            0.001,
+            CONCENTRATION_PARTS_PER_MILLION,
+        ),
+        (
+            1,
+            CONCENTRATION_PARTS_PER_BILLION,
+            1164.4092,
+            CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+        ),
+        (
+            1,
+            CONCENTRATION_PARTS_PER_BILLION,
+            1.1644092,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        ),
         # PPM to other units
         (
             1,
@@ -308,7 +327,19 @@ _CONVERTED_VALUE: dict[
             1164.41,
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         ),
+        (
+            1,
+            CONCENTRATION_PARTS_PER_MILLION,
+            0.001,
+            CONCENTRATION_PARTS_PER_BILLION,
+        ),
         # MILLIGRAMS_PER_CUBIC_METER to other units
+        (
+            120,
+            CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+            0.10305655,
+            CONCENTRATION_PARTS_PER_BILLION,
+        ),
         (
             120,
             CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
@@ -333,6 +364,12 @@ _CONVERTED_VALUE: dict[
             CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
             120,
             CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+        ),
+        (
+            120000,
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            0.10305655,
+            CONCENTRATION_PARTS_PER_BILLION,
         ),
     ],
     ConductivityConverter: [
