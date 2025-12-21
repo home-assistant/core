@@ -14,5 +14,13 @@
     "turn_on": {
       "service": "mdi:bullhorn"
     }
+  },
+  "triggers": {
+    "turned_off": {
+      "trigger": "mdi:bullhorn-outline"
+    },
+    "turned_on": {
+      "trigger": "mdi:bullhorn"
+    }
   }
 }
