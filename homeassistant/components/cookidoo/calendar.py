@@ -5,16 +5,14 @@ from __future__ import annotations
 from datetime import date, datetime, timedelta
 import logging
 
-from cookidoo_api import (
-    CookidooAuthException,
-    CookidooException,
-    CookidooRequestException,
-)
+from cookidoo_api import CookidooAuthException, CookidooException
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import CookidooConfigEntry, CookidooDataUpdateCoordinator
 from .entity import CookidooBaseEntity
 
@@ -61,12 +59,11 @@ class CookidooCalendarEntity(CookidooBaseEntity, CalendarEntity):
             return await self.coordinator.cookidoo.get_recipes_in_calendar_week(
                 week_day
             )
-        except CookidooRequestException as e:
-            _LOGGER.error("Failed to fetch Cookidoo week plan: %s", e)
-            return []
         except CookidooException as e:
-            _LOGGER.error("Unknown Cookidoo error: %s", e)
-            return []
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="calendar_fetch_failed",
+            ) from e
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
