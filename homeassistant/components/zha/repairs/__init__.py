@@ -1,4 +1,5 @@
 """ZHA repairs for common environmental and device problems."""
+
 from __future__ import annotations
 
 from typing import Any, cast
@@ -7,7 +8,7 @@ from homeassistant.components.repairs import ConfirmRepairFlow, RepairsFlow
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
-from ..core.const import DOMAIN
+from ..const import DOMAIN
 from .network_settings_inconsistent import (
     ISSUE_INCONSISTENT_NETWORK_SETTINGS,
     NetworkSettingsInconsistentFlow,

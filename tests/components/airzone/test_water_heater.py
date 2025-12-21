@@ -1,4 +1,5 @@
 """The water heater tests for the Airzone platform."""
+
 from unittest.mock import patch
 
 from aioairzone.const import (
@@ -210,10 +211,13 @@ async def test_airzone_water_heater_set_temp_error(hass: HomeAssistant) -> None:
 
     await async_init_integration(hass)
 
-    with patch(
-        "homeassistant.components.airzone.AirzoneLocalApi.put_hvac",
-        side_effect=AirzoneError,
-    ), pytest.raises(HomeAssistantError):
+    with (
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.put_hvac",
+            side_effect=AirzoneError,
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
         await hass.services.async_call(
             WATER_HEATER_DOMAIN,
             SERVICE_SET_TEMPERATURE,

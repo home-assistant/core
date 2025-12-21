@@ -1,24 +1,29 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "title": "Connect to the PowerView Hub",
-        "data": {
-          "host": "[%key:common::config_flow::data::ip%]"
-        }
-      },
-      "link": {
-        "title": "[%key:component::hunterdouglas_powerview::config::step::user::title%]",
-        "description": "Do you want to set up {name} ({host})?"
-      }
-    },
-    "flow_title": "{name} ({host})",
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unsupported_device": "Only the primary PowerView Hub can be added"
+    },
+    "flow_title": "{name} ({host})",
+    "step": {
+      "link": {
+        "description": "Do you want to set up {name} ({host})?",
+        "title": "[%key:component::hunterdouglas_powerview::config::step::user::title%]"
+      },
+      "user": {
+        "data": {
+          "api_version": "Hub generation",
+          "host": "[%key:common::config_flow::data::ip%]"
+        },
+        "data_description": {
+          "api_version": "API version is detectable, but you can override and force a specific version"
+        },
+        "title": "Connect to the PowerView Hub"
+      }
     }
   },
   "entity": {
@@ -34,9 +39,6 @@
       "bottom": {
         "name": "Bottom"
       },
-      "top": {
-        "name": "Top"
-      },
       "combined": {
         "name": "Combined"
       },
@@ -45,6 +47,9 @@
       },
       "rear": {
         "name": "Rear"
+      },
+      "top": {
+        "name": "Top"
       }
     },
     "select": {

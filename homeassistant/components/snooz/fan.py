@@ -1,4 +1,5 @@
 """Fan representation of a Snooz device."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -22,7 +23,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import (
@@ -37,7 +38,9 @@ from .models import SnoozConfigurationData
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Snooz device from a config entry."""
 
@@ -74,7 +77,11 @@ class SnoozFan(FanEntity, RestoreEntity):
 
     _attr_has_entity_name = True
     _attr_name = None
-    _attr_supported_features = FanEntityFeature.SET_SPEED
+    _attr_supported_features = (
+        FanEntityFeature.SET_SPEED
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
     _attr_should_poll = False
     _is_on: bool | None = None
     _percentage: int | None = None

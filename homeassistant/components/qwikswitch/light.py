@@ -1,4 +1,5 @@
 """Support for Qwikswitch Relays and Dimmers."""
+
 from __future__ import annotations
 
 from homeassistant.components.light import ColorMode, LightEntity
@@ -6,7 +7,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import DOMAIN as QWIKSWITCH, QSToggleEntity
+from . import DOMAIN
+from .entity import QSToggleEntity
 
 
 async def async_setup_platform(
@@ -19,8 +21,8 @@ async def async_setup_platform(
     if discovery_info is None:
         return
 
-    qsusb = hass.data[QWIKSWITCH]
-    devs = [QSLight(qsid, qsusb) for qsid in discovery_info[QWIKSWITCH]]
+    qsusb = hass.data[DOMAIN]
+    devs = [QSLight(qsid, qsusb) for qsid in discovery_info[DOMAIN]]
     add_entities(devs)
 
 

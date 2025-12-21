@@ -1,24 +1,25 @@
 """Button entity platform for Tailwind."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
 
-from gotailwind import Tailwind
+from gotailwind import Tailwind, TailwindError
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
     ButtonEntity,
     ButtonEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import TailwindDataUpdateCoordinator
+from .coordinator import TailwindConfigEntry
 from .entity import TailwindEntity
 
 
@@ -41,14 +42,13 @@ DESCRIPTIONS = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: TailwindConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tailwind button based on a config entry."""
-    coordinator: TailwindDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         TailwindButtonEntity(
-            coordinator,
+            entry.runtime_data,
             description,
         )
         for description in DESCRIPTIONS
@@ -62,4 +62,11 @@ class TailwindButtonEntity(TailwindEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Trigger button press on the Tailwind device."""
-        await self.entity_description.press_fn(self.coordinator.tailwind)
+        try:
+            await self.entity_description.press_fn(self.coordinator.tailwind)
+        except TailwindError as exc:
+            raise HomeAssistantError(
+                str(exc),
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+            ) from exc

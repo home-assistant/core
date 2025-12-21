@@ -1,0 +1,42 @@
+{
+  "entity": {
+    "sensor": {
+      "discussions_count": {
+        "default": "mdi:forum"
+      },
+      "forks_count": {
+        "default": "mdi:source-fork"
+      },
+      "issues_count": {
+        "default": "mdi:github"
+      },
+      "latest_commit": {
+        "default": "mdi:source-commit"
+      },
+      "latest_discussion": {
+        "default": "mdi:forum"
+      },
+      "latest_issue": {
+        "default": "mdi:github"
+      },
+      "latest_pull_request": {
+        "default": "mdi:source-pull"
+      },
+      "latest_release": {
+        "default": "mdi:github"
+      },
+      "latest_tag": {
+        "default": "mdi:tag"
+      },
+      "pulls_count": {
+        "default": "mdi:source-pull"
+      },
+      "stargazers_count": {
+        "default": "mdi:star"
+      },
+      "subscribers_count": {
+        "default": "mdi:glasses"
+      }
+    }
+  }
+}

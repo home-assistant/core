@@ -1,9 +1,9 @@
 """The GitHub integration."""
+
 from __future__ import annotations
 
 from aiogithubapi import GitHubAPI
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -13,26 +13,26 @@ from homeassistant.helpers.aiohttp_client import (
 )
 
 from .const import CONF_REPOSITORIES, DOMAIN, LOGGER
-from .coordinator import GitHubDataUpdateCoordinator
+from .coordinator import GithubConfigEntry, GitHubDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: GithubConfigEntry) -> bool:
     """Set up GitHub from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-
     client = GitHubAPI(
         token=entry.data[CONF_ACCESS_TOKEN],
         session=async_get_clientsession(hass),
-        **{"client_name": SERVER_SOFTWARE},
+        client_name=SERVER_SOFTWARE,
     )
 
     repositories: list[str] = entry.options[CONF_REPOSITORIES]
 
+    entry.runtime_data = {}
     for repository in repositories:
         coordinator = GitHubDataUpdateCoordinator(
             hass=hass,
+            config_entry=entry,
             client=client,
             repository=repository,
         )
@@ -42,19 +42,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if not entry.pref_disable_polling:
             await coordinator.subscribe()
 
-        hass.data[DOMAIN][repository] = coordinator
+        entry.runtime_data[repository] = coordinator
 
     async_cleanup_device_registry(hass=hass, entry=entry)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
     return True
 
 
 @callback
 def async_cleanup_device_registry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: GithubConfigEntry,
 ) -> None:
     """Remove entries form device registry if we no longer track the repository."""
     device_registry = dr.async_get(hass)
@@ -80,17 +79,10 @@ def async_cleanup_device_registry(
                 break
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: GithubConfigEntry) -> bool:
     """Unload a config entry."""
-    repositories: dict[str, GitHubDataUpdateCoordinator] = hass.data[DOMAIN]
+    repositories = entry.runtime_data
     for coordinator in repositories.values():
         coordinator.unsubscribe()
 
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data.pop(DOMAIN)
-    return unload_ok
-
-
-async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle an options update."""
-    await hass.config_entries.async_reload(entry.entry_id)
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

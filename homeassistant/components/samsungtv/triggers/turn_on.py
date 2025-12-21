@@ -1,4 +1,5 @@
 """Samsung TV device turn on trigger."""
+
 from __future__ import annotations
 
 import voluptuous as vol

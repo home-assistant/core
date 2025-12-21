@@ -1,4 +1,5 @@
 """Constants for google integration."""
+
 from __future__ import annotations
 
 from enum import Enum, StrEnum
@@ -8,9 +9,7 @@ DOMAIN = "google"
 CONF_CALENDAR_ACCESS = "calendar_access"
 CONF_CREDENTIAL_TYPE = "credential_type"
 DATA_CALENDARS = "calendars"
-DATA_SERVICE = "service"
 DATA_CONFIG = "config"
-DATA_STORE = "store"
 
 
 class FeatureAccess(Enum):

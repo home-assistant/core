@@ -1,0 +1,217 @@
+{
+  "common": {
+    "code": "Access code",
+    "code_input_description": "Code to toggle switchable outputs"
+  },
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "code": "[%key:component::satel_integra::common::code%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "code": "[%key:component::satel_integra::common::code_input_description%]",
+          "host": "The IP address of the alarm panel",
+          "port": "The port of the alarm panel"
+        }
+      }
+    }
+  },
+  "config_subentries": {
+    "output": {
+      "entry_type": "Output",
+      "error": {
+        "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      },
+      "initiate_flow": {
+        "user": "Add output"
+      },
+      "step": {
+        "reconfigure": {
+          "data": {
+            "name": "[%key:common::config_flow::data::name%]",
+            "type": "[%key:component::satel_integra::config_subentries::output::step::user::data::type%]"
+          },
+          "data_description": {
+            "name": "[%key:component::satel_integra::config_subentries::zone::step::user::data_description::name%]",
+            "type": "[%key:component::satel_integra::config_subentries::zone::step::user::data_description::type%]"
+          },
+          "title": "Reconfigure output {output_number}"
+        },
+        "user": {
+          "data": {
+            "name": "[%key:common::config_flow::data::name%]",
+            "output_number": "Output number",
+            "type": "Output type"
+          },
+          "data_description": {
+            "name": "[%key:component::satel_integra::config_subentries::zone::step::user::data_description::name%]",
+            "output_number": "Enter output number to configure",
+            "type": "[%key:component::satel_integra::config_subentries::zone::step::user::data_description::type%]"
+          },
+          "title": "Configure output"
+        }
+      }
+    },
+    "partition": {
+      "entry_type": "Partition",
+      "error": {
+        "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      },
+      "initiate_flow": {
+        "user": "Add partition"
+      },
+      "step": {
+        "reconfigure": {
+          "data": {
+            "arm_home_mode": "[%key:component::satel_integra::config_subentries::partition::step::user::data::arm_home_mode%]",
+            "name": "[%key:common::config_flow::data::name%]"
+          },
+          "data_description": {
+            "arm_home_mode": "[%key:component::satel_integra::config_subentries::partition::step::user::data_description::arm_home_mode%]"
+          },
+          "title": "Reconfigure partition {partition_number}"
+        },
+        "user": {
+          "data": {
+            "arm_home_mode": "Arm home mode",
+            "name": "[%key:common::config_flow::data::name%]",
+            "partition_number": "Partition number"
+          },
+          "data_description": {
+            "arm_home_mode": "The mode in which the partition is armed when 'arm home' is used. For more information on what the differences are between them, please refer to Satel Integra manual.",
+            "name": "The name to give to the alarm panel",
+            "partition_number": "Enter partition number to configure"
+          },
+          "title": "Configure partition"
+        }
+      }
+    },
+    "switchable_output": {
+      "entry_type": "Switchable output",
+      "error": {
+        "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      },
+      "initiate_flow": {
+        "user": "Add switchable output"
+      },
+      "step": {
+        "reconfigure": {
+          "data": {
+            "name": "[%key:common::config_flow::data::name%]"
+          },
+          "data_description": {
+            "name": "[%key:component::satel_integra::config_subentries::switchable_output::step::user::data_description::name%]"
+          },
+          "title": "Reconfigure switchable output {switchable_output_number}"
+        },
+        "user": {
+          "data": {
+            "name": "[%key:common::config_flow::data::name%]",
+            "switchable_output_number": "Switchable output number"
+          },
+          "data_description": {
+            "name": "The name to give to the switch",
+            "switchable_output_number": "Enter switchable output number to configure"
+          },
+          "title": "Configure switchable output"
+        }
+      }
+    },
+    "zone": {
+      "entry_type": "Zone",
+      "error": {
+        "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      },
+      "initiate_flow": {
+        "user": "Add zone"
+      },
+      "step": {
+        "reconfigure": {
+          "data": {
+            "name": "[%key:common::config_flow::data::name%]",
+            "type": "[%key:component::satel_integra::config_subentries::zone::step::user::data::type%]"
+          },
+          "data_description": {
+            "name": "[%key:component::satel_integra::config_subentries::zone::step::user::data_description::name%]",
+            "type": "[%key:component::satel_integra::config_subentries::zone::step::user::data_description::type%]"
+          },
+          "title": "Reconfigure zone {zone_number}"
+        },
+        "user": {
+          "data": {
+            "name": "[%key:common::config_flow::data::name%]",
+            "type": "Zone type",
+            "zone_number": "Zone number"
+          },
+          "data_description": {
+            "name": "The name to give to the sensor",
+            "type": "Choose the device class you would like the sensor to show as",
+            "zone_number": "Enter zone number to configure"
+          },
+          "title": "Configure zone"
+        }
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "description": "Configuring {integration_title} using YAML is being removed but there was an connection error importing your existing configuration.\n\nEnsure connection to {integration_title} works and restart Home Assistant to try again or remove the `{domain}` YAML configuration from your configuration.yaml file and add the {integration_title} integration manually.",
+      "title": "YAML import failed due to a connection error"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "code": "[%key:component::satel_integra::common::code%]"
+        },
+        "data_description": {
+          "code": "[%key:component::satel_integra::common::code_input_description%]"
+        }
+      }
+    }
+  },
+  "selector": {
+    "binary_sensor_device_class": {
+      "options": {
+        "battery": "[%key:component::binary_sensor::entity_component::battery::name%]",
+        "battery_charging": "[%key:component::binary_sensor::entity_component::battery_charging::name%]",
+        "carbon_monoxide": "[%key:component::binary_sensor::entity_component::carbon_monoxide::name%]",
+        "cold": "[%key:component::binary_sensor::entity_component::cold::name%]",
+        "connectivity": "[%key:component::binary_sensor::entity_component::connectivity::name%]",
+        "door": "[%key:component::binary_sensor::entity_component::door::name%]",
+        "garage_door": "[%key:component::binary_sensor::entity_component::garage_door::name%]",
+        "gas": "[%key:component::binary_sensor::entity_component::gas::name%]",
+        "heat": "[%key:component::binary_sensor::entity_component::heat::name%]",
+        "light": "[%key:component::binary_sensor::entity_component::light::name%]",
+        "lock": "[%key:component::binary_sensor::entity_component::lock::name%]",
+        "moisture": "[%key:component::binary_sensor::entity_component::moisture::name%]",
+        "motion": "[%key:component::binary_sensor::entity_component::motion::name%]",
+        "moving": "[%key:component::binary_sensor::entity_component::moving::name%]",
+        "occupancy": "[%key:component::binary_sensor::entity_component::occupancy::name%]",
+        "opening": "[%key:component::binary_sensor::entity_component::opening::name%]",
+        "plug": "[%key:component::binary_sensor::entity_component::plug::name%]",
+        "power": "[%key:component::binary_sensor::entity_component::power::name%]",
+        "presence": "[%key:component::binary_sensor::entity_component::presence::name%]",
+        "problem": "[%key:component::binary_sensor::entity_component::problem::name%]",
+        "running": "[%key:component::binary_sensor::entity_component::running::name%]",
+        "safety": "[%key:component::binary_sensor::entity_component::safety::name%]",
+        "smoke": "[%key:component::binary_sensor::entity_component::smoke::name%]",
+        "sound": "[%key:component::binary_sensor::entity_component::sound::name%]",
+        "tamper": "[%key:component::binary_sensor::entity_component::tamper::name%]",
+        "update": "[%key:component::binary_sensor::entity_component::update::name%]",
+        "vibration": "[%key:component::binary_sensor::entity_component::vibration::name%]",
+        "window": "[%key:component::binary_sensor::entity_component::window::name%]"
+      }
+    }
+  }
+}

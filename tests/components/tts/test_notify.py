@@ -1,4 +1,5 @@
 """The tests for the TTS component."""
+
 from unittest.mock import patch
 
 import pytest
@@ -8,8 +9,8 @@ from homeassistant.components.media_player import (
     DOMAIN as DOMAIN_MP,
     SERVICE_PLAY_MEDIA,
 )
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.setup import async_setup_component
 
 from .common import MockTTSEntity, mock_config_entry_setup
@@ -48,6 +49,7 @@ async def test_setup_legacy_platform(hass: HomeAssistant) -> None:
     }
     with assert_setup_component(1, notify.DOMAIN):
         assert await async_setup_component(hass, notify.DOMAIN, config)
+        await hass.async_block_till_done()
 
     assert hass.services.has_service(notify.DOMAIN, "tts_test")
 
@@ -64,6 +66,7 @@ async def test_setup_platform(hass: HomeAssistant) -> None:
     }
     with assert_setup_component(1, notify.DOMAIN):
         assert await async_setup_component(hass, notify.DOMAIN, config)
+        await hass.async_block_till_done()
 
     assert hass.services.has_service(notify.DOMAIN, "tts_test")
 
@@ -79,6 +82,7 @@ async def test_setup_platform_missing_key(hass: HomeAssistant) -> None:
     }
     with assert_setup_component(0, notify.DOMAIN):
         assert await async_setup_component(hass, notify.DOMAIN, config)
+        await hass.async_block_till_done()
 
     assert not hass.services.has_service(notify.DOMAIN, "tts_test")
 
@@ -105,6 +109,8 @@ async def test_setup_legacy_service(hass: HomeAssistant) -> None:
 
     with assert_setup_component(1, notify.DOMAIN):
         assert await async_setup_component(hass, notify.DOMAIN, config)
+
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         notify.DOMAIN,
@@ -140,6 +146,8 @@ async def test_setup_service(
 
     with assert_setup_component(1, notify.DOMAIN):
         assert await async_setup_component(hass, notify.DOMAIN, config)
+
+    await hass.async_block_till_done()
 
     await hass.services.async_call(
         notify.DOMAIN,

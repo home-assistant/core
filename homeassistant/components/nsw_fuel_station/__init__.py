@@ -1,4 +1,5 @@
 """The nsw_fuel_station component."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -32,6 +33,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=None,
         name="sensor",
         update_interval=SCAN_INTERVAL,
         update_method=async_update_data,

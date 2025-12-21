@@ -1,24 +1,26 @@
 """UniFi Protect Integration utils."""
+
 from __future__ import annotations
 
-from collections.abc import Generator, Iterable
+from collections.abc import Callable, Coroutine, Generator, Iterable
 import contextlib
-from enum import Enum
+from functools import wraps
 from pathlib import Path
 import socket
-from typing import Any
+from typing import TYPE_CHECKING, Any, Concatenate
 
 from aiohttp import CookieJar
-from pyunifiprotect import ProtectApiClient
-from pyunifiprotect.data import (
+from uiprotect import ProtectApiClient
+from uiprotect.data import (
     Bootstrap,
+    CameraChannel,
     Light,
     LightModeEnableType,
     LightModeType,
     ProtectAdoptableDeviceModel,
 )
+from uiprotect.exceptions import ClientError, NotAuthorized
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -27,6 +29,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.storage import STORAGE_DIR
 
@@ -38,20 +41,9 @@ from .const import (
     ModelType,
 )
 
-_SENTINEL = object()
-
-
-def get_nested_attr(obj: Any, attrs: tuple[str, ...]) -> Any:
-    """Fetch a nested attribute."""
-    if len(attrs) == 1:
-        value = getattr(obj, attrs[0], None)
-    else:
-        value = obj
-        for key in attrs:
-            if (value := getattr(value, key, _SENTINEL)) is _SENTINEL:
-                return None
-
-    return value.value if isinstance(value, Enum) else value
+if TYPE_CHECKING:
+    from .data import UFPConfigEntry
+    from .entity import BaseProtectEntity
 
 
 @callback
@@ -87,17 +79,15 @@ def async_get_devices_by_type(
     bootstrap: Bootstrap, device_type: ModelType
 ) -> dict[str, ProtectAdoptableDeviceModel]:
     """Get devices by type."""
-
-    devices: dict[str, ProtectAdoptableDeviceModel] = getattr(
-        bootstrap, f"{device_type.value}s"
-    )
+    devices: dict[str, ProtectAdoptableDeviceModel]
+    devices = getattr(bootstrap, device_type.devices_key)
     return devices
 
 
 @callback
 def async_get_devices(
     bootstrap: Bootstrap, model_type: Iterable[ModelType]
-) -> Generator[ProtectAdoptableDeviceModel, None, None]:
+) -> Generator[ProtectAdoptableDeviceModel]:
     """Return all device by type."""
     return (
         device
@@ -111,37 +101,73 @@ def async_get_light_motion_current(obj: Light) -> str:
     """Get light motion mode for Flood Light."""
 
     if (
-        obj.light_mode_settings.mode == LightModeType.MOTION
-        and obj.light_mode_settings.enable_at == LightModeEnableType.DARK
+        obj.light_mode_settings.mode is LightModeType.MOTION
+        and obj.light_mode_settings.enable_at is LightModeEnableType.DARK
     ):
-        return f"{LightModeType.MOTION.value}Dark"
+        return f"{LightModeType.MOTION.value}_dark"
     return obj.light_mode_settings.mode.value
 
 
 @callback
-def async_dispatch_id(entry: ConfigEntry, dispatch: str) -> str:
-    """Generate entry specific dispatch ID."""
-
-    return f"{DOMAIN}.{entry.entry_id}.{dispatch}"
-
-
-@callback
 def async_create_api_client(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: UFPConfigEntry
 ) -> ProtectApiClient:
     """Create ProtectApiClient from config entry."""
 
     session = async_create_clientsession(hass, cookie_jar=CookieJar(unsafe=True))
+    public_api_session = async_create_clientsession(hass)
     return ProtectApiClient(
         host=entry.data[CONF_HOST],
         port=entry.data[CONF_PORT],
         username=entry.data[CONF_USERNAME],
         password=entry.data[CONF_PASSWORD],
+        api_key=entry.data.get("api_key"),
         verify_ssl=entry.data[CONF_VERIFY_SSL],
         session=session,
+        public_api_session=public_api_session,
         subscribed_models=DEVICES_FOR_SUBSCRIBE,
         override_connection_host=entry.options.get(CONF_OVERRIDE_CHOST, False),
         ignore_stats=not entry.options.get(CONF_ALL_UPDATES, False),
         ignore_unadopted=False,
-        cache_dir=Path(hass.config.path(STORAGE_DIR, "unifiprotect_cache")),
+        cache_dir=Path(hass.config.path(STORAGE_DIR, "unifiprotect")),
+        config_dir=Path(hass.config.path(STORAGE_DIR, "unifiprotect")),
     )
+
+
+@callback
+def get_camera_base_name(channel: CameraChannel) -> str:
+    """Get base name for cameras channel."""
+
+    camera_name = channel.name
+    if channel.name != "Package Camera":
+        camera_name = f"{channel.name} resolution channel"
+
+    return camera_name
+
+
+def async_ufp_instance_command[_EntityT: "BaseProtectEntity", **_P](
+    func: Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, Any]],
+) -> Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, None]]:
+    """Decorate UniFi Protect entity instance commands to handle exceptions.
+
+    A decorator that wraps the passed in function, catches Protect errors,
+    and re-raises them as HomeAssistantError with translations.
+    """
+
+    @wraps(func)
+    async def handler(self: _EntityT, *args: _P.args, **kwargs: _P.kwargs) -> None:
+        try:
+            await func(self, *args, **kwargs)
+        except NotAuthorized as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="not_authorized",
+            ) from err
+        except ClientError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
+
+    return handler

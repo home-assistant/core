@@ -1,0 +1,64 @@
+# serializer version: 1
+# name: test_weather_entity[weather.vilnius-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'weather',
+    'entity_category': None,
+    'entity_id': 'weather.vilnius',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'meteo_lt',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <WeatherEntityFeature: 3>,
+    'translation_key': None,
+    'unique_id': 'vilnius',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_weather_entity[weather.vilnius-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'apparent_temperature': 10.9,
+      'attribution': 'Data provided by Lithuanian Hydrometeorological Service (LHMT)',
+      'cloud_coverage': 1,
+      'friendly_name': 'Vilnius',
+      'humidity': 71,
+      'precipitation_unit': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+      'pressure': 1033.0,
+      'pressure_unit': <UnitOfPressure.HPA: 'hPa'>,
+      'supported_features': <WeatherEntityFeature: 3>,
+      'temperature': 10.9,
+      'temperature_unit': <UnitOfTemperature.CELSIUS: '°C'>,
+      'visibility_unit': <UnitOfLength.KILOMETERS: 'km'>,
+      'wind_bearing': 20,
+      'wind_gust_speed': 21.6,
+      'wind_speed': 7.2,
+      'wind_speed_unit': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'weather.vilnius',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'sunny',
+  })
+# ---

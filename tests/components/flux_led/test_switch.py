@@ -1,4 +1,5 @@
 """Tests for switch platform."""
+
 from flux_led.const import MODE_MUSIC
 
 from homeassistant.components import flux_led

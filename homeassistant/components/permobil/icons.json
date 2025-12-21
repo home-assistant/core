@@ -1,0 +1,36 @@
+{
+  "entity": {
+    "sensor": {
+      "charge_time_left": {
+        "default": "mdi:battery-clock"
+      },
+      "distance_left": {
+        "default": "mdi:map-marker-distance"
+      },
+      "max_distance_left": {
+        "default": "mdi:map-marker-distance"
+      },
+      "max_watt_hours": {
+        "default": "mdi:lightning-bolt"
+      },
+      "record_adjustments": {
+        "default": "mdi:seat-recline-extra"
+      },
+      "record_distance": {
+        "default": "mdi:map-marker-distance"
+      },
+      "state_of_health": {
+        "default": "mdi:battery-heart-variant"
+      },
+      "usage_adjustments": {
+        "default": "mdi:seat-recline-extra"
+      },
+      "usage_distance": {
+        "default": "mdi:map-marker-distance"
+      },
+      "watt_hours_left": {
+        "default": "mdi:lightning-bolt"
+      }
+    }
+  }
+}

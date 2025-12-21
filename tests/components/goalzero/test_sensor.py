@@ -1,5 +1,7 @@
 """Sensor tests for the Goalzero integration."""
 
+import pytest
+
 from homeassistant.components.goalzero.const import DEFAULT_NAME
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
@@ -25,10 +27,9 @@ from . import async_init_integration
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensors(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    entity_registry_enabled_by_default: None,
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
     """Test we get sensor data."""
     await async_init_integration(hass, aioclient_mock)
@@ -96,7 +97,7 @@ async def test_sensors(
     assert state.attributes.get(ATTR_STATE_CLASS) is None
     state = hass.states.get(f"sensor.{DEFAULT_NAME}_total_run_time")
     assert state.state == "1720984"
-    assert state.attributes.get(ATTR_DEVICE_CLASS) is None
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DURATION
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTime.SECONDS
     assert state.attributes.get(ATTR_STATE_CLASS) is None
     state = hass.states.get(f"sensor.{DEFAULT_NAME}_wi_fi_ssid")

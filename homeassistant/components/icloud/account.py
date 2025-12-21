@@ -1,4 +1,5 @@
 """iCloud account."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -11,6 +12,7 @@ from pyicloud.exceptions import (
     PyiCloudFailedLoginException,
     PyiCloudNoDevicesException,
     PyiCloudServiceNotActivatedException,
+    PyiCloudServiceUnavailable,
 )
 from pyicloud.services.findmyiphone import AppleDevice
 
@@ -28,6 +30,13 @@ from homeassistant.util.dt import utcnow
 from homeassistant.util.location import distance
 
 from .const import (
+    ATTR_ACCOUNT_FETCH_INTERVAL,
+    ATTR_BATTERY,
+    ATTR_BATTERY_STATUS,
+    ATTR_DEVICE_NAME,
+    ATTR_DEVICE_STATUS,
+    ATTR_LOW_POWER_MODE,
+    ATTR_OWNER_NAME,
     DEVICE_BATTERY_LEVEL,
     DEVICE_BATTERY_STATUS,
     DEVICE_CLASS,
@@ -48,26 +57,9 @@ from .const import (
     DOMAIN,
 )
 
-# entity attributes
-ATTR_ACCOUNT_FETCH_INTERVAL = "account_fetch_interval"
-ATTR_BATTERY = "battery"
-ATTR_BATTERY_STATUS = "battery_status"
-ATTR_DEVICE_NAME = "device_name"
-ATTR_DEVICE_STATUS = "device_status"
-ATTR_LOW_POWER_MODE = "low_power_mode"
-ATTR_OWNER_NAME = "owner_fullname"
-
-# services
-SERVICE_ICLOUD_PLAY_SOUND = "play_sound"
-SERVICE_ICLOUD_DISPLAY_MESSAGE = "display_message"
-SERVICE_ICLOUD_LOST_DEVICE = "lost_device"
-SERVICE_ICLOUD_UPDATE = "update"
-ATTR_ACCOUNT = "account"
-ATTR_LOST_DEVICE_MESSAGE = "message"
-ATTR_LOST_DEVICE_NUMBER = "number"
-ATTR_LOST_DEVICE_SOUND = "sound"
-
 _LOGGER = logging.getLogger(__name__)
+
+type IcloudConfigEntry = ConfigEntry[IcloudAccount]
 
 
 class IcloudAccount:
@@ -82,7 +74,7 @@ class IcloudAccount:
         with_family: bool,
         max_interval: int,
         gps_accuracy_threshold: int,
-        config_entry: ConfigEntry,
+        config_entry: IcloudConfigEntry,
     ) -> None:
         """Initialize an iCloud account."""
         self.hass = hass
@@ -116,7 +108,7 @@ class IcloudAccount:
 
             if self.api.requires_2fa:
                 # Trigger a new log in to ensure the user enters the 2FA code again.
-                raise PyiCloudFailedLoginException
+                raise PyiCloudFailedLoginException("2FA Required")  # noqa: TRY301
 
         except PyiCloudFailedLoginException:
             self.api = None
@@ -134,24 +126,29 @@ class IcloudAccount:
             return
 
         try:
-            api_devices = self.api.devices
             # Gets device owners infos
-            user_info = api_devices.response["userInfo"]
+            user_info = self.api.devices.user_info
         except (
             PyiCloudServiceNotActivatedException,
             PyiCloudNoDevicesException,
+            PyiCloudServiceUnavailable,
         ) as err:
             _LOGGER.error("No iCloud device found")
             raise ConfigEntryNotReady from err
 
-        self._owner_fullname = f"{user_info['firstName']} {user_info['lastName']}"
+        if user_info is None:
+            raise ConfigEntryNotReady("No user info found in iCloud devices response")
+
+        self._owner_fullname = (
+            f"{user_info.get('firstName')} {user_info.get('lastName')}"
+        )
 
         self._family_members_fullname = {}
         if user_info.get("membersInfo") is not None:
-            for prs_id, member in user_info["membersInfo"].items():
-                self._family_members_fullname[
-                    prs_id
-                ] = f"{member['firstName']} {member['lastName']}"
+            for prs_id, member in user_info.get("membersInfo").items():
+                self._family_members_fullname[prs_id] = (
+                    f"{member['firstName']} {member['lastName']}"
+                )
 
         self._devices = {}
         self.update_devices()
@@ -160,6 +157,7 @@ class IcloudAccount:
         """Update iCloud devices."""
         if self.api is None:
             return
+        _LOGGER.debug("Updating devices")
 
         if self.api.requires_2fa:
             self._require_reauth()
@@ -168,15 +166,11 @@ class IcloudAccount:
         api_devices = {}
         try:
             api_devices = self.api.devices
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:  # noqa: BLE001
             _LOGGER.error("Unknown iCloud error: %s", err)
             self._fetch_interval = 2
             dispatcher_send(self.hass, self.signal_device_update)
-            track_point_in_utc_time(
-                self.hass,
-                self.keep_alive,
-                utcnow() + timedelta(minutes=self._fetch_interval),
-            )
+            self._schedule_next_fetch()
             return
 
         # Gets devices infos
@@ -222,11 +216,7 @@ class IcloudAccount:
         if new_device:
             dispatcher_send(self.hass, self.signal_device_new)
 
-        track_point_in_utc_time(
-            self.hass,
-            self.keep_alive,
-            utcnow() + timedelta(minutes=self._fetch_interval),
-        )
+        self._schedule_next_fetch()
 
     def _require_reauth(self):
         """Require the user to log in again."""
@@ -305,6 +295,14 @@ class IcloudAccount:
             self._max_interval,
         )
 
+    def _schedule_next_fetch(self) -> None:
+        if not self._config_entry.pref_disable_polling:
+            track_point_in_utc_time(
+                self.hass,
+                self.keep_alive,
+                utcnow() + timedelta(minutes=self._fetch_interval),
+            )
+
     def keep_alive(self, now=None) -> None:
         """Keep the API alive."""
         if self.api is None:
@@ -318,11 +316,12 @@ class IcloudAccount:
 
     def get_devices_with_name(self, name: str) -> list[Any]:
         """Get devices by name."""
-        result = []
         name_slug = slugify(name.replace(" ", "", 99))
-        for device in self.devices.values():
-            if slugify(device.name.replace(" ", "", 99)) == name_slug:
-                result.append(device)
+        result = [
+            device
+            for device in self.devices.values()
+            if slugify(device.name.replace(" ", "", 99)) == name_slug
+        ]
         if not result:
             raise ValueError(f"No device with name {name}")
         return result

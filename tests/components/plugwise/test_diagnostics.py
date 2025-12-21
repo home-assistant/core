@@ -1,7 +1,8 @@
 """Tests for the diagnostics data provided by the Plugwise integration."""
+
 from unittest.mock import MagicMock
 
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 

@@ -1,4 +1,5 @@
 """Base UptimeRobot entity."""
+
 from __future__ import annotations
 
 from pyuptimerobot import UptimeRobotMonitor
@@ -58,8 +59,3 @@ class UptimeRobotEntity(CoordinatorEntity[UptimeRobotDataUpdateCoordinator]):
             ),
             self._monitor,
         )
-
-    @property
-    def monitor_available(self) -> bool:
-        """Returtn if the monitor is available."""
-        return bool(self.monitor.status == 2)

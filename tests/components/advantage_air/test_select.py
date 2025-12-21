@@ -1,6 +1,5 @@
 """Test the Advantage Air Select Platform."""
 
-
 from unittest.mock import AsyncMock
 
 from homeassistant.components.select import (

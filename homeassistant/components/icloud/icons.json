@@ -1,0 +1,16 @@
+{
+  "services": {
+    "display_message": {
+      "service": "mdi:message-alert"
+    },
+    "lost_device": {
+      "service": "mdi:devices"
+    },
+    "play_sound": {
+      "service": "mdi:speaker-wireless"
+    },
+    "update": {
+      "service": "mdi:update"
+    }
+  }
+}

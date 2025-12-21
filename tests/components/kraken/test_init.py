@@ -1,4 +1,5 @@
 """Tests for the kraken integration."""
+
 from unittest.mock import patch
 
 from pykrakenapi.pykrakenapi import CallRateLimitError, KrakenAPIError
@@ -14,12 +15,15 @@ from tests.common import MockConfigEntry
 
 async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test unload for Kraken."""
-    with patch(
-        "pykrakenapi.KrakenAPI.get_tradable_asset_pairs",
-        return_value=TRADEABLE_ASSET_PAIR_RESPONSE,
-    ), patch(
-        "pykrakenapi.KrakenAPI.get_ticker_information",
-        return_value=TICKER_INFORMATION_RESPONSE,
+    with (
+        patch(
+            "pykrakenapi.KrakenAPI.get_tradable_asset_pairs",
+            return_value=TRADEABLE_ASSET_PAIR_RESPONSE,
+        ),
+        patch(
+            "pykrakenapi.KrakenAPI.get_ticker_information",
+            return_value=TICKER_INFORMATION_RESPONSE,
+        ),
     ):
         entry = MockConfigEntry(domain=DOMAIN)
         entry.add_to_hass(hass)
@@ -34,12 +38,15 @@ async def test_unknown_error(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test unload for Kraken."""
-    with patch(
-        "pykrakenapi.KrakenAPI.get_tradable_asset_pairs",
-        return_value=TRADEABLE_ASSET_PAIR_RESPONSE,
-    ), patch(
-        "pykrakenapi.KrakenAPI.get_ticker_information",
-        side_effect=KrakenAPIError("EQuery: Error"),
+    with (
+        patch(
+            "pykrakenapi.KrakenAPI.get_tradable_asset_pairs",
+            return_value=TRADEABLE_ASSET_PAIR_RESPONSE,
+        ),
+        patch(
+            "pykrakenapi.KrakenAPI.get_ticker_information",
+            side_effect=KrakenAPIError("EQuery: Error"),
+        ),
     ):
         entry = MockConfigEntry(domain=DOMAIN)
         entry.add_to_hass(hass)
@@ -53,12 +60,15 @@ async def test_callrate_limit(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test unload for Kraken."""
-    with patch(
-        "pykrakenapi.KrakenAPI.get_tradable_asset_pairs",
-        return_value=TRADEABLE_ASSET_PAIR_RESPONSE,
-    ), patch(
-        "pykrakenapi.KrakenAPI.get_ticker_information",
-        side_effect=CallRateLimitError(),
+    with (
+        patch(
+            "pykrakenapi.KrakenAPI.get_tradable_asset_pairs",
+            return_value=TRADEABLE_ASSET_PAIR_RESPONSE,
+        ),
+        patch(
+            "pykrakenapi.KrakenAPI.get_ticker_information",
+            side_effect=CallRateLimitError(),
+        ),
     ):
         entry = MockConfigEntry(domain=DOMAIN)
         entry.add_to_hass(hass)

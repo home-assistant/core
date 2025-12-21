@@ -1,12 +1,13 @@
 """Represent the AsusWrt router."""
+
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from pyasuswrt import AsusWrtError
+from asusrouter import AsusRouterError
 
 from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
@@ -20,7 +21,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo, format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util, slugify
 
 from .bridge import AsusWrtBridge, WrtDevice
@@ -39,6 +40,9 @@ from .const import (
     SENSORS_CONNECTED_DEVICE,
 )
 
+if TYPE_CHECKING:
+    from . import AsusWrtConfigEntry
+
 CONF_REQ_RELOAD = [CONF_DNSMASQ, CONF_INTERFACE, CONF_REQUIRE_IP]
 
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -51,10 +55,13 @@ _LOGGER = logging.getLogger(__name__)
 class AsusWrtSensorDataHandler:
     """Data handler for AsusWrt sensor."""
 
-    def __init__(self, hass: HomeAssistant, api: AsusWrtBridge) -> None:
+    def __init__(
+        self, hass: HomeAssistant, api: AsusWrtBridge, entry: AsusWrtConfigEntry
+    ) -> None:
         """Initialize a AsusWrt sensor data handler."""
         self._hass = hass
         self._api = api
+        self._entry = entry
         self._connected_devices = 0
 
     async def _get_connected_devices(self) -> dict[str, int]:
@@ -90,6 +97,7 @@ class AsusWrtSensorDataHandler:
             update_method=method,
             # Polling interval. Will only be polled if there are subscribers.
             update_interval=SCAN_INTERVAL if should_poll else None,
+            config_entry=self._entry,
         )
         await coordinator.async_refresh()
 
@@ -168,7 +176,7 @@ class AsusWrtRouter:
 
         self._on_close: list[Callable] = []
 
-        self._options: dict[str, Any] = {
+        self._options: dict[str, str | bool | int] = {
             CONF_DNSMASQ: DEFAULT_DNSMASQ,
             CONF_INTERFACE: DEFAULT_INTERFACE,
             CONF_REQUIRE_IP: True,
@@ -221,7 +229,7 @@ class AsusWrtRouter:
         """Set up a AsusWrt router."""
         try:
             await self._api.async_connect()
-        except (AsusWrtError, OSError) as exc:
+        except (AsusRouterError, OSError) as exc:
             raise ConfigEntryNotReady from exc
         if not self._api.is_connected:
             raise ConfigEntryNotReady
@@ -276,7 +284,7 @@ class AsusWrtRouter:
         _LOGGER.debug("Checking devices for ASUS router %s", self.host)
         try:
             wrt_devices = await self._api.async_get_connected_devices()
-        except UpdateFailed as exc:
+        except (OSError, AsusRouterError) as exc:
             if not self._connect_error:
                 self._connect_error = True
                 _LOGGER.error(
@@ -288,15 +296,13 @@ class AsusWrtRouter:
 
         if self._connect_error:
             self._connect_error = False
-            _LOGGER.info("Reconnected to ASUS router %s", self.host)
+            _LOGGER.warning("Reconnected to ASUS router %s", self.host)
 
         self._connected_devices = len(wrt_devices)
-        consider_home: int = self._options.get(
-            CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
+        consider_home = int(
+            self._options.get(CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds())
         )
-        track_unknown: bool = self._options.get(
-            CONF_TRACK_UNKNOWN, DEFAULT_TRACK_UNKNOWN
-        )
+        track_unknown = self._options.get(CONF_TRACK_UNKNOWN, DEFAULT_TRACK_UNKNOWN)
 
         for device_mac, device in self._devices.items():
             dev_info = wrt_devices.pop(device_mac, None)
@@ -320,7 +326,9 @@ class AsusWrtRouter:
         if self._sensors_data_handler:
             return
 
-        self._sensors_data_handler = AsusWrtSensorDataHandler(self.hass, self._api)
+        self._sensors_data_handler = AsusWrtSensorDataHandler(
+            self.hass, self._api, self._entry
+        )
         self._sensors_data_handler.update_device_count(self._connected_devices)
 
         sensors_types = await self._api.async_get_available_sensors()
@@ -361,7 +369,7 @@ class AsusWrtRouter:
         """Add a function to call when router is closed."""
         self._on_close.append(func)
 
-    def update_options(self, new_options: dict[str, Any]) -> bool:
+    def update_options(self, new_options: Mapping[str, Any]) -> bool:
         """Update router options."""
         req_reload = False
         for name, new_opt in new_options.items():
@@ -378,11 +386,13 @@ class AsusWrtRouter:
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
         info = DeviceInfo(
+            configuration_url=self._api.configuration_url,
             identifiers={(DOMAIN, self._entry.unique_id or "AsusWRT")},
             name=self.host,
             model=self._api.model or "Asus Router",
+            model_id=self._api.model_id,
+            serial_number=self._api.serial_number,
             manufacturer="Asus",
-            configuration_url=f"http://{self.host}",
         )
         if self._api.firmware:
             info["sw_version"] = self._api.firmware

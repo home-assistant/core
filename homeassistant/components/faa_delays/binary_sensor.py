@@ -1,4 +1,5 @@
 """Platform for FAA Delays sensor component."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
@@ -11,13 +12,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import FAADataUpdateCoordinator
+from . import FAAConfigEntry, FAADataUpdateCoordinator
 from .const import DOMAIN
 
 
@@ -33,7 +33,6 @@ FAA_BINARY_SENSORS: tuple[FaaDelaysBinarySensorEntityDescription, ...] = (
     FaaDelaysBinarySensorEntityDescription(
         key="GROUND_DELAY",
         translation_key="ground_delay",
-        icon="mdi:airport",
         is_on_fn=lambda airport: airport.ground_delay.status,
         extra_state_attributes_fn=lambda airport: {
             "average": airport.ground_delay.average,
@@ -43,7 +42,6 @@ FAA_BINARY_SENSORS: tuple[FaaDelaysBinarySensorEntityDescription, ...] = (
     FaaDelaysBinarySensorEntityDescription(
         key="GROUND_STOP",
         translation_key="ground_stop",
-        icon="mdi:airport",
         is_on_fn=lambda airport: airport.ground_stop.status,
         extra_state_attributes_fn=lambda airport: {
             "endtime": airport.ground_stop.endtime,
@@ -53,7 +51,6 @@ FAA_BINARY_SENSORS: tuple[FaaDelaysBinarySensorEntityDescription, ...] = (
     FaaDelaysBinarySensorEntityDescription(
         key="DEPART_DELAY",
         translation_key="depart_delay",
-        icon="mdi:airplane-takeoff",
         is_on_fn=lambda airport: airport.depart_delay.status,
         extra_state_attributes_fn=lambda airport: {
             "minimum": airport.depart_delay.minimum,
@@ -65,7 +62,6 @@ FAA_BINARY_SENSORS: tuple[FaaDelaysBinarySensorEntityDescription, ...] = (
     FaaDelaysBinarySensorEntityDescription(
         key="ARRIVE_DELAY",
         translation_key="arrive_delay",
-        icon="mdi:airplane-landing",
         is_on_fn=lambda airport: airport.arrive_delay.status,
         extra_state_attributes_fn=lambda airport: {
             "minimum": airport.arrive_delay.minimum,
@@ -77,7 +73,6 @@ FAA_BINARY_SENSORS: tuple[FaaDelaysBinarySensorEntityDescription, ...] = (
     FaaDelaysBinarySensorEntityDescription(
         key="CLOSURE",
         translation_key="closure",
-        icon="mdi:airplane:off",
         is_on_fn=lambda airport: airport.closure.status,
         extra_state_attributes_fn=lambda airport: {
             "begin": airport.closure.start,
@@ -88,10 +83,12 @@ FAA_BINARY_SENSORS: tuple[FaaDelaysBinarySensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: FAAConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a FAA sensor based on a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     entities = [
         FAABinarySensor(coordinator, entry.entry_id, description)
@@ -118,7 +115,6 @@ class FAABinarySensor(CoordinatorEntity[FAADataUpdateCoordinator], BinarySensorE
         super().__init__(coordinator)
         self.entity_description = description
         _id = coordinator.data.code
-        self._attr_name = f"{_id} {description.name}"
         self._attr_unique_id = f"{_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, _id)},

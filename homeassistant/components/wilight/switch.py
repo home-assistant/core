@@ -1,4 +1,5 @@
 """Support for WiLight switches."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -11,9 +12,10 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN, WiLightDevice
+from .const import DOMAIN
+from .entity import WiLightDevice
 from .parent_device import WiLightParent
 from .support import wilight_to_hass_trigger, wilight_trigger as wl_trigger
 
@@ -56,10 +58,6 @@ VALID_TRIGGER_INDEX = vol.All(
 DESC_WATERING = "watering"
 DESC_PAUSE = "pause"
 
-# Icons of the valve switch entities
-ICON_WATERING = "mdi:water"
-ICON_PAUSE = "mdi:pause-circle-outline"
-
 
 def entities_from_discovered_wilight(api_device: PyWiLightDevice) -> tuple[Any]:
     """Parse configuration and add WiLight switch entities."""
@@ -77,7 +75,9 @@ def entities_from_discovered_wilight(api_device: PyWiLightDevice) -> tuple[Any]:
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up WiLight switches from a config entry."""
     parent: WiLightParent = hass.data[DOMAIN][entry.entry_id]
@@ -149,7 +149,6 @@ class WiLightValveSwitch(WiLightDevice, SwitchEntity):
     """Representation of a WiLights Valve switch."""
 
     _attr_translation_key = "watering"
-    _attr_icon = ICON_WATERING
 
     @property
     def is_on(self) -> bool:
@@ -266,7 +265,6 @@ class WiLightValvePauseSwitch(WiLightDevice, SwitchEntity):
     """Representation of a WiLights Valve Pause switch."""
 
     _attr_translation_key = "pause"
-    _attr_icon = ICON_PAUSE
 
     @property
     def is_on(self) -> bool:

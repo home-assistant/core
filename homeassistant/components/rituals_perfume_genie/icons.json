@@ -1,0 +1,30 @@
+{
+  "entity": {
+    "number": {
+      "perfume_amount": {
+        "default": "mdi:gauge"
+      }
+    },
+    "select": {
+      "room_size_square_meter": {
+        "default": "mdi:ruler-square"
+      }
+    },
+    "sensor": {
+      "fill": {
+        "default": "mdi:beaker"
+      },
+      "perfume": {
+        "default": "mdi:tag"
+      },
+      "wifi_percentage": {
+        "default": "mdi:wifi"
+      }
+    },
+    "switch": {
+      "fan": {
+        "default": "mdi:fan"
+      }
+    }
+  }
+}

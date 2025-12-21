@@ -1,147 +1,127 @@
 """Define tests for the Meater config flow."""
-from unittest.mock import AsyncMock, patch
+
+from unittest.mock import AsyncMock
 
 from meater import AuthenticationError, ServiceUnavailableError
 import pytest
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.meater import DOMAIN
+from homeassistant.components.meater.const import DOMAIN
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
 
-@pytest.fixture
-def mock_client():
-    """Define a fixture for authentication coroutine."""
-    return AsyncMock(return_value=None)
-
-
-@pytest.fixture
-def mock_meater(mock_client):
-    """Mock the meater library."""
-    with patch("homeassistant.components.meater.MeaterApi.authenticate") as mock_:
-        mock_.side_effect = mock_client
-        yield mock_
-
-
-async def test_duplicate_error(hass: HomeAssistant) -> None:
-    """Test that errors are shown when duplicates are added."""
-    conf = {CONF_USERNAME: "user@host.com", CONF_PASSWORD: "password123"}
-
-    MockConfigEntry(domain=DOMAIN, unique_id="user@host.com", data=conf).add_to_hass(
-        hass
-    )
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=conf
-    )
-
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-
-@pytest.mark.parametrize("mock_client", [AsyncMock(side_effect=Exception)])
-async def test_unknown_auth_error(hass: HomeAssistant, mock_meater) -> None:
-    """Test that an invalid API/App Key throws an error."""
-    conf = {CONF_USERNAME: "user@host.com", CONF_PASSWORD: "password123"}
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=conf
-    )
-    assert result["errors"] == {"base": "unknown_auth_error"}
-
-
-@pytest.mark.parametrize("mock_client", [AsyncMock(side_effect=AuthenticationError)])
-async def test_invalid_credentials(hass: HomeAssistant, mock_meater) -> None:
-    """Test that an invalid API/App Key throws an error."""
-    conf = {CONF_USERNAME: "user@host.com", CONF_PASSWORD: "password123"}
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=conf
-    )
-    assert result["errors"] == {"base": "invalid_auth"}
-
-
-@pytest.mark.parametrize(
-    "mock_client", [AsyncMock(side_effect=ServiceUnavailableError)]
-)
-async def test_service_unavailable(hass: HomeAssistant, mock_meater) -> None:
-    """Test that an invalid API/App Key throws an error."""
-    conf = {CONF_USERNAME: "user@host.com", CONF_PASSWORD: "password123"}
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=conf
-    )
-    assert result["errors"] == {"base": "service_unavailable_error"}
-
-
-async def test_user_flow(hass: HomeAssistant, mock_meater) -> None:
+async def test_user_flow(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_meater_client: AsyncMock
+) -> None:
     """Test that the user flow works."""
-    conf = {CONF_USERNAME: "user@host.com", CONF_PASSWORD: "password123"}
-
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=None
+        DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    with patch(
-        "homeassistant.components.meater.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], conf)
-        await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "user@host.com", CONF_PASSWORD: "password123"},
+    )
 
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_USERNAME: "user@host.com",
         CONF_PASSWORD: "password123",
     }
+    assert result["result"].unique_id == "user@host.com"
     assert len(mock_setup_entry.mock_calls) == 1
 
-    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert config_entry.data == {
-        CONF_USERNAME: "user@host.com",
-        CONF_PASSWORD: "password123",
-    }
 
-
-async def test_reauth_flow(hass: HomeAssistant, mock_meater) -> None:
-    """Test that the reauth flow works."""
-    data = {
-        CONF_USERNAME: "user@host.com",
-        CONF_PASSWORD: "password123",
-    }
-    mock_config = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="user@host.com",
-        data=data,
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (AuthenticationError, "invalid_auth"),
+        (ServiceUnavailableError, "service_unavailable_error"),
+        (Exception, "unknown_auth_error"),
+    ],
+)
+async def test_user_flow_exceptions(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_meater_client: AsyncMock,
+    exception: Exception,
+    error: str,
+) -> None:
+    """Test that an invalid API/App Key throws an error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
     )
-    mock_config.add_to_hass(hass)
+
+    mock_meater_client.authenticate.side_effect = exception
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "user@host.com", CONF_PASSWORD: "password123"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": error}
+
+    mock_meater_client.authenticate.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USERNAME: "user@host.com", CONF_PASSWORD: "password123"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_duplicate_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_meater_client: AsyncMock,
+) -> None:
+    """Test that errors are shown when duplicates are added."""
+    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_REAUTH},
-        data=data,
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-    assert result["errors"] is None
-
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"password": "passwordabc"},
+        {CONF_USERNAME: "user@host.com", CONF_PASSWORD: "password123"},
     )
-    await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.FlowResultType.ABORT
-    assert result2["reason"] == "reauth_successful"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
-    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert config_entry.data == {
+
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_meater_client: AsyncMock,
+) -> None:
+    """Test that the reauth flow works."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert not result["errors"]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PASSWORD: "passwordabc"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {
         CONF_USERNAME: "user@host.com",
         CONF_PASSWORD: "passwordabc",
     }

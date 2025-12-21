@@ -1,4 +1,5 @@
 """Helper to test significant Climate state changes."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -11,13 +12,13 @@ from homeassistant.helpers.significant_change import (
 )
 
 from . import (
-    ATTR_AUX_HEAT,
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_HUMIDITY,
     ATTR_HVAC_ACTION,
     ATTR_PRESET_MODE,
+    ATTR_SWING_HORIZONTAL_MODE,
     ATTR_SWING_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -25,7 +26,6 @@ from . import (
 )
 
 SIGNIFICANT_ATTRIBUTES: set[str] = {
-    ATTR_AUX_HEAT,
     ATTR_CURRENT_HUMIDITY,
     ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
@@ -33,6 +33,7 @@ SIGNIFICANT_ATTRIBUTES: set[str] = {
     ATTR_HVAC_ACTION,
     ATTR_PRESET_MODE,
     ATTR_SWING_MODE,
+    ATTR_SWING_HORIZONTAL_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     ATTR_TEMPERATURE,
@@ -52,21 +53,23 @@ def async_check_significant_change(
     if old_state != new_state:
         return True
 
-    old_attrs_s = set(old_attrs.items())
-    new_attrs_s = set(new_attrs.items())
+    old_attrs_s = set(
+        {k: v for k, v in old_attrs.items() if k in SIGNIFICANT_ATTRIBUTES}.items()
+    )
+    new_attrs_s = set(
+        {k: v for k, v in new_attrs.items() if k in SIGNIFICANT_ATTRIBUTES}.items()
+    )
+
     changed_attrs: set[str] = {item[0] for item in old_attrs_s ^ new_attrs_s}
     ha_unit = hass.config.units.temperature_unit
 
     for attr_name in changed_attrs:
-        if attr_name not in SIGNIFICANT_ATTRIBUTES:
-            continue
-
         if attr_name in [
-            ATTR_AUX_HEAT,
             ATTR_FAN_MODE,
             ATTR_HVAC_ACTION,
             ATTR_PRESET_MODE,
             ATTR_SWING_MODE,
+            ATTR_SWING_HORIZONTAL_MODE,
         ]:
             return True
 

@@ -1,9 +1,10 @@
 """Renson ventilation unit buttons."""
+
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 
-from _collections_abc import Callable
 from renson_endura_delta.renson import RensonVentilation
 
 from homeassistant.components.button import (
@@ -14,25 +15,18 @@ from homeassistant.components.button import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import RensonCoordinator, RensonData
 from .const import DOMAIN
 from .entity import RensonEntity
 
 
-@dataclass(frozen=True)
-class RensonButtonEntityDescriptionMixin:
-    """Action function called on press."""
+@dataclass(frozen=True, kw_only=True)
+class RensonButtonEntityDescription(ButtonEntityDescription):
+    """Class describing Renson button entity."""
 
     action_fn: Callable[[RensonVentilation], None]
-
-
-@dataclass(frozen=True)
-class RensonButtonEntityDescription(
-    ButtonEntityDescription, RensonButtonEntityDescriptionMixin
-):
-    """Class describing Renson button entity."""
 
 
 ENTITY_DESCRIPTIONS: tuple[RensonButtonEntityDescription, ...] = (
@@ -60,7 +54,7 @@ ENTITY_DESCRIPTIONS: tuple[RensonButtonEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Renson button platform."""
 

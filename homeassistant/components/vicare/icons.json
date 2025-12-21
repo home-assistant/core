@@ -1,0 +1,162 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "burner": {
+        "default": "mdi:gas-burner"
+      },
+      "child_safety_lock_mode": {
+        "default": "mdi:lock"
+      },
+      "circulation_pump": {
+        "default": "mdi:pump"
+      },
+      "domestic_hot_water_circulation_pump": {
+        "default": "mdi:pump"
+      },
+      "domestic_hot_water_pump": {
+        "default": "mdi:pump"
+      },
+      "filter_hours": {
+        "default": "mdi:counter"
+      },
+      "filter_overdue_hours": {
+        "default": "mdi:counter"
+      },
+      "filter_remaining_hours": {
+        "default": "mdi:counter"
+      },
+      "frost_protection": {
+        "default": "mdi:snowflake"
+      },
+      "mounting_mode": {
+        "default": "mdi:wrench"
+      },
+      "one_time_charge": {
+        "default": "mdi:shower-head"
+      },
+      "solar_pump": {
+        "default": "mdi:pump"
+      },
+      "supply_fan_hours": {
+        "default": "mdi:counter"
+      },
+      "supply_fan_speed": {
+        "default": "mdi:rotate-right"
+      },
+      "valve": {
+        "default": "mdi:pipe-valve"
+      }
+    },
+    "button": {
+      "activate_onetimecharge": {
+        "default": "mdi:shower-head"
+      },
+      "deactivate_onetimecharge": {
+        "default": "mdi:shower-head"
+      }
+    },
+    "fan": {
+      "ventilation": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "permanent": "mdi:fan",
+              "sensor_driven": "mdi:refresh-auto",
+              "sensor_override": "mdi:refresh-auto",
+              "standard": "mdi:snail",
+              "standby": "mdi:power-standby",
+              "ventilation": "mdi:clock-outline"
+            }
+          }
+        }
+      }
+    },
+    "number": {
+      "heating_curve_shift": {
+        "default": "mdi:plus-minus-variant"
+      },
+      "heating_curve_slope": {
+        "default": "mdi:slope-uphill"
+      }
+    },
+    "sensor": {
+      "burner_hours": {
+        "default": "mdi:counter"
+      },
+      "burner_modulation": {
+        "default": "mdi:percent"
+      },
+      "burner_starts": {
+        "default": "mdi:counter"
+      },
+      "compressor_hours": {
+        "default": "mdi:counter"
+      },
+      "compressor_hours_loadclass1": {
+        "default": "mdi:counter"
+      },
+      "compressor_hours_loadclass2": {
+        "default": "mdi:counter"
+      },
+      "compressor_hours_loadclass3": {
+        "default": "mdi:counter"
+      },
+      "compressor_hours_loadclass4": {
+        "default": "mdi:counter"
+      },
+      "compressor_hours_loadclass5": {
+        "default": "mdi:counter"
+      },
+      "compressor_phase": {
+        "default": "mdi:information"
+      },
+      "compressor_starts": {
+        "default": "mdi:counter"
+      },
+      "ess_state_of_charge": {
+        "default": "mdi:home-battery"
+      },
+      "heating_rod_hours": {
+        "default": "mdi:counter"
+      },
+      "heating_rod_starts": {
+        "default": "mdi:counter"
+      },
+      "pcc_energy_consumption": {
+        "default": "mdi:transmission-tower-export"
+      },
+      "pcc_energy_feed_in": {
+        "default": "mdi:transmission-tower-import"
+      },
+      "pcc_transfer_power_exchange": {
+        "default": "mdi:transmission-tower"
+      },
+      "photovoltaic_energy_production_today": {
+        "default": "mdi:solar-power"
+      },
+      "valve_position": {
+        "default": "mdi:pipe-valve"
+      },
+      "ventilation_input_volumeflow": {
+        "default": "mdi:air-filter"
+      },
+      "ventilation_level": {
+        "default": "mdi:fan"
+      },
+      "ventilation_output_volumeflow": {
+        "default": "mdi:air-filter"
+      },
+      "volumetric_flow": {
+        "default": "mdi:gauge"
+      },
+      "zigbee_signal_strength": {
+        "default": "mdi:wifi"
+      }
+    }
+  },
+  "services": {
+    "set_vicare_mode": {
+      "service": "mdi:cog"
+    }
+  }
+}

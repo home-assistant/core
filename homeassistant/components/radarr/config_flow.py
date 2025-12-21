@@ -1,4 +1,5 @@
 """Config flow for Radarr."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -9,11 +10,11 @@ from aiopyarr import exceptions
 from aiopyarr.models.host_configuration import PyArrHostConfiguration
 from aiopyarr.radarr_client import RadarrClient
 import voluptuous as vol
+from yarl import URL
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DEFAULT_NAME, DEFAULT_URL, DOMAIN
@@ -24,19 +25,15 @@ class RadarrConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize the flow."""
-        self.entry: ConfigEntry | None = None
-
-    async def async_step_reauth(self, _: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
-        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm reauth dialog."""
         if user_input is not None:
             return await self.async_step_user()
@@ -46,14 +43,17 @@ class RadarrConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
 
-        if user_input is None:
-            user_input = dict(self.entry.data) if self.entry else None
+        if user_input is not None:
+            # aiopyarr defaults to the service port if one isn't given
+            # this is counter to standard practice  where http = 80
+            # and https = 443.
+            url = URL(user_input[CONF_URL])
+            user_input[CONF_URL] = f"{url.scheme}://{url.host}:{url.port}{url.path}"
 
-        else:
             try:
                 if result := await validate_input(self.hass, user_input):
                     user_input[CONF_API_KEY] = result[1]
@@ -68,20 +68,21 @@ class RadarrConfigFlow(ConfigFlow, domain=DOMAIN):
             except exceptions.ArrException:
                 errors = {"base": "unknown"}
             if not errors:
-                if self.entry:
-                    self.hass.config_entries.async_update_entry(
-                        self.entry, data=user_input
+                if self.source == SOURCE_REAUTH:
+                    return self.async_update_reload_and_abort(
+                        self._get_reauth_entry(), data=user_input
                     )
-                    await self.hass.config_entries.async_reload(self.entry.entry_id)
-
-                    return self.async_abort(reason="reauth_successful")
 
                 return self.async_create_entry(
                     title=DEFAULT_NAME,
                     data=user_input,
                 )
 
-        user_input = user_input or {}
+        if user_input is None:
+            user_input = {}
+            if self.source == SOURCE_REAUTH:
+                user_input = dict(self._get_reauth_entry().data)
+
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(

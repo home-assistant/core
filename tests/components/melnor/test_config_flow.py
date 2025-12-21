@@ -1,4 +1,5 @@
 """Test the melnor config flow."""
+
 from unittest.mock import AsyncMock
 
 import pytest
@@ -6,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.melnor.const import DOMAIN
+from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.const import CONF_ADDRESS, CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -16,6 +18,8 @@ from .conftest import (
     FAKE_SERVICE_INFO_2,
     patch_async_discovered_service_info,
 )
+
+from tests.common import MockConfigEntry
 
 
 async def test_user_step_no_devices(
@@ -28,7 +32,7 @@ async def test_user_step_no_devices(
             context={"source": config_entries.SOURCE_USER},
         )
 
-        assert result["type"] == FlowResultType.ABORT
+        assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "no_devices_found"
 
         mock_setup_entry.assert_not_called()
@@ -39,16 +43,16 @@ async def test_user_step_discovered_devices(
 ) -> None:
     """Test we properly handle device picking."""
 
-    with patch_async_discovered_service_info():
+    with patch_async_discovered_service_info([FAKE_SERVICE_INFO_1]):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
         )
 
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "pick_device"
 
-        with pytest.raises(vol.MultipleInvalid):
+        with pytest.raises(vol.Invalid):
             await hass.config_entries.flow.async_configure(
                 result["flow_id"], user_input={CONF_ADDRESS: "wrong_address"}
             )
@@ -57,7 +61,7 @@ async def test_user_step_discovered_devices(
             result["flow_id"], user_input={CONF_ADDRESS: FAKE_ADDRESS_1}
         )
 
-        assert result2["type"] == FlowResultType.CREATE_ENTRY
+        assert result2["type"] is FlowResultType.CREATE_ENTRY
         assert result2["data"] == {CONF_ADDRESS: FAKE_ADDRESS_1}
 
     mock_setup_entry.assert_called_once()
@@ -93,9 +97,9 @@ async def test_user_step_with_existing_device(
             context={"source": config_entries.SOURCE_USER},
         )
 
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
 
-        with pytest.raises(vol.MultipleInvalid):
+        with pytest.raises(vol.Invalid):
             await hass.config_entries.flow.async_configure(
                 result["flow_id"], user_input={CONF_ADDRESS: FAKE_ADDRESS_1}
             )
@@ -114,7 +118,7 @@ async def test_bluetooth_discovered(
         data=FAKE_SERVICE_INFO_1,
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "bluetooth_confirm"
     assert result["description_placeholders"] == {"name": FAKE_ADDRESS_1}
 
@@ -142,8 +146,41 @@ async def test_bluetooth_confirm(
         result["flow_id"], user_input={}
     )
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == FAKE_ADDRESS_1
     assert result2["data"] == {CONF_ADDRESS: FAKE_ADDRESS_1}
+
+    mock_setup_entry.assert_called_once()
+
+
+async def test_user_setup_replaces_ignored_device(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test the user initiated form can replace an ignored device."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=FAKE_ADDRESS_1,
+        source=SOURCE_IGNORE,
+        data={},
+    )
+    entry.add_to_hass(hass)
+
+    with patch_async_discovered_service_info([FAKE_SERVICE_INFO_1]):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pick_device"
+
+    # Verify the ignored device is in the dropdown
+    assert FAKE_ADDRESS_1 in result["data_schema"].schema[CONF_ADDRESS].container
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_ADDRESS: FAKE_ADDRESS_1}
+    )
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == FAKE_ADDRESS_1
+    assert result2["data"] == {CONF_ADDRESS: FAKE_ADDRESS_1}
+    assert result2["result"].unique_id == FAKE_ADDRESS_1
 
     mock_setup_entry.assert_called_once()

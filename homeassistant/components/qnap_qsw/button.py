@@ -1,4 +1,5 @@
 """Support for the QNAP QSW buttons."""
+
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
@@ -15,23 +16,18 @@ from homeassistant.components.button import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, QSW_COORD_DATA, QSW_REBOOT
 from .coordinator import QswDataCoordinator
 from .entity import QswDataEntity
 
 
-@dataclass(frozen=True)
-class QswButtonDescriptionMixin:
-    """Mixin to describe a Button entity."""
+@dataclass(frozen=True, kw_only=True)
+class QswButtonDescription(ButtonEntityDescription):
+    """Class to describe a Button entity."""
 
     press_action: Callable[[QnapQswApi], Awaitable[bool]]
-
-
-@dataclass(frozen=True)
-class QswButtonDescription(ButtonEntityDescription, QswButtonDescriptionMixin):
-    """Class to describe a Button entity."""
 
 
 BUTTON_TYPES: Final[tuple[QswButtonDescription, ...]] = (
@@ -45,7 +41,9 @@ BUTTON_TYPES: Final[tuple[QswButtonDescription, ...]] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add QNAP QSW buttons from a config_entry."""
     coordinator: QswDataCoordinator = hass.data[DOMAIN][entry.entry_id][QSW_COORD_DATA]

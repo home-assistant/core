@@ -7,7 +7,7 @@
       'longitude': '**REDACTED**',
       'name': 'Home',
     }),
-    'coordinator_data': dict({
+    'observation_data': dict({
       'ApparentTemperature': dict({
         'Imperial': dict({
           'Unit': 'F',
@@ -297,8 +297,6 @@
           }),
         }),
       }),
-      'forecast': list([
-      ]),
     }),
   })
 # ---

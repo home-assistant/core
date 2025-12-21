@@ -1,0 +1,17 @@
+{
+  "domain": "airobot",
+  "name": "Airobot",
+  "codeowners": ["@mettolen"],
+  "config_flow": true,
+  "dhcp": [
+    {
+      "hostname": "airobot-thermostat-*"
+    }
+  ],
+  "documentation": "https://www.home-assistant.io/integrations/airobot",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["pyairobotrest"],
+  "quality_scale": "silver",
+  "requirements": ["pyairobotrest==0.1.0"]
+}

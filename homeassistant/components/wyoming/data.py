@@ -1,10 +1,11 @@
 """Base class for Wyoming providers."""
+
 from __future__ import annotations
 
 import asyncio
 
 from wyoming.client import AsyncTcpClient
-from wyoming.info import Describe, Info, Satellite
+from wyoming.info import Describe, Info
 
 from homeassistant.const import Platform
 
@@ -23,14 +24,23 @@ class WyomingService:
         self.host = host
         self.port = port
         self.info = info
-        platforms = []
+        self.platforms = []
+
+        if (self.info.satellite is not None) and self.info.satellite.installed:
+            # Don't load platforms for satellite services, such as local wake
+            # word detection.
+            return
+
         if any(asr.installed for asr in info.asr):
-            platforms.append(Platform.STT)
+            self.platforms.append(Platform.STT)
         if any(tts.installed for tts in info.tts):
-            platforms.append(Platform.TTS)
+            self.platforms.append(Platform.TTS)
         if any(wake.installed for wake in info.wake):
-            platforms.append(Platform.WAKE_WORD)
-        self.platforms = platforms
+            self.platforms.append(Platform.WAKE_WORD)
+        if any(intent.installed for intent in info.intent) or any(
+            handle.installed for handle in info.handle
+        ):
+            self.platforms.append(Platform.CONVERSATION)
 
     def has_services(self) -> bool:
         """Return True if services are installed that Home Assistant can use."""
@@ -38,11 +48,19 @@ class WyomingService:
             any(asr for asr in self.info.asr if asr.installed)
             or any(tts for tts in self.info.tts if tts.installed)
             or any(wake for wake in self.info.wake if wake.installed)
+            or any(intent for intent in self.info.intent if intent.installed)
+            or any(handle for handle in self.info.handle if handle.installed)
             or ((self.info.satellite is not None) and self.info.satellite.installed)
         )
 
     def get_name(self) -> str | None:
         """Return name of first installed usable service."""
+
+        # Wyoming satellite
+        # Must be checked first because satellites may contain wake services, etc.
+        if (self.info.satellite is not None) and self.info.satellite.installed:
+            return self.info.satellite.name
+
         # ASR = automated speech recognition (speech-to-text)
         asr_installed = [asr for asr in self.info.asr if asr.installed]
         if asr_installed:
@@ -58,14 +76,15 @@ class WyomingService:
         if wake_installed:
             return wake_installed[0].name
 
-        # satellite
-        satellite_installed: Satellite | None = None
+        # intent recognition (text -> intent)
+        intent_installed = [intent for intent in self.info.intent if intent.installed]
+        if intent_installed:
+            return intent_installed[0].name
 
-        if (self.info.satellite is not None) and self.info.satellite.installed:
-            satellite_installed = self.info.satellite
-
-        if satellite_installed:
-            return satellite_installed.name
+        # intent handling (text -> text)
+        handle_installed = [handle for handle in self.info.handle if handle.installed]
+        if handle_installed:
+            return handle_installed[0].name
 
         return None
 
@@ -97,7 +116,7 @@ async def load_wyoming_info(
                 while True:
                     event = await client.read_event()
                     if event is None:
-                        raise WyomingError(
+                        raise WyomingError(  # noqa: TRY301
                             "Connection closed unexpectedly",
                         )
 
@@ -107,7 +126,7 @@ async def load_wyoming_info(
 
                 if wyoming_info is not None:
                     break  # for
-        except (asyncio.TimeoutError, OSError, WyomingError):
+        except (TimeoutError, OSError, WyomingError):
             # Sleep and try again
             await asyncio.sleep(retry_wait)
 

@@ -1,0 +1,38 @@
+{
+  "entity": {
+    "button": {
+      "cancel_job": {
+        "default": "mdi:cancel"
+      },
+      "pause_job": {
+        "default": "mdi:pause"
+      },
+      "resume_job": {
+        "default": "mdi:play"
+      }
+    },
+    "sensor": {
+      "filename": {
+        "default": "mdi:file-image-outline"
+      },
+      "material": {
+        "default": "mdi:palette-swatch-variant"
+      },
+      "nozzle_diameter": {
+        "default": "mdi:printer-3d-nozzle"
+      },
+      "print_finish": {
+        "default": "mdi:clock-end"
+      },
+      "print_start": {
+        "default": "mdi:clock-start"
+      },
+      "printer_state": {
+        "default": "mdi:printer-3d"
+      },
+      "progress": {
+        "default": "mdi:progress-clock"
+      }
+    }
+  }
+}

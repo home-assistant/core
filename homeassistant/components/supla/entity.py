@@ -1,4 +1,5 @@
 """Base class for SUPLA channels."""
+
 from __future__ import annotations
 
 import logging
@@ -26,10 +27,9 @@ class SuplaEntity(CoordinatorEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-        return "supla-{}-{}".format(
-            self.channel_data["iodevice"]["gUIDString"].lower(),
-            self.channel_data["channelNumber"],
-        )
+        uid = self.channel_data["iodevice"]["gUIDString"].lower()
+        channel_number = self.channel_data["channelNumber"]
+        return f"supla-{uid}-{channel_number}"
 
     @property
     def name(self) -> str | None:

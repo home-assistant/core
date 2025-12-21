@@ -1,4 +1,5 @@
 """Support for HDMI CEC devices as switches."""
+
 from __future__ import annotations
 
 import logging
@@ -11,7 +12,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import ATTR_NEW, DOMAIN, CecEntity
+from .const import ATTR_NEW, DOMAIN
+from .entity import CecEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,7 +28,7 @@ def setup_platform(
 ) -> None:
     """Find and return HDMI devices as switches."""
     if discovery_info and ATTR_NEW in discovery_info:
-        _LOGGER.info("Setting up HDMI devices %s", discovery_info[ATTR_NEW])
+        _LOGGER.debug("Setting up HDMI devices %s", discovery_info[ATTR_NEW])
         entities = []
         for device in discovery_info[ATTR_NEW]:
             hdmi_device = hass.data[DOMAIN][device]

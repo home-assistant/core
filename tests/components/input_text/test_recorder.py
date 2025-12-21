@@ -1,7 +1,10 @@
 """The tests for recorder platform."""
+
 from __future__ import annotations
 
 from datetime import timedelta
+
+import pytest
 
 from homeassistant.components.input_text import (
     ATTR_MAX,
@@ -11,7 +14,6 @@ from homeassistant.components.input_text import (
     DOMAIN,
     MODE_TEXT,
 )
-from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.const import ATTR_EDITABLE
 from homeassistant.core import HomeAssistant
@@ -22,9 +24,8 @@ from tests.common import async_fire_time_changed
 from tests.components.recorder.common import async_wait_recording_done
 
 
-async def test_exclude_attributes(
-    recorder_mock: Recorder, hass: HomeAssistant, enable_custom_integrations: None
-) -> None:
+@pytest.mark.usefixtures("recorder_mock", "enable_custom_integrations")
+async def test_exclude_attributes(hass: HomeAssistant) -> None:
     """Test attributes to be excluded."""
     now = dt_util.utcnow()
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {"test": {}}})

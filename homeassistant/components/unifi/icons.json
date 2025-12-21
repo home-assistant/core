@@ -1,0 +1,92 @@
+{
+  "entity": {
+    "button": {
+      "wlan_regenerate_password": {
+        "default": "mdi:form-textbox-password"
+      }
+    },
+    "image": {
+      "wlan_qr_code": {
+        "default": "mdi:qrcode"
+      }
+    },
+    "sensor": {
+      "client_bandwidth_rx": {
+        "default": "mdi:download"
+      },
+      "client_bandwidth_tx": {
+        "default": "mdi:upload"
+      },
+      "device_clients": {
+        "default": "mdi:account-multiple"
+      },
+      "device_cpu_utilization": {
+        "default": "mdi:chip"
+      },
+      "device_memory_utilization": {
+        "default": "mdi:memory"
+      },
+      "device_state": {
+        "default": "mdi:lan-connect"
+      },
+      "device_uplink_mac": {
+        "default": "mdi:ethernet"
+      },
+      "port_bandwidth_rx": {
+        "default": "mdi:download"
+      },
+      "port_bandwidth_tx": {
+        "default": "mdi:upload"
+      },
+      "wlan_clients": {
+        "default": "mdi:account-multiple"
+      }
+    },
+    "switch": {
+      "block_client": {
+        "default": "mdi:ethernet",
+        "state": {
+          "off": "mdi:ethernet-off"
+        }
+      },
+      "dpi_restriction": {
+        "default": "mdi:network",
+        "state": {
+          "off": "mdi:network-off"
+        }
+      },
+      "firewall_policy_control": {
+        "default": "mdi:security-network"
+      },
+      "poe_port_control": {
+        "default": "mdi:ethernet",
+        "state": {
+          "off": "mdi:ethernet-off"
+        }
+      },
+      "port_forward_control": {
+        "default": "mdi:upload-network"
+      },
+      "traffic_route_control": {
+        "default": "mdi:routes"
+      },
+      "traffic_rule_control": {
+        "default": "mdi:security-network"
+      },
+      "wlan_control": {
+        "default": "mdi:wifi-check",
+        "state": {
+          "off": "mdi:wifi-off"
+        }
+      }
+    }
+  },
+  "services": {
+    "reconnect_client": {
+      "service": "mdi:sync"
+    },
+    "remove_clients": {
+      "service": "mdi:delete"
+    }
+  }
+}

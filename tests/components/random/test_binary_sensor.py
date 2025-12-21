@@ -1,4 +1,5 @@
 """The test for the Random binary sensor platform."""
+
 from unittest.mock import patch
 
 from homeassistant.core import HomeAssistant

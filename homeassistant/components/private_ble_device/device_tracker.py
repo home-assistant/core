@@ -1,4 +1,5 @@
 """Tracking for bluetooth low energy devices."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -10,7 +11,7 @@ from homeassistant.components.device_tracker.config_entry import BaseTrackerEnti
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_HOME, STATE_NOT_HOME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import BasePrivateDeviceEntity
 
@@ -20,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Load Device Tracker entities for a config entry."""
     async_add_entities([BasePrivateDeviceTracker(config_entry)])
@@ -31,6 +32,7 @@ class BasePrivateDeviceTracker(BasePrivateDeviceEntity, BaseTrackerEntity):
 
     _attr_should_poll = False
     _attr_has_entity_name = True
+    _attr_translation_key = "device_tracker"
     _attr_name = None
 
     @property
@@ -68,8 +70,3 @@ class BasePrivateDeviceTracker(BasePrivateDeviceEntity, BaseTrackerEntity):
     def source_type(self) -> SourceType:
         """Return the source type, eg gps or router, of the device."""
         return SourceType.BLUETOOTH_LE
-
-    @property
-    def icon(self) -> str:
-        """Return device icon."""
-        return "mdi:bluetooth-connect" if self._last_info else "mdi:bluetooth-off"

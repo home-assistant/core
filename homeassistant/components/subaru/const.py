@@ -1,4 +1,5 @@
 """Constants for the Subaru integration."""
+
 from subarulink.const import ALL_DOORS, DRIVERS_DOOR, TAILGATE_DOOR
 
 from homeassistant.const import Platform

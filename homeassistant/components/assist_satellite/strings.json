@@ -1,0 +1,155 @@
+{
+  "common": {
+    "trigger_behavior_description": "The behavior of the targeted Assist satellites to trigger on.",
+    "trigger_behavior_name": "Behavior"
+  },
+  "entity_component": {
+    "_": {
+      "name": "Assist satellite",
+      "state": {
+        "idle": "[%key:common::state::idle%]",
+        "listening": "Listening",
+        "processing": "Processing",
+        "responding": "Responding"
+      }
+    }
+  },
+  "selector": {
+    "answers": {
+      "fields": {
+        "id": "Answer ID",
+        "sentences": "Sentences"
+      }
+    },
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
+      }
+    }
+  },
+  "services": {
+    "announce": {
+      "description": "Lets a satellite announce a message.",
+      "fields": {
+        "media_id": {
+          "description": "The media ID to announce instead of using text-to-speech.",
+          "name": "Media ID"
+        },
+        "message": {
+          "description": "The message to announce.",
+          "name": "Message"
+        },
+        "preannounce": {
+          "description": "Play a sound before the announcement.",
+          "name": "Preannounce"
+        },
+        "preannounce_media_id": {
+          "description": "Custom media ID to play before the announcement.",
+          "name": "Preannounce media ID"
+        }
+      },
+      "name": "Announce"
+    },
+    "ask_question": {
+      "description": "Asks a question and gets the user's response.",
+      "fields": {
+        "answers": {
+          "description": "Possible answers to the question.",
+          "name": "Answers"
+        },
+        "entity_id": {
+          "description": "Assist satellite entity to ask the question on.",
+          "name": "Entity"
+        },
+        "preannounce": {
+          "description": "Play a sound before the start message or media.",
+          "name": "Preannounce"
+        },
+        "preannounce_media_id": {
+          "description": "Custom media ID to play before the start message or media.",
+          "name": "Preannounce media ID"
+        },
+        "question": {
+          "description": "The question to ask.",
+          "name": "Question"
+        },
+        "question_media_id": {
+          "description": "The media ID of the question to use instead of text-to-speech.",
+          "name": "Question media ID"
+        }
+      },
+      "name": "Ask question"
+    },
+    "start_conversation": {
+      "description": "Starts a conversation from a satellite.",
+      "fields": {
+        "extra_system_prompt": {
+          "description": "Provide background information to the AI about the request.",
+          "name": "Extra system prompt"
+        },
+        "preannounce": {
+          "description": "Play a sound before the start message or media.",
+          "name": "Preannounce"
+        },
+        "preannounce_media_id": {
+          "description": "Custom media ID to play before the start message or media.",
+          "name": "Preannounce media ID"
+        },
+        "start_media_id": {
+          "description": "The media ID to start with instead of using text-to-speech.",
+          "name": "Media ID"
+        },
+        "start_message": {
+          "description": "The message to start with.",
+          "name": "Message"
+        }
+      },
+      "name": "Start conversation"
+    }
+  },
+  "title": "Assist satellite",
+  "triggers": {
+    "idle": {
+      "description": "Triggers after one or more voice assistant satellites become idle after having processed a command.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::assist_satellite::common::trigger_behavior_description%]",
+          "name": "[%key:component::assist_satellite::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Satellite became idle"
+    },
+    "listening": {
+      "description": "Triggers after one or more voice assistant satellites start listening for a command from someone.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::assist_satellite::common::trigger_behavior_description%]",
+          "name": "[%key:component::assist_satellite::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Satellite started listening"
+    },
+    "processing": {
+      "description": "Triggers after one or more voice assistant satellites start processing a command after having heard it.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::assist_satellite::common::trigger_behavior_description%]",
+          "name": "[%key:component::assist_satellite::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Satellite started processing"
+    },
+    "responding": {
+      "description": "Triggers after one or more voice assistant satellites start responding to a command after having processed it, or start announcing something.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::assist_satellite::common::trigger_behavior_description%]",
+          "name": "[%key:component::assist_satellite::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Satellite started responding"
+    }
+  }
+}

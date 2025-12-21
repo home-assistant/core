@@ -1,23 +1,27 @@
 """Config flow for the Home Assistant Green integration."""
+
 from __future__ import annotations
 
 import asyncio
 import logging
 from typing import Any
 
-import aiohttp
 import voluptuous as vol
 
 from homeassistant.components.hassio import (
-    HassioAPIError,
-    async_get_green_settings,
-    async_set_green_settings,
-    is_hassio,
+    GreenOptions,
+    SupervisorError,
+    get_supervisor_client,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
-from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
+from homeassistant.core import HomeAssistant, async_get_hass, callback
 from homeassistant.helpers import selector
+from homeassistant.helpers.hassio import is_hassio
 
 from .const import DOMAIN
 
@@ -44,13 +48,12 @@ class HomeAssistantGreenConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> HomeAssistantGreenOptionsFlow:
         """Return the options flow."""
-        return HomeAssistantGreenOptionsFlow()
+        return HomeAssistantGreenOptionsFlow(async_get_hass())
 
-    async def async_step_system(self, data: dict[str, Any] | None = None) -> FlowResult:
+    async def async_step_system(
+        self, data: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         return self.async_create_entry(title="Home Assistant Green", data={})
 
 
@@ -59,9 +62,14 @@ class HomeAssistantGreenOptionsFlow(OptionsFlow):
 
     _hw_settings: dict[str, bool] | None = None
 
+    def __init__(self, hass: HomeAssistant, *args: Any, **kwargs: Any) -> None:
+        """Instantiate options flow."""
+        super().__init__(*args, **kwargs)
+        self._supervisor_client = get_supervisor_client(hass)
+
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options."""
         if not is_hassio(self.hass):
             return self.async_abort(reason="not_hassio")
@@ -70,29 +78,29 @@ class HomeAssistantGreenOptionsFlow(OptionsFlow):
 
     async def async_step_hardware_settings(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle hardware settings."""
-
         if user_input is not None:
             if self._hw_settings == user_input:
                 return self.async_create_entry(data={})
             try:
                 async with asyncio.timeout(10):
-                    await async_set_green_settings(self.hass, user_input)
-            except (aiohttp.ClientError, TimeoutError, HassioAPIError) as err:
+                    await self._supervisor_client.os.set_green_options(
+                        GreenOptions.from_dict(user_input)
+                    )
+            except (TimeoutError, SupervisorError) as err:
                 _LOGGER.warning("Failed to write hardware settings", exc_info=err)
                 return self.async_abort(reason="write_hw_settings_error")
             return self.async_create_entry(data={})
 
         try:
             async with asyncio.timeout(10):
-                self._hw_settings: dict[str, bool] = await async_get_green_settings(
-                    self.hass
-                )
-        except (aiohttp.ClientError, TimeoutError, HassioAPIError) as err:
+                green_info = await self._supervisor_client.os.green_info()
+        except (TimeoutError, SupervisorError) as err:
             _LOGGER.warning("Failed to read hardware settings", exc_info=err)
             return self.async_abort(reason="read_hw_settings_error")
 
+        self._hw_settings: dict[str, bool] = green_info.to_dict()
         schema = self.add_suggested_values_to_schema(
             STEP_HW_SETTINGS_SCHEMA, self._hw_settings
         )

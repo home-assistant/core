@@ -1,18 +1,30 @@
 """Support for the Philips Hue system."""
+
 from aiohue.util import normalize_bridge_id
 
 from homeassistant.components import persistent_notification
-from homeassistant.config_entries import SOURCE_IGNORE, ConfigEntry
+from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.typing import ConfigType
 
-from .bridge import HueBridge
-from .const import DOMAIN, SERVICE_HUE_ACTIVATE_SCENE
+from .bridge import HueBridge, HueConfigEntry
+from .const import DOMAIN
 from .migration import check_migration
-from .services import async_register_services
+from .services import async_setup_services
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up Hue integration."""
+
+    async_setup_services(hass)
+
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: HueConfigEntry) -> bool:
     """Set up a bridge from a config entry."""
     # check (and run) migrations if needed
     await check_migration(hass, entry)
@@ -21,9 +33,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     bridge = HueBridge(hass, entry)
     if not await bridge.async_initialize_bridge():
         return False
-
-    # register Hue domain services
-    async_register_services(hass)
 
     api = bridge.api
 
@@ -68,7 +77,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             identifiers={(DOMAIN, api.config.bridge_id)},
             manufacturer="Signify",
             name=api.config.name,
-            model=api.config.model_id,
+            model_id=api.config.model_id,
             sw_version=api.config.software_version,
         )
         # create persistent notification if we found a bridge version with security vulnerability
@@ -96,17 +105,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             },
             manufacturer=api.config.bridge_device.product_data.manufacturer_name,
             name=api.config.name,
-            model=api.config.model_id,
+            model_id=api.config.model_id,
             sw_version=api.config.software_version,
         )
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HueConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_success = await hass.data[DOMAIN][entry.entry_id].async_reset()
-    if len(hass.data[DOMAIN]) == 0:
-        hass.data.pop(DOMAIN)
-        hass.services.async_remove(DOMAIN, SERVICE_HUE_ACTIVATE_SCENE)
-    return unload_success
+    return await entry.runtime_data.async_reset()

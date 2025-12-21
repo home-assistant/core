@@ -1,0 +1,68 @@
+{
+  "audio": {
+    "available": true,
+    "volume": 53,
+    "volume_limit": {
+      "max": 100,
+      "min": 0
+    },
+    "volume_range": {
+      "max": 100,
+      "min": 0
+    }
+  },
+  "bluetooth": {
+    "active": false,
+    "address": "40:F4:C9:AA:AA:AA",
+    "available": true,
+    "discoverable": true,
+    "mac": "40:F4:C9:AA:AA:AA",
+    "name": "LM8367",
+    "pairable": false
+  },
+  "display": {
+    "brightness": 75,
+    "brightness_limit": {
+      "max": 76,
+      "min": 2
+    },
+    "brightness_mode": "manual",
+    "brightness_range": {
+      "max": 100,
+      "min": 0
+    },
+    "height": 8,
+    "on": true,
+    "screensaver": {
+      "enabled": true,
+      "modes": {
+        "time_based": {
+          "enabled": false
+        },
+        "when_dark": {
+          "enabled": true
+        }
+      },
+      "widget": "1_com.lametric.clock"
+    },
+    "type": "mixed",
+    "width": 37
+  },
+  "id": "67790",
+  "mode": "manual",
+  "model": "sa8",
+  "name": "TIME",
+  "os_version": "3.1.3",
+  "serial_number": "SA840700836700W00BAA",
+  "wifi": {
+    "active": true,
+    "mac": "40:F4:C9:AA:AA:AA",
+    "available": true,
+    "encryption": "WPA",
+    "ssid": "My wifi",
+    "ip": "10.0.0.99",
+    "mode": "dhcp",
+    "netmask": "255.255.255.0",
+    "rssi": 78
+  }
+}

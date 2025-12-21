@@ -1,4 +1,5 @@
 """The ruuvitag_ble integration."""
+
 from __future__ import annotations
 
 import logging
@@ -21,18 +22,18 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Ruuvitag BLE device from a config entry."""
+    """Set up Ruuvi BLE device from a config entry."""
     address = entry.unique_id
     assert address is not None
     data = RuuvitagBluetoothDeviceData()
-    coordinator = hass.data.setdefault(DOMAIN, {})[
-        entry.entry_id
-    ] = PassiveBluetoothProcessorCoordinator(
-        hass,
-        _LOGGER,
-        address=address,
-        mode=BluetoothScanningMode.ACTIVE,
-        update_method=data.update,
+    coordinator = hass.data.setdefault(DOMAIN, {})[entry.entry_id] = (
+        PassiveBluetoothProcessorCoordinator(
+            hass,
+            _LOGGER,
+            address=address,
+            mode=BluetoothScanningMode.ACTIVE,
+            update_method=data.update,
+        )
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(

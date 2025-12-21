@@ -1,4 +1,5 @@
 """CoolMasterNet platform to control of CoolMasterNet Climate Devices."""
+
 from __future__ import annotations
 
 import logging
@@ -7,17 +8,21 @@ from typing import Any
 from pycoolmasternet_async import SWING_MODES
 
 from homeassistant.components.climate import (
+    FAN_AUTO,
+    FAN_HIGH,
+    FAN_LOW,
+    FAN_MEDIUM,
     ClimateEntity,
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_SUPPORTED_MODES, DATA_COORDINATOR, DATA_INFO, DOMAIN
+from .const import CONF_SUPPORTED_MODES
+from .coordinator import CoolmasterConfigEntry, CoolmasterDataUpdateCoordinator
 from .entity import CoolmasterEntity
 
 CM_TO_HA_STATE = {
@@ -30,22 +35,32 @@ CM_TO_HA_STATE = {
 
 HA_STATE_TO_CM = {value: key for key, value in CM_TO_HA_STATE.items()}
 
-FAN_MODES = ["low", "med", "high", "auto"]
+CM_TO_HA_FAN = {
+    "low": FAN_LOW,
+    "med": FAN_MEDIUM,
+    "high": FAN_HIGH,
+    "auto": FAN_AUTO,
+}
+
+HA_FAN_TO_CM = {value: key for key, value in CM_TO_HA_FAN.items()}
+
+FAN_MODES = list(CM_TO_HA_FAN.values())
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: CoolmasterConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the CoolMasterNet climate platform."""
-    info = hass.data[DOMAIN][config_entry.entry_id][DATA_INFO]
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
-    supported_modes = config_entry.data.get(CONF_SUPPORTED_MODES)
+    coordinator = config_entry.runtime_data
+    supported_modes: list[str] = config_entry.data[CONF_SUPPORTED_MODES]
     async_add_entities(
-        CoolmasterClimate(coordinator, unit_id, info, supported_modes)
+        CoolmasterClimate(
+            coordinator, unit_id, [HVACMode(mode) for mode in supported_modes]
+        )
         for unit_id in coordinator.data
     )
 
@@ -55,9 +70,14 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
 
     _attr_name = None
 
-    def __init__(self, coordinator, unit_id, info, supported_modes):
+    def __init__(
+        self,
+        coordinator: CoolmasterDataUpdateCoordinator,
+        unit_id: str,
+        supported_modes: list[HVACMode],
+    ) -> None:
         """Initialize the climate device."""
-        super().__init__(coordinator, unit_id, info)
+        super().__init__(coordinator, unit_id)
         self._attr_hvac_modes = supported_modes
         self._attr_unique_id = unit_id
 
@@ -65,7 +85,10 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
     def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         supported_features = (
-            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
         )
         if self.swing_mode:
             supported_features |= ClimateEntityFeature.SWING_MODE
@@ -101,7 +124,7 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
     @property
     def fan_mode(self):
         """Return the fan setting."""
-        return self._unit.fan_speed
+        return CM_TO_HA_FAN[self._unit.fan_speed]
 
     @property
     def fan_modes(self):
@@ -128,7 +151,7 @@ class CoolmasterClimate(CoolmasterEntity, ClimateEntity):
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new fan mode."""
         _LOGGER.debug("Setting fan mode of %s to %s", self.unique_id, fan_mode)
-        self._unit = await self._unit.set_fan_speed(fan_mode)
+        self._unit = await self._unit.set_fan_speed(HA_FAN_TO_CM[fan_mode])
         self.async_write_ha_state()
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:

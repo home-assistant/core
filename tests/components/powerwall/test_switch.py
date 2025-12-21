@@ -1,5 +1,6 @@
 """Test for Powerwall off-grid switch."""
-from unittest.mock import Mock, patch
+
+from unittest.mock import MagicMock, patch
 
 import pytest
 from tesla_powerwall import GridStatus, PowerwallError
@@ -23,7 +24,7 @@ ENTITY_ID = "switch.mysite_off_grid_operation"
 
 
 @pytest.fixture(name="mock_powerwall")
-async def mock_powerwall_fixture(hass):
+async def mock_powerwall_fixture(hass: HomeAssistant) -> MagicMock:
     """Set up base powerwall fixture."""
 
     mock_powerwall = await _mock_powerwall_with_fixtures(hass)
@@ -43,7 +44,7 @@ async def test_entity_registry(
 ) -> None:
     """Test powerwall off-grid switch device."""
 
-    mock_powerwall.get_grid_status = Mock(return_value=GridStatus.CONNECTED)
+    mock_powerwall.get_grid_status.return_value = GridStatus.CONNECTED
 
     assert ENTITY_ID in entity_registry.entities
 
@@ -51,7 +52,7 @@ async def test_entity_registry(
 async def test_initial(hass: HomeAssistant, mock_powerwall) -> None:
     """Test initial grid status without off grid switch selected."""
 
-    mock_powerwall.get_grid_status = Mock(return_value=GridStatus.CONNECTED)
+    mock_powerwall.get_grid_status.return_value = GridStatus.CONNECTED
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_OFF
@@ -60,7 +61,7 @@ async def test_initial(hass: HomeAssistant, mock_powerwall) -> None:
 async def test_on(hass: HomeAssistant, mock_powerwall) -> None:
     """Test state once offgrid switch has been turned on."""
 
-    mock_powerwall.get_grid_status = Mock(return_value=GridStatus.ISLANDED)
+    mock_powerwall.get_grid_status.return_value = GridStatus.ISLANDED
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -76,7 +77,7 @@ async def test_on(hass: HomeAssistant, mock_powerwall) -> None:
 async def test_off(hass: HomeAssistant, mock_powerwall) -> None:
     """Test state once offgrid switch has been turned off."""
 
-    mock_powerwall.get_grid_status = Mock(return_value=GridStatus.CONNECTED)
+    mock_powerwall.get_grid_status.return_value = GridStatus.CONNECTED
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -94,11 +95,8 @@ async def test_exception_on_powerwall_error(
 ) -> None:
     """Ensure that an exception in the tesla_powerwall library causes a HomeAssistantError."""
 
+    mock_powerwall.set_island_mode.side_effect = PowerwallError("Mock exception")
     with pytest.raises(HomeAssistantError, match="Setting off-grid operation to"):
-        mock_powerwall.set_island_mode = Mock(
-            side_effect=PowerwallError("Mock exception")
-        )
-
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,

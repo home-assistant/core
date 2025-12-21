@@ -1,4 +1,5 @@
 """The ATEN PE switch component."""
+
 from __future__ import annotations
 
 import logging
@@ -8,14 +9,14 @@ from atenpdu import AtenPE, AtenPEError
 import voluptuous as vol
 
 from homeassistant.components.switch import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
     SwitchDeviceClass,
     SwitchEntity,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -29,7 +30,7 @@ DEFAULT_COMMUNITY = "private"
 DEFAULT_PORT = "161"
 DEFAULT_USERNAME = "administrator"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
@@ -79,11 +80,9 @@ async def async_setup_platform(
         sw_version=sw_version,
     )
 
-    switches = []
-    async for outlet in outlets:
-        switches.append(AtenSwitch(dev, info, mac, outlet.id, outlet.name))
-
-    async_add_entities(switches, True)
+    async_add_entities(
+        (AtenSwitch(dev, info, mac, outlet.id, outlet.name) for outlet in outlets), True
+    )
 
 
 class AtenSwitch(SwitchEntity):

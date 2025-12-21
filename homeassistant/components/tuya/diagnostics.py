@@ -1,33 +1,38 @@
 """Diagnostics support for Tuya."""
+
 from __future__ import annotations
 
-from contextlib import suppress
-import json
-from typing import Any, cast
+from typing import Any
 
-from tuya_iot import TuyaDevice
+from tuya_sharing import CustomerDevice
 
 from homeassistant.components.diagnostics import REDACTED
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_COUNTRY_CODE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.util import dt as dt_util
 
-from . import HomeAssistantTuyaData
-from .const import CONF_APP_TYPE, CONF_AUTH_TYPE, CONF_ENDPOINT, DOMAIN, DPCode
+from . import TuyaConfigEntry
+from .const import DOMAIN, DPCode
+from .type_information import DEVICE_WARNINGS
+
+_REDACTED_DPCODES = {
+    DPCode.ALARM_MESSAGE,
+    DPCode.ALARM_MSG,
+    DPCode.DOORBELL_PIC,
+    DPCode.MOVEMENT_DETECT_PIC,
+}
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: TuyaConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     return _async_get_diagnostics(hass, entry)
 
 
 async def async_get_device_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry, device: DeviceEntry
+    hass: HomeAssistant, entry: TuyaConfigEntry, device: DeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device entry."""
     return _async_get_diagnostics(hass, entry, device)
@@ -36,21 +41,19 @@ async def async_get_device_diagnostics(
 @callback
 def _async_get_diagnostics(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: TuyaConfigEntry,
     device: DeviceEntry | None = None,
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    hass_data: HomeAssistantTuyaData = hass.data[DOMAIN][entry.entry_id]
+    manager = entry.runtime_data.manager
 
     mqtt_connected = None
-    if hass_data.home_manager.mq.client:
-        mqtt_connected = hass_data.home_manager.mq.client.is_connected()
+    if manager.mq.client:
+        mqtt_connected = manager.mq.client.is_connected()
 
     data = {
-        "endpoint": entry.data[CONF_ENDPOINT],
-        "auth_type": entry.data[CONF_AUTH_TYPE],
-        "country_code": entry.data[CONF_COUNTRY_CODE],
-        "app_type": entry.data[CONF_APP_TYPE],
+        "endpoint": manager.customer_api.endpoint,
+        "terminal_id": manager.terminal_id,
         "mqtt_connected": mqtt_connected,
         "disabled_by": entry.disabled_by,
         "disabled_polling": entry.pref_disable_polling,
@@ -58,14 +61,12 @@ def _async_get_diagnostics(
 
     if device:
         tuya_device_id = next(iter(device.identifiers))[1]
-        data |= _async_device_as_dict(
-            hass, hass_data.device_manager.device_map[tuya_device_id]
-        )
+        data |= _async_device_as_dict(hass, manager.device_map[tuya_device_id])
     else:
         data.update(
             devices=[
                 _async_device_as_dict(hass, device)
-                for device in hass_data.device_manager.device_map.values()
+                for device in manager.device_map.values()
             ]
         )
 
@@ -73,13 +74,15 @@ def _async_get_diagnostics(
 
 
 @callback
-def _async_device_as_dict(hass: HomeAssistant, device: TuyaDevice) -> dict[str, Any]:
+def _async_device_as_dict(
+    hass: HomeAssistant, device: CustomerDevice
+) -> dict[str, Any]:
     """Represent a Tuya device as a dictionary."""
 
     # Base device information, without sensitive information.
     data = {
+        "id": device.id,
         "name": device.name,
-        "model": device.model if hasattr(device, "model") else None,
         "category": device.category,
         "product_id": device.product_id,
         "product_name": device.product_name,
@@ -93,39 +96,33 @@ def _async_device_as_dict(hass: HomeAssistant, device: TuyaDevice) -> dict[str, 
         "status_range": {},
         "status": {},
         "home_assistant": {},
+        "set_up": device.set_up,
+        "support_local": device.support_local,
+        "local_strategy": device.local_strategy,
+        "warnings": DEVICE_WARNINGS.get(device.id),
     }
 
     # Gather Tuya states
     for dpcode, value in device.status.items():
         # These statuses may contain sensitive information, redact these..
-        if dpcode in {DPCode.ALARM_MESSAGE, DPCode.MOVEMENT_DETECT_PIC}:
+        if dpcode in _REDACTED_DPCODES:
             data["status"][dpcode] = REDACTED
             continue
 
-        with suppress(ValueError, TypeError):
-            value = json.loads(value)
         data["status"][dpcode] = value
 
     # Gather Tuya functions
     for function in device.function.values():
-        value = function.values
-        with suppress(ValueError, TypeError, AttributeError):
-            value = json.loads(cast(str, function.values))
-
         data["function"][function.code] = {
             "type": function.type,
-            "value": value,
+            "value": function.values,
         }
 
     # Gather Tuya status ranges
     for status_range in device.status_range.values():
-        value = status_range.values
-        with suppress(ValueError, TypeError, AttributeError):
-            value = json.loads(status_range.values)
-
         data["status_range"][status_range.code] = {
             "type": status_range.type,
-            "value": value,
+            "value": status_range.values,
         }
 
     # Gather information how this Tuya device is represented in Home Assistant

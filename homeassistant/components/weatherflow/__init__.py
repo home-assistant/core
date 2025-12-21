@@ -1,4 +1,5 @@
 """Get data from Smart Weather station via UDP."""
+
 from __future__ import annotations
 
 from pyweatherflowudp.client import EVENT_DEVICE_DISCOVERED, WeatherFlowListener
@@ -16,6 +17,7 @@ from homeassistant.helpers.start import async_at_started
 from .const import DOMAIN, LOGGER, format_dispatch_call
 
 PLATFORMS = [
+    Platform.EVENT,
     Platform.SENSOR,
 ]
 

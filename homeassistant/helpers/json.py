@@ -1,4 +1,5 @@
 """Helpers to help with encoding Home Assistant objects in JSON."""
+
 from collections import deque
 from collections.abc import Callable
 import datetime
@@ -11,13 +12,7 @@ from typing import TYPE_CHECKING, Any, Final
 import orjson
 
 from homeassistant.util.file import write_utf8_file, write_utf8_file_atomic
-from homeassistant.util.json import (  # noqa: F401
-    JSON_DECODE_EXCEPTIONS,
-    JSON_ENCODE_EXCEPTIONS,
-    SerializationError,
-    format_unserializable_data,
-    json_loads,
-)
+from homeassistant.util.json import SerializationError, format_unserializable_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,6 +40,8 @@ def json_encoder_default(obj: Any) -> Any:
 
     Hand other objects to the original method.
     """
+    if hasattr(obj, "json_fragment"):
+        return obj.json_fragment
     if isinstance(obj, (set, tuple)):
         return list(obj)
     if isinstance(obj, float):
@@ -114,6 +111,9 @@ def json_bytes_strip_null(data: Any) -> bytes:
     return json_bytes(_strip_null(orjson.loads(result)))
 
 
+json_fragment = orjson.Fragment
+
+
 def json_dumps(data: Any) -> str:
     r"""Dump json string.
 
@@ -130,25 +130,71 @@ def json_dumps(data: Any) -> str:
     return json_bytes(data).decode("utf-8")
 
 
+json_bytes_sorted = partial(
+    orjson.dumps,
+    option=orjson.OPT_NON_STR_KEYS | orjson.OPT_SORT_KEYS,
+    default=json_encoder_default,
+)
+"""Dump json bytes with keys sorted."""
+
+
 def json_dumps_sorted(data: Any) -> str:
     """Dump json string with keys sorted."""
-    return orjson.dumps(
-        data,
-        option=orjson.OPT_NON_STR_KEYS | orjson.OPT_SORT_KEYS,
-        default=json_encoder_default,
-    ).decode("utf-8")
+    return json_bytes_sorted(data).decode("utf-8")
 
 
 JSON_DUMP: Final = json_dumps
 
 
 def _orjson_default_encoder(data: Any) -> str:
-    """JSON encoder that uses orjson with hass defaults."""
+    """JSON encoder that uses orjson with hass defaults and returns a str."""
+    return _orjson_bytes_default_encoder(data).decode("utf-8")
+
+
+def _orjson_bytes_default_encoder(data: Any) -> bytes:
+    """JSON encoder that uses orjson with hass defaults and returns bytes."""
     return orjson.dumps(
         data,
         option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS,
         default=json_encoder_default,
-    ).decode("utf-8")
+    )
+
+
+def prepare_save_json(
+    data: list | dict,
+    *,
+    encoder: type[json.JSONEncoder] | None = None,
+) -> tuple[str, str | bytes]:
+    """Prepare JSON data for saving to a file.
+
+    Returns a tuple of (mode, json_data) where mode is either 'w' or 'wb'
+    and json_data is either a str or bytes depending on the mode.
+
+    Args:
+        data: Data to serialize.
+        encoder: Optional custom JSON encoder.
+    """
+    dump: Callable[[Any], Any]
+    try:
+        # For backwards compatibility, if they pass in the
+        # default json encoder we use _orjson_default_encoder
+        # which is the orjson equivalent to the default encoder.
+        if encoder and encoder is not JSONEncoder:
+            # If they pass a custom encoder that is not the
+            # default JSONEncoder, we use the slow path of json.dumps
+            mode = "w"
+            dump = json.dumps
+            json_data: str | bytes = json.dumps(data, indent=2, cls=encoder)
+        else:
+            mode = "wb"
+            dump = _orjson_default_encoder
+            json_data = _orjson_bytes_default_encoder(data)
+    except TypeError as error:
+        formatted_data = format_unserializable_data(
+            find_paths_unserializable_data(data, dump=dump)
+        )
+        raise SerializationError(f"Bad data at {formatted_data}") from error
+    return (mode, json_data)
 
 
 def save_json(
@@ -160,31 +206,13 @@ def save_json(
     atomic_writes: bool = False,
 ) -> None:
     """Save JSON data to a file."""
-    dump: Callable[[Any], Any]
     try:
-        # For backwards compatibility, if they pass in the
-        # default json encoder we use _orjson_default_encoder
-        # which is the orjson equivalent to the default encoder.
-        if encoder and encoder is not JSONEncoder:
-            # If they pass a custom encoder that is not the
-            # default JSONEncoder, we use the slow path of json.dumps
-            dump = json.dumps
-            json_data = json.dumps(data, indent=2, cls=encoder)
-        else:
-            dump = _orjson_default_encoder
-            json_data = _orjson_default_encoder(data)
-    except TypeError as error:
-        formatted_data = format_unserializable_data(
-            find_paths_unserializable_data(data, dump=dump)
-        )
-        msg = f"Failed to serialize to JSON: {filename}. Bad data at {formatted_data}"
-        _LOGGER.error(msg)
-        raise SerializationError(msg) from error
-
-    if atomic_writes:
-        write_utf8_file_atomic(filename, json_data, private)
-    else:
-        write_utf8_file(filename, json_data, private)
+        mode, json_data = prepare_save_json(data, encoder=encoder)
+    except SerializationError as err:
+        _LOGGER.error("Failed to serialize to JSON: %s. %s", filename, err)
+        raise
+    method = write_utf8_file_atomic if atomic_writes else write_utf8_file
+    method(filename, json_data, private, mode=mode)
 
 
 def find_paths_unserializable_data(
@@ -194,10 +222,7 @@ def find_paths_unserializable_data(
 
     This method is slow! Only use for error handling.
     """
-    from homeassistant.core import (  # pylint: disable=import-outside-toplevel
-        Event,
-        State,
-    )
+    from homeassistant.core import Event, State  # noqa: PLC0415
 
     to_process = deque([(bad_data, "$")])
     invalid = {}

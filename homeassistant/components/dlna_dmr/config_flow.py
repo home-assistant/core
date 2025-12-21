@@ -1,4 +1,5 @@
 """Config flow for DLNA DMR."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
@@ -6,7 +7,7 @@ from functools import partial
 from ipaddress import IPv6Address, ip_address
 import logging
 from pprint import pformat
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 from urllib.parse import urlparse
 
 from async_upnp_client.client import UpnpError
@@ -15,13 +16,26 @@ from async_upnp_client.profiles.profile import find_device_of_type
 from getmac import get_mac_address
 import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.components import ssdp
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_MAC, CONF_TYPE, CONF_URL
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import IntegrationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_DEVICE_TYPE,
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_MANUFACTURER,
+    ATTR_UPNP_MODEL_NAME,
+    ATTR_UPNP_SERVICE_LIST,
+    SsdpServiceInfo,
+)
+from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     CONF_BROWSE_UNFILTERED,
@@ -35,14 +49,14 @@ from .data import get_domain_data
 
 LOGGER = logging.getLogger(__name__)
 
-FlowInput = Mapping[str, Any] | None
+type FlowInput = Mapping[str, Any] | None
 
 
 class ConnectError(IntegrationError):
     """Error occurred when trying to connect to a device."""
 
 
-class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class DlnaDmrFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a DLNA DMR config flow.
 
     The Unique Device Name (UDN) of the DMR device is used as the unique_id for
@@ -54,7 +68,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize flow."""
-        self._discoveries: dict[str, ssdp.SsdpServiceInfo] = {}
+        self._discoveries: dict[str, SsdpServiceInfo] = {}
         self._location: str | None = None
         self._udn: str | None = None
         self._device_type: str | None = None
@@ -65,12 +79,12 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
-    ) -> config_entries.OptionsFlow:
+        config_entry: ConfigEntry,
+    ) -> OptionsFlow:
         """Define the config flow to handle options."""
-        return DlnaDmrOptionsFlowHandler(config_entry)
+        return DlnaDmrOptionsFlowHandler()
 
-    async def async_step_user(self, user_input: FlowInput = None) -> FlowResult:
+    async def async_step_user(self, user_input: FlowInput = None) -> ConfigFlowResult:
         """Handle a flow initialized by the user.
 
         Let user choose from a list of found and unconfigured devices or to
@@ -92,7 +106,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_manual()
 
         self._discoveries = {
-            discovery.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
+            discovery.upnp.get(ATTR_UPNP_FRIENDLY_NAME)
             or cast(str, urlparse(discovery.ssdp_location).hostname): discovery
             for discovery in discoveries
         }
@@ -102,7 +116,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return self.async_show_form(step_id="user", data_schema=data_schema)
 
-    async def async_step_manual(self, user_input: FlowInput = None) -> FlowResult:
+    async def async_step_manual(self, user_input: FlowInput = None) -> ConfigFlowResult:
         """Manual URL entry by the user."""
         LOGGER.debug("async_step_manual: user_input: %s", user_input)
 
@@ -124,12 +138,17 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="manual", data_schema=data_schema, errors=errors
         )
 
-    async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
+    async def async_step_ssdp(
+        self, discovery_info: SsdpServiceInfo
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by SSDP discovery."""
         if LOGGER.isEnabledFor(logging.DEBUG):
             LOGGER.debug("async_step_ssdp: discovery_info %s", pformat(discovery_info))
 
         await self._async_set_info_from_discovery(discovery_info)
+        if TYPE_CHECKING:
+            # _async_set_info_from_discovery unconditionally sets self._name
+            assert self._name is not None
 
         if _is_ignored_device(discovery_info):
             return self.async_abort(reason="alternative_integration")
@@ -142,7 +161,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         # case the device doesn't have a static and unique UDN (breaking the
         # UPnP spec).
         for entry in self._async_current_entries(include_ignore=True):
-            if self._location == entry.data[CONF_URL]:
+            if self._location == entry.data.get(CONF_URL):
                 return self.async_abort(reason="already_configured")
             if self._mac and self._mac == entry.data.get(CONF_MAC):
                 return self.async_abort(reason="already_configured")
@@ -151,7 +170,9 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_confirm()
 
-    async def async_step_ignore(self, user_input: Mapping[str, Any]) -> FlowResult:
+    async def async_step_ignore(
+        self, user_input: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Ignore this config flow, and add MAC address as secondary identifier.
 
         Not all DMR devices correctly implement the spec, so their UDN may
@@ -185,30 +206,9 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_unignore(self, user_input: Mapping[str, Any]) -> FlowResult:
-        """Rediscover previously ignored devices by their unique_id."""
-        LOGGER.debug("async_step_unignore: user_input: %s", user_input)
-        self._udn = user_input["unique_id"]
-        assert self._udn
-        await self.async_set_unique_id(self._udn)
-
-        # Find a discovery matching the unignored unique_id for a DMR device
-        for dev_type in DmrDevice.DEVICE_TYPES:
-            discovery = await ssdp.async_get_discovery_info_by_udn_st(
-                self.hass, self._udn, dev_type
-            )
-            if discovery:
-                break
-        else:
-            return self.async_abort(reason="discovery_error")
-
-        await self._async_set_info_from_discovery(discovery, abort_if_configured=False)
-
-        self.context["title_placeholders"] = {"name": self._name}
-
-        return await self.async_step_confirm()
-
-    async def async_step_confirm(self, user_input: FlowInput = None) -> FlowResult:
+    async def async_step_confirm(
+        self, user_input: FlowInput = None
+    ) -> ConfigFlowResult:
         """Allow the user to confirm adding the device."""
         LOGGER.debug("async_step_confirm: %s", user_input)
 
@@ -256,7 +256,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if not self._mac and (host := urlparse(self._location).hostname):
             self._mac = await _async_get_mac_address(self.hass, host)
 
-    def _create_entry(self) -> FlowResult:
+    def _create_entry(self) -> ConfigFlowResult:
         """Create a config entry, assuming all required information is now known."""
         LOGGER.debug(
             "_async_create_entry: location: %s, UDN: %s", self._location, self._udn
@@ -275,7 +275,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(title=title, data=data, options=self._options)
 
     async def _async_set_info_from_discovery(
-        self, discovery_info: ssdp.SsdpServiceInfo, abort_if_configured: bool = True
+        self, discovery_info: SsdpServiceInfo, abort_if_configured: bool = True
     ) -> None:
         """Set information required for a config entry from the SSDP discovery."""
         LOGGER.debug(
@@ -293,7 +293,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._device_type = discovery_info.ssdp_nt or discovery_info.ssdp_st
         self._name = (
-            discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME)
+            discovery_info.upnp.get(ATTR_UPNP_FRIENDLY_NAME)
             or urlparse(self._location).hostname
             or DEFAULT_NAME
         )
@@ -309,12 +309,12 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 updates[CONF_MAC] = self._mac
             self._abort_if_unique_id_configured(updates=updates, reload_on_update=False)
 
-    async def _async_get_discoveries(self) -> list[ssdp.SsdpServiceInfo]:
+    async def _async_get_discoveries(self) -> list[SsdpServiceInfo]:
         """Get list of unconfigured DLNA devices discovered by SSDP."""
         LOGGER.debug("_get_discoveries")
 
         # Get all compatible devices from ssdp's cache
-        discoveries: list[ssdp.SsdpServiceInfo] = []
+        discoveries: list[SsdpServiceInfo] = []
         for udn_st in DmrDevice.DEVICE_TYPES:
             st_discoveries = await ssdp.async_get_discovery_info_by_st(
                 self.hass, udn_st
@@ -326,26 +326,18 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             entry.unique_id
             for entry in self._async_current_entries(include_ignore=False)
         }
-        discoveries = [
-            disc for disc in discoveries if disc.ssdp_udn not in current_unique_ids
-        ]
-
-        return discoveries
+        return [disc for disc in discoveries if disc.ssdp_udn not in current_unique_ids]
 
 
-class DlnaDmrOptionsFlowHandler(config_entries.OptionsFlow):
+class DlnaDmrOptionsFlowHandler(OptionsFlow):
     """Handle a DLNA DMR options flow.
 
     Configures the single instance and updates the existing config entry.
     """
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize."""
-        self.config_entry = config_entry
-
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options."""
         errors: dict[str, str] = {}
         # Don't modify existing (read-only) options -- copy and update instead
@@ -373,7 +365,7 @@ class DlnaDmrOptionsFlowHandler(config_entries.OptionsFlow):
             if not errors:
                 return self.async_create_entry(title="", data=options)
 
-        fields = {}
+        fields: VolDictType = {}
 
         def _add_with_suggestion(key: str, validator: Callable | type[bool]) -> None:
             """Add a field to with a suggested value.
@@ -402,7 +394,7 @@ class DlnaDmrOptionsFlowHandler(config_entries.OptionsFlow):
         )
 
 
-def _is_ignored_device(discovery_info: ssdp.SsdpServiceInfo) -> bool:
+def _is_ignored_device(discovery_info: SsdpServiceInfo) -> bool:
     """Return True if this device should be ignored for discovery.
 
     These devices are supported better by other integrations, so don't bug
@@ -418,17 +410,14 @@ def _is_ignored_device(discovery_info: ssdp.SsdpServiceInfo) -> bool:
         return True
 
     # Is the root device not a DMR?
-    if (
-        discovery_info.upnp.get(ssdp.ATTR_UPNP_DEVICE_TYPE)
-        not in DmrDevice.DEVICE_TYPES
-    ):
+    if discovery_info.upnp.get(ATTR_UPNP_DEVICE_TYPE) not in DmrDevice.DEVICE_TYPES:
         return True
 
     # Special cases for devices with other discovery methods (e.g. mDNS), or
     # that advertise multiple unrelated (sent in separate discovery packets)
     # UPnP devices.
-    manufacturer = (discovery_info.upnp.get(ssdp.ATTR_UPNP_MANUFACTURER) or "").lower()
-    model = (discovery_info.upnp.get(ssdp.ATTR_UPNP_MODEL_NAME) or "").lower()
+    manufacturer = (discovery_info.upnp.get(ATTR_UPNP_MANUFACTURER) or "").lower()
+    model = (discovery_info.upnp.get(ATTR_UPNP_MODEL_NAME) or "").lower()
 
     if manufacturer.startswith("xbmc") or model == "kodi":
         # kodi
@@ -448,14 +437,14 @@ def _is_ignored_device(discovery_info: ssdp.SsdpServiceInfo) -> bool:
     return False
 
 
-def _is_dmr_device(discovery_info: ssdp.SsdpServiceInfo) -> bool:
+def _is_dmr_device(discovery_info: SsdpServiceInfo) -> bool:
     """Determine if discovery is a complete DLNA DMR device.
 
     Use the discovery_info instead of DmrDevice.is_profile_device to avoid
     contacting the device again.
     """
     # Abort if the device doesn't support all services required for a DmrDevice.
-    discovery_service_list = discovery_info.upnp.get(ssdp.ATTR_UPNP_SERVICE_LIST)
+    discovery_service_list = discovery_info.upnp.get(ATTR_UPNP_SERVICE_LIST)
     if not discovery_service_list:
         return False
 

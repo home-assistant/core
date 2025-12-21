@@ -1,0 +1,20 @@
+{
+  "data": {
+    "status": [
+      { "key": "BSH.Common.Status.RemoteControlActive", "value": true },
+      { "key": "BSH.Common.Status.RemoteControlStartAllowed", "value": true },
+      {
+        "key": "BSH.Common.Status.OperationState",
+        "value": "BSH.Common.EnumType.OperationState.Ready"
+      },
+      {
+        "key": "BSH.Common.Status.DoorState",
+        "value": "BSH.Common.EnumType.DoorState.Closed"
+      },
+      {
+        "key": "Refrigeration.Common.Status.Door.Refrigerator",
+        "value": "BSH.Common.EnumType.DoorState.Open"
+      }
+    ]
+  }
+}

@@ -34,6 +34,7 @@ Icon
 
 # GITHUB Proposed Python stuff:
 *.py[cod]
+__pycache__
 
 # C extensions
 *.so
@@ -68,6 +69,7 @@ test-reports/
 test-results.xml
 test-output.xml
 pytest-*.txt
+junit.xml
 
 # Translations
 *.mo
@@ -77,7 +79,7 @@ pytest-*.txt
 .project
 .pydevproject
 
-.python-version
+.tool-versions
 
 # emacs auto backups
 *~
@@ -109,6 +111,7 @@ virtualization/vagrant/config
 !.vscode/cSpell.json
 !.vscode/extensions.json
 !.vscode/tasks.json
+!.vscode/settings.default.jsonc
 .env
 
 # Windows Explorer
@@ -132,3 +135,11 @@ tmp_cache
 
 # python-language-server / Rope
 .ropeproject
+
+# Will be created from script/split_tests.py
+pytest_buckets.txt
+
+# AI tooling
+.claude/settings.local.json
+.serena/
+

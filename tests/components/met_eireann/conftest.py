@@ -1,4 +1,5 @@
 """Fixtures for Met Éireann weather testing."""
+
 from unittest.mock import AsyncMock, patch
 
 import pytest

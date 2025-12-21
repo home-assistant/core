@@ -1,0 +1,41 @@
+{
+  "data": {
+    "type": "Car",
+    "id": "VF1AAAAA555777999",
+    "attributes": {
+      "dateTime": "2020-12-24T20:00:00.000Z",
+      "mode": "scheduled",
+      "schedules": [
+        {
+          "id": 1,
+          "activated": false
+        },
+        {
+          "id": 2,
+          "activated": true,
+          "wednesday": { "readyAtTime": "T15:15Z" },
+          "friday": { "readyAtTime": "T15:15Z" }
+        },
+        {
+          "id": 3,
+          "activated": false,
+          "monday": { "readyAtTime": "T23:30Z" },
+          "tuesday": { "readyAtTime": "T23:30Z" },
+          "wednesday": { "readyAtTime": "T23:30Z" },
+          "thursday": { "readyAtTime": "T23:30Z" },
+          "friday": { "readyAtTime": "T23:30Z" },
+          "saturday": { "readyAtTime": "T23:30Z" },
+          "sunday": { "readyAtTime": "T23:30Z" }
+        },
+        {
+          "id": 4,
+          "activated": false
+        },
+        {
+          "id": 5,
+          "activated": false
+        }
+      ]
+    }
+  }
+}

@@ -1,11 +1,12 @@
 """The tests for the Landis+Gyr Heat Meter sensor platform."""
+
 import datetime
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 import serial
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from ultraheat_api.response import HeatMeterResponse
 
 from homeassistant.components.homeassistant import DOMAIN as HA_DOMAIN

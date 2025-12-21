@@ -9,12 +9,12 @@
       "registered_devices": true
     },
     {
-      "macaddress": "001E0C*",
-      "hostname": "my[45]50*"
+      "hostname": "my[45]50*",
+      "macaddress": "001E0C*"
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/steamist",
   "iot_class": "local_polling",
   "loggers": ["aiosteamist", "discovery30303"],
-  "requirements": ["aiosteamist==0.3.2", "discovery30303==0.2.1"]
+  "requirements": ["aiosteamist==1.0.1", "discovery30303==0.3.3"]
 }

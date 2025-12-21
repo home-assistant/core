@@ -1,4 +1,5 @@
 """Support for monitoring a Neurio energy sensor."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -9,18 +10,17 @@ import requests.exceptions
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
 from homeassistant.const import CONF_API_KEY, UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import Throttle
-import homeassistant.util.dt as dt_util
+from homeassistant.util import Throttle, dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +37,7 @@ DAILY_TYPE = "daily"
 MIN_TIME_BETWEEN_DAILY_UPDATES = timedelta(seconds=150)
 MIN_TIME_BETWEEN_ACTIVE_UPDATES = timedelta(seconds=10)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
         vol.Required(CONF_API_SECRET): cv.string,
@@ -105,16 +105,15 @@ class NeurioData:
         """Return latest active power value."""
         return self._active_power
 
-    def get_active_power(self):
+    def get_active_power(self) -> None:
         """Return current power value."""
         try:
             sample = self.neurio_client.get_samples_live_last(self.sensor_id)
             self._active_power = sample["consumptionPower"]
         except (requests.exceptions.RequestException, ValueError, KeyError):
             _LOGGER.warning("Could not update current power usage")
-            return None
 
-    def get_daily_usage(self):
+    def get_daily_usage(self) -> None:
         """Return current daily power usage."""
         kwh = 0
         start_time = dt_util.start_of_local_day().astimezone(dt_util.UTC).isoformat()
@@ -128,7 +127,7 @@ class NeurioData:
             )
         except (requests.exceptions.RequestException, ValueError, KeyError):
             _LOGGER.warning("Could not update daily power usage")
-            return None
+            return
 
         for result in history:
             kwh += result["consumptionEnergy"] / 3600000

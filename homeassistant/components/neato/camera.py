@@ -1,4 +1,5 @@
 """Support for loading picture from Neato."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -12,7 +13,7 @@ from urllib3.response import HTTPResponse
 from homeassistant.components.camera import Camera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import NEATO_LOGIN, NEATO_MAP_DATA, NEATO_ROBOTS, SCAN_INTERVAL_MINUTES
 from .entity import NeatoEntity
@@ -25,15 +26,18 @@ ATTR_GENERATED_AT = "generated_at"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Neato camera with config entry."""
-    dev = []
     neato: NeatoHub = hass.data[NEATO_LOGIN]
     mapdata: dict[str, Any] | None = hass.data.get(NEATO_MAP_DATA)
-    for robot in hass.data[NEATO_ROBOTS]:
-        if "maps" in robot.traits:
-            dev.append(NeatoCleaningMap(neato, robot, mapdata))
+    dev = [
+        NeatoCleaningMap(neato, robot, mapdata)
+        for robot in hass.data[NEATO_ROBOTS]
+        if "maps" in robot.traits
+    ]
 
     if not dev:
         return

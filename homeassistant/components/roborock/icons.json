@@ -1,0 +1,141 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "in_cleaning": {
+        "default": "mdi:vacuum"
+      },
+      "mop_attached": {
+        "default": "mdi:square-rounded"
+      },
+      "mop_drying_status": {
+        "default": "mdi:heat-wave"
+      },
+      "water_box_attached": {
+        "default": "mdi:water"
+      },
+      "water_shortage": {
+        "default": "mdi:water"
+      }
+    },
+    "button": {
+      "reset_air_filter_consumable": {
+        "default": "mdi:air-filter"
+      },
+      "reset_main_brush_consumable": {
+        "default": "mdi:brush"
+      },
+      "reset_sensor_consumable": {
+        "default": "mdi:eye-outline"
+      },
+      "reset_side_brush_consumable": {
+        "default": "mdi:brush"
+      }
+    },
+    "number": {
+      "volume": {
+        "default": "mdi:volume-source"
+      }
+    },
+    "sensor": {
+      "clean_percent": {
+        "default": "mdi:progress-check"
+      },
+      "cleaning_area": {
+        "default": "mdi:texture-box"
+      },
+      "cleaning_brush_time_left": {
+        "default": "mdi:brush"
+      },
+      "countdown": {
+        "default": "mdi:clock-outline"
+      },
+      "dock_error": {
+        "default": "mdi:garage-open"
+      },
+      "filter_time_left": {
+        "default": "mdi:air-filter"
+      },
+      "last_clean_end": {
+        "default": "mdi:clock-time-twelve"
+      },
+      "last_clean_start": {
+        "default": "mdi:clock-time-twelve"
+      },
+      "main_brush_time_left": {
+        "default": "mdi:brush"
+      },
+      "sensor_time_left": {
+        "default": "mdi:eye-outline"
+      },
+      "side_brush_time_left": {
+        "default": "mdi:brush"
+      },
+      "status": {
+        "default": "mdi:information-outline"
+      },
+      "strainer_time_left": {
+        "default": "mdi:filter-variant"
+      },
+      "total_cleaning_area": {
+        "default": "mdi:texture-box"
+      },
+      "total_cleaning_count": {
+        "default": "mdi:counter"
+      },
+      "total_cleaning_time": {
+        "default": "mdi:history"
+      },
+      "vacuum_error": {
+        "default": "mdi:alert-circle"
+      },
+      "washing_left": {
+        "default": "mdi:clock-outline"
+      },
+      "zeo_error": {
+        "default": "mdi:alert-circle"
+      },
+      "zeo_state": {
+        "default": "mdi:information-outline"
+      }
+    },
+    "switch": {
+      "child_lock": {
+        "default": "mdi:account-lock"
+      },
+      "dnd_switch": {
+        "default": "mdi:bell-cancel"
+      },
+      "off_peak_switch": {
+        "default": "mdi:power-plug"
+      },
+      "status_indicator": {
+        "default": "mdi:alarm-light-outline"
+      }
+    },
+    "time": {
+      "dnd_end_time": {
+        "default": "mdi:bell-ring"
+      },
+      "dnd_start_time": {
+        "default": "mdi:bell-cancel"
+      },
+      "off_peak_end": {
+        "default": "mdi:power-plug-off"
+      },
+      "off_peak_start": {
+        "default": "mdi:power-plug"
+      }
+    }
+  },
+  "services": {
+    "get_maps": {
+      "service": "mdi:floor-plan"
+    },
+    "get_vacuum_current_position": {
+      "service": "mdi:map-marker"
+    },
+    "set_vacuum_goto_position": {
+      "service": "mdi:map-marker"
+    }
+  }
+}

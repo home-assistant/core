@@ -1,4 +1,5 @@
 """Support for Rflink lights."""
+
 from __future__ import annotations
 
 import logging
@@ -9,17 +10,17 @@ import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
     ColorMode,
     LightEntity,
 )
 from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import (
+from .const import (
     CONF_ALIASES,
     CONF_AUTOMATIC_ADD,
     CONF_DEVICE_DEFAULTS,
@@ -32,8 +33,8 @@ from . import (
     DEVICE_DEFAULTS_SCHEMA,
     EVENT_KEY_COMMAND,
     EVENT_KEY_ID,
-    SwitchableRflinkDevice,
 )
+from .entity import SwitchableRflinkDevice
 from .utils import brightness_to_rflink, rflink_to_brightness
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,7 +46,7 @@ TYPE_SWITCHABLE = "switchable"
 TYPE_HYBRID = "hybrid"
 TYPE_TOGGLE = "toggle"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(
             CONF_DEVICE_DEFAULTS, default=DEVICE_DEFAULTS_SCHEMA({})
@@ -100,7 +101,7 @@ def entity_class_for_type(entity_type):
     entity_device_mapping = {
         # sends only 'dim' commands not compatible with on/off switches
         TYPE_DIMMABLE: DimmableRflinkLight,
-        # sends only 'on/off' commands not advices with dimmers and signal
+        # sends only 'on/off' commands not advised with dimmers and signal
         # repetition
         TYPE_SWITCHABLE: RflinkLight,
         # sends 'dim' and 'on' command to support both dimmers and on/off
@@ -220,8 +221,8 @@ class DimmableRflinkLight(SwitchableRflinkDevice, LightEntity):
         elif command in ["off", "alloff"]:
             self._state = False
         # dimmable device accept 'set_level=(0-15)' commands
-        elif re.search("^set_level=(0?[0-9]|1[0-5])$", command, re.IGNORECASE):
-            self._brightness = rflink_to_brightness(int(command.split("=")[1]))
+        elif match := re.search("^set_level=(0?[0-9]|1[0-5])$", command, re.IGNORECASE):
+            self._brightness = rflink_to_brightness(int(match.group(1)))
             self._state = True
 
     @property

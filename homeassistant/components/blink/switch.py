@@ -1,28 +1,28 @@
 """Support for Blink Motion detection switches."""
+
 from __future__ import annotations
 
-import asyncio
 from typing import Any
+
+from blinkpy.auth import UnauthorizedError
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEFAULT_BRAND, DOMAIN, TYPE_CAMERA_ARMED
-from .coordinator import BlinkUpdateCoordinator
+from .coordinator import BlinkConfigEntry, BlinkUpdateCoordinator
 
 SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
     SwitchEntityDescription(
         key=TYPE_CAMERA_ARMED,
-        icon="mdi:motion-sensor",
         translation_key="camera_motion",
         device_class=SwitchDeviceClass.SWITCH,
     ),
@@ -31,11 +31,11 @@ SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: BlinkConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Blink switches."""
-    coordinator: BlinkUpdateCoordinator = hass.data[DOMAIN][config.entry_id]
+    coordinator = config_entry.runtime_data
 
     async_add_entities(
         BlinkSwitch(coordinator, camera, description)
@@ -74,10 +74,14 @@ class BlinkSwitch(CoordinatorEntity[BlinkUpdateCoordinator], SwitchEntity):
         try:
             await self._camera.async_arm(True)
 
-        except asyncio.TimeoutError as er:
+        except TimeoutError as er:
             raise HomeAssistantError(
-                "Blink failed to arm camera motion detection"
+                translation_domain=DOMAIN,
+                translation_key="failed_arm_motion",
             ) from er
+        except UnauthorizedError as er:
+            self.coordinator.config_entry.async_start_reauth(self.hass)
+            raise ConfigEntryAuthFailed("Blink authorization failed") from er
 
         await self.coordinator.async_refresh()
 
@@ -86,10 +90,14 @@ class BlinkSwitch(CoordinatorEntity[BlinkUpdateCoordinator], SwitchEntity):
         try:
             await self._camera.async_arm(False)
 
-        except asyncio.TimeoutError as er:
+        except TimeoutError as er:
             raise HomeAssistantError(
-                "Blink failed to dis-arm camera motion detection"
+                translation_domain=DOMAIN,
+                translation_key="failed_disarm_motion",
             ) from er
+        except UnauthorizedError as er:
+            self.coordinator.config_entry.async_start_reauth(self.hass)
+            raise ConfigEntryAuthFailed("Blink authorization failed") from er
 
         await self.coordinator.async_refresh()
 

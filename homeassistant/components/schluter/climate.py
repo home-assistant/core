@@ -1,4 +1,5 @@
 """Support for Schluter thermostats."""
+
 from __future__ import annotations
 
 import logging
@@ -8,7 +9,7 @@ from requests import RequestException
 import voluptuous as vol
 
 from homeassistant.components.climate import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
     SCAN_INTERVAL,
     ClimateEntity,
     ClimateEntityFeature,
@@ -28,7 +29,7 @@ from homeassistant.helpers.update_coordinator import (
 from . import DATA_SCHLUTER_API, DATA_SCHLUTER_SESSION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
     {vol.Optional(CONF_SCAN_INTERVAL): vol.All(vol.Coerce(int), vol.Range(min=1))}
 )
 
@@ -117,12 +118,12 @@ class SchluterThermostat(CoordinatorEntity, ClimateEntity):
         return self.coordinator.data[self._serial_number].set_point_temp
 
     @property
-    def min_temp(self):
+    def min_temp(self) -> float:
         """Identify min_temp in Schluter API."""
         return self.coordinator.data[self._serial_number].min_temp
 
     @property
-    def max_temp(self):
+    def max_temp(self) -> float:
         """Identify max_temp in Schluter API."""
         return self.coordinator.data[self._serial_number].max_temp
 

@@ -1,4 +1,5 @@
 """Sensors flow for Withings."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -7,12 +8,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import WithingsConfigEntry
 from .const import DOMAIN
 from .coordinator import WithingsBedPresenceDataUpdateCoordinator
 from .entity import WithingsEntity
@@ -20,11 +21,11 @@ from .entity import WithingsEntity
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: WithingsConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id].bed_presence_coordinator
+    coordinator = entry.runtime_data.bed_presence_coordinator
 
     ent_reg = er.async_get(hass)
 
@@ -47,7 +48,6 @@ async def async_setup_entry(
 class WithingsBinarySensor(WithingsEntity, BinarySensorEntity):
     """Implementation of a Withings sensor."""
 
-    _attr_icon = "mdi:bed"
     _attr_translation_key = "in_bed"
     _attr_device_class = BinarySensorDeviceClass.OCCUPANCY
     coordinator: WithingsBedPresenceDataUpdateCoordinator

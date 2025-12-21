@@ -1,0 +1,5 @@
+{
+  "domain": "ambient_weather",
+  "name": "Ambient Weather",
+  "integrations": ["ambient_network", "ambient_station"]
+}

@@ -5,17 +5,17 @@ from pywemo import Insight, Maker, StandbyState
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import async_wemo_dispatcher_connect
+from .coordinator import DeviceCoordinator
 from .entity import WemoBinaryStateEntity, WemoEntity
-from .wemo_device import DeviceCoordinator
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     _config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up WeMo binary sensors."""
 

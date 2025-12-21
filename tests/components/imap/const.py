@@ -1,6 +1,5 @@
 """Constants for tests imap integration."""
 
-
 DATE_HEADER1 = b"Date: Fri, 24 Mar 2023 13:52:00 +0100\r\n"
 DATE_HEADER2 = b"Date: Fri, 24 Mar 2023 13:52:00 +0100 (CET)\r\n"
 DATE_HEADER3 = b"Date: 24 Mar 2023 13:52:00 +0100\r\n"
@@ -28,6 +27,9 @@ TEST_MESSAGE_HEADERS2 = (
 TEST_MULTIPART_HEADER = (
     b'Content-Type: multipart/related;\r\n\tboundary="Mark=_100584970350292485166"'
 )
+TEST_MULTIPART_ATTACHMENT_HEADER = (
+    b'Content-Type: multipart/mixed; boundary="------------qIuh0xG6dsImymfJo6f2M4Zv"'
+)
 
 TEST_MESSAGE_HEADERS3 = b""
 
@@ -35,6 +37,13 @@ TEST_MESSAGE = TEST_MESSAGE_HEADERS1 + DATE_HEADER1 + TEST_MESSAGE_HEADERS2
 
 TEST_MESSAGE_MULTIPART = (
     TEST_MESSAGE_HEADERS1 + DATE_HEADER1 + TEST_MESSAGE_HEADERS2 + TEST_MULTIPART_HEADER
+)
+
+TEST_MESSAGE_MULTIPART_ATTACHMENT = (
+    TEST_MESSAGE_HEADERS1
+    + DATE_HEADER1
+    + TEST_MESSAGE_HEADERS2
+    + TEST_MULTIPART_ATTACHMENT_HEADER
 )
 
 TEST_MESSAGE_NO_SUBJECT_TO_FROM = (
@@ -58,6 +67,11 @@ TEST_CONTENT_BINARY = b"Content-Type: application/binary\r\n\r\nTest body\r\n"
 TEST_CONTENT_TEXT_PLAIN = (
     b'Content-Type: text/plain; charset="utf-8"\r\n'
     b"Content-Transfer-Encoding: 7bit\r\n\r\nTest body\r\n"
+)
+
+TEST_CONTENT_TEXT_PLAIN_EMPTY = (
+    b'Content-Type: text/plain; charset="utf-8"\r\n'
+    b"Content-Transfer-Encoding: 7bit\r\n\r\n  \r\n"
 )
 
 TEST_CONTENT_TEXT_BASE64 = (
@@ -102,8 +116,17 @@ TEST_CONTENT_HTML_BASE64 = (
 
 TEST_CONTENT_MULTIPART = (
     b"\r\nThis is a multi-part message in MIME format.\r\n"
-    + b"\r\n--Mark=_100584970350292485166\r\n"
+    b"\r\n--Mark=_100584970350292485166\r\n"
     + TEST_CONTENT_TEXT_PLAIN
+    + b"\r\n--Mark=_100584970350292485166\r\n"
+    + TEST_CONTENT_HTML
+    + b"\r\n--Mark=_100584970350292485166--\r\n"
+)
+
+TEST_CONTENT_MULTIPART_EMPTY_PLAIN = (
+    b"\r\nThis is a multi-part message in MIME format.\r\n"
+    b"\r\n--Mark=_100584970350292485166\r\n"
+    + TEST_CONTENT_TEXT_PLAIN_EMPTY
     + b"\r\n--Mark=_100584970350292485166\r\n"
     + TEST_CONTENT_HTML
     + b"\r\n--Mark=_100584970350292485166--\r\n"
@@ -111,7 +134,7 @@ TEST_CONTENT_MULTIPART = (
 
 TEST_CONTENT_MULTIPART_BASE64 = (
     b"\r\nThis is a multi-part message in MIME format.\r\n"
-    + b"\r\n--Mark=_100584970350292485166\r\n"
+    b"\r\n--Mark=_100584970350292485166\r\n"
     + TEST_CONTENT_TEXT_BASE64
     + b"\r\n--Mark=_100584970350292485166\r\n"
     + TEST_CONTENT_HTML_BASE64
@@ -120,14 +143,55 @@ TEST_CONTENT_MULTIPART_BASE64 = (
 
 TEST_CONTENT_MULTIPART_BASE64_INVALID = (
     b"\r\nThis is a multi-part message in MIME format.\r\n"
-    + b"\r\n--Mark=_100584970350292485166\r\n"
+    b"\r\n--Mark=_100584970350292485166\r\n"
     + TEST_CONTENT_TEXT_BASE64_INVALID
     + b"\r\n--Mark=_100584970350292485166\r\n"
     + TEST_CONTENT_HTML_BASE64
     + b"\r\n--Mark=_100584970350292485166--\r\n"
 )
 
+TEST_CONTENT_MULTIPART_WITH_ATTACHMENT = b"""
+\nThis is a multi-part message in MIME format.
+--------------qIuh0xG6dsImymfJo6f2M4Zv
+Content-Type: multipart/alternative;
+ boundary="------------N4zNjp2QWnOfrYQhtLL02Bk1"
+
+--------------N4zNjp2QWnOfrYQhtLL02Bk1
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+
+*Multi* part Test body
+
+--------------N4zNjp2QWnOfrYQhtLL02Bk1
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+<!DOCTYPE html>
+<html>
+  <head>
+
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  </head>
+  <body>
+    <p><b>Multi</b> part Test body</p>
+  </body>
+</html>
+
+--------------N4zNjp2QWnOfrYQhtLL02Bk1--
+--------------qIuh0xG6dsImymfJo6f2M4Zv
+Content-Type: text/plain; charset=UTF-8; name="Text attachment content.txt"
+Content-Disposition: attachment; filename="Text attachment content.txt"
+Content-Transfer-Encoding: base64
+
+VGV4dCBhdHRhY2htZW50IGNvbnRlbnQ=
+
+--------------qIuh0xG6dsImymfJo6f2M4Zv--
+"""
+
+
 EMPTY_SEARCH_RESPONSE = ("OK", [b"", b"Search completed (0.0001 + 0.000 secs)."])
+EMPTY_SEARCH_RESPONSE_ALT = ("OK", [b"Search completed (0.0001 + 0.000 secs)."])
+
 BAD_RESPONSE = ("BAD", [b"", b"Unexpected error"])
 
 TEST_SEARCH_RESPONSE = ("OK", [b"1", b"Search completed (0.0001 + 0.000 secs)."])
@@ -151,6 +215,18 @@ TEST_FETCH_RESPONSE_TEXT_PLAIN = (
         + str(len(TEST_MESSAGE + TEST_CONTENT_TEXT_PLAIN)).encode("utf-8")
         + b"}",
         bytearray(TEST_MESSAGE + TEST_CONTENT_TEXT_PLAIN),
+        b")",
+        b"Fetch completed (0.0001 + 0.000 secs).",
+    ],
+)
+
+TEST_FETCH_RESPONSE_TEXT_PLAIN_EMPTY = (
+    "OK",
+    [
+        b"1 FETCH (BODY[] {"
+        + str(len(TEST_MESSAGE + TEST_CONTENT_TEXT_PLAIN_EMPTY)).encode("utf-8")
+        + b"}",
+        bytearray(TEST_MESSAGE + TEST_CONTENT_TEXT_PLAIN_EMPTY),
         b")",
         b"Fetch completed (0.0001 + 0.000 secs).",
     ],
@@ -250,6 +326,19 @@ TEST_FETCH_RESPONSE_MULTIPART = (
         b"Fetch completed (0.0001 + 0.000 secs).",
     ],
 )
+TEST_FETCH_RESPONSE_MULTIPART_EMPTY_PLAIN = (
+    "OK",
+    [
+        b"1 FETCH (BODY[] {"
+        + str(len(TEST_MESSAGE_MULTIPART + TEST_CONTENT_MULTIPART_EMPTY_PLAIN)).encode(
+            "utf-8"
+        )
+        + b"}",
+        bytearray(TEST_MESSAGE_MULTIPART + TEST_CONTENT_MULTIPART_EMPTY_PLAIN),
+        b")",
+        b"Fetch completed (0.0001 + 0.000 secs).",
+    ],
+)
 TEST_FETCH_RESPONSE_MULTIPART_BASE64 = (
     "OK",
     [
@@ -259,6 +348,24 @@ TEST_FETCH_RESPONSE_MULTIPART_BASE64 = (
         )
         + b"}",
         bytearray(TEST_MESSAGE_MULTIPART + TEST_CONTENT_MULTIPART_BASE64),
+        b")",
+        b"Fetch completed (0.0001 + 0.000 secs).",
+    ],
+)
+TEST_FETCH_RESPONSE_MULTIPART_WITH_ATTACHMENT = (
+    "OK",
+    [
+        b"1 FETCH (BODY[] {"
+        + str(
+            len(
+                TEST_MESSAGE_MULTIPART_ATTACHMENT
+                + TEST_CONTENT_MULTIPART_WITH_ATTACHMENT
+            )
+        ).encode("utf-8")
+        + b"}",
+        bytearray(
+            TEST_MESSAGE_MULTIPART_ATTACHMENT + TEST_CONTENT_MULTIPART_WITH_ATTACHMENT
+        ),
         b")",
         b"Fetch completed (0.0001 + 0.000 secs).",
     ],

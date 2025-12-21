@@ -1,4 +1,5 @@
 """Support for Modern Forms switches."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -6,20 +7,18 @@ from typing import Any
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import (
-    ModernFormsDataUpdateCoordinator,
-    ModernFormsDeviceEntity,
-    modernforms_exception_handler,
-)
+from . import modernforms_exception_handler
 from .const import DOMAIN
+from .coordinator import ModernFormsDataUpdateCoordinator
+from .entity import ModernFormsDeviceEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Modern Forms switch based on a config entry."""
     coordinator: ModernFormsDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
@@ -39,12 +38,11 @@ class ModernFormsSwitch(ModernFormsDeviceEntity, SwitchEntity):
         *,
         entry_id: str,
         coordinator: ModernFormsDataUpdateCoordinator,
-        icon: str,
         key: str,
     ) -> None:
         """Initialize Modern Forms switch."""
         self._key = key
-        super().__init__(entry_id=entry_id, coordinator=coordinator, icon=icon)
+        super().__init__(entry_id=entry_id, coordinator=coordinator)
         self._attr_unique_id = f"{self.coordinator.data.info.mac_address}_{self._key}"
 
 
@@ -60,7 +58,6 @@ class ModernFormsAwaySwitch(ModernFormsSwitch):
         super().__init__(
             coordinator=coordinator,
             entry_id=entry_id,
-            icon="mdi:airplane-takeoff",
             key="away_mode",
         )
 
@@ -92,7 +89,6 @@ class ModernFormsAdaptiveLearningSwitch(ModernFormsSwitch):
         super().__init__(
             coordinator=coordinator,
             entry_id=entry_id,
-            icon="mdi:school-outline",
             key="adaptive_learning",
         )
 

@@ -1,4 +1,5 @@
 """Fixtures for Weatherflow integration tests."""
+
 import asyncio
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
@@ -13,7 +14,7 @@ from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.weatherflow.async_setup_entry", return_value=True
@@ -28,7 +29,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_has_devices() -> Generator[AsyncMock, None, None]:
+def mock_has_devices() -> Generator[AsyncMock]:
     """Return a mock has_devices function."""
     with patch(
         "homeassistant.components.weatherflow.config_flow.WeatherFlowListener.on",
@@ -38,7 +39,7 @@ def mock_has_devices() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_stop() -> Generator[AsyncMock, None, None]:
+def mock_stop() -> Generator[AsyncMock]:
     """Return a fixture to handle the stop of udp."""
 
     async def mock_stop_listening(self):
@@ -53,7 +54,7 @@ def mock_stop() -> Generator[AsyncMock, None, None]:
 
 
 @pytest.fixture
-def mock_start() -> Generator[AsyncMock, None, None]:
+def mock_start() -> Generator[AsyncMock]:
     """Return fixture for starting upd."""
 
     device = WeatherFlowDevice(

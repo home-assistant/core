@@ -1,4 +1,5 @@
 """Constants for InfluxDB integration."""
+
 from datetime import timedelta
 import re
 
@@ -15,7 +16,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 CONF_DB_NAME = "database"
 CONF_BUCKET = "bucket"

@@ -1,4 +1,5 @@
 """Test Home Assistant language util methods."""
+
 from __future__ import annotations
 
 import pytest
@@ -190,6 +191,9 @@ def test_sr_latn() -> None:
         "sr-CS",
         "sr-RS",
     ]
+
+    # Prefer exact match with code
+    assert language.matches("sr", ["sr-Latn", "sr"]) == ["sr", "sr-Latn"]
 
 
 def test_no_nb_same() -> None:

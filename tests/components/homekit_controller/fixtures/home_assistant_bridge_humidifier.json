@@ -1,0 +1,173 @@
+[
+  {
+    "aid": 1,
+    "services": [
+      {
+        "iid": 1,
+        "type": "3E",
+        "characteristics": [
+          {
+            "iid": 2,
+            "type": "14",
+            "perms": ["pw"],
+            "format": "bool"
+          },
+          {
+            "iid": 3,
+            "type": "20",
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Home Assistant"
+          },
+          {
+            "iid": 4,
+            "type": "21",
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Bridge"
+          },
+          {
+            "iid": 5,
+            "type": "23",
+            "perms": ["pr"],
+            "format": "string",
+            "value": "HASS Bridge S6"
+          },
+          {
+            "iid": 6,
+            "type": "30",
+            "perms": ["pr"],
+            "format": "string",
+            "value": "homekit.bridge"
+          },
+          {
+            "iid": 7,
+            "type": "52",
+            "perms": ["pr"],
+            "format": "string",
+            "value": "2024.2.0"
+          }
+        ]
+      },
+      {
+        "iid": 8,
+        "type": "A2",
+        "characteristics": [
+          {
+            "iid": 9,
+            "type": "37",
+            "perms": ["pr", "ev"],
+            "format": "string",
+            "value": "01.01.00"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "aid": 293334836,
+    "services": [
+      {
+        "iid": 1,
+        "type": "3E",
+        "characteristics": [
+          {
+            "iid": 2,
+            "type": "14",
+            "perms": ["pw"],
+            "format": "bool"
+          },
+          {
+            "iid": 3,
+            "type": "20",
+            "perms": ["pr"],
+            "format": "string",
+            "value": "switchbot"
+          },
+          {
+            "iid": 4,
+            "type": "21",
+            "perms": ["pr"],
+            "format": "string",
+            "value": "WoHumi"
+          },
+          {
+            "iid": 5,
+            "type": "23",
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Humidifier 182A"
+          },
+          {
+            "iid": 6,
+            "type": "30",
+            "perms": ["pr"],
+            "format": "string",
+            "value": "humidifier.humidifier_182a"
+          },
+          {
+            "iid": 7,
+            "type": "52",
+            "perms": ["pr"],
+            "format": "string",
+            "value": "2024.2.0"
+          }
+        ]
+      },
+      {
+        "iid": 8,
+        "type": "BD",
+        "characteristics": [
+          {
+            "iid": 9,
+            "type": "10",
+            "perms": ["pr", "ev"],
+            "format": "float",
+            "unit": "percentage",
+            "minStep": 1,
+            "maxValue": 100,
+            "minValue": 0,
+            "value": 0
+          },
+          {
+            "iid": 10,
+            "type": "B3",
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "valid-values": [0, 1, 2],
+            "value": 0
+          },
+          {
+            "iid": 11,
+            "type": "B4",
+            "perms": ["pr", "pw", "ev"],
+            "format": "uint8",
+            "maxValue": 1,
+            "minValue": 1,
+            "valid-values": [1],
+            "value": 1
+          },
+          {
+            "iid": 12,
+            "type": "B0",
+            "perms": ["pr", "pw", "ev"],
+            "format": "uint8",
+            "valid-values": [0, 1],
+            "value": 0
+          },
+          {
+            "iid": 13,
+            "type": "CA",
+            "perms": ["pr", "pw", "ev"],
+            "format": "float",
+            "unit": "percentage",
+            "minStep": 1,
+            "maxValue": 100,
+            "minValue": 0,
+            "value": 45
+          }
+        ]
+      }
+    ]
+  }
+]

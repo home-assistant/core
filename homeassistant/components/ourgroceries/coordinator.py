@@ -1,4 +1,5 @@
 """The OurGroceries coordinator."""
+
 from __future__ import annotations
 
 import asyncio
@@ -7,6 +8,7 @@ import logging
 
 from ourgroceries import OurGroceries
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -20,7 +22,11 @@ _LOGGER = logging.getLogger(__name__)
 class OurGroceriesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
     """Class to manage fetching OurGroceries data."""
 
-    def __init__(self, hass: HomeAssistant, og: OurGroceries) -> None:
+    config_entry: ConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, og: OurGroceries
+    ) -> None:
         """Initialize global OurGroceries data updater."""
         self.og = og
         self.lists: list[dict] = []
@@ -29,6 +35,7 @@ class OurGroceriesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=interval,
         )

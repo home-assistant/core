@@ -1,4 +1,5 @@
 """Errors for the HLK-SW16 component."""
+
 from homeassistant.exceptions import HomeAssistantError
 
 

@@ -1,5 +1,7 @@
 """Test code shared between test files."""
 
+from typing import Any
+
 from pyatv import conf, const, interface
 from pyatv.const import Protocol
 
@@ -7,7 +9,7 @@ from pyatv.const import Protocol
 class MockPairingHandler(interface.PairingHandler):
     """Mock for PairingHandler in pyatv."""
 
-    def __init__(self, *args):
+    def __init__(self, *args: Any) -> None:
         """Initialize a new MockPairingHandler."""
         super().__init__(*args)
         self.pin_code = None

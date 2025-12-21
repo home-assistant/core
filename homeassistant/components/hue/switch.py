@@ -1,4 +1,5 @@
 """Support for switch platform for Hue resources (V2 only)."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -18,23 +19,21 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .bridge import HueBridge
-from .const import DOMAIN
+from .bridge import HueConfigEntry
 from .v2.entity import HueBaseEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: HueConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Hue switch platform from Hue resources."""
-    bridge: HueBridge = hass.data[DOMAIN][config_entry.entry_id]
+    bridge = config_entry.runtime_data
     api: HueBridgeV2 = bridge.api
 
     if bridge.api_version == 1:
@@ -57,7 +56,7 @@ async def async_setup_entry(
             event_type: EventType, resource: BehaviorInstance | LightLevel | Motion
         ) -> None:
             """Add entity from Hue resource."""
-            async_add_entities([switch_class(bridge, api.sensors.motion, resource)])
+            async_add_entities([switch_class(bridge, controller, resource)])
 
         # add all current items in controller
         for item in controller:

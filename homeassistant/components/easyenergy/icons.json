@@ -1,0 +1,26 @@
+{
+  "entity": {
+    "sensor": {
+      "hours_priced_equal_or_higher": {
+        "default": "mdi:clock"
+      },
+      "hours_priced_equal_or_lower": {
+        "default": "mdi:clock"
+      },
+      "percentage_of_max": {
+        "default": "mdi:percent"
+      }
+    }
+  },
+  "services": {
+    "get_energy_return_prices": {
+      "service": "mdi:transmission-tower-export"
+    },
+    "get_energy_usage_prices": {
+      "service": "mdi:transmission-tower-import"
+    },
+    "get_gas_prices": {
+      "service": "mdi:gas-station"
+    }
+  }
+}

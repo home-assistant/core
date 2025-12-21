@@ -1,0 +1,39 @@
+{
+  "entity": {
+    "sensor": {
+      "billing_cycle_length": {
+        "default": "mdi:calendar-range"
+      },
+      "billing_cycle_remaining": {
+        "default": "mdi:calendar-clock"
+      },
+      "data_used": {
+        "default": "mdi:network"
+      },
+      "downloaded": {
+        "default": "mdi:download-network"
+      },
+      "international_calls": {
+        "default": "mdi:phone-plus"
+      },
+      "mobile_calls": {
+        "default": "mdi:phone"
+      },
+      "national_calls": {
+        "default": "mdi:phone"
+      },
+      "other_calls": {
+        "default": "mdi:phone"
+      },
+      "sms_sent": {
+        "default": "mdi:message-processing"
+      },
+      "uploaded": {
+        "default": "mdi:upload-network"
+      },
+      "voicemail_calls": {
+        "default": "mdi:phone"
+      }
+    }
+  }
+}

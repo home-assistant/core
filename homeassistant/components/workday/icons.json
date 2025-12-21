@@ -1,0 +1,7 @@
+{
+  "services": {
+    "check_date": {
+      "service": "mdi:calendar-check"
+    }
+  }
+}

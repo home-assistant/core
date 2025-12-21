@@ -1,18 +1,21 @@
 """Config flow for Meater."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
+import logging
 from typing import Any
 
 from meater import AuthenticationError, MeaterApi, ServiceUnavailableError
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 REAUTH_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
 USER_SCHEMA = vol.Schema(
@@ -20,7 +23,7 @@ USER_SCHEMA = vol.Schema(
 )
 
 
-class MeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class MeaterConfigFlow(ConfigFlow, domain=DOMAIN):
     """Meater Config Flow."""
 
     _data_schema = USER_SCHEMA
@@ -28,7 +31,7 @@ class MeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Define the login user step."""
         if user_input is None:
             return self.async_show_form(
@@ -45,7 +48,9 @@ class MeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self._try_connect_meater("user", None, username, password)
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
         self._data_schema = REAUTH_SCHEMA
         self._username = entry_data[CONF_USERNAME]
@@ -53,7 +58,7 @@ class MeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, str] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle re-auth completion."""
         placeholders = {"username": self._username}
         if not user_input:
@@ -70,7 +75,7 @@ class MeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _try_connect_meater(
         self, step_id, placeholders: dict[str, str] | None, username: str, password: str
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         session = aiohttp_client.async_get_clientsession(self.hass)
 
         api = MeaterApi(session)
@@ -82,7 +87,8 @@ class MeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_auth"
         except ServiceUnavailableError:
             errors["base"] = "service_unavailable_error"
-        except Exception:  # pylint: disable=broad-except
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown_auth_error"
         else:
             data = {"username": username, "password": password}

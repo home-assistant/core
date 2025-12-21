@@ -16,9 +16,9 @@ from homeassistant.components.bluetooth import (
     BluetoothServiceInfo,
     async_discovered_service_info,
 )
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_ADDRESS
-from homeassistant.data_entry_flow import AbortFlow, FlowResult
+from homeassistant.data_entry_flow import AbortFlow
 
 from .const import DOMAIN
 
@@ -51,7 +51,7 @@ class InspectorBLEConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfo
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the bluetooth discovery step."""
         _LOGGER.debug("Discovered BLE device: %s", discovery_info.name)
         await self.async_set_unique_id(discovery_info.address)
@@ -67,7 +67,7 @@ class InspectorBLEConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_bluetooth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Confirm discovery."""
         # We always will have self._discovery_info be a BluetoothServiceInfo at this point
         # and this helps mypy not complain
@@ -84,7 +84,7 @@ class InspectorBLEConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the user step to pick discovered device."""
         if user_input is not None:
             address = user_input[CONF_ADDRESS]
@@ -93,7 +93,7 @@ class InspectorBLEConfigFlow(ConfigFlow, domain=DOMAIN):
             self._discovery_info = self._discovered_devices[address]
             return await self.async_step_check_connection()
 
-        current_addresses = self._async_current_ids()
+        current_addresses = self._async_current_ids(include_ignore=False)
         for discovery_info in async_discovered_service_info(self.hass):
             address = discovery_info.address
             if address in current_addresses or address in self._discovered_devices:
@@ -123,7 +123,7 @@ class InspectorBLEConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
         )
 
-    async def async_step_check_connection(self) -> FlowResult:
+    async def async_step_check_connection(self) -> ConfigFlowResult:
         """Check we can connect to the device before considering the configuration is successful."""
         # We always will have self._discovery_info be a BluetoothServiceInfo at this point
         # and this helps mypy not complain
@@ -136,11 +136,10 @@ class InspectorBLEConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
         except AbortFlow:
             raise
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception:
             _LOGGER.exception(
-                "Error occurred reading information from %s: %s",
+                "Error occurred reading information from %s",
                 self._discovery_info.address,
-                err,
             )
             return self.async_abort(reason="unknown")
         _LOGGER.debug("Device connection successful, proceeding")

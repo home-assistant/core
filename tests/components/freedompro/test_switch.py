@@ -1,4 +1,5 @@
 """Tests for the Freedompro switch."""
+
 from datetime import timedelta
 from unittest.mock import ANY, patch
 
@@ -11,16 +12,17 @@ from homeassistant.util.dt import utcnow
 
 from .conftest import get_states_response_for_uid
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 uid = "3WRRJR6RCZQZSND8VP0YTO3YXCSOFPKBMW8T51TU-LQ*1JKU1MVWHQL-Z9SCUS85VFXMRGNDCDNDDUVVDKBU31W"
 
 
 async def test_switch_get_state(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, init_integration
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test states of the switch."""
-    init_integration
 
     entity_id = "switch.irrigation_switch"
     state = hass.states.get(entity_id)
@@ -53,10 +55,11 @@ async def test_switch_get_state(
 
 
 async def test_switch_set_off(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, init_integration
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test set off of the switch."""
-    init_integration
 
     entity_id = "switch.irrigation_switch"
 
@@ -104,10 +107,11 @@ async def test_switch_set_off(
 
 
 async def test_switch_set_on(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry, init_integration
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test set on of the switch."""
-    init_integration
 
     entity_id = "switch.irrigation_switch"
     state = hass.states.get(entity_id)

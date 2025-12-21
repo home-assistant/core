@@ -1,4 +1,5 @@
 """Config flow for UptimeRobot integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -14,9 +15,8 @@ from pyuptimerobot import (
 )
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import API_ATTR_OK, DOMAIN, LOGGER
@@ -24,7 +24,7 @@ from .const import API_ATTR_OK, DOMAIN, LOGGER
 STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class UptimeRobotConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for UptimeRobot."""
 
     VERSION = 1
@@ -36,7 +36,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         response: UptimeRobotApiResponse | UptimeRobotApiError | None = None
         key: str = data[CONF_API_KEY]
-        if key.startswith("ur") or key.startswith("m"):
+        if key.startswith(("ur", "m")):
             LOGGER.error("Wrong API key type detected, use the 'main' API key")
             errors["base"] = "not_main_key"
             return errors, None
@@ -44,13 +44,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             response = await uptime_robot_api.async_get_account_details()
-        except UptimeRobotAuthenticationException as exception:
-            LOGGER.error(exception)
+        except UptimeRobotAuthenticationException:
             errors["base"] = "invalid_api_key"
-        except UptimeRobotException as exception:
-            LOGGER.error(exception)
+        except UptimeRobotException:
             errors["base"] = "cannot_connect"
-        except Exception as exception:  # pylint: disable=broad-except
+        except Exception as exception:  # noqa: BLE001
             LOGGER.exception(exception)
             errors["base"] = "unknown"
         else:
@@ -68,7 +66,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(
@@ -85,13 +83,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Return the reauth confirm step."""
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
         if user_input is None:
             return self.async_show_form(
@@ -115,4 +115,31 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reauth_confirm", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the device."""
+        reconfigure_entry = self._get_reconfigure_entry()
+        if not user_input:
+            return self.async_show_form(
+                step_id="reconfigure",
+                data_schema=STEP_USER_DATA_SCHEMA,
+            )
+
+        self._async_abort_entries_match(
+            {CONF_API_KEY: reconfigure_entry.data[CONF_API_KEY]}
+        )
+
+        errors, account = await self._validate_input(user_input)
+        if account:
+            await self.async_set_unique_id(str(account.user_id))
+            self._abort_if_unique_id_configured()
+            return self.async_update_reload_and_abort(
+                reconfigure_entry, data_updates=user_input
+            )
+
+        return self.async_show_form(
+            step_id="reconfigure", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )

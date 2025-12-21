@@ -1,4 +1,5 @@
 """Support for the Escea Fireplace."""
+
 from __future__ import annotations
 
 from collections.abc import Coroutine
@@ -20,7 +21,7 @@ from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTempera
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     DATA_DISCOVERY_SERVICE,
@@ -31,7 +32,6 @@ from .const import (
     DOMAIN,
     ESCEA_FIREPLACE,
     ESCEA_MANUFACTURER,
-    ICON,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,7 +47,7 @@ _HA_FAN_TO_ESCEA = {v: k for k, v in _ESCEA_FAN_TO_HA.items()}
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize an Escea Controller."""
     discovery_service = hass.data[DATA_DISCOVERY_SERVICE]
@@ -78,11 +78,14 @@ class ControllerEntity(ClimateEntity):
     _attr_has_entity_name = True
     _attr_name = None
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
-    _attr_icon = ICON
+    _attr_translation_key = "fireplace"
     _attr_precision = PRECISION_WHOLE
     _attr_should_poll = False
     _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
     )
     _attr_target_temperature_step = PRECISION_WHOLE
     _attr_temperature_unit = UnitOfTemperature.CELSIUS

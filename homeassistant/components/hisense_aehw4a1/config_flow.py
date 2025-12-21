@@ -1,4 +1,5 @@
 """Config flow for Hisense AEH-W4A1 integration."""
+
 from pyaehw4a1.aehw4a1 import AehW4a1
 
 from homeassistant.core import HomeAssistant

@@ -1,68 +1,37 @@
 """Constants used by Home Assistant components."""
+
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Final
+from typing import TYPE_CHECKING, Final
+
+from .generated.entity_platforms import EntityPlatforms
+from .util.event_type import EventType
+from .util.hass_dict import HassKey
+from .util.signal_type import SignalType
+
+if TYPE_CHECKING:
+    from .core import EventStateChangedData, EventStateReportedData
+    from .helpers.typing import NoEventData
 
 APPLICATION_NAME: Final = "HomeAssistant"
-MAJOR_VERSION: Final = 2024
+MAJOR_VERSION: Final = 2026
 MINOR_VERSION: Final = 1
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
-REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 11, 0)
-REQUIRED_NEXT_PYTHON_VER: Final[tuple[int, int, int]] = (3, 11, 0)
+REQUIRED_PYTHON_VER: Final[tuple[int, int, int]] = (3, 13, 2)
+REQUIRED_NEXT_PYTHON_VER: Final[tuple[int, int, int]] = (3, 13, 2)
 # Truthy date string triggers showing related deprecation warning messages.
 REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = ""
 
 # Format for platform files
 PLATFORM_FORMAT: Final = "{platform}.{domain}"
 
+# Explicit reexport to allow other modules to import Platform directly from const
+Platform = EntityPlatforms
 
-class Platform(StrEnum):
-    """Available entity platforms."""
-
-    AIR_QUALITY = "air_quality"
-    ALARM_CONTROL_PANEL = "alarm_control_panel"
-    BINARY_SENSOR = "binary_sensor"
-    BUTTON = "button"
-    CALENDAR = "calendar"
-    CAMERA = "camera"
-    CLIMATE = "climate"
-    COVER = "cover"
-    DATE = "date"
-    DATETIME = "datetime"
-    DEVICE_TRACKER = "device_tracker"
-    EVENT = "event"
-    FAN = "fan"
-    GEO_LOCATION = "geo_location"
-    HUMIDIFIER = "humidifier"
-    IMAGE = "image"
-    IMAGE_PROCESSING = "image_processing"
-    LAWN_MOWER = "lawn_mower"
-    LIGHT = "light"
-    LOCK = "lock"
-    MAILBOX = "mailbox"
-    MEDIA_PLAYER = "media_player"
-    NOTIFY = "notify"
-    NUMBER = "number"
-    REMOTE = "remote"
-    SCENE = "scene"
-    SELECT = "select"
-    SENSOR = "sensor"
-    SIREN = "siren"
-    STT = "stt"
-    SWITCH = "switch"
-    TEXT = "text"
-    TIME = "time"
-    TODO = "todo"
-    TTS = "tts"
-    VACUUM = "vacuum"
-    VALVE = "valve"
-    UPDATE = "update"
-    WAKE_WORD = "wake_word"
-    WATER_HEATER = "water_heater"
-    WEATHER = "weather"
+BASE_PLATFORMS: Final = {platform.value for platform in Platform}
 
 
 # Can be used to specify a catch all when registering state or event listeners.
@@ -92,9 +61,12 @@ SUN_EVENT_SUNRISE: Final = "sunrise"
 # #### CONFIG ####
 CONF_ABOVE: Final = "above"
 CONF_ACCESS_TOKEN: Final = "access_token"
+CONF_ACTION: Final = "action"
+CONF_ACTIONS: Final = "actions"
 CONF_ADDRESS: Final = "address"
 CONF_AFTER: Final = "after"
 CONF_ALIAS: Final = "alias"
+CONF_LLM_HASS_API = "llm_hass_api"
 CONF_ALLOWLIST_EXTERNAL_URLS: Final = "allowlist_external_urls"
 CONF_API_KEY: Final = "api_key"
 CONF_API_TOKEN: Final = "api_token"
@@ -199,11 +171,13 @@ CONF_METHOD: Final = "method"
 CONF_MINIMUM: Final = "minimum"
 CONF_MODE: Final = "mode"
 CONF_MODEL: Final = "model"
+CONF_MODEL_ID: Final = "model_id"
 CONF_MONITORED_CONDITIONS: Final = "monitored_conditions"
 CONF_MONITORED_VARIABLES: Final = "monitored_variables"
 CONF_NAME: Final = "name"
 CONF_OFFSET: Final = "offset"
 CONF_OPTIMISTIC: Final = "optimistic"
+CONF_OPTIONS: Final = "options"
 CONF_PACKAGES: Final = "packages"
 CONF_PARALLEL: Final = "parallel"
 CONF_PARAMS: Final = "params"
@@ -218,6 +192,7 @@ CONF_PLATFORM: Final = "platform"
 CONF_PORT: Final = "port"
 CONF_PREFIX: Final = "prefix"
 CONF_PROFILE_NAME: Final = "profile_name"
+CONF_PROMPT: Final = "prompt"
 CONF_PROTOCOL: Final = "protocol"
 CONF_PROXY_SSL: Final = "proxy_ssl"
 CONF_QUOTE: Final = "quote"
@@ -242,6 +217,7 @@ CONF_SERVICE: Final = "service"
 CONF_SERVICE_DATA: Final = "data"
 CONF_SERVICE_DATA_TEMPLATE: Final = "data_template"
 CONF_SERVICE_TEMPLATE: Final = "service_template"
+CONF_SET_CONVERSATION_RESPONSE: Final = "set_conversation_response"
 CONF_SHOW_ON_MAP: Final = "show_on_map"
 CONF_SLAVE: Final = "slave"
 CONF_SOURCE: Final = "source"
@@ -257,6 +233,8 @@ CONF_THEN: Final = "then"
 CONF_TIMEOUT: Final = "timeout"
 CONF_TIME_ZONE: Final = "time_zone"
 CONF_TOKEN: Final = "token"
+CONF_TRIGGER: Final = "trigger"
+CONF_TRIGGERS: Final = "triggers"
 CONF_TRIGGER_TIME: Final = "trigger_time"
 CONF_TTL: Final = "ttl"
 CONF_TYPE: Final = "type"
@@ -278,6 +256,7 @@ CONF_WHILE: Final = "while"
 CONF_WHITELIST: Final = "whitelist"
 CONF_ALLOWLIST_EXTERNAL_DIRS: Final = "allowlist_external_dirs"
 LEGACY_CONF_WHITELIST_EXTERNAL_DIRS: Final = "whitelist_external_dirs"
+CONF_DEBUG: Final = "debug"
 CONF_XY: Final = "xy"
 CONF_ZONE: Final = "zone"
 
@@ -285,16 +264,20 @@ CONF_ZONE: Final = "zone"
 EVENT_CALL_SERVICE: Final = "call_service"
 EVENT_COMPONENT_LOADED: Final = "component_loaded"
 EVENT_CORE_CONFIG_UPDATE: Final = "core_config_updated"
-EVENT_HOMEASSISTANT_CLOSE: Final = "homeassistant_close"
-EVENT_HOMEASSISTANT_START: Final = "homeassistant_start"
-EVENT_HOMEASSISTANT_STARTED: Final = "homeassistant_started"
-EVENT_HOMEASSISTANT_STOP: Final = "homeassistant_stop"
-EVENT_HOMEASSISTANT_FINAL_WRITE: Final = "homeassistant_final_write"
+EVENT_HOMEASSISTANT_CLOSE: EventType[NoEventData] = EventType("homeassistant_close")
+EVENT_HOMEASSISTANT_START: EventType[NoEventData] = EventType("homeassistant_start")
+EVENT_HOMEASSISTANT_STARTED: EventType[NoEventData] = EventType("homeassistant_started")
+EVENT_HOMEASSISTANT_STOP: EventType[NoEventData] = EventType("homeassistant_stop")
+EVENT_HOMEASSISTANT_FINAL_WRITE: EventType[NoEventData] = EventType(
+    "homeassistant_final_write"
+)
+EVENT_LABS_UPDATED: Final = "labs_updated"
 EVENT_LOGBOOK_ENTRY: Final = "logbook_entry"
 EVENT_LOGGING_CHANGED: Final = "logging_changed"
 EVENT_SERVICE_REGISTERED: Final = "service_registered"
 EVENT_SERVICE_REMOVED: Final = "service_removed"
-EVENT_STATE_CHANGED: Final = "state_changed"
+EVENT_STATE_CHANGED: EventType[EventStateChangedData] = EventType("state_changed")
+EVENT_STATE_REPORTED: EventType[EventStateReportedData] = EventType("state_reported")
 EVENT_THEMES_UPDATED: Final = "themes_updated"
 EVENT_PANELS_UPDATED: Final = "panels_updated"
 EVENT_LOVELACE_UPDATED: Final = "lovelace_updated"
@@ -304,37 +287,6 @@ EVENT_RECORDER_HOURLY_STATISTICS_GENERATED: Final = (
 )
 EVENT_SHOPPING_LIST_UPDATED: Final = "shopping_list_updated"
 
-# #### DEVICE CLASSES ####
-# DEVICE_CLASS_* below are deprecated as of 2021.12
-# use the SensorDeviceClass enum instead.
-DEVICE_CLASS_AQI: Final = "aqi"
-DEVICE_CLASS_BATTERY: Final = "battery"
-DEVICE_CLASS_CO: Final = "carbon_monoxide"
-DEVICE_CLASS_CO2: Final = "carbon_dioxide"
-DEVICE_CLASS_CURRENT: Final = "current"
-DEVICE_CLASS_DATE: Final = "date"
-DEVICE_CLASS_ENERGY: Final = "energy"
-DEVICE_CLASS_FREQUENCY: Final = "frequency"
-DEVICE_CLASS_GAS: Final = "gas"
-DEVICE_CLASS_HUMIDITY: Final = "humidity"
-DEVICE_CLASS_ILLUMINANCE: Final = "illuminance"
-DEVICE_CLASS_MONETARY: Final = "monetary"
-DEVICE_CLASS_NITROGEN_DIOXIDE = "nitrogen_dioxide"
-DEVICE_CLASS_NITROGEN_MONOXIDE = "nitrogen_monoxide"
-DEVICE_CLASS_NITROUS_OXIDE = "nitrous_oxide"
-DEVICE_CLASS_OZONE: Final = "ozone"
-DEVICE_CLASS_PM1: Final = "pm1"
-DEVICE_CLASS_PM10: Final = "pm10"
-DEVICE_CLASS_PM25: Final = "pm25"
-DEVICE_CLASS_POWER_FACTOR: Final = "power_factor"
-DEVICE_CLASS_POWER: Final = "power"
-DEVICE_CLASS_PRESSURE: Final = "pressure"
-DEVICE_CLASS_SIGNAL_STRENGTH: Final = "signal_strength"
-DEVICE_CLASS_SULPHUR_DIOXIDE = "sulphur_dioxide"
-DEVICE_CLASS_TEMPERATURE: Final = "temperature"
-DEVICE_CLASS_TIMESTAMP: Final = "timestamp"
-DEVICE_CLASS_VOLATILE_ORGANIC_COMPOUNDS = "volatile_organic_compounds"
-DEVICE_CLASS_VOLTAGE: Final = "voltage"
 
 # #### STATES ####
 STATE_ON: Final = "on"
@@ -351,24 +303,10 @@ STATE_PLAYING: Final = "playing"
 STATE_PAUSED: Final = "paused"
 STATE_IDLE: Final = "idle"
 STATE_STANDBY: Final = "standby"
-STATE_ALARM_DISARMED: Final = "disarmed"
-STATE_ALARM_ARMED_HOME: Final = "armed_home"
-STATE_ALARM_ARMED_AWAY: Final = "armed_away"
-STATE_ALARM_ARMED_NIGHT: Final = "armed_night"
-STATE_ALARM_ARMED_VACATION: Final = "armed_vacation"
-STATE_ALARM_ARMED_CUSTOM_BYPASS: Final = "armed_custom_bypass"
-STATE_ALARM_PENDING: Final = "pending"
-STATE_ALARM_ARMING: Final = "arming"
-STATE_ALARM_DISARMING: Final = "disarming"
-STATE_ALARM_TRIGGERED: Final = "triggered"
-STATE_LOCKED: Final = "locked"
-STATE_UNLOCKED: Final = "unlocked"
-STATE_LOCKING: Final = "locking"
-STATE_UNLOCKING: Final = "unlocking"
-STATE_JAMMED: Final = "jammed"
 STATE_UNAVAILABLE: Final = "unavailable"
 STATE_OK: Final = "ok"
 STATE_PROBLEM: Final = "problem"
+
 
 # #### STATE AND EVENT ATTRIBUTES ####
 # Attribution
@@ -397,11 +335,20 @@ ATTR_NAME: Final = "name"
 # Contains one string or a list of strings, each being an entity id
 ATTR_ENTITY_ID: Final = "entity_id"
 
+# Contains one string, the config entry ID
+ATTR_CONFIG_ENTRY_ID: Final = "config_entry_id"
+
 # Contains one string or a list of strings, each being an area id
 ATTR_AREA_ID: Final = "area_id"
 
 # Contains one string, the device ID
 ATTR_DEVICE_ID: Final = "device_id"
+
+# Contains one string or a list of strings, each being an floor id
+ATTR_FLOOR_ID: Final = "floor_id"
+
+# Contains one string or a list of strings, each being an label id
+ATTR_LABEL_ID: Final = "label_id"
 
 # String with a friendly name for the entity
 ATTR_FRIENDLY_NAME: Final = "friendly_name"
@@ -435,6 +382,8 @@ ATTR_CONNECTIONS: Final = "connections"
 ATTR_DEFAULT_NAME: Final = "default_name"
 ATTR_MANUFACTURER: Final = "manufacturer"
 ATTR_MODEL: Final = "model"
+ATTR_MODEL_ID: Final = "model_id"
+ATTR_SERIAL_NUMBER: Final = "serial_number"
 ATTR_SUGGESTED_AREA: Final = "suggested_area"
 ATTR_SW_VERSION: Final = "sw_version"
 ATTR_HW_VERSION: Final = "hw_version"
@@ -484,7 +433,7 @@ ATTR_STATE: Final = "state"
 ATTR_EDITABLE: Final = "editable"
 ATTR_OPTION: Final = "option"
 
-# The entity has been restored with restore state
+# The entity state has been partially restored by the entity registry
 ATTR_RESTORED: Final = "restored"
 
 # Bitfield of supported component features for the entity
@@ -505,50 +454,69 @@ ATTR_PERSONS: Final = "persons"
 class UnitOfApparentPower(StrEnum):
     """Apparent power units."""
 
+    MILLIVOLT_AMPERE = "mVA"
     VOLT_AMPERE = "VA"
-
-
-POWER_VOLT_AMPERE: Final = "VA"
-"""Deprecated: please use UnitOfApparentPower.VOLT_AMPERE."""
+    KILO_VOLT_AMPERE = "kVA"
 
 
 # Power units
 class UnitOfPower(StrEnum):
     """Power units."""
 
+    MILLIWATT = "mW"
     WATT = "W"
     KILO_WATT = "kW"
+    MEGA_WATT = "MW"
+    GIGA_WATT = "GW"
+    TERA_WATT = "TW"
     BTU_PER_HOUR = "BTU/h"
 
 
-POWER_WATT: Final = "W"
-"""Deprecated: please use UnitOfPower.WATT."""
-POWER_KILO_WATT: Final = "kW"
-"""Deprecated: please use UnitOfPower.KILO_WATT."""
-POWER_BTU_PER_HOUR: Final = "BTU/h"
-"""Deprecated: please use UnitOfPower.BTU_PER_HOUR."""
-
 # Reactive power units
-POWER_VOLT_AMPERE_REACTIVE: Final = "var"
+class UnitOfReactivePower(StrEnum):
+    """Reactive power units."""
+
+    MILLIVOLT_AMPERE_REACTIVE = "mvar"
+    VOLT_AMPERE_REACTIVE = "var"
+    KILO_VOLT_AMPERE_REACTIVE = "kvar"
 
 
 # Energy units
 class UnitOfEnergy(StrEnum):
     """Energy units."""
 
-    GIGA_JOULE = "GJ"
-    KILO_WATT_HOUR = "kWh"
+    JOULE = "J"
+    KILO_JOULE = "kJ"
     MEGA_JOULE = "MJ"
-    MEGA_WATT_HOUR = "MWh"
+    GIGA_JOULE = "GJ"
+    MILLIWATT_HOUR = "mWh"
     WATT_HOUR = "Wh"
+    KILO_WATT_HOUR = "kWh"
+    MEGA_WATT_HOUR = "MWh"
+    GIGA_WATT_HOUR = "GWh"
+    TERA_WATT_HOUR = "TWh"
+    CALORIE = "cal"
+    KILO_CALORIE = "kcal"
+    MEGA_CALORIE = "Mcal"
+    GIGA_CALORIE = "Gcal"
 
 
-ENERGY_KILO_WATT_HOUR: Final = "kWh"
-"""Deprecated: please use UnitOfEnergy.KILO_WATT_HOUR."""
-ENERGY_MEGA_WATT_HOUR: Final = "MWh"
-"""Deprecated: please use UnitOfEnergy.MEGA_WATT_HOUR."""
-ENERGY_WATT_HOUR: Final = "Wh"
-"""Deprecated: please use UnitOfEnergy.WATT_HOUR."""
+# Reactive energy units
+class UnitOfReactiveEnergy(StrEnum):
+    """Reactive energy units."""
+
+    VOLT_AMPERE_REACTIVE_HOUR = "varh"
+    KILO_VOLT_AMPERE_REACTIVE_HOUR = "kvarh"
+
+
+# Energy Distance units
+class UnitOfEnergyDistance(StrEnum):
+    """Energy Distance units."""
+
+    KILO_WATT_HOUR_PER_100_KM = "kWh/100km"
+    WATT_HOUR_PER_KM = "Wh/km"
+    MILES_PER_KILO_WATT_HOUR = "mi/kWh"
+    KM_PER_KILO_WATT_HOUR = "km/kWh"
 
 
 # Electric_current units
@@ -559,24 +527,16 @@ class UnitOfElectricCurrent(StrEnum):
     AMPERE = "A"
 
 
-ELECTRIC_CURRENT_MILLIAMPERE: Final = "mA"
-"""Deprecated: please use UnitOfElectricCurrent.MILLIAMPERE."""
-ELECTRIC_CURRENT_AMPERE: Final = "A"
-"""Deprecated: please use UnitOfElectricCurrent.AMPERE."""
-
-
 # Electric_potential units
 class UnitOfElectricPotential(StrEnum):
     """Electric potential units."""
 
+    MICROVOLT = "μV"
     MILLIVOLT = "mV"
     VOLT = "V"
+    KILOVOLT = "kV"
+    MEGAVOLT = "MV"
 
-
-ELECTRIC_POTENTIAL_MILLIVOLT: Final = "mV"
-"""Deprecated: please use UnitOfElectricPotential.MILLIVOLT."""
-ELECTRIC_POTENTIAL_VOLT: Final = "V"
-"""Deprecated: please use UnitOfElectricPotential.VOLT."""
 
 # Degree units
 DEGREE: Final = "°"
@@ -596,14 +556,6 @@ class UnitOfTemperature(StrEnum):
     KELVIN = "K"
 
 
-TEMP_CELSIUS: Final = "°C"
-"""Deprecated: please use UnitOfTemperature.CELSIUS"""
-TEMP_FAHRENHEIT: Final = "°F"
-"""Deprecated: please use UnitOfTemperature.FAHRENHEIT"""
-TEMP_KELVIN: Final = "K"
-"""Deprecated: please use UnitOfTemperature.KELVIN"""
-
-
 # Time units
 class UnitOfTime(StrEnum):
     """Time units."""
@@ -619,26 +571,6 @@ class UnitOfTime(StrEnum):
     YEARS = "y"
 
 
-TIME_MICROSECONDS: Final = "μs"
-"""Deprecated: please use UnitOfTime.MICROSECONDS."""
-TIME_MILLISECONDS: Final = "ms"
-"""Deprecated: please use UnitOfTime.MILLISECONDS."""
-TIME_SECONDS: Final = "s"
-"""Deprecated: please use UnitOfTime.SECONDS."""
-TIME_MINUTES: Final = "min"
-"""Deprecated: please use UnitOfTime.MINUTES."""
-TIME_HOURS: Final = "h"
-"""Deprecated: please use UnitOfTime.HOURS."""
-TIME_DAYS: Final = "d"
-"""Deprecated: please use UnitOfTime.DAYS."""
-TIME_WEEKS: Final = "w"
-"""Deprecated: please use UnitOfTime.WEEKS."""
-TIME_MONTHS: Final = "m"
-"""Deprecated: please use UnitOfTime.MONTHS."""
-TIME_YEARS: Final = "y"
-"""Deprecated: please use UnitOfTime.YEARS."""
-
-
 # Length units
 class UnitOfLength(StrEnum):
     """Length units."""
@@ -651,24 +583,7 @@ class UnitOfLength(StrEnum):
     FEET = "ft"
     YARDS = "yd"
     MILES = "mi"
-
-
-LENGTH_MILLIMETERS: Final = "mm"
-"""Deprecated: please use UnitOfLength.MILLIMETERS."""
-LENGTH_CENTIMETERS: Final = "cm"
-"""Deprecated: please use UnitOfLength.CENTIMETERS."""
-LENGTH_METERS: Final = "m"
-"""Deprecated: please use UnitOfLength.METERS."""
-LENGTH_KILOMETERS: Final = "km"
-"""Deprecated: please use UnitOfLength.KILOMETERS."""
-LENGTH_INCHES: Final = "in"
-"""Deprecated: please use UnitOfLength.INCHES."""
-LENGTH_FEET: Final = "ft"
-"""Deprecated: please use UnitOfLength.FEET."""
-LENGTH_YARD: Final = "yd"
-"""Deprecated: please use UnitOfLength.YARDS."""
-LENGTH_MILES: Final = "mi"
-"""Deprecated: please use UnitOfLength.MILES."""
+    NAUTICAL_MILES = "nmi"
 
 
 # Frequency units
@@ -681,20 +596,11 @@ class UnitOfFrequency(StrEnum):
     GIGAHERTZ = "GHz"
 
 
-FREQUENCY_HERTZ: Final = "Hz"
-"""Deprecated: please use UnitOfFrequency.HERTZ"""
-FREQUENCY_KILOHERTZ: Final = "kHz"
-"""Deprecated: please use UnitOfFrequency.KILOHERTZ"""
-FREQUENCY_MEGAHERTZ: Final = "MHz"
-"""Deprecated: please use UnitOfFrequency.MEGAHERTZ"""
-FREQUENCY_GIGAHERTZ: Final = "GHz"
-"""Deprecated: please use UnitOfFrequency.GIGAHERTZ"""
-
-
 # Pressure units
 class UnitOfPressure(StrEnum):
     """Pressure units."""
 
+    MILLIPASCAL = "mPa"
     PA = "Pa"
     HPA = "hPa"
     KPA = "kPa"
@@ -703,27 +609,8 @@ class UnitOfPressure(StrEnum):
     MBAR = "mbar"
     MMHG = "mmHg"
     INHG = "inHg"
+    INH2O = "inH₂O"
     PSI = "psi"
-
-
-PRESSURE_PA: Final = "Pa"
-"""Deprecated: please use UnitOfPressure.PA"""
-PRESSURE_HPA: Final = "hPa"
-"""Deprecated: please use UnitOfPressure.HPA"""
-PRESSURE_KPA: Final = "kPa"
-"""Deprecated: please use UnitOfPressure.KPA"""
-PRESSURE_BAR: Final = "bar"
-"""Deprecated: please use UnitOfPressure.BAR"""
-PRESSURE_CBAR: Final = "cbar"
-"""Deprecated: please use UnitOfPressure.CBAR"""
-PRESSURE_MBAR: Final = "mbar"
-"""Deprecated: please use UnitOfPressure.MBAR"""
-PRESSURE_MMHG: Final = "mmHg"
-"""Deprecated: please use UnitOfPressure.MMHG"""
-PRESSURE_INHG: Final = "inHg"
-"""Deprecated: please use UnitOfPressure.INHG"""
-PRESSURE_PSI: Final = "psi"
-"""Deprecated: please use UnitOfPressure.PSI"""
 
 
 # Sound pressure units
@@ -734,18 +621,13 @@ class UnitOfSoundPressure(StrEnum):
     WEIGHTED_DECIBEL_A = "dBA"
 
 
-SOUND_PRESSURE_DB: Final = "dB"
-"""Deprecated: please use UnitOfSoundPressure.DECIBEL"""
-SOUND_PRESSURE_WEIGHTED_DBA: Final = "dBa"
-"""Deprecated: please use UnitOfSoundPressure.WEIGHTED_DECIBEL_A"""
-
-
 # Volume units
 class UnitOfVolume(StrEnum):
     """Volume units."""
 
     CUBIC_FEET = "ft³"
     CENTUM_CUBIC_FEET = "CCF"
+    MILLE_CUBIC_FEET = "MCF"
     CUBIC_METERS = "m³"
     LITERS = "L"
     MILLILITERS = "mL"
@@ -759,36 +641,36 @@ class UnitOfVolume(StrEnum):
     British/Imperial fluid ounces are not yet supported"""
 
 
-VOLUME_LITERS: Final = "L"
-"""Deprecated: please use UnitOfVolume.LITERS"""
-VOLUME_MILLILITERS: Final = "mL"
-"""Deprecated: please use UnitOfVolume.MILLILITERS"""
-VOLUME_CUBIC_METERS: Final = "m³"
-"""Deprecated: please use UnitOfVolume.CUBIC_METERS"""
-VOLUME_CUBIC_FEET: Final = "ft³"
-"""Deprecated: please use UnitOfVolume.CUBIC_FEET"""
-
-VOLUME_GALLONS: Final = "gal"
-"""Deprecated: please use UnitOfVolume.GALLONS"""
-VOLUME_FLUID_OUNCE: Final = "fl. oz."
-"""Deprecated: please use UnitOfVolume.FLUID_OUNCES"""
-
-
 # Volume Flow Rate units
 class UnitOfVolumeFlowRate(StrEnum):
     """Volume flow rate units."""
 
     CUBIC_METERS_PER_HOUR = "m³/h"
-    CUBIC_FEET_PER_MINUTE = "ft³/m"
+    CUBIC_METERS_PER_MINUTE = "m³/min"
+    CUBIC_METERS_PER_SECOND = "m³/s"
+    CUBIC_FEET_PER_MINUTE = "ft³/min"
+    LITERS_PER_HOUR = "L/h"
+    LITERS_PER_MINUTE = "L/min"
+    LITERS_PER_SECOND = "L/s"
+    GALLONS_PER_HOUR = "gal/h"
+    GALLONS_PER_MINUTE = "gal/min"
+    GALLONS_PER_DAY = "gal/d"
+    MILLILITERS_PER_SECOND = "mL/s"
 
 
-VOLUME_FLOW_RATE_CUBIC_METERS_PER_HOUR: Final = "m³/h"
-"""Deprecated: please use UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR"""
-VOLUME_FLOW_RATE_CUBIC_FEET_PER_MINUTE: Final = "ft³/m"
-"""Deprecated: please use UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE"""
+class UnitOfArea(StrEnum):
+    """Area units."""
 
-# Area units
-AREA_SQUARE_METERS: Final = "m²"
+    SQUARE_METERS = "m²"
+    SQUARE_CENTIMETERS = "cm²"
+    SQUARE_KILOMETERS = "km²"
+    SQUARE_MILLIMETERS = "mm²"
+    SQUARE_INCHES = "in²"
+    SQUARE_FEET = "ft²"
+    SQUARE_YARDS = "yd²"
+    SQUARE_MILES = "mi²"
+    ACRES = "ac"
+    HECTARES = "ha"
 
 
 # Mass units
@@ -798,27 +680,19 @@ class UnitOfMass(StrEnum):
     GRAMS = "g"
     KILOGRAMS = "kg"
     MILLIGRAMS = "mg"
-    MICROGRAMS = "µg"
+    MICROGRAMS = "μg"
     OUNCES = "oz"
     POUNDS = "lb"
     STONES = "st"
 
 
-MASS_GRAMS: Final = "g"
-"""Deprecated: please use UnitOfMass.GRAMS"""
-MASS_KILOGRAMS: Final = "kg"
-"""Deprecated: please use UnitOfMass.KILOGRAMS"""
-MASS_MILLIGRAMS: Final = "mg"
-"""Deprecated: please use UnitOfMass.MILLIGRAMS"""
-MASS_MICROGRAMS: Final = "µg"
-"""Deprecated: please use UnitOfMass.MICROGRAMS"""
-MASS_OUNCES: Final = "oz"
-"""Deprecated: please use UnitOfMass.OUNCES"""
-MASS_POUNDS: Final = "lb"
-"""Deprecated: please use UnitOfMass.POUNDS"""
+class UnitOfConductivity(StrEnum):
+    """Conductivity units."""
 
-# Conductivity units
-CONDUCTIVITY: Final = "µS/cm"
+    SIEMENS_PER_CM = "S/cm"
+    MICROSIEMENS_PER_CM = "μS/cm"
+    MILLISIEMENS_PER_CM = "mS/cm"
+
 
 # Light units
 LIGHT_LUX: Final = "lx"
@@ -839,13 +713,6 @@ class UnitOfIrradiance(StrEnum):
 
     WATTS_PER_SQUARE_METER = "W/m²"
     BTUS_PER_HOUR_SQUARE_FOOT = "BTU/(h⋅ft²)"
-
-
-# Irradiation units
-IRRADIATION_WATTS_PER_SQUARE_METER: Final = "W/m²"
-"""Deprecated: please use UnitOfIrradiance.WATTS_PER_SQUARE_METER"""
-IRRADIATION_BTUS_PER_HOUR_SQUARE_FOOT: Final = "BTU/(h×ft²)"
-"""Deprecated: please use UnitOfIrradiance.BTUS_PER_HOUR_SQUARE_FOOT"""
 
 
 class UnitOfVolumetricFlux(StrEnum):
@@ -885,55 +752,36 @@ class UnitOfPrecipitationDepth(StrEnum):
     """Derived from cm³/cm²"""
 
 
-# Precipitation units
-PRECIPITATION_INCHES: Final = "in"
-"""Deprecated: please use UnitOfPrecipitationDepth.INCHES"""
-PRECIPITATION_MILLIMETERS: Final = "mm"
-"""Deprecated: please use UnitOfPrecipitationDepth.MILLIMETERS"""
-PRECIPITATION_MILLIMETERS_PER_HOUR: Final = "mm/h"
-"""Deprecated: please use UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR"""
-PRECIPITATION_INCHES_PER_HOUR: Final = "in/h"
-"""Deprecated: please use UnitOfVolumetricFlux.INCHES_PER_HOUR"""
-
 # Concentration units
-CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = "µg/m³"
+CONCENTRATION_GRAMS_PER_CUBIC_METER: Final = "g/m³"
 CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: Final = "mg/m³"
+CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = "μg/m³"
 CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT: Final = "μg/ft³"
 CONCENTRATION_PARTS_PER_CUBIC_METER: Final = "p/m³"
 CONCENTRATION_PARTS_PER_MILLION: Final = "ppm"
 CONCENTRATION_PARTS_PER_BILLION: Final = "ppb"
 
 
+class UnitOfBloodGlucoseConcentration(StrEnum):
+    """Blood glucose concentration units."""
+
+    MILLIGRAMS_PER_DECILITER = "mg/dL"
+    MILLIMOLE_PER_LITER = "mmol/L"
+
+
 # Speed units
 class UnitOfSpeed(StrEnum):
     """Speed units."""
 
+    BEAUFORT = "Beaufort"
     FEET_PER_SECOND = "ft/s"
+    INCHES_PER_SECOND = "in/s"
+    METERS_PER_MINUTE = "m/min"
     METERS_PER_SECOND = "m/s"
     KILOMETERS_PER_HOUR = "km/h"
     KNOTS = "kn"
     MILES_PER_HOUR = "mph"
-
-
-SPEED_FEET_PER_SECOND: Final = "ft/s"
-"""Deprecated: please use UnitOfSpeed.FEET_PER_SECOND"""
-SPEED_METERS_PER_SECOND: Final = "m/s"
-"""Deprecated: please use UnitOfSpeed.METERS_PER_SECOND"""
-SPEED_KILOMETERS_PER_HOUR: Final = "km/h"
-"""Deprecated: please use UnitOfSpeed.KILOMETERS_PER_HOUR"""
-SPEED_KNOTS: Final = "kn"
-"""Deprecated: please use UnitOfSpeed.KNOTS"""
-SPEED_MILES_PER_HOUR: Final = "mph"
-"""Deprecated: please use UnitOfSpeed.MILES_PER_HOUR"""
-
-SPEED_MILLIMETERS_PER_DAY: Final = "mm/d"
-"""Deprecated: please use UnitOfVolumetricFlux.MILLIMETERS_PER_DAY"""
-
-SPEED_INCHES_PER_DAY: Final = "in/d"
-"""Deprecated: please use UnitOfVolumetricFlux.INCHES_PER_DAY"""
-
-SPEED_INCHES_PER_HOUR: Final = "in/h"
-"""Deprecated: please use UnitOfVolumetricFlux.INCHES_PER_HOUR"""
+    MILLIMETERS_PER_SECOND = "mm/s"
 
 
 # Signal_strength units
@@ -968,50 +816,6 @@ class UnitOfInformation(StrEnum):
     YOBIBYTES = "YiB"
 
 
-DATA_BITS: Final = "bit"
-"""Deprecated: please use UnitOfInformation.BITS"""
-DATA_KILOBITS: Final = "kbit"
-"""Deprecated: please use UnitOfInformation.KILOBITS"""
-DATA_MEGABITS: Final = "Mbit"
-"""Deprecated: please use UnitOfInformation.MEGABITS"""
-DATA_GIGABITS: Final = "Gbit"
-"""Deprecated: please use UnitOfInformation.GIGABITS"""
-DATA_BYTES: Final = "B"
-"""Deprecated: please use UnitOfInformation.BYTES"""
-DATA_KILOBYTES: Final = "kB"
-"""Deprecated: please use UnitOfInformation.KILOBYTES"""
-DATA_MEGABYTES: Final = "MB"
-"""Deprecated: please use UnitOfInformation.MEGABYTES"""
-DATA_GIGABYTES: Final = "GB"
-"""Deprecated: please use UnitOfInformation.GIGABYTES"""
-DATA_TERABYTES: Final = "TB"
-"""Deprecated: please use UnitOfInformation.TERABYTES"""
-DATA_PETABYTES: Final = "PB"
-"""Deprecated: please use UnitOfInformation.PETABYTES"""
-DATA_EXABYTES: Final = "EB"
-"""Deprecated: please use UnitOfInformation.EXABYTES"""
-DATA_ZETTABYTES: Final = "ZB"
-"""Deprecated: please use UnitOfInformation.ZETTABYTES"""
-DATA_YOTTABYTES: Final = "YB"
-"""Deprecated: please use UnitOfInformation.YOTTABYTES"""
-DATA_KIBIBYTES: Final = "KiB"
-"""Deprecated: please use UnitOfInformation.KIBIBYTES"""
-DATA_MEBIBYTES: Final = "MiB"
-"""Deprecated: please use UnitOfInformation.MEBIBYTES"""
-DATA_GIBIBYTES: Final = "GiB"
-"""Deprecated: please use UnitOfInformation.GIBIBYTES"""
-DATA_TEBIBYTES: Final = "TiB"
-"""Deprecated: please use UnitOfInformation.TEBIBYTES"""
-DATA_PEBIBYTES: Final = "PiB"
-"""Deprecated: please use UnitOfInformation.PEBIBYTES"""
-DATA_EXBIBYTES: Final = "EiB"
-"""Deprecated: please use UnitOfInformation.EXBIBYTES"""
-DATA_ZEBIBYTES: Final = "ZiB"
-"""Deprecated: please use UnitOfInformation.ZEBIBYTES"""
-DATA_YOBIBYTES: Final = "YiB"
-"""Deprecated: please use UnitOfInformation.YOBIBYTES"""
-
-
 # Data_rate units
 class UnitOfDataRate(StrEnum):
     """Data rate units."""
@@ -1029,36 +833,12 @@ class UnitOfDataRate(StrEnum):
     GIBIBYTES_PER_SECOND = "GiB/s"
 
 
-DATA_RATE_BITS_PER_SECOND: Final = "bit/s"
-"""Deprecated: please use UnitOfDataRate.BITS_PER_SECOND"""
-DATA_RATE_KILOBITS_PER_SECOND: Final = "kbit/s"
-"""Deprecated: please use UnitOfDataRate.KILOBITS_PER_SECOND"""
-DATA_RATE_MEGABITS_PER_SECOND: Final = "Mbit/s"
-"""Deprecated: please use UnitOfDataRate.MEGABITS_PER_SECOND"""
-DATA_RATE_GIGABITS_PER_SECOND: Final = "Gbit/s"
-"""Deprecated: please use UnitOfDataRate.GIGABITS_PER_SECOND"""
-DATA_RATE_BYTES_PER_SECOND: Final = "B/s"
-"""Deprecated: please use UnitOfDataRate.BYTES_PER_SECOND"""
-DATA_RATE_KILOBYTES_PER_SECOND: Final = "kB/s"
-"""Deprecated: please use UnitOfDataRate.KILOBYTES_PER_SECOND"""
-DATA_RATE_MEGABYTES_PER_SECOND: Final = "MB/s"
-"""Deprecated: please use UnitOfDataRate.MEGABYTES_PER_SECOND"""
-DATA_RATE_GIGABYTES_PER_SECOND: Final = "GB/s"
-"""Deprecated: please use UnitOfDataRate.GIGABYTES_PER_SECOND"""
-DATA_RATE_KIBIBYTES_PER_SECOND: Final = "KiB/s"
-"""Deprecated: please use UnitOfDataRate.KIBIBYTES_PER_SECOND"""
-DATA_RATE_MEBIBYTES_PER_SECOND: Final = "MiB/s"
-"""Deprecated: please use UnitOfDataRate.MEBIBYTES_PER_SECOND"""
-DATA_RATE_GIBIBYTES_PER_SECOND: Final = "GiB/s"
-"""Deprecated: please use UnitOfDataRate.GIBIBYTES_PER_SECOND"""
-
-
 # States
-COMPRESSED_STATE_STATE = "s"
-COMPRESSED_STATE_ATTRIBUTES = "a"
-COMPRESSED_STATE_CONTEXT = "c"
-COMPRESSED_STATE_LAST_CHANGED = "lc"
-COMPRESSED_STATE_LAST_UPDATED = "lu"
+COMPRESSED_STATE_STATE: Final = "s"
+COMPRESSED_STATE_ATTRIBUTES: Final = "a"
+COMPRESSED_STATE_CONTEXT: Final = "c"
+COMPRESSED_STATE_LAST_CHANGED: Final = "lc"
+COMPRESSED_STATE_LAST_UPDATED: Final = "lu"
 
 # #### SERVICES ####
 SERVICE_TURN_ON: Final = "turn_on"
@@ -1148,6 +928,7 @@ RESTART_EXIT_CODE: Final = 100
 UNIT_NOT_RECOGNIZED_TEMPLATE: Final = "{} is not a recognized {} unit."
 
 LENGTH: Final = "length"
+AREA: Final = "area"
 MASS: Final = "mass"
 PRESSURE: Final = "pressure"
 VOLUME: Final = "volume"
@@ -1168,30 +949,6 @@ PRECISION_TENTHS: Final = 0.1
 # cloud, alexa, or google_home components
 CLOUD_NEVER_EXPOSED_ENTITIES: Final[list[str]] = ["group.all_locks"]
 
-# ENTITY_CATEGOR* below are deprecated as of 2021.12
-# use the EntityCategory enum instead.
-ENTITY_CATEGORY_CONFIG: Final = "config"
-ENTITY_CATEGORY_DIAGNOSTIC: Final = "diagnostic"
-ENTITY_CATEGORIES: Final[list[str]] = [
-    ENTITY_CATEGORY_CONFIG,
-    ENTITY_CATEGORY_DIAGNOSTIC,
-]
-
-# The ID of the Home Assistant Media Player Cast App
-CAST_APP_ID_HOMEASSISTANT_MEDIA: Final = "B45F4572"
-# The ID of the Home Assistant Lovelace Cast App
-CAST_APP_ID_HOMEASSISTANT_LOVELACE: Final = "A078F6B0"
-
-# User used by Supervisor
-HASSIO_USER_NAME = "Supervisor"
-
-SIGNAL_BOOTSTRAP_INTEGRATIONS = "bootstrap_integrations"
-
-# Date/Time formats
-FORMAT_DATE: Final = "%Y-%m-%d"
-FORMAT_TIME: Final = "%H:%M:%S"
-FORMAT_DATETIME: Final = f"{FORMAT_DATE} {FORMAT_TIME}"
-
 
 class EntityCategory(StrEnum):
     """Category of an entity.
@@ -1207,3 +964,34 @@ class EntityCategory(StrEnum):
     # Diagnostic: An entity exposing some configuration parameter,
     # or diagnostics of a device.
     DIAGNOSTIC = "diagnostic"
+
+
+ENTITY_CATEGORIES: Final[list[str]] = [cls.value for cls in EntityCategory]
+
+# The ID of the Home Assistant Media Player Cast App
+CAST_APP_ID_HOMEASSISTANT_MEDIA: Final = "B45F4572"
+# The ID of the Home Assistant Lovelace Cast App
+CAST_APP_ID_HOMEASSISTANT_LOVELACE: Final = "A078F6B0"
+
+# User used by Supervisor
+HASSIO_USER_NAME = "Supervisor"
+
+SIGNAL_BOOTSTRAP_INTEGRATIONS: SignalType[dict[str, float]] = SignalType(
+    "bootstrap_integrations"
+)
+
+
+# hass.data key for logging information.
+KEY_DATA_LOGGING: HassKey[str] = HassKey("logging")
+
+
+# Date/Time formats
+FORMAT_DATE: Final = "%Y-%m-%d"
+FORMAT_TIME: Final = "%H:%M:%S"
+FORMAT_DATETIME: Final = f"{FORMAT_DATE} {FORMAT_TIME}"
+
+
+# Maximum entities expected in the state machine
+# This is not a hard limit, but caches and other
+# data structures will be pre-allocated to this size
+MAX_EXPECTED_ENTITY_IDS: Final = 16384

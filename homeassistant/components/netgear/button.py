@@ -1,4 +1,5 @@
 """Support for Netgear Button."""
+
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any
@@ -11,7 +12,7 @@ from homeassistant.components.button import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN, KEY_COORDINATOR, KEY_ROUTER
@@ -19,18 +20,11 @@ from .entity import NetgearRouterCoordinatorEntity
 from .router import NetgearRouter
 
 
-@dataclass(frozen=True)
-class NetgearButtonEntityDescriptionRequired:
-    """Required attributes of NetgearButtonEntityDescription."""
+@dataclass(frozen=True, kw_only=True)
+class NetgearButtonEntityDescription(ButtonEntityDescription):
+    """Class describing Netgear button entities."""
 
     action: Callable[[NetgearRouter], Callable[[], Coroutine[Any, Any, None]]]
-
-
-@dataclass(frozen=True)
-class NetgearButtonEntityDescription(
-    ButtonEntityDescription, NetgearButtonEntityDescriptionRequired
-):
-    """Class describing Netgear button entities."""
 
 
 BUTTONS = [
@@ -44,7 +38,9 @@ BUTTONS = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up button for Netgear component."""
     router = hass.data[DOMAIN][entry.entry_id][KEY_ROUTER]

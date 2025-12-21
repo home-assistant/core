@@ -1,0 +1,21 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "air": {
+        "default": "mdi:cloud"
+      },
+      "artillery": {
+        "default": "mdi:tank"
+      },
+      "chemical": {
+        "default": "mdi:chemical-weapon"
+      },
+      "nuclear": {
+        "default": "mdi:nuke"
+      },
+      "urban_fights": {
+        "default": "mdi:pistol"
+      }
+    }
+  }
+}

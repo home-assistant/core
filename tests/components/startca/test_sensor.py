@@ -1,11 +1,12 @@
 """Tests for the Start.ca sensor platform."""
+
 from http import HTTPStatus
 
-from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.startca.sensor import StartcaData
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, PERCENTAGE, UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.setup import async_setup_component
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 

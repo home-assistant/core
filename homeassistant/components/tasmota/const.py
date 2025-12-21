@@ -1,4 +1,5 @@
 """Constants used by multiple Tasmota modules."""
+
 from homeassistant.const import Platform
 
 CONF_DISCOVERY_PREFIX = "discovery_prefix"
@@ -12,6 +13,7 @@ DOMAIN = "tasmota"
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.CAMERA,
     Platform.COVER,
     Platform.FAN,
     Platform.LIGHT,

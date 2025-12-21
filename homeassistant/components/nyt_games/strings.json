@@ -1,0 +1,53 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "token": "Token"
+        },
+        "data_description": {
+          "token": "The NYT Games NYT-S cookie value."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "connections_played": {
+        "name": "[%key:component::nyt_games::entity::sensor::wordles_played::name%]"
+      },
+      "last_played": {
+        "name": "Last played"
+      },
+      "max_streak": {
+        "name": "Highest streak"
+      },
+      "spelling_bees_played": {
+        "name": "[%key:component::nyt_games::entity::sensor::wordles_played::name%]"
+      },
+      "streak": {
+        "name": "Current streak"
+      },
+      "total_pangrams": {
+        "name": "Total pangrams found"
+      },
+      "total_words": {
+        "name": "Total words found"
+      },
+      "won": {
+        "name": "Won"
+      },
+      "wordles_played": {
+        "name": "Played"
+      }
+    }
+  }
+}

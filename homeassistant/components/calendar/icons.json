@@ -1,0 +1,19 @@
+{
+  "entity_component": {
+    "_": {
+      "default": "mdi:calendar",
+      "state": {
+        "off": "mdi:calendar-blank",
+        "on": "mdi:calendar-check"
+      }
+    }
+  },
+  "services": {
+    "create_event": {
+      "service": "mdi:calendar-plus"
+    },
+    "get_events": {
+      "service": "mdi:calendar-month"
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "services": {
+    "reset_filter_life": {
+      "service": "mdi:refresh"
+    },
+    "set_humidity": {
+      "service": "mdi:water-percent"
+    }
+  }
+}

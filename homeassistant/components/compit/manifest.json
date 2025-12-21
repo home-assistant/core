@@ -1,0 +1,12 @@
+{
+  "domain": "compit",
+  "name": "Compit",
+  "codeowners": ["@Przemko92"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/compit",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "loggers": ["compit"],
+  "quality_scale": "bronze",
+  "requirements": ["compit-inext-api==0.3.4"]
+}

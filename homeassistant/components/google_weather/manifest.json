@@ -1,0 +1,12 @@
+{
+  "domain": "google_weather",
+  "name": "Google Weather",
+  "codeowners": ["@tronikos"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/google_weather",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "loggers": ["google_weather_api"],
+  "quality_scale": "bronze",
+  "requirements": ["python-google-weather-api==0.0.4"]
+}

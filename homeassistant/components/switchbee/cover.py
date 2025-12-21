@@ -17,7 +17,7 @@ from homeassistant.components.cover import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import SwitchBeeCoordinator
@@ -25,7 +25,9 @@ from .entity import SwitchBeeDeviceEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SwitchBee switch."""
     coordinator: SwitchBeeCoordinator = hass.data[DOMAIN][entry.entry_id]
@@ -55,7 +57,7 @@ class SwitchBeeSomfyEntity(SwitchBeeDeviceEntity[SwitchBeeSomfy], CoverEntity):
             await self.coordinator.api.set_state(self._device.id, command)
         except (SwitchBeeError, SwitchBeeTokenError) as exp:
             raise HomeAssistantError(
-                f"Failed to fire {command} for {self.name}, {str(exp)}"
+                f"Failed to fire {command} for {self.name}, {exp!s}"
             ) from exp
 
     async def async_open_cover(self, **kwargs: Any) -> None:
@@ -145,7 +147,7 @@ class SwitchBeeCoverEntity(SwitchBeeDeviceEntity[SwitchBeeShutter], CoverEntity)
         except (SwitchBeeError, SwitchBeeTokenError) as exp:
             raise HomeAssistantError(
                 f"Failed to set {self.name} position to {kwargs[ATTR_POSITION]}, error:"
-                f" {str(exp)}"
+                f" {exp!s}"
             ) from exp
 
         self._get_coordinator_device().position = kwargs[ATTR_POSITION]

@@ -1,0 +1,37 @@
+{
+  "config": {
+    "abort": {
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "step": {
+      "confirm": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      }
+    }
+  },
+  "entity": {
+    "light": {
+      "govee_light": {
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "breathe": "Breathe",
+              "candlelight": "Candlelight",
+              "crossing": "Crossing",
+              "dating": "Dating",
+              "energetic": "Energetic",
+              "movie": "Movie",
+              "none": "None",
+              "romantic": "Romantic",
+              "snowflake": "Snowflake",
+              "sunrise": "Sunrise",
+              "sunset": "Sunset",
+              "twinkle": "Twinkle"
+            }
+          }
+        }
+      }
+    }
+  }
+}

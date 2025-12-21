@@ -1,4 +1,5 @@
 """Constants for ebus component."""
+
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     PERCENTAGE,

@@ -1,4 +1,5 @@
 """Constants for the WattTime integration."""
+
 import logging
 
 DOMAIN = "watttime"

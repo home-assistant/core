@@ -1,0 +1,200 @@
+{
+  "common": {
+    "descr_diaspora": "Is the location outside of Israel?",
+    "descr_elevation": "Elevation in meters above sea level. This is used to calculate the times correctly.",
+    "descr_language": "Language to use when displaying values in the UI. This does not affect the Hebrew date.",
+    "descr_location": "Location to use for the Jewish calendar calculations. By default, the location is set to the Home Assistant location.",
+    "descr_time_zone": "If you specify a location, make sure to specify the time zone for correct calendar times calculations",
+    "diaspora": "Outside of Israel?",
+    "time_zone": "Time zone"
+  },
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "step": {
+      "reconfigure": {
+        "data": {
+          "diaspora": "[%key:component::jewish_calendar::common::diaspora%]",
+          "elevation": "[%key:common::config_flow::data::elevation%]",
+          "language": "[%key:common::config_flow::data::language%]",
+          "location": "[%key:common::config_flow::data::location%]",
+          "time_zone": "[%key:component::jewish_calendar::common::time_zone%]"
+        },
+        "data_description": {
+          "diaspora": "[%key:component::jewish_calendar::common::descr_diaspora%]",
+          "elevation": "[%key:component::jewish_calendar::common::descr_elevation%]",
+          "language": "[%key:component::jewish_calendar::common::descr_language%]",
+          "location": "[%key:component::jewish_calendar::common::descr_location%]",
+          "time_zone": "[%key:component::jewish_calendar::common::descr_time_zone%]"
+        }
+      },
+      "user": {
+        "data": {
+          "diaspora": "[%key:component::jewish_calendar::common::diaspora%]",
+          "elevation": "[%key:common::config_flow::data::elevation%]",
+          "language": "[%key:common::config_flow::data::language%]",
+          "location": "[%key:common::config_flow::data::location%]",
+          "time_zone": "[%key:component::jewish_calendar::common::time_zone%]"
+        },
+        "data_description": {
+          "diaspora": "[%key:component::jewish_calendar::common::descr_diaspora%]",
+          "elevation": "[%key:component::jewish_calendar::common::descr_elevation%]",
+          "language": "[%key:component::jewish_calendar::common::descr_language%]",
+          "location": "[%key:component::jewish_calendar::common::descr_location%]",
+          "time_zone": "[%key:component::jewish_calendar::common::descr_time_zone%]"
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "erev_shabbat_hag": {
+        "name": "Erev Shabbat/Hag"
+      },
+      "issur_melacha_in_effect": {
+        "name": "Issur Melacha in effect"
+      },
+      "motzei_shabbat_hag": {
+        "name": "Motzei Shabbat/Hag"
+      }
+    },
+    "sensor": {
+      "alot_hashachar": {
+        "name": "Halachic dawn (Alot Hashachar)"
+      },
+      "chatzot_hayom": {
+        "name": "Halachic midday (Chatzot Hayom)"
+      },
+      "daf_yomi": {
+        "name": "Daf Yomi"
+      },
+      "hebrew_date": {
+        "name": "Date",
+        "state_attributes": {
+          "hebrew_day": { "name": "Hebrew day" },
+          "hebrew_month_biblical_order": {
+            "name": "Hebrew month in biblical order"
+          },
+          "hebrew_month_name": { "name": "Hebrew month name" },
+          "hebrew_month_standard_order": {
+            "name": "Hebrew month in standard order"
+          },
+          "hebrew_year": { "name": "Hebrew year" }
+        }
+      },
+      "holiday": {
+        "name": "Holiday"
+      },
+      "mincha_gedola": {
+        "name": "Mincha Gedola"
+      },
+      "mincha_ketana": {
+        "name": "Mincha Ketana"
+      },
+      "netz_hachama": {
+        "name": "Halachic sunrise (Netz Hachama)"
+      },
+      "omer_count": {
+        "name": "Day of the Omer"
+      },
+      "plag_hamincha": {
+        "name": "Plag Hamincha"
+      },
+      "shkia": {
+        "name": "Sunset (Shkia)"
+      },
+      "sof_zman_shema_gra": {
+        "name": "Latest time for Shma Gr\"a"
+      },
+      "sof_zman_shema_mga": {
+        "name": "Latest time for Shma MG\"A"
+      },
+      "sof_zman_tfilla_gra": {
+        "name": "Latest time for Tefilla Gr\"a"
+      },
+      "sof_zman_tfilla_mga": {
+        "name": "Latest time for Tefilla MG\"A"
+      },
+      "talit_and_tefillin": {
+        "name": "Earliest time for Talit and Tefillin"
+      },
+      "tset_hakohavim_shabbat": {
+        "name": "Nightfall (T'set Hakochavim, 3 stars)"
+      },
+      "tset_hakohavim_tsom": {
+        "name": "Nightfall (T'set Hakochavim)"
+      },
+      "upcoming_candle_lighting": {
+        "name": "Upcoming candle lighting"
+      },
+      "upcoming_havdalah": {
+        "name": "Upcoming Havdalah"
+      },
+      "upcoming_shabbat_candle_lighting": {
+        "name": "Upcoming Shabbat candle lighting"
+      },
+      "upcoming_shabbat_havdalah": {
+        "name": "Upcoming Shabbat Havdalah"
+      },
+      "weekly_portion": {
+        "name": "Weekly Torah portion"
+      }
+    }
+  },
+  "exceptions": {
+    "sunset_event": {
+      "message": "Sunset event cannot be calculated for the provided date and location"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "candle_lighting_minutes_before_sunset": "Minutes before sunset for candle lighting",
+          "havdalah_minutes_after_sunset": "Minutes after sunset for Havdalah"
+        },
+        "data_description": {
+          "candle_lighting_minutes_before_sunset": "Defaults to 18 minutes. In Israel you probably want to use 20/30/40 depending on your location. Outside of Israel you probably want to use 18/24.",
+          "havdalah_minutes_after_sunset": "Setting this to 0 means 36 minutes as fixed degrees (8.5°) will be used instead"
+        },
+        "title": "Configure options for Jewish Calendar"
+      }
+    }
+  },
+  "selector": {
+    "nusach": {
+      "options": {
+        "adot_mizrah": "Adot Mizrah",
+        "ashkenaz": "Ashkenaz",
+        "italian": "Italian",
+        "sfarad": "Sfarad"
+      }
+    }
+  },
+  "services": {
+    "count_omer": {
+      "description": "Returns the phrase for counting the Omer on a given date.",
+      "fields": {
+        "after_sunset": {
+          "description": "Uses the next Hebrew day (starting at sunset) for a given date. This indicator is ignored if the Date field is empty.",
+          "name": "After sunset"
+        },
+        "date": {
+          "description": "Date to count the Omer for.",
+          "name": "Date"
+        },
+        "language": {
+          "description": "Language to count the Omer in.",
+          "name": "[%key:common::config_flow::data::language%]"
+        },
+        "nusach": {
+          "description": "Nusach to count the Omer in.",
+          "name": "Nusach"
+        }
+      },
+      "name": "Count the Omer"
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "sensor": {
+      "season": {
+        "default": "mdi:cloud",
+        "state": {
+          "autumn": "mdi:leaf",
+          "spring": "mdi:flower",
+          "summer": "mdi:sunglasses",
+          "winter": "mdi:snowflake"
+        }
+      }
+    }
+  }
+}

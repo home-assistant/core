@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "sensor": {
+      "marginal_operating_emissions_rate": {
+        "default": "mdi:blur"
+      },
+      "relative_marginal_emissions_intensity": {
+        "default": "mdi:blur"
+      }
+    }
+  }
+}

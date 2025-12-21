@@ -1,4 +1,5 @@
 """The tests for media_player recorder."""
+
 from __future__ import annotations
 
 from datetime import timedelta

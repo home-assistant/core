@@ -3,30 +3,45 @@
 from datetime import timedelta
 from unittest.mock import Mock
 
-from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
-from homeassistant.config_entries import ConfigEntry
+from freezegun.api import FrozenDateTimeFactory
+
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_LOCK, SERVICE_UNLOCK
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
-from homeassistant.util.dt import utcnow
+
+from . import MockSchlageConfigEntry
 
 from tests.common import async_fire_time_changed
 
 
-async def test_lock_device_registry(
-    hass: HomeAssistant, mock_added_config_entry: ConfigEntry
+async def test_lock_attributes(
+    hass: HomeAssistant,
+    mock_added_config_entry: MockSchlageConfigEntry,
+    mock_schlage: Mock,
+    mock_lock: Mock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test lock is added to device registry."""
-    device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device(identifiers={("schlage", "test")})
-    assert device.model == "<model-name>"
-    assert device.sw_version == "1.0"
-    assert device.name == "Vault Door"
-    assert device.manufacturer == "Schlage"
+    """Test lock attributes."""
+    lock = hass.states.get("lock.vault_door")
+    assert lock is not None
+    assert lock.state == LockState.UNLOCKED
+    assert lock.attributes["changed_by"] == "thumbturn"
+
+    mock_lock.is_locked = False
+    mock_lock.is_jammed = True
+    # Make the coordinator refresh data.
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    lock = hass.states.get("lock.vault_door")
+    assert lock is not None
+    assert lock.state == LockState.JAMMED
 
 
 async def test_lock_services(
-    hass: HomeAssistant, mock_lock: Mock, mock_added_config_entry: ConfigEntry
+    hass: HomeAssistant,
+    mock_lock: Mock,
+    mock_added_config_entry: MockSchlageConfigEntry,
 ) -> None:
     """Test lock services."""
     await hass.services.async_call(
@@ -51,16 +66,20 @@ async def test_lock_services(
 
 
 async def test_changed_by(
-    hass: HomeAssistant, mock_lock: Mock, mock_added_config_entry: ConfigEntry
+    hass: HomeAssistant,
+    mock_lock: Mock,
+    mock_added_config_entry: MockSchlageConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test population of the changed_by attribute."""
     mock_lock.last_changed_by.reset_mock()
     mock_lock.last_changed_by.return_value = "access code - foo"
 
     # Make the coordinator refresh data.
-    async_fire_time_changed(hass, utcnow() + timedelta(seconds=31))
-    await hass.async_block_till_done()
-    mock_lock.last_changed_by.assert_called_once_with()
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    mock_lock.last_changed_by.assert_called_with()
 
     lock_device = hass.states.get("lock.vault_door")
     assert lock_device is not None

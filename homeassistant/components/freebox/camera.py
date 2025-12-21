@@ -1,39 +1,40 @@
 """Support for Freebox cameras."""
+
 from __future__ import annotations
 
 import logging
 from typing import Any
 
 from homeassistant.components.camera import CameraEntityFeature
-from homeassistant.components.ffmpeg.camera import (
-    CONF_EXTRA_ARGUMENTS,
-    CONF_INPUT,
+from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS, CONF_INPUT
+from homeassistant.components.ffmpeg.camera import (  # pylint: disable=hass-component-root-import
     DEFAULT_ARGUMENTS,
     FFmpegCamera,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import ATTR_DETECTION, DOMAIN, FreeboxHomeCategory
-from .home_base import FreeboxHomeEntity
-from .router import FreeboxRouter
+from .const import ATTR_DETECTION, FreeboxHomeCategory
+from .entity import FreeboxHomeEntity
+from .router import FreeboxConfigEntry, FreeboxRouter
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: FreeboxConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up cameras."""
-    router = hass.data[DOMAIN][entry.unique_id]
-    tracked: set = set()
+    router = entry.runtime_data
+    tracked: set[str] = set()
 
     @callback
-    def update_callback():
+    def update_callback() -> None:
         add_entities(hass, router, async_add_entities, tracked)
 
     router.listeners.append(
@@ -45,9 +46,14 @@ async def async_setup_entry(
 
 
 @callback
-def add_entities(hass: HomeAssistant, router, async_add_entities, tracked):
+def add_entities(
+    hass: HomeAssistant,
+    router: FreeboxRouter,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    tracked: set[str],
+) -> None:
     """Add new cameras from the router."""
-    new_tracked = []
+    new_tracked: list[FreeboxCamera] = []
 
     for nodeid, node in router.home_devices.items():
         if (node["category"] != FreeboxHomeCategory.CAMERA) or (nodeid in tracked):
@@ -67,7 +73,7 @@ class FreeboxCamera(FreeboxHomeEntity, FFmpegCamera):
     ) -> None:
         """Initialize a camera."""
 
-        super().__init__(hass, router, node)
+        super().__init__(router, node)
         device_info = {
             CONF_NAME: node["label"].strip(),
             CONF_INPUT: node["props"]["Stream"],

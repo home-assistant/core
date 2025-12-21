@@ -1,0 +1,114 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "failed_to_read_config": "Failed to read config from device",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    },
+    "flow_title": "{name}",
+    "step": {
+      "bluetooth_confirm": {
+        "description": "[%key:component::bluetooth::config::step::bluetooth_confirm::description%]"
+      },
+      "user": {
+        "data": {
+          "address": "[%key:common::config_flow::data::device%]"
+        },
+        "data_description": {
+          "address": "Select the device to add."
+        },
+        "description": "[%key:component::bluetooth::config::step::user::description%]"
+      }
+    }
+  },
+  "device": {
+    "probe": {
+      "name": "Probe {probe_number}"
+    }
+  },
+  "entity": {
+    "event": {
+      "event": {
+        "name": "Event",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "ambient_cool_down": "Ambient temperature cooldown",
+              "ambient_low_temp": "Ambient temperature too low",
+              "ambient_over_heat": "Ambient temperature too high",
+              "device_high_temp": "Device has too high temperature",
+              "device_low_power": "Device has low battery",
+              "ignition_failure": "Ignition failure",
+              "probe_above_maximum": "Temperature too high",
+              "probe_acknowledge": "Alarm acknowledged",
+              "probe_alarm": "Alarm triggered",
+              "probe_below_minimum": "Temperature too low",
+              "probe_disconnected": "Probe disconnected",
+              "probe_timer_alarm": "Timer alarm"
+            }
+          }
+        }
+      }
+    },
+    "number": {
+      "alarm_interval": {
+        "name": "Alarm interval"
+      },
+      "temperature_maximum": {
+        "name": "Maximum temperature"
+      },
+      "temperature_minimum": {
+        "name": "Minimum temperature"
+      },
+      "temperature_target": {
+        "name": "Target temperature"
+      }
+    },
+    "select": {
+      "grill_type": {
+        "name": "Grill type",
+        "state": {
+          "bbq_smoke": "BBQ smoke",
+          "beef": "Beef",
+          "chicken": "Chicken",
+          "cold_smoke": "Cold smoke",
+          "fish": "Fish",
+          "hamburger": "Hamburger",
+          "hot_smoke": "Hot smoke",
+          "lamb": "Lamb",
+          "mark_a": "Mark A",
+          "mark_b": "Mark B",
+          "mark_c": "Mark C",
+          "none": "[%key:component::togrill::entity::select::taste::state::none%]",
+          "pork": "Pork",
+          "sausage": "Sausage",
+          "turkey": "Turkey",
+          "veal": "Veal"
+        }
+      },
+      "taste": {
+        "name": "Taste",
+        "state": {
+          "medium": "Medium",
+          "medium_rare": "Medium rare",
+          "medium_well": "Medium well",
+          "none": "Not set",
+          "rare": "Rare",
+          "well_done": "Well done"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "communication_failed": {
+      "message": "Communication failed with the device"
+    },
+    "disconnected": {
+      "message": "The device is disconnected"
+    },
+    "rejected": {
+      "message": "Data was rejected by device"
+    }
+  }
+}

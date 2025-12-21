@@ -1,23 +1,26 @@
 """KMtronic Switch integration."""
+
 from typing import Any
 import urllib.parse
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_REVERSE, DATA_COORDINATOR, DATA_HUB, DOMAIN, MANUFACTURER
+from .const import CONF_REVERSE, DOMAIN, MANUFACTURER
+from .coordinator import KMTronicConfigEntry
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: KMTronicConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Config entry example."""
-    coordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
-    hub = hass.data[DOMAIN][entry.entry_id][DATA_HUB]
+    coordinator = entry.runtime_data
+    hub = coordinator.hub
     reverse = entry.options.get(CONF_REVERSE, False)
     await hub.async_get_relays()
 
@@ -31,6 +34,9 @@ async def async_setup_entry(
 
 class KMtronicSwitch(CoordinatorEntity, SwitchEntity):
     """KMtronic Switch Entity."""
+
+    _attr_translation_key = "relay"
+    _attr_has_entity_name = True
 
     def __init__(self, hub, coordinator, relay, reverse, config_entry_id):
         """Pass coordinator to CoordinatorEntity."""
@@ -46,7 +52,7 @@ class KMtronicSwitch(CoordinatorEntity, SwitchEntity):
             configuration_url=hub.host,
         )
 
-        self._attr_name = f"Relay{relay.id}"
+        self._attr_translation_placeholders = {"relay_id": relay.id}
         self._attr_unique_id = f"{config_entry_id}_relay{relay.id}"
 
     @property

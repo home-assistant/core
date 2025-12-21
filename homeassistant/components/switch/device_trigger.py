@@ -1,4 +1,5 @@
 """Provides device triggers for switches."""
+
 from __future__ import annotations
 
 import voluptuous as vol

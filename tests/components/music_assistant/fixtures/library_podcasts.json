@@ -1,0 +1,309 @@
+{
+  "library_podcasts": [
+    {
+      "item_id": "6",
+      "provider": "library",
+      "name": "Test Podcast 0",
+      "version": "",
+      "sort_name": "test podcast 0",
+      "uri": "library://podcast/6",
+      "external_ids": [],
+      "is_playable": true,
+      "media_type": "podcast",
+      "provider_mappings": [
+        {
+          "item_id": "0",
+          "provider_domain": "test",
+          "provider_instance": "test",
+          "available": true,
+          "audio_format": {
+            "content_type": "?",
+            "codec_type": "?",
+            "sample_rate": 44100,
+            "bit_depth": 16,
+            "channels": 2,
+            "output_format_str": "?",
+            "bit_rate": 0
+          },
+          "url": null,
+          "details": null
+        }
+      ],
+      "metadata": {
+        "description": null,
+        "review": null,
+        "explicit": null,
+        "images": [
+          {
+            "type": "thumb",
+            "path": "logo.png",
+            "provider": "builtin",
+            "remotely_accessible": false
+          }
+        ],
+        "genres": null,
+        "mood": null,
+        "style": null,
+        "copyright": null,
+        "lyrics": null,
+        "label": null,
+        "links": null,
+        "performers": null,
+        "preview": null,
+        "popularity": null,
+        "release_date": null,
+        "languages": null,
+        "chapters": null,
+        "last_refresh": null
+      },
+      "favorite": false,
+      "position": null,
+      "publisher": "Test Publisher",
+      "total_episodes": null
+    },
+    {
+      "item_id": "7",
+      "provider": "library",
+      "name": "Test Podcast 1",
+      "version": "",
+      "sort_name": "test podcast 1",
+      "uri": "library://podcast/7",
+      "external_ids": [],
+      "is_playable": true,
+      "media_type": "podcast",
+      "provider_mappings": [
+        {
+          "item_id": "1",
+          "provider_domain": "test",
+          "provider_instance": "test",
+          "available": true,
+          "audio_format": {
+            "content_type": "?",
+            "codec_type": "?",
+            "sample_rate": 44100,
+            "bit_depth": 16,
+            "channels": 2,
+            "output_format_str": "?",
+            "bit_rate": 0
+          },
+          "url": null,
+          "details": null
+        }
+      ],
+      "metadata": {
+        "description": null,
+        "review": null,
+        "explicit": null,
+        "images": [
+          {
+            "type": "thumb",
+            "path": "logo.png",
+            "provider": "builtin",
+            "remotely_accessible": false
+          }
+        ],
+        "genres": null,
+        "mood": null,
+        "style": null,
+        "copyright": null,
+        "lyrics": null,
+        "label": null,
+        "links": null,
+        "performers": null,
+        "preview": null,
+        "popularity": null,
+        "release_date": null,
+        "languages": null,
+        "chapters": null,
+        "last_refresh": null
+      },
+      "favorite": false,
+      "position": null,
+      "publisher": "Test Publisher",
+      "total_episodes": null
+    },
+    {
+      "item_id": "8",
+      "provider": "library",
+      "name": "Test Podcast 2",
+      "version": "",
+      "sort_name": "test podcast 2",
+      "uri": "library://podcast/8",
+      "external_ids": [],
+      "is_playable": true,
+      "media_type": "podcast",
+      "provider_mappings": [
+        {
+          "item_id": "2",
+          "provider_domain": "test",
+          "provider_instance": "test",
+          "available": true,
+          "audio_format": {
+            "content_type": "?",
+            "codec_type": "?",
+            "sample_rate": 44100,
+            "bit_depth": 16,
+            "channels": 2,
+            "output_format_str": "?",
+            "bit_rate": 0
+          },
+          "url": null,
+          "details": null
+        }
+      ],
+      "metadata": {
+        "description": null,
+        "review": null,
+        "explicit": null,
+        "images": [
+          {
+            "type": "thumb",
+            "path": "logo.png",
+            "provider": "builtin",
+            "remotely_accessible": false
+          }
+        ],
+        "genres": null,
+        "mood": null,
+        "style": null,
+        "copyright": null,
+        "lyrics": null,
+        "label": null,
+        "links": null,
+        "performers": null,
+        "preview": null,
+        "popularity": null,
+        "release_date": null,
+        "languages": null,
+        "chapters": null,
+        "last_refresh": null
+      },
+      "favorite": false,
+      "position": null,
+      "publisher": "Test Publisher",
+      "total_episodes": null
+    },
+    {
+      "item_id": "9",
+      "provider": "library",
+      "name": "Test Podcast 3",
+      "version": "",
+      "sort_name": "test podcast 3",
+      "uri": "library://podcast/9",
+      "external_ids": [],
+      "is_playable": true,
+      "media_type": "podcast",
+      "provider_mappings": [
+        {
+          "item_id": "3",
+          "provider_domain": "test",
+          "provider_instance": "test",
+          "available": true,
+          "audio_format": {
+            "content_type": "?",
+            "codec_type": "?",
+            "sample_rate": 44100,
+            "bit_depth": 16,
+            "channels": 2,
+            "output_format_str": "?",
+            "bit_rate": 0
+          },
+          "url": null,
+          "details": null
+        }
+      ],
+      "metadata": {
+        "description": null,
+        "review": null,
+        "explicit": null,
+        "images": [
+          {
+            "type": "thumb",
+            "path": "logo.png",
+            "provider": "builtin",
+            "remotely_accessible": false
+          }
+        ],
+        "genres": null,
+        "mood": null,
+        "style": null,
+        "copyright": null,
+        "lyrics": null,
+        "label": null,
+        "links": null,
+        "performers": null,
+        "preview": null,
+        "popularity": null,
+        "release_date": null,
+        "languages": null,
+        "chapters": null,
+        "last_refresh": null
+      },
+      "favorite": false,
+      "position": null,
+      "publisher": "Test Publisher",
+      "total_episodes": null
+    },
+    {
+      "item_id": "10",
+      "provider": "library",
+      "name": "Test Podcast 4",
+      "version": "",
+      "sort_name": "test podcast 4",
+      "uri": "library://podcast/10",
+      "external_ids": [],
+      "is_playable": true,
+      "media_type": "podcast",
+      "provider_mappings": [
+        {
+          "item_id": "4",
+          "provider_domain": "test",
+          "provider_instance": "test",
+          "available": true,
+          "audio_format": {
+            "content_type": "?",
+            "codec_type": "?",
+            "sample_rate": 44100,
+            "bit_depth": 16,
+            "channels": 2,
+            "output_format_str": "?",
+            "bit_rate": 0
+          },
+          "url": null,
+          "details": null
+        }
+      ],
+      "metadata": {
+        "description": null,
+        "review": null,
+        "explicit": null,
+        "images": [
+          {
+            "type": "thumb",
+            "path": "logo.png",
+            "provider": "builtin",
+            "remotely_accessible": false
+          }
+        ],
+        "genres": null,
+        "mood": null,
+        "style": null,
+        "copyright": null,
+        "lyrics": null,
+        "label": null,
+        "links": null,
+        "performers": null,
+        "preview": null,
+        "popularity": null,
+        "release_date": null,
+        "languages": null,
+        "chapters": null,
+        "last_refresh": null
+      },
+      "favorite": false,
+      "position": null,
+      "publisher": "Test Publisher",
+      "total_episodes": null
+    }
+  ]
+}

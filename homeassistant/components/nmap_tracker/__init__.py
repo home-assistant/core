@@ -1,17 +1,16 @@
 """The Nmap Tracker integration."""
+
 from __future__ import annotations
 
 import asyncio
-import contextlib
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from functools import partial
 import logging
 from typing import Final
 
-import aiohttp
+import aiooui
 from getmac import get_mac_address
-from mac_vendor_lookup import AsyncMacLookup
 from nmap import PortScanner, PortScannerError
 
 from homeassistant.components.device_tracker import (
@@ -22,15 +21,17 @@ from homeassistant.components.device_tracker import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EXCLUDE, CONF_HOSTS, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_HOME_INTERVAL,
+    CONF_HOSTS_EXCLUDE,
+    CONF_HOSTS_LIST,
+    CONF_MAC_EXCLUDE,
     CONF_OPTIONS,
     DOMAIN,
     NMAP_TRACKED_DEVICES,
@@ -90,14 +91,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     devices = domain_data.setdefault(NMAP_TRACKED_DEVICES, NmapTrackedDevices())
     scanner = domain_data[entry.entry_id] = NmapDeviceScanner(hass, entry, devices)
     await scanner.async_setup()
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
-
-
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle options update."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -109,6 +104,40 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate config entry."""
+    _LOGGER.debug(
+        "Migrating configuration from version %s.%s", entry.version, entry.minor_version
+    )
+
+    if entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+
+    if entry.version == 1:
+        new_options = {**entry.options}
+        if entry.minor_version < 2:
+            new_options[CONF_HOSTS_LIST] = cv.ensure_list_csv(
+                new_options.get(CONF_HOSTS, [])
+            )
+            new_options[CONF_HOSTS_EXCLUDE] = cv.ensure_list_csv(
+                new_options.get(CONF_EXCLUDE, [])
+            )
+            new_options[CONF_MAC_EXCLUDE] = []
+
+    hass.config_entries.async_update_entry(
+        entry, options=new_options, minor_version=2, version=1
+    )
+
+    _LOGGER.debug(
+        "Migration to configuration version %s.%s successful",
+        entry.version,
+        entry.minor_version,
+    )
+
+    return True
 
 
 @callback
@@ -153,12 +182,12 @@ class NmapDeviceScanner:
         self._hosts = None
         self._options = None
         self._exclude = None
+        self._mac_exclude = None
         self._scan_interval = None
 
         self._known_mac_addresses: dict[str, str] = {}
         self._finished_first_scan = False
         self._last_results: list[NmapDevice] = []
-        self._mac_vendor_lookup = None
 
     async def async_setup(self):
         """Set up the tracker."""
@@ -166,10 +195,9 @@ class NmapDeviceScanner:
         self._scan_interval = timedelta(
             seconds=config.get(CONF_SCAN_INTERVAL, TRACKER_SCAN_INTERVAL)
         )
-        hosts_list = cv.ensure_list_csv(config[CONF_HOSTS])
-        self._hosts = [host for host in hosts_list if host != ""]
-        excludes_list = cv.ensure_list_csv(config[CONF_EXCLUDE])
-        self._exclude = [exclude for exclude in excludes_list if exclude != ""]
+        self._hosts = config.get(CONF_HOSTS_LIST, [])
+        self._exclude = config.get(CONF_HOSTS_EXCLUDE, [])
+        self._mac_exclude = config.get(CONF_MAC_EXCLUDE, [])
         self._options = config[CONF_OPTIONS]
         self.home_interval = timedelta(
             minutes=cv.positive_int(config[CONF_HOME_INTERVAL])
@@ -179,7 +207,7 @@ class NmapDeviceScanner:
                 seconds=cv.positive_float(config[CONF_CONSIDER_HOME])
             )
         self._scan_lock = asyncio.Lock()
-        if self._hass.state == CoreState.running:
+        if self._hass.state is CoreState.running:
             await self._async_start_scanner()
             return
 
@@ -191,8 +219,9 @@ class NmapDeviceScanner:
         registry = er.async_get(self._hass)
         self._known_mac_addresses = {
             entry.unique_id: entry.original_name
-            for entry in registry.entities.values()
-            if entry.config_entry_id == self._entry_id
+            for entry in registry.entities.get_entries_for_config_entry_id(
+                self._entry_id
+            )
         }
 
     @property
@@ -204,12 +233,6 @@ class NmapDeviceScanner:
     def signal_device_missing(self) -> str:
         """Signal specific per nmap tracker entry to signal a missing device."""
         return f"{DOMAIN}-device-missing-{self._entry_id}"
-
-    @callback
-    def _async_get_vendor(self, mac_address):
-        """Lookup the vendor."""
-        oui = self._mac_vendor_lookup.sanitise(mac_address)[:6]
-        return self._mac_vendor_lookup.prefixes.get(oui)
 
     @callback
     def _async_stop(self):
@@ -226,11 +249,8 @@ class NmapDeviceScanner:
                 self._scan_interval,
             )
         )
-        self._mac_vendor_lookup = AsyncMacLookup()
-        with contextlib.suppress((asyncio.TimeoutError, aiohttp.ClientError)):
-            # We don't care if this fails since it only
-            # improves the data when we don't have it from nmap
-            await self._mac_vendor_lookup.load_vendors()
+        if not aiooui.is_loaded():
+            await aiooui.async_load()
         self._hass.async_create_task(self._async_scan_devices())
 
     def _build_options(self):
@@ -292,7 +312,7 @@ class NmapDeviceScanner:
                 None,
                 original_name,
                 None,
-                self._async_get_vendor(mac_address),
+                aiooui.get_vendor(mac_address),
                 "Device not found in initial scan",
                 now,
                 1,
@@ -390,10 +410,15 @@ class NmapDeviceScanner:
             )
             if mac is None:
                 self._async_device_offline(ipv4, "No MAC address found", now)
-                _LOGGER.info("No MAC address found for %s", ipv4)
+                _LOGGER.warning("No MAC address found for %s", ipv4)
                 continue
 
             formatted_mac = format_mac(mac)
+
+            if formatted_mac in self._mac_exclude:
+                _LOGGER.debug("MAC address %s is excluded from tracking", formatted_mac)
+                continue
+
             if (
                 devices.config_entry_owner.setdefault(formatted_mac, entry_id)
                 != entry_id
@@ -401,7 +426,7 @@ class NmapDeviceScanner:
                 continue
 
             hostname = info["hostnames"][0]["name"] if info["hostnames"] else ipv4
-            vendor = info.get("vendor", {}).get(mac) or self._async_get_vendor(mac)
+            vendor = info.get("vendor", {}).get(mac) or aiooui.get_vendor(mac)
             name = human_readable_name(hostname, vendor, mac)
             device = NmapDevice(
                 formatted_mac, hostname, name, ipv4, vendor, reason, now, None

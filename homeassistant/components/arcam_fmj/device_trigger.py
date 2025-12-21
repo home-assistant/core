@@ -1,4 +1,5 @@
 """Provides device automations for Arcam FMJ Receiver control."""
+
 from __future__ import annotations
 
 import voluptuous as vol
@@ -32,23 +33,19 @@ async def async_get_triggers(
     hass: HomeAssistant, device_id: str
 ) -> list[dict[str, str]]:
     """List device triggers for Arcam FMJ Receiver control devices."""
-    registry = er.async_get(hass)
-    triggers = []
+    entity_registry = er.async_get(hass)
 
-    # Get all the integrations entities for this device
-    for entry in er.async_entries_for_device(registry, device_id):
-        if entry.domain == "media_player":
-            triggers.append(
-                {
-                    CONF_PLATFORM: "device",
-                    CONF_DEVICE_ID: device_id,
-                    CONF_DOMAIN: DOMAIN,
-                    CONF_ENTITY_ID: entry.id,
-                    CONF_TYPE: "turn_on",
-                }
-            )
-
-    return triggers
+    return [
+        {
+            CONF_PLATFORM: "device",
+            CONF_DEVICE_ID: device_id,
+            CONF_DOMAIN: DOMAIN,
+            CONF_ENTITY_ID: entry.id,
+            CONF_TYPE: "turn_on",
+        }
+        for entry in er.async_entries_for_device(entity_registry, device_id)
+        if entry.domain == "media_player"
+    ]
 
 
 async def async_attach_trigger(

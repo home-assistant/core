@@ -1,13 +1,21 @@
 """Test Z-Wave JS events."""
+
 from unittest.mock import AsyncMock
 
 import pytest
 from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
 
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from tests.common import async_capture_events
+
+
+@pytest.fixture
+def platforms() -> list[str]:
+    """Fixture to specify platforms to test."""
+    return []
 
 
 async def test_scenes(
@@ -243,6 +251,7 @@ async def test_notifications(
     assert events[2].data["command_class_name"] == "Multilevel Switch"
 
 
+@pytest.mark.parametrize("platforms", [[Platform.SWITCH]])
 async def test_value_updated(
     hass: HomeAssistant, vision_security_zl7432, integration, client
 ) -> None:
@@ -348,7 +357,11 @@ async def test_power_level_notification(
 
 
 async def test_unknown_notification(
-    hass: HomeAssistant, hank_binary_switch, integration, client
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    hank_binary_switch,
+    integration,
+    client,
 ) -> None:
     """Test behavior of unknown notification type events."""
     # just pick a random node to fake the notification event
@@ -358,8 +371,9 @@ async def test_unknown_notification(
     # by the lib. We will use a class that is guaranteed not to be recognized
     notification_obj = AsyncMock()
     notification_obj.node = node
-    with pytest.raises(TypeError):
-        node.emit("notification", {"notification": notification_obj})
+    node.emit("notification", {"notification": notification_obj})
+
+    assert f"Unhandled notification type: {notification_obj}" in caplog.text
 
     notification_events = async_capture_events(hass, "zwave_js_notification")
 

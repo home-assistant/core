@@ -1,4 +1,5 @@
 """Test the Z-Wave JS lock platform."""
+
 import pytest
 from zwave_js_server.const import CommandClass
 from zwave_js_server.const.command_class.lock import (
@@ -14,11 +15,12 @@ from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
     SERVICE_LOCK,
     SERVICE_UNLOCK,
+    LockState,
 )
 from homeassistant.components.zwave_js.const import (
     ATTR_LOCK_TIMEOUT,
     ATTR_OPERATION_TYPE,
-    DOMAIN as ZWAVE_JS_DOMAIN,
+    DOMAIN,
 )
 from homeassistant.components.zwave_js.helpers import ZwaveValueMatcher
 from homeassistant.components.zwave_js.lock import (
@@ -26,13 +28,7 @@ from homeassistant.components.zwave_js.lock import (
     SERVICE_SET_LOCK_CONFIGURATION,
     SERVICE_SET_LOCK_USERCODE,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_LOCKED,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    STATE_UNLOCKED,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -51,7 +47,7 @@ async def test_door_lock(
     state = hass.states.get(SCHLAGE_BE469_LOCK_ENTITY)
 
     assert state
-    assert state.state == STATE_UNLOCKED
+    assert state.state == LockState.UNLOCKED
 
     # Test locking
     await hass.services.async_call(
@@ -94,7 +90,9 @@ async def test_door_lock(
     )
     node.receive_event(event)
 
-    assert hass.states.get(SCHLAGE_BE469_LOCK_ENTITY).state == STATE_LOCKED
+    state = hass.states.get(SCHLAGE_BE469_LOCK_ENTITY)
+    assert state
+    assert state.state == LockState.LOCKED
 
     client.async_send_command.reset_mock()
 
@@ -121,7 +119,7 @@ async def test_door_lock(
 
     # Test set usercode service
     await hass.services.async_call(
-        ZWAVE_JS_DOMAIN,
+        DOMAIN,
         SERVICE_SET_LOCK_USERCODE,
         {
             ATTR_ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
@@ -147,7 +145,7 @@ async def test_door_lock(
 
     # Test clear usercode
     await hass.services.async_call(
-        ZWAVE_JS_DOMAIN,
+        DOMAIN,
         SERVICE_CLEAR_LOCK_USERCODE,
         {ATTR_ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY, ATTR_CODE_SLOT: 1},
         blocking=True,
@@ -173,7 +171,7 @@ async def test_door_lock(
     }
     caplog.clear()
     await hass.services.async_call(
-        ZWAVE_JS_DOMAIN,
+        DOMAIN,
         SERVICE_SET_LOCK_CONFIGURATION,
         {
             ATTR_ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
@@ -193,6 +191,7 @@ async def test_door_lock(
             "insideHandlesCanOpenDoorConfiguration": [True, True, True, True],
             "operationType": 2,
             "outsideHandlesCanOpenDoorConfiguration": [True, True, True, True],
+            "lockTimeoutConfiguration": 1,
         }
     ]
     assert args["commandClass"] == 98
@@ -217,7 +216,7 @@ async def test_door_lock(
     node.receive_event(event)
 
     await hass.services.async_call(
-        ZWAVE_JS_DOMAIN,
+        DOMAIN,
         SERVICE_SET_LOCK_CONFIGURATION,
         {
             ATTR_ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
@@ -238,6 +237,7 @@ async def test_door_lock(
             "insideHandlesCanOpenDoorConfiguration": [True, True, True, True],
             "operationType": 2,
             "outsideHandlesCanOpenDoorConfiguration": [True, True, True, True],
+            "lockTimeoutConfiguration": 1,
         }
     ]
     assert args["commandClass"] == 98
@@ -261,7 +261,7 @@ async def test_door_lock(
     # Test set usercode service error handling
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            ZWAVE_JS_DOMAIN,
+            DOMAIN,
             SERVICE_SET_LOCK_USERCODE,
             {
                 ATTR_ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
@@ -274,7 +274,7 @@ async def test_door_lock(
     # Test clear usercode service error handling
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            ZWAVE_JS_DOMAIN,
+            DOMAIN,
             SERVICE_CLEAR_LOCK_USERCODE,
             {ATTR_ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY, ATTR_CODE_SLOT: 1},
             blocking=True,
@@ -293,7 +293,10 @@ async def test_door_lock(
     node.receive_event(event)
 
     assert node.status == NodeStatus.DEAD
-    assert hass.states.get(SCHLAGE_BE469_LOCK_ENTITY).state == STATE_UNAVAILABLE
+    state = hass.states.get(SCHLAGE_BE469_LOCK_ENTITY)
+    assert state
+    # The state should still be locked, even if the node is dead
+    assert state.state == LockState.LOCKED
 
 
 async def test_only_one_lock(

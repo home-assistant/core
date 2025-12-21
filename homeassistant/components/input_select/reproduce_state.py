@@ -1,4 +1,5 @@
 """Reproduce an Input select state."""
+
 from __future__ import annotations
 
 import asyncio

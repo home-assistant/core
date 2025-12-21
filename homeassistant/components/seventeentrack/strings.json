@@ -1,0 +1,129 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "alert": {
+        "name": "Alert"
+      },
+      "delivered": {
+        "name": "Delivered"
+      },
+      "expired": {
+        "name": "Expired"
+      },
+      "in_transit": {
+        "name": "In transit"
+      },
+      "not_found": {
+        "name": "Not found"
+      },
+      "package": {
+        "name": "Package {name}"
+      },
+      "ready_to_be_picked_up": {
+        "name": "Ready to be picked up"
+      },
+      "undelivered": {
+        "name": "Undelivered"
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_config_entry": {
+      "message": "Invalid config entry provided. Got {config_entry_id}"
+    },
+    "unloaded_config_entry": {
+      "message": "Invalid config entry provided. {config_entry_id} is not loaded."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "show_archived": "Whether sensors should be created for archived packages",
+          "show_delivered": "Whether sensors should be created for delivered packages"
+        },
+        "description": "Configure general settings"
+      }
+    }
+  },
+  "selector": {
+    "package_state": {
+      "options": {
+        "alert": "[%key:component::seventeentrack::entity::sensor::alert::name%]",
+        "delivered": "[%key:component::seventeentrack::entity::sensor::delivered::name%]",
+        "expired": "[%key:component::seventeentrack::entity::sensor::expired::name%]",
+        "in_transit": "[%key:component::seventeentrack::entity::sensor::in_transit::name%]",
+        "not_found": "[%key:component::seventeentrack::entity::sensor::not_found::name%]",
+        "ready_to_be_picked_up": "[%key:component::seventeentrack::entity::sensor::ready_to_be_picked_up::name%]",
+        "undelivered": "[%key:component::seventeentrack::entity::sensor::undelivered::name%]"
+      }
+    }
+  },
+  "services": {
+    "add_package": {
+      "description": "Adds a package using the 17track API.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The selected service to add the package to.",
+          "name": "17Track service"
+        },
+        "package_friendly_name": {
+          "description": "The friendly name of the package to be added.",
+          "name": "Package friendly name"
+        },
+        "package_tracking_number": {
+          "description": "The package with the tracking number will be added.",
+          "name": "Package tracking number to add"
+        }
+      },
+      "name": "Add a package"
+    },
+    "archive_package": {
+      "description": "Archives a package using the 17track API.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The package will be archived for the selected service.",
+          "name": "[%key:component::seventeentrack::services::get_packages::fields::config_entry_id::name%]"
+        },
+        "package_tracking_number": {
+          "description": "The package will be archived for the specified tracking number.",
+          "name": "Package tracking number"
+        }
+      },
+      "name": "Archive package"
+    },
+    "get_packages": {
+      "description": "Queries the 17track API for the latest package data.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The packages will be retrieved for the selected service.",
+          "name": "17Track service"
+        },
+        "package_state": {
+          "description": "Only return packages with the specified states. Returns all packages if not specified.",
+          "name": "Package states"
+        }
+      },
+      "name": "Get packages"
+    }
+  }
+}

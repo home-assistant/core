@@ -1,0 +1,181 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "muted": {
+        "default": "mdi:bell-off"
+      }
+    },
+    "button": {
+      "pause": {
+        "default": "mdi:pause"
+      },
+      "resume": {
+        "default": "mdi:play-pause"
+      },
+      "self_test_request": {
+        "default": "mdi:refresh-auto"
+      },
+      "start": {
+        "default": "mdi:play"
+      },
+      "stop": {
+        "default": "mdi:stop"
+      }
+    },
+    "fan": {
+      "fan": {
+        "state_attributes": {
+          "preset_mode": {
+            "default": "mdi:fan",
+            "state": {
+              "auto": "mdi:fan-auto",
+              "high": "mdi:fan-speed-3",
+              "low": "mdi:fan-speed-1",
+              "medium": "mdi:fan-speed-2",
+              "natural_wind": "mdi:tailwind",
+              "sleep_wind": "mdi:sleep"
+            }
+          }
+        }
+      }
+    },
+    "number": {
+      "cook_time": {
+        "default": "mdi:microwave"
+      },
+      "speaker_setpoint": {
+        "default": "mdi:speaker"
+      }
+    },
+    "select": {
+      "laundry_washer_spin_speed": {
+        "default": "mdi:reload"
+      },
+      "power_level": {
+        "default": "mdi:power-settings"
+      },
+      "temperature_level": {
+        "default": "mdi:thermometer"
+      }
+    },
+    "sensor": {
+      "activated_carbon_filter_condition": {
+        "default": "mdi:filter-check"
+      },
+      "air_quality": {
+        "default": "mdi:air-filter"
+      },
+      "bat_replacement_description": {
+        "default": "mdi:battery-sync"
+      },
+      "battery_charge_state": {
+        "default": "mdi:battery-charging"
+      },
+      "battery_replacement_description": {
+        "default": "mdi:battery-sync-outline"
+      },
+      "battery_time_remaining": {
+        "default": "mdi:battery-clock-outline"
+      },
+      "battery_time_to_full_charge": {
+        "default": "mdi:battery-clock"
+      },
+      "battery_voltage": {
+        "default": "mdi:current-dc"
+      },
+      "contamination_state": {
+        "default": "mdi:air-filter"
+      },
+      "current_phase": {
+        "default": "mdi:state-machine"
+      },
+      "door_closed_events": {
+        "default": "mdi:door-closed"
+      },
+      "door_open_events": {
+        "default": "mdi:door-open"
+      },
+      "esa_opt_out_state": {
+        "default": "mdi:home-lightning-bolt"
+      },
+      "esa_state": {
+        "default": "mdi:home-lightning-bolt"
+      },
+      "eve_weather_trend": {
+        "default": "mdi:weather",
+        "state": {
+          "cloudy": "mdi:weather-cloudy",
+          "rainy": "mdi:weather-rainy",
+          "stormy": "mdi:weather-windy",
+          "sunny": "mdi:weather-sunny"
+        }
+      },
+      "evse_fault_state": {
+        "default": "mdi:ev-station"
+      },
+      "evse_state": {
+        "default": "mdi:ev-station"
+      },
+      "evse_supply_state": {
+        "default": "mdi:ev-station"
+      },
+      "flow": {
+        "default": "mdi:pipe"
+      },
+      "hepa_filter_condition": {
+        "default": "mdi:filter-check"
+      },
+      "operational_error": {
+        "default": "mdi:alert-circle"
+      },
+      "operational_state": {
+        "default": "mdi:play-pause"
+      },
+      "pump_control_mode": {
+        "default": "mdi:pipe-wrench"
+      },
+      "pump_speed": {
+        "default": "mdi:speedometer"
+      },
+      "pump_status": {
+        "default": "mdi:pump"
+      },
+      "tank_percentage": {
+        "default": "mdi:water-boiler"
+      },
+      "tank_volume": {
+        "default": "mdi:water-boiler"
+      },
+      "valve_position": {
+        "default": "mdi:valve"
+      }
+    },
+    "switch": {
+      "child_lock": {
+        "default": "mdi:lock",
+        "state": {
+          "off": "mdi:lock-off",
+          "on": "mdi:lock"
+        }
+      },
+      "evse_charging_switch": {
+        "default": "mdi:ev-station"
+      },
+      "privacy_mode_button": {
+        "default": "mdi:shield-lock"
+      },
+      "speaker_mute": {
+        "default": "mdi:volume-high",
+        "state": {
+          "off": "mdi:volume-high",
+          "on": "mdi:volume-mute"
+        }
+      }
+    }
+  },
+  "services": {
+    "water_heater_boost": {
+      "service": "mdi:water-boiler"
+    }
+  }
+}

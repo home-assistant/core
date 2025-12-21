@@ -1,0 +1,46 @@
+{
+  "entity": {
+    "sensor": {
+      "categories": {
+        "default": "mdi:shape"
+      },
+      "recipes": {
+        "default": "mdi:food"
+      },
+      "tags": {
+        "default": "mdi:tag-multiple"
+      },
+      "tools": {
+        "default": "mdi:tools"
+      },
+      "users": {
+        "default": "mdi:account-multiple"
+      }
+    },
+    "todo": {
+      "shopping_list": {
+        "default": "mdi:basket"
+      }
+    }
+  },
+  "services": {
+    "get_mealplan": {
+      "service": "mdi:food"
+    },
+    "get_recipe": {
+      "service": "mdi:map"
+    },
+    "get_recipes": {
+      "service": "mdi:book-open-page-variant"
+    },
+    "import_recipe": {
+      "service": "mdi:map-search"
+    },
+    "set_mealplan": {
+      "service": "mdi:food"
+    },
+    "set_random_mealplan": {
+      "service": "mdi:dice-multiple"
+    }
+  }
+}

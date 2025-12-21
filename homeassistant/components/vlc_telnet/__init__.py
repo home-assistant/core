@@ -1,18 +1,34 @@
 """The VLC media player Telnet integration."""
+
+from dataclasses import dataclass
+
 from aiovlc.client import Client
 from aiovlc.exceptions import AuthError, ConnectError
 
+from homeassistant.components.media_player import (
+    SCAN_INTERVAL as MEDIAPLAYER_SCAN_INTERVAL,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 
-from .const import DATA_AVAILABLE, DATA_VLC, DOMAIN, LOGGER
+from .const import LOGGER
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
+type VlcConfigEntry = ConfigEntry[VlcData]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+@dataclass
+class VlcData:
+    """Runtime data definition."""
+
+    vlc: Client
+    available: bool
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: VlcConfigEntry) -> bool:
     """Set up VLC media player Telnet from a config entry."""
     config = entry.data
 
@@ -20,7 +36,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     port = config[CONF_PORT]
     password = config[CONF_PASSWORD]
 
-    vlc = Client(password=password, host=host, port=port)
+    vlc = Client(
+        password=password,
+        host=host,
+        port=port,
+        timeout=int(MEDIAPLAYER_SCAN_INTERVAL.total_seconds() - 1),
+    )
 
     available = True
 
@@ -30,15 +51,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         LOGGER.warning("Failed to connect to VLC: %s. Trying again", err)
         available = False
 
+    async def _disconnect_vlc() -> None:
+        """Disconnect from VLC."""
+        LOGGER.debug("Disconnecting from VLC")
+        try:
+            await vlc.disconnect()
+        except ConnectError as err:
+            LOGGER.warning("Connection error: %s", err)
+
     if available:
         try:
             await vlc.login()
         except AuthError as err:
-            await disconnect_vlc(vlc)
-            raise ConfigEntryAuthFailed() from err
+            await _disconnect_vlc()
+            raise ConfigEntryAuthFailed from err
 
-    domain_data = hass.data.setdefault(DOMAIN, {})
-    domain_data[entry.entry_id] = {DATA_VLC: vlc, DATA_AVAILABLE: available}
+    entry.runtime_data = VlcData(vlc, available)
+
+    entry.async_on_unload(_disconnect_vlc)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -47,21 +77,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    if unload_ok:
-        entry_data = hass.data[DOMAIN].pop(entry.entry_id)
-        vlc = entry_data[DATA_VLC]
-
-        await disconnect_vlc(vlc)
-
-    return unload_ok
-
-
-async def disconnect_vlc(vlc: Client) -> None:
-    """Disconnect from VLC."""
-    LOGGER.debug("Disconnecting from VLC")
-    try:
-        await vlc.disconnect()
-    except ConnectError as err:
-        LOGGER.warning("Connection error: %s", err)
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

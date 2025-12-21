@@ -1,0 +1,33 @@
+{
+  "entity": {
+    "sensor": {
+      "api_version": {
+        "default": "mdi:api"
+      },
+      "connection_type": {
+        "default": "mdi:network"
+      },
+      "filament": {
+        "default": "mdi:printer-3d-nozzle"
+      },
+      "host": {
+        "default": "mdi:ip-network"
+      },
+      "hours_used": {
+        "default": "mdi:clock"
+      },
+      "job_name": {
+        "default": "mdi:file"
+      },
+      "job_phase": {
+        "default": "mdi:printer-3d"
+      },
+      "job_status": {
+        "default": "mdi:printer-3d"
+      },
+      "progress": {
+        "default": "mdi:printer-3d-nozzle"
+      }
+    }
+  }
+}

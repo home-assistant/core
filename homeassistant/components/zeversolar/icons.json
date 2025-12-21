@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "sensor": {
+      "energy_today": {
+        "default": "mdi:home-battery"
+      },
+      "pac": {
+        "default": "mdi:solar-power-variant"
+      }
+    }
+  }
+}

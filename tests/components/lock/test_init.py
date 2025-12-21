@@ -1,11 +1,12 @@
 """The tests for the lock component."""
+
 from __future__ import annotations
 
+import re
 from typing import Any
 
 import pytest
 
-from homeassistant.components import lock
 from homeassistant.components.lock import (
     ATTR_CODE,
     CONF_DEFAULT_CODE,
@@ -13,20 +14,15 @@ from homeassistant.components.lock import (
     SERVICE_LOCK,
     SERVICE_OPEN,
     SERVICE_UNLOCK,
-    STATE_JAMMED,
-    STATE_LOCKED,
-    STATE_LOCKING,
-    STATE_UNLOCKED,
-    STATE_UNLOCKING,
     LockEntityFeature,
+    LockState,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.entity_registry as er
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from .conftest import MockLock
-
-from tests.common import import_and_test_deprecated_constant_enum
 
 
 async def help_test_async_lock_service(
@@ -52,6 +48,8 @@ async def test_lock_default(hass: HomeAssistant, mock_lock_entity: MockLock) -> 
     assert mock_lock_entity.is_locked is None
     assert mock_lock_entity.is_locking is None
     assert mock_lock_entity.is_unlocking is None
+    assert mock_lock_entity.is_opening is None
+    assert mock_lock_entity.is_open is None
 
 
 async def test_lock_states(hass: HomeAssistant, mock_lock_entity: MockLock) -> None:
@@ -61,26 +59,39 @@ async def test_lock_states(hass: HomeAssistant, mock_lock_entity: MockLock) -> N
 
     mock_lock_entity._attr_is_locking = True
     assert mock_lock_entity.is_locking
-    assert mock_lock_entity.state == STATE_LOCKING
+    assert mock_lock_entity.state == LockState.LOCKING
 
     mock_lock_entity._attr_is_locked = True
     mock_lock_entity._attr_is_locking = False
     assert mock_lock_entity.is_locked
-    assert mock_lock_entity.state == STATE_LOCKED
+    assert mock_lock_entity.state == LockState.LOCKED
 
     mock_lock_entity._attr_is_unlocking = True
     assert mock_lock_entity.is_unlocking
-    assert mock_lock_entity.state == STATE_UNLOCKING
+    assert mock_lock_entity.state == LockState.UNLOCKING
 
     mock_lock_entity._attr_is_locked = False
     mock_lock_entity._attr_is_unlocking = False
     assert not mock_lock_entity.is_locked
-    assert mock_lock_entity.state == STATE_UNLOCKED
+    assert mock_lock_entity.state == LockState.UNLOCKED
 
     mock_lock_entity._attr_is_jammed = True
     assert mock_lock_entity.is_jammed
-    assert mock_lock_entity.state == STATE_JAMMED
+    assert mock_lock_entity.state == LockState.JAMMED
     assert not mock_lock_entity.is_locked
+
+    mock_lock_entity._attr_is_jammed = False
+    mock_lock_entity._attr_is_opening = True
+    assert mock_lock_entity.is_opening
+    assert mock_lock_entity.state == LockState.OPENING
+    assert mock_lock_entity.is_opening
+
+    mock_lock_entity._attr_is_opening = False
+    mock_lock_entity._attr_is_open = True
+    assert not mock_lock_entity.is_opening
+    assert mock_lock_entity.state == LockState.OPEN
+    assert not mock_lock_entity.is_opening
+    assert mock_lock_entity.is_open
 
 
 @pytest.mark.parametrize(
@@ -134,15 +145,15 @@ async def test_lock_open_with_code(
     state = hass.states.get(mock_lock_entity.entity_id)
     assert state.attributes["code_format"] == r"^\d{4}$"
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await help_test_async_lock_service(
             hass, mock_lock_entity.entity_id, SERVICE_OPEN
         )
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await help_test_async_lock_service(
             hass, mock_lock_entity.entity_id, SERVICE_OPEN, code=""
         )
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await help_test_async_lock_service(
             hass, mock_lock_entity.entity_id, SERVICE_OPEN, code="HELLO"
         )
@@ -170,15 +181,15 @@ async def test_lock_lock_with_code(
     mock_lock_entity.calls_unlock.assert_called_with(code="1234")
     assert mock_lock_entity.calls_lock.call_count == 0
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await help_test_async_lock_service(
             hass, mock_lock_entity.entity_id, SERVICE_LOCK
         )
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await help_test_async_lock_service(
             hass, mock_lock_entity.entity_id, SERVICE_LOCK, code=""
         )
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await help_test_async_lock_service(
             hass, mock_lock_entity.entity_id, SERVICE_LOCK, code="HELLO"
         )
@@ -206,15 +217,15 @@ async def test_lock_unlock_with_code(
     mock_lock_entity.calls_lock.assert_called_with(code="1234")
     assert mock_lock_entity.calls_unlock.call_count == 0
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await help_test_async_lock_service(
             hass, mock_lock_entity.entity_id, SERVICE_UNLOCK
         )
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await help_test_async_lock_service(
             hass, mock_lock_entity.entity_id, SERVICE_UNLOCK, code=""
         )
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await help_test_async_lock_service(
             hass, mock_lock_entity.entity_id, SERVICE_UNLOCK, code="HELLO"
         )
@@ -234,15 +245,15 @@ async def test_lock_with_illegal_code(
 ) -> None:
     """Test lock entity with default code that does not match the code format."""
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await help_test_async_lock_service(
             hass, mock_lock_entity.entity_id, SERVICE_OPEN, code="123456"
         )
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await help_test_async_lock_service(
             hass, mock_lock_entity.entity_id, SERVICE_LOCK, code="123456"
         )
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await help_test_async_lock_service(
             hass, mock_lock_entity.entity_id, SERVICE_UNLOCK, code="123456"
         )
@@ -344,24 +355,26 @@ async def test_lock_with_illegal_default_code(
     assert mock_lock_entity.state_attributes == {"code_format": r"^\d{4}$"}
     assert mock_lock_entity._lock_option_default_code == ""
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await help_test_async_lock_service(
             hass, mock_lock_entity.entity_id, SERVICE_OPEN
         )
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await help_test_async_lock_service(
             hass, mock_lock_entity.entity_id, SERVICE_LOCK
         )
-    with pytest.raises(ValueError):
+    with pytest.raises(
+        ServiceValidationError,
+        match=re.escape(
+            rf"The code for lock.test_lock doesn't match pattern ^\d{{{4}}}$"
+        ),
+    ) as exc:
         await help_test_async_lock_service(
             hass, mock_lock_entity.entity_id, SERVICE_UNLOCK
         )
 
-
-@pytest.mark.parametrize(("enum"), list(LockEntityFeature))
-def test_deprecated_constants(
-    caplog: pytest.LogCaptureFixture,
-    enum: LockEntityFeature,
-) -> None:
-    """Test deprecated constants."""
-    import_and_test_deprecated_constant_enum(caplog, lock, enum, "SUPPORT_", "2025.1")
+    assert (
+        str(exc.value)
+        == rf"The code for lock.test_lock doesn't match pattern ^\d{{{4}}}$"
+    )
+    assert exc.value.translation_key == "add_default_code"

@@ -1,4 +1,5 @@
 """Base Entity for JustNimbus sensors."""
+
 from __future__ import annotations
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -27,6 +28,7 @@ class JustNimbusEntity(
             identifiers={(DOMAIN, device_id)},
             name="JustNimbus Sensor",
             manufacturer="JustNimbus",
+            sw_version=coordinator.data.api_version,
         )
 
     @property

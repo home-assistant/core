@@ -1,5 +1,5 @@
 {
-  "availableOptions": ["play", "pause", "previous", "next", "seek"],
+  "availableOperations": ["play", "pause", "previous", "next", "seek"],
   "metadata": {
     "album": "1 (Remastered)",
     "artist": "The Beatles",

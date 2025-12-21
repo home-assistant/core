@@ -1,0 +1,173 @@
+{
+  "errors": [
+    "Connection to Investments may need attention",
+    "Connection to The Bank of Go may need attention"
+  ],
+  "accounts": [
+    {
+      "org": {
+        "domain": "www.newwealthfront.com",
+        "name": "The Bank of Go",
+        "sfin-url": "https://beta-bridge.simplefin.org/simplefin",
+        "url": "https://www.newwealthfront.com"
+      },
+      "id": "ACT-1a2b3c4d-5e6f-7g8h-9i0j",
+      "name": "The Bank",
+      "currency": "USD",
+      "balance": "7777.77",
+      "available-balance": "7777.77",
+      "balance-date": 1705413843,
+      "transactions": [
+        {
+          "id": "12394832938403",
+          "posted": 793090572,
+          "amount": "-1234.56",
+          "description": "Enchanted Bait Shop",
+          "payee": "Uncle Frank",
+          "memo": "Some memo",
+          "transacted_at": 793080572
+        }
+      ],
+      "extra": {
+        "account-open-date": 978360153
+      },
+      "holdings": []
+    },
+    {
+      "org": {
+        "domain": "www.newfidelity.com",
+        "name": "Investments",
+        "sfin-url": "https://beta-bridge.simplefin.org/simplefin",
+        "url": "https://www.newfidelity.com"
+      },
+      "id": "ACT-1k2l3m4n-5o6p-7q8r-9s0t",
+      "name": "My Checking",
+      "currency": "USD",
+      "balance": "12345.67",
+      "available-balance": "5432.10",
+      "balance-date": 1705413319,
+      "transactions": [],
+      "holdings": []
+    },
+    {
+      "org": {
+        "domain": "www.newhfcu.org",
+        "name": "The Bank of Go",
+        "sfin-url": "https://beta-bridge.simplefin.org/simplefin",
+        "url": "https://www.newhfcu.org/"
+      },
+      "id": "ACT-2a3b4c5d-6e7f-8g9h-0i1j",
+      "name": "PRIME SAVINGS",
+      "currency": "EUR",
+      "balance": "9876.54",
+      "available-balance": "8765.43",
+      "balance-date": 1705428861,
+      "transactions": [],
+      "holdings": []
+    },
+    {
+      "org": {
+        "domain": "www.randombank2.com",
+        "name": "Random Bank",
+        "sfin-url": "https://beta-bridge.simplefin.org/simplefin",
+        "url": "https://www.randombank2.com/"
+      },
+      "id": "ACT-3a4b5c6d-7e8f-9g0h-1i2j",
+      "name": "Costco Anywhere Visa® Card",
+      "currency": "USD",
+      "balance": "-532.69",
+      "available-balance": "4321.98",
+      "balance-date": 1705429002,
+      "transactions": [],
+      "holdings": []
+    },
+    {
+      "org": {
+        "domain": "www.newfidelity.com",
+        "name": "Investments",
+        "sfin-url": "https://beta-bridge.simplefin.org/simplefin",
+        "url": "https://www.newfidelity.com"
+      },
+      "id": "ACT-4k5l6m7n-8o9p-1q2r-3s4t",
+      "name": "Dr Evil",
+      "currency": "USD",
+      "balance": "1000000.00",
+      "available-balance": "13579.24",
+      "balance-date": 1705413319,
+      "transactions": [],
+      "holdings": [
+        {
+          "id": "HOL-62eb5bb6-4aed-4fe1-bdbe-f28e127e359b",
+          "created": 1705413320,
+          "currency": "",
+          "cost_basis": "10000.00",
+          "description": "Fantastic FID GROWTH CO K6",
+          "market_value": "15000.00",
+          "purchase_price": "0.00",
+          "shares": "200.00",
+          "symbol": "FGKFX"
+        }
+      ]
+    },
+    {
+      "org": {
+        "domain": "www.newfidelity.com",
+        "name": "Investments",
+        "sfin-url": "https://beta-bridge.simplefin.org/simplefin",
+        "url": "https://www.newfidelity.com"
+      },
+      "id": "ACT-5k6l7m8n-9o0p-1q2r-3s4t",
+      "name": "NerdCorp Series B",
+      "currency": "EUR",
+      "balance": "13579.24",
+      "available-balance": "9876.54",
+      "balance-date": 1705413319,
+      "transactions": [],
+      "holdings": [
+        {
+          "id": "HOL-08f775cd-eedf-4ee5-9f53-241c8efa5bf3",
+          "created": 1705413321,
+          "currency": "",
+          "cost_basis": "7500.00",
+          "description": "Mythical FID GROWTH CO K6",
+          "market_value": "9876.54",
+          "purchase_price": "0.00",
+          "shares": "150.00",
+          "symbol": "FGKFX"
+        }
+      ]
+    },
+    {
+      "org": {
+        "domain": "www.randombank2.com",
+        "name": "Mythical RandomSavings",
+        "sfin-url": "https://beta-bridge.simplefin.org/simplefin",
+        "url": "https://www.randombank2.com/"
+      },
+      "id": "ACT-6a7b8c9d-0e1f-2g3h-4i5j",
+      "name": "Unicorn Pot",
+      "currency": "USD",
+      "balance": "10000.00",
+      "available-balance": "7500.00",
+      "balance-date": 1705429002,
+      "transactions": [],
+      "holdings": []
+    },
+    {
+      "org": {
+        "domain": "www.randombank2.com",
+        "name": "Mythical RandomSavings",
+        "sfin-url": "https://beta-bridge.simplefin.org/simplefin",
+        "url": "https://www.randombank2.com/"
+      },
+      "id": "ACT-7a8b9c0d-1e2f-3g4h-5i6j",
+      "name": "Castle Mortgage",
+      "currency": "USD",
+      "balance": "7500.00",
+      "available-balance": "5000.00",
+      "balance-date": 1705429002,
+      "transactions": [],
+      "holdings": []
+    }
+  ]
+}

@@ -1,6 +1,9 @@
 """Define fixtures available for all tests."""
+
 from __future__ import annotations
 
+from collections.abc import Generator
+from pathlib import Path
 import re
 import tempfile
 from unittest.mock import patch
@@ -27,13 +30,16 @@ from homeassistant.components.matrix import (
     CONF_COMMANDS,
     CONF_EXPRESSION,
     CONF_HOMESERVER,
+    CONF_REACTION,
     CONF_ROOMS,
     CONF_WORD,
     EVENT_MATRIX_COMMAND,
     MatrixBot,
+    RoomAlias,
+    RoomAnyID,
     RoomID,
 )
-from homeassistant.components.matrix.const import DOMAIN as MATRIX_DOMAIN
+from homeassistant.components.matrix.const import DOMAIN
 from homeassistant.components.matrix.notify import CONF_DEFAULT_ROOM
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
 from homeassistant.const import (
@@ -43,7 +49,7 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from tests.common import async_capture_events
@@ -51,13 +57,15 @@ from tests.common import async_capture_events
 TEST_NOTIFIER_NAME = "matrix_notify"
 
 TEST_HOMESERVER = "example.com"
-TEST_DEFAULT_ROOM = "!DefaultNotificationRoom:example.com"
-TEST_ROOM_A_ID = "!RoomA-ID:example.com"
-TEST_ROOM_B_ID = "!RoomB-ID:example.com"
-TEST_ROOM_B_ALIAS = "#RoomB-Alias:example.com"
-TEST_JOINABLE_ROOMS = {
+TEST_DEFAULT_ROOM = RoomID("!DefaultNotificationRoom:example.com")
+TEST_ROOM_A_ID = RoomID("!RoomA-ID:example.com")
+TEST_ROOM_B_ID = RoomID("!RoomB-ID:example.com")
+TEST_ROOM_B_ALIAS = RoomAlias("#RoomB-Alias:example.com")
+TEST_ROOM_C_ID = RoomID("!RoomC-ID:example.com")
+TEST_JOINABLE_ROOMS: dict[RoomAnyID, RoomID] = {
     TEST_ROOM_A_ID: TEST_ROOM_A_ID,
     TEST_ROOM_B_ALIAS: TEST_ROOM_B_ID,
+    TEST_ROOM_C_ID: TEST_ROOM_C_ID,
 }
 TEST_BAD_ROOM = "!UninvitedRoom:example.com"
 TEST_MXID = "@user:example.com"
@@ -74,19 +82,17 @@ class _MockAsyncClient(AsyncClient):
     async def close(self):
         return None
 
-    async def room_resolve_alias(self, room_alias: str):
+    async def room_resolve_alias(self, room_alias: RoomAnyID):
         if room_id := TEST_JOINABLE_ROOMS.get(room_alias):
             return RoomResolveAliasResponse(
                 room_alias=room_alias, room_id=room_id, servers=[TEST_HOMESERVER]
             )
-        else:
-            return RoomResolveAliasError(message=f"Could not resolve {room_alias}")
+        return RoomResolveAliasError(message=f"Could not resolve {room_alias}")
 
     async def join(self, room_id: RoomID):
         if room_id in TEST_JOINABLE_ROOMS.values():
             return JoinResponse(room_id=room_id)
-        else:
-            return JoinError(message="Not allowed to join this room.")
+        return JoinError(message="Not allowed to join this room.")
 
     async def login(self, *args, **kwargs):
         if kwargs.get("password") == TEST_PASSWORD or kwargs.get("token") == TEST_TOKEN:
@@ -96,9 +102,8 @@ class _MockAsyncClient(AsyncClient):
                 device_id="test_device",
                 user_id=TEST_MXID,
             )
-        else:
-            self.access_token = ""
-            return LoginError(message="LoginError", status_code="status_code")
+        self.access_token = ""
+        return LoginError(message="LoginError", status_code="status_code")
 
     async def logout(self, *args, **kwargs):
         self.access_token = ""
@@ -110,19 +115,17 @@ class _MockAsyncClient(AsyncClient):
             return WhoamiResponse(
                 user_id=TEST_MXID, device_id=TEST_DEVICE_ID, is_guest=False
             )
-        else:
-            self.access_token = ""
-            return WhoamiError(
-                message="Invalid access token passed.", status_code="M_UNKNOWN_TOKEN"
-            )
+        self.access_token = ""
+        return WhoamiError(
+            message="Invalid access token passed.", status_code="M_UNKNOWN_TOKEN"
+        )
 
     async def room_send(self, *args, **kwargs):
         if not self.logged_in:
             raise LocalProtocolError
         if kwargs["room_id"] not in TEST_JOINABLE_ROOMS.values():
             return ErrorResponse(message="Cannot send a message in this room.")
-        else:
-            return Response()
+        return Response()
 
     async def sync(self, *args, **kwargs):
         return None
@@ -135,7 +138,7 @@ class _MockAsyncClient(AsyncClient):
 
 
 MOCK_CONFIG_DATA = {
-    MATRIX_DOMAIN: {
+    DOMAIN: {
         CONF_HOMESERVER: "https://matrix.example.com",
         CONF_USERNAME: TEST_MXID,
         CONF_PASSWORD: TEST_PASSWORD,
@@ -150,11 +153,25 @@ MOCK_CONFIG_DATA = {
                 CONF_EXPRESSION: "My name is (?P<name>.*)",
                 CONF_NAME: "ExpressionTriggerEventName",
             },
+            {
+                CONF_REACTION: "😄",
+                CONF_NAME: "ReactionTriggerEventName",
+            },
+            {
+                CONF_WORD: "WordTriggerSubset",
+                CONF_NAME: "WordTriggerSubsetEventName",
+                CONF_ROOMS: [TEST_ROOM_B_ALIAS, TEST_ROOM_C_ID],
+            },
+            {
+                CONF_EXPRESSION: "Your name is (?P<name>.*)",
+                CONF_NAME: "ExpressionTriggerSubsetEventName",
+                CONF_ROOMS: [TEST_ROOM_B_ALIAS, TEST_ROOM_C_ID],
+            },
         ],
     },
     NOTIFY_DOMAIN: {
         CONF_NAME: TEST_NOTIFIER_NAME,
-        CONF_PLATFORM: MATRIX_DOMAIN,
+        CONF_PLATFORM: DOMAIN,
         CONF_DEFAULT_ROOM: TEST_DEFAULT_ROOM,
     },
 }
@@ -164,15 +181,32 @@ MOCK_WORD_COMMANDS = {
         "WordTrigger": {
             "word": "WordTrigger",
             "name": "WordTriggerEventName",
-            "rooms": [TEST_ROOM_A_ID, TEST_ROOM_B_ID],
+            "rooms": list(TEST_JOINABLE_ROOMS.values()),
         }
     },
     TEST_ROOM_B_ID: {
         "WordTrigger": {
             "word": "WordTrigger",
             "name": "WordTriggerEventName",
-            "rooms": [TEST_ROOM_A_ID, TEST_ROOM_B_ID],
-        }
+            "rooms": list(TEST_JOINABLE_ROOMS.values()),
+        },
+        "WordTriggerSubset": {
+            "word": "WordTriggerSubset",
+            "name": "WordTriggerSubsetEventName",
+            "rooms": [TEST_ROOM_B_ID, TEST_ROOM_C_ID],
+        },
+    },
+    TEST_ROOM_C_ID: {
+        "WordTrigger": {
+            "word": "WordTrigger",
+            "name": "WordTriggerEventName",
+            "rooms": list(TEST_JOINABLE_ROOMS.values()),
+        },
+        "WordTriggerSubset": {
+            "word": "WordTriggerSubset",
+            "name": "WordTriggerSubsetEventName",
+            "rooms": [TEST_ROOM_B_ID, TEST_ROOM_C_ID],
+        },
     },
 }
 
@@ -181,16 +215,57 @@ MOCK_EXPRESSION_COMMANDS = {
         {
             "expression": re.compile("My name is (?P<name>.*)"),
             "name": "ExpressionTriggerEventName",
-            "rooms": [TEST_ROOM_A_ID, TEST_ROOM_B_ID],
+            "rooms": list(TEST_JOINABLE_ROOMS.values()),
         }
     ],
     TEST_ROOM_B_ID: [
         {
             "expression": re.compile("My name is (?P<name>.*)"),
             "name": "ExpressionTriggerEventName",
-            "rooms": [TEST_ROOM_A_ID, TEST_ROOM_B_ID],
-        }
+            "rooms": list(TEST_JOINABLE_ROOMS.values()),
+        },
+        {
+            "expression": re.compile("Your name is (?P<name>.*)"),
+            "name": "ExpressionTriggerSubsetEventName",
+            "rooms": [TEST_ROOM_B_ID, TEST_ROOM_C_ID],
+        },
     ],
+    TEST_ROOM_C_ID: [
+        {
+            "expression": re.compile("My name is (?P<name>.*)"),
+            "name": "ExpressionTriggerEventName",
+            "rooms": list(TEST_JOINABLE_ROOMS.values()),
+        },
+        {
+            "expression": re.compile("Your name is (?P<name>.*)"),
+            "name": "ExpressionTriggerSubsetEventName",
+            "rooms": [TEST_ROOM_B_ID, TEST_ROOM_C_ID],
+        },
+    ],
+}
+
+MOCK_REACTION_COMMANDS = {
+    TEST_ROOM_A_ID: {
+        "😄": {
+            "reaction": "😄",
+            "name": "ReactionTriggerEventName",
+            "rooms": list(TEST_JOINABLE_ROOMS.values()),
+        }
+    },
+    TEST_ROOM_B_ID: {
+        "😄": {
+            "reaction": "😄",
+            "name": "ReactionTriggerEventName",
+            "rooms": list(TEST_JOINABLE_ROOMS.values()),
+        },
+    },
+    TEST_ROOM_C_ID: {
+        "😄": {
+            "reaction": "😄",
+            "name": "ReactionTriggerEventName",
+            "rooms": list(TEST_JOINABLE_ROOMS.values()),
+        },
+    },
 }
 
 
@@ -221,7 +296,9 @@ def mock_load_json():
 @pytest.fixture
 def mock_allowed_path():
     """Allow using NamedTemporaryFile for mock image."""
-    with patch("homeassistant.core.Config.is_allowed_path", return_value=True) as mock:
+    with patch(
+        "homeassistant.core_config.Config.is_allowed_path", return_value=True
+    ) as mock:
         yield mock
 
 
@@ -234,10 +311,13 @@ async def matrix_bot(
     The resulting MatrixBot will have a mocked _client.
     """
 
-    assert await async_setup_component(hass, MATRIX_DOMAIN, MOCK_CONFIG_DATA)
+    assert await async_setup_component(hass, DOMAIN, MOCK_CONFIG_DATA)
     assert await async_setup_component(hass, NOTIFY_DOMAIN, MOCK_CONFIG_DATA)
     await hass.async_block_till_done()
-    assert isinstance(matrix_bot := hass.data[MATRIX_DOMAIN], MatrixBot)
+
+    # Accessing hass.data in tests is not desirable, but all the tests here
+    # currently do this.
+    assert isinstance(matrix_bot := hass.data[DOMAIN], MatrixBot)
 
     await hass.async_start()
 
@@ -245,21 +325,21 @@ async def matrix_bot(
 
 
 @pytest.fixture
-def matrix_events(hass: HomeAssistant):
+def matrix_events(hass: HomeAssistant) -> list[Event]:
     """Track event calls."""
-    return async_capture_events(hass, MATRIX_DOMAIN)
+    return async_capture_events(hass, DOMAIN)
 
 
 @pytest.fixture
-def command_events(hass: HomeAssistant):
+def command_events(hass: HomeAssistant) -> list[Event]:
     """Track event calls."""
     return async_capture_events(hass, EVENT_MATRIX_COMMAND)
 
 
 @pytest.fixture
-def image_path(tmp_path):
+def image_path(tmp_path: Path) -> Generator[tempfile._TemporaryFileWrapper]:
     """Provide the Path to a mock image."""
     image = Image.new("RGBA", size=(50, 50), color=(256, 0, 0))
-    image_file = tempfile.NamedTemporaryFile(dir=tmp_path)
-    image.save(image_file, "PNG")
-    return image_file
+    with tempfile.NamedTemporaryFile(dir=tmp_path) as image_file:
+        image.save(image_file, "PNG")
+        yield image_file

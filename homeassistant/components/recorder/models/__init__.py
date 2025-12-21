@@ -1,4 +1,5 @@
 """Models for Recorder."""
+
 from __future__ import annotations
 
 from .context import (
@@ -16,13 +17,13 @@ from .statistics import (
     RollingWindowStatisticPeriod,
     StatisticData,
     StatisticDataTimestamp,
+    StatisticMeanType,
     StatisticMetaData,
     StatisticPeriod,
     StatisticResult,
 )
 from .time import (
     datetime_to_timestamp_or_none,
-    process_datetime_to_timestamp,
     process_timestamp,
     process_timestamp_to_utc_isoformat,
     timestamp_to_datetime_or_none,
@@ -37,6 +38,7 @@ __all__ = [
     "RollingWindowStatisticPeriod",
     "StatisticData",
     "StatisticDataTimestamp",
+    "StatisticMeanType",
     "StatisticMetaData",
     "StatisticPeriod",
     "StatisticResult",
@@ -46,7 +48,6 @@ __all__ = [
     "datetime_to_timestamp_or_none",
     "extract_event_type_ids",
     "extract_metadata_ids",
-    "process_datetime_to_timestamp",
     "process_timestamp",
     "process_timestamp_to_utc_isoformat",
     "row_to_compressed_state",

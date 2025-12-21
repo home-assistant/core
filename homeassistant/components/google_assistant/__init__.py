@@ -1,4 +1,5 @@
 """Support for Actions on Google Assistant Smart Home Control."""
+
 from __future__ import annotations
 
 import logging
@@ -28,7 +29,7 @@ from .const import (  # noqa: F401
     DEFAULT_EXPOSE_BY_DEFAULT,
     DEFAULT_EXPOSED_DOMAINS,
     DOMAIN,
-    EVENT_QUERY_RECEIVED,  # noqa: F401
+    EVENT_QUERY_RECEIVED,
     SERVICE_REQUEST_SYNC,
     SOURCE_CLOUD,
 )
@@ -94,6 +95,8 @@ CONFIG_SCHEMA = vol.Schema(
     {vol.Optional(DOMAIN): GOOGLE_ASSISTANT_SCHEMA}, extra=vol.ALLOW_EXTRA
 )
 
+type GoogleConfigEntry = ConfigEntry[GoogleConfig]
+
 
 async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
     """Activate Google Actions component."""
@@ -114,7 +117,7 @@ async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> bool:
     """Set up from a config entry."""
 
     config: ConfigType = {**hass.data[DOMAIN][DATA_CONFIG]}
@@ -140,7 +143,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     google_config = GoogleConfig(hass, config)
     await google_config.async_initialize()
 
-    hass.data[DOMAIN][entry.entry_id] = google_config
+    entry.runtime_data = google_config
 
     hass.http.register_view(GoogleAssistantView(google_config))
 

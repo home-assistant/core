@@ -1,7 +1,8 @@
 """Constants used by Tessie integration."""
+
 from __future__ import annotations
 
-from enum import StrEnum
+from enum import IntEnum, StrEnum
 
 DOMAIN = "tessie"
 
@@ -12,16 +13,44 @@ MODELS = {
     "models": "Model S",
 }
 
+TRANSLATED_ERRORS = {
+    "unknown": "unknown",
+    "not supported": "not_supported",
+    "cable connected": "cable_connected",
+    "already active": "already_active",
+    "already inactive": "already_inactive",
+    "incorrect pin": "incorrect_pin",
+    "no cable": "no_cable",
+    "cpd_enabled": "cpd_enabled",
+}
 
-class TessieStatus(StrEnum):
+
+class TessieState(StrEnum):
     """Tessie status."""
 
     ASLEEP = "asleep"
     ONLINE = "online"
 
 
+class TessieStatus(StrEnum):
+    """Tessie status."""
+
+    ASLEEP = "asleep"
+    AWAKE = "awake"
+    WAITING = "waiting_for_sleep"
+
+
 class TessieSeatHeaterOptions(StrEnum):
     """Tessie seat heater options."""
+
+    OFF = "off"
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+
+
+class TessieSeatCoolerOptions(StrEnum):
+    """Tessie seat cooler options."""
 
     OFF = "off"
     LOW = "low"
@@ -46,3 +75,42 @@ class TessieUpdateStatus(StrEnum):
     INSTALLING = "installing"
     WIFI_WAIT = "downloading_wifi_wait"
     SCHEDULED = "scheduled"
+
+
+class TessieCoverStates(IntEnum):
+    """Tessie Cover states."""
+
+    CLOSED = 0
+    OPEN = 1
+
+
+class TessieChargeCableLockStates(StrEnum):
+    """Tessie Charge Cable Lock states."""
+
+    ENGAGED = "Engaged"
+    DISENGAGED = "Disengaged"
+
+
+TessieChargeStates = {
+    "Starting": "starting",
+    "Charging": "charging",
+    "Stopped": "stopped",
+    "Complete": "complete",
+    "Disconnected": "disconnected",
+    "NoPower": "no_power",
+}
+
+
+class TessieWallConnectorStates(IntEnum):
+    """Tessie Wall Connector states."""
+
+    BOOTING = 0
+    CHARGING = 1
+    DISCONNECTED = 2
+    CONNECTED = 4
+    SCHEDULED = 5
+    NEGOTIATING = 6
+    ERROR = 7
+    CHARGING_FINISHED = 8
+    WAITING_CAR = 9
+    CHARGING_REDUCED = 10

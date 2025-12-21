@@ -1,4 +1,5 @@
-"""Constants for the Transmission Bittorent Client component."""
+"""Constants for the Transmission Bittorrent Client component."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -30,13 +31,16 @@ DEFAULT_DELETE_DATA = False
 DEFAULT_LIMIT = 10
 DEFAULT_ORDER = ORDER_OLDEST_FIRST
 DEFAULT_NAME = "Transmission"
+DEFAULT_SSL = False
 DEFAULT_PORT = 9091
+DEFAULT_PATH = "/transmission/rpc"
 DEFAULT_SCAN_INTERVAL = 120
 
 STATE_ATTR_TORRENT_INFO = "torrent_info"
 
 ATTR_DELETE_DATA = "delete_data"
 ATTR_TORRENT = "torrent"
+ATTR_DOWNLOAD_PATH = "download_path"
 
 SERVICE_ADD_TORRENT = "add_torrent"
 SERVICE_REMOVE_TORRENT = "remove_torrent"

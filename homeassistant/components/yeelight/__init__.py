@@ -1,7 +1,7 @@
 """Support for Xiaomi Yeelight WiFi color bulb."""
+
 from __future__ import annotations
 
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -19,8 +19,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType, VolDictType
 
 from .const import (
     ACTION_OFF,
@@ -59,7 +59,7 @@ from .scanner import YeelightScanner
 _LOGGER = logging.getLogger(__name__)
 
 
-YEELIGHT_FLOW_TRANSITION_SCHEMA = {
+YEELIGHT_FLOW_TRANSITION_SCHEMA: VolDictType = {
     vol.Optional(ATTR_COUNT, default=0): cv.positive_int,
     vol.Optional(ATTR_ACTION, default=ACTION_RECOVER): vol.Any(
         ACTION_RECOVER, ACTION_OFF, ACTION_STAY
@@ -214,7 +214,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         device = await _async_get_device(hass, entry.data[CONF_HOST], entry)
         await _async_initialize(hass, entry, device)
-    except (asyncio.TimeoutError, OSError, BulbException) as ex:
+    except (TimeoutError, OSError, BulbException) as ex:
         raise ConfigEntryNotReady from ex
 
     found_unique_id = device.unique_id
@@ -232,9 +232,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # Wait to install the reload listener until everything was successfully initialized
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
-
     return True
 
 
@@ -243,11 +240,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     data_config_entries = hass.data[DOMAIN][DATA_CONFIG_ENTRIES]
     data_config_entries.pop(entry.entry_id)
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle options update."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def _async_get_device(

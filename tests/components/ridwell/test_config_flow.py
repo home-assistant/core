@@ -1,16 +1,23 @@
 """Test the Ridwell config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from aioridwell.errors import InvalidCredentialsError, RidwellError
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.ridwell.const import DOMAIN
+from homeassistant.components.ridwell.const import (
+    CALENDAR_TITLE_ROTATING,
+    CONF_CALENDAR_TITLE,
+    DOMAIN,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .conftest import TEST_PASSWORD, TEST_USERNAME
+
+from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
@@ -27,7 +34,7 @@ async def test_create_entry(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     # Test errors that can arise:
@@ -38,7 +45,7 @@ async def test_create_entry(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=config
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] == errors
 
@@ -46,7 +53,7 @@ async def test_create_entry(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=config
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_USERNAME
     assert result["data"] == {
         CONF_USERNAME: TEST_USERNAME,
@@ -59,21 +66,60 @@ async def test_duplicate_error(hass: HomeAssistant, config, setup_config_entry) 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=config
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
 async def test_step_reauth(
-    hass: HomeAssistant, config, config_entry, setup_config_entry
+    hass: HomeAssistant, config, config_entry: MockConfigEntry, setup_config_entry
 ) -> None:
     """Test a full reauth flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=config
-    )
+    result = await config_entry.start_reauth_flow(hass)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_PASSWORD: "new_password"},
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+
+    assert config_entry.data[CONF_PASSWORD] == "new_password"
     assert len(hass.config_entries.async_entries()) == 1
+
+
+async def test_option_flow_event_title(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test option flow for event title."""
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_CALENDAR_TITLE: CALENDAR_TITLE_ROTATING},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_CALENDAR_TITLE] == CALENDAR_TITLE_ROTATING
+
+
+async def test_successful_config_flow(
+    hass: HomeAssistant, config, mock_aioridwell
+) -> None:
+    """Test the happy path of a successful config flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=config
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == TEST_USERNAME
+    assert result["data"] == config

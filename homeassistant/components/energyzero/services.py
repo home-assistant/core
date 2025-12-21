@@ -1,4 +1,5 @@
 """The EnergyZero services."""
+
 from __future__ import annotations
 
 from datetime import date, datetime
@@ -9,6 +10,7 @@ from typing import Final
 from energyzero import Electricity, Gas, VatOption
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -17,11 +19,13 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import selector
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
-from .coordinator import EnergyZeroDataUpdateCoordinator
+from .coordinator import EnergyZeroConfigEntry, EnergyZeroDataUpdateCoordinator
 
+ATTR_CONFIG_ENTRY: Final = "config_entry"
 ATTR_START: Final = "start"
 ATTR_END: Final = "end"
 ATTR_INCL_VAT: Final = "incl_vat"
@@ -30,6 +34,11 @@ GAS_SERVICE_NAME: Final = "get_gas_prices"
 ENERGY_SERVICE_NAME: Final = "get_energy_prices"
 SERVICE_SCHEMA: Final = vol.Schema(
     {
+        vol.Required(ATTR_CONFIG_ENTRY): selector.ConfigEntrySelector(
+            {
+                "integration": DOMAIN,
+            }
+        ),
         vol.Required(ATTR_INCL_VAT): bool,
         vol.Optional(ATTR_START): str,
         vol.Optional(ATTR_END): str,
@@ -53,7 +62,6 @@ def __get_date(date_input: str | None) -> date | datetime:
         return value
 
     raise ServiceValidationError(
-        "Invalid datetime provided.",
         translation_domain=DOMAIN,
         translation_key="invalid_date",
         translation_placeholders={
@@ -75,12 +83,40 @@ def __serialize_prices(prices: Electricity | Gas) -> ServiceResponse:
     }
 
 
+def __get_coordinator(call: ServiceCall) -> EnergyZeroDataUpdateCoordinator:
+    """Get the coordinator from the entry."""
+    entry_id: str = call.data[ATTR_CONFIG_ENTRY]
+    entry: EnergyZeroConfigEntry | None = call.hass.config_entries.async_get_entry(
+        entry_id
+    )
+
+    if not entry:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_config_entry",
+            translation_placeholders={
+                "config_entry": entry_id,
+            },
+        )
+    if entry.state != ConfigEntryState.LOADED:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="unloaded_config_entry",
+            translation_placeholders={
+                "config_entry": entry.title,
+            },
+        )
+
+    return entry.runtime_data
+
+
 async def __get_prices(
     call: ServiceCall,
     *,
-    coordinator: EnergyZeroDataUpdateCoordinator,
     price_type: PriceType,
 ) -> ServiceResponse:
+    coordinator = __get_coordinator(call)
+
     start = __get_date(call.data.get(ATTR_START))
     end = __get_date(call.data.get(ATTR_END))
 
@@ -92,13 +128,13 @@ async def __get_prices(
     data: Electricity | Gas
 
     if price_type == PriceType.GAS:
-        data = await coordinator.energyzero.gas_prices(
+        data = await coordinator.energyzero.get_gas_prices_legacy(
             start_date=start,
             end_date=end,
             vat=vat,
         )
     else:
-        data = await coordinator.energyzero.energy_prices(
+        data = await coordinator.energyzero.get_electricity_prices_legacy(
             start_date=start,
             end_date=end,
             vat=vat,
@@ -108,22 +144,20 @@ async def __get_prices(
 
 
 @callback
-def async_register_services(
-    hass: HomeAssistant, coordinator: EnergyZeroDataUpdateCoordinator
-):
+def async_setup_services(hass: HomeAssistant) -> None:
     """Set up EnergyZero services."""
 
     hass.services.async_register(
         DOMAIN,
         GAS_SERVICE_NAME,
-        partial(__get_prices, coordinator=coordinator, price_type=PriceType.GAS),
+        partial(__get_prices, price_type=PriceType.GAS),
         schema=SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(
         DOMAIN,
         ENERGY_SERVICE_NAME,
-        partial(__get_prices, coordinator=coordinator, price_type=PriceType.ENERGY),
+        partial(__get_prices, price_type=PriceType.ENERGY),
         schema=SERVICE_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )

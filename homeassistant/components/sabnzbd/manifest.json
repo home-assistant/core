@@ -1,10 +1,11 @@
 {
   "domain": "sabnzbd",
   "name": "SABnzbd",
-  "codeowners": ["@shaiu"],
+  "codeowners": ["@shaiu", "@jpbede"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/sabnzbd",
   "iot_class": "local_polling",
   "loggers": ["pysabnzbd"],
+  "quality_scale": "bronze",
   "requirements": ["pysabnzbd==1.1.1"]
 }

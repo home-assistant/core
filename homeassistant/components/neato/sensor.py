@@ -1,4 +1,5 @@
 """Support for Neato sensors."""
+
 from __future__ import annotations
 
 from datetime import timedelta
@@ -12,7 +13,7 @@ from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import NEATO_LOGIN, NEATO_ROBOTS, SCAN_INTERVAL_MINUTES
 from .entity import NeatoEntity
@@ -26,13 +27,13 @@ BATTERY = "Battery"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Neato sensor using config entry."""
-    dev = []
     neato: NeatoHub = hass.data[NEATO_LOGIN]
-    for robot in hass.data[NEATO_ROBOTS]:
-        dev.append(NeatoSensor(neato, robot))
+    dev = [NeatoSensor(neato, robot) for robot in hass.data[NEATO_ROBOTS]]
 
     if not dev:
         return

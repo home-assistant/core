@@ -1,4 +1,5 @@
 """Support for Ridwell buttons."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -10,7 +11,7 @@ from homeassistant.components.switch import SwitchEntity, SwitchEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import RidwellDataUpdateCoordinator
@@ -19,12 +20,13 @@ from .entity import RidwellEntity
 SWITCH_DESCRIPTION = SwitchEntityDescription(
     key="opt_in",
     translation_key="opt_in",
-    icon="mdi:calendar-check",
 )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Ridwell sensors based on a config entry."""
     coordinator: RidwellDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]

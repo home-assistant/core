@@ -1,4 +1,5 @@
 """Tests for the LIVISI Smart Home integration."""
+
 from unittest.mock import patch
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD

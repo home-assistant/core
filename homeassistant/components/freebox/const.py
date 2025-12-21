@@ -1,4 +1,5 @@
 """Freebox component constants."""
+
 from __future__ import annotations
 
 import enum
@@ -7,7 +8,6 @@ import socket
 from homeassistant.const import Platform
 
 DOMAIN = "freebox"
-SERVICE_REBOOT = "reboot"
 
 APP_DESC = {
     "app_id": "hass",
@@ -19,12 +19,12 @@ API_VERSION = "v6"
 
 PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
+    Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.CAMERA,
     Platform.DEVICE_TRACKER,
     Platform.SENSOR,
-    Platform.BINARY_SENSOR,
     Platform.SWITCH,
-    Platform.CAMERA,
 ]
 
 DEFAULT_DEVICE_NAME = "Unknown device"

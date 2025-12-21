@@ -1,6 +1,7 @@
 add_torrent:
   fields:
     entry_id:
+      required: true
       selector:
         config_entry:
           integration: transmission
@@ -9,10 +10,16 @@ add_torrent:
       example: http://releases.ubuntu.com/19.04/ubuntu-19.04-desktop-amd64.iso.torrent
       selector:
         text:
+    download_path:
+      required: false
+      example: "/path/to/download/directory"
+      selector:
+        text:
 
 remove_torrent:
   fields:
     entry_id:
+      required: true
       selector:
         config_entry:
           integration: transmission
@@ -22,6 +29,7 @@ remove_torrent:
       selector:
         text:
     delete_data:
+      required: true
       default: false
       selector:
         boolean:
@@ -29,10 +37,12 @@ remove_torrent:
 start_torrent:
   fields:
     entry_id:
+      required: true
       selector:
         config_entry:
           integration: transmission
     id:
+      required: true
       example: 123
       selector:
         text:
@@ -40,6 +50,7 @@ start_torrent:
 stop_torrent:
   fields:
     entry_id:
+      required: true
       selector:
         config_entry:
           integration: transmission

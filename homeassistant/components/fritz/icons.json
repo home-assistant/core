@@ -1,0 +1,70 @@
+{
+  "entity": {
+    "button": {
+      "cleanup": {
+        "default": "mdi:broom"
+      }
+    },
+    "sensor": {
+      "external_ip": {
+        "default": "mdi:earth"
+      },
+      "external_ipv6": {
+        "default": "mdi:earth"
+      },
+      "gb_received": {
+        "default": "mdi:download"
+      },
+      "gb_sent": {
+        "default": "mdi:upload"
+      },
+      "kb_s_received": {
+        "default": "mdi:download"
+      },
+      "kb_s_sent": {
+        "default": "mdi:upload"
+      },
+      "link_attenuation_received": {
+        "default": "mdi:download"
+      },
+      "link_attenuation_sent": {
+        "default": "mdi:upload"
+      },
+      "link_kb_s_received": {
+        "default": "mdi:download"
+      },
+      "link_kb_s_sent": {
+        "default": "mdi:upload"
+      },
+      "link_noise_margin_received": {
+        "default": "mdi:download"
+      },
+      "link_noise_margin_sent": {
+        "default": "mdi:upload"
+      },
+      "max_kb_s_received": {
+        "default": "mdi:download"
+      },
+      "max_kb_s_sent": {
+        "default": "mdi:upload"
+      }
+    }
+  },
+  "services": {
+    "cleanup": {
+      "service": "mdi:broom"
+    },
+    "dial": {
+      "service": "mdi:phone-dial"
+    },
+    "reboot": {
+      "service": "mdi:refresh"
+    },
+    "reconnect": {
+      "service": "mdi:connection"
+    },
+    "set_guest_wifi_password": {
+      "service": "mdi:form-textbox-password"
+    }
+  }
+}

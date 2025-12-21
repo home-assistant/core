@@ -1,13 +1,13 @@
 """Test the Advantage Air Sensor Platform."""
-from datetime import timedelta
-from unittest.mock import AsyncMock
 
-from homeassistant.components.advantage_air.const import DOMAIN as ADVANTAGE_AIR_DOMAIN
+from datetime import timedelta
+from unittest.mock import AsyncMock, patch
+
+from homeassistant.components.advantage_air.const import DOMAIN
 from homeassistant.components.advantage_air.sensor import (
     ADVANTAGE_AIR_SERVICE_SET_TIME_TO,
     ADVANTAGE_AIR_SET_COUNTDOWN_VALUE,
 )
-from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -41,7 +41,7 @@ async def test_sensor_platform(
     value = 20
 
     await hass.services.async_call(
-        ADVANTAGE_AIR_DOMAIN,
+        DOMAIN,
         ADVANTAGE_AIR_SERVICE_SET_TIME_TO,
         {ATTR_ENTITY_ID: [entity_id], ADVANTAGE_AIR_SET_COUNTDOWN_VALUE: value},
         blocking=True,
@@ -61,7 +61,7 @@ async def test_sensor_platform(
 
     value = 0
     await hass.services.async_call(
-        ADVANTAGE_AIR_DOMAIN,
+        DOMAIN,
         ADVANTAGE_AIR_SERVICE_SET_TIME_TO,
         {ATTR_ENTITY_ID: [entity_id], ADVANTAGE_AIR_SET_COUNTDOWN_VALUE: value},
         blocking=True,
@@ -109,21 +109,28 @@ async def test_sensor_platform(
     assert entry
     assert entry.unique_id == "uniqueid-ac1-z02-signal"
 
+
+async def test_sensor_platform_disabled_entity(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry, mock_get: AsyncMock
+) -> None:
+    """Test sensor platform disabled entity."""
+
+    await add_mock_config(hass)
+
     # Test First Zone Temp Sensor (disabled by default)
     entity_id = "sensor.myzone_zone_open_with_sensor_temperature"
 
     assert not hass.states.get(entity_id)
 
     mock_get.reset_mock()
-    entity_registry.async_update_entity(entity_id=entity_id, disabled_by=None)
-    await hass.async_block_till_done()
 
-    async_fire_time_changed(
-        hass,
-        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
-    )
-    await hass.async_block_till_done()
-    assert len(mock_get.mock_calls) == 2
+    with patch("homeassistant.config_entries.RELOAD_AFTER_UPDATE_DELAY", 1):
+        entity_registry.async_update_entity(entity_id=entity_id, disabled_by=None)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=2))
+        await hass.async_block_till_done(wait_background_tasks=True)
+        assert len(mock_get.mock_calls) == 1
 
     state = hass.states.get(entity_id)
     assert state

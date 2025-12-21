@@ -1,12 +1,22 @@
 """Constants for Brother integration."""
+
 from __future__ import annotations
 
+from datetime import timedelta
 from typing import Final
-
-DATA_CONFIG_ENTRY: Final = "config_entry"
 
 DOMAIN: Final = "brother"
 
-PRINTER_TYPES: Final = ["laser", "ink"]
+PRINTER_TYPE_LASER = "laser"
+PRINTER_TYPE_INK = "ink"
 
-SNMP: Final = "snmp"
+PRINTER_TYPES: Final = [PRINTER_TYPE_LASER, PRINTER_TYPE_INK]
+
+UPDATE_INTERVAL = timedelta(seconds=30)
+
+SECTION_ADVANCED_SETTINGS = "advanced_settings"
+
+CONF_COMMUNITY = "community"
+
+DEFAULT_COMMUNITY = "public"
+DEFAULT_PORT = 161

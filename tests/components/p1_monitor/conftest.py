@@ -1,4 +1,5 @@
 """Fixtures for P1 Monitor integration tests."""
+
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -6,7 +7,7 @@ from p1monitor import Phases, Settings, SmartMeter, WaterMeter
 import pytest
 
 from homeassistant.components.p1_monitor.const import DOMAIN
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
@@ -18,15 +19,18 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         title="monitor",
         domain=DOMAIN,
-        data={CONF_HOST: "example"},
+        data={CONF_HOST: "example", CONF_PORT: 80},
         unique_id="unique_thingy",
+        version=2,
     )
 
 
 @pytest.fixture
 def mock_p1monitor():
     """Return a mocked P1 Monitor client."""
-    with patch("homeassistant.components.p1_monitor.P1Monitor") as p1monitor_mock:
+    with patch(
+        "homeassistant.components.p1_monitor.coordinator.P1Monitor"
+    ) as p1monitor_mock:
         client = p1monitor_mock.return_value
         client.smartmeter = AsyncMock(
             return_value=SmartMeter.from_dict(

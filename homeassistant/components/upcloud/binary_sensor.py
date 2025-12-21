@@ -4,22 +4,21 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DATA_UPCLOUD, UpCloudServerEntity
+from .coordinator import UpCloudConfigEntry
+from .entity import UpCloudServerEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: UpCloudConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the UpCloud server binary sensor."""
-    coordinator = hass.data[DATA_UPCLOUD].coordinators[config_entry.data[CONF_USERNAME]]
-    entities = [UpCloudBinarySensor(coordinator, uuid) for uuid in coordinator.data]
+    coordinator = config_entry.runtime_data
+    entities = [UpCloudBinarySensor(config_entry, uuid) for uuid in coordinator.data]
     async_add_entities(entities, True)
 
 

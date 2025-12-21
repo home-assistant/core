@@ -1,0 +1,16 @@
+{
+  "services": {
+    "clear_cache": {
+      "service": "mdi:delete"
+    },
+    "scan": {
+      "service": "mdi:magnify"
+    },
+    "set_memo_text": {
+      "service": "mdi:note-text"
+    },
+    "sync_clock": {
+      "service": "mdi:clock"
+    }
+  }
+}

@@ -1,4 +1,5 @@
 """Tests for the login flow."""
+
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import patch
@@ -6,7 +7,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
+from homeassistant.core_config import async_process_ha_core_config
 
 from . import BASE_CONFIG, async_setup_auth
 
@@ -26,22 +27,30 @@ _TRUSTED_NETWORKS_CONFIG = {
 
 
 @pytest.mark.parametrize(
-    ("provider_configs", "ip", "expected"),
+    ("ip", "preselect_remember_me"),
+    [
+        ("192.168.1.10", True),
+        ("::ffff:192.168.0.10", True),
+        ("1.2.3.4", False),
+        ("2001:db8::1", False),
+    ],
+)
+@pytest.mark.parametrize(
+    ("provider_configs", "expected"),
     [
         (
             BASE_CONFIG,
-            None,
             [{"name": "Example", "type": "insecure_example", "id": None}],
         ),
         (
-            [_TRUSTED_NETWORKS_CONFIG],
-            None,
-            [],
-        ),
-        (
-            [_TRUSTED_NETWORKS_CONFIG],
-            "192.168.0.1",
-            [{"name": "Trusted Networks", "type": "trusted_networks", "id": None}],
+            [{"type": "homeassistant"}],
+            [
+                {
+                    "name": "Home Assistant Local",
+                    "type": "homeassistant",
+                    "id": None,
+                }
+            ],
         ),
     ],
 )
@@ -49,8 +58,9 @@ async def test_fetch_auth_providers(
     hass: HomeAssistant,
     aiohttp_client: ClientSessionGenerator,
     provider_configs: list[dict[str, Any]],
-    ip: str | None,
     expected: list[dict[str, Any]],
+    ip: str,
+    preselect_remember_me: bool,
 ) -> None:
     """Test fetching auth providers."""
     client = await async_setup_auth(
@@ -58,73 +68,37 @@ async def test_fetch_auth_providers(
     )
     resp = await client.get("/auth/providers")
     assert resp.status == HTTPStatus.OK
-    assert await resp.json() == expected
-
-
-async def _test_fetch_auth_providers_home_assistant(
-    hass: HomeAssistant,
-    aiohttp_client: ClientSessionGenerator,
-    ip: str,
-) -> None:
-    """Test fetching auth providers for homeassistant auth provider."""
-    client = await async_setup_auth(
-        hass, aiohttp_client, [{"type": "homeassistant"}], custom_ip=ip
-    )
-
-    expected = {
-        "name": "Home Assistant Local",
-        "type": "homeassistant",
-        "id": None,
+    assert await resp.json() == {
+        "providers": expected,
+        "preselect_remember_me": preselect_remember_me,
     }
 
+
+@pytest.mark.parametrize(
+    ("ip", "expected"),
+    [
+        (
+            "192.168.0.1",
+            [{"name": "Trusted Networks", "type": "trusted_networks", "id": None}],
+        ),
+        ("::ffff:192.168.0.10", []),
+        ("1.2.3.4", []),
+        ("2001:db8::1", []),
+    ],
+)
+async def test_fetch_auth_providers_trusted_network(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    expected: list[dict[str, Any]],
+    ip: str,
+) -> None:
+    """Test fetching auth providers."""
+    client = await async_setup_auth(
+        hass, aiohttp_client, [_TRUSTED_NETWORKS_CONFIG], custom_ip=ip
+    )
     resp = await client.get("/auth/providers")
     assert resp.status == HTTPStatus.OK
-    assert await resp.json() == [expected]
-
-
-@pytest.mark.parametrize(
-    "ip",
-    [
-        "192.168.0.10",
-        "::ffff:192.168.0.10",
-        "1.2.3.4",
-        "2001:db8::1",
-    ],
-)
-async def test_fetch_auth_providers_home_assistant_person_not_loaded(
-    hass: HomeAssistant,
-    aiohttp_client: ClientSessionGenerator,
-    ip: str,
-) -> None:
-    """Test fetching auth providers for homeassistant auth provider, where person integration is not loaded."""
-    await _test_fetch_auth_providers_home_assistant(hass, aiohttp_client, ip)
-
-
-@pytest.mark.parametrize(
-    ("ip", "is_local"),
-    [
-        ("192.168.0.10", True),
-        ("::ffff:192.168.0.10", True),
-        ("1.2.3.4", False),
-        ("2001:db8::1", False),
-    ],
-)
-async def test_fetch_auth_providers_home_assistant_person_loaded(
-    hass: HomeAssistant,
-    aiohttp_client: ClientSessionGenerator,
-    ip: str,
-    is_local: bool,
-) -> None:
-    """Test fetching auth providers for homeassistant auth provider, where person integration is loaded."""
-    domain = "person"
-    config = {domain: {"id": "1234", "name": "test person"}}
-    assert await async_setup_component(hass, domain, config)
-
-    await _test_fetch_auth_providers_home_assistant(
-        hass,
-        aiohttp_client,
-        ip,
-    )
+    assert (await resp.json())["providers"] == expected
 
 
 async def test_fetch_auth_providers_onboarding(
@@ -246,11 +220,15 @@ async def test_invalid_redirect_uri(
     assert resp.status == HTTPStatus.OK
     step = await resp.json()
 
-    with patch(
-        "homeassistant.components.auth.indieauth.fetch_redirect_uris", return_value=[]
-    ), patch(
-        "homeassistant.components.http.ban.process_wrong_login"
-    ) as mock_process_wrong_login:
+    with (
+        patch(
+            "homeassistant.components.auth.indieauth.fetch_redirect_uris",
+            return_value=[],
+        ),
+        patch(
+            "homeassistant.components.http.ban.process_wrong_login"
+        ) as mock_process_wrong_login,
+    ):
         resp = await client.post(
             f"/auth/login_flow/{step['flow_id']}",
             json={
@@ -394,19 +372,59 @@ async def test_login_exist_user_ip_changes(
     assert response == {"message": "IP address changed"}
 
 
+@pytest.mark.usefixtures("current_request_with_host")  # Has example.com host
+@pytest.mark.parametrize(
+    ("config", "expected_url_prefix", "extra_response_data"),
+    [
+        (
+            {
+                "internal_url": "http://192.168.1.100:8123",
+                # Current request matches external url
+                "external_url": "https://example.com",
+            },
+            "https://example.com",
+            {"issuer": "https://example.com"},
+        ),
+        (
+            {
+                # Current request matches internal url
+                "internal_url": "https://example.com",
+                "external_url": "https://other.com",
+            },
+            "https://example.com",
+            {"issuer": "https://example.com"},
+        ),
+        (
+            {
+                # Current request does not match either url
+                "internal_url": "https://other.com",
+                "external_url": "https://again.com",
+            },
+            "",
+            {},
+        ),
+    ],
+    ids=["external_url", "internal_url", "no_match"],
+)
 async def test_well_known_auth_info(
-    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    config: dict[str, str],
+    expected_url_prefix: str,
+    extra_response_data: dict[str, str],
 ) -> None:
-    """Test logging in and the ip address changes results in an rejection."""
+    """Test the well-known OAuth authorization server endpoint with different URL configurations."""
+    await async_process_ha_core_config(hass, config)
     client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
     resp = await client.get(
         "/.well-known/oauth-authorization-server",
     )
     assert resp.status == 200
     assert await resp.json() == {
-        "authorization_endpoint": "/auth/authorize",
-        "token_endpoint": "/auth/token",
-        "revocation_endpoint": "/auth/revoke",
+        **extra_response_data,
+        "authorization_endpoint": f"{expected_url_prefix}/auth/authorize",
+        "token_endpoint": f"{expected_url_prefix}/auth/token",
+        "revocation_endpoint": f"{expected_url_prefix}/auth/revoke",
         "response_types_supported": ["code"],
         "service_documentation": "https://developers.home-assistant.io/docs/auth_api",
     }

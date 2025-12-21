@@ -1,8 +1,9 @@
 """Support for Huawei LTE selects."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from functools import partial
 import logging
 
@@ -17,31 +18,26 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import UNDEFINED
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import HuaweiLteBaseEntityWithDevice
+from . import Router
 from .const import DOMAIN, KEY_NET_NET_MODE
+from .entity import HuaweiLteBaseEntityWithDevice
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass(frozen=True)
-class HuaweiSelectEntityMixin:
-    """Mixin for Huawei LTE select entities, to ensure required fields are set."""
+@dataclass(frozen=True, kw_only=True)
+class HuaweiSelectEntityDescription(SelectEntityDescription):
+    """Class describing Huawei LTE select entities."""
 
     setter_fn: Callable[[str], None]
-
-
-@dataclass(frozen=True)
-class HuaweiSelectEntityDescription(SelectEntityDescription, HuaweiSelectEntityMixin):
-    """Class describing Huawei LTE select entities."""
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up from config entry."""
     router = hass.data[DOMAIN].routers[config_entry.entry_id]
@@ -50,8 +46,6 @@ async def async_setup_entry(
     desc = HuaweiSelectEntityDescription(
         key=KEY_NET_NET_MODE,
         entity_category=EntityCategory.CONFIG,
-        icon="mdi:transmission-tower",
-        name="Preferred network mode",
         translation_key="preferred_network_mode",
         options=[
             NetworkModeEnum.MODE_AUTO.value,
@@ -80,22 +74,24 @@ async def async_setup_entry(
     async_add_entities(selects, True)
 
 
-@dataclass
 class HuaweiLteSelectEntity(HuaweiLteBaseEntityWithDevice, SelectEntity):
     """Huawei LTE select entity."""
 
     entity_description: HuaweiSelectEntityDescription
-    key: str
-    item: str
+    _raw_state: str | None = None
 
-    _raw_state: str | None = field(default=None, init=False)
-
-    def __post_init__(self) -> None:
-        """Initialize remaining attributes."""
-        name = None
-        if self.entity_description.name != UNDEFINED:
-            name = self.entity_description.name
-        self._attr_name = name or self.item
+    def __init__(
+        self,
+        router: Router,
+        entity_description: HuaweiSelectEntityDescription,
+        key: str,
+        item: str,
+    ) -> None:
+        """Initialize."""
+        super().__init__(router)
+        self.entity_description = entity_description
+        self.key = key
+        self.item = item
 
     def select_option(self, option: str) -> None:
         """Change the selected option."""

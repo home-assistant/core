@@ -1,11 +1,12 @@
 """Test Home Assistant util methods."""
+
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock, patch
 
 import pytest
 
 from homeassistant import util
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 
 def test_raise_if_invalid_filename() -> None:
@@ -53,8 +54,8 @@ def test_slugify() -> None:
     assert util.slugify("影師嗎") == "ying_shi_ma"
     assert util.slugify("けいふぉんと") == "keihuonto"
     assert util.slugify("$") == "unknown"
-    assert util.slugify("Ⓐ") == "unknown"
-    assert util.slugify("ⓑ") == "unknown"
+    assert util.slugify("Ⓐ") == "a"
+    assert util.slugify("ⓑ") == "b"
     assert util.slugify("$$$") == "unknown"
     assert util.slugify("$something") == "something"
     assert util.slugify("") == ""
@@ -232,3 +233,31 @@ async def test_throttle_async() -> None:
 
     assert (await test_method2()) is True
     assert (await test_method2()) is None
+
+
+@pytest.mark.parametrize(
+    ("input", "expected"),
+    [
+        ("fooBar", "foo_bar"),
+        ("FooBar", "foo_bar"),
+        ("Foobar", "foobar"),
+        ("Foo.bar", "foo_bar"),
+        ("_foo-Bar", "_foo_bar"),
+        ("HTTP", "http"),
+        ("HTTPResponse", "http_response"),
+        ("iPhone", "i_phone"),
+        ("IPAddress", "ip_address"),
+        ("IP_Address", "ip_address"),
+        ("My IP Address", "my_ip_address"),
+        ("LocalIP", "local_ip"),
+        ("Python3Thing", "python3_thing"),
+        ("mTLS", "m_tls"),
+        ("DTrace", "dtrace"),
+        ("IPv4", "ipv4"),
+        ("ID", "id"),
+        ("", ""),
+    ],
+)
+def test_snakecase(input, expected) -> None:
+    """Test snake casing a string."""
+    assert util.snakecase(input) == expected

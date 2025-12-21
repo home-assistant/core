@@ -1,4 +1,5 @@
 """Common code for tests."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -19,7 +20,7 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
-SetupCallback = Callable[[pv.VeraController, dict], None]
+type SetupCallback = Callable[[pv.VeraController, dict], None]
 
 
 class ControllerData(NamedTuple):
@@ -57,8 +58,8 @@ class ControllerConfig(NamedTuple):
 
 
 def new_simple_controller_config(
-    config: dict = None,
-    options: dict = None,
+    config: dict | None = None,
+    options: dict | None = None,
     config_source=ConfigSource.CONFIG_FLOW,
     serial_number="1111",
     devices: tuple[pv.VeraDevice, ...] = (),
@@ -82,7 +83,7 @@ def new_simple_controller_config(
 class ComponentFactory:
     """Factory class."""
 
-    def __init__(self, vera_controller_class_mock):
+    def __init__(self, vera_controller_class_mock) -> None:
         """Initialize the factory."""
         self.vera_controller_class_mock = vera_controller_class_mock
 

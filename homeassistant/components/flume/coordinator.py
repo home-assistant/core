@@ -1,11 +1,15 @@
 """The IntelliFire integration."""
+
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
 
 import pyflume
-from pyflume import FlumeDeviceList
+from pyflume import FlumeAuth, FlumeData, FlumeDeviceList
+from requests import Session
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -18,13 +22,34 @@ from .const import (
 )
 
 
+@dataclass
+class FlumeRuntimeData:
+    """Runtime data for the Flume config entry."""
+
+    devices: FlumeDeviceList
+    auth: FlumeAuth
+    http_session: Session
+    notifications_coordinator: FlumeNotificationDataUpdateCoordinator
+
+
+type FlumeConfigEntry = ConfigEntry[FlumeRuntimeData]
+
+
 class FlumeDeviceDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Data update coordinator for an individual flume device."""
 
-    def __init__(self, hass: HomeAssistant, flume_device) -> None:
+    config_entry: FlumeConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: FlumeConfigEntry,
+        flume_device: FlumeData,
+    ) -> None:
         """Initialize the Coordinator."""
         super().__init__(
             hass,
+            config_entry=config_entry,
             name=DOMAIN,
             logger=_LOGGER,
             update_interval=DEVICE_SCAN_INTERVAL,
@@ -48,10 +73,18 @@ class FlumeDeviceDataUpdateCoordinator(DataUpdateCoordinator[None]):
 class FlumeDeviceConnectionUpdateCoordinator(DataUpdateCoordinator[None]):
     """Date update coordinator to read connected status from Devices endpoint."""
 
-    def __init__(self, hass: HomeAssistant, flume_devices: FlumeDeviceList) -> None:
+    config_entry: FlumeConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: FlumeConfigEntry,
+        flume_devices: FlumeDeviceList,
+    ) -> None:
         """Initialize the Coordinator."""
         super().__init__(
             hass,
+            config_entry=config_entry,
             name=DOMAIN,
             logger=_LOGGER,
             update_interval=DEVICE_CONNECTION_SCAN_INTERVAL,
@@ -79,24 +112,29 @@ class FlumeDeviceConnectionUpdateCoordinator(DataUpdateCoordinator[None]):
 class FlumeNotificationDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Data update coordinator for flume notifications."""
 
-    def __init__(self, hass: HomeAssistant, auth) -> None:
+    config_entry: FlumeConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: FlumeConfigEntry, auth: FlumeAuth
+    ) -> None:
         """Initialize the Coordinator."""
         super().__init__(
             hass,
+            config_entry=config_entry,
             name=DOMAIN,
             logger=_LOGGER,
             update_interval=NOTIFICATION_SCAN_INTERVAL,
         )
         self.auth = auth
-        self.active_notifications_by_device: dict = {}
-        self.notifications: list[dict[str, Any]]
+        self.active_notifications_by_device: dict[str, set[str]] = {}
+        self.notifications: list[dict[str, Any]] = []
 
-    def _update_lists(self):
+    def _update_lists(self) -> None:
         """Query flume for notification list."""
         # Get notifications (read or unread).
         # The related binary sensors (leak detected, high flow, low battery)
         # will be active until the notification is deleted in the Flume app.
-        self.notifications: list[dict[str, Any]] = pyflume.FlumeNotificationList(
+        self.notifications = pyflume.FlumeNotificationList(
             self.auth, read=None
         ).notification_list
         _LOGGER.debug("Notifications %s", self.notifications)

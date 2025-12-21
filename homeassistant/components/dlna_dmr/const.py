@@ -1,4 +1,5 @@
 """Constants for the DLNA DMR component."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping

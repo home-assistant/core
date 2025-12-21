@@ -1,0 +1,30 @@
+# serializer version: 1
+# name: test_entry_diagnostics[positive_payload0]
+  dict({
+    'config_entry': dict({
+      'data': dict({
+        'host': '**REDACTED**',
+        'port': 44077,
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'madvr',
+      'entry_id': '3bd2acb0e4f0476d40865546d0d91132',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'envy',
+      'unique_id': '00:11:22:33:44:55',
+      'version': 1,
+    }),
+    'madvr_data': dict({
+      'is_on': True,
+    }),
+  })
+# ---

@@ -1,13 +1,16 @@
 """The tests for the Media group platform."""
+
 import asyncio
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
 
 from homeassistant.components.group import DOMAIN
 from homeassistant.components.media_player import (
+    ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
+    ATTR_MEDIA_EXTRA,
     ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_SHUFFLE,
     ATTR_MEDIA_TRACK,
@@ -44,7 +47,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_platform, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 
@@ -597,3 +600,59 @@ async def test_nested_group(hass: HomeAssistant) -> None:
     assert hass.states.get("media_player.kitchen").state == STATE_OFF
     assert hass.states.get("media_player.group_1").state == STATE_OFF
     assert hass.states.get("media_player.nested_group").state == STATE_OFF
+
+
+async def test_service_play_media_kwargs(hass: HomeAssistant) -> None:
+    """Test that kwargs get passed through on play_media service call."""
+    await async_setup_component(
+        hass,
+        MEDIA_DOMAIN,
+        {
+            MEDIA_DOMAIN: [
+                {"platform": "demo"},
+                {
+                    "platform": DOMAIN,
+                    "entities": [
+                        "media_player.bedroom",
+                        "media_player.living_room",
+                    ],
+                },
+            ]
+        },
+    )
+
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    platform = entity_platform.async_get_platforms(hass, "media_player")[0]
+    mp_bedroom = platform.domain_entities["media_player.bedroom"]
+    mp_bedroom.play_media = MagicMock()
+
+    mp_living_room = platform.domain_entities["media_player.living_room"]
+    mp_living_room.play_media = MagicMock()
+
+    await hass.services.async_call(
+        MEDIA_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.media_group",
+            ATTR_MEDIA_CONTENT_TYPE: "some_type",
+            ATTR_MEDIA_CONTENT_ID: "some_id",
+            ATTR_MEDIA_ANNOUNCE: "true",
+            ATTR_MEDIA_EXTRA: {
+                "volume": 20,
+            },
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert mp_bedroom.play_media.call_count == 1
+    mp_bedroom.play_media.assert_called_with(
+        "some_type", "some_id", announce=True, extra={"volume": 20}
+    )
+
+    assert mp_living_room.play_media.call_count == 1
+    mp_living_room.play_media.assert_called_with(
+        "some_type", "some_id", announce=True, extra={"volume": 20}
+    )

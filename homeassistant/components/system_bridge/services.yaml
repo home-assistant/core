@@ -1,3 +1,27 @@
+get_process_by_id:
+  fields:
+    bridge:
+      required: true
+      selector:
+        device:
+          integration: system_bridge
+    id:
+      required: true
+      example: 1234
+      selector:
+        number:
+get_processes_by_name:
+  fields:
+    bridge:
+      required: true
+      selector:
+        device:
+          integration: system_bridge
+    name:
+      required: true
+      example: "chrome.exe"
+      selector:
+        text:
 open_path:
   fields:
     bridge:

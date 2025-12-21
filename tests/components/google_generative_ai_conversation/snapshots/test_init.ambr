@@ -1,33 +1,197 @@
 # serializer version: 1
-# name: test_default_prompt
-  dict({
-    'context': '''
-      This smart home is controlled by Home Assistant.
-      
-      An overview of the areas and the devices in this smart home:
-      
-      Test Area:
-      - Test Device (Test Model)
-      
-      Test Area 2:
-      - Test Device 2
-      - Test Device 3 (Test Model 3A)
-      - Test Device 4
-      - 1 (3)
-      
-      Answer the user's questions about the world truthfully.
-      
-      If the user wants to control a device, reject the request and suggest using the Home Assistant app.
-    ''',
-    'messages': list([
-      dict({
-        'author': '0',
-        'content': 'hello',
+# name: test_devices
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
       }),
-    ]),
-    'model': 'models/chat-bison-001',
-    'temperature': 0.25,
-    'top_k': 40,
-    'top_p': 0.95,
-  })
+      'disabled_by': None,
+      'entry_type': <DeviceEntryType.SERVICE: 'service'>,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'google_generative_ai_conversation',
+          'ulid-conversation',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'Google',
+      'model': 'gemini-2.5-flash',
+      'model_id': None,
+      'name': 'Google AI Conversation',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': <DeviceEntryType.SERVICE: 'service'>,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'google_generative_ai_conversation',
+          'ulid-stt',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'Google',
+      'model': 'gemini-2.5-flash',
+      'model_id': None,
+      'name': 'Google AI STT',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': <DeviceEntryType.SERVICE: 'service'>,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'google_generative_ai_conversation',
+          'ulid-ai-task',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'Google',
+      'model': 'gemini-2.5-flash',
+      'model_id': None,
+      'name': 'Google AI Task',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': <DeviceEntryType.SERVICE: 'service'>,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'google_generative_ai_conversation',
+          'ulid-tts',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'Google',
+      'model': 'gemini-2.5-flash-preview-tts',
+      'model_id': None,
+      'name': 'Google AI TTS',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_generate_content_file_processing_succeeds
+  list([
+    tuple(
+      '',
+      tuple(
+      ),
+      dict({
+        'contents': list([
+          'Describe this image from my doorbell camera',
+          File(
+    name='doorbell_snapshot.jpg',
+    state=<FileState.ACTIVE: 'ACTIVE'>
+  ),
+          File(
+    name='context.txt',
+    state=<FileState.PROCESSING: 'PROCESSING'>
+  ),
+        ]),
+        'model': 'models/gemini-2.5-flash',
+      }),
+    ),
+  ])
+# ---
+# name: test_generate_content_service_with_image
+  list([
+    tuple(
+      '',
+      tuple(
+      ),
+      dict({
+        'contents': list([
+          'Describe this image from my doorbell camera',
+          File(
+    name='doorbell_snapshot.jpg',
+    state=<FileState.ACTIVE: 'ACTIVE'>
+  ),
+          File(
+    name='context.txt',
+    state=<FileState.ACTIVE: 'ACTIVE'>
+  ),
+        ]),
+        'model': 'models/gemini-2.5-flash',
+      }),
+    ),
+  ])
+# ---
+# name: test_generate_content_service_without_images
+  list([
+    tuple(
+      '',
+      tuple(
+      ),
+      dict({
+        'contents': list([
+          'Write an opening speech for a Home Assistant release party',
+        ]),
+        'model': 'models/gemini-2.5-flash',
+      }),
+    ),
+  ])
+# ---
+# name: test_load_entry_with_unloaded_entries
+  list([
+    tuple(
+      '',
+      tuple(
+      ),
+      dict({
+        'contents': list([
+          'Write an opening speech for a Home Assistant release party',
+        ]),
+        'model': 'models/gemini-2.5-flash',
+      }),
+    ),
+  ])
 # ---

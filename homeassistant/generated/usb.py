@@ -5,7 +5,25 @@ To update, run python3 -m script.hassfest
 
 USB = [
     {
+        "description": "*zbt-2*",
+        "domain": "homeassistant_connect_zbt2",
+        "pid": "4001",
+        "vid": "303A",
+    },
+    {
+        "description": "*zbt-2*",
+        "domain": "homeassistant_connect_zbt2",
+        "pid": "831A",
+        "vid": "303A",
+    },
+    {
         "description": "*skyconnect v1.0*",
+        "domain": "homeassistant_sky_connect",
+        "pid": "EA60",
+        "vid": "10C4",
+    },
+    {
+        "description": "*home assistant connect zbt-1*",
         "domain": "homeassistant_sky_connect",
         "pid": "EA60",
         "vid": "10C4",
@@ -18,6 +36,20 @@ USB = [
         "domain": "modem_callerid",
         "pid": "1340",
         "vid": "0572",
+    },
+    {
+        "description": "*raven*",
+        "domain": "rainforest_raven",
+        "manufacturer": "*rainforest*",
+        "pid": "8A28",
+        "vid": "0403",
+    },
+    {
+        "description": "*emu-2*",
+        "domain": "rainforest_raven",
+        "manufacturer": "*rainforest*",
+        "pid": "0003",
+        "vid": "04B4",
     },
     {
         "domain": "velbus",
@@ -41,6 +73,12 @@ USB = [
     },
     {
         "description": "*2652*",
+        "domain": "zha",
+        "pid": "EA60",
+        "vid": "10C4",
+    },
+    {
+        "description": "*slzb-07*",
         "domain": "zha",
         "pid": "EA60",
         "vid": "10C4",
@@ -112,6 +150,18 @@ USB = [
         "vid": "10C4",
     },
     {
+        "description": "*sonoff*max*",
+        "domain": "zha",
+        "pid": "EA60",
+        "vid": "10C4",
+    },
+    {
+        "description": "*sonoff*lite*mg21*",
+        "domain": "zha",
+        "pid": "EA60",
+        "vid": "10C4",
+    },
+    {
         "domain": "zwave_js",
         "pid": "0200",
         "vid": "0658",
@@ -120,6 +170,20 @@ USB = [
         "description": "*z-wave*",
         "domain": "zwave_js",
         "pid": "8A2A",
+        "vid": "10C4",
+    },
+    {
+        "description": "*nabu casa zwa-2*",
+        "domain": "zwave_js",
+        "manufacturer": "nabu casa",
+        "pid": "4001",
+        "vid": "303A",
+    },
+    {
+        "description": "*sonoff*zwave*",
+        "domain": "zwave_js",
+        "manufacturer": "sonoff",
+        "pid": "EA60",
         "vid": "10C4",
     },
 ]

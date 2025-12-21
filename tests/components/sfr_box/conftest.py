@@ -1,6 +1,6 @@
 """Provide common SFR Box fixtures."""
-from collections.abc import Generator
-import json
+
+from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -11,11 +11,11 @@ from homeassistant.config_entries import SOURCE_USER, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.sfr_box.async_setup_entry", return_value=True
@@ -58,9 +58,11 @@ def get_config_entry_with_auth(hass: HomeAssistant) -> ConfigEntry:
 
 
 @pytest.fixture
-def dsl_get_info() -> Generator[DslInfo, None, None]:
+async def dsl_get_info(hass: HomeAssistant) -> AsyncGenerator[DslInfo]:
     """Fixture for SFRBox.dsl_get_info."""
-    dsl_info = DslInfo(**json.loads(load_fixture("dsl_getInfo.json", DOMAIN)))
+    dsl_info = DslInfo(
+        **(await async_load_json_object_fixture(hass, "dsl_getInfo.json", DOMAIN))
+    )
     with patch(
         "homeassistant.components.sfr_box.coordinator.SFRBox.dsl_get_info",
         return_value=dsl_info,
@@ -69,9 +71,11 @@ def dsl_get_info() -> Generator[DslInfo, None, None]:
 
 
 @pytest.fixture
-def ftth_get_info() -> Generator[FtthInfo, None, None]:
+async def ftth_get_info(hass: HomeAssistant) -> AsyncGenerator[FtthInfo]:
     """Fixture for SFRBox.ftth_get_info."""
-    info = FtthInfo(**json.loads(load_fixture("ftth_getInfo.json", DOMAIN)))
+    info = FtthInfo(
+        **(await async_load_json_object_fixture(hass, "ftth_getInfo.json", DOMAIN))
+    )
     with patch(
         "homeassistant.components.sfr_box.coordinator.SFRBox.ftth_get_info",
         return_value=info,
@@ -80,9 +84,11 @@ def ftth_get_info() -> Generator[FtthInfo, None, None]:
 
 
 @pytest.fixture
-def system_get_info() -> Generator[SystemInfo, None, None]:
+async def system_get_info(hass: HomeAssistant) -> AsyncGenerator[SystemInfo]:
     """Fixture for SFRBox.system_get_info."""
-    info = SystemInfo(**json.loads(load_fixture("system_getInfo.json", DOMAIN)))
+    info = SystemInfo(
+        **(await async_load_json_object_fixture(hass, "system_getInfo.json", DOMAIN))
+    )
     with patch(
         "homeassistant.components.sfr_box.coordinator.SFRBox.system_get_info",
         return_value=info,
@@ -91,9 +97,11 @@ def system_get_info() -> Generator[SystemInfo, None, None]:
 
 
 @pytest.fixture
-def wan_get_info() -> Generator[WanInfo, None, None]:
+async def wan_get_info(hass: HomeAssistant) -> AsyncGenerator[WanInfo]:
     """Fixture for SFRBox.wan_get_info."""
-    info = WanInfo(**json.loads(load_fixture("wan_getInfo.json", DOMAIN)))
+    info = WanInfo(
+        **(await async_load_json_object_fixture(hass, "wan_getInfo.json", DOMAIN))
+    )
     with patch(
         "homeassistant.components.sfr_box.coordinator.SFRBox.wan_get_info",
         return_value=info,

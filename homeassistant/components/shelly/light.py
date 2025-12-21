@@ -1,7 +1,9 @@
 """Light for Shelly."""
+
 from __future__ import annotations
 
-from typing import Any, cast
+from dataclasses import dataclass
+from typing import Any, Final, cast
 
 from aioshelly.block_device import Block
 from aioshelly.const import MODEL_BULB, RPC_GENERATIONS
@@ -13,122 +15,115 @@ from homeassistant.components.light import (
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
     ATTR_TRANSITION,
+    DOMAIN as LIGHT_DOMAIN,
     ColorMode,
     LightEntity,
+    LightEntityDescription,
     LightEntityFeature,
     brightness_supported,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
+    BLOCK_MAX_TRANSITION_TIME_MS,
     DUAL_MODE_LIGHT_MODELS,
     KELVIN_MAX_VALUE,
     KELVIN_MIN_VALUE_COLOR,
     KELVIN_MIN_VALUE_WHITE,
     LOGGER,
-    MAX_TRANSITION_TIME,
     MODELS_SUPPORTING_LIGHT_TRANSITION,
     RGBW_MODELS,
+    RPC_MIN_TRANSITION_TIME_SEC,
     SHBLB_1_RGB_EFFECTS,
     STANDARD_RGB_EFFECTS,
 )
-from .coordinator import ShellyBlockCoordinator, ShellyRpcCoordinator, get_entry_data
-from .entity import ShellyBlockEntity, ShellyRpcEntity
+from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
+from .entity import (
+    BlockEntityDescription,
+    RpcEntityDescription,
+    ShellyBlockAttributeEntity,
+    ShellyRpcAttributeEntity,
+    async_setup_entry_block,
+    async_setup_entry_rpc,
+)
 from .utils import (
-    async_remove_shelly_entity,
+    async_remove_orphaned_entities,
     brightness_to_percentage,
     get_device_entry_gen,
-    get_rpc_key_ids,
+    get_rpc_channel_name,
+    get_rpc_key_id,
     is_block_channel_type_light,
     is_rpc_channel_type_light,
     percentage_to_brightness,
 )
 
+PARALLEL_UPDATES = 0
+
+
+@dataclass(frozen=True, kw_only=True)
+class BlockLightDescription(BlockEntityDescription, LightEntityDescription):
+    """Description for a Shelly BLOCK light entity."""
+
+
+BLOCK_LIGHTS = {
+    ("light", "output"): BlockLightDescription(
+        key="light|output",
+    ),
+    ("relay", "output"): BlockLightDescription(
+        key="relay|output",
+        removal_condition=lambda settings, block: not is_block_channel_type_light(
+            settings, block
+        ),
+    ),
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: ShellyConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up lights for device."""
+    """Set up light entities."""
     if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
-        return async_setup_rpc_entry(hass, config_entry, async_add_entities)
+        return _async_setup_rpc_entry(hass, config_entry, async_add_entities)
 
-    return async_setup_block_entry(hass, config_entry, async_add_entities)
-
-
-@callback
-def async_setup_block_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up entities for block device."""
-    coordinator = get_entry_data(hass)[config_entry.entry_id].block
-    assert coordinator
-    blocks = []
-    assert coordinator.device.blocks
-    for block in coordinator.device.blocks:
-        if block.type == "light":
-            blocks.append(block)
-        elif block.type == "relay":
-            if not is_block_channel_type_light(
-                coordinator.device.settings, int(block.channel)
-            ):
-                continue
-
-            blocks.append(block)
-            unique_id = f"{coordinator.mac}-{block.type}_{block.channel}"
-            async_remove_shelly_entity(hass, "switch", unique_id)
-
-    if not blocks:
-        return
-
-    async_add_entities(BlockShellyLight(coordinator, block) for block in blocks)
+    return _async_setup_block_entry(hass, config_entry, async_add_entities)
 
 
 @callback
-def async_setup_rpc_entry(
+def _async_setup_block_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: ShellyConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up entities for RPC device."""
-    coordinator = get_entry_data(hass)[config_entry.entry_id].rpc
+    """Set up entities for BLOCK device."""
+    coordinator = config_entry.runtime_data.block
     assert coordinator
-    switch_key_ids = get_rpc_key_ids(coordinator.device.status, "switch")
 
-    switch_ids = []
-    for id_ in switch_key_ids:
-        if not is_rpc_channel_type_light(coordinator.device.config, id_):
-            continue
-
-        switch_ids.append(id_)
-        unique_id = f"{coordinator.mac}-switch:{id_}"
-        async_remove_shelly_entity(hass, "switch", unique_id)
-
-    if switch_ids:
-        async_add_entities(
-            RpcShellySwitchAsLight(coordinator, id_) for id_ in switch_ids
-        )
-        return
-
-    light_key_ids = get_rpc_key_ids(coordinator.device.status, "light")
-    if light_key_ids:
-        async_add_entities(RpcShellyLight(coordinator, id_) for id_ in light_key_ids)
+    async_setup_entry_block(
+        hass, config_entry, async_add_entities, BLOCK_LIGHTS, BlockShellyLight
+    )
 
 
-class BlockShellyLight(ShellyBlockEntity, LightEntity):
+class BlockShellyLight(ShellyBlockAttributeEntity, LightEntity):
     """Entity that controls a light on block based Shelly devices."""
 
+    entity_description: BlockLightDescription
     _attr_supported_color_modes: set[str]
 
-    def __init__(self, coordinator: ShellyBlockCoordinator, block: Block) -> None:
-        """Initialize light."""
-        super().__init__(coordinator, block)
+    def __init__(
+        self,
+        coordinator: ShellyBlockCoordinator,
+        block: Block,
+        attribute: str,
+        description: BlockLightDescription,
+    ) -> None:
+        """Initialize block light."""
+        super().__init__(coordinator, block, attribute, description)
         self.control_result: dict[str, Any] | None = None
+        self._attr_name = None  # Main device entity
+        self._attr_unique_id: str = f"{coordinator.mac}-{block.description}"
         self._attr_supported_color_modes = set()
         self._attr_min_color_temp_kelvin = KELVIN_MIN_VALUE_WHITE
         self._attr_max_color_temp_kelvin = KELVIN_MAX_VALUE
@@ -221,7 +216,7 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
             red = self.block.red
             green = self.block.green
             blue = self.block.blue
-        return (red, green, blue)
+        return (cast(int, red), cast(int, green), cast(int, blue))
 
     @property
     def rgbw_color(self) -> tuple[int, int, int, int]:
@@ -231,7 +226,7 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
         else:
             white = self.block.white
 
-        return (*self.rgb_color, white)
+        return (*self.rgb_color, cast(int, white))
 
     @property
     def color_temp_kelvin(self) -> int:
@@ -262,9 +257,9 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
             effect_index = self.block.effect
 
         if self.coordinator.model == MODEL_BULB:
-            return SHBLB_1_RGB_EFFECTS[effect_index]
+            return SHBLB_1_RGB_EFFECTS[cast(int, effect_index)]
 
-        return STANDARD_RGB_EFFECTS[effect_index]
+        return STANDARD_RGB_EFFECTS[cast(int, effect_index)]
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on light."""
@@ -279,7 +274,7 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
 
         if ATTR_TRANSITION in kwargs:
             params["transition"] = min(
-                int(kwargs[ATTR_TRANSITION] * 1000), MAX_TRANSITION_TIME
+                int(kwargs[ATTR_TRANSITION] * 1000), BLOCK_MAX_TRANSITION_TIME_MS
             )
 
         if ATTR_BRIGHTNESS in kwargs and brightness_supported(supported_color_modes):
@@ -351,7 +346,7 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
 
         if ATTR_TRANSITION in kwargs:
             params["transition"] = min(
-                int(kwargs[ATTR_TRANSITION] * 1000), MAX_TRANSITION_TIME
+                int(kwargs[ATTR_TRANSITION] * 1000), BLOCK_MAX_TRANSITION_TIME_MS
             )
 
         self.control_result = await self.set_state(**params)
@@ -365,41 +360,28 @@ class BlockShellyLight(ShellyBlockEntity, LightEntity):
         super()._update_callback()
 
 
-class RpcShellySwitchAsLight(ShellyRpcEntity, LightEntity):
-    """Entity that controls a relay as light on RPC based Shelly devices."""
+@dataclass(frozen=True, kw_only=True)
+class RpcLightDescription(RpcEntityDescription, LightEntityDescription):
+    """Description for a Shelly RPC light entity."""
 
-    _attr_color_mode = ColorMode.ONOFF
-    _attr_supported_color_modes = {ColorMode.ONOFF}
 
-    def __init__(self, coordinator: ShellyRpcCoordinator, id_: int) -> None:
+class RpcShellyLightBase(ShellyRpcAttributeEntity, LightEntity):
+    """Base Entity for RPC based Shelly devices."""
+
+    entity_description: RpcLightDescription
+    _component: str = "Light"
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcEntityDescription,
+    ) -> None:
         """Initialize light."""
-        super().__init__(coordinator, f"switch:{id_}")
-        self._id = id_
-
-    @property
-    def is_on(self) -> bool:
-        """If light is on."""
-        return bool(self.status["output"])
-
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn on light."""
-        await self.call_rpc("Switch.Set", {"id": self._id, "on": True})
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn off light."""
-        await self.call_rpc("Switch.Set", {"id": self._id, "on": False})
-
-
-class RpcShellyLight(ShellyRpcEntity, LightEntity):
-    """Entity that controls a light on RPC based Shelly devices."""
-
-    _attr_color_mode = ColorMode.BRIGHTNESS
-    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
-
-    def __init__(self, coordinator: ShellyRpcCoordinator, id_: int) -> None:
-        """Initialize light."""
-        super().__init__(coordinator, f"light:{id_}")
-        self._id = id_
+        super().__init__(coordinator, key, attribute, description)
+        self._attr_name = get_rpc_channel_name(coordinator.device, key)
+        self._attr_unique_id = f"{coordinator.mac}-{key}"
 
     @property
     def is_on(self) -> bool:
@@ -411,6 +393,21 @@ class RpcShellyLight(ShellyRpcEntity, LightEntity):
         """Return the brightness of this light between 0..255."""
         return percentage_to_brightness(self.status["brightness"])
 
+    @property
+    def rgb_color(self) -> tuple[int, int, int]:
+        """Return the rgb color value [int, int, int]."""
+        return cast(tuple, self.status["rgb"])
+
+    @property
+    def rgbw_color(self) -> tuple[int, int, int, int]:
+        """Return the rgbw color value [int, int, int, int]."""
+        return (*self.status["rgb"], self.status["white"])
+
+    @property
+    def color_temp_kelvin(self) -> int:
+        """Return the CT color value in Kelvin."""
+        return cast(int, self.status["ct"])
+
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on light."""
         params: dict[str, Any] = {"id": self._id, "on": True}
@@ -418,8 +415,180 @@ class RpcShellyLight(ShellyRpcEntity, LightEntity):
         if ATTR_BRIGHTNESS in kwargs:
             params["brightness"] = brightness_to_percentage(kwargs[ATTR_BRIGHTNESS])
 
-        await self.call_rpc("Light.Set", params)
+        if ATTR_COLOR_TEMP_KELVIN in kwargs:
+            params["ct"] = kwargs[ATTR_COLOR_TEMP_KELVIN]
+
+        if ATTR_TRANSITION in kwargs:
+            params["transition_duration"] = max(
+                kwargs[ATTR_TRANSITION], RPC_MIN_TRANSITION_TIME_SEC
+            )
+
+        if ATTR_RGB_COLOR in kwargs:
+            params["rgb"] = list(kwargs[ATTR_RGB_COLOR])
+
+        if ATTR_RGBW_COLOR in kwargs:
+            params["rgb"] = list(kwargs[ATTR_RGBW_COLOR][:-1])
+            params["white"] = kwargs[ATTR_RGBW_COLOR][-1]
+
+        if self.status.get("mode") is not None:
+            if ATTR_COLOR_TEMP_KELVIN in kwargs:
+                params["mode"] = "cct"
+            elif ATTR_RGB_COLOR in kwargs:
+                params["mode"] = "rgb"
+
+        await self.call_rpc(f"{self._component}.Set", params)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off light."""
-        await self.call_rpc("Light.Set", {"id": self._id, "on": False})
+        params: dict[str, Any] = {"id": self._id, "on": False}
+
+        if ATTR_TRANSITION in kwargs:
+            params["transition_duration"] = max(
+                kwargs[ATTR_TRANSITION], RPC_MIN_TRANSITION_TIME_SEC
+            )
+
+        await self.call_rpc(f"{self._component}.Set", params)
+
+
+class RpcShellySwitchAsLight(RpcShellyLightBase):
+    """Entity that controls a relay as light on RPC based Shelly devices."""
+
+    _component = "Switch"
+
+    _attr_color_mode = ColorMode.ONOFF
+    _attr_supported_color_modes = {ColorMode.ONOFF}
+
+
+class RpcShellyLight(RpcShellyLightBase):
+    """Entity that controls a light on RPC based Shelly devices."""
+
+    _component = "Light"
+
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+    _attr_supported_features = LightEntityFeature.TRANSITION
+
+
+class RpcShellyCctLight(RpcShellyLightBase):
+    """Entity that controls a CCT light on RPC based Shelly devices."""
+
+    _component = "CCT"
+
+    _attr_color_mode = ColorMode.COLOR_TEMP
+    _attr_supported_color_modes = {ColorMode.COLOR_TEMP}
+    _attr_supported_features = LightEntityFeature.TRANSITION
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcEntityDescription,
+    ) -> None:
+        """Initialize light."""
+        super().__init__(coordinator, key, attribute, description)
+        if color_temp_range := coordinator.device.config[key].get("ct_range"):
+            self._attr_min_color_temp_kelvin = color_temp_range[0]
+            self._attr_max_color_temp_kelvin = color_temp_range[1]
+        else:
+            self._attr_min_color_temp_kelvin = KELVIN_MIN_VALUE_WHITE
+            self._attr_max_color_temp_kelvin = KELVIN_MAX_VALUE
+
+
+class RpcShellyRgbCctLight(RpcShellyLightBase):
+    """Entity that controls a RGBCCT light on RPC based Shelly devices."""
+
+    _component = "RGBCCT"
+
+    _attr_supported_color_modes = {ColorMode.COLOR_TEMP, ColorMode.RGB}
+    _attr_supported_features = LightEntityFeature.TRANSITION
+    _attr_min_color_temp_kelvin = KELVIN_MIN_VALUE_WHITE
+    _attr_max_color_temp_kelvin = KELVIN_MAX_VALUE
+
+    @property
+    def color_mode(self) -> ColorMode:
+        """Return the color mode."""
+        if self.status["mode"] == "cct":
+            return ColorMode.COLOR_TEMP
+
+        return ColorMode.RGB
+
+
+class RpcShellyRgbLight(RpcShellyLightBase):
+    """Entity that controls a RGB light on RPC based Shelly devices."""
+
+    _component = "RGB"
+
+    _attr_color_mode = ColorMode.RGB
+    _attr_supported_color_modes = {ColorMode.RGB}
+    _attr_supported_features = LightEntityFeature.TRANSITION
+
+
+class RpcShellyRgbwLight(RpcShellyLightBase):
+    """Entity that controls a RGBW light on RPC based Shelly devices."""
+
+    _component = "RGBW"
+
+    _attr_color_mode = ColorMode.RGBW
+    _attr_supported_color_modes = {ColorMode.RGBW}
+    _attr_supported_features = LightEntityFeature.TRANSITION
+
+
+LIGHTS: Final = {
+    "switch": RpcEntityDescription(
+        key="switch",
+        sub_key="output",
+        removal_condition=lambda config, _status, key: not is_rpc_channel_type_light(
+            config, get_rpc_key_id(key)
+        ),
+        entity_class=RpcShellySwitchAsLight,
+    ),
+    "light": RpcEntityDescription(
+        key="light",
+        sub_key="output",
+        entity_class=RpcShellyLight,
+    ),
+    "cct": RpcEntityDescription(
+        key="cct",
+        sub_key="output",
+        entity_class=RpcShellyCctLight,
+    ),
+    "rgb": RpcEntityDescription(
+        key="rgb",
+        sub_key="output",
+        entity_class=RpcShellyRgbLight,
+    ),
+    "rgbcct": RpcEntityDescription(
+        key="rgbcct",
+        sub_key="output",
+        entity_class=RpcShellyRgbCctLight,
+    ),
+    "rgbw": RpcEntityDescription(
+        key="rgbw",
+        sub_key="output",
+        entity_class=RpcShellyRgbwLight,
+    ),
+}
+
+
+@callback
+def _async_setup_rpc_entry(
+    hass: HomeAssistant,
+    config_entry: ShellyConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up entities for RPC device."""
+    coordinator = config_entry.runtime_data.rpc
+    assert coordinator
+
+    async_setup_entry_rpc(
+        hass, config_entry, async_add_entities, LIGHTS, RpcShellyLight
+    )
+
+    async_remove_orphaned_entities(
+        hass,
+        config_entry.entry_id,
+        coordinator.mac,
+        LIGHT_DOMAIN,
+        coordinator.device.status,
+    )

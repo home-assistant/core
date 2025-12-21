@@ -1,7 +1,6 @@
 """Percentage util functions."""
-from __future__ import annotations
 
-from typing import TypeVar
+from __future__ import annotations
 
 from .scaling import (  # noqa: F401
     int_states_in_range,
@@ -10,10 +9,8 @@ from .scaling import (  # noqa: F401
     states_in_range,
 )
 
-_T = TypeVar("_T")
 
-
-def ordered_list_item_to_percentage(ordered_list: list[_T], item: _T) -> int:
+def ordered_list_item_to_percentage[_T](ordered_list: list[_T], item: _T) -> int:
     """Determine the percentage of an item in an ordered list.
 
     When using this utility for fan speeds, do not include "off"
@@ -36,7 +33,7 @@ def ordered_list_item_to_percentage(ordered_list: list[_T], item: _T) -> int:
     return (list_position * 100) // list_len
 
 
-def percentage_to_ordered_list_item(ordered_list: list[_T], percentage: int) -> _T:
+def percentage_to_ordered_list_item[_T](ordered_list: list[_T], percentage: int) -> _T:
     """Find the item that most closely matches the percentage in an ordered list.
 
     When using this utility for fan speeds, do not include "off"
@@ -80,7 +77,7 @@ def ranged_value_to_percentage(
 
 
 def percentage_to_ranged_value(
-    low_high_range: tuple[float, float], percentage: int
+    low_high_range: tuple[float, float], percentage: float
 ) -> float:
     """Given a range of low and high values convert a percentage to a single value.
 

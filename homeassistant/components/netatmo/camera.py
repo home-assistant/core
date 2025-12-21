@@ -1,4 +1,5 @@
 """Support for the Netatmo cameras."""
+
 from __future__ import annotations
 
 import logging
@@ -15,17 +16,21 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     ATTR_CAMERA_LIGHT_MODE,
+    ATTR_EVENT_TYPE,
     ATTR_PERSON,
     ATTR_PERSONS,
     CAMERA_LIGHT_MODES,
+    CAMERA_TRIGGERS,
     CONF_URL_SECURITY,
     DATA_CAMERAS,
     DATA_EVENTS,
     DOMAIN,
+    EVENT_TYPE_CONNECTION,
+    EVENT_TYPE_DISCONNECTION,
     EVENT_TYPE_LIGHT_MODE,
     EVENT_TYPE_OFF,
     EVENT_TYPE_ON,
@@ -34,12 +39,10 @@ from .const import (
     SERVICE_SET_CAMERA_LIGHT,
     SERVICE_SET_PERSON_AWAY,
     SERVICE_SET_PERSONS_HOME,
-    WEBHOOK_LIGHT_MODE,
-    WEBHOOK_NACAMERA_CONNECTION,
     WEBHOOK_PUSH_TYPE,
 )
 from .data_handler import EVENT, HOME, SIGNAL_NAME, NetatmoDevice
-from .netatmo_entity_base import NetatmoBase
+from .entity import NetatmoModuleEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +50,9 @@ DEFAULT_QUALITY = "high"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Netatmo camera platform."""
 
@@ -79,12 +84,16 @@ async def async_setup_entry(
     )
 
 
-class NetatmoCamera(NetatmoBase, Camera):
+class NetatmoCamera(NetatmoModuleEntity, Camera):
     """Representation of a Netatmo camera."""
 
     _attr_brand = MANUFACTURER
-    _attr_has_entity_name = True
     _attr_supported_features = CameraEntityFeature.STREAM
+    _attr_configuration_url = CONF_URL_SECURITY
+    device: NaModules.Camera
+    _quality = DEFAULT_QUALITY
+    _monitoring: bool | None = None
+    _attr_name = None
 
     def __init__(
         self,
@@ -92,30 +101,22 @@ class NetatmoCamera(NetatmoBase, Camera):
     ) -> None:
         """Set up for access to the Netatmo camera images."""
         Camera.__init__(self)
-        super().__init__(netatmo_device.data_handler)
+        super().__init__(netatmo_device)
 
-        self._camera = cast(NaModules.Camera, netatmo_device.device)
-        self._id = self._camera.entity_id
-        self._home_id = self._camera.home.entity_id
-        self._device_name = self._camera.name
-        self._model = self._camera.device_type
-        self._config_url = CONF_URL_SECURITY
-        self._attr_unique_id = f"{self._id}-{self._model}"
-        self._quality = DEFAULT_QUALITY
-        self._monitoring: bool | None = None
+        self._attr_unique_id = f"{netatmo_device.device.entity_id}-{self.device_type}"
         self._light_state = None
 
         self._publishers.extend(
             [
                 {
                     "name": HOME,
-                    "home_id": self._home_id,
-                    SIGNAL_NAME: f"{HOME}-{self._home_id}",
+                    "home_id": self.home.entity_id,
+                    SIGNAL_NAME: f"{HOME}-{self.home.entity_id}",
                 },
                 {
                     "name": EVENT,
-                    "home_id": self._home_id,
-                    SIGNAL_NAME: f"{EVENT}-{self._home_id}",
+                    "home_id": self.home.entity_id,
+                    SIGNAL_NAME: f"{EVENT}-{self.home.entity_id}",
                 },
             ]
         )
@@ -124,7 +125,7 @@ class NetatmoCamera(NetatmoBase, Camera):
         """Entity created."""
         await super().async_added_to_hass()
 
-        for event_type in (EVENT_TYPE_LIGHT_MODE, EVENT_TYPE_OFF, EVENT_TYPE_ON):
+        for event_type in CAMERA_TRIGGERS:
             self.async_on_remove(
                 async_dispatcher_connect(
                     self.hass,
@@ -133,30 +134,69 @@ class NetatmoCamera(NetatmoBase, Camera):
                 )
             )
 
-        self.hass.data[DOMAIN][DATA_CAMERAS][self._id] = self._device_name
+        self.hass.data[DOMAIN][DATA_CAMERAS][self.device.entity_id] = self.device.name
 
     @callback
     def handle_event(self, event: dict) -> None:
         """Handle webhook events."""
         data = event["data"]
+        event_type = data.get(ATTR_EVENT_TYPE)
+        push_type = data.get(WEBHOOK_PUSH_TYPE)
 
-        if not data.get("camera_id"):
+        if not push_type:
+            _LOGGER.debug("Event has no push_type, returning")
             return
 
-        if data["home_id"] == self._home_id and data["camera_id"] == self._id:
-            if data[WEBHOOK_PUSH_TYPE] in ("NACamera-off", "NACamera-disconnection"):
+        if not data.get("camera_id"):
+            _LOGGER.debug("Event %s has no camera ID, returning", event_type)
+            return
+
+        if (
+            data["home_id"] == self.home.entity_id
+            and data["camera_id"] == self.device.entity_id
+        ):
+            # device_type to be stripped "DeviceType."
+            device_push_type = f"{self.device_type.name}-{event_type}"
+            if push_type != device_push_type:
+                _LOGGER.debug(
+                    "Event push_type %s does not match device push_type %s, returning",
+                    push_type,
+                    device_push_type,
+                )
+                return
+
+            if event_type in [EVENT_TYPE_DISCONNECTION, EVENT_TYPE_OFF]:
+                _LOGGER.debug(
+                    "Camera %s has received %s event, turning off and idleing streaming",
+                    data["camera_id"],
+                    event_type,
+                )
                 self._attr_is_streaming = False
                 self._monitoring = False
-            elif data[WEBHOOK_PUSH_TYPE] in (
-                "NACamera-on",
-                WEBHOOK_NACAMERA_CONNECTION,
-            ):
+            elif event_type in [EVENT_TYPE_CONNECTION, EVENT_TYPE_ON]:
+                _LOGGER.debug(
+                    "Camera %s has received %s event, turning on and enabling streaming",
+                    data["camera_id"],
+                    event_type,
+                )
                 self._attr_is_streaming = True
                 self._monitoring = True
-            elif data[WEBHOOK_PUSH_TYPE] == WEBHOOK_LIGHT_MODE:
-                self._light_state = data["sub_type"]
-                self._attr_extra_state_attributes.update(
-                    {"light_state": self._light_state}
+            elif event_type == EVENT_TYPE_LIGHT_MODE:
+                if data.get("sub_type"):
+                    self._light_state = data["sub_type"]
+                    self._attr_extra_state_attributes.update(
+                        {"light_state": self._light_state}
+                    )
+                else:
+                    _LOGGER.debug(
+                        "Camera %s has received light mode event without sub_type",
+                        data["camera_id"],
+                    )
+            else:
+                _LOGGER.debug(
+                    "Camera %s has received unexpected event as type %s",
+                    data["camera_id"],
+                    event_type,
                 )
 
             self.async_write_ha_state()
@@ -167,7 +207,7 @@ class NetatmoCamera(NetatmoBase, Camera):
     ) -> bytes | None:
         """Return a still image response from the camera."""
         try:
-            return cast(bytes, await self._camera.async_get_live_snapshot())
+            return cast(bytes, await self.device.async_get_live_snapshot())
         except (
             aiohttp.ClientPayloadError,
             aiohttp.ContentTypeError,
@@ -182,50 +222,50 @@ class NetatmoCamera(NetatmoBase, Camera):
     def supported_features(self) -> CameraEntityFeature:
         """Return supported features."""
         supported_features = CameraEntityFeature.ON_OFF
-        if self._model != "NDB":
+        if self.device_type != "NDB":
             supported_features |= CameraEntityFeature.STREAM
         return supported_features
 
     async def async_turn_off(self) -> None:
         """Turn off camera."""
-        await self._camera.async_monitoring_off()
+        await self.device.async_monitoring_off()
 
     async def async_turn_on(self) -> None:
         """Turn on camera."""
-        await self._camera.async_monitoring_on()
+        await self.device.async_monitoring_on()
 
     async def stream_source(self) -> str:
         """Return the stream source."""
-        if self._camera.is_local:
-            await self._camera.async_update_camera_urls()
+        if self.device.is_local:
+            await self.device.async_update_camera_urls()
 
-        if self._camera.local_url:
-            return f"{self._camera.local_url}/live/files/{self._quality}/index.m3u8"
-        return f"{self._camera.vpn_url}/live/files/{self._quality}/index.m3u8"
+        if self.device.local_url:
+            return f"{self.device.local_url}/live/files/{self._quality}/index.m3u8"
+        return f"{self.device.vpn_url}/live/files/{self._quality}/index.m3u8"
 
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state."""
-        self._attr_is_on = self._camera.alim_status is not None
-        self._attr_available = self._camera.alim_status is not None
+        self._attr_is_on = self.device.alim_status is not None
+        self._attr_available = self.device.alim_status is not None
 
-        if self._camera.monitoring is not None:
-            self._attr_is_streaming = self._camera.monitoring
-            self._attr_motion_detection_enabled = self._camera.monitoring
+        if self.device.monitoring is not None:
+            self._attr_is_streaming = self.device.monitoring
+            self._attr_motion_detection_enabled = self.device.monitoring
 
-        self.hass.data[DOMAIN][DATA_EVENTS][self._id] = self.process_events(
-            self._camera.events
+        self.hass.data[DOMAIN][DATA_EVENTS][self.device.entity_id] = (
+            self.process_events(self.device.events)
         )
 
         self._attr_extra_state_attributes.update(
             {
-                "id": self._id,
+                "id": self.device.entity_id,
                 "monitoring": self._monitoring,
-                "sd_status": self._camera.sd_status,
-                "alim_status": self._camera.alim_status,
-                "is_local": self._camera.is_local,
-                "vpn_url": self._camera.vpn_url,
-                "local_url": self._camera.local_url,
+                "sd_status": self.device.sd_status,
+                "alim_status": self.device.alim_status,
+                "is_local": self.device.is_local,
+                "vpn_url": self.device.vpn_url,
+                "local_url": self.device.local_url,
                 "light_state": self._light_state,
             }
         )
@@ -248,9 +288,9 @@ class NetatmoCamera(NetatmoBase, Camera):
 
     def get_video_url(self, video_id: str) -> str:
         """Get video url."""
-        if self._camera.is_local:
-            return f"{self._camera.local_url}/vod/{video_id}/files/{self._quality}/index.m3u8"
-        return f"{self._camera.vpn_url}/vod/{video_id}/files/{self._quality}/index.m3u8"
+        if self.device.is_local:
+            return f"{self.device.local_url}/vod/{video_id}/files/{self._quality}/index.m3u8"
+        return f"{self.device.vpn_url}/vod/{video_id}/files/{self._quality}/index.m3u8"
 
     def fetch_person_ids(self, persons: list[str | None]) -> list[str]:
         """Fetch matching person ids for given list of persons."""
@@ -259,7 +299,7 @@ class NetatmoCamera(NetatmoBase, Camera):
 
         for person in persons:
             person_id = None
-            for pid, data in self._camera.home.persons.items():
+            for pid, data in self.home.persons.items():
                 if data.pseudo == person:
                     person_ids.append(pid)
                     person_id = pid
@@ -278,7 +318,7 @@ class NetatmoCamera(NetatmoBase, Camera):
         persons = kwargs.get(ATTR_PERSONS, [])
         person_ids = self.fetch_person_ids(persons)
 
-        await self._camera.home.async_set_persons_home(person_ids=person_ids)
+        await self.home.async_set_persons_home(person_ids=person_ids)
         _LOGGER.debug("Set %s as at home", persons)
 
     async def _service_set_person_away(self, **kwargs: Any) -> None:
@@ -287,7 +327,7 @@ class NetatmoCamera(NetatmoBase, Camera):
         person_ids = self.fetch_person_ids([person] if person else [])
         person_id = next(iter(person_ids), None)
 
-        await self._camera.home.async_set_persons_away(
+        await self.home.async_set_persons_away(
             person_id=person_id,
         )
 
@@ -298,11 +338,11 @@ class NetatmoCamera(NetatmoBase, Camera):
 
     async def _service_set_camera_light(self, **kwargs: Any) -> None:
         """Service to set light mode."""
-        if not isinstance(self._camera, NaModules.netatmo.NOC):
+        if not isinstance(self.device, NaModules.netatmo.NOC):
             raise HomeAssistantError(
-                f"{self._model} <{self._device_name}> does not have a floodlight"
+                f"{self.device_type} <{self.device.name}> does not have a floodlight"
             )
 
         mode = str(kwargs.get(ATTR_CAMERA_LIGHT_MODE))
         _LOGGER.debug("Turn %s camera light for '%s'", mode, self._attr_name)
-        await self._camera.async_set_floodlight_state(mode)
+        await self.device.async_set_floodlight_state(mode)

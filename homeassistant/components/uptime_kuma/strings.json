@@ -1,0 +1,137 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "hassio_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::uptime_kuma::config::step::user::data_description::api_key%]"
+        },
+        "description": "Do you want to configure Home Assistant to connect to the Uptime Kuma service provided by the add-on: {addon}?",
+        "title": "Uptime Kuma via Home Assistant add-on"
+      },
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::uptime_kuma::config::step::user::data_description::api_key%]"
+        },
+        "description": "The API key for **{name}** is invalid. To re-authenticate with Uptime Kuma provide a new API key below",
+        "title": "Re-authenticate with Uptime Kuma: {name}"
+      },
+      "reconfigure": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "url": "[%key:common::config_flow::data::url%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::uptime_kuma::config::step::user::data_description::api_key%]",
+          "url": "[%key:component::uptime_kuma::config::step::user::data_description::url%]",
+          "verify_ssl": "[%key:component::uptime_kuma::config::step::user::data_description::verify_ssl%]"
+        },
+        "title": "Update configuration for Uptime Kuma"
+      },
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "url": "[%key:common::config_flow::data::url%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "api_key": "Enter an API key. To create a new API key navigate to **Settings → API Keys** and select **Add API Key**",
+          "url": "Enter the full URL of your Uptime Kuma instance. Be sure to include the protocol (`http` or `https`), the hostname or IP address, the port number (if it is a non-default port), and any path prefix if applicable. Example: `{example_url}`",
+          "verify_ssl": "Enable SSL certificate verification for secure connections. Disable only if connecting to an Uptime Kuma instance using a self-signed certificate or via IP address"
+        },
+        "description": "Set up **Uptime Kuma** monitoring service"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "cert_days_remaining": {
+        "name": "Certificate expiry"
+      },
+      "hostname": {
+        "name": "Monitored hostname"
+      },
+      "port": {
+        "name": "Monitored port"
+      },
+      "response_time": {
+        "name": "Response time"
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "down": "Down",
+          "maintenance": "Maintenance",
+          "pending": "Pending",
+          "up": "Up"
+        }
+      },
+      "type": {
+        "name": "Monitor type",
+        "state": {
+          "dns": "DNS",
+          "docker": "Docker",
+          "gamedig": "GameDig",
+          "group": "Group",
+          "grpc_keyword": "gRPC(s) - Keyword",
+          "http": "HTTP(s)",
+          "json_query": "HTTP(s) - JSON query",
+          "kafka_producer": "Kafka Producer",
+          "keyword": "HTTP(s) - Keyword",
+          "manual": "Manual",
+          "mongodb": "MongoDB",
+          "mqtt": "MQTT",
+          "mysql": "MySQL/MariaDB",
+          "ping": "Ping",
+          "port": "TCP port",
+          "postgres": "PostgreSQL",
+          "push": "Push",
+          "rabbit_mq": "RabbitMQ",
+          "radius": "RADIUS",
+          "real_browser": "HTTP(s) - Browser engine",
+          "redis": "Redis",
+          "smtp": "SMTP",
+          "snmp": "SNMP",
+          "sqlserver": "Microsoft SQL Server",
+          "steam": "Steam Game Server",
+          "tailscale_ping": "Tailscale Ping"
+        }
+      },
+      "url": {
+        "name": "Monitored URL"
+      }
+    },
+    "update": {
+      "update": {
+        "name": "Uptime Kuma version"
+      }
+    }
+  },
+  "exceptions": {
+    "auth_failed_exception": {
+      "message": "Authentication with Uptime Kuma failed. Please check that your API key is correct and still valid"
+    },
+    "request_failed_exception": {
+      "message": "Connection to Uptime Kuma failed"
+    },
+    "update_check_failed": {
+      "message": "Failed to check for latest Uptime Kuma update"
+    }
+  }
+}

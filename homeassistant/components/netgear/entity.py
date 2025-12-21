@@ -1,4 +1,5 @@
 """Represent the Netgear router and its devices."""
+
 from __future__ import annotations
 
 from abc import abstractmethod

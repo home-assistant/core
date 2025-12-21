@@ -1,0 +1,103 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_url": "[%key:common::config_flow::error::invalid_host%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]"
+        }
+      }
+    }
+  },
+  "config_subentries": {
+    "ai_task_data": {
+      "abort": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "download_failed": "[%key:component::ollama::config_subentries::conversation::abort::download_failed%]",
+        "entry_not_loaded": "[%key:component::ollama::config_subentries::conversation::abort::entry_not_loaded%]",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      },
+      "entry_type": "AI task",
+      "initiate_flow": {
+        "reconfigure": "Reconfigure AI task",
+        "user": "Add AI task"
+      },
+      "progress": {
+        "download": "[%key:component::ollama::config_subentries::conversation::progress::download%]"
+      },
+      "step": {
+        "download": {
+          "title": "[%key:component::ollama::config_subentries::conversation::step::download::title%]"
+        },
+        "set_options": {
+          "data": {
+            "keep_alive": "[%key:component::ollama::config_subentries::conversation::step::set_options::data::keep_alive%]",
+            "max_history": "[%key:component::ollama::config_subentries::conversation::step::set_options::data::max_history%]",
+            "model": "[%key:component::ollama::config_subentries::conversation::step::set_options::data::model%]",
+            "name": "[%key:common::config_flow::data::name%]",
+            "num_ctx": "[%key:component::ollama::config_subentries::conversation::step::set_options::data::num_ctx%]",
+            "prompt": "[%key:common::config_flow::data::prompt%]",
+            "think": "[%key:component::ollama::config_subentries::conversation::step::set_options::data::think%]"
+          },
+          "data_description": {
+            "keep_alive": "[%key:component::ollama::config_subentries::conversation::step::set_options::data_description::keep_alive%]",
+            "num_ctx": "[%key:component::ollama::config_subentries::conversation::step::set_options::data_description::num_ctx%]",
+            "prompt": "[%key:component::ollama::config_subentries::conversation::step::set_options::data_description::prompt%]",
+            "think": "[%key:component::ollama::config_subentries::conversation::step::set_options::data_description::think%]"
+          }
+        }
+      }
+    },
+    "conversation": {
+      "abort": {
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "download_failed": "Model downloading failed",
+        "entry_not_loaded": "Failed to add agent. The configuration is disabled.",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      },
+      "entry_type": "Conversation agent",
+      "initiate_flow": {
+        "reconfigure": "Reconfigure conversation agent",
+        "user": "Add conversation agent"
+      },
+      "progress": {
+        "download": "Please wait while the model is downloaded, which may take a very long time. Check your Ollama server logs for more details."
+      },
+      "step": {
+        "download": {
+          "title": "Downloading model"
+        },
+        "set_options": {
+          "data": {
+            "keep_alive": "Keep alive",
+            "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]",
+            "max_history": "Max history messages",
+            "model": "Model",
+            "name": "[%key:common::config_flow::data::name%]",
+            "num_ctx": "Context window size",
+            "prompt": "[%key:common::config_flow::data::prompt%]",
+            "think": "Think before responding"
+          },
+          "data_description": {
+            "keep_alive": "Duration in seconds for Ollama to keep model in memory. -1 = indefinite, 0 = never.",
+            "num_ctx": "Maximum number of text tokens the model can process. Lower to reduce Ollama RAM, or increase for a large number of exposed entities.",
+            "prompt": "Instruct how the LLM should respond. This can be a template.",
+            "think": "If enabled, the LLM will think before responding. This can improve response quality but may increase latency."
+          }
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "unsupported_attachment_type": {
+      "message": "Ollama only supports image attachments in user content, but received non-image attachment."
+    }
+  }
+}

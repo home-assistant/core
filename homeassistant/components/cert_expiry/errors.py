@@ -1,4 +1,5 @@
 """Errors for the cert_expiry integration."""
+
 from homeassistant.exceptions import HomeAssistantError
 
 
@@ -24,3 +25,7 @@ class ConnectionTimeout(TemporaryFailure):
 
 class ConnectionRefused(TemporaryFailure):
     """Network connection refused."""
+
+
+class ConnectionReset(TemporaryFailure):
+    """Network connection reset."""

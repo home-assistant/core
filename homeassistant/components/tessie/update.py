@@ -1,37 +1,55 @@
 """Update platform for Tessie integration."""
+
 from __future__ import annotations
 
-from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from typing import Any
 
-from .const import DOMAIN, TessieUpdateStatus
-from .coordinator import TessieDataUpdateCoordinator
+from tessie_api import schedule_software_update
+
+from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from . import TessieConfigEntry
+from .const import TessieUpdateStatus
 from .entity import TessieEntity
+from .models import TessieVehicleData
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TessieConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Tessie Update platform from a config entry."""
-    coordinators = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
-    async_add_entities(TessieUpdateEntity(coordinator) for coordinator in coordinators)
+    async_add_entities(TessieUpdateEntity(vehicle) for vehicle in data.vehicles)
 
 
 class TessieUpdateEntity(TessieEntity, UpdateEntity):
     """Tessie Updates entity."""
 
     _attr_supported_features = UpdateEntityFeature.PROGRESS
-    _attr_name = None
 
     def __init__(
         self,
-        coordinator: TessieDataUpdateCoordinator,
+        vehicle: TessieVehicleData,
     ) -> None:
         """Initialize the Update."""
-        super().__init__(coordinator, "update")
+        super().__init__(vehicle, "update")
+
+    @property
+    def supported_features(self) -> UpdateEntityFeature:
+        """Flag supported features."""
+        if self.get("vehicle_state_software_update_status") in (
+            TessieUpdateStatus.AVAILABLE,
+            TessieUpdateStatus.SCHEDULED,
+        ):
+            return self._attr_supported_features | UpdateEntityFeature.INSTALL
+        return self._attr_supported_features
 
     @property
     def installed_version(self) -> str:
@@ -50,14 +68,38 @@ class TessieUpdateEntity(TessieEntity, UpdateEntity):
             TessieUpdateStatus.WIFI_WAIT,
         ):
             return self.get("vehicle_state_software_update_version")
-        return None
+        return self.installed_version
 
     @property
-    def in_progress(self) -> bool | int | None:
+    def in_progress(self) -> bool:
+        """Update installation progress."""
+        return (
+            self.get("vehicle_state_software_update_status")
+            == TessieUpdateStatus.INSTALLING
+        )
+
+    @property
+    def update_percentage(self) -> int | None:
         """Update installation progress."""
         if (
             self.get("vehicle_state_software_update_status")
             == TessieUpdateStatus.INSTALLING
         ):
             return self.get("vehicle_state_software_update_install_perc")
-        return False
+        return None
+
+    @property
+    def release_url(self) -> str | None:
+        """URL to the full release notes of the latest version available."""
+        if self.latest_version is None:
+            return None
+        return f"https://stats.tessie.com/versions/{self.latest_version}"
+
+    async def async_install(
+        self, version: str | None, backup: bool, **kwargs: Any
+    ) -> None:
+        """Install an update."""
+        await self.run(schedule_software_update, in_seconds=0)
+        self.set(
+            ("vehicle_state_software_update_status", TessieUpdateStatus.INSTALLING)
+        )

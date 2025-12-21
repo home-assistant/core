@@ -1,15 +1,15 @@
 """Diagnostics support for Sensor.Community."""
+
 from __future__ import annotations
 
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import CONF_SENSOR_ID, DOMAIN
+from .const import CONF_SENSOR_ID
+from .coordinator import LuftdatenConfigEntry
 
 TO_REDACT = {
     CONF_LATITUDE,
@@ -19,10 +19,8 @@ TO_REDACT = {
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: LuftdatenConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator: DataUpdateCoordinator[dict[str, Any]] = hass.data[DOMAIN][
-        entry.entry_id
-    ]
+    coordinator = entry.runtime_data
     return async_redact_data(coordinator.data, TO_REDACT)

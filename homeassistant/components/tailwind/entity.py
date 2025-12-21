@@ -1,7 +1,8 @@
 """Base entity for the Tailwind integration."""
+
 from __future__ import annotations
 
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -25,10 +26,6 @@ class TailwindEntity(CoordinatorEntity[TailwindDataUpdateCoordinator]):
         self._attr_unique_id = f"{coordinator.data.device_id}-{entity_description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.data.device_id)},
-            connections={(CONNECTION_NETWORK_MAC, coordinator.data.mac_address)},
-            manufacturer="Tailwind",
-            model=coordinator.data.product,
-            sw_version=coordinator.data.firmware_version,
         )
 
 
@@ -61,7 +58,7 @@ class TailwindDoorEntity(CoordinatorEntity[TailwindDataUpdateCoordinator]):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{coordinator.data.device_id}-{door_id}")},
             via_device=(DOMAIN, coordinator.data.device_id),
-            name=f"Door {coordinator.data.doors[door_id].index+1}",
+            name=f"Door {coordinator.data.doors[door_id].index + 1}",
             manufacturer="Tailwind",
             model=coordinator.data.product,
             sw_version=coordinator.data.firmware_version,

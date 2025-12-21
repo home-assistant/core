@@ -1,4 +1,5 @@
 """Test the Litter-Robot time entity."""
+
 from __future__ import annotations
 
 from datetime import datetime, time

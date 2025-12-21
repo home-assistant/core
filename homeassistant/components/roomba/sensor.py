@@ -1,4 +1,5 @@
 """Sensor platform for Roomba."""
+
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -11,29 +12,32 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfArea, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import DOMAIN
-from .irobot_base import IRobotEntity
+from .entity import IRobotEntity, roomba_reported_state
 from .models import RoombaData
 
 
-@dataclass(frozen=True)
-class RoombaSensorEntityDescriptionMixin:
-    """Mixin for describing Roomba data."""
+@dataclass(frozen=True, kw_only=True)
+class RoombaSensorEntityDescription(SensorEntityDescription):
+    """Immutable class for describing Roomba data."""
 
     value_fn: Callable[[IRobotEntity], StateType]
 
 
-@dataclass(frozen=True)
-class RoombaSensorEntityDescription(
-    SensorEntityDescription, RoombaSensorEntityDescriptionMixin
-):
-    """Immutable class for describing Roomba data."""
-
+DOCK_SENSORS: list[RoombaSensorEntityDescription] = [
+    RoombaSensorEntityDescription(
+        key="dock_tank_level",
+        translation_key="dock_tank_level",
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda self: self.dock_tank_level,
+    ),
+]
 
 SENSORS: list[RoombaSensorEntityDescription] = [
     RoombaSensorEntityDescription(
@@ -41,13 +45,19 @@ SENSORS: list[RoombaSensorEntityDescription] = [
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda self: self.battery_level,
+        value_fn=lambda self: self.vacuum_state.get("batPct"),
+    ),
+    RoombaSensorEntityDescription(
+        key="tank_level",
+        translation_key="tank_level",
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda self: self.tank_level,
     ),
     RoombaSensorEntityDescription(
         key="battery_cycles",
         translation_key="battery_cycles",
         state_class=SensorStateClass.MEASUREMENT,
-        icon="mdi:counter",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda self: self.battery_stats.get("nLithChrg")
         or self.battery_stats.get("nNimhChrg"),
@@ -55,7 +65,6 @@ SENSORS: list[RoombaSensorEntityDescription] = [
     RoombaSensorEntityDescription(
         key="total_cleaning_time",
         translation_key="total_cleaning_time",
-        icon="mdi:clock",
         native_unit_of_measurement=UnitOfTime.HOURS,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda self: self.run_stats.get("hr"),
@@ -63,7 +72,6 @@ SENSORS: list[RoombaSensorEntityDescription] = [
     RoombaSensorEntityDescription(
         key="average_mission_time",
         translation_key="average_mission_time",
-        icon="mdi:clock",
         native_unit_of_measurement=UnitOfTime.MINUTES,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda self: self.mission_stats.get("aMssnM"),
@@ -71,7 +79,6 @@ SENSORS: list[RoombaSensorEntityDescription] = [
     RoombaSensorEntityDescription(
         key="total_missions",
         translation_key="total_missions",
-        icon="mdi:counter",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="Missions",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -80,7 +87,6 @@ SENSORS: list[RoombaSensorEntityDescription] = [
     RoombaSensorEntityDescription(
         key="successful_missions",
         translation_key="successful_missions",
-        icon="mdi:counter",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="Missions",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -89,7 +95,6 @@ SENSORS: list[RoombaSensorEntityDescription] = [
     RoombaSensorEntityDescription(
         key="canceled_missions",
         translation_key="canceled_missions",
-        icon="mdi:counter",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="Missions",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -98,7 +103,6 @@ SENSORS: list[RoombaSensorEntityDescription] = [
     RoombaSensorEntityDescription(
         key="failed_missions",
         translation_key="failed_missions",
-        icon="mdi:counter",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="Missions",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -107,11 +111,29 @@ SENSORS: list[RoombaSensorEntityDescription] = [
     RoombaSensorEntityDescription(
         key="scrubs_count",
         translation_key="scrubs_count",
-        icon="mdi:counter",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement="Scrubs",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda self: self.run_stats.get("nScrubs"),
+        entity_registry_enabled_default=False,
+    ),
+    RoombaSensorEntityDescription(
+        key="total_cleaned_area",
+        translation_key="total_cleaned_area",
+        native_unit_of_measurement=UnitOfArea.SQUARE_METERS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda self: (
+            None if (sqft := self.run_stats.get("sqft")) is None else sqft * 9.29
+        ),
+        suggested_display_precision=0,
+        entity_registry_enabled_default=False,
+    ),
+    RoombaSensorEntityDescription(
+        key="last_mission",
+        translation_key="last_mission",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda self: self.last_mission,
         entity_registry_enabled_default=False,
     ),
 ]
@@ -120,15 +142,23 @@ SENSORS: list[RoombaSensorEntityDescription] = [
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the iRobot Roomba vacuum cleaner."""
     domain_data: RoombaData = hass.data[DOMAIN][config_entry.entry_id]
     roomba = domain_data.roomba
     blid = domain_data.blid
 
+    sensor_list: list[RoombaSensorEntityDescription] = SENSORS
+
+    has_dock: bool = len(roomba_reported_state(roomba).get("dock", {})) > 0
+
+    if has_dock:
+        sensor_list.extend(DOCK_SENSORS)
+
     async_add_entities(
-        RoombaSensor(roomba, blid, entity_description) for entity_description in SENSORS
+        RoombaSensor(roomba, blid, entity_description)
+        for entity_description in sensor_list
     )
 
 

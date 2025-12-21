@@ -1,0 +1,113 @@
+{
+  "entity": {
+    "sensor": {
+      "access_point_mac": {
+        "default": "mdi:router-network"
+      },
+      "average_ping": {
+        "default": "mdi:wan"
+      },
+      "cpu_utilization": {
+        "default": "mdi:cpu-64-bit"
+      },
+      "downlink_bandwidth": {
+        "default": "mdi:download"
+      },
+      "download_last_month": {
+        "default": "mdi:download"
+      },
+      "download_last_month_average": {
+        "default": "mdi:download"
+      },
+      "download_month": {
+        "default": "mdi:download"
+      },
+      "download_month_average": {
+        "default": "mdi:download"
+      },
+      "download_today": {
+        "default": "mdi:download"
+      },
+      "download_week": {
+        "default": "mdi:download"
+      },
+      "download_week_average": {
+        "default": "mdi:download"
+      },
+      "download_yesterday": {
+        "default": "mdi:download"
+      },
+      "ethernet_link_status": {
+        "default": "mdi:ethernet"
+      },
+      "link_rate": {
+        "default": "mdi:speedometer"
+      },
+      "link_type": {
+        "default": "mdi:lan"
+      },
+      "memory_utilization": {
+        "default": "mdi:memory"
+      },
+      "signal_strength": {
+        "default": "mdi:wifi"
+      },
+      "ssid": {
+        "default": "mdi:wifi-marker"
+      },
+      "uplink_bandwidth": {
+        "default": "mdi:upload"
+      },
+      "upload_last_month": {
+        "default": "mdi:upload"
+      },
+      "upload_last_month_average": {
+        "default": "mdi:upload"
+      },
+      "upload_month": {
+        "default": "mdi:upload"
+      },
+      "upload_month_average": {
+        "default": "mdi:upload"
+      },
+      "upload_today": {
+        "default": "mdi:upload"
+      },
+      "upload_week": {
+        "default": "mdi:upload"
+      },
+      "upload_week_average": {
+        "default": "mdi:upload"
+      },
+      "upload_yesterday": {
+        "default": "mdi:upload"
+      }
+    },
+    "switch": {
+      "2g_guest_wifi": {
+        "default": "mdi:wifi"
+      },
+      "5g_guest_wifi": {
+        "default": "mdi:wifi"
+      },
+      "access_control": {
+        "default": "mdi:block-helper"
+      },
+      "allowed_on_network": {
+        "default": "mdi:block-helper"
+      },
+      "parental_control": {
+        "default": "mdi:account-child-outline"
+      },
+      "quality_of_service": {
+        "default": "mdi:wifi-star"
+      },
+      "smart_connect": {
+        "default": "mdi:wifi"
+      },
+      "traffic_meter": {
+        "default": "mdi:wifi-arrow-up-down"
+      }
+    }
+  }
+}

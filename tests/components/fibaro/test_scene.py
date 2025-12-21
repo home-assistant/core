@@ -1,4 +1,5 @@
 """Test the Fibaro scene platform."""
+
 from unittest.mock import Mock
 
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN

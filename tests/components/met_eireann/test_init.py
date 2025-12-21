@@ -1,4 +1,5 @@
 """Test the Met Éireann integration init."""
+
 from homeassistant.components.met_eireann.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant

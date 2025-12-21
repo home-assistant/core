@@ -1,11 +1,15 @@
 """Test the Energy sensors."""
+
+from collections.abc import Callable, Coroutine
 import copy
 from datetime import timedelta
 from typing import Any
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.energy import data
+from homeassistant.components.recorder.core import Recorder
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.components.sensor import (
     ATTR_LAST_RESET,
@@ -13,7 +17,9 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorStateClass,
 )
-from homeassistant.components.sensor.recorder import compile_statistics
+from homeassistant.components.sensor.recorder import (  # pylint: disable=hass-component-root-import
+    compile_statistics,
+)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -24,7 +30,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_conversion import _WH_TO_CAL, _WH_TO_J
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from tests.components.recorder.common import async_wait_recording_done
@@ -34,10 +41,12 @@ TEST_TIME_ADVANCE_INTERVAL = timedelta(milliseconds=10)
 
 
 @pytest.fixture
-async def setup_integration(recorder_mock):
+async def setup_integration(
+    recorder_mock: Recorder,
+) -> Callable[[HomeAssistant], Coroutine[Any, Any, None]]:
     """Set up the integration."""
 
-    async def setup_integration(hass):
+    async def setup_integration(hass: HomeAssistant) -> None:
         assert await async_setup_component(hass, "energy", {})
         await hass.async_block_till_done()
 
@@ -45,7 +54,7 @@ async def setup_integration(recorder_mock):
 
 
 @pytest.fixture(autouse=True)
-def frozen_time(freezer):
+def frozen_time(freezer: FrozenDateTimeFactory) -> FrozenDateTimeFactory:
     """Freeze clock for tests."""
     freezer.move_to("2022-04-19 07:53:05")
     return freezer
@@ -84,6 +93,7 @@ async def test_cost_sensor_no_states(
         "data": energy_data,
     }
     await setup_integration(hass)
+    # pylint: disable-next=fixme
     # TODO: No states, should the cost entity refuse to setup?
 
 
@@ -424,7 +434,7 @@ async def test_cost_sensor_price_entity_total(
         hass.states.async_set(
             usage_sensor_entity_id,
             initial_energy,
-            {**energy_attributes, **{"last_reset": last_reset}},
+            {**energy_attributes, "last_reset": last_reset},
         )
     hass.states.async_set("sensor.energy_price", "1")
 
@@ -443,7 +453,7 @@ async def test_cost_sensor_price_entity_total(
         hass.states.async_set(
             usage_sensor_entity_id,
             "0",
-            {**energy_attributes, **{"last_reset": last_reset}},
+            {**energy_attributes, "last_reset": last_reset},
         )
         await hass.async_block_till_done()
 
@@ -465,7 +475,7 @@ async def test_cost_sensor_price_entity_total(
     hass.states.async_set(
         usage_sensor_entity_id,
         "10",
-        {**energy_attributes, **{"last_reset": last_reset}},
+        {**energy_attributes, "last_reset": last_reset},
     )
     await hass.async_block_till_done()
     state = hass.states.get(cost_sensor_entity_id)
@@ -492,7 +502,7 @@ async def test_cost_sensor_price_entity_total(
     hass.states.async_set(
         usage_sensor_entity_id,
         "14.5",
-        {**energy_attributes, **{"last_reset": last_reset}},
+        {**energy_attributes, "last_reset": last_reset},
     )
     await hass.async_block_till_done()
     state = hass.states.get(cost_sensor_entity_id)
@@ -510,7 +520,7 @@ async def test_cost_sensor_price_entity_total(
     hass.states.async_set(
         usage_sensor_entity_id,
         "14",
-        {**energy_attributes, **{"last_reset": last_reset}},
+        {**energy_attributes, "last_reset": last_reset},
     )
     await hass.async_block_till_done()
     state = hass.states.get(cost_sensor_entity_id)
@@ -523,7 +533,7 @@ async def test_cost_sensor_price_entity_total(
     hass.states.async_set(
         usage_sensor_entity_id,
         "4",
-        {**energy_attributes, **{"last_reset": last_reset}},
+        {**energy_attributes, "last_reset": last_reset},
     )
     await hass.async_block_till_done()
     state = hass.states.get(cost_sensor_entity_id)
@@ -536,7 +546,7 @@ async def test_cost_sensor_price_entity_total(
     hass.states.async_set(
         usage_sensor_entity_id,
         "10",
-        {**energy_attributes, **{"last_reset": last_reset}},
+        {**energy_attributes, "last_reset": last_reset},
     )
     await hass.async_block_till_done()
     state = hass.states.get(cost_sensor_entity_id)
@@ -741,10 +751,12 @@ async def test_cost_sensor_price_entity_total_no_reset(
 @pytest.mark.parametrize(
     ("energy_unit", "factor"),
     [
+        (UnitOfEnergy.MILLIWATT_HOUR, 1e6),
         (UnitOfEnergy.WATT_HOUR, 1000),
         (UnitOfEnergy.KILO_WATT_HOUR, 1),
         (UnitOfEnergy.MEGA_WATT_HOUR, 0.001),
-        (UnitOfEnergy.GIGA_JOULE, 0.001 * 3.6),
+        (UnitOfEnergy.GIGA_JOULE, _WH_TO_J / 1e6),
+        (UnitOfEnergy.CALORIE, _WH_TO_CAL * 1e3),
     ],
 )
 async def test_cost_sensor_handle_energy_units(
@@ -808,6 +820,7 @@ async def test_cost_sensor_handle_energy_units(
 @pytest.mark.parametrize(
     ("price_unit", "factor"),
     [
+        (f"EUR/{UnitOfEnergy.MILLIWATT_HOUR}", 1e-6),
         (f"EUR/{UnitOfEnergy.WATT_HOUR}", 0.001),
         (f"EUR/{UnitOfEnergy.KILO_WATT_HOUR}", 1),
         (f"EUR/{UnitOfEnergy.MEGA_WATT_HOUR}", 1000),
@@ -987,7 +1000,7 @@ async def test_cost_sensor_handle_late_price_sensor(
 
 @pytest.mark.parametrize(
     "unit",
-    (UnitOfVolume.CUBIC_FEET, UnitOfVolume.CUBIC_METERS),
+    [UnitOfVolume.CUBIC_FEET, UnitOfVolume.CUBIC_METERS, UnitOfVolume.LITERS],
 )
 async def test_cost_sensor_handle_gas(
     setup_integration, hass: HomeAssistant, hass_storage: dict[str, Any], unit
@@ -1085,12 +1098,12 @@ async def test_cost_sensor_handle_gas_kwh(
 
 @pytest.mark.parametrize(
     ("unit_system", "usage_unit", "growth"),
-    (
+    [
         # 1 cubic foot = 7.47 gl, 100 ft3 growth @ 0.5/ft3:
         (US_CUSTOMARY_SYSTEM, UnitOfVolume.CUBIC_FEET, 374.025974025974),
         (US_CUSTOMARY_SYSTEM, UnitOfVolume.GALLONS, 50.0),
         (METRIC_SYSTEM, UnitOfVolume.CUBIC_METERS, 50.0),
-    ),
+    ],
 )
 async def test_cost_sensor_handle_water(
     setup_integration,

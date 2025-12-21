@@ -1,4 +1,5 @@
 """The CPU Speed integration."""
+
 from cpuinfo import cpuinfo
 
 from homeassistant.config_entries import ConfigEntry

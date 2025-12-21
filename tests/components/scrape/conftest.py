@@ -1,4 +1,5 @@
 """Fixtures for the Scrape integration."""
+
 from __future__ import annotations
 
 from collections.abc import Generator
@@ -8,8 +9,13 @@ import uuid
 
 import pytest
 
-from homeassistant.components.rest.data import DEFAULT_TIMEOUT
-from homeassistant.components.rest.schema import DEFAULT_METHOD, DEFAULT_VERIFY_SSL
+from homeassistant.components.rest.data import (  # pylint: disable=hass-component-root-import
+    DEFAULT_TIMEOUT,
+)
+from homeassistant.components.rest.schema import (  # pylint: disable=hass-component-root-import
+    DEFAULT_METHOD,
+    DEFAULT_VERIFY_SSL,
+)
 from homeassistant.components.scrape.const import (
     CONF_ENCODING,
     CONF_INDEX,
@@ -34,7 +40,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Automatically path uuid generator."""
     with patch(
         "homeassistant.components.scrape.async_setup_entry",

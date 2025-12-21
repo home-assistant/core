@@ -1,4 +1,5 @@
 """Config flow for Nina integration."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -6,19 +7,22 @@ from typing import Any
 from pynina import ApiError, Nina
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.core import callback
-from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_registry import (
-    async_entries_for_config_entry,
-    async_get,
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
 )
+from homeassistant.core import callback
+from homeassistant.data_entry_flow import section
+from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     _LOGGER,
     CONF_AREA_FILTER,
+    CONF_FILTERS,
     CONF_HEADLINE_FILTER,
     CONF_MESSAGE_SLOTS,
     CONF_REGIONS,
@@ -81,10 +85,39 @@ def prepare_user_input(
     return user_input
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+def create_schema(regions: dict[str, dict[str, Any]]) -> vol.Schema:
+    """Create the schema for the flows."""
+    schema_dict: VolDictType = {
+        **{
+            vol.Optional(region): cv.multi_select(regions[region])
+            for region in CONST_REGIONS
+        },
+        vol.Required(
+            CONF_MESSAGE_SLOTS,
+            default=5,
+        ): vol.All(int, vol.Range(min=1, max=20)),
+        vol.Required(CONF_FILTERS): section(
+            vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_HEADLINE_FILTER,
+                    ): cv.string,
+                    vol.Optional(
+                        CONF_AREA_FILTER,
+                    ): cv.string,
+                }
+            )
+        ),
+    }
+
+    return vol.Schema(schema_dict)
+
+
+class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for NINA."""
 
     VERSION: int = 1
+    MINOR_VERSION: int = 3
 
     def __init__(self) -> None:
         """Initialize."""
@@ -96,14 +129,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self.regions[name] = {}
 
     async def async_step_user(
-        self: ConfigFlow,
+        self,
         user_input: dict[str, Any] | None = None,
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, Any] = {}
-
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
 
         if not self._all_region_codes_sorted:
             nina: Nina = Nina(async_get_clientsession(self.hass))
@@ -113,9 +143,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     await nina.getAllRegionalCodes()
                 )
             except ApiError:
-                errors["base"] = "cannot_connect"
-            except Exception as err:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception: %s", err)
+                return self.async_abort(reason="no_fetch")
+            except Exception:  # noqa: BLE001
+                _LOGGER.exception("Unexpected exception")
                 return self.async_abort(reason="unknown")
 
             self.regions = split_regions(self._all_region_codes_sorted, self.regions)
@@ -127,8 +157,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if group_input := user_input.get(group):
                     user_input[CONF_REGIONS] += group_input
 
-            if not user_input[CONF_HEADLINE_FILTER]:
-                user_input[CONF_HEADLINE_FILTER] = NO_MATCH_REGEX
+            if not user_input[CONF_FILTERS][CONF_HEADLINE_FILTER]:
+                user_input[CONF_FILTERS][CONF_HEADLINE_FILTER] = NO_MATCH_REGEX
 
             if user_input[CONF_REGIONS]:
                 return self.async_create_entry(
@@ -140,37 +170,25 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    **{
-                        vol.Optional(region): cv.multi_select(self.regions[region])
-                        for region in CONST_REGIONS
-                    },
-                    vol.Required(CONF_MESSAGE_SLOTS, default=5): vol.All(
-                        int, vol.Range(min=1, max=20)
-                    ),
-                    vol.Optional(CONF_HEADLINE_FILTER, default=""): cv.string,
-                }
-            ),
+            data_schema=create_schema(self.regions),
             errors=errors,
         )
 
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
 
-class OptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle a option flow for nut."""
+class OptionsFlowHandler(OptionsFlowWithReload):
+    """Handle an option flow for NINA."""
 
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
-        self.config_entry = config_entry
-        self.data = dict(self.config_entry.data)
+        self.data = dict(config_entry.data)
 
         self._all_region_codes_sorted: dict[str, str] = {}
         self.regions: dict[str, dict[str, Any]] = {}
@@ -180,9 +198,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             if name not in self.data:
                 self.data[name] = []
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle options flow."""
-        errors: dict[str, Any] = {}
+        errors: dict[str, str] = {}
 
         if not self._all_region_codes_sorted:
             nina: Nina = Nina(async_get_clientsession(self.hass))
@@ -192,9 +212,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     await nina.getAllRegionalCodes()
                 )
             except ApiError:
-                errors["base"] = "cannot_connect"
-            except Exception as err:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception: %s", err)
+                return self.async_abort(reason="no_fetch")
+            except Exception:  # noqa: BLE001
+                _LOGGER.exception("Unexpected exception")
                 return self.async_abort(reason="unknown")
 
             self.regions = split_regions(self._all_region_codes_sorted, self.regions)
@@ -211,16 +231,16 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     user_input, self._all_region_codes_sorted
                 )
 
-                entity_registry = async_get(self.hass)
+                entity_registry = er.async_get(self.hass)
 
-                entries = async_entries_for_config_entry(
+                entries = er.async_entries_for_config_entry(
                     entity_registry, self.config_entry.entry_id
                 )
 
                 removed_entities_slots = [
                     f"{region}-{slot_id}"
                     for region in self.data[CONF_REGIONS]
-                    for slot_id in range(0, self.data[CONF_MESSAGE_SLOTS] + 1)
+                    for slot_id in range(self.data[CONF_MESSAGE_SLOTS] + 1)
                     if slot_id > user_input[CONF_MESSAGE_SLOTS]
                 ]
 
@@ -242,33 +262,16 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     self.config_entry, data=user_input
                 )
 
-                return self.async_create_entry(title="", data=None)
+                return self.async_create_entry(title="", data={})
 
             errors["base"] = "no_selection"
 
+        schema_with_suggested = self.add_suggested_values_to_schema(
+            create_schema(self.regions), self.data
+        )
+
         return self.async_show_form(
             step_id="init",
-            data_schema=vol.Schema(
-                {
-                    **{
-                        vol.Optional(
-                            region, default=self.data[region]
-                        ): cv.multi_select(self.regions[region])
-                        for region in CONST_REGIONS
-                    },
-                    vol.Required(
-                        CONF_MESSAGE_SLOTS,
-                        default=self.data[CONF_MESSAGE_SLOTS],
-                    ): vol.All(int, vol.Range(min=1, max=20)),
-                    vol.Optional(
-                        CONF_HEADLINE_FILTER,
-                        default=self.data[CONF_HEADLINE_FILTER],
-                    ): cv.string,
-                    vol.Optional(
-                        CONF_AREA_FILTER,
-                        default=self.data[CONF_AREA_FILTER],
-                    ): cv.string,
-                }
-            ),
+            data_schema=schema_with_suggested,
             errors=errors,
         )

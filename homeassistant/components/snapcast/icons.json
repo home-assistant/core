@@ -1,0 +1,19 @@
+{
+  "services": {
+    "join": {
+      "service": "mdi:music-note-plus"
+    },
+    "restore": {
+      "service": "mdi:camera-retake"
+    },
+    "set_latency": {
+      "service": "mdi:camera-timer"
+    },
+    "snapshot": {
+      "service": "mdi:camera"
+    },
+    "unjoin": {
+      "service": "mdi:music-note-minus"
+    }
+  }
+}

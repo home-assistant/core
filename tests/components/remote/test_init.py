@@ -1,7 +1,6 @@
 """The tests for the Remote component, adapted from Light Test."""
-import pytest
 
-import homeassistant.components.remote as remote
+from homeassistant.components import remote
 from homeassistant.components.remote import (
     ATTR_ALTERNATIVE,
     ATTR_COMMAND,
@@ -22,7 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from tests.common import async_mock_service, import_and_test_deprecated_constant_enum
+from tests.common import async_mock_service
 
 TEST_PLATFORM = {DOMAIN: {CONF_PLATFORM: "test"}}
 SERVICE_SEND_COMMAND = "send_command"
@@ -141,12 +140,3 @@ async def test_delete_command(hass: HomeAssistant) -> None:
     assert call.domain == remote.DOMAIN
     assert call.service == SERVICE_DELETE_COMMAND
     assert call.data[ATTR_ENTITY_ID] == ENTITY_ID
-
-
-@pytest.mark.parametrize(("enum"), list(remote.RemoteEntityFeature))
-def test_deprecated_constants(
-    caplog: pytest.LogCaptureFixture,
-    enum: remote.RemoteEntityFeature,
-) -> None:
-    """Test deprecated constants."""
-    import_and_test_deprecated_constant_enum(caplog, remote, enum, "SUPPORT_", "2025.1")

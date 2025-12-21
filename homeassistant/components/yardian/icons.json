@@ -1,0 +1,34 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "freeze_prevent": {
+        "default": "mdi:snowflake-alert"
+      },
+      "standby": {
+        "default": "mdi:pause-circle"
+      },
+      "watering_running": {
+        "default": "mdi:sprinkler",
+        "state": {
+          "off": "mdi:sprinkler-variant"
+        }
+      },
+      "zone_enabled": {
+        "default": "mdi:toggle-switch",
+        "state": {
+          "off": "mdi:toggle-switch-off"
+        }
+      }
+    },
+    "switch": {
+      "switch": {
+        "default": "mdi:water"
+      }
+    }
+  },
+  "services": {
+    "start_irrigation": {
+      "service": "mdi:water"
+    }
+  }
+}

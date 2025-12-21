@@ -1,0 +1,452 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "alarm_sound_detection": {
+        "default": "mdi:alarm-bell"
+      },
+      "animal_detected": {
+        "default": "mdi:paw"
+      },
+      "audio_object_detected": {
+        "default": "mdi:eye"
+      },
+      "baby_cry_detected": {
+        "default": "mdi:cradle"
+      },
+      "barking_detected": {
+        "default": "mdi:dog"
+      },
+      "car_alarm_detected": {
+        "default": "mdi:car"
+      },
+      "car_horn_detected": {
+        "default": "mdi:bugle"
+      },
+      "co_alarm_detected": {
+        "default": "mdi:molecule-co"
+      },
+      "detections_animal": {
+        "default": "mdi:paw"
+      },
+      "detections_baby_cry": {
+        "default": "mdi:cradle"
+      },
+      "detections_barking": {
+        "default": "mdi:dog"
+      },
+      "detections_car_alarm": {
+        "default": "mdi:car"
+      },
+      "detections_car_horn": {
+        "default": "mdi:bugle"
+      },
+      "detections_co_alarm": {
+        "default": "mdi:molecule-co"
+      },
+      "detections_glass_break": {
+        "default": "mdi:glass-fragile"
+      },
+      "detections_license_plate": {
+        "default": "mdi:car"
+      },
+      "detections_motion": {
+        "default": "mdi:run-fast"
+      },
+      "detections_package": {
+        "default": "mdi:package-variant-closed"
+      },
+      "detections_person": {
+        "default": "mdi:walk"
+      },
+      "detections_siren": {
+        "default": "mdi:alarm-bell"
+      },
+      "detections_smoke": {
+        "default": "mdi:fire"
+      },
+      "detections_speaking": {
+        "default": "mdi:account-voice"
+      },
+      "detections_vehicle": {
+        "default": "mdi:car"
+      },
+      "doorbell": {
+        "default": "mdi:doorbell-video"
+      },
+      "flood_light": {
+        "default": "mdi:spotlight-beam"
+      },
+      "glass_break_detected": {
+        "default": "mdi:glass-fragile"
+      },
+      "hdr_mode": {
+        "default": "mdi:brightness-7"
+      },
+      "high_fps": {
+        "default": "mdi:video-high-definition"
+      },
+      "humidity_sensor": {
+        "default": "mdi:water-percent"
+      },
+      "humidity_sensor_enabled": {
+        "default": "mdi:water-percent"
+      },
+      "is_dark": {
+        "default": "mdi:brightness-6"
+      },
+      "light_sensor": {
+        "default": "mdi:brightness-5"
+      },
+      "light_sensor_enabled": {
+        "default": "mdi:brightness-5"
+      },
+      "motion_detection_enabled": {
+        "default": "mdi:walk"
+      },
+      "object_detected": {
+        "default": "mdi:eye"
+      },
+      "overlay_show_date": {
+        "default": "mdi:fullscreen"
+      },
+      "overlay_show_logo": {
+        "default": "mdi:fullscreen"
+      },
+      "overlay_show_name": {
+        "default": "mdi:fullscreen"
+      },
+      "overlay_show_nerd_mode": {
+        "default": "mdi:fullscreen"
+      },
+      "package_detected": {
+        "default": "mdi:package-variant-closed"
+      },
+      "person_detected": {
+        "default": "mdi:walk"
+      },
+      "siren_detected": {
+        "default": "mdi:alarm-bell"
+      },
+      "smoke_alarm_detected": {
+        "default": "mdi:fire"
+      },
+      "speaking_detected": {
+        "default": "mdi:account-voice"
+      },
+      "ssh_enabled": {
+        "default": "mdi:lock"
+      },
+      "status_light": {
+        "default": "mdi:led-on"
+      },
+      "system_sounds": {
+        "default": "mdi:speaker"
+      },
+      "temperature_sensor": {
+        "default": "mdi:thermometer"
+      },
+      "temperature_sensor_enabled": {
+        "default": "mdi:thermometer"
+      },
+      "tracking_person": {
+        "default": "mdi:walk"
+      },
+      "vehicle_detected": {
+        "default": "mdi:car"
+      }
+    },
+    "button": {
+      "adopt_device": {
+        "default": "mdi:plus-circle"
+      },
+      "clear_tamper": {
+        "default": "mdi:notification-clear-all"
+      },
+      "play_buzzer": {
+        "default": "mdi:play"
+      },
+      "play_chime": {
+        "default": "mdi:play"
+      },
+      "unadopt_device": {
+        "default": "mdi:delete"
+      }
+    },
+    "event": {
+      "doorbell": {
+        "default": "mdi:doorbell-video"
+      },
+      "fingerprint": {
+        "default": "mdi:fingerprint"
+      },
+      "nfc": {
+        "default": "mdi:nfc"
+      },
+      "vehicle": {
+        "default": "mdi:car"
+      }
+    },
+    "number": {
+      "auto_lock_timeout": {
+        "default": "mdi:walk"
+      },
+      "auto_shutoff_duration": {
+        "default": "mdi:camera-timer"
+      },
+      "chime_duration": {
+        "default": "mdi:bell"
+      },
+      "doorbell_ring_volume": {
+        "default": "mdi:bell-ring"
+      },
+      "infrared_custom_lux_trigger": {
+        "default": "mdi:white-balance-sunny"
+      },
+      "microphone_level": {
+        "default": "mdi:microphone"
+      },
+      "motion_sensitivity": {
+        "default": "mdi:walk"
+      },
+      "system_sounds_volume": {
+        "default": "mdi:volume-high"
+      },
+      "volume": {
+        "default": "mdi:speaker"
+      },
+      "wide_dynamic_range": {
+        "default": "mdi:state-machine"
+      },
+      "zoom_level": {
+        "default": "mdi:magnify-plus-outline"
+      }
+    },
+    "select": {
+      "chime_type": {
+        "default": "mdi:bell"
+      },
+      "doorbell_text": {
+        "default": "mdi:card-text"
+      },
+      "hdr_mode": {
+        "default": "mdi:brightness-7"
+      },
+      "infrared_mode": {
+        "default": "mdi:circle-opacity"
+      },
+      "light_mode": {
+        "default": "mdi:spotlight"
+      },
+      "liveview": {
+        "default": "mdi:view-dashboard"
+      },
+      "mount_type": {
+        "default": "mdi:screwdriver"
+      },
+      "paired_camera": {
+        "default": "mdi:cctv"
+      },
+      "recording_mode": {
+        "default": "mdi:video-outline"
+      }
+    },
+    "sensor": {
+      "chime_type": {
+        "default": "mdi:bell"
+      },
+      "cpu_utilization": {
+        "default": "mdi:speedometer"
+      },
+      "doorbell_text": {
+        "default": "mdi:card-text"
+      },
+      "infrared_mode": {
+        "default": "mdi:circle-opacity"
+      },
+      "last_doorbell_ring": {
+        "default": "mdi:doorbell-video"
+      },
+      "last_ring": {
+        "default": "mdi:bell"
+      },
+      "lens_type": {
+        "default": "mdi:camera-iris"
+      },
+      "light_mode": {
+        "default": "mdi:spotlight"
+      },
+      "liveview": {
+        "default": "mdi:view-dashboard"
+      },
+      "memory_utilization": {
+        "default": "mdi:memory"
+      },
+      "microphone_level": {
+        "default": "mdi:microphone"
+      },
+      "motion_sensitivity": {
+        "default": "mdi:walk"
+      },
+      "mount_type": {
+        "default": "mdi:screwdriver"
+      },
+      "paired_camera": {
+        "default": "mdi:cctv"
+      },
+      "recording_capacity": {
+        "default": "mdi:record-rec"
+      },
+      "recording_mode": {
+        "default": "mdi:video-outline"
+      },
+      "resolution_4k_video": {
+        "default": "mdi:cctv"
+      },
+      "resolution_free_space": {
+        "default": "mdi:cctv"
+      },
+      "resolution_hd_video": {
+        "default": "mdi:cctv"
+      },
+      "sensitivity": {
+        "default": "mdi:walk"
+      },
+      "storage_utilization": {
+        "default": "mdi:harddisk"
+      },
+      "type_continuous_video": {
+        "default": "mdi:server"
+      },
+      "type_detections_video": {
+        "default": "mdi:server"
+      },
+      "type_timelapse_video": {
+        "default": "mdi:server"
+      },
+      "uptime": {
+        "default": "mdi:clock"
+      },
+      "volume": {
+        "default": "mdi:speaker"
+      }
+    },
+    "switch": {
+      "analytics_enabled": {
+        "default": "mdi:google-analytics"
+      },
+      "color_night_vision": {
+        "default": "mdi:light-flood-down"
+      },
+      "detections_animal": {
+        "default": "mdi:paw"
+      },
+      "detections_baby_cry": {
+        "default": "mdi:cradle"
+      },
+      "detections_bark": {
+        "default": "mdi:dog"
+      },
+      "detections_car_alarm": {
+        "default": "mdi:car"
+      },
+      "detections_car_horn": {
+        "default": "mdi:bugle"
+      },
+      "detections_co_alarm": {
+        "default": "mdi:molecule-co"
+      },
+      "detections_glass_break": {
+        "default": "mdi:glass-fragile"
+      },
+      "detections_license_plate": {
+        "default": "mdi:car"
+      },
+      "detections_motion": {
+        "default": "mdi:walk"
+      },
+      "detections_package": {
+        "default": "mdi:package-variant-closed"
+      },
+      "detections_person": {
+        "default": "mdi:walk"
+      },
+      "detections_siren": {
+        "default": "mdi:alarm-bell"
+      },
+      "detections_smoke": {
+        "default": "mdi:fire"
+      },
+      "detections_speak": {
+        "default": "mdi:account-voice"
+      },
+      "detections_vehicle": {
+        "default": "mdi:car"
+      },
+      "hdr_mode": {
+        "default": "mdi:brightness-7"
+      },
+      "high_fps": {
+        "default": "mdi:video-high-definition"
+      },
+      "humidity_sensor": {
+        "default": "mdi:water-percent"
+      },
+      "insights_enabled": {
+        "default": "mdi:magnify"
+      },
+      "light_sensor": {
+        "default": "mdi:brightness-5"
+      },
+      "motion": {
+        "default": "mdi:run-fast"
+      },
+      "overlay_show_date": {
+        "default": "mdi:fullscreen"
+      },
+      "overlay_show_logo": {
+        "default": "mdi:fullscreen"
+      },
+      "overlay_show_name": {
+        "default": "mdi:fullscreen"
+      },
+      "overlay_show_nerd_mode": {
+        "default": "mdi:fullscreen"
+      },
+      "privacy_mode": {
+        "default": "mdi:eye-settings"
+      },
+      "ssh_enabled": {
+        "default": "mdi:lock"
+      },
+      "status_light": {
+        "default": "mdi:led-on"
+      },
+      "system_sounds": {
+        "default": "mdi:speaker"
+      },
+      "temperature_sensor": {
+        "default": "mdi:thermometer"
+      },
+      "tracking_person": {
+        "default": "mdi:walk"
+      }
+    }
+  },
+  "services": {
+    "add_doorbell_text": {
+      "service": "mdi:message-plus"
+    },
+    "get_user_keyring_info": {
+      "service": "mdi:key-chain"
+    },
+    "remove_doorbell_text": {
+      "service": "mdi:message-minus"
+    },
+    "remove_privacy_zone": {
+      "service": "mdi:eye-minus"
+    },
+    "set_chime_paired_doorbells": {
+      "service": "mdi:bell-cog"
+    }
+  }
+}

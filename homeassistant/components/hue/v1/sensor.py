@@ -1,4 +1,5 @@
 """Hue sensor entities."""
+
 from aiohue.v1.sensors import (
     TYPE_ZLL_LIGHTLEVEL,
     TYPE_ZLL_ROTARY,
@@ -12,8 +13,10 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import LIGHT_LUX, PERCENTAGE, EntityCategory, UnitOfTemperature
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from ..const import DOMAIN as HUE_DOMAIN
+from ..bridge import HueConfigEntry
 from .sensor_base import SENSOR_CONFIG_MAP, GenericHueSensor, GenericZLLSensor
 
 LIGHT_LEVEL_NAME_FORMAT = "{} light level"
@@ -21,9 +24,13 @@ REMOTE_NAME_FORMAT = "{} battery level"
 TEMPERATURE_NAME_FORMAT = "{} temperature"
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: HueConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
     """Defer sensor setup to the shared sensor module."""
-    bridge = hass.data[HUE_DOMAIN][config_entry.entry_id]
+    bridge = config_entry.runtime_data
 
     if not bridge.sensor_manager:
         return
@@ -31,10 +38,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     await bridge.sensor_manager.async_register_component("sensor", async_add_entities)
 
 
+# pylint: disable-next=hass-enforce-class-module
 class GenericHueGaugeSensorEntity(GenericZLLSensor, SensorEntity):
     """Parent class for all 'gauge' Hue device sensors."""
 
 
+# pylint: disable-next=hass-enforce-class-module
 class HueLightLevel(GenericHueGaugeSensorEntity):
     """The light level sensor entity for a Hue motion sensor device."""
 
@@ -70,6 +79,7 @@ class HueLightLevel(GenericHueGaugeSensorEntity):
         return attributes
 
 
+# pylint: disable-next=hass-enforce-class-module
 class HueTemperature(GenericHueGaugeSensorEntity):
     """The temperature sensor entity for a Hue motion sensor device."""
 
@@ -86,6 +96,7 @@ class HueTemperature(GenericHueGaugeSensorEntity):
         return self.sensor.temperature / 100
 
 
+# pylint: disable-next=hass-enforce-class-module
 class HueBattery(GenericHueSensor, SensorEntity):
     """Battery class for when a batt-powered device is only represented as an event."""
 

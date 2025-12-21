@@ -1,4 +1,5 @@
 """Test how the DmsDeviceSource handles available and unavailable devices."""
+
 from __future__ import annotations
 
 import asyncio
@@ -14,9 +15,10 @@ import pytest
 from homeassistant.components import media_source, ssdp
 from homeassistant.components.dlna_dms.const import DOMAIN
 from homeassistant.components.dlna_dms.dms import get_domain_data
-from homeassistant.components.media_player.errors import BrowseError
-from homeassistant.components.media_source.error import Unresolvable
+from homeassistant.components.media_player import BrowseError
+from homeassistant.components.media_source import Unresolvable
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from .conftest import (
     MOCK_DEVICE_LOCATION,
@@ -176,9 +178,9 @@ async def test_become_available(
     upnp_factory_mock.async_create_device.reset_mock()
 
     # Send an SSDP notification from the now alive device
-    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0]
+    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0].target
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=NEW_DEVICE_LOCATION,
             ssdp_st=MOCK_DEVICE_TYPE,
@@ -204,9 +206,9 @@ async def test_alive_but_gone(
     upnp_factory_mock.async_create_device.side_effect = UpnpError
 
     # Send an SSDP notification from the still missing device
-    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0]
+    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0].target
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=NEW_DEVICE_LOCATION,
             ssdp_st=MOCK_DEVICE_TYPE,
@@ -226,7 +228,7 @@ async def test_alive_but_gone(
     # Send the same SSDP notification, expecting no extra connection attempts
     upnp_factory_mock.async_create_device.reset_mock()
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=NEW_DEVICE_LOCATION,
             ssdp_st=MOCK_DEVICE_TYPE,
@@ -243,7 +245,7 @@ async def test_alive_but_gone(
     # Send an SSDP notification with a new BOOTID, indicating the device has rebooted
     upnp_factory_mock.async_create_device.reset_mock()
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=NEW_DEVICE_LOCATION,
             ssdp_st=MOCK_DEVICE_TYPE,
@@ -262,7 +264,7 @@ async def test_alive_but_gone(
     # should result in a reconnect attempt even with same BOOTID.
     upnp_factory_mock.async_create_device.reset_mock()
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_st=MOCK_DEVICE_TYPE,
             upnp={},
@@ -270,7 +272,7 @@ async def test_alive_but_gone(
         ssdp.SsdpChange.BYEBYE,
     )
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=NEW_DEVICE_LOCATION,
             ssdp_st=MOCK_DEVICE_TYPE,
@@ -307,9 +309,9 @@ async def test_multiple_ssdp_alive(
     upnp_factory_mock.async_create_device.side_effect = create_device_delayed
 
     # Send two SSDP notifications with the new device URL
-    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0]
+    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0].target
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=NEW_DEVICE_LOCATION,
             ssdp_st=MOCK_DEVICE_TYPE,
@@ -318,7 +320,7 @@ async def test_multiple_ssdp_alive(
         ssdp.SsdpChange.ALIVE,
     )
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=NEW_DEVICE_LOCATION,
             ssdp_st=MOCK_DEVICE_TYPE,
@@ -342,9 +344,9 @@ async def test_ssdp_byebye(
 ) -> None:
     """Test device is disconnected when byebye is received."""
     # First byebye will cause a disconnect
-    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0]
+    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0].target
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_udn=MOCK_DEVICE_UDN,
             ssdp_headers={"NTS": "ssdp:byebye"},
@@ -359,7 +361,7 @@ async def test_ssdp_byebye(
 
     # Second byebye will do nothing
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_udn=MOCK_DEVICE_UDN,
             ssdp_headers={"NTS": "ssdp:byebye"},
@@ -385,9 +387,9 @@ async def test_ssdp_update_seen_bootid(
     upnp_factory_mock.async_create_device.side_effect = None
 
     # Send SSDP alive with boot ID
-    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0]
+    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0].target
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=MOCK_DEVICE_LOCATION,
             ssdp_headers={ssdp.ATTR_SSDP_BOOTID: "1"},
@@ -404,7 +406,7 @@ async def test_ssdp_update_seen_bootid(
 
     # Send SSDP update with next boot ID
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_udn=MOCK_DEVICE_UDN,
             ssdp_headers={
@@ -425,7 +427,7 @@ async def test_ssdp_update_seen_bootid(
 
     # Send SSDP update with same next boot ID, again
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_udn=MOCK_DEVICE_UDN,
             ssdp_headers={
@@ -446,7 +448,7 @@ async def test_ssdp_update_seen_bootid(
 
     # Send SSDP update with bad next boot ID
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_udn=MOCK_DEVICE_UDN,
             ssdp_headers={
@@ -467,7 +469,7 @@ async def test_ssdp_update_seen_bootid(
 
     # Send a new SSDP alive with the new boot ID, device should not reconnect
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=MOCK_DEVICE_LOCATION,
             ssdp_headers={ssdp.ATTR_SSDP_BOOTID: "2"},
@@ -497,9 +499,9 @@ async def test_ssdp_update_missed_bootid(
     upnp_factory_mock.async_create_device.side_effect = None
 
     # Send SSDP alive with boot ID
-    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0]
+    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0].target
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=MOCK_DEVICE_LOCATION,
             ssdp_headers={ssdp.ATTR_SSDP_BOOTID: "1"},
@@ -516,7 +518,7 @@ async def test_ssdp_update_missed_bootid(
 
     # Send SSDP update with skipped boot ID (not previously seen)
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_udn=MOCK_DEVICE_UDN,
             ssdp_headers={
@@ -537,7 +539,7 @@ async def test_ssdp_update_missed_bootid(
 
     # Send a new SSDP alive with the new boot ID, device should reconnect
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=MOCK_DEVICE_LOCATION,
             ssdp_headers={ssdp.ATTR_SSDP_BOOTID: "3"},
@@ -567,9 +569,9 @@ async def test_ssdp_bootid(
     upnp_factory_mock.async_create_device.reset_mock()
 
     # Send SSDP alive with boot ID
-    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0]
+    ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0].target
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=MOCK_DEVICE_LOCATION,
             ssdp_headers={ssdp.ATTR_SSDP_BOOTID: "1"},
@@ -585,7 +587,7 @@ async def test_ssdp_bootid(
 
     # Send SSDP alive with same boot ID, nothing should happen
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=MOCK_DEVICE_LOCATION,
             ssdp_headers={ssdp.ATTR_SSDP_BOOTID: "1"},
@@ -601,7 +603,7 @@ async def test_ssdp_bootid(
 
     # Send a new SSDP alive with an incremented boot ID, device should be dis/reconnected
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=MOCK_DEVICE_LOCATION,
             ssdp_headers={ssdp.ATTR_SSDP_BOOTID: "2"},

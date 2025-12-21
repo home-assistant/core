@@ -1,4 +1,5 @@
 """Media Player component to integrate TVs exposing the Joint Space API."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -15,14 +16,13 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.trigger import PluggableAction
 
-from . import LOGGER as _LOGGER, PhilipsTVDataUpdateCoordinator
-from .const import DOMAIN
+from . import LOGGER as _LOGGER
+from .coordinator import PhilipsTVConfigEntry, PhilipsTVDataUpdateCoordinator
 from .entity import PhilipsJsEntity
 from .helpers import async_get_turn_on_trigger
 
@@ -48,11 +48,11 @@ def _inverted(data):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: PhilipsTVConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the configuration entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     async_add_entities(
         [
             PhilipsTVMediaPlayer(
@@ -250,6 +250,10 @@ class PhilipsTVMediaPlayer(PhilipsJsEntity, MediaPlayerEntity):
                     media_content_type=MediaType.CHANNEL,
                     can_play=True,
                     can_expand=False,
+                    thumbnail=self.get_browse_image_url(
+                        MediaType.CHANNEL,
+                        f"{self._tv.channel_list_id}/{channel['ccid']}",
+                    ),
                 )
                 for channel in self._tv.channels_current
             ]
@@ -289,6 +293,10 @@ class PhilipsTVMediaPlayer(PhilipsJsEntity, MediaPlayerEntity):
                         media_content_type=MediaType.CHANNEL,
                         can_play=True,
                         can_expand=False,
+                        thumbnail=self.get_browse_image_url(
+                            MediaType.CHANNEL,
+                            f"{list_id}/{channel['ccid']}",
+                        ),
                     )
                     for channel in favorites.get("channels", [])
                 ]
@@ -412,7 +420,11 @@ class PhilipsTVMediaPlayer(PhilipsJsEntity, MediaPlayerEntity):
             if media_content_type == MediaType.APP and media_content_id:
                 return await self._tv.getApplicationIcon(media_content_id)
             if media_content_type == MediaType.CHANNEL and media_content_id:
-                return await self._tv.getChannelLogo(media_content_id)
+                list_id, _, channel_id = media_content_id.partition("/")
+                if not channel_id:
+                    channel_id = list_id
+                    list_id = "all"
+                return await self._tv.getChannelLogo(channel_id, list_id)
         except ConnectionFailure:
             _LOGGER.warning("Failed to fetch image")
         return None, None

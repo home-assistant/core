@@ -1,4 +1,5 @@
 """Support for IPMA weather service."""
+
 from __future__ import annotations
 
 import asyncio
@@ -22,7 +23,6 @@ from homeassistant.components.weather import (
     WeatherEntity,
     WeatherEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_MODE,
     UnitOfPressure,
@@ -30,18 +30,12 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.sun import is_up
 from homeassistant.util import Throttle
 
-from .const import (
-    ATTRIBUTION,
-    CONDITION_MAP,
-    DATA_API,
-    DATA_LOCATION,
-    DOMAIN,
-    MIN_TIME_BETWEEN_UPDATES,
-)
+from . import IpmaConfigEntry
+from .const import ATTRIBUTION, CONDITION_MAP, MIN_TIME_BETWEEN_UPDATES
 from .entity import IPMADevice
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,12 +43,12 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: IpmaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add a weather entity from a config_entry."""
-    api = hass.data[DOMAIN][config_entry.entry_id][DATA_API]
-    location = hass.data[DOMAIN][config_entry.entry_id][DATA_LOCATION]
+    location = config_entry.runtime_data.location
+    api = config_entry.runtime_data.api
     async_add_entities([IPMAWeather(api, location, config_entry)], True)
 
 
@@ -71,7 +65,7 @@ class IPMAWeather(WeatherEntity, IPMADevice):
     )
 
     def __init__(
-        self, api: IPMA_API, location: Location, config_entry: ConfigEntry
+        self, api: IPMA_API, location: Location, config_entry: IpmaConfigEntry
     ) -> None:
         """Initialise the platform with a data instance and station name."""
         IPMADevice.__init__(self, api, location)
@@ -140,7 +134,7 @@ class IPMAWeather(WeatherEntity, IPMADevice):
         forecast = self._hourly_forecast
 
         if not forecast:
-            return
+            return None
 
         return self._condition_conversion(forecast[0].weather_type.id, None)
 
@@ -204,20 +198,13 @@ class IPMAWeather(WeatherEntity, IPMADevice):
             for data_in in forecast
         ]
 
-    @property
-    def forecast(self) -> list[Forecast]:
-        """Return the forecast array."""
-        return self._forecast(
-            self._hourly_forecast if self._period == 1 else self._daily_forecast
-        )
-
     async def _try_update_forecast(
         self,
         forecast_type: Literal["daily", "hourly"],
         period: int,
     ) -> None:
         """Try to update weather forecast."""
-        with contextlib.suppress(asyncio.TimeoutError):
+        with contextlib.suppress(TimeoutError):
             async with asyncio.timeout(10):
                 await self._update_forecast(forecast_type, period, False)
 

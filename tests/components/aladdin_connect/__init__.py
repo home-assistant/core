@@ -1,1 +1,1 @@
-"""The tests for Aladdin Connect platforms."""
+"""Tests for the Aladdin Connect Garage Door integration."""

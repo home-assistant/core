@@ -1,0 +1,288 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "hand_open": {
+        "default": "mdi:hand-wave"
+      }
+    },
+    "fan": {
+      "fan": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "mdi:fan-auto",
+              "smart": "mdi:fan-auto"
+            }
+          }
+        }
+      }
+    },
+    "light": {
+      "light": {
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "colorloop": "mdi:looks"
+            }
+          }
+        }
+      }
+    },
+    "number": {
+      "auto_off_timer": {
+        "default": "mdi:timer"
+      },
+      "away_preset_temperature": {
+        "default": "mdi:temperature-celsius"
+      },
+      "button_delay": {
+        "default": "mdi:speedometer"
+      },
+      "default_level_local": {
+        "default": "mdi:brightness-percent"
+      },
+      "default_level_remote": {
+        "default": "mdi:brightness-percent"
+      },
+      "dimming_speed_down_local": {
+        "default": "mdi:speedometer"
+      },
+      "dimming_speed_down_remote": {
+        "default": "mdi:speedometer"
+      },
+      "dimming_speed_up_local": {
+        "default": "mdi:speedometer"
+      },
+      "dimming_speed_up_remote": {
+        "default": "mdi:speedometer"
+      },
+      "double_tap_down_level": {
+        "default": "mdi:brightness-percent"
+      },
+      "double_tap_up_level": {
+        "default": "mdi:brightness-percent"
+      },
+      "exercise_trigger_time": {
+        "default": "mdi:clock"
+      },
+      "external_temperature_sensor": {
+        "default": "mdi:thermometer"
+      },
+      "filter_life_time": {
+        "default": "mdi:timer"
+      },
+      "led_color_when_off": {
+        "default": "mdi:palette"
+      },
+      "led_color_when_on": {
+        "default": "mdi:palette"
+      },
+      "led_intensity_when_off": {
+        "default": "mdi:brightness-percent"
+      },
+      "led_intensity_when_on": {
+        "default": "mdi:brightness-percent"
+      },
+      "load_level_indicator_timeout": {
+        "default": "mdi:timer"
+      },
+      "load_room_mean": {
+        "default": "mdi:scale-balance"
+      },
+      "local_temperature_calibration": {
+        "default": "mdi:temperature-celsius"
+      },
+      "maximum_level": {
+        "default": "mdi:brightness-percent"
+      },
+      "minimum_level": {
+        "default": "mdi:brightness-percent"
+      },
+      "portion_weight": {
+        "default": "mdi:weight-gram"
+      },
+      "presence_detection_timeout": {
+        "default": "mdi:timer-edit"
+      },
+      "quick_start_time": {
+        "default": "mdi:speedometer"
+      },
+      "ramp_rate_off_to_on_local": {
+        "default": "mdi:speedometer"
+      },
+      "ramp_rate_off_to_on_remote": {
+        "default": "mdi:speedometer"
+      },
+      "ramp_rate_on_to_off_local": {
+        "default": "mdi:speedometer"
+      },
+      "ramp_rate_on_to_off_remote": {
+        "default": "mdi:speedometer"
+      },
+      "regulation_setpoint_offset": {
+        "default": "mdi:thermostat"
+      },
+      "serving_size": {
+        "default": "mdi:counter"
+      },
+      "state_after_power_restored": {
+        "default": "mdi:brightness-percent"
+      },
+      "timer_duration": {
+        "default": "mdi:timer"
+      }
+    },
+    "select": {
+      "device_mode": {
+        "default": "mdi:cogs"
+      },
+      "exercise_day_of_week": {
+        "default": "mdi:wrench-clock"
+      },
+      "feeding_mode": {
+        "default": "mdi:wrench-clock"
+      },
+      "keypad_lockout": {
+        "default": "mdi:lock"
+      },
+      "off_led_color": {
+        "default": "mdi:palette-outline"
+      },
+      "on_led_color": {
+        "default": "mdi:palette"
+      },
+      "pilot_wire_mode": {
+        "default": "mdi:radiator"
+      }
+    },
+    "sensor": {
+      "device_run_time": {
+        "default": "mdi:timer"
+      },
+      "filter_run_time": {
+        "default": "mdi:timer"
+      },
+      "hooks_state": {
+        "default": "mdi:hook"
+      },
+      "last_feeding_size": {
+        "default": "mdi:counter"
+      },
+      "last_feeding_source": {
+        "default": "mdi:devices"
+      },
+      "last_illumination_state": {
+        "default": "mdi:theme-light-dark"
+      },
+      "load_estimate": {
+        "default": "mdi:scale-balance"
+      },
+      "open_window_detected": {
+        "default": "mdi:window-open"
+      },
+      "pi_heating_demand": {
+        "default": "mdi:radiator"
+      },
+      "portions_dispensed_today": {
+        "default": "mdi:counter"
+      },
+      "preheat_time": {
+        "default": "mdi:radiator"
+      },
+      "setpoint_change_source": {
+        "default": "mdi:thermostat"
+      },
+      "smoke_density": {
+        "default": "mdi:google-circles-communities"
+      },
+      "timer_time_left": {
+        "default": "mdi:timer"
+      },
+      "weight_dispensed_today": {
+        "default": "mdi:weight-gram"
+      }
+    },
+    "switch": {
+      "buzzer_manual_alarm": {
+        "default": "mdi:bullhorn"
+      },
+      "buzzer_manual_mute": {
+        "default": "mdi:volume-off"
+      },
+      "child_lock": {
+        "default": "mdi:account-lock"
+      },
+      "double_up_full": {
+        "default": "mdi:gesture-double-tap"
+      },
+      "external_window_sensor": {
+        "default": "mdi:window-open"
+      },
+      "heartbeat_indicator": {
+        "default": "mdi:heart-flash"
+      },
+      "heat_available": {
+        "default": "mdi:water-boiler"
+      },
+      "hooks_locked": {
+        "default": "mdi:lock"
+      },
+      "inverted": {
+        "default": "mdi:arrow-up-down"
+      },
+      "led_indicator": {
+        "default": "mdi:led-on"
+      },
+      "linkage_alarm": {
+        "default": "mdi:shield-link-variant"
+      },
+      "prioritize_external_temperature_sensor": {
+        "default": "mdi:thermometer"
+      },
+      "use_internal_window_detection": {
+        "default": "mdi:window-open"
+      },
+      "use_load_balancing": {
+        "default": "mdi:scale-balance"
+      }
+    }
+  },
+  "services": {
+    "clear_lock_user_code": {
+      "service": "mdi:lock-remove"
+    },
+    "disable_lock_user_code": {
+      "service": "mdi:lock-off"
+    },
+    "enable_lock_user_code": {
+      "service": "mdi:lock"
+    },
+    "issue_zigbee_cluster_command": {
+      "service": "mdi:console"
+    },
+    "issue_zigbee_group_command": {
+      "service": "mdi:console"
+    },
+    "permit": {
+      "service": "mdi:cellphone-link"
+    },
+    "reconfigure_device": {
+      "service": "mdi:cellphone-cog"
+    },
+    "remove": {
+      "service": "mdi:cellphone-remove"
+    },
+    "set_lock_user_code": {
+      "service": "mdi:lock"
+    },
+    "set_zigbee_cluster_attribute": {
+      "service": "mdi:cog"
+    },
+    "warning_device_squawk": {
+      "service": "mdi:alert"
+    },
+    "warning_device_warn": {
+      "service": "mdi:alert"
+    }
+  }
+}

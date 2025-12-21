@@ -1,10 +1,12 @@
 """Hue event entities from Button resources."""
+
 from __future__ import annotations
 
 from typing import Any
 
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
+from aiohue.v2.models.bell_button import BellButton
 from aiohue.v2.models.button import Button
 from aiohue.v2.models.relative_rotary import RelativeRotary, RelativeRotaryDirection
 
@@ -13,22 +15,21 @@ from homeassistant.components.event import (
     EventEntity,
     EventEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .bridge import HueBridge
-from .const import DEFAULT_BUTTON_EVENT_TYPES, DEVICE_SPECIFIC_EVENT_TYPES, DOMAIN
+from .bridge import HueConfigEntry
+from .const import DEFAULT_BUTTON_EVENT_TYPES, DEVICE_SPECIFIC_EVENT_TYPES
 from .v2.entity import HueBaseEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: HueConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up event platform from Hue button resources."""
-    bridge: HueBridge = hass.data[DOMAIN][config_entry.entry_id]
+    bridge = config_entry.runtime_data
     api: HueBridgeV2 = bridge.api
 
     if bridge.api_version == 1:
@@ -39,19 +40,27 @@ async def async_setup_entry(
     @callback
     def async_add_entity(
         event_type: EventType,
-        resource: Button | RelativeRotary,
+        resource: Button | RelativeRotary | BellButton,
     ) -> None:
         """Add entity from Hue resource."""
         if isinstance(resource, RelativeRotary):
             async_add_entities(
                 [HueRotaryEventEntity(bridge, api.sensors.relative_rotary, resource)]
             )
+        elif isinstance(resource, BellButton):
+            async_add_entities(
+                [HueBellButtonEventEntity(bridge, api.sensors.bell_button, resource)]
+            )
         else:
             async_add_entities(
                 [HueButtonEventEntity(bridge, api.sensors.button, resource)]
             )
 
-    for controller in (api.sensors.button, api.sensors.relative_rotary):
+    for controller in (
+        api.sensors.button,
+        api.sensors.relative_rotary,
+        api.sensors.bell_button,
+    ):
         # add all current items in controller
         for item in controller:
             async_add_entity(EventType.RESOURCE_ADDED, item)
@@ -67,6 +76,8 @@ async def async_setup_entry(
 class HueButtonEventEntity(HueBaseEntity, EventEntity):
     """Representation of a Hue Event entity from a button resource."""
 
+    resource: Button | BellButton
+
     entity_description = EventEntityDescription(
         key="button",
         device_class=EventDeviceClass.BUTTON,
@@ -80,27 +91,40 @@ class HueButtonEventEntity(HueBaseEntity, EventEntity):
         # fill the event types based on the features the switch supports
         hue_dev_id = self.controller.get_device(self.resource.id).id
         model_id = self.bridge.api.devices[hue_dev_id].product_data.product_name
-        event_types: list[str] = []
-        for event_type in DEVICE_SPECIFIC_EVENT_TYPES.get(
-            model_id, DEFAULT_BUTTON_EVENT_TYPES
-        ):
-            event_types.append(event_type.value)
-        self._attr_event_types = event_types
-
-    @property
-    def name(self) -> str:
-        """Return name for the entity."""
-        # this can be translated too as soon as we support arguments into translations ?
-        return f"Button {self.resource.metadata.control_id}"
+        self._attr_event_types: list[str] = [
+            event_type.value
+            for event_type in DEVICE_SPECIFIC_EVENT_TYPES.get(
+                model_id, DEFAULT_BUTTON_EVENT_TYPES
+            )
+        ]
+        self._attr_translation_placeholders = {
+            "button_id": self.resource.metadata.control_id
+        }
 
     @callback
-    def _handle_event(self, event_type: EventType, resource: Button) -> None:
+    def _handle_event(
+        self, event_type: EventType, resource: Button | BellButton
+    ) -> None:
         """Handle status event for this resource (or it's parent)."""
         if event_type == EventType.RESOURCE_UPDATED and resource.id == self.resource.id:
-            self._trigger_event(resource.button.last_event.value)
+            if resource.button is None or resource.button.button_report is None:
+                return
+            self._trigger_event(resource.button.button_report.event.value)
             self.async_write_ha_state()
             return
         super()._handle_event(event_type, resource)
+
+
+class HueBellButtonEventEntity(HueButtonEventEntity):
+    """Representation of a Hue Event entity from a bell_button resource."""
+
+    resource: Button | BellButton
+
+    entity_description = EventEntityDescription(
+        key="bell_button",
+        device_class=EventDeviceClass.DOORBELL,
+        has_entity_name=True,
+    )
 
 
 class HueRotaryEventEntity(HueBaseEntity, EventEntity):
@@ -121,11 +145,16 @@ class HueRotaryEventEntity(HueBaseEntity, EventEntity):
     def _handle_event(self, event_type: EventType, resource: RelativeRotary) -> None:
         """Handle status event for this resource (or it's parent)."""
         if event_type == EventType.RESOURCE_UPDATED and resource.id == self.resource.id:
-            event_key = resource.relative_rotary.last_event.rotation.direction.value
+            if (
+                resource.relative_rotary is None
+                or resource.relative_rotary.rotary_report is None
+            ):
+                return
+            event_key = resource.relative_rotary.rotary_report.rotation.direction.value
             event_data = {
-                "duration": resource.relative_rotary.last_event.rotation.duration,
-                "steps": resource.relative_rotary.last_event.rotation.steps,
-                "action": resource.relative_rotary.last_event.action.value,
+                "duration": resource.relative_rotary.rotary_report.rotation.duration,
+                "steps": resource.relative_rotary.rotary_report.rotation.steps,
+                "action": resource.relative_rotary.rotary_report.action.value,
             }
             self._trigger_event(event_key, event_data)
             self.async_write_ha_state()

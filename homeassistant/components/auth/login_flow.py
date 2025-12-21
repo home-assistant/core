@@ -66,6 +66,7 @@ associate with an credential if "type" set to "link_user" in
     "version": 1
 }
 """
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -79,8 +80,9 @@ import voluptuous_serialize
 
 from homeassistant import data_entry_flow
 from homeassistant.auth import AuthManagerFlowManager, InvalidAuthError
-from homeassistant.auth.models import Credentials
+from homeassistant.auth.models import AuthFlowContext, AuthFlowResult, Credentials
 from homeassistant.components import onboarding
+from homeassistant.components.http import KEY_HASS
 from homeassistant.components.http.auth import async_user_not_allowed_do_auth
 from homeassistant.components.http.ban import (
     log_invalid_auth,
@@ -89,8 +91,13 @@ from homeassistant.components.http.ban import (
 )
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.network import is_cloud_connection
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.network import (
+    NoURLAvailableError,
+    get_url,
+    is_cloud_connection,
+)
+from homeassistant.util.network import is_local
 
 from . import indieauth
 
@@ -102,7 +109,8 @@ if TYPE_CHECKING:
     from . import StoreResultType
 
 
-async def async_setup(
+@callback
+def async_setup(
     hass: HomeAssistant, store_result: Callable[[str, Credentials], str]
 ) -> None:
     """Component to allow users to login."""
@@ -121,17 +129,29 @@ class WellKnownOAuthInfoView(HomeAssistantView):
 
     async def get(self, request: web.Request) -> web.Response:
         """Return the well known OAuth2 authorization info."""
-        return self.json(
-            {
-                "authorization_endpoint": "/auth/authorize",
-                "token_endpoint": "/auth/token",
-                "revocation_endpoint": "/auth/revoke",
-                "response_types_supported": ["code"],
-                "service_documentation": (
-                    "https://developers.home-assistant.io/docs/auth_api"
-                ),
-            }
-        )
+        hass = request.app[KEY_HASS]
+        # Some applications require absolute urls, so we prefer using the
+        # current requests url if possible, with fallback to a relative url.
+        try:
+            url_prefix = get_url(hass, require_current_request=True)
+        except NoURLAvailableError:
+            url_prefix = ""
+
+        metadata = {
+            "authorization_endpoint": f"{url_prefix}/auth/authorize",
+            "token_endpoint": f"{url_prefix}/auth/token",
+            "revocation_endpoint": f"{url_prefix}/auth/revoke",
+            "response_types_supported": ["code"],
+            "service_documentation": (
+                "https://developers.home-assistant.io/docs/auth_api"
+            ),
+        }
+
+        # Add issuer only when we have a valid base URL (RFC 8414 compliance)
+        if url_prefix:
+            metadata["issuer"] = url_prefix
+
+        return self.json(metadata)
 
 
 class AuthProvidersView(HomeAssistantView):
@@ -143,7 +163,7 @@ class AuthProvidersView(HomeAssistantView):
 
     async def get(self, request: web.Request) -> web.Response:
         """Get available auth providers."""
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[KEY_HASS]
         if not onboarding.async_is_user_onboarded(hass):
             return self.json_message(
                 message="Onboarding not finished",
@@ -185,25 +205,28 @@ class AuthProvidersView(HomeAssistantView):
                 }
             )
 
-        return self.json(providers)
+        preselect_remember_me = not cloud_connection and is_local(remote_address)
+
+        return self.json(
+            {
+                "providers": providers,
+                "preselect_remember_me": preselect_remember_me,
+            }
+        )
 
 
-def _prepare_result_json(
-    result: data_entry_flow.FlowResult,
-) -> data_entry_flow.FlowResult:
-    """Convert result to JSON."""
+def _prepare_result_json(result: AuthFlowResult) -> dict[str, Any]:
+    """Convert result to JSON serializable dict."""
     if result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY:
-        data = result.copy()
-        data.pop("result")
-        data.pop("data")
-        return data
+        return {
+            key: val for key, val in result.items() if key not in ("result", "data")
+        }
 
     if result["type"] != data_entry_flow.FlowResultType.FORM:
-        return result
+        return result  # type: ignore[return-value]
 
-    data = result.copy()
-
-    if (schema := data["data_schema"]) is None:
+    data = dict(result)
+    if (schema := result["data_schema"]) is None:
         data["data_schema"] = []
     else:
         data["data_schema"] = voluptuous_serialize.convert(schema)
@@ -229,7 +252,7 @@ class LoginFlowBaseView(HomeAssistantView):
         self,
         request: web.Request,
         client_id: str,
-        result: data_entry_flow.FlowResult,
+        result: AuthFlowResult,
     ) -> web.Response:
         """Convert the flow result to a response."""
         if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
@@ -247,7 +270,7 @@ class LoginFlowBaseView(HomeAssistantView):
                 await process_wrong_login(request)
             return self.json(_prepare_result_json(result))
 
-        hass: HomeAssistant = request.app["hass"]
+        hass = request.app[KEY_HASS]
 
         if not await indieauth.verify_redirect_uri(
             hass, client_id, result["context"]["redirect_uri"]
@@ -257,7 +280,7 @@ class LoginFlowBaseView(HomeAssistantView):
         result.pop("data")
         result.pop("context")
 
-        result_obj: Credentials = result.pop("result")
+        result_obj = result.pop("result")
 
         # Result can be None if credential was never linked to a user before.
         user = await hass.auth.async_get_user_by_credentials(result_obj)
@@ -270,7 +293,8 @@ class LoginFlowBaseView(HomeAssistantView):
             )
 
         process_success_login(request)
-        result["result"] = self._store_result(client_id, result_obj)
+        # We overwrite the Credentials object with the string code to retrieve it.
+        result["result"] = self._store_result(client_id, result_obj)  # type: ignore[typeddict-item]
 
         return self.json(result)
 
@@ -289,7 +313,9 @@ class LoginFlowIndexView(LoginFlowBaseView):
         vol.Schema(
             {
                 vol.Required("client_id"): str,
-                vol.Required("handler"): vol.Any(str, list),
+                vol.Required("handler"): vol.All(
+                    [vol.Any(str, None)], vol.Length(2, 2), vol.Coerce(tuple)
+                ),
                 vol.Required("redirect_uri"): str,
                 vol.Optional("type", default="authorize"): str,
             }
@@ -304,20 +330,16 @@ class LoginFlowIndexView(LoginFlowBaseView):
         if not indieauth.verify_client_id(client_id):
             return self.json_message("Invalid client id", HTTPStatus.BAD_REQUEST)
 
-        handler: tuple[str, ...] | str
-        if isinstance(data["handler"], list):
-            handler = tuple(data["handler"])
-        else:
-            handler = data["handler"]
+        handler: tuple[str, str] = tuple(data["handler"])
 
         try:
             result = await self._flow_mgr.async_init(
-                handler,  # type: ignore[arg-type]
-                context={
-                    "ip_address": ip_address(request.remote),  # type: ignore[arg-type]
-                    "credential_only": data.get("type") == "link_user",
-                    "redirect_uri": redirect_uri,
-                },
+                handler,
+                context=AuthFlowContext(
+                    ip_address=ip_address(request.remote),  # type: ignore[arg-type]
+                    credential_only=data.get("type") == "link_user",
+                    redirect_uri=redirect_uri,
+                ),
             )
         except data_entry_flow.UnknownHandler:
             return self.json_message("Invalid handler specified", HTTPStatus.NOT_FOUND)

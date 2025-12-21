@@ -1,14 +1,15 @@
 """Support for 1-Wire environment sensors."""
+
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 import dataclasses
+from datetime import timedelta
 import logging
 import os
-from types import MappingProxyType
 from typing import Any
 
-from pyownet import protocol
+from aio_ownet.exceptions import OWServerReturnError
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -16,7 +17,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     LIGHT_LUX,
     PERCENTAGE,
@@ -25,25 +25,33 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     DEVICE_KEYS_0_3,
     DEVICE_KEYS_A_B,
-    DOMAIN,
+    DEVICE_KEYS_A_D,
     OPTION_ENTRY_DEVICE_OPTIONS,
     OPTION_ENTRY_SENSOR_PRECISION,
     PRECISION_MAPPING_FAMILY_28,
-    READ_MODE_FLOAT,
-    READ_MODE_INT,
 )
-from .onewire_entities import OneWireEntity, OneWireEntityDescription
-from .onewirehub import OneWireHub
+from .entity import OneWireEntity
+from .onewirehub import (
+    SIGNAL_NEW_DEVICE_CONNECTED,
+    OneWireConfigEntry,
+    OneWireHub,
+    OWDeviceDescription,
+)
+
+# the library uses non-persistent connections
+# and concurrent access to the bus is managed by the server
+PARALLEL_UPDATES = 0
+SCAN_INTERVAL = timedelta(seconds=30)
 
 
 @dataclasses.dataclass(frozen=True)
-class OneWireSensorEntityDescription(OneWireEntityDescription, SensorEntityDescription):
+class OneWireSensorEntityDescription(SensorEntityDescription):
     """Class describing OneWire sensor entities."""
 
     override_key: Callable[[str, Mapping[str, Any]], str] | None = None
@@ -70,7 +78,6 @@ SIMPLE_TEMPERATURE_SENSOR_DESCRIPTION = OneWireSensorEntityDescription(
     key="temperature",
     device_class=SensorDeviceClass.TEMPERATURE,
     native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-    read_mode=READ_MODE_FLOAT,
     state_class=SensorStateClass.MEASUREMENT,
 )
 
@@ -85,7 +92,6 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.TEMPERATURE,
             entity_registry_enabled_default=False,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-            read_mode=READ_MODE_FLOAT,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         OneWireSensorEntityDescription(
@@ -93,9 +99,33 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.PRESSURE,
             entity_registry_enabled_default=False,
             native_unit_of_measurement=UnitOfPressure.MBAR,
-            read_mode=READ_MODE_FLOAT,
             state_class=SensorStateClass.MEASUREMENT,
         ),
+    ),
+    "20": tuple(
+        [
+            OneWireSensorEntityDescription(
+                key=f"latestvolt.{device_key}",
+                device_class=SensorDeviceClass.VOLTAGE,
+                entity_registry_enabled_default=False,
+                native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+                state_class=SensorStateClass.MEASUREMENT,
+                translation_key="latest_voltage_id",
+                translation_placeholders={"id": str(device_key)},
+            )
+            for device_key in DEVICE_KEYS_A_D
+        ]
+        + [
+            OneWireSensorEntityDescription(
+                key=f"volt.{device_key}",
+                device_class=SensorDeviceClass.VOLTAGE,
+                native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+                state_class=SensorStateClass.MEASUREMENT,
+                translation_key="voltage_id",
+                translation_placeholders={"id": str(device_key)},
+            )
+            for device_key in DEVICE_KEYS_A_D
+        ]
     ),
     "22": (SIMPLE_TEMPERATURE_SENSOR_DESCRIPTION,),
     "26": (
@@ -105,7 +135,6 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.HUMIDITY,
             entity_registry_enabled_default=False,
             native_unit_of_measurement=PERCENTAGE,
-            read_mode=READ_MODE_FLOAT,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         OneWireSensorEntityDescription(
@@ -113,7 +142,6 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.HUMIDITY,
             entity_registry_enabled_default=False,
             native_unit_of_measurement=PERCENTAGE,
-            read_mode=READ_MODE_FLOAT,
             state_class=SensorStateClass.MEASUREMENT,
             translation_key="humidity_hih3600",
         ),
@@ -122,7 +150,6 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.HUMIDITY,
             entity_registry_enabled_default=False,
             native_unit_of_measurement=PERCENTAGE,
-            read_mode=READ_MODE_FLOAT,
             state_class=SensorStateClass.MEASUREMENT,
             translation_key="humidity_hih4000",
         ),
@@ -131,7 +158,6 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.HUMIDITY,
             entity_registry_enabled_default=False,
             native_unit_of_measurement=PERCENTAGE,
-            read_mode=READ_MODE_FLOAT,
             state_class=SensorStateClass.MEASUREMENT,
             translation_key="humidity_hih5030",
         ),
@@ -140,7 +166,6 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.HUMIDITY,
             entity_registry_enabled_default=False,
             native_unit_of_measurement=PERCENTAGE,
-            read_mode=READ_MODE_FLOAT,
             state_class=SensorStateClass.MEASUREMENT,
             translation_key="humidity_htm1735",
         ),
@@ -149,7 +174,6 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.PRESSURE,
             entity_registry_enabled_default=False,
             native_unit_of_measurement=UnitOfPressure.MBAR,
-            read_mode=READ_MODE_FLOAT,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         OneWireSensorEntityDescription(
@@ -157,7 +181,6 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.ILLUMINANCE,
             entity_registry_enabled_default=False,
             native_unit_of_measurement=LIGHT_LUX,
-            read_mode=READ_MODE_FLOAT,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         OneWireSensorEntityDescription(
@@ -165,7 +188,6 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.VOLTAGE,
             entity_registry_enabled_default=False,
             native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-            read_mode=READ_MODE_FLOAT,
             state_class=SensorStateClass.MEASUREMENT,
             translation_key="voltage_vad",
         ),
@@ -174,7 +196,6 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.VOLTAGE,
             entity_registry_enabled_default=False,
             native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-            read_mode=READ_MODE_FLOAT,
             state_class=SensorStateClass.MEASUREMENT,
             translation_key="voltage_vdd",
         ),
@@ -183,7 +204,6 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.VOLTAGE,
             entity_registry_enabled_default=False,
             native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-            read_mode=READ_MODE_FLOAT,
             state_class=SensorStateClass.MEASUREMENT,
             translation_key="voltage_vis",
         ),
@@ -194,7 +214,6 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.TEMPERATURE,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             override_key=_get_sensor_precision_family_28,
-            read_mode=READ_MODE_FLOAT,
             state_class=SensorStateClass.MEASUREMENT,
         ),
     ),
@@ -205,7 +224,6 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.TEMPERATURE,
             entity_registry_enabled_default=False,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-            read_mode=READ_MODE_FLOAT,
             override_key=lambda d, o: "typeK/temperature",
             state_class=SensorStateClass.MEASUREMENT,
             translation_key="thermocouple_temperature_k",
@@ -215,7 +233,6 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.VOLTAGE,
             entity_registry_enabled_default=False,
             native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-            read_mode=READ_MODE_FLOAT,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         OneWireSensorEntityDescription(
@@ -223,7 +240,6 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             device_class=SensorDeviceClass.VOLTAGE,
             entity_registry_enabled_default=False,
             native_unit_of_measurement=UnitOfElectricPotential.VOLT,
-            read_mode=READ_MODE_FLOAT,
             state_class=SensorStateClass.MEASUREMENT,
             translation_key="voltage_vis_gradient",
         ),
@@ -232,13 +248,12 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
     "42": (SIMPLE_TEMPERATURE_SENSOR_DESCRIPTION,),
     "1D": tuple(
         OneWireSensorEntityDescription(
-            key=f"counter.{id}",
-            native_unit_of_measurement="count",
-            read_mode=READ_MODE_INT,
+            key=f"counter.{device_key}",
             state_class=SensorStateClass.TOTAL_INCREASING,
-            translation_key=f"counter_{id.lower()}",
+            translation_key="counter_id",
+            translation_placeholders={"id": str(device_key)},
         )
-        for id in DEVICE_KEYS_A_B
+        for device_key in DEVICE_KEYS_A_B
     ),
 }
 
@@ -250,14 +265,12 @@ HOBBYBOARD_EF: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             key="humidity/humidity_corrected",
             device_class=SensorDeviceClass.HUMIDITY,
             native_unit_of_measurement=PERCENTAGE,
-            read_mode=READ_MODE_FLOAT,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         OneWireSensorEntityDescription(
             key="humidity/humidity_raw",
             device_class=SensorDeviceClass.HUMIDITY,
             native_unit_of_measurement=PERCENTAGE,
-            read_mode=READ_MODE_FLOAT,
             state_class=SensorStateClass.MEASUREMENT,
             translation_key="humidity_raw",
         ),
@@ -265,20 +278,19 @@ HOBBYBOARD_EF: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             key="humidity/temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-            read_mode=READ_MODE_FLOAT,
             state_class=SensorStateClass.MEASUREMENT,
         ),
     ),
     "HB_MOISTURE_METER": tuple(
         OneWireSensorEntityDescription(
-            key=f"moisture/sensor.{id}",
+            key=f"moisture/sensor.{device_key}",
             device_class=SensorDeviceClass.PRESSURE,
             native_unit_of_measurement=UnitOfPressure.CBAR,
-            read_mode=READ_MODE_FLOAT,
             state_class=SensorStateClass.MEASUREMENT,
-            translation_key=f"moisture_{id}",
+            translation_key="moisture_id",
+            translation_placeholders={"id": str(device_key)},
         )
-        for id in DEVICE_KEYS_0_3
+        for device_key in DEVICE_KEYS_0_3
     ),
 }
 
@@ -290,14 +302,12 @@ EDS_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             key="EDS0066/temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-            read_mode=READ_MODE_FLOAT,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         OneWireSensorEntityDescription(
             key="EDS0066/pressure",
             device_class=SensorDeviceClass.PRESSURE,
             native_unit_of_measurement=UnitOfPressure.MBAR,
-            read_mode=READ_MODE_FLOAT,
             state_class=SensorStateClass.MEASUREMENT,
         ),
     ),
@@ -306,28 +316,24 @@ EDS_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             key="EDS0068/temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-            read_mode=READ_MODE_FLOAT,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         OneWireSensorEntityDescription(
             key="EDS0068/pressure",
             device_class=SensorDeviceClass.PRESSURE,
             native_unit_of_measurement=UnitOfPressure.MBAR,
-            read_mode=READ_MODE_FLOAT,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         OneWireSensorEntityDescription(
             key="EDS0068/light",
             device_class=SensorDeviceClass.ILLUMINANCE,
             native_unit_of_measurement=LIGHT_LUX,
-            read_mode=READ_MODE_FLOAT,
             state_class=SensorStateClass.MEASUREMENT,
         ),
         OneWireSensorEntityDescription(
             key="EDS0068/humidity",
             device_class=SensorDeviceClass.HUMIDITY,
             native_unit_of_measurement=PERCENTAGE,
-            read_mode=READ_MODE_FLOAT,
             state_class=SensorStateClass.MEASUREMENT,
         ),
     ),
@@ -347,39 +353,50 @@ def get_sensor_types(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: OneWireConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up 1-Wire platform."""
-    onewire_hub = hass.data[DOMAIN][config_entry.entry_id]
-    entities = await hass.async_add_executor_job(
-        get_entities, onewire_hub, config_entry.options
+
+    async def _add_entities(
+        hub: OneWireHub, devices: list[OWDeviceDescription]
+    ) -> None:
+        """Add 1-Wire entities for all devices."""
+        if not devices:
+            return
+        entities = await get_entities(hub, devices, config_entry.options)
+        async_add_entities(entities, True)
+
+    hub = config_entry.runtime_data
+    await _add_entities(hub, hub.devices)
+    config_entry.async_on_unload(
+        async_dispatcher_connect(hass, SIGNAL_NEW_DEVICE_CONNECTED, _add_entities)
     )
-    async_add_entities(entities, True)
 
 
-def get_entities(
-    onewire_hub: OneWireHub, options: MappingProxyType[str, Any]
-) -> list[OneWireSensor]:
+async def get_entities(
+    onewire_hub: OneWireHub,
+    devices: list[OWDeviceDescription],
+    options: Mapping[str, Any],
+) -> list[OneWireSensorEntity]:
     """Get a list of entities."""
-    if not onewire_hub.devices:
-        return []
-
-    entities: list[OneWireSensor] = []
-    assert onewire_hub.owproxy
-    for device in onewire_hub.devices:
+    entities: list[OneWireSensorEntity] = []
+    for device in devices:
         family = device.family
         device_type = device.type
         device_id = device.id
         device_info = device.device_info
         device_sub_type = "std"
         device_path = device.path
-        if "EF" in family:
+        if device_type and "EF" in family:
             device_sub_type = "HobbyBoard"
             family = device_type
-        elif "7E" in family:
+        elif device_type and "7E" in family:
             device_sub_type = "EDS"
             family = device_type
+        elif "A6" in family:
+            # A6 is a secondary family code for DS2438
+            family = "26"
 
         if family not in get_sensor_types(device_sub_type):
             continue
@@ -387,8 +404,10 @@ def get_entities(
             if description.key.startswith("moisture/"):
                 s_id = description.key.split(".")[1]
                 is_leaf = int(
-                    onewire_hub.owproxy.read(
-                        f"{device_path}moisture/is_leaf.{s_id}"
+                    (
+                        await onewire_hub.owproxy.read(
+                            f"{device_path}moisture/is_leaf.{s_id}"
+                        )
                     ).decode()
                 )
                 if is_leaf:
@@ -396,7 +415,8 @@ def get_entities(
                         description,
                         device_class=SensorDeviceClass.HUMIDITY,
                         native_unit_of_measurement=PERCENTAGE,
-                        translation_key=f"wetness_{s_id}",
+                        translation_key="wetness_id",
+                        translation_placeholders={"id": s_id},
                     )
             override_key = None
             if description.override_key:
@@ -408,8 +428,8 @@ def get_entities(
             if family == "12":
                 # We need to check if there is TAI8570 plugged in
                 try:
-                    onewire_hub.owproxy.read(device_file)
-                except protocol.OwnetError as err:
+                    await onewire_hub.owproxy.read(device_file)
+                except OWServerReturnError as err:
                     _LOGGER.debug(
                         "Ignoring unreachable sensor %s",
                         device_file,
@@ -417,7 +437,7 @@ def get_entities(
                     )
                     continue
             entities.append(
-                OneWireSensor(
+                OneWireSensorEntity(
                     description=description,
                     device_id=device_id,
                     device_file=device_file,
@@ -428,12 +448,12 @@ def get_entities(
     return entities
 
 
-class OneWireSensor(OneWireEntity, SensorEntity):
+class OneWireSensorEntity(OneWireEntity, SensorEntity):
     """Implementation of a 1-Wire sensor."""
 
-    entity_description: OneWireSensorEntityDescription
-
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> float | int | None:
         """Return the state of the entity."""
-        return self._state
+        if (state := self._state) is None:
+            return None
+        return float(state) if "." in state else int(state)

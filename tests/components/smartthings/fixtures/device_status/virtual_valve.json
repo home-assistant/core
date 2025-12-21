@@ -1,0 +1,13 @@
+{
+  "components": {
+    "main": {
+      "refresh": {},
+      "valve": {
+        "valve": {
+          "value": "closed",
+          "timestamp": "2025-02-11T11:27:02.262Z"
+        }
+      }
+    }
+  }
+}

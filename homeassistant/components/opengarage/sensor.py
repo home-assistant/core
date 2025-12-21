@@ -1,4 +1,5 @@
 """Platform for the opengarage.io sensor component."""
+
 from __future__ import annotations
 
 import logging
@@ -19,10 +20,10 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import OpenGarageDataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import OpenGarageDataUpdateCoordinator
 from .entity import OpenGarageEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -58,22 +59,22 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the OpenGarage sensors."""
     open_garage_data_coordinator: OpenGarageDataUpdateCoordinator = hass.data[DOMAIN][
         entry.entry_id
     ]
     async_add_entities(
-        [
-            OpenGarageSensor(
-                open_garage_data_coordinator,
-                cast(str, entry.unique_id),
-                description,
-            )
-            for description in SENSOR_TYPES
-            if description.key in open_garage_data_coordinator.data
-        ],
+        OpenGarageSensor(
+            open_garage_data_coordinator,
+            cast(str, entry.unique_id),
+            description,
+        )
+        for description in SENSOR_TYPES
+        if description.key in open_garage_data_coordinator.data
     )
 
 

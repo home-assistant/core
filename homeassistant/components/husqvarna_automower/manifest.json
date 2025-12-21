@@ -1,0 +1,13 @@
+{
+  "domain": "husqvarna_automower",
+  "name": "Husqvarna Automower",
+  "codeowners": ["@Thomas55555"],
+  "config_flow": true,
+  "dependencies": ["application_credentials"],
+  "documentation": "https://www.home-assistant.io/integrations/husqvarna_automower",
+  "integration_type": "hub",
+  "iot_class": "cloud_push",
+  "loggers": ["aioautomower"],
+  "quality_scale": "silver",
+  "requirements": ["aioautomower==2.7.1"]
+}

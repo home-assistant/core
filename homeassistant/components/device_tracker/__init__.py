@@ -1,28 +1,21 @@
 """Provide functionality to keep track of devices."""
-from __future__ import annotations
 
-from functools import partial
+from __future__ import annotations
 
 from homeassistant.const import ATTR_GPS_ACCURACY, STATE_HOME  # noqa: F401
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.deprecation import (
-    check_if_deprecated_constant,
-    dir_with_deprecated_constants,
-)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
 from .config_entry import (  # noqa: F401
     ScannerEntity,
+    ScannerEntityDescription,
     TrackerEntity,
+    TrackerEntityDescription,
     async_setup_entry,
     async_unload_entry,
 )
 from .const import (  # noqa: F401
-    _DEPRECATED_SOURCE_TYPE_BLUETOOTH,
-    _DEPRECATED_SOURCE_TYPE_BLUETOOTH_LE,
-    _DEPRECATED_SOURCE_TYPE_GPS,
-    _DEPRECATED_SOURCE_TYPE_ROUTER,
     ATTR_ATTRIBUTES,
     ATTR_BATTERY,
     ATTR_DEV_ID,
@@ -57,12 +50,6 @@ from .legacy import (  # noqa: F401
     see,
 )
 
-# As we import deprecated constants from the const module, we need to add these two functions
-# otherwise this module will be logged for using deprecated constants and not the custom component
-# Both can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(dir_with_deprecated_constants, module_globals=globals())
-
 
 @bind_hass
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:
@@ -72,14 +59,5 @@ def is_on(hass: HomeAssistant, entity_id: str) -> bool:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the device tracker."""
-
-    # We need to add the component here break the deadlock
-    # when setting up integrations from config entries as
-    # they would otherwise wait for the device tracker to be
-    # setup and thus the config entries would not be able to
-    # setup their platforms.
-    hass.config.components.add(DOMAIN)
-
-    await async_setup_legacy_integration(hass, config)
-
+    async_setup_legacy_integration(hass, config)
     return True

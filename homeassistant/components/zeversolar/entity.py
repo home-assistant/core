@@ -1,4 +1,5 @@
 """Base Entity for Zeversolar sensors."""
+
 from __future__ import annotations
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -26,4 +27,5 @@ class ZeversolarEntity(
             identifiers={(DOMAIN, coordinator.data.serial_number)},
             name="Zeversolar Sensor",
             manufacturer="Zeversolar",
+            serial_number=coordinator.data.serial_number,
         )

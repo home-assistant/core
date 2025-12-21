@@ -1,4 +1,5 @@
 """Binary sensor entity platform for Tailwind."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -7,16 +8,15 @@ from dataclasses import dataclass
 from gotailwind import TailwindDoor
 
 from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import TailwindDataUpdateCoordinator
+from .coordinator import TailwindConfigEntry
 from .entity import TailwindDoorEntity
 
 
@@ -30,25 +30,24 @@ class TailwindDoorBinarySensorEntityDescription(BinarySensorEntityDescription):
 DESCRIPTIONS: tuple[TailwindDoorBinarySensorEntityDescription, ...] = (
     TailwindDoorBinarySensorEntityDescription(
         key="locked_out",
-        translation_key="operational_status",
+        translation_key="operational_problem",
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:garage-alert",
-        is_on_fn=lambda door: not door.locked_out,
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        is_on_fn=lambda door: door.locked_out,
     ),
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: TailwindConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tailwind binary sensor based on a config entry."""
-    coordinator: TailwindDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        TailwindDoorBinarySensorEntity(coordinator, door_id, description)
+        TailwindDoorBinarySensorEntity(entry.runtime_data, door_id, description)
         for description in DESCRIPTIONS
-        for door_id in coordinator.data.doors
+        for door_id in entry.runtime_data.data.doors
     )
 
 

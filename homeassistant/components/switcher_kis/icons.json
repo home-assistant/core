@@ -1,0 +1,34 @@
+{
+  "entity": {
+    "button": {
+      "assume_off": {
+        "default": "mdi:fan-off"
+      },
+      "assume_on": {
+        "default": "mdi:fan"
+      },
+      "vertical_swing_off": {
+        "default": "mdi:autorenew-off"
+      },
+      "vertical_swing_on": {
+        "default": "mdi:autorenew"
+      }
+    },
+    "sensor": {
+      "auto_shutdown": {
+        "default": "mdi:progress-clock"
+      },
+      "remaining_time": {
+        "default": "mdi:av-timer"
+      }
+    }
+  },
+  "services": {
+    "set_auto_off": {
+      "service": "mdi:progress-clock"
+    },
+    "turn_on_with_timer": {
+      "service": "mdi:timer"
+    }
+  }
+}

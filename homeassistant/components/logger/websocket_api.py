@@ -1,21 +1,23 @@
 """Websocket API handlers for the logger integration."""
-import logging
+
 from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.components.websocket_api.connection import ActiveConnection
+from homeassistant.components.websocket_api import ActiveConnection
+from homeassistant.config_entries import DISCOVERY_SOURCES
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.loader import IntegrationNotFound, async_get_integration
 from homeassistant.setup import async_get_loaded_integrations
 
 from .const import LOGSEVERITY
 from .helpers import (
+    DATA_LOGGER,
     LoggerSetting,
     LogPersistance,
     LogSettingsType,
-    async_get_domain_config,
+    get_logger,
 )
 
 
@@ -33,16 +35,26 @@ def handle_integration_log_info(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle integrations logger info."""
+    integrations = set(async_get_loaded_integrations(hass))
+
+    # Add discovered config flows that are not yet loaded
+    for flow in hass.config_entries.flow.async_progress():
+        if flow["context"].get("source") in DISCOVERY_SOURCES:
+            integrations.add(flow["handler"])
+
+    # Add integrations with custom log settings
+    integrations.update(hass.data[DATA_LOGGER].settings.async_get_integration_domains())
+
     connection.send_result(
         msg["id"],
         [
             {
                 "domain": integration,
-                "level": logging.getLogger(
+                "level": get_logger(
                     f"homeassistant.components.{integration}"
                 ).getEffectiveLevel(),
             }
-            for integration in async_get_loaded_integrations(hass)
+            for integration in integrations
         ],
     )
 
@@ -64,10 +76,10 @@ async def handle_integration_log_level(
         await async_get_integration(hass, msg["integration"])
     except IntegrationNotFound:
         connection.send_error(
-            msg["id"], websocket_api.const.ERR_NOT_FOUND, "Integration not found"
+            msg["id"], websocket_api.ERR_NOT_FOUND, "Integration not found"
         )
         return
-    await async_get_domain_config(hass).settings.async_update(
+    await hass.data[DATA_LOGGER].settings.async_update(
         hass,
         msg["integration"],
         LoggerSetting(
@@ -92,7 +104,7 @@ async def handle_module_log_level(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle setting integration log level."""
-    await async_get_domain_config(hass).settings.async_update(
+    await hass.data[DATA_LOGGER].settings.async_update(
         hass,
         msg["module"],
         LoggerSetting(

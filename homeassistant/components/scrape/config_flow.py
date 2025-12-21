@@ -1,4 +1,5 @@
 """Adds config flow for Scrape integration."""
+
 from __future__ import annotations
 
 from collections.abc import Mapping
@@ -8,8 +9,13 @@ import uuid
 import voluptuous as vol
 
 from homeassistant.components.rest import create_rest_data_from_config
-from homeassistant.components.rest.data import DEFAULT_TIMEOUT
-from homeassistant.components.rest.schema import DEFAULT_METHOD, METHODS
+from homeassistant.components.rest.data import (  # pylint: disable=hass-component-root-import
+    DEFAULT_TIMEOUT,
+)
+from homeassistant.components.rest.schema import (  # pylint: disable=hass-component-root-import
+    DEFAULT_METHOD,
+    METHODS,
+)
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DOMAIN as SENSOR_DOMAIN,
@@ -59,6 +65,7 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
+from homeassistant.helpers.trigger_template_entity import CONF_AVAILABILITY
 
 from . import COMBINED_SCHEMA
 from .const import (
@@ -104,6 +111,7 @@ SENSOR_SETUP = {
     ),
     vol.Optional(CONF_ATTRIBUTE): TextSelector(),
     vol.Optional(CONF_VALUE_TEMPLATE): TemplateSelector(),
+    vol.Optional(CONF_AVAILABILITY): TemplateSelector(),
     vol.Optional(CONF_DEVICE_CLASS): SelectSelector(
         SelectSelectorConfig(
             options=[
@@ -305,6 +313,7 @@ class ScrapeConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW
+    options_flow_reloads = True
 
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""

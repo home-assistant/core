@@ -1,21 +1,27 @@
 """The tests for the Everything but the Kitchen Sink integration."""
+
 import datetime
 from http import HTTPStatus
 from unittest.mock import ANY
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
+import voluptuous as vol
 
 from homeassistant.components.kitchen_sink import DOMAIN
-from homeassistant.components.recorder import Recorder, get_instance
+from homeassistant.components.labs import EVENT_LABS_UPDATED
+from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.statistics import (
+    StatisticMeanType,
     async_add_external_statistics,
     get_last_statistics,
     list_statistic_ids,
 )
 from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from tests.components.recorder.common import async_wait_recording_done
@@ -23,14 +29,13 @@ from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture
-def mock_history(hass):
+def mock_history(hass: HomeAssistant) -> None:
     """Mock history component loaded."""
     hass.config.components.add("history")
 
 
-async def test_demo_statistics(
-    recorder_mock: Recorder, mock_history, hass: HomeAssistant
-) -> None:
+@pytest.mark.usefixtures("recorder_mock", "mock_history")
+async def test_demo_statistics(hass: HomeAssistant) -> None:
     """Test that the kitchen sink component makes some statistics available."""
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
@@ -43,6 +48,7 @@ async def test_demo_statistics(
     assert {
         "display_unit_of_measurement": "°C",
         "has_mean": True,
+        "mean_type": StatisticMeanType.ARITHMETIC,
         "has_sum": False,
         "name": "Outdoor temperature",
         "source": DOMAIN,
@@ -53,6 +59,7 @@ async def test_demo_statistics(
     assert {
         "display_unit_of_measurement": "kWh",
         "has_mean": False,
+        "mean_type": StatisticMeanType.NONE,
         "has_sum": True,
         "name": "Energy consumption 1",
         "source": DOMAIN,
@@ -62,9 +69,8 @@ async def test_demo_statistics(
     } in statistic_ids
 
 
-async def test_demo_statistics_growth(
-    recorder_mock: Recorder, mock_history, hass: HomeAssistant
-) -> None:
+@pytest.mark.usefixtures("recorder_mock", "mock_history")
+async def test_demo_statistics_growth(hass: HomeAssistant) -> None:
     """Test that the kitchen sink sum statistics adds to the previous state."""
     hass.config.units = US_CUSTOMARY_SYSTEM
 
@@ -77,8 +83,9 @@ async def test_demo_statistics_growth(
         "source": DOMAIN,
         "name": "Energy consumption 1",
         "statistic_id": statistic_id,
+        "unit_class": "volume",
         "unit_of_measurement": "m³",
-        "has_mean": False,
+        "mean_type": StatisticMeanType.NONE,
         "has_sum": True,
     }
     statistics = [
@@ -102,8 +109,28 @@ async def test_demo_statistics_growth(
     assert statistics[statistic_id][0]["sum"] <= (2**20 + 24)
 
 
+@pytest.mark.usefixtures("recorder_mock", "mock_history")
+async def test_statistics_issues(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test that the kitchen sink sum statistics causes statistics issues."""
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await async_wait_recording_done(hass)
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json_auto_id({"type": "recorder/validate_statistics"})
+    response = await ws_client.receive_json()
+    assert response["success"]
+    assert response["result"] == snapshot
+
+
+@pytest.mark.freeze_time("2023-10-21")
+@pytest.mark.usefixtures("mock_history")
 async def test_issues_created(
-    mock_history,
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
@@ -125,7 +152,7 @@ async def test_issues_created(
         "issues": [
             {
                 "breaks_in_ha_version": "2023.1.1",
-                "created": ANY,
+                "created": "2023-10-21T00:00:00+00:00",
                 "dismissed_version": None,
                 "domain": DOMAIN,
                 "ignored": False,
@@ -139,7 +166,7 @@ async def test_issues_created(
             },
             {
                 "breaks_in_ha_version": "2023.1.1",
-                "created": ANY,
+                "created": "2023-10-21T00:00:00+00:00",
                 "dismissed_version": None,
                 "domain": DOMAIN,
                 "ignored": False,
@@ -153,7 +180,7 @@ async def test_issues_created(
             },
             {
                 "breaks_in_ha_version": None,
-                "created": ANY,
+                "created": "2023-10-21T00:00:00+00:00",
                 "dismissed_version": None,
                 "domain": DOMAIN,
                 "ignored": False,
@@ -167,7 +194,7 @@ async def test_issues_created(
             },
             {
                 "breaks_in_ha_version": None,
-                "created": ANY,
+                "created": "2023-10-21T00:00:00+00:00",
                 "dismissed_version": None,
                 "domain": DOMAIN,
                 "ignored": False,
@@ -181,7 +208,7 @@ async def test_issues_created(
             },
             {
                 "breaks_in_ha_version": None,
-                "created": ANY,
+                "created": "2023-10-21T00:00:00+00:00",
                 "dismissed_version": None,
                 "domain": DOMAIN,
                 "is_fixable": True,
@@ -191,6 +218,20 @@ async def test_issues_created(
                 "severity": "warning",
                 "translation_key": "cold_tea",
                 "translation_placeholders": None,
+                "ignored": False,
+            },
+            {
+                "breaks_in_ha_version": None,
+                "created": "2023-10-21T00:00:00+00:00",
+                "dismissed_version": None,
+                "domain": "homeassistant",
+                "is_fixable": False,
+                "issue_domain": DOMAIN,
+                "issue_id": ANY,
+                "learn_more_url": None,
+                "severity": "error",
+                "translation_key": "config_entry_reauth",
+                "translation_placeholders": {"name": "Kitchen Sink"},
                 "ignored": False,
             },
         ]
@@ -229,9 +270,7 @@ async def test_issues_created(
         "description_placeholders": None,
         "flow_id": flow_id,
         "handler": DOMAIN,
-        "minor_version": 1,
         "type": "create_entry",
-        "version": 1,
     }
 
     await ws_client.send_json({"id": 4, "type": "repairs/list_issues"})
@@ -242,7 +281,7 @@ async def test_issues_created(
         "issues": [
             {
                 "breaks_in_ha_version": "2023.1.1",
-                "created": ANY,
+                "created": "2023-10-21T00:00:00+00:00",
                 "dismissed_version": None,
                 "domain": DOMAIN,
                 "ignored": False,
@@ -256,7 +295,7 @@ async def test_issues_created(
             },
             {
                 "breaks_in_ha_version": None,
-                "created": ANY,
+                "created": "2023-10-21T00:00:00+00:00",
                 "dismissed_version": None,
                 "domain": DOMAIN,
                 "ignored": False,
@@ -270,7 +309,7 @@ async def test_issues_created(
             },
             {
                 "breaks_in_ha_version": None,
-                "created": ANY,
+                "created": "2023-10-21T00:00:00+00:00",
                 "dismissed_version": None,
                 "domain": DOMAIN,
                 "ignored": False,
@@ -284,7 +323,7 @@ async def test_issues_created(
             },
             {
                 "breaks_in_ha_version": None,
-                "created": ANY,
+                "created": "2023-10-21T00:00:00+00:00",
                 "dismissed_version": None,
                 "domain": DOMAIN,
                 "is_fixable": True,
@@ -296,5 +335,172 @@ async def test_issues_created(
                 "translation_placeholders": None,
                 "ignored": False,
             },
+            {
+                "breaks_in_ha_version": None,
+                "created": "2023-10-21T00:00:00+00:00",
+                "dismissed_version": None,
+                "domain": "homeassistant",
+                "is_fixable": False,
+                "issue_domain": DOMAIN,
+                "issue_id": ANY,
+                "learn_more_url": None,
+                "severity": "error",
+                "translation_key": "config_entry_reauth",
+                "translation_placeholders": {"name": "Kitchen Sink"},
+                "ignored": False,
+            },
         ]
     }
+
+
+async def test_service(
+    hass: HomeAssistant,
+) -> None:
+    """Test we can call the service."""
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+
+    with pytest.raises(vol.error.MultipleInvalid):
+        await hass.services.async_call(DOMAIN, "test_service_1", blocking=True)
+
+    await hass.services.async_call(
+        DOMAIN, "test_service_1", {"field_1": 1, "field_2": "auto"}, blocking=True
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        "test_service_1",
+        {"field_1": 1, "field_2": "auto", "field_3": 1, "field_4": "forwards"},
+        blocking=True,
+    )
+
+
+@pytest.fixture
+async def setup_kitchen_sink_with_repairs(hass: HomeAssistant) -> None:
+    """Set up kitchen_sink integration with labs and repairs."""
+    assert await async_setup_component(hass, "labs", {})
+    assert await async_setup_component(hass, "repairs", {})
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await hass.async_block_till_done()
+
+
+async def test_special_repair_issue_not_created_when_disabled(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    setup_kitchen_sink_with_repairs: None,
+) -> None:
+    """Test that special repair issue is not created when preview feature is disabled."""
+    # Check that issue does not exist when preview feature is disabled
+    issue = issue_registry.async_get_issue(DOMAIN, "kitchen_sink_special_repair_issue")
+    assert issue is None
+
+
+async def test_special_repair_issue_created_when_enabled(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    hass_ws_client: WebSocketGenerator,
+    setup_kitchen_sink_with_repairs: None,
+) -> None:
+    """Test that special repair issue is created when preview feature is enabled."""
+    ws_client = await hass_ws_client(hass)
+
+    # Enable the special repair preview feature
+    await ws_client.send_json_auto_id(
+        {
+            "type": "labs/update",
+            "domain": "kitchen_sink",
+            "preview_feature": "special_repair",
+            "enabled": True,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    # Wait for event handling
+    await hass.async_block_till_done()
+
+    # Check that issue was created
+    issue = issue_registry.async_get_issue(DOMAIN, "kitchen_sink_special_repair_issue")
+    assert issue is not None
+    assert issue.domain == DOMAIN
+    assert issue.translation_key == "special_repair"
+    assert issue.is_fixable is False
+    assert issue.severity == ir.IssueSeverity.WARNING
+
+
+async def test_special_repair_preview_feature_toggle(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test that special repair issue is created/deleted when preview feature is toggled."""
+    # Setup repairs and kitchen_sink first
+    assert await async_setup_component(hass, "labs", {})
+    assert await async_setup_component(hass, "repairs", {})
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await hass.async_block_till_done()
+
+    ws_client = await hass_ws_client(hass)
+
+    # Enable the special repair preview feature
+    await ws_client.send_json_auto_id(
+        {
+            "type": "labs/update",
+            "domain": "kitchen_sink",
+            "preview_feature": "special_repair",
+            "enabled": True,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    # Check issue exists
+    issue = issue_registry.async_get_issue(DOMAIN, "kitchen_sink_special_repair_issue")
+    assert issue is not None
+
+    # Disable the special repair preview feature
+    await ws_client.send_json_auto_id(
+        {
+            "type": "labs/update",
+            "domain": "kitchen_sink",
+            "preview_feature": "special_repair",
+            "enabled": False,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    # Check issue is removed
+    issue = issue_registry.async_get_issue(DOMAIN, "kitchen_sink_special_repair_issue")
+    assert issue is None
+
+
+async def test_preview_feature_event_handler_registered(
+    hass: HomeAssistant,
+) -> None:
+    """Test that preview feature event handler is registered on setup."""
+    # Setup kitchen_sink
+    assert await async_setup_component(hass, "labs", {})
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await hass.async_block_till_done()
+
+    # Track if event is handled
+    events_received = []
+
+    def track_event(event):
+        events_received.append(event)
+
+    hass.bus.async_listen(EVENT_LABS_UPDATED, track_event)
+    await hass.async_block_till_done()
+
+    # Fire a labs updated event for kitchen_sink preview feature
+    hass.bus.async_fire(
+        EVENT_LABS_UPDATED,
+        {"feature_id": "kitchen_sink.special_repair", "enabled": True},
+    )
+    await hass.async_block_till_done()
+
+    # Verify event was received by our tracker
+    assert len(events_received) == 1
+    assert events_received[0].data["feature_id"] == "kitchen_sink.special_repair"

@@ -1,4 +1,5 @@
 """The repairs integration."""
+
 from __future__ import annotations
 
 from homeassistant.core import HomeAssistant
@@ -11,11 +12,11 @@ from .issue_handler import ConfirmRepairFlow, RepairsFlowManager
 from .models import RepairsFlow
 
 __all__ = [
-    "ConfirmRepairFlow",
     "DOMAIN",
-    "repairs_flow_manager",
+    "ConfirmRepairFlow",
     "RepairsFlow",
     "RepairsFlowManager",
+    "repairs_flow_manager",
 ]
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 

@@ -1,4 +1,5 @@
 """Event parser and human readable log generator."""
+
 from __future__ import annotations
 
 import asyncio
@@ -12,12 +13,12 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.recorder import get_instance
-from homeassistant.components.websocket_api import messages
-from homeassistant.components.websocket_api.connection import ActiveConnection
+from homeassistant.components.websocket_api import ActiveConnection, messages
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.helpers.json import JSON_DUMP
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.json import json_bytes
+from homeassistant.util import dt as dt_util
+from homeassistant.util.async_ import create_eager_task
 
 from .const import DOMAIN
 from .helpers import (
@@ -46,7 +47,7 @@ class LogbookLiveStream:
     subscriptions: list[CALLBACK_TYPE]
     end_time_unsub: CALLBACK_TYPE | None = None
     task: asyncio.Task | None = None
-    wait_sync_task: asyncio.Task | None = None
+    wait_sync_future: asyncio.Future[None] | None = None
 
 
 @callback
@@ -70,7 +71,7 @@ def _async_send_empty_response(
     stream_end_time = end_time or dt_util.utcnow()
     empty_stream_message = _generate_stream_message([], start_time, stream_end_time)
     empty_response = messages.event_message(msg_id, empty_stream_message)
-    connection.send_message(JSON_DUMP(empty_response))
+    connection.send_message(json_bytes(empty_response))
 
 
 async def _async_send_historical_events(
@@ -79,7 +80,6 @@ async def _async_send_historical_events(
     msg_id: int,
     start_time: dt,
     end_time: dt,
-    formatter: Callable[[int, Any], dict[str, Any]],
     event_processor: EventProcessor,
     partial: bool,
     force_send: bool = False,
@@ -107,7 +107,6 @@ async def _async_send_historical_events(
             msg_id,
             start_time,
             end_time,
-            formatter,
             event_processor,
             partial,
         )
@@ -129,7 +128,6 @@ async def _async_send_historical_events(
         msg_id,
         recent_query_start,
         end_time,
-        formatter,
         event_processor,
         partial=True,
     )
@@ -141,7 +139,6 @@ async def _async_send_historical_events(
         msg_id,
         start_time,
         recent_query_start,
-        formatter,
         event_processor,
         partial,
     )
@@ -162,17 +159,15 @@ async def _async_get_ws_stream_events(
     msg_id: int,
     start_time: dt,
     end_time: dt,
-    formatter: Callable[[int, Any], dict[str, Any]],
     event_processor: EventProcessor,
     partial: bool,
-) -> tuple[str, dt | None]:
+) -> tuple[bytes, dt | None]:
     """Async wrapper around _ws_formatted_get_events."""
     return await get_instance(hass).async_add_executor_job(
         _ws_stream_get_events,
         msg_id,
         start_time,
         end_time,
-        formatter,
         event_processor,
         partial,
     )
@@ -184,8 +179,8 @@ def _generate_stream_message(
     """Generate a logbook stream message response."""
     return {
         "events": events,
-        "start_time": dt_util.utc_to_timestamp(start_day),
-        "end_time": dt_util.utc_to_timestamp(end_day),
+        "start_time": start_day.timestamp(),
+        "end_time": end_day.timestamp(),
     }
 
 
@@ -193,10 +188,9 @@ def _ws_stream_get_events(
     msg_id: int,
     start_day: dt,
     end_day: dt,
-    formatter: Callable[[int, Any], dict[str, Any]],
     event_processor: EventProcessor,
     partial: bool,
-) -> tuple[str, dt | None]:
+) -> tuple[bytes, dt | None]:
     """Fetch events and convert them to json in the executor."""
     events = event_processor.get_events(start_day, end_day)
     last_time = None
@@ -209,7 +203,7 @@ def _ws_stream_get_events(
         # data in case the UI needs to show that historical
         # data is still loading in the future
         message["partial"] = True
-    return JSON_DUMP(formatter(msg_id, message)), last_time
+    return json_bytes(messages.event_message(msg_id, message)), last_time
 
 
 async def _async_events_consumer(
@@ -220,11 +214,14 @@ async def _async_events_consumer(
     event_processor: EventProcessor,
 ) -> None:
     """Stream events from the queue."""
+    subscriptions_setup_complete_timestamp = (
+        subscriptions_setup_complete_time.timestamp()
+    )
     while True:
         events: list[Event] = [await stream_queue.get()]
         # If the event is older than the last db
         # event we already sent it so we skip it.
-        if events[0].time_fired <= subscriptions_setup_complete_time:
+        if events[0].time_fired_timestamp <= subscriptions_setup_complete_timestamp:
             continue
         # We sleep for the EVENT_COALESCE_TIME so
         # we can group events together to minimize
@@ -238,7 +235,7 @@ async def _async_events_consumer(
             async_event_to_row(e) for e in events
         ):
             connection.send_message(
-                JSON_DUMP(
+                json_bytes(
                     messages.event_message(
                         msg_id,
                         {"events": logbook_events},
@@ -313,7 +310,6 @@ async def ws_event_stream(
             msg_id,
             start_time,
             end_time,
-            messages.event_message,
             event_processor,
             partial=False,
         )
@@ -333,8 +329,8 @@ async def ws_event_stream(
         subscriptions.clear()
         if live_stream.task:
             live_stream.task.cancel()
-        if live_stream.wait_sync_task:
-            live_stream.wait_sync_task.cancel()
+        if live_stream.wait_sync_future:
+            live_stream.wait_sync_future.cancel()
         if live_stream.end_time_unsub:
             live_stream.end_time_unsub()
             live_stream.end_time_unsub = None
@@ -380,7 +376,6 @@ async def ws_event_stream(
         msg_id,
         start_time,
         subscriptions_setup_complete_time,
-        messages.event_message,
         event_processor,
         partial=True,
         # Force a send since the wait for the sync task
@@ -394,7 +389,7 @@ async def ws_event_stream(
         # Unsubscribe happened while sending historical events
         return
 
-    live_stream.task = asyncio.create_task(
+    live_stream.task = create_eager_task(
         _async_events_consumer(
             subscriptions_setup_complete_time,
             connection,
@@ -404,10 +399,12 @@ async def ws_event_stream(
         )
     )
 
-    live_stream.wait_sync_task = asyncio.create_task(
-        get_instance(hass).async_block_till_done()
-    )
-    await live_stream.wait_sync_task
+    if sync_future := get_instance(hass).async_get_commit_future():
+        # Set the future so we can cancel it if the client
+        # unsubscribes before the commit is done so we don't
+        # query the database needlessly
+        live_stream.wait_sync_future = sync_future
+        await live_stream.wait_sync_future
 
     #
     # Fetch any events from the database that have
@@ -421,9 +418,11 @@ async def ws_event_stream(
         hass,
         connection,
         msg_id,
-        last_event_time or start_time,
+        # Add one microsecond so we are outside the window of
+        # the last event we got from the database since otherwise
+        # we could fetch the same event twice
+        (last_event_time or start_time) + timedelta(microseconds=1),
         subscriptions_setup_complete_time,
-        messages.event_message,
         event_processor,
         partial=False,
     )
@@ -435,9 +434,9 @@ def _ws_formatted_get_events(
     start_time: dt,
     end_time: dt,
     event_processor: EventProcessor,
-) -> str:
+) -> bytes:
     """Fetch events and convert them to json in the executor."""
-    return JSON_DUMP(
+    return json_bytes(
         messages.result_message(
             msg_id, event_processor.get_events(start_time, end_time)
         )

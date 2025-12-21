@@ -1,4 +1,5 @@
 """binary sensors for Ukraine Alarm integration."""
+
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import (
@@ -10,10 +11,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import UkraineAlarmDataUpdateCoordinator
 from .const import (
     ALERT_TYPE_AIR,
     ALERT_TYPE_ARTILLERY,
@@ -25,6 +25,7 @@ from .const import (
     DOMAIN,
     MANUFACTURER,
 )
+from .coordinator import UkraineAlarmDataUpdateCoordinator
 
 BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(
@@ -36,31 +37,26 @@ BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
         key=ALERT_TYPE_AIR,
         translation_key="air",
         device_class=BinarySensorDeviceClass.SAFETY,
-        icon="mdi:cloud",
     ),
     BinarySensorEntityDescription(
         key=ALERT_TYPE_URBAN_FIGHTS,
         translation_key="urban_fights",
         device_class=BinarySensorDeviceClass.SAFETY,
-        icon="mdi:pistol",
     ),
     BinarySensorEntityDescription(
         key=ALERT_TYPE_ARTILLERY,
         translation_key="artillery",
         device_class=BinarySensorDeviceClass.SAFETY,
-        icon="mdi:tank",
     ),
     BinarySensorEntityDescription(
         key=ALERT_TYPE_CHEMICAL,
         translation_key="chemical",
         device_class=BinarySensorDeviceClass.SAFETY,
-        icon="mdi:chemical-weapon",
     ),
     BinarySensorEntityDescription(
         key=ALERT_TYPE_NUCLEAR,
         translation_key="nuclear",
         device_class=BinarySensorDeviceClass.SAFETY,
-        icon="mdi:nuke",
     ),
 )
 
@@ -68,7 +64,7 @@ BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Ukraine Alarm binary sensor entities based on a config entry."""
     name = config_entry.data[CONF_NAME]

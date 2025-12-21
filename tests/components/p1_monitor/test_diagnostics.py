@@ -21,6 +21,7 @@ async def test_diagnostics(
             "title": "monitor",
             "data": {
                 "host": REDACTED,
+                "port": REDACTED,
             },
         },
         "data": {

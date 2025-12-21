@@ -1,0 +1,20 @@
+{
+  "entity": {
+    "select": {
+      "activities": {
+        "default": "mdi:remote-tv",
+        "state": {
+          "power_off": "mdi:remote-tv-off"
+        }
+      }
+    }
+  },
+  "services": {
+    "change_channel": {
+      "service": "mdi:remote-tv"
+    },
+    "sync": {
+      "service": "mdi:sync"
+    }
+  }
+}

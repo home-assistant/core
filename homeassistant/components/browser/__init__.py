@@ -1,4 +1,5 @@
 """Support for launching a web browser on the host machine."""
+
 import webbrowser
 
 import voluptuous as vol

@@ -1,0 +1,38 @@
+# serializer version: 1
+# name: test_climate_entity_attributes[climate-entity-attributes]
+  ReadOnlyDict({
+    'current_temperature': 30,
+    'fan_mode': 'auto',
+    'fan_modes': list([
+      'low',
+      'high',
+      'fan1',
+      'fan2',
+    ]),
+    'friendly_name': 'Test my climate',
+    'hvac_action': <HVACAction.COOLING: 'cooling'>,
+    'hvac_modes': list([
+      <HVACMode.COOL: 'cool'>,
+      <HVACMode.HEAT: 'heat'>,
+      <HVACMode.AUTO: 'auto'>,
+      <HVACMode.OFF: 'off'>,
+    ]),
+    'max_temp': 30,
+    'min_temp': 10,
+    'preset_mode': 'none',
+    'preset_modes': list([
+      'away',
+      'activity',
+      'preset1',
+      'preset2',
+    ]),
+    'supported_features': <ClimateEntityFeature: 441>,
+    'swing_mode': 'both',
+    'swing_modes': list([
+      'both',
+      'off',
+    ]),
+    'target_temp_step': 2,
+    'temperature': 20,
+  })
+# ---

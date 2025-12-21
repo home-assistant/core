@@ -1,0 +1,26 @@
+{
+  "entity_component": {
+    "_": {
+      "default": "mdi:bullhorn"
+    }
+  },
+  "services": {
+    "toggle": {
+      "service": "mdi:bullhorn"
+    },
+    "turn_off": {
+      "service": "mdi:bullhorn"
+    },
+    "turn_on": {
+      "service": "mdi:bullhorn"
+    }
+  },
+  "triggers": {
+    "turned_off": {
+      "trigger": "mdi:bullhorn-outline"
+    },
+    "turned_on": {
+      "trigger": "mdi:bullhorn"
+    }
+  }
+}

@@ -1,15 +1,17 @@
 """The tests for the webdav calendar component."""
+
 from collections.abc import Awaitable, Callable
 import datetime
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import MagicMock, Mock
+import zoneinfo
 
 from caldav.objects import Event
-from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.calendar import CalendarEntityFeature
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -314,10 +316,10 @@ def mock_tz() -> str | None:
 
 
 @pytest.fixture(autouse=True)
-def set_tz(hass: HomeAssistant, tz: str | None) -> None:
+async def set_tz(hass: HomeAssistant, tz: str | None) -> None:
     """Fixture to set the default TZ to the one requested."""
     if tz is not None:
-        hass.config.set_time_zone(tz)
+        await hass.config.async_set_time_zone(tz)
 
 
 @pytest.fixture(autouse=True)
@@ -434,7 +436,7 @@ async def test_setup_component_config(
 
 
 @pytest.mark.parametrize("tz", [UTC])
-@freeze_time(_local_datetime(17, 45))
+@pytest.mark.freeze_time(_local_datetime(17, 45))
 async def test_ongoing_event(
     hass: HomeAssistant, setup_platform_cb: Callable[[], Awaitable[None]]
 ) -> None:
@@ -454,11 +456,12 @@ async def test_ongoing_event(
         "end_time": "2017-11-27 18:00:00",
         "location": "Hamburg",
         "description": "Surprisingly rainy",
+        "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
 
 
 @pytest.mark.parametrize("tz", [UTC])
-@freeze_time(_local_datetime(17, 30))
+@pytest.mark.freeze_time(_local_datetime(17, 30))
 async def test_just_ended_event(
     hass: HomeAssistant, setup_platform_cb: Callable[[], Awaitable[None]]
 ) -> None:
@@ -478,11 +481,12 @@ async def test_just_ended_event(
         "end_time": "2017-11-27 18:00:00",
         "location": "Hamburg",
         "description": "Surprisingly rainy",
+        "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
 
 
 @pytest.mark.parametrize("tz", [UTC])
-@freeze_time(_local_datetime(17, 00))
+@pytest.mark.freeze_time(_local_datetime(17, 00))
 async def test_ongoing_event_different_tz(
     hass: HomeAssistant, setup_platform_cb: Callable[[], Awaitable[None]]
 ) -> None:
@@ -502,11 +506,12 @@ async def test_ongoing_event_different_tz(
         "description": "Sunny day",
         "end_time": "2017-11-27 17:30:00",
         "location": "San Francisco",
+        "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
 
 
 @pytest.mark.parametrize("tz", [UTC])
-@freeze_time(_local_datetime(19, 10))
+@pytest.mark.freeze_time(_local_datetime(19, 10))
 async def test_ongoing_floating_event_returned(
     hass: HomeAssistant, setup_platform_cb: Callable[[], Awaitable[None]]
 ) -> None:
@@ -526,11 +531,12 @@ async def test_ongoing_floating_event_returned(
         "end_time": "2017-11-27 20:00:00",
         "location": "Hamburg",
         "description": "What a day",
+        "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
 
 
 @pytest.mark.parametrize("tz", [UTC])
-@freeze_time(_local_datetime(8, 30))
+@pytest.mark.freeze_time(_local_datetime(8, 30))
 async def test_ongoing_event_with_offset(
     hass: HomeAssistant, setup_platform_cb: Callable[[], Awaitable[None]]
 ) -> None:
@@ -550,6 +556,7 @@ async def test_ongoing_event_with_offset(
         "end_time": "2017-11-27 11:00:00",
         "location": "Hamburg",
         "description": "Surprisingly shiny",
+        "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
 
 
@@ -570,7 +577,7 @@ async def test_ongoing_event_with_offset(
         )
     ],
 )
-@freeze_time(_local_datetime(12, 00))
+@pytest.mark.freeze_time(_local_datetime(12, 00))
 async def test_matching_filter(
     hass: HomeAssistant, setup_platform_cb: Callable[[], Awaitable[None]]
 ) -> None:
@@ -590,6 +597,7 @@ async def test_matching_filter(
         "end_time": "2017-11-27 18:00:00",
         "location": "Hamburg",
         "description": "Surprisingly rainy",
+        "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
 
 
@@ -610,7 +618,7 @@ async def test_matching_filter(
         )
     ],
 )
-@freeze_time(_local_datetime(12, 00))
+@pytest.mark.freeze_time(_local_datetime(12, 00))
 async def test_matching_filter_real_regexp(
     hass: HomeAssistant, setup_platform_cb: Callable[[], Awaitable[None]]
 ) -> None:
@@ -631,6 +639,7 @@ async def test_matching_filter_real_regexp(
         "end_time": "2017-11-27 18:00:00",
         "location": "Hamburg",
         "description": "Surprisingly rainy",
+        "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
 
 
@@ -648,7 +657,7 @@ async def test_matching_filter_real_regexp(
         }
     ],
 )
-@freeze_time(_local_datetime(20, 00))
+@pytest.mark.freeze_time(_local_datetime(20, 00))
 async def test_filter_matching_past_event(
     hass: HomeAssistant, setup_platform_cb: Callable[[], Awaitable[None]]
 ) -> None:
@@ -663,6 +672,7 @@ async def test_filter_matching_past_event(
     assert dict(state.attributes) == {
         "friendly_name": CALENDAR_NAME,
         "offset_reached": False,
+        "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
 
 
@@ -680,7 +690,7 @@ async def test_filter_matching_past_event(
         }
     ],
 )
-@freeze_time(_local_datetime(12, 00))
+@pytest.mark.freeze_time(_local_datetime(12, 00))
 async def test_no_result_with_filtering(
     hass: HomeAssistant, setup_platform_cb: Callable[[], Awaitable[None]]
 ) -> None:
@@ -694,6 +704,7 @@ async def test_no_result_with_filtering(
     assert dict(state.attributes) == {
         "friendly_name": CALENDAR_NAME,
         "offset_reached": False,
+        "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
 
 
@@ -720,7 +731,7 @@ async def test_all_day_event(
     target_datetime: datetime.datetime,
 ) -> None:
     """Test that the event lasting the whole day is returned, if it's early in the local day."""
-    freezer.move_to(target_datetime.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE))
+    freezer.move_to(target_datetime.replace(tzinfo=dt_util.get_default_time_zone()))
     assert await async_setup_component(
         hass,
         "calendar",
@@ -748,11 +759,12 @@ async def test_all_day_event(
         "end_time": "2017-11-28 00:00:00",
         "location": "Hamburg",
         "description": "What a beautiful day",
+        "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
 
 
 @pytest.mark.parametrize("tz", [UTC])
-@freeze_time(_local_datetime(21, 45))
+@pytest.mark.freeze_time(_local_datetime(21, 45))
 async def test_event_rrule(
     hass: HomeAssistant, setup_platform_cb: Callable[[], Awaitable[None]]
 ) -> None:
@@ -772,11 +784,12 @@ async def test_event_rrule(
         "end_time": "2017-11-27 22:30:00",
         "location": "Hamburg",
         "description": "Every day for a while",
+        "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
 
 
 @pytest.mark.parametrize("tz", [UTC])
-@freeze_time(_local_datetime(22, 15))
+@pytest.mark.freeze_time(_local_datetime(22, 15))
 async def test_event_rrule_ongoing(
     hass: HomeAssistant, setup_platform_cb: Callable[[], Awaitable[None]]
 ) -> None:
@@ -796,11 +809,12 @@ async def test_event_rrule_ongoing(
         "end_time": "2017-11-27 22:30:00",
         "location": "Hamburg",
         "description": "Every day for a while",
+        "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
 
 
 @pytest.mark.parametrize("tz", [UTC])
-@freeze_time(_local_datetime(22, 45))
+@pytest.mark.freeze_time(_local_datetime(22, 45))
 async def test_event_rrule_duration(
     hass: HomeAssistant, setup_platform_cb: Callable[[], Awaitable[None]]
 ) -> None:
@@ -820,11 +834,12 @@ async def test_event_rrule_duration(
         "end_time": "2017-11-27 23:30:00",
         "location": "Hamburg",
         "description": "Every day for a while as well",
+        "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
 
 
 @pytest.mark.parametrize("tz", [UTC])
-@freeze_time(_local_datetime(23, 15))
+@pytest.mark.freeze_time(_local_datetime(23, 15))
 async def test_event_rrule_duration_ongoing(
     hass: HomeAssistant, setup_platform_cb: Callable[[], Awaitable[None]]
 ) -> None:
@@ -844,11 +859,12 @@ async def test_event_rrule_duration_ongoing(
         "end_time": "2017-11-27 23:30:00",
         "location": "Hamburg",
         "description": "Every day for a while as well",
+        "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
 
 
 @pytest.mark.parametrize("tz", [UTC])
-@freeze_time(_local_datetime(23, 37))
+@pytest.mark.freeze_time(_local_datetime(23, 37))
 async def test_event_rrule_endless(
     hass: HomeAssistant, setup_platform_cb: Callable[[], Awaitable[None]]
 ) -> None:
@@ -868,6 +884,7 @@ async def test_event_rrule_endless(
         "end_time": "2017-11-27 23:59:59",
         "location": "Hamburg",
         "description": "Every day forever",
+        "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
 
 
@@ -894,7 +911,7 @@ async def test_event_rrule_all_day_early(
     target_datetime: datetime.datetime,
 ) -> None:
     """Test that the recurring all day event is returned early in the local day, and not on the first occurrence."""
-    freezer.move_to(target_datetime.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE))
+    freezer.move_to(target_datetime.replace(tzinfo=dt_util.get_default_time_zone()))
     assert await async_setup_component(
         hass,
         "calendar",
@@ -924,11 +941,12 @@ async def test_event_rrule_all_day_early(
         "end_time": "2016-12-02 00:00:00",
         "location": "Hamburg",
         "description": "Groundhog Day",
+        "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
 
 
 @pytest.mark.parametrize("tz", [UTC])
-@freeze_time(dt_util.as_local(datetime.datetime(2015, 11, 27, 0, 15)))
+@pytest.mark.freeze_time(dt_util.as_local(datetime.datetime(2015, 11, 27, 0, 15)))
 async def test_event_rrule_hourly_on_first(
     hass: HomeAssistant, setup_platform_cb: Callable[[], Awaitable[None]]
 ) -> None:
@@ -948,11 +966,12 @@ async def test_event_rrule_hourly_on_first(
         "end_time": "2015-11-27 00:30:00",
         "location": "Hamburg",
         "description": "The bell tolls for thee",
+        "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
 
 
 @pytest.mark.parametrize("tz", ["UTC"])
-@freeze_time(dt_util.as_local(datetime.datetime(2015, 11, 27, 11, 15)))
+@pytest.mark.freeze_time(dt_util.as_local(datetime.datetime(2015, 11, 27, 11, 15)))
 async def test_event_rrule_hourly_on_last(
     hass: HomeAssistant, setup_platform_cb: Callable[[], Awaitable[None]]
 ) -> None:
@@ -972,6 +991,7 @@ async def test_event_rrule_hourly_on_last(
         "end_time": "2015-11-27 11:30:00",
         "location": "Hamburg",
         "description": "The bell tolls for thee",
+        "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
 
 
@@ -1083,14 +1103,14 @@ async def test_calendar_components(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize("tz", [UTC])
-@freeze_time(_local_datetime(17, 30))
+@pytest.mark.freeze_time(_local_datetime(17, 30))
 async def test_setup_config_entry(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
 ) -> None:
     """Test a calendar entity from a config entry."""
     config_entry.add_to_hass(hass)
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
 
     state = hass.states.get(TEST_ENTITY)
     assert state
@@ -1104,6 +1124,7 @@ async def test_setup_config_entry(
         "end_time": "2017-11-28 00:00:00",
         "location": "Hamburg",
         "description": "What a beautiful day",
+        "supported_features": CalendarEntityFeature.CREATE_EVENT,
     }
 
 
@@ -1124,7 +1145,7 @@ async def test_config_entry_supported_components(
 ) -> None:
     """Test that calendars are only created for VEVENT types when using a config entry."""
     config_entry.add_to_hass(hass)
-    await config_entry.async_setup(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
 
     state = hass.states.get("calendar.calendar_1")
     assert state
@@ -1139,3 +1160,103 @@ async def test_config_entry_supported_components(
     # No entity created when no components exist
     state = hass.states.get("calendar.calendar_4")
     assert not state
+
+
+@pytest.mark.parametrize("tz", [UTC])
+@pytest.mark.parametrize(
+    ("service_data", "expected_ics_fields"),
+    [
+        # Basic event with all fields
+        (
+            {
+                "summary": "Test Event",
+                "start_date_time": "2025-08-06T10:00:00+00:00",
+                "end_date_time": "2025-08-06T11:00:00+00:00",
+                "description": "Test Description",
+                "location": "Test Location",
+            },
+            {
+                "description": "Test Description",
+                "dtend": datetime.datetime(
+                    2025, 8, 6, 11, 0, tzinfo=zoneinfo.ZoneInfo(key="UTC")
+                ),
+                "dtstart": datetime.datetime(
+                    2025, 8, 6, 10, 0, tzinfo=zoneinfo.ZoneInfo(key="UTC")
+                ),
+                "location": "Test Location",
+                "summary": "Test Event",
+            },
+        ),
+        # Event with only required fields
+        (
+            {
+                "summary": "Required Only",
+                "start_date_time": "2025-08-07T09:00:00+00:00",
+                "end_date_time": "2025-08-07T10:00:00+00:00",
+            },
+            {
+                "summary": "Required Only",
+                "dtstart": datetime.datetime(
+                    2025, 8, 7, 9, 0, tzinfo=zoneinfo.ZoneInfo(key="UTC")
+                ),
+                "dtend": datetime.datetime(
+                    2025, 8, 7, 10, 0, tzinfo=zoneinfo.ZoneInfo(key="UTC")
+                ),
+            },
+        ),
+        # All-day event (date only)
+        (
+            {
+                "summary": "All Day Event",
+                "start_date": "2025-08-08",
+                "end_date": "2025-08-09",
+            },
+            {
+                "summary": "All Day Event",
+                "dtstart": datetime.date(2025, 8, 8),
+                "dtend": datetime.date(2025, 8, 9),
+            },
+        ),
+        # Event with different timezone
+        (
+            {
+                "summary": "Different TZ",
+                "start_date_time": "2025-08-07T09:00:00+02:00",
+                "end_date_time": "2025-08-07T10:00:00+02:00",
+            },
+            {
+                "summary": "Different TZ",
+                "dtstart": datetime.datetime(
+                    2025, 8, 7, 7, 0, tzinfo=zoneinfo.ZoneInfo(key="UTC")
+                ),
+                "dtend": datetime.datetime(
+                    2025, 8, 7, 8, 0, tzinfo=zoneinfo.ZoneInfo(key="UTC")
+                ),
+            },
+        ),
+        # Rrule is not supported in API (async_call) calls.
+    ],
+)
+async def test_add_vevent(
+    hass: HomeAssistant,
+    setup_platform_cb: Callable[[], Awaitable[None]],
+    calendars: list[Mock],
+    service_data: dict,
+    expected_ics_fields: dict,
+) -> None:
+    """Test adding a VEVENT to the calendar."""
+    await setup_platform_cb()
+
+    calendars[0].add_event = MagicMock(return_value=[])
+    await hass.services.async_call(
+        "calendar",
+        "create_event",
+        service_data,
+        target={"entity_id": TEST_ENTITY},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    calendars[0].add_event.assert_called_once()
+    assert calendars[0].add_event.call_args
+    assert calendars[0].add_event.call_args[1] == expected_ics_fields

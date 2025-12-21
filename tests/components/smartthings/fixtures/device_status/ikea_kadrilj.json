@@ -1,0 +1,68 @@
+{
+  "components": {
+    "main": {
+      "windowShadeLevel": {
+        "shadeLevel": {
+          "value": 32,
+          "unit": "%",
+          "timestamp": "2025-03-13T10:40:25.613Z"
+        }
+      },
+      "refresh": {},
+      "windowShadePreset": {},
+      "battery": {
+        "quantity": {
+          "value": null
+        },
+        "battery": {
+          "value": 37,
+          "unit": "%",
+          "timestamp": "2025-03-13T07:09:05.149Z"
+        },
+        "type": {
+          "value": null
+        }
+      },
+      "firmwareUpdate": {
+        "lastUpdateStatusReason": {
+          "value": null
+        },
+        "availableVersion": {
+          "value": "22007631",
+          "timestamp": "2025-03-12T20:35:04.576Z"
+        },
+        "lastUpdateStatus": {
+          "value": null
+        },
+        "supportedCommands": {
+          "value": null
+        },
+        "state": {
+          "value": "updateRequested",
+          "timestamp": "2025-03-12T20:35:03.879Z"
+        },
+        "updateAvailable": {
+          "value": false,
+          "timestamp": "2025-03-12T20:35:04.577Z"
+        },
+        "currentVersion": {
+          "value": "22007631",
+          "timestamp": "2025-03-12T20:35:04.508Z"
+        },
+        "lastUpdateTime": {
+          "value": null
+        }
+      },
+      "windowShade": {
+        "supportedWindowShadeCommands": {
+          "value": ["open", "close", "pause"],
+          "timestamp": "2025-03-13T10:33:48.402Z"
+        },
+        "windowShade": {
+          "value": "partially open",
+          "timestamp": "2025-03-13T10:55:58.205Z"
+        }
+      }
+    }
+  }
+}

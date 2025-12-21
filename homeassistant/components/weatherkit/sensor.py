@@ -1,6 +1,5 @@
 """WeatherKit sensors."""
 
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -10,7 +9,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfVolumetricFlux
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -28,7 +27,6 @@ SENSORS = (
     SensorEntityDescription(
         key="pressureTrend",
         device_class=SensorDeviceClass.ENUM,
-        icon="mdi:gauge",
         options=["rising", "falling", "steady"],
         translation_key="pressure_trend",
     ),
@@ -38,7 +36,7 @@ SENSORS = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add sensor entities from a config_entry."""
     coordinator: WeatherKitDataUpdateCoordinator = hass.data[DOMAIN][

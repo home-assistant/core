@@ -1,4 +1,5 @@
 """Steam constants."""
+
 import logging
 from typing import Final
 

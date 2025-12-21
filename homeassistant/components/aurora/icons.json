@@ -1,0 +1,14 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "visibility_alert": {
+        "default": "mdi:hazard-lights"
+      }
+    },
+    "sensor": {
+      "visibility": {
+        "default": "mdi:gauge"
+      }
+    }
+  }
+}

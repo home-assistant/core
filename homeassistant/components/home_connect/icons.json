@@ -1,0 +1,270 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "dust_box_inserted": {
+        "default": "mdi:download"
+      },
+      "interior_illumination_active": {
+        "default": "mdi:lightbulb-on",
+        "state": {
+          "off": "mdi:lightbulb-off"
+        }
+      },
+      "lifted": {
+        "default": "mdi:arrow-up-right-bold"
+      },
+      "lost": {
+        "default": "mdi:map-marker-remove-variant"
+      },
+      "remote_control": {
+        "default": "mdi:remote",
+        "state": {
+          "off": "mdi:remote-off"
+        }
+      },
+      "remote_start": {
+        "default": "mdi:remote",
+        "state": {
+          "off": "mdi:remote-off"
+        }
+      }
+    },
+    "button": {
+      "open_door": {
+        "default": "mdi:door-open"
+      },
+      "partly_open_door": {
+        "default": "mdi:door-open"
+      },
+      "pause_program": {
+        "default": "mdi:pause"
+      },
+      "resume_program": {
+        "default": "mdi:play"
+      },
+      "stop_program": {
+        "default": "mdi:stop"
+      }
+    },
+    "number": {
+      "finish_in_relative": {
+        "default": "mdi:progress-clock"
+      },
+      "start_in_relative": {
+        "default": "mdi:progress-clock"
+      }
+    },
+    "sensor": {
+      "bean_container_empty": {
+        "default": "mdi:coffee-maker",
+        "state": {
+          "confirmed": "mdi:coffee-maker-check",
+          "present": "mdi:coffee-maker-outline"
+        }
+      },
+      "camera_state": {
+        "default": "mdi:camera",
+        "state": {
+          "disabled": "mdi:camera-off",
+          "error": "mdi:alert-circle-outline",
+          "sleeping": "mdi:sleep"
+        }
+      },
+      "coffee_and_milk_counter": {
+        "default": "mdi:coffee"
+      },
+      "coffee_counter": {
+        "default": "mdi:coffee"
+      },
+      "door": {
+        "default": "mdi:door",
+        "state": {
+          "closed": "mdi:door-closed",
+          "locked": "mdi:door-closed-lock",
+          "open": "mdi:door-open"
+        }
+      },
+      "drip_tray_full": {
+        "default": "mdi:tray",
+        "state": {
+          "confirmed": "mdi:tray-full",
+          "present": "mdi:tray-alert"
+        }
+      },
+      "freezer_door_alarm": {
+        "default": "mdi:snowflake",
+        "state": {
+          "confirmed": "mdi:snowflake-check",
+          "present": "mdi:snowflake-alert"
+        }
+      },
+      "freezer_temperature_alarm": {
+        "default": "mdi:thermometer",
+        "state": {
+          "confirmed": "mdi:thermometer-check",
+          "present": "mdi:thermometer-alert"
+        }
+      },
+      "frothy_milk_counter": {
+        "default": "mdi:cup"
+      },
+      "hot_milk_counter": {
+        "default": "mdi:cup"
+      },
+      "hot_water_counter": {
+        "default": "mdi:cup-water"
+      },
+      "hot_water_cups_counter": {
+        "default": "mdi:cup"
+      },
+      "last_selected_map": {
+        "default": "mdi:map",
+        "state": {
+          "map1": "mdi:numeric-1",
+          "map2": "mdi:numeric-2",
+          "map3": "mdi:numeric-3",
+          "tempmap": "mdi:map-clock-outline"
+        }
+      },
+      "milk_counter": {
+        "default": "mdi:cup"
+      },
+      "operation_state": {
+        "default": "mdi:state-machine",
+        "state": {
+          "aborting": "mdi:close-circle",
+          "actionrequired": "mdi:gesture-tap",
+          "delayedstart": "mdi:progress-clock",
+          "error": "mdi:alert-circle",
+          "finished": "mdi:flag-checkered",
+          "inactive": "mdi:stop",
+          "pause": "mdi:pause",
+          "ready": "mdi:check-circle",
+          "run": "mdi:play"
+        }
+      },
+      "powder_coffee_counter": {
+        "default": "mdi:coffee"
+      },
+      "program_progress": {
+        "default": "mdi:progress-clock"
+      },
+      "refrigerator_door_alarm": {
+        "default": "mdi:fridge",
+        "state": {
+          "confirmed": "mdi:fridge-alert-outline",
+          "present": "mdi:fridge-alert"
+        }
+      },
+      "ristretto_espresso_counter": {
+        "default": "mdi:coffee"
+      },
+      "water_tank_empty": {
+        "default": "mdi:water",
+        "state": {
+          "confirmed": "mdi:water-check",
+          "present": "mdi:water-alert"
+        }
+      }
+    },
+    "switch": {
+      "child_lock": {
+        "default": "mdi:lock",
+        "state": {
+          "off": "mdi:lock-off",
+          "on": "mdi:lock"
+        }
+      },
+      "cooking-oven-setting-sabbath_mode": {
+        "default": "mdi:volume-mute"
+      },
+      "cup_warmer": {
+        "default": "mdi:heat-wave"
+      },
+      "dispenser_enabled": {
+        "default": "mdi:snowflake",
+        "state": {
+          "off": "mdi:snowflake-off"
+        }
+      },
+      "door-assistant_freezer": {
+        "default": "mdi:door"
+      },
+      "door-assistant_fridge": {
+        "default": "mdi:door"
+      },
+      "eco_dry": {
+        "default": "mdi:sprout"
+      },
+      "eco_mode": {
+        "default": "mdi:sprout"
+      },
+      "fast_pre_heat": {
+        "default": "mdi:fire"
+      },
+      "freezer_super_mode": {
+        "default": "mdi:speedometer"
+      },
+      "fresh_mode": {
+        "default": "mdi:leaf"
+      },
+      "half_load": {
+        "default": "mdi:fraction-one-half"
+      },
+      "hygiene_plus": {
+        "default": "mdi:silverware-clean"
+      },
+      "i_dos_1_active": {
+        "default": "mdi:numeric-1-circle"
+      },
+      "i_dos_2_active": {
+        "default": "mdi:numeric-2-circle"
+      },
+      "power": {
+        "default": "mdi:power"
+      },
+      "refrigerator_super_mode": {
+        "default": "mdi:speedometer"
+      },
+      "sabbath_mode": {
+        "default": "mdi:volume-mute"
+      },
+      "silence_on_demand": {
+        "default": "mdi:volume-mute",
+        "state": {
+          "off": "mdi:volume-high",
+          "on": "mdi:volume-mute"
+        }
+      },
+      "vacation_mode": {
+        "default": "mdi:beach"
+      }
+    }
+  },
+  "services": {
+    "change_setting": {
+      "service": "mdi:cog"
+    },
+    "pause_program": {
+      "service": "mdi:pause"
+    },
+    "resume_program": {
+      "service": "mdi:play-pause"
+    },
+    "select_program": {
+      "service": "mdi:form-select"
+    },
+    "set_option_active": {
+      "service": "mdi:gesture-tap"
+    },
+    "set_option_selected": {
+      "service": "mdi:gesture-tap"
+    },
+    "set_program_and_options": {
+      "service": "mdi:form-select"
+    },
+    "start_program": {
+      "service": "mdi:play"
+    }
+  }
+}

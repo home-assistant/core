@@ -1,4 +1,5 @@
 """Tests for Plex media browser."""
+
 from http import HTTPStatus
 from unittest.mock import Mock, patch
 
@@ -10,7 +11,7 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_TYPE,
 )
 from homeassistant.components.plex.const import CONF_SERVER_IDENTIFIER, PLEX_URI_SCHEME
-from homeassistant.components.websocket_api.const import ERR_UNKNOWN_ERROR, TYPE_RESULT
+from homeassistant.components.websocket_api import ERR_UNKNOWN_ERROR, TYPE_RESULT
 from homeassistant.core import HomeAssistant
 
 from .const import DEFAULT_DATA

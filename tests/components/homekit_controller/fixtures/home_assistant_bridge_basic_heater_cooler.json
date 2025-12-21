@@ -1,0 +1,229 @@
+[
+  {
+    "aid": 1,
+    "services": [
+      {
+        "iid": 1,
+        "type": "3E",
+        "characteristics": [
+          {
+            "iid": 2,
+            "type": "14",
+            "perms": ["pw"],
+            "format": "bool"
+          },
+          {
+            "iid": 3,
+            "type": "20",
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Home Assistant"
+          },
+          {
+            "iid": 4,
+            "type": "21",
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Bridge"
+          },
+          {
+            "iid": 5,
+            "type": "23",
+            "perms": ["pr"],
+            "format": "string",
+            "value": "HASS Bridge S6"
+          },
+          {
+            "iid": 6,
+            "type": "30",
+            "perms": ["pr"],
+            "format": "string",
+            "value": "homekit.bridge"
+          },
+          {
+            "iid": 7,
+            "type": "52",
+            "perms": ["pr"],
+            "format": "string",
+            "value": "2024.2.0"
+          }
+        ]
+      },
+      {
+        "iid": 8,
+        "type": "A2",
+        "characteristics": [
+          {
+            "iid": 9,
+            "type": "37",
+            "perms": ["pr", "ev"],
+            "format": "string",
+            "value": "01.01.00"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "aid": 1233851541,
+    "services": [
+      {
+        "iid": 1,
+        "type": "3E",
+        "characteristics": [
+          {
+            "iid": 163,
+            "type": "14",
+            "perms": ["pw"],
+            "format": "bool"
+          },
+          {
+            "iid": 164,
+            "type": "20",
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Lookin"
+          },
+          {
+            "iid": 165,
+            "type": "21",
+            "perms": ["pr"],
+            "format": "string",
+            "value": "Climate Control"
+          },
+          {
+            "iid": 166,
+            "type": "23",
+            "perms": ["pr"],
+            "format": "string",
+            "value": "89 Living Room"
+          },
+          {
+            "iid": 167,
+            "type": "30",
+            "perms": ["pr"],
+            "format": "string",
+            "value": "climate.89_living_room"
+          },
+          {
+            "iid": 168,
+            "type": "52",
+            "perms": ["pr"],
+            "format": "string",
+            "value": "2024.2.0"
+          }
+        ],
+        "primary": false
+      },
+      {
+        "iid": 169,
+        "type": "BC",
+        "characteristics": [
+          {
+            "iid": 170,
+            "type": "B2",
+            "perms": ["pr", "ev"],
+            "format": "uint8",
+            "valid-values": [0, 1, 2],
+            "value": 0
+          },
+          {
+            "iid": 171,
+            "type": "B1",
+            "perms": ["pr", "pw", "ev"],
+            "format": "uint8",
+            "valid-values": [0, 1, 2, 3],
+            "value": 2
+          },
+          {
+            "iid": 172,
+            "type": "11",
+            "perms": ["pr", "ev"],
+            "format": "float",
+            "unit": "celsius",
+            "minStep": 0.1,
+            "maxValue": 1000,
+            "minValue": -273.1,
+            "value": 22.8
+          },
+          {
+            "iid": 173,
+            "type": "35",
+            "perms": ["pr", "pw", "ev"],
+            "format": "float",
+            "unit": "celsius",
+            "minStep": 0.1,
+            "maxValue": 30.0,
+            "minValue": 16.0,
+            "value": 20.0
+          },
+          {
+            "iid": 174,
+            "type": "36",
+            "perms": ["pr", "pw", "ev"],
+            "format": "uint8",
+            "valid-values": [0, 1],
+            "value": 1
+          },
+          {
+            "iid": 180,
+            "type": "10",
+            "perms": ["pr", "ev"],
+            "format": "float",
+            "unit": "percentage",
+            "minStep": 1,
+            "maxValue": 100,
+            "minValue": 0,
+            "value": 60
+          }
+        ],
+        "primary": true,
+        "linked": [175]
+      },
+      {
+        "iid": 175,
+        "type": "B7",
+        "characteristics": [
+          {
+            "iid": 176,
+            "type": "B0",
+            "perms": ["pr", "pw", "ev"],
+            "format": "uint8",
+            "valid-values": [0, 1],
+            "value": 1
+          },
+          {
+            "iid": 177,
+            "type": "29",
+            "perms": ["pr", "pw", "ev"],
+            "format": "float",
+            "description": "Fan Mode",
+            "unit": "percentage",
+            "minStep": 33.333333333333336,
+            "maxValue": 100,
+            "minValue": 0,
+            "value": 33.33333333333334
+          },
+          {
+            "iid": 178,
+            "type": "BF",
+            "perms": ["pr", "pw", "ev"],
+            "format": "uint8",
+            "description": "Fan Auto",
+            "valid-values": [0, 1],
+            "value": 0
+          },
+          {
+            "iid": 179,
+            "type": "B6",
+            "perms": ["pr", "pw", "ev"],
+            "format": "uint8",
+            "description": "Swing Mode",
+            "valid-values": [0, 1],
+            "value": 0
+          }
+        ]
+      }
+    ]
+  }
+]

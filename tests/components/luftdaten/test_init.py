@@ -1,4 +1,5 @@
 """Tests for the Luftdaten integration."""
+
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from luftdaten.exceptions import LuftdatenError
@@ -66,8 +67,8 @@ async def test_setting_unique_id(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_luftdaten: MagicMock
 ) -> None:
     """Test we set unique ID if not set yet."""
-    mock_config_entry.unique_id = None
     mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, unique_id=None)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()

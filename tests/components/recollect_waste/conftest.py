@@ -1,5 +1,7 @@
 """Define test fixtures for ReCollect Waste."""
+
 from datetime import date
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiorecollect.client import PickupEvent, PickupType
@@ -10,6 +12,7 @@ from homeassistant.components.recollect_waste.const import (
     CONF_SERVICE_ID,
     DOMAIN,
 )
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -24,7 +27,9 @@ def client_fixture(pickup_events):
 
 
 @pytest.fixture(name="config_entry")
-def config_entry_fixture(hass, config):
+def config_entry_fixture(
+    hass: HomeAssistant, config: dict[str, Any]
+) -> MockConfigEntry:
     """Define a config entry fixture."""
     entry = MockConfigEntry(
         domain=DOMAIN, unique_id=f"{TEST_PLACE_ID}, {TEST_SERVICE_ID}", data=config
@@ -34,7 +39,7 @@ def config_entry_fixture(hass, config):
 
 
 @pytest.fixture(name="config")
-def config_fixture():
+def config_fixture() -> dict[str, Any]:
     """Define a config entry data fixture."""
     return {
         CONF_PLACE_ID: TEST_PLACE_ID,
@@ -53,20 +58,25 @@ def pickup_events_fixture():
 
 
 @pytest.fixture(name="mock_aiorecollect")
-async def mock_aiorecollect_fixture(client):
+def mock_aiorecollect_fixture(client):
     """Define a fixture to patch aiorecollect."""
-    with patch(
-        "homeassistant.components.recollect_waste.Client",
-        return_value=client,
-    ), patch(
-        "homeassistant.components.recollect_waste.config_flow.Client",
-        return_value=client,
+    with (
+        patch(
+            "homeassistant.components.recollect_waste.Client",
+            return_value=client,
+        ),
+        patch(
+            "homeassistant.components.recollect_waste.config_flow.Client",
+            return_value=client,
+        ),
     ):
         yield
 
 
 @pytest.fixture(name="setup_config_entry")
-async def setup_config_entry_fixture(hass, config_entry, mock_aiorecollect):
+async def setup_config_entry_fixture(
+    hass: HomeAssistant, config_entry: MockConfigEntry, mock_aiorecollect: None
+) -> None:
     """Define a fixture to set up recollect_waste."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()

@@ -1,4 +1,5 @@
 """Collection of test helpers."""
+
 from fractions import Fraction
 import functools
 from functools import partial
@@ -58,8 +59,7 @@ def frame_image_data(frame_i, total_frames):
     img[:, :, 2] = 0.5 + 0.5 * np.sin(2 * np.pi * (2 / 3 + frame_i / total_frames))
 
     img = np.round(255 * img).astype(np.uint8)
-    img = np.clip(img, 0, 255)
-    return img
+    return np.clip(img, 0, 255)
 
 
 def generate_video(encoder, container_format, duration):
@@ -114,7 +114,7 @@ def remux_with_audio(source, container_format, audio_codec):
     output = io.BytesIO()
     output.name = "test.mov" if container_format == "mov" else "test.mp4"
     container = av.open(output, mode="w", format=container_format)
-    container.add_stream(template=av_source.streams.video[0])
+    container.add_stream_from_template(av_source.streams.video[0])
 
     a_packet = None
     last_a_dts = -1

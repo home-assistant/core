@@ -1,22 +1,20 @@
 """Helper methods for various modules."""
+
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable, Coroutine, Iterable, KeysView, Mapping
 from datetime import datetime, timedelta
 from functools import wraps
+import inspect
 import random
 import re
 import string
 import threading
-from typing import Any, TypeVar
+from typing import Any
 
 import slugify as unicode_slug
 
 from .dt import as_local, utcnow
-
-_T = TypeVar("_T")
-_U = TypeVar("_U")
 
 RE_SANITIZE_FILENAME = re.compile(r"(~|\.\.|/|\\)")
 RE_SANITIZE_PATH = re.compile(r"(~|\.(\.)+)")
@@ -60,7 +58,7 @@ def repr_helper(inp: Any) -> str:
     return str(inp)
 
 
-def convert(
+def convert[_T, _U](
     value: _T | None, to_type: Callable[[_T], _U], default: _U | None = None
 ) -> _U | None:
     """Convert value to to_type, returns default if fails."""
@@ -99,6 +97,20 @@ def get_random_string(length: int = 10) -> str:
     return "".join(generator.choice(source_chars) for _ in range(length))
 
 
+# Adapted from https://github.com/okunishinishi/python-stringcase, with improvements
+def snakecase(text: str) -> str:
+    """Convert a string to snake_case."""
+    text = re.sub(r"[\s.-]", "_", text)
+    if not text.isupper():
+        # Underscore before last uppercase of groups of 2+ uppercase ("HTTPResponse", "IPAddress")
+        text = re.sub(
+            r"[A-Z]{2,}(?=[A-Z][^A-Z])", lambda match: match.group(0) + "_", text
+        )
+        # Underscore between non-uppercase followed by uppercase
+        text = re.sub(r"(?<=[^A-Z_])[A-Z]", lambda match: "_" + match.group(0), text)
+    return text.lower()
+
+
 class Throttle:
     """A class for throttling the execution of tasks.
 
@@ -127,17 +139,15 @@ class Throttle:
     def __call__(self, method: Callable) -> Callable:
         """Caller for the throttle."""
         # Make sure we return a coroutine if the method is async.
-        if asyncio.iscoroutinefunction(method):
+        if inspect.iscoroutinefunction(method):
 
             async def throttled_value() -> None:
                 """Stand-in function for when real func is being throttled."""
-                return None
 
         else:
 
             def throttled_value() -> None:  # type: ignore[misc]
                 """Stand-in function for when real func is being throttled."""
-                return None
 
         if self.limit_no_throttle is not None:
             method = Throttle(self.limit_no_throttle)(method)
@@ -164,20 +174,18 @@ class Throttle:
             If we cannot acquire the lock, it is running so return None.
             """
             if hasattr(method, "__self__"):
-                host = getattr(method, "__self__")
+                host = method.__self__
             elif is_func:
                 host = wrapper
             else:
                 host = args[0] if args else wrapper
 
-            # pylint: disable=protected-access
             if not hasattr(host, "_throttle"):
-                host._throttle = {}
+                host._throttle = {}  # noqa: SLF001
 
-            if id(self) not in host._throttle:
-                host._throttle[id(self)] = [threading.Lock(), None]
-            throttle = host._throttle[id(self)]
-            # pylint: enable=protected-access
+            if id(self) not in host._throttle:  # noqa: SLF001
+                host._throttle[id(self)] = [threading.Lock(), None]  # noqa: SLF001
+            throttle = host._throttle[id(self)]  # noqa: SLF001
 
             if not throttle[0].acquire(False):
                 return throttled_value()

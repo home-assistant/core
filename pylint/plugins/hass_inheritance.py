@@ -1,4 +1,5 @@
 """Plugin to enforce type hints on specific functions."""
+
 from __future__ import annotations
 
 import re
@@ -17,7 +18,7 @@ def _get_module_platform(module_name: str) -> str | None:
         # Or `homeassistant.components.<component>.<platform>`
         return None
 
-    platform = module_match.groups()[0]
+    platform = module_match.group(1)
     return platform.lstrip(".") if platform else "__init__"
 
 

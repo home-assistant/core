@@ -1,4 +1,5 @@
 """Support for Vanderbilt (formerly Siemens) SPC alarm systems."""
+
 from __future__ import annotations
 
 from pyspcwebgw import SpcWebGateway
@@ -21,6 +22,7 @@ def _get_device_class(zone_type: ZoneType) -> BinarySensorDeviceClass | None:
     return {
         ZoneType.ALARM: BinarySensorDeviceClass.MOTION,
         ZoneType.ENTRY_EXIT: BinarySensorDeviceClass.OPENING,
+        ZoneType.ENTRY_EXIT_2: BinarySensorDeviceClass.OPENING,
         ZoneType.FIRE: BinarySensorDeviceClass.SMOKE,
         ZoneType.TECHNICAL: BinarySensorDeviceClass.POWER,
     }.get(zone_type)

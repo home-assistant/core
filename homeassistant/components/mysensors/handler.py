@@ -1,4 +1,5 @@
 """Handle MySensors messages."""
+
 from __future__ import annotations
 
 from collections.abc import Callable
@@ -12,7 +13,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util import decorator
 
 from .const import CHILD_CALLBACK, NODE_CALLBACK, DevId, GatewayId
-from .device import get_mysensors_devices
+from .entity import get_mysensors_devices
 from .helpers import (
     discover_mysensors_node,
     discover_mysensors_platform,

@@ -1,4 +1,5 @@
 """Test the Alarm Control Panel significant change platform."""
+
 import pytest
 
 from homeassistant.components.alarm_control_panel import (

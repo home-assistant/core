@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from homeassistant.components.balboa.const import DOMAIN as BALBOA_DOMAIN
+from homeassistant.components.balboa.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
@@ -16,15 +16,15 @@ async def test_setup_entry(
     hass: HomeAssistant, client: MagicMock, integration: MockConfigEntry
 ) -> None:
     """Validate that setup entry also configure the client."""
-    assert integration.state == ConfigEntryState.LOADED
+    assert integration.state is ConfigEntryState.LOADED
     await hass.config_entries.async_unload(integration.entry_id)
-    assert integration.state == ConfigEntryState.NOT_LOADED
+    assert integration.state is ConfigEntryState.NOT_LOADED
 
 
 async def test_setup_entry_fails(hass: HomeAssistant, client: MagicMock) -> None:
     """Validate that setup entry also configure the client."""
     config_entry = MockConfigEntry(
-        domain=BALBOA_DOMAIN,
+        domain=DOMAIN,
         data={
             CONF_HOST: TEST_HOST,
         },
@@ -36,7 +36,7 @@ async def test_setup_entry_fails(hass: HomeAssistant, client: MagicMock) -> None
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
     client.connect.return_value = True
     client.async_configuration_loaded.return_value = False
@@ -44,4 +44,4 @@ async def test_setup_entry_fails(hass: HomeAssistant, client: MagicMock) -> None
     await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY

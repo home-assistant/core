@@ -1,4 +1,5 @@
 """Const for Plaato."""
+
 from datetime import timedelta
 
 from homeassistant.const import Platform
@@ -17,7 +18,7 @@ PLACEHOLDER_DOCS_URL = "docs_url"
 PLACEHOLDER_DEVICE_TYPE = "device_type"
 PLACEHOLDER_DEVICE_NAME = "device_name"
 DOCS_URL = "https://www.home-assistant.io/integrations/plaato/"
-PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 SENSOR_DATA = "sensor_data"
 COORDINATOR = "coordinator"
 DEVICE = "device"
