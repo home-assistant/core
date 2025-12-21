@@ -93,13 +93,15 @@ async def test_scrape_xml_content_type(
     }
 
     mocker = MockRestData("test_scrape_xml")
-    mocker.headers = {"Content-Type": "application/xml"}
     with patch(
         "homeassistant.components.rest.RestData",
         return_value=mocker,
     ):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
+
+    # Verify XML Content-Type header is set
+    assert mocker.headers.get("Content-Type") == "application/rss+xml"
 
     state = hass.states.get("sensor.rss_title")
     assert state.state == "Test RSS Feed"
@@ -123,14 +125,16 @@ async def test_scrape_xml_declaration(
         ]
     }
 
-    mocker = MockRestData("test_scrape_xml")
-    mocker.headers = {"Content-Type": "text/html"}  # Not XML, but content has <?xml
+    mocker = MockRestData("test_scrape_xml_fallback")
     with patch(
         "homeassistant.components.rest.RestData",
         return_value=mocker,
     ):
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done()
+
+    # Verify non-XML Content-Type but XML parser used due to <?xml declaration
+    assert mocker.headers.get("Content-Type") == "text/html"
 
     state = hass.states.get("sensor.rss_title")
     assert state.state == "Test RSS Feed"
