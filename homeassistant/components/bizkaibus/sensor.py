@@ -70,17 +70,16 @@ async def async_setup_entry(
 
     lines = config_entry.options["lines"]
 
-    if not lines:
-        return
-
-    for line in lines:
-        async_add_entities(
-            (
-                BizkaibusSensor(coordinator, description, line)
-                for description in SENSORS
-            ),
-            True,
+    sensors = [
+        BizkaibusSensor(
+            coordinator=coordinator,
+            entity_description=SENSORS[2],
+            line_id=line,
         )
+        for line in lines
+    ]
+
+    async_add_entities(sensors)
 
 
 class BizkaibusSensor(CoordinatorEntity[BizkaibusUpdateCoordinator], SensorEntity):
@@ -136,3 +135,8 @@ class BizkaibusSensor(CoordinatorEntity[BizkaibusUpdateCoordinator], SensorEntit
             if getattr(item, "bus_id", None) == self.line_id:
                 return idx
         return -1
+
+    @property
+    def available(self) -> bool:
+        """Return if sensor is available."""
+        return self.coordinator.data is not None
