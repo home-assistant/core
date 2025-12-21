@@ -37,7 +37,7 @@ class ActronAirRuntimeData:
 type ActronAirConfigEntry = ConfigEntry[ActronAirRuntimeData]
 
 
-class ActronAirSystemCoordinator(DataUpdateCoordinator[ActronAirACSystem]):
+class ActronAirSystemCoordinator(DataUpdateCoordinator[ActronAirStatus]):
     """System coordinator for Actron Air integration."""
 
     def __init__(

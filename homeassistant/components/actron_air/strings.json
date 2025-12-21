@@ -34,9 +34,6 @@
   },
   "entity": {
     "sensor": {
-      "clean_filter": {
-        "name": "Clean filter"
-      },
       "compressor_chasing_temperature": {
         "name": "Compressor chasing temperature"
       },
@@ -46,17 +43,11 @@
       "compressor_live_temperature": {
         "name": "Compressor live temperature"
       },
-      "compressor_mode": {
-        "name": "Compressor mode"
-      },
       "compressor_power": {
         "name": "Compressor power"
       },
       "compressor_speed": {
         "name": "Compressor speed"
-      },
-      "defrost_mode": {
-        "name": "Defrost mode"
       },
       "outdoor_temperature": {
         "name": "Outdoor temperature"

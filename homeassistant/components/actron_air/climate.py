@@ -17,10 +17,10 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import ActronAirConfigEntry, ActronAirSystemCoordinator
+from .entity import ActronAirEntity
 
 PARALLEL_UPDATES = 0
 
@@ -68,32 +68,16 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class BaseClimateEntity(CoordinatorEntity[ActronAirSystemCoordinator], ClimateEntity):
+class ActronAirClimateEntity(ActronAirEntity, ClimateEntity):
     """Base class for Actron Air climate entities."""
 
-    _attr_has_entity_name = True
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE
-        | ClimateEntityFeature.FAN_MODE
-        | ClimateEntityFeature.TURN_ON
-        | ClimateEntityFeature.TURN_OFF
-    )
     _attr_name = None
     _attr_fan_modes = list(FAN_MODE_MAPPING_ACTRONAIR_TO_HA.values())
     _attr_hvac_modes = list(HVAC_MODE_MAPPING_ACTRONAIR_TO_HA.values())
 
-    def __init__(
-        self,
-        coordinator: ActronAirSystemCoordinator,
-        name: str,
-    ) -> None:
-        """Initialize an Actron Air unit."""
-        super().__init__(coordinator)
-        self._serial_number = coordinator.serial_number
 
-
-class ActronSystemClimate(BaseClimateEntity):
+class ActronSystemClimate(ActronAirClimateEntity):
     """Representation of the Actron Air system."""
 
     _attr_supported_features = (
@@ -109,7 +93,7 @@ class ActronSystemClimate(BaseClimateEntity):
         name: str,
     ) -> None:
         """Initialize an Actron Air unit."""
-        super().__init__(coordinator, name)
+        super().__init__(coordinator)
         serial_number = coordinator.serial_number
         self._attr_unique_id = serial_number
         self._attr_device_info = DeviceInfo(
@@ -182,7 +166,7 @@ class ActronSystemClimate(BaseClimateEntity):
         await self._status.user_aircon_settings.set_temperature(temperature=temp)
 
 
-class ActronZoneClimate(BaseClimateEntity):
+class ActronZoneClimate(ActronAirClimateEntity):
     """Representation of a zone within the Actron Air system."""
 
     _attr_supported_features = (
@@ -197,7 +181,7 @@ class ActronZoneClimate(BaseClimateEntity):
         zone: ActronAirZone,
     ) -> None:
         """Initialize an Actron Air unit."""
-        super().__init__(coordinator, zone.title)
+        super().__init__(coordinator)
         serial_number = coordinator.serial_number
         self._zone_id: int = zone.zone_id
         self._attr_unique_id: str = f"{serial_number}_zone_{zone.zone_id}"

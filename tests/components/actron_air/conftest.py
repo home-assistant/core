@@ -75,6 +75,26 @@ def mock_actron_api() -> Generator[AsyncMock]:
         status.room_temp = 25
         status.is_on = False
 
+        # Mock sensor attributes
+        status.compressor_chasing_temperature = 24.0
+        status.compressor_live_temperature = 23.5
+        status.compressor_speed = 1500
+        status.compressor_power = 2500
+        status.outdoor_temperature = 28.5
+
+        # Mock peripheral for sensor testing
+        peripheral = MagicMock()
+        peripheral.serial_number = "ZC_12345"
+        peripheral.device_type = "Zone Controller"
+        peripheral.logical_address = "3"
+        peripheral.battery_level = 85
+        peripheral.humidity = 45
+        peripheral.temperature = 22.5
+        zone = MagicMock()
+        zone.title = "Living Room"
+        peripheral.zones = [zone]
+        status.peripherals = [peripheral]
+
         # Mock user_aircon_settings for the switch platform
         settings = status.user_aircon_settings
         settings.away_mode = False
