@@ -7,6 +7,7 @@ from typing import Literal
 from pooldose.type_definitions import DeviceInfoDict, ValueDict
 
 from homeassistant.const import CONF_MAC
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -77,3 +78,40 @@ class PooldoseEntity(CoordinatorEntity[PooldoseCoordinator]):
         """Get data for this entity, only if available."""
         platform_data = self.coordinator.data[self.platform_name]
         return platform_data.get(self.entity_description.key)
+
+    async def _async_perform_write(self, api_call, key: str, value=None) -> None:
+        """Perform a write call to the API with unified error handling.
+
+        - `api_call` should be a bound coroutine function like
+          `self.coordinator.client.set_number`.
+        - Raises ServiceValidationError on connection errors or when the API
+          returns False.
+        """
+        try:
+            if value is None:
+                success = await api_call(key)
+            else:
+                success = await api_call(key, value)
+        except (TimeoutError, ConnectionError, OSError) as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"error": str(err)},
+            ) from err
+
+        if not success:
+            # If client is not connected, surface a cannot_connect error
+            if not self.coordinator.client.is_connected:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN, translation_key="cannot_connect"
+                )
+
+            placeholders = {"entity": self.entity_description.key}
+            if value is not None:
+                placeholders["value"] = str(value)
+
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="write_rejected",
+                translation_placeholders=placeholders,
+            )
