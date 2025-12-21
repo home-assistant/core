@@ -17,8 +17,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     entry.runtime_data = openevsewifi.Charger(entry.data[CONF_HOST])
     try:
-        result = await hass.async_add_executor_job(entry.runtime_data.getStatus)
-        assert result is not None
+        await hass.async_add_executor_job(entry.runtime_data.getStatus)
     except AttributeError as ex:
         raise ConfigEntryError("Unable to connect to charger") from ex
 
