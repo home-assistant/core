@@ -3,7 +3,7 @@
 from abc import abstractmethod
 from collections.abc import Mapping
 from datetime import timedelta
-from typing import TypeVar
+from typing import TypeVar, cast
 
 from aiocomelit.api import ComelitCommonApi, ComeliteSerialBridgeApi, ComelitVedoApi
 from aiocomelit.const import (
@@ -184,7 +184,7 @@ class ComelitSerialBridge(ComelitBaseCoordinator[T]):
         if self.vedo_pin:
             data.update(await self.api.get_all_areas_and_zones())
 
-        return data
+        return cast(T, data)
 
 
 class ComelitVedoSystem(ComelitBaseCoordinator[T]):
@@ -221,4 +221,4 @@ class ComelitVedoSystem(ComelitBaseCoordinator[T]):
                     "area" if obj_type == ALARM_AREA else "zone",
                 )
 
-        return data
+        return cast(T, data)
