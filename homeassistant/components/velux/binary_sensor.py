@@ -66,7 +66,7 @@ class VeluxRainSensor(VeluxEntity, BinarySensorEntity):
             limitation = await self.node.get_limitation()
         except (OSError, PyVLXException) as err:
             if not self._unavailable_logged:
-                LOGGER.info(
+                LOGGER.warning(
                     "Rain sensor %s is unavailable: %s",
                     self.entity_id,
                     err,
