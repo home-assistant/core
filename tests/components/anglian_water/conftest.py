@@ -38,6 +38,11 @@ def mock_smart_meter() -> SmartMeter:
     mock.latest_read = 50
     mock.yesterday_water_cost = 0.5
     mock.yesterday_sewerage_cost = 0.5
+    mock.readings = [
+        {"read_at": "2024-06-01T12:00:00Z", "consumption": 10, "read": 10},
+        {"read_at": "2024-06-01T13:00:00Z", "consumption": 15, "read": 25},
+        {"read_at": "2024-06-01T14:00:00Z", "consumption": 25, "read": 50},
+    ]
     return mock
 
 
@@ -54,7 +59,6 @@ def mock_anglian_water_authenticator() -> Generator[MagicMock]:
         ),
     ):
         mock_instance = mock_auth_class.return_value
-        mock_instance.account_number = ACCOUNT_NUMBER
         mock_instance.access_token = ACCESS_TOKEN
         mock_instance.refresh_token = ACCESS_TOKEN
         mock_instance.send_login_request.return_value = None

@@ -19,6 +19,7 @@ from pyicloud.services.photos import AlbumContainer, BasePhotoAlbum
 import voluptuous as vol
 
 from homeassistant.config_entries import (
+    SOURCE_USER,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
@@ -185,8 +186,8 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             CONF_GPS_ACCURACY_THRESHOLD: self._gps_accuracy_threshold,
         }
 
-        # If this is a password update attempt, update the entry instead of creating one
-        if step_id == "user":
+        # If this is a password update attempt, don't try and creating one
+        if self.source == SOURCE_USER:
             return self.async_create_entry(title=self._username, data=data)
 
         entry = await self.async_set_unique_id(self.unique_id)
