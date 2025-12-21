@@ -463,7 +463,8 @@
           "sensor": "[%key:component::sensor::title%]",
           "switch": "[%key:component::switch::title%]",
           "update": "[%key:component::update::title%]",
-          "vacuum": "[%key:component::vacuum::title%]"
+          "vacuum": "[%key:component::vacuum::title%]",
+          "weather": "[%key:component::weather::title%]"
         },
         "title": "Template helper"
       },
@@ -507,6 +508,36 @@
           }
         },
         "title": "Template vacuum"
+      },
+      "weather": {
+        "data": {
+          "condition": "Condition",
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "forecast_daily": "Forecast daily",
+          "forecast_hourly": "Forecast hourly",
+          "humidity": "Humidity",
+          "name": "[%key:common::config_flow::data::name%]",
+          "temperature": "Temperature",
+          "temperature_unit": "Temperature unit"
+        },
+        "data_description": {
+          "condition": "Defines a template to get the current weather condition",
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "forecast_daily": "Defines a template to get the [daily forecast data]({daily_link})",
+          "forecast_hourly": "Defines a template to get the [hourly forecast data]({hourly_link})",
+          "humidity": "Defines a template to get the current humidity",
+          "temperature": "Defines a template to get the current temperature",
+          "temperature_unit": "The temperature unit"
+        },
+        "sections": {
+          "advanced_options": {
+            "data": {
+              "availability": "[%key:component::template::common::availability%]"
+            },
+            "name": "[%key:component::template::common::advanced_options%]"
+          }
+        },
+        "title": "Template weather"
       }
     }
   },
@@ -529,7 +560,7 @@
       "title": "Deprecated battery level option in {entity_name}"
     },
     "deprecated_legacy_templates": {
-      "description": "The legacy `platform: template` syntax for `{domain}` is being removed. Please migrate `{breadcrumb}` to the modern template syntax.\n\n1. Remove existing template definition.\n2. Add new template definition:\n{config}\n3. Restart Home Assistant or reload template entities.",
+      "description": "The legacy `platform: template` syntax for `{domain}` is being removed. Please migrate `{breadcrumb}` to the modern template syntax.\n#### Step 1 - Remove legacy configuration\nRemove the `{breadcrumb}` template definition from the `configuration.yaml` `{domain}:` section.\n\n**Note:** If you are using `{domain}: !include {filename}.yaml` in `configuration.yaml`, remove the {domain} definition from the included `{filename}.yaml`.\n#### Step 2 -  Add the modern configuration\nAdd new template definition inside `configuration.yaml`:\n{config}\n**Note:** If there are any existing `template:` sections in your configuration, make sure to omit the `template:` line from the yaml above.  There can only be 1 `template:` section in `configuration.yaml`.  Also, ensure the indentation is aligned with the existing entities within the `template:` section.\n#### Step 3 - Restart Home Assistant or reload template entities",
       "title": "Legacy {domain} template deprecation"
     }
   },
@@ -995,6 +1026,36 @@
           }
         },
         "title": "[%key:component::template::config::step::vacuum::title%]"
+      },
+      "weather": {
+        "data": {
+          "condition": "[%key:component::template::config::step::weather::data::condition%]",
+          "device_id": "[%key:common::config_flow::data::device%]",
+          "forecast_daily": "[%key:component::template::config::step::weather::data::forecast_daily%]",
+          "forecast_hourly": "[%key:component::template::config::step::weather::data::forecast_hourly%]",
+          "humidity": "[%key:component::template::config::step::weather::data::humidity%]",
+          "name": "[%key:common::config_flow::data::name%]",
+          "temperature": "[%key:component::template::config::step::weather::data::temperature%]",
+          "temperature_unit": "[%key:component::template::config::step::weather::data::temperature_unit%]"
+        },
+        "data_description": {
+          "condition": "[%key:component::template::config::step::weather::data_description::condition%]",
+          "device_id": "[%key:component::template::common::device_id_description%]",
+          "forecast_daily": "[%key:component::template::config::step::weather::data_description::forecast_daily%]",
+          "forecast_hourly": "[%key:component::template::config::step::weather::data_description::forecast_hourly%]",
+          "humidity": "[%key:component::template::config::step::weather::data_description::humidity%]",
+          "temperature": "[%key:component::template::config::step::weather::data_description::temperature%]",
+          "temperature_unit": "[%key:component::template::config::step::weather::data_description::temperature_unit%]"
+        },
+        "sections": {
+          "advanced_options": {
+            "data": {
+              "availability": "[%key:component::template::common::availability%]"
+            },
+            "name": "[%key:component::template::common::advanced_options%]"
+          }
+        },
+        "title": "[%key:component::template::config::step::weather::title%]"
       }
     }
   },

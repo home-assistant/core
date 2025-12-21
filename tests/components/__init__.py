@@ -1,5 +1,6 @@
 """The tests for components."""
 
+from collections.abc import Iterable
 from enum import StrEnum
 import itertools
 from typing import TypedDict
@@ -38,8 +39,6 @@ async def target_entities(
     - included: List of entity_ids meant to be targeted.
     - excluded: List of entity_ids not meant to be targeted.
     """
-    await async_setup_component(hass, domain, {})
-
     config_entry = MockConfigEntry(domain="test")
     config_entry.add_to_hass(hass)
 
@@ -172,6 +171,7 @@ def parametrize_trigger_states(
     other_states: list[str | None | tuple[str | None, dict]],
     additional_attributes: dict | None = None,
     trigger_from_none: bool = True,
+    retrigger_on_target_state: bool = False,
 ) -> list[tuple[str, list[StateDescription]]]:
     """Parametrize states and expected service call counts.
 
@@ -180,6 +180,9 @@ def parametrize_trigger_states(
 
     Set `trigger_from_none` to False if the trigger is not expected to fire
     when the initial state is None.
+
+    Set `retrigger_on_target_state` to True if the trigger is expected to fire
+    when the state changes to another target state.
 
     Returns a list of tuples with (trigger, list of states),
     where states is a list of StateDescription dicts.
@@ -215,7 +218,7 @@ def parametrize_trigger_states(
             "count": count,
         }
 
-    return [
+    tests = [
         # Initial state None
         (
             trigger,
@@ -261,6 +264,9 @@ def parametrize_trigger_states(
                         state_with_attributes(target_state, 0),
                         state_with_attributes(other_state, 0),
                         state_with_attributes(target_state, 1),
+                        # Repeat target state to test retriggering
+                        state_with_attributes(target_state, 0),
+                        state_with_attributes(STATE_UNAVAILABLE, 0),
                     )
                     for target_state in target_states
                     for other_state in other_states
@@ -299,6 +305,34 @@ def parametrize_trigger_states(
             ),
         ),
     ]
+
+    if len(target_states) > 1:
+        # If more than one target state, test state change between target states
+        tests.append(
+            (
+                trigger,
+                list(
+                    itertools.chain.from_iterable(
+                        (
+                            state_with_attributes(target_states[idx - 1], 0),
+                            state_with_attributes(
+                                target_state, 1 if retrigger_on_target_state else 0
+                            ),
+                            state_with_attributes(other_state, 0),
+                            state_with_attributes(target_states[idx - 1], 1),
+                            state_with_attributes(
+                                target_state, 1 if retrigger_on_target_state else 0
+                            ),
+                            state_with_attributes(STATE_UNAVAILABLE, 0),
+                        )
+                        for idx, target_state in enumerate(target_states[1:], start=1)
+                        for other_state in other_states
+                    )
+                ),
+            ),
+        )
+
+    return tests
 
 
 async def arm_trigger(
@@ -347,6 +381,15 @@ def set_or_remove_state(
         )
 
 
-def other_states(state: StrEnum) -> list[str]:
+def other_states(state: StrEnum | Iterable[StrEnum]) -> list[str]:
     """Return a sorted list with all states except the specified one."""
-    return sorted({s.value for s in state.__class__} - {state.value})
+    if isinstance(state, StrEnum):
+        excluded_values = {state.value}
+        enum_class = state.__class__
+    else:
+        if len(state) == 0:
+            raise ValueError("state iterable must not be empty")
+        excluded_values = {s.value for s in state}
+        enum_class = list(state)[0].__class__
+
+    return sorted({s.value for s in enum_class} - excluded_values)
