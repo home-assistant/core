@@ -45,12 +45,12 @@ class VeluxRainSensor(VeluxEntity, BinarySensorEntity):
     _attr_entity_registry_enabled_default = False
     _attr_device_class = BinarySensorDeviceClass.MOISTURE
     _attr_translation_key = "rain_sensor"
+    _unavailable_logged = False
 
     def __init__(self, node: OpeningDevice, config_entry_id: str) -> None:
         """Initialize VeluxRainSensor."""
         super().__init__(node, config_entry_id)
         self._attr_unique_id = f"{self._attr_unique_id}_rain_sensor"
-        self._unavailable_logged = False
 
     @property
     def available(self) -> bool:
