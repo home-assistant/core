@@ -62,6 +62,12 @@ NUMBER_ENTITIES: dict[str, NumberEntityDescription] = {
         translation_key="sensitivity",
         entity_category=EntityCategory.CONFIG,
     ),
+    CharacteristicsTypes.AIRPLAY_ENABLE: NumberEntityDescription(
+        key=CharacteristicsTypes.AIRPLAY_ENABLE,
+        name="AirPlay Enable",
+        translation_key="airplay_enable",
+        entity_category=EntityCategory.CONFIG,
+    ),
 }
 
 
