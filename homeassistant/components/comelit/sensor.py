@@ -2,29 +2,24 @@
 
 from __future__ import annotations
 
-from typing import Final, cast
+from typing import TYPE_CHECKING, Final, cast
 
 from aiocomelit.api import ComelitSerialBridgeObject, ComelitVedoZoneObject
-from aiocomelit.const import ALARM_ZONE, BRIDGE, OTHER, AlarmZoneState
+from aiocomelit.const import ALARM_ZONE, OTHER, AlarmZoneState
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import CONF_TYPE, UnitOfPower
+from homeassistant.const import UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ObjectClassType
-from .coordinator import (
-    ComelitBaseCoordinator,
-    ComelitConfigEntry,
-    ComelitSerialBridge,
-    ComelitVedoSystem,
-)
+from .coordinator import ComelitConfigEntry, ComelitSerialBridge, ComelitVedoSystem
 from .entity import ComelitBridgeBaseEntity
 from .utils import new_device_listener
 
@@ -57,13 +52,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up Comelit sensors."""
 
-    coordinator: ComelitBaseCoordinator
-    is_bridge = config_entry.data.get(CONF_TYPE, BRIDGE) == BRIDGE
+    coordinator = config_entry.runtime_data
+    is_bridge = isinstance(coordinator, ComelitSerialBridge)
 
-    if is_bridge:
-        coordinator = cast(ComelitSerialBridge, config_entry.runtime_data)
-    else:
-        coordinator = cast(ComelitVedoSystem, config_entry.runtime_data)
+    if TYPE_CHECKING:
+        if is_bridge:
+            assert isinstance(coordinator, ComelitSerialBridge)
+        else:
+            assert isinstance(coordinator, ComelitVedoSystem)
 
     def _add_new_bridge_entities(
         new_devices: list[ObjectClassType], dev_type: str
@@ -103,9 +99,7 @@ async def async_setup_entry(
         )
 
     # Alarm sensors (both via Bridge or VedoSystem)
-    if isinstance(coordinator, ComelitVedoSystem) or (
-        isinstance(coordinator, ComelitSerialBridge) and coordinator.vedo_pin
-    ):
+    if coordinator.vedo_pin:
         config_entry.async_on_unload(
             new_device_listener(coordinator, _add_new_vedo_entities, ALARM_ZONE)
         )

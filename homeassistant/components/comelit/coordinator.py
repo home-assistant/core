@@ -204,6 +204,7 @@ class ComelitVedoSystem(ComelitBaseCoordinator[T]):
     ) -> None:
         """Initialize the scanner."""
         self.api = ComelitVedoApi(host, port, pin, session)
+        self.vedo_pin = pin
         super().__init__(hass, entry, VEDO, host)
 
     async def _async_update_system_data(

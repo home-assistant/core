@@ -2,27 +2,21 @@
 
 from __future__ import annotations
 
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from aiocomelit.api import ComelitVedoZoneObject
-from aiocomelit.const import ALARM_ZONE, BRIDGE, AlarmZoneState
+from aiocomelit.const import ALARM_ZONE, AlarmZoneState
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.const import CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ObjectClassType
-from .coordinator import (
-    ComelitBaseCoordinator,
-    ComelitConfigEntry,
-    ComelitSerialBridge,
-    ComelitVedoSystem,
-)
+from .coordinator import ComelitConfigEntry, ComelitSerialBridge, ComelitVedoSystem
 from .utils import new_device_listener
 
 # Coordinator is used to centralize the data updates
@@ -36,13 +30,17 @@ async def async_setup_entry(
 ) -> None:
     """Set up Comelit VEDO presence sensors."""
 
-    coordinator: ComelitBaseCoordinator
-    if config_entry.data.get(CONF_TYPE, BRIDGE) == BRIDGE:
-        coordinator = cast(ComelitSerialBridge, config_entry.runtime_data)
-        if not coordinator.vedo_pin:
-            return
-    else:
-        coordinator = cast(ComelitVedoSystem, config_entry.runtime_data)
+    coordinator = config_entry.runtime_data
+    is_bridge = isinstance(coordinator, ComelitSerialBridge)
+
+    if TYPE_CHECKING:
+        if is_bridge:
+            assert isinstance(coordinator, ComelitSerialBridge)
+        else:
+            assert isinstance(coordinator, ComelitVedoSystem)
+
+    if not coordinator.vedo_pin:
+        return
 
     def _add_new_entities(new_devices: list[ObjectClassType], dev_type: str) -> None:
         """Add entities for new monitors."""

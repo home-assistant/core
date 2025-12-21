@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import logging
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 from aiocomelit.api import ComelitVedoAreaObject
-from aiocomelit.const import ALARM_AREA, BRIDGE, AlarmAreaState
+from aiocomelit.const import ALARM_AREA, AlarmAreaState
 
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
@@ -14,17 +14,11 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelState,
     CodeFormat,
 )
-from homeassistant.const import CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .coordinator import (
-    ComelitBaseCoordinator,
-    ComelitConfigEntry,
-    ComelitSerialBridge,
-    ComelitVedoSystem,
-)
+from .coordinator import ComelitConfigEntry, ComelitSerialBridge, ComelitVedoSystem
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -62,11 +56,17 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Comelit VEDO system alarm control panel devices."""
 
-    coordinator: ComelitBaseCoordinator
-    if config_entry.data.get(CONF_TYPE, BRIDGE) == BRIDGE:
-        coordinator = cast(ComelitSerialBridge, config_entry.runtime_data)
-    else:
-        coordinator = cast(ComelitVedoSystem, config_entry.runtime_data)
+    coordinator = config_entry.runtime_data
+    is_bridge = isinstance(coordinator, ComelitSerialBridge)
+
+    if TYPE_CHECKING:
+        if is_bridge:
+            assert isinstance(coordinator, ComelitSerialBridge)
+        else:
+            assert isinstance(coordinator, ComelitVedoSystem)
+
+    if not coordinator.vedo_pin:
+        return
 
     if data := coordinator.data[ALARM_AREA]:
         async_add_entities(
