@@ -1,25 +1,5 @@
 {
   "entity": {
-    "binary_sensor": {
-      "balancer": {
-        "default": "mdi:transfer"
-      },
-      "chrg_mosfet": {
-        "default": "mdi:battery-plus"
-      },
-      "dischrg_mosfet": {
-        "default": "mdi:battery-minus"
-      },
-      "heater": {
-        "default": "mdi:snowflake-thermometer"
-      },
-      "problem": {
-        "default": "mdi:battery-check",
-        "state": {
-          "on": "mdi:battery-alert"
-        }
-      }
-    },
     "sensor": {
       "battery_health": {
         "default": "mdi:battery-heart-variant"

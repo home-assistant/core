@@ -19,20 +19,6 @@
     }
   },
   "entity": {
-    "binary_sensor": {
-      "balancer": {
-        "name": "Balancer"
-      },
-      "chrg_mosfet": {
-        "name": "Charge MOSFET"
-      },
-      "dischrg_mosfet": {
-        "name": "Discharge MOSFET"
-      },
-      "heater": {
-        "name": "Heater"
-      }
-    },
     "sensor": {
       "battery_health": {
         "name": "Battery health"
