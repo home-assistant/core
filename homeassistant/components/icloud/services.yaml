@@ -69,8 +69,6 @@ next_media:
       integration: icloud
       domain: camera
   fields:
-    camera:
-      required: true
     mode:
       required: false
       default: false

@@ -1,11 +1,11 @@
 """Support for iCloud album cameras."""
 
+from copy import deepcopy
 import datetime
 import logging
 import random
 from typing import Any
 
-from propcache.api import cached_property
 from pyicloud import PyiCloudService
 from pyicloud.exceptions import (
     PyiCloudAPIResponseException,
@@ -105,7 +105,7 @@ class AppleiCloudAlbumCamera(Camera):
 
         self._attr_unique_id = f"{self._type}_{self._id}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{self._id}")},
+            identifiers={(DOMAIN, sub_entry.data[CONF_ALBUM_ID])},
             configuration_url="https://www.icloud.com/",
             manufacturer="Apple",
             name=f"iCloud Album - {sub_entry.data[CONF_ALBUM_NAME]}",
@@ -227,11 +227,9 @@ class AppleiCloudAlbumCamera(Camera):
         if self._photo is None:
             return
 
-        self._attr_extra_state_attributes = self.extra_state_attributes or {}
-
         self.hass.add_job(self.async_write_ha_state)
 
-    @cached_property
+    @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         if self._photo is None:
@@ -288,7 +286,7 @@ class AppleiCloudSharedStreamCamera(AppleiCloudAlbumCamera):
 
     _attr_model: str = "Apple iCloud Shared Stream"
 
-    @cached_property
+    @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attrs: dict[str, Any] | None = super().extra_state_attributes
@@ -296,6 +294,7 @@ class AppleiCloudSharedStreamCamera(AppleiCloudAlbumCamera):
             return {}
 
         if isinstance(self._photo, PhotoStreamAsset):
+            attrs = deepcopy(attrs)
             attrs.update(
                 {
                     "like_count": self._photo.like_count,

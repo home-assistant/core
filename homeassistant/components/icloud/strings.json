@@ -149,10 +149,6 @@
     "next_media": {
       "description": "Skips to the next image on the camera entity.",
       "fields": {
-        "camera": {
-          "description": "The camera entity to change the image on.",
-          "name": "Camera entity"
-        },
         "mode": {
           "description": "Use a random image instead of the next image.",
           "name": "Randomize"
