@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Mapping, Sequence
 import logging
 import os
@@ -383,7 +382,6 @@ class CameraSubEntryFlowHandler(ConfigSubentryFlow):
         self._album_id: str = ""
         self._album_type: str = ""
         self._albums: AlbumContainer | None = None
-        self._task: asyncio.Task | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -399,14 +397,14 @@ class CameraSubEntryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Handle the album selection step."""
         self._album_type = "album"
-        return await self.async_step_progress(user_input)
+        return await self.async_step_get_album_container(user_input)
 
     async def async_step_shared_stream(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Handle the shared stream selection step."""
         self._album_type = "shared_stream"
-        return await self.async_step_progress(user_input)
+        return await self.async_step_get_album_container(user_input)
 
     @staticmethod
     def _get_album_container(api: PyiCloudService, album_type: str) -> AlbumContainer:
@@ -415,7 +413,14 @@ class CameraSubEntryFlowHandler(ConfigSubentryFlow):
             return api.photos.albums
         return api.photos.shared_streams
 
-    async def _async_get_album_container(self) -> None:
+    @progress_step(
+        description_placeholders=lambda self: {
+            "name": f"Loading {self._album_type.replace('_', ' ')}s..."
+        }
+    )
+    async def async_step_get_album_container(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
         """Return the album container based on album type."""
         config_entry: ConfigEntry[Any] = self._get_entry()
         api: PyiCloudService = config_entry.runtime_data.api
@@ -423,29 +428,12 @@ class CameraSubEntryFlowHandler(ConfigSubentryFlow):
             CameraSubEntryFlowHandler._get_album_container, api, self._album_type
         )
 
-    @progress_step(
-        description_placeholders=lambda self: {
-            "name": f"Loading {self._album_type.replace('_', ' ')}s..."
-        }
-    )
-    async def async_step_progress(
-        self, user_input: dict[str, Any] | None = None
-    ) -> SubentryFlowResult:
-        """Handle loading album list."""
-
-        if self._task is None:
-            self._task = self.hass.async_create_task(
-                self._async_get_album_container(),
-                name="icloud_get_album_container",
-            )
-        if not self._task.done():
-            return self.async_show_progress(
-                step_id="progress",
-                progress_action="load_albums",
-                progress_task=self._task,
-            )
-
-        self._task = None
+        if self._albums is None or len(self._albums) == 0:
+            if self._album_type == "album":
+                _LOGGER.debug("No albums found")
+                return self.async_abort(reason="no_albums")
+            _LOGGER.debug("No shared streams found")
+            return self.async_abort(reason="no_shared_streams")
 
         return self.async_show_progress_done(next_step_id="select_album")
 
@@ -458,11 +446,7 @@ class CameraSubEntryFlowHandler(ConfigSubentryFlow):
             return await self.async_step_options()
 
         if self._albums is None or len(self._albums) == 0:
-            if self._album_type == "album":
-                _LOGGER.debug("No albums found")
-                return self.async_abort(reason="no_albums")
-            _LOGGER.debug("No shared streams found")
-            return self.async_abort(reason="no_shared_streams")
+            raise RuntimeError("Albums not loaded")
 
         if len(self._albums) == 1:
             self._album_id = self._albums[0].id
@@ -507,7 +491,6 @@ class CameraSubEntryFlowHandler(ConfigSubentryFlow):
             self.hass.config_entries.async_schedule_reload(config_entry.entry_id)
             return self.async_create_entry(
                 title=album.title,
-                # unique_id=f"{self._album_type}_{self._album_id}",
                 data={
                     CONF_ALBUM_ID: self._album_id,
                     CONF_ALBUM_TYPE: self._album_type,
