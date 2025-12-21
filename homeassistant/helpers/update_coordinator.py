@@ -30,7 +30,6 @@ from homeassistant.util.dt import utcnow
 
 from . import entity, event
 from .debounce import Debouncer
-from .frame import report_usage
 from .typing import UNDEFINED, UndefinedType
 
 REQUEST_REFRESH_DEFAULT_COOLDOWN = 10
@@ -333,11 +332,9 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             self.config_entry.state
             is not config_entries.ConfigEntryState.SETUP_IN_PROGRESS
         ):
-            report_usage(
-                "uses `async_config_entry_first_refresh`, which is only supported "
-                f"when entry state is {config_entries.ConfigEntryState.SETUP_IN_PROGRESS}, "
-                f"but it is in state {self.config_entry.state}",
-                breaks_in_ha_version="2025.11",
+            raise ConfigEntryError(
+                f"`async_config_entry_first_refresh` called when config entry state is {self.config_entry.state}, "
+                f"but should only be called in state {config_entries.ConfigEntryState.SETUP_IN_PROGRESS}"
             )
         if await self.__wrap_async_setup():
             await self._async_refresh(

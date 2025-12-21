@@ -340,6 +340,10 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
             ),
             vol.Optional("selector"): cv.schema_with_slug_keys(
                 {
+                    vol.Optional("choices"): cv.schema_with_slug_keys(
+                        translation_value_validator,
+                        slug_validator=translation_key_validator,
+                    ),
                     vol.Optional("options"): cv.schema_with_slug_keys(
                         translation_value_validator,
                         slug_validator=translation_key_validator,

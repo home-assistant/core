@@ -47,7 +47,7 @@ def make_binary_sensor_trigger(
         """Trigger for entity state changes."""
 
         _device_class = device_class
-        _to_state = to_state
+        _to_states = {to_state}
 
     return CustomTrigger
 
