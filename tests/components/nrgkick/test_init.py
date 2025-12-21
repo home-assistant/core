@@ -14,6 +14,7 @@ from homeassistant.components.nrgkick.api import (
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from . import async_setup_entry_with_return, create_mock_config_entry
 
@@ -301,8 +302,9 @@ async def test_coordinator_command_blocked_by_solar(
 
         coordinator = mock_config_entry.runtime_data
 
-        # Should raise communication error with the device's message
-        with pytest.raises(NRGkickApiClientCommunicationError) as exc_info:
+        # Coordinator should surface a translated HomeAssistantError
+        # that includes the device's message.
+        with pytest.raises(HomeAssistantError) as exc_info:
             await coordinator.async_set_charge_pause(True)
 
         assert "blocked by solar-charging" in str(exc_info.value)
@@ -328,8 +330,9 @@ async def test_coordinator_command_unexpected_value(
 
         coordinator = mock_config_entry.runtime_data
 
-        # Should raise communication error when value doesn't match
-        with pytest.raises(NRGkickApiClientCommunicationError) as exc_info:
+        # Coordinator should surface a translated HomeAssistantError
+        # when the returned value doesn't match the requested value.
+        with pytest.raises(HomeAssistantError) as exc_info:
             await coordinator.async_set_current(6.7)
 
         assert "unexpected value" in str(exc_info.value).lower()

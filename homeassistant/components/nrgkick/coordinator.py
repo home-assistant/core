@@ -10,13 +10,14 @@ from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import (
     NRGkickAPI,
     NRGkickApiClientAuthenticationError,
     NRGkickApiClientCommunicationError,
+    NRGkickApiClientError,
 )
 from .const import CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL, DOMAIN
 
@@ -78,7 +79,9 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         command_func: Callable[[], Awaitable[dict[str, Any]]],
         expected_value: Any,
         control_key: str,
-        error_message: str,
+        *,
+        target: str,
+        value: str,
     ) -> None:
         """Execute a command and verify the state changed.
 
@@ -90,12 +93,30 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         """
         # Execute command and get response.
-        response = await command_func()
+        try:
+            response = await command_func()
+        except NRGkickApiClientError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_failed",
+                translation_placeholders={
+                    "target": target,
+                    "value": value,
+                    "error": str(err),
+                },
+            ) from err
 
         # Check if response contains an error message.
         if "Response" in response:
-            raise NRGkickApiClientCommunicationError(
-                f"{error_message} {response['Response']}"
+            device_error = response["Response"]
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_failed",
+                translation_placeholders={
+                    "target": target,
+                    "value": value,
+                    "error": str(device_error),
+                },
             )
 
         # Check if response contains the expected key with the new value.
@@ -109,13 +130,24 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     float(expected_value) if expected_value is not None else None
                 )
                 if actual_float != expected_float:
-                    raise NRGkickApiClientCommunicationError(
-                        f"{error_message} Device returned unexpected value: "
-                        f"{actual_value} (expected {expected_value})."
+                    raise HomeAssistantError(
+                        translation_domain=DOMAIN,
+                        translation_key="set_failed_unexpected_value",
+                        translation_placeholders={
+                            "target": target,
+                            "value": value,
+                            "actual": str(actual_value),
+                            "expected": str(expected_value),
+                        },
                     )
             except (ValueError, TypeError) as err:
-                raise NRGkickApiClientCommunicationError(
-                    f"{error_message} Device returned invalid value."
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="set_failed_invalid_value",
+                    translation_placeholders={
+                        "target": target,
+                        "value": value,
+                    },
                 ) from err
 
             # Update coordinator data immediately with the new value.
@@ -137,7 +169,8 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             lambda: self.api.set_current(current),
             current,
             "current_set",
-            f"Failed to set charging current to {current}A.",
+            target="current_set",
+            value=str(current),
         )
 
     async def async_set_charge_pause(self, pause: bool) -> None:
@@ -147,7 +180,8 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             lambda: self.api.set_charge_pause(pause),
             expected_state,
             "charge_pause",
-            f"Failed to {'pause' if pause else 'resume'} charging.",
+            target="charge_pause",
+            value="on" if pause else "off",
         )
 
     async def async_set_energy_limit(self, energy_limit: int) -> None:
@@ -156,7 +190,8 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             lambda: self.api.set_energy_limit(energy_limit),
             energy_limit,
             "energy_limit",
-            f"Failed to set energy limit to {energy_limit}Wh.",
+            target="energy_limit",
+            value=str(energy_limit),
         )
 
     async def async_set_phase_count(self, phase_count: int) -> None:
@@ -165,5 +200,6 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             lambda: self.api.set_phase_count(phase_count),
             phase_count,
             "phase_count",
-            f"Failed to set phase count to {phase_count}.",
+            target="phase_count",
+            value=str(phase_count),
         )

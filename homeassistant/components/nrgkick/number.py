@@ -8,12 +8,9 @@ from typing import Any
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.const import EntityCategory, UnitOfElectricCurrent
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import NRGkickConfigEntry, NRGkickDataUpdateCoordinator, NRGkickEntity
-from .api import NRGkickApiClientError
-from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -108,19 +105,9 @@ class NRGkickNumber(NRGkickEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the value of the number entity."""
-        try:
-            if self._key == "current_set":
-                await self.coordinator.async_set_current(value)
-            elif self._key == "energy_limit":
-                await self.coordinator.async_set_energy_limit(int(value))
-            elif self._key == "phase_count":
-                await self.coordinator.async_set_phase_count(int(value))
-        except NRGkickApiClientError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="set_failed",
-                translation_placeholders={
-                    "target": self._attr_translation_key or self._key,
-                    "value": str(value),
-                },
-            ) from err
+        if self._key == "current_set":
+            await self.coordinator.async_set_current(value)
+        elif self._key == "energy_limit":
+            await self.coordinator.async_set_energy_limit(int(value))
+        elif self._key == "phase_count":
+            await self.coordinator.async_set_phase_count(int(value))

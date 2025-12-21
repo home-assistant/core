@@ -439,6 +439,72 @@ async def test_reconfigure_flow_invalid_auth(
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
+async def test_reconfigure_flow_no_auth_to_auth_required(
+    hass: HomeAssistant, mock_nrgkick_api
+) -> None:
+    """Test reconfigure flow when moving from no auth to auth required."""
+    # Create entry without authentication
+    entry = create_mock_config_entry(
+        domain="nrgkick",
+        title="NRGkick Test",
+        data={CONF_HOST: "192.168.1.100"},
+        entry_id="test_entry",
+        unique_id="TEST123456",
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_confirm"
+
+    # Simulate device now requires authentication
+    mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientAuthenticationError
+
+    with patch(
+        "homeassistant.components.nrgkick.config_flow.NRGkickAPI",
+        return_value=mock_nrgkick_api,
+    ):
+        # User submits without credentials (form should show with defaults)
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "192.168.1.100",
+            },
+        )
+
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["errors"] == {"base": "invalid_auth"}
+
+    # Now provide credentials
+    mock_nrgkick_api.test_connection.side_effect = None
+
+    with (
+        patch(
+            "homeassistant.components.nrgkick.config_flow.NRGkickAPI",
+            return_value=mock_nrgkick_api,
+        ),
+        patch("homeassistant.components.nrgkick.async_setup_entry", return_value=True),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                CONF_HOST: "192.168.1.100",
+                CONF_USERNAME: "user",
+                CONF_PASSWORD: "pass",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] == data_entry_flow.FlowResultType.ABORT
+    assert result3["reason"] == "reconfigure_successful"
+
+    updated_entry = hass.config_entries.async_get_entry(entry.entry_id)
+    assert updated_entry.data[CONF_HOST] == "192.168.1.100"
+    assert updated_entry.data[CONF_USERNAME] == "user"
+    assert updated_entry.data[CONF_PASSWORD] == "pass"
+
+
 # Zeroconf Discovery Tests
 
 

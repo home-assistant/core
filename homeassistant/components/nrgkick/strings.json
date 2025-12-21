@@ -439,7 +439,13 @@
       "message": "Device returned HTTP error {status_code} ({status_message}). URL: {url}"
     },
     "set_failed": {
-      "message": "Failed to set {target} to {value}."
+      "message": "Failed to set {target} to {value}. {error}"
+    },
+    "set_failed_invalid_value": {
+      "message": "Failed to set {target} to {value}. Device returned invalid value."
+    },
+    "set_failed_unexpected_value": {
+      "message": "Failed to set {target} to {value}. Device returned unexpected value: {actual} (expected {expected})."
     },
     "unknown_error": {
       "message": "An unknown error occurred."

@@ -276,8 +276,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
 
         host = entry.data.get(CONF_HOST, "")
-        username = entry.data.get(CONF_USERNAME, "")
-        password = entry.data.get(CONF_PASSWORD, "")
+        username = entry.data.get(CONF_USERNAME) or ""
+        password = entry.data.get(CONF_PASSWORD) or ""
 
         return self.async_show_form(
             step_id="reconfigure_confirm",

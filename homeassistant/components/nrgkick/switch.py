@@ -7,12 +7,9 @@ from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import NRGkickConfigEntry, NRGkickDataUpdateCoordinator, NRGkickEntity
-from .api import NRGkickApiClientError
-from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,28 +62,8 @@ class NRGkickSwitch(NRGkickEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        try:
-            await self.coordinator.async_set_charge_pause(True)
-        except NRGkickApiClientError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="set_failed",
-                translation_placeholders={
-                    "target": "charge_pause",
-                    "value": "on",
-                },
-            ) from err
+        await self.coordinator.async_set_charge_pause(True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        try:
-            await self.coordinator.async_set_charge_pause(False)
-        except NRGkickApiClientError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="set_failed",
-                translation_placeholders={
-                    "target": "charge_pause",
-                    "value": "off",
-                },
-            ) from err
+        await self.coordinator.async_set_charge_pause(False)
