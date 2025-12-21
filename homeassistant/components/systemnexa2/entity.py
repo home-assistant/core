@@ -1,14 +1,10 @@
 """Base entity for SystemNexa2 integration."""
 
-import logging
-
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER
 from .coordinator import SystemNexa2DataUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class SystemNexa2Entity(CoordinatorEntity[SystemNexa2DataUpdateCoordinator]):
