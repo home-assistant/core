@@ -50,6 +50,7 @@ class SystemNexa2DataUpdateCoordinator(DataUpdateCoordinator[SystemNexa2Data]):
 
     config_entry: SystemNexa2ConfigEntry
     info_data: InformationData
+    device: Device
 
     def __init__(
         self,
@@ -66,18 +67,16 @@ class SystemNexa2DataUpdateCoordinator(DataUpdateCoordinator[SystemNexa2Data]):
             update_method=None,
             always_update=False,
         )
-        self.device = Device(
-            host=config_entry.data[CONF_HOST], on_update=self._async_handle_update
-        )
         self._state_received_once = False
 
     async def async_setup(self) -> None:
         """Set up the coordinator and initialize the device connection."""
         try:
-            await self.device.initialize()
-            if self.device.info_data is None or self.device.info_data.unique_id is None:
-                # Should never happen, as if it fails to fetch info_data during initialize() it will raise an DeviceInitializationError
-                raise ConfigEntryNotReady
+            self.device = await Device.initiate_device(
+                host=self.config_entry.data[CONF_HOST],
+                on_update=self._async_handle_update,
+            )
+
             self.data = SystemNexa2Data()
             self.data.available = False
             self.data.unique_id = self.device.info_data.unique_id

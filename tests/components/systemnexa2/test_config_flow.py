@@ -10,6 +10,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
+from tests.common import MockConfigEntry
+
 
 async def test_full_flow(
     hass: HomeAssistant,
@@ -35,6 +37,38 @@ async def test_full_flow(
         CONF_DEVICE_ID: "test_device_id",
         CONF_MODEL: "Test Model",
     }
+
+
+async def test_already_configured(
+    hass: HomeAssistant,
+    mock_system_nexa_2_device: MagicMock,
+) -> None:
+    """Test we abort if the device is already configured."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="test_device_id",
+        data={
+            CONF_HOST: "10.0.0.100",
+            CONF_NAME: "Test Device",
+            CONF_DEVICE_ID: "test_device_id",
+            CONF_MODEL: "Test Model",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "10.0.0.131"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_connection_timeout(
