@@ -5,6 +5,7 @@
   "config_flow": true,
   "dependencies": ["ffmpeg"],
   "documentation": "https://www.home-assistant.io/integrations/freebox",
+  "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["freebox_api"],
   "requirements": ["freebox-api==1.2.2"],
