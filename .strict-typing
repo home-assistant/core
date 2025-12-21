@@ -567,6 +567,7 @@ homeassistant.components.wake_word.*
 homeassistant.components.wallbox.*
 homeassistant.components.waqi.*
 homeassistant.components.water_heater.*
+homeassistant.components.watts.*
 homeassistant.components.watttime.*
 homeassistant.components.weather.*
 homeassistant.components.webhook.*
