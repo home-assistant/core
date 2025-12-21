@@ -53,13 +53,6 @@ class VeluxRainSensor(VeluxEntity, BinarySensorEntity):
         self._attr_unique_id = f"{self._attr_unique_id}_rain_sensor"
 
     @property
-    def available(self) -> bool:
-        """Return if entity is available.
-
-        Rain sensor is polled, so we just use _attr_available
-        """
-        return self._attr_available
-
     async def async_update(self) -> None:
         """Fetch the latest state from the device."""
         try:
