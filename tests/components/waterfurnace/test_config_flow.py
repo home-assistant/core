@@ -409,3 +409,120 @@ async def test_reauth_flow_unexpected_error(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_import_flow_success(
+    hass: HomeAssistant, mock_waterfurnace_client: Mock
+) -> None:
+    """Test successful import flow from YAML."""
+    result = cast(
+        dict[str, Any],
+        await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                CONF_USERNAME: "test_user",
+                CONF_PASSWORD: "test_password",
+            },
+        ),
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "WaterFurnace TEST_GWID_12345"
+    assert result["data"] == {
+        CONF_USERNAME: "test_user",
+        CONF_PASSWORD: "test_password",
+    }
+    assert result["result"].unique_id == "TEST_GWID_12345"
+
+
+async def test_import_flow_already_configured(
+    hass: HomeAssistant,
+    mock_waterfurnace_client: Mock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test import flow when device is already configured."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = cast(
+        dict[str, Any],
+        await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                CONF_USERNAME: "test_user",
+                CONF_PASSWORD: "test_password",
+            },
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_import_flow_cannot_connect(
+    hass: HomeAssistant, mock_waterfurnace_client: Mock
+) -> None:
+    """Test import flow with connection error."""
+    mock_waterfurnace_client.login.side_effect = WFException("Connection failed")
+
+    result = cast(
+        dict[str, Any],
+        await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                CONF_USERNAME: "test_user",
+                CONF_PASSWORD: "test_password",
+            },
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
+async def test_import_flow_invalid_auth(
+    hass: HomeAssistant, mock_waterfurnace_client: Mock
+) -> None:
+    """Test import flow with invalid credentials."""
+    mock_waterfurnace_client.login.side_effect = WFCredentialError(
+        "Invalid credentials"
+    )
+
+    result = cast(
+        dict[str, Any],
+        await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                CONF_USERNAME: "bad_user",
+                CONF_PASSWORD: "bad_password",
+            },
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
+async def test_import_flow_unexpected_error(
+    hass: HomeAssistant, mock_waterfurnace_client: Mock
+) -> None:
+    """Test import flow with unexpected error."""
+    mock_waterfurnace_client.login.side_effect = Exception("Unexpected error")
+
+    result = cast(
+        dict[str, Any],
+        await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                CONF_USERNAME: "test_user",
+                CONF_PASSWORD: "test_password",
+            },
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"

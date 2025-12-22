@@ -7,9 +7,11 @@ import logging
 import threading
 import time
 
+import voluptuous as vol
 from waterfurnace.waterfurnace import WaterFurnace, WFCredentialError, WFException
 
 from homeassistant.components import persistent_notification
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
@@ -18,8 +20,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import discovery
+from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.typing import ConfigType
 
 from .models import WaterFurnaceConfigEntry
 
@@ -34,6 +37,30 @@ ERROR_INTERVAL = timedelta(seconds=300)
 MAX_FAILS = 10
 NOTIFICATION_ID = "waterfurnace_website_notification"
 NOTIFICATION_TITLE = "WaterFurnace website status"
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_USERNAME): cv.string,
+                vol.Required(CONF_PASSWORD): cv.string,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up WaterFurnace from yaml configuration."""
+    if DOMAIN in config:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data=config[DOMAIN],
+            )
+        )
+    return True
 
 
 async def async_setup_entry(

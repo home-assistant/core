@@ -2,8 +2,10 @@
   "config": {
     "abort": {
       "already_configured": "This device is already configured",
+      "cannot_connect": "Failed to import configuration from YAML. Please verify your credentials and set up the integration via the UI",
       "no_devices": "No devices found on this account",
       "reauth_successful": "Reauthentication successful",
+      "unknown": "Failed to import configuration from YAML due to an unexpected error. Please set up the integration via the UI",
       "wrong_account": "The credentials provided are for a different account"
     },
     "error": {

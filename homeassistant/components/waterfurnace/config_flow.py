@@ -152,6 +152,29 @@ class WaterFurnaceConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
+        """Handle import from YAML configuration."""
+        try:
+            info = await validate_input(self.hass, import_data)
+        except (CannotConnect, InvalidAuth):
+            _LOGGER.error(
+                "Failed to import WaterFurnace configuration from YAML. "
+                "Please verify your credentials and set up the integration via the UI"
+            )
+            return self.async_abort(reason="cannot_connect")
+        except Exception:
+            _LOGGER.exception("Unexpected error importing WaterFurnace configuration")
+            return self.async_abort(reason="unknown")
+
+        # Set unique ID based on GWID
+        await self.async_set_unique_id(info["gwid"])
+        self._abort_if_unique_id_configured()
+
+        return self.async_create_entry(
+            title=info["title"],
+            data=import_data,
+        )
+
 
 class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
