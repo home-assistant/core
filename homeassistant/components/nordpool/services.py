@@ -48,7 +48,7 @@ SERVICE_GET_PRICES_FOR_DATE = "get_prices_for_date"
 SERVICE_GET_PRICE_INDICES_FOR_DATE = "get_price_indices_for_date"
 SERVICE_GET_PRICES_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
+        vol.Optional(ATTR_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
         vol.Required(ATTR_DATE): cv.date,
         vol.Optional(ATTR_AREAS): vol.All(vol.In(list(AREAS)), cv.ensure_list, [str]),
         vol.Optional(ATTR_CURRENCY): vol.All(
@@ -65,9 +65,20 @@ SERVICE_GET_PRICE_INDICES_SCHEMA = SERVICE_GET_PRICES_SCHEMA.extend(
 )
 
 
-def get_config_entry(hass: HomeAssistant, entry_id: str) -> NordPoolConfigEntry:
+def get_config_entry(hass: HomeAssistant, entry_id: str | None) -> NordPoolConfigEntry:
     """Return config entry."""
-    if not (entry := hass.config_entries.async_get_entry(entry_id)):
+    if entry_id is not None:
+        entry = hass.config_entries.async_get_entry(entry_id)
+    elif entries := hass.config_entries.async_entries(DOMAIN):
+        if len(entries) > 1:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="multiple_entries",
+            )
+        entry = entries[0]
+    else:
+        entry = None
+    if not entry:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="entry_not_found",
@@ -88,7 +99,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         call: ServiceCall,
     ) -> tuple[NordPoolClient, date, str, list[str], int]:
         """Return the parameters for the service."""
-        entry = get_config_entry(hass, call.data[ATTR_CONFIG_ENTRY])
+        entry = get_config_entry(hass, call.data.get(ATTR_CONFIG_ENTRY))
         client = entry.runtime_data.client
         asked_date: date = call.data[ATTR_DATE]
 

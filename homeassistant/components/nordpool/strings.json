@@ -111,6 +111,9 @@
     "initial_update_failed": {
       "message": "Initial update failed on startup with error {error}"
     },
+    "multiple_entries": {
+      "message": "There are multiple Nord Pool configuration entries in Home Assistant, must specify entry to use."
+    },
     "no_day_data": {
       "message": "Data for current day is missing"
     }
@@ -150,7 +153,7 @@
           "name": "Areas"
         },
         "config_entry": {
-          "description": "The Nord Pool configuration entry for this action.",
+          "description": "The Nord Pool configuration entry for this action. Optional if there is exactly one configured.",
           "name": "Config entry"
         },
         "currency": {
