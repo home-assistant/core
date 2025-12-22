@@ -23,7 +23,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_PORT, DEFAULT_USERNAME, DOMAIN, LOGGER
+from .const import DEFAULT_SCAN_INTERVAL, DEFAULT_PORT, DEFAULT_USERNAME, DOMAIN, LOGGER
 
 type PlugwiseConfigEntry = ConfigEntry[PlugwiseDataUpdateCoordinator]
 
@@ -38,14 +38,19 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[dict[str, GwEntityData
 
     config_entry: PlugwiseConfigEntry
 
-    def __init__(self, hass: HomeAssistant, config_entry: PlugwiseConfigEntry) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: PlugwiseConfigEntry,
+        update_interval: timedelta = timedelta(seconds=60),
+    ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
             LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=timedelta(seconds=60),
+            update_interval=update_interval,
             # Don't refresh immediately, give the device time to process
             # the change in state before we query it.
             request_refresh_debouncer=Debouncer(
@@ -74,6 +79,10 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[dict[str, GwEntityData
         """
         version = await self.api.connect()
         self._connected = isinstance(version, Version)
+        if self._connected:
+            self.update_interval = DEFAULT_SCAN_INTERVAL.get(
+                self.api.smile.type, timedelta(seconds=60)
+            )
 
     async def _async_setup(self) -> None:
         """Initialize the update_data process."""
