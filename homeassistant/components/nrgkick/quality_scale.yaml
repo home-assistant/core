@@ -49,14 +49,11 @@ rules:
   discovery-update-info: done
   entity-translations: done
   exception-translations: done
-  icon-translations:
-    status: exempt
-    comment: |
-      This integration uses standard icons that do not require dynamic translation.
+  icon-translations: done
   reconfiguration-flow: done
   # Platinum
   async-dependency:
     status: exempt
     comment: |
       The nrgkick-api library uses aiohttp which is already async.
-  strict-typing: todo
+  strict-typing: done

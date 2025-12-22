@@ -1,24 +1,24 @@
 {
   "config": {
     "abort": {
-      "already_configured": "Device is already configured",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "json_api_disabled": "JSON API is disabled on the device",
       "no_serial_number": "Device does not provide a serial number",
       "reauth_failed": "Re-authentication failed",
-      "reauth_successful": "Re-authentication was successful",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_failed": "Reconfiguration failed",
-      "reconfigure_successful": "Reconfiguration was successful"
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "Cannot connect to the NRGkick device. Test the connection using a browser: http://{device_ip}/info",
-      "invalid_auth": "Invalid authentication",
-      "unknown": "Unexpected error"
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "reauth_confirm": {
         "data": {
-          "password": "Password",
-          "username": "Username"
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
           "password": "Password for Basic Auth.",
@@ -28,9 +28,9 @@
       },
       "reconfigure_confirm": {
         "data": {
-          "host": "Host",
-          "password": "Password",
-          "username": "Username"
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
           "host": "The hostname or IP address of the NRGkick device.",
@@ -41,9 +41,9 @@
       },
       "user": {
         "data": {
-          "host": "Host",
-          "password": "Password",
-          "username": "Username"
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
           "host": "The hostname or IP address of the NRGkick device.",
@@ -54,8 +54,8 @@
       },
       "zeroconf_confirm": {
         "data": {
-          "password": "Password",
-          "username": "Username"
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
           "password": "Password for Basic Auth (optional).",
