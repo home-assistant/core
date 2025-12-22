@@ -12,7 +12,7 @@ NOT_SENSIRION_SERVICE_INFO = BluetoothServiceInfo(
     source="local",
 )
 
-SENSIRION_SERVICE_INFO = BluetoothServiceInfo(
+SENSIRION_SERVICE_INFO_MYCO2 = BluetoothServiceInfo(
     name="MyCO2",
     address="01:03:05:07:09:11",  # Ignored (the payload encodes a device ID)
     rssi=-60,
@@ -23,5 +23,5 @@ SENSIRION_SERVICE_INFO = BluetoothServiceInfo(
     service_uuids=[],
     source="local",
 )
-CONFIGURED_NAME = "MyCO2 84E3"
-CONFIGURED_PREFIX = "myco2_84e3"
+CONFIGURED_NAME_MYCO2 = "MyCO2 84E3"
+CONFIGURED_PREFIX_MYCO2 = "myco2_84e3"
