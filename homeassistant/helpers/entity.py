@@ -452,6 +452,10 @@ class Entity(
     # Entity description instance for this Entity
     entity_description: EntityDescription
 
+    # Overridden object id, derived from entity_id, if it is set directly.
+    # Only used internally, never to be set by integrations.
+    internal_overridden_object_id: str | None | UndefinedType = UNDEFINED
+
     # If we reported if this entity was slow
     _slow_reported = False
 
@@ -715,7 +719,7 @@ class Entity(
 
     @property
     def suggested_object_id(self) -> str | None:
-        """Return input for object id."""
+        """Return suggested object id."""
         if (
             # Check our class has overridden the name property from Entity
             # We need to use type.__getattribute__ to retrieve the underlying
@@ -733,6 +737,7 @@ class Entity(
             )
         else:
             name = self.name
+
         return None if name is UNDEFINED else name
 
     @cached_property

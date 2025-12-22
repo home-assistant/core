@@ -38,12 +38,7 @@ from homeassistant.setup import SetupPhases, async_start_setup
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.hass_dict import HassKey
 
-from . import (
-    device_registry as dev_reg,
-    entity_registry as ent_reg,
-    service,
-    translation,
-)
+from . import device_registry as dr, entity_registry as er, service, translation
 from .deprecation import deprecated_function
 from .entity_registry import EntityRegistry, RegistryEntryDisabler, RegistryEntryHider
 from .event import async_call_later
@@ -624,7 +619,7 @@ class EntityPlatform:
         event loop and will finish faster if we run them concurrently.
         """
         results: list[BaseException | None] | None = None
-        entity_registry = ent_reg.async_get(self.hass)
+        entity_registry = er.async_get(self.hass)
         try:
             async with self.hass.timeout.async_timeout(timeout, self.domain):
                 results = await asyncio.gather(
@@ -676,7 +671,7 @@ class EntityPlatform:
         to the event loop so we can await the coros directly without
         scheduling them as tasks.
         """
-        entity_registry = ent_reg.async_get(self.hass)
+        entity_registry = er.async_get(self.hass)
         try:
             async with self.hass.timeout.async_timeout(timeout, self.domain):
                 for entity in entities:
@@ -791,7 +786,7 @@ class EntityPlatform:
                 already_exists = True
         return (already_exists, restored)
 
-    async def _async_add_entity(  # noqa: C901
+    async def _async_add_entity(
         self,
         entity: Entity,
         update_before_add: bool,
@@ -818,11 +813,22 @@ class EntityPlatform:
                 entity.add_to_platform_abort()
                 return
 
-        suggested_object_id: str | None = None
-
         entity_name = entity.name
         if entity_name is UNDEFINED:
             entity_name = None
+
+        suggested_object_id: str | None = None
+
+        # An entity may suggest the entity_id by setting entity_id itself
+        if entity.internal_overridden_object_id is UNDEFINED:
+            if entity.entity_id is not None and not valid_entity_id(entity.entity_id):
+                entity.add_to_platform_abort()
+                raise HomeAssistantError(f"Invalid entity ID: {entity.entity_id}")
+            entity.internal_overridden_object_id = (
+                split_entity_id(entity.entity_id)[1]
+                if entity.entity_id is not None
+                else None
+            )
 
         # Get entity_id from unique ID registration
         if entity.unique_id is not None:
@@ -852,16 +858,16 @@ class EntityPlatform:
                     entity.add_to_platform_abort()
                     return
 
-            device: dev_reg.DeviceEntry | None
+            device: dr.DeviceEntry | None
             if self.config_entry:
                 if device_info := entity.device_info:
                     try:
-                        device = dev_reg.async_get(self.hass).async_get_or_create(
+                        device = dr.async_get(self.hass).async_get_or_create(
                             config_entry_id=self.config_entry.entry_id,
                             config_subentry_id=config_subentry_id,
                             **device_info,
                         )
-                    except dev_reg.DeviceInfoError as exc:
+                    except dr.DeviceInfoError as exc:
                         self.logger.error(
                             "%s: Not adding entity with invalid device info: %s",
                             self.platform_name,
@@ -869,28 +875,19 @@ class EntityPlatform:
                         )
                         entity.add_to_platform_abort()
                         return
+
+                    entity.device_entry = device
                 else:
                     device = entity.device_entry
             else:
                 device = None
 
-            calculated_object_id: str | None = None
-            # An entity may suggest the entity_id by setting entity_id itself
-            suggested_entity_id: str | None = entity.entity_id
-            if suggested_entity_id is not None:
-                suggested_object_id = split_entity_id(entity.entity_id)[1]
-                if self.entity_namespace is not None:
-                    suggested_object_id = (
-                        f"{self.entity_namespace} {suggested_object_id}"
-                    )
-            if not registered_entity_id and suggested_entity_id is None:
-                # Do not bother working out a suggested_object_id
-                # if the entity is already registered as it will
-                # be ignored.
-                #
-                calculated_object_id = async_calculate_suggested_object_id(
-                    entity, device
-                )
+            calculated_object_id, calculated = _async_calculate_suggested_object_id(
+                entity, self
+            )
+            if not calculated:
+                suggested_object_id = calculated_object_id
+                calculated_object_id = None
 
             disabled_by: RegistryEntryDisabler | None = None
             if not entity.entity_registry_enabled_default:
@@ -929,43 +926,20 @@ class EntityPlatform:
                 )
 
             entity.registry_entry = entry
-            if device:
-                entity.device_entry = device
             entity.entity_id = entry.entity_id
 
-        else:  # entity.unique_id is None
-            generate_new_entity_id = False
+        else:  # entity.unique_id is None  # noqa: PLR5501
             # We won't generate an entity ID if the platform has already set one
             # We will however make sure that platform cannot pick a registered ID
-            if entity.entity_id is not None and entity_registry.async_is_registered(
+            if entity.entity_id is None or entity_registry.async_is_registered(
                 entity.entity_id
             ):
-                # If entity already registered, convert entity id to suggestion
-                suggested_object_id = split_entity_id(entity.entity_id)[1]
-                generate_new_entity_id = True
-
-            # Generate entity ID
-            if entity.entity_id is None or generate_new_entity_id:
-                suggested_object_id = (
-                    suggested_object_id
-                    or entity.suggested_object_id
-                    or DEVICE_DEFAULT_NAME
+                suggested_object_id, _ = _async_calculate_suggested_object_id(
+                    entity, self
                 )
-
-                if self.entity_namespace is not None:
-                    suggested_object_id = (
-                        f"{self.entity_namespace} {suggested_object_id}"
-                    )
                 entity.entity_id = entity_registry.async_generate_entity_id(
-                    self.domain, suggested_object_id
+                    self.domain, suggested_object_id or ""
                 )
-
-            # Make sure it is valid in case an entity set the value themselves
-            # Avoid calling valid_entity_id if we already know it is valid
-            # since it already made it in the registry
-            if not valid_entity_id(entity.entity_id):
-                entity.add_to_platform_abort()
-                raise HomeAssistantError(f"Invalid entity ID: {entity.entity_id}")
 
         already_exists, restored = self._entity_id_already_exists(entity.entity_id)
 
@@ -1235,24 +1209,33 @@ class EntityPlatform:
 
 
 @callback
-def async_calculate_suggested_object_id(
-    entity: Entity, device: dev_reg.DeviceEntry | None
-) -> str | None:
-    """Calculate the suggested object ID for an entity."""
-    calculated_object_id: str | None = None
-    if device and entity.has_entity_name:
-        device_name = device.name_by_user or device.name
-        if entity.use_device_name:
-            calculated_object_id = device_name
-        else:
-            calculated_object_id = f"{device_name} {entity.suggested_object_id}"
-    if not calculated_object_id:
-        calculated_object_id = entity.suggested_object_id
+def _async_calculate_suggested_object_id(
+    entity: Entity, platform: EntityPlatform
+) -> tuple[str | None, bool]:
+    """Calculate the suggested object ID for an entity.
 
-    if (platform := entity.platform) and platform.entity_namespace is not None:
-        calculated_object_id = f"{platform.entity_namespace} {calculated_object_id}"
+    Also returns if the object ID was calculated.
+    """
+    calculated = True
+    suggested_object_id: str | None
 
-    return calculated_object_id
+    assert entity.internal_overridden_object_id is not UNDEFINED
+    if entity.internal_overridden_object_id is not None:
+        calculated = False
+        suggested_object_id = entity.internal_overridden_object_id
+    else:
+        suggested_object_id = entity.suggested_object_id
+
+    if entity.unique_id is None and not suggested_object_id:
+        suggested_object_id = DEVICE_DEFAULT_NAME
+
+    if platform.entity_namespace is not None:
+        calculated = False
+        if entity.unique_id is not None and not suggested_object_id:
+            suggested_object_id = f"{platform.platform_name}_{entity.unique_id}"
+        suggested_object_id = f"{platform.entity_namespace} {suggested_object_id}"
+
+    return suggested_object_id, calculated
 
 
 current_platform: ContextVar[EntityPlatform | None] = ContextVar(
