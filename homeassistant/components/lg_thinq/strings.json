@@ -205,6 +205,9 @@
       }
     },
     "number": {
+      "fan_speed": {
+        "name": "Fan speed"
+      },
       "lamp_brightness": {
         "name": "[%key:component::lg_thinq::entity::number::light_status::name%]"
       },

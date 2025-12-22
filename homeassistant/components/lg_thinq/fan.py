@@ -239,6 +239,12 @@ class ThinQHoodFanEntity(ThinQEntity, FanEntity):
     rather than named speed presets.
     """
 
+    _attr_supported_features = (
+        FanEntityFeature.SET_SPEED
+        | FanEntityFeature.TURN_ON
+        | FanEntityFeature.TURN_OFF
+    )
+
     def __init__(
         self,
         coordinator: DeviceDataUpdateCoordinator,
@@ -247,12 +253,6 @@ class ThinQHoodFanEntity(ThinQEntity, FanEntity):
     ) -> None:
         """Initialize hood fan platform."""
         super().__init__(coordinator, entity_description, property_id)
-
-        self._attr_supported_features = (
-            FanEntityFeature.SET_SPEED
-            | FanEntityFeature.TURN_ON
-            | FanEntityFeature.TURN_OFF
-        )
 
         # Get min/max from data, default to 0-2 if not available
         self._min_speed: int = int(self.data.min) if self.data.min is not None else 0

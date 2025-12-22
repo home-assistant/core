@@ -22,6 +22,11 @@ from . import ThinqConfigEntry
 from .entity import ThinQEntity
 
 NUMBER_DESC: dict[ThinQProperty, NumberEntityDescription] = {
+    ThinQProperty.FAN_SPEED: NumberEntityDescription(
+        key=ThinQProperty.FAN_SPEED,
+        translation_key=ThinQProperty.FAN_SPEED,
+        entity_registry_enabled_default=False,
+    ),
     ThinQProperty.LAMP_BRIGHTNESS: NumberEntityDescription(
         key=ThinQProperty.LAMP_BRIGHTNESS,
         translation_key=ThinQProperty.LAMP_BRIGHTNESS,
@@ -93,12 +98,18 @@ DEVICE_TYPE_NUMBER_MAP: dict[DeviceType, tuple[NumberEntityDescription, ...]] = 
         TIMER_NUMBER_DESC[ThinQProperty.SLEEP_TIMER_RELATIVE_HOUR_TO_STOP],
     ),
     DeviceType.DRYER: WASHER_NUMBERS,
-    DeviceType.HOOD: (NUMBER_DESC[ThinQProperty.LAMP_BRIGHTNESS],),
+    DeviceType.HOOD: (
+        NUMBER_DESC[ThinQProperty.FAN_SPEED],
+        NUMBER_DESC[ThinQProperty.LAMP_BRIGHTNESS],
+    ),
     DeviceType.HUMIDIFIER: (
         NUMBER_DESC[ThinQProperty.TARGET_HUMIDITY],
         TIMER_NUMBER_DESC[ThinQProperty.SLEEP_TIMER_RELATIVE_HOUR_TO_STOP],
     ),
-    DeviceType.MICROWAVE_OVEN: (NUMBER_DESC[ThinQProperty.LAMP_BRIGHTNESS],),
+    DeviceType.MICROWAVE_OVEN: (
+        NUMBER_DESC[ThinQProperty.FAN_SPEED],
+        NUMBER_DESC[ThinQProperty.LAMP_BRIGHTNESS],
+    ),
     DeviceType.OVEN: (NUMBER_DESC[ThinQProperty.TARGET_TEMPERATURE],),
     DeviceType.REFRIGERATOR: (NUMBER_DESC[ThinQProperty.TARGET_TEMPERATURE],),
     DeviceType.STYLER: (TIMER_NUMBER_DESC[TimerProperty.RELATIVE_HOUR_TO_STOP_WM],),
