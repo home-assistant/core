@@ -1,0 +1,7 @@
+{
+  "exceptions": {
+    "send_command_failed": {
+      "message": "Failed to send IR command: {error}"
+    }
+  }
+}

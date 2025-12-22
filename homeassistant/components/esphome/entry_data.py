@@ -85,7 +85,7 @@ INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], Platform] = {
     DateTimeInfo: Platform.DATETIME,
     EventInfo: Platform.EVENT,
     FanInfo: Platform.FAN,
-    InfraredProxyInfo: Platform.REMOTE,
+    InfraredProxyInfo: Platform.INFRARED,
     LightInfo: Platform.LIGHT,
     LockInfo: Platform.LOCK,
     MediaPlayerInfo: Platform.MEDIA_PLAYER,

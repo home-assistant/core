@@ -772,6 +772,8 @@ build.json @home-assistant/supervisor
 /tests/components/inels/ @epdevlab
 /homeassistant/components/influxdb/ @mdegat01
 /tests/components/influxdb/ @mdegat01
+/homeassistant/components/infrared/ @home-assistant/core
+/tests/components/infrared/ @home-assistant/core
 /homeassistant/components/inkbird/ @bdraco
 /tests/components/inkbird/ @bdraco
 /homeassistant/components/input_boolean/ @home-assistant/core

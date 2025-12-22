@@ -29,6 +29,7 @@ class EntityPlatforms(StrEnum):
     HUMIDIFIER = "humidifier"
     IMAGE = "image"
     IMAGE_PROCESSING = "image_processing"
+    INFRARED = "infrared"
     LAWN_MOWER = "lawn_mower"
     LIGHT = "light"
     LOCK = "lock"

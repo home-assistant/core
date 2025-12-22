@@ -2171,6 +2171,7 @@ NO_QUALITY_SCALE = [
     "input_text",
     "intent_script",
     "intent",
+    "infrared",
     "labs",
     "logbook",
     "logger",
