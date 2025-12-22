@@ -37,7 +37,6 @@ from .entity import RoborockCoordinatedEntityA01, RoborockCoordinatedEntityV1
 
 PARALLEL_UPDATES = 0
 
-import logging
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -327,14 +326,13 @@ class RoborockSelectEntityA01(RoborockCoordinatedEntityA01, SelectEntity):
             value = self.entity_description.option_values.get(option)
             if value is not None:
                 await self.coordinator.api.set_value(
-                    self.entity_description.data_protocol, 
-                    value
+                    self.entity_description.data_protocol,
+                    value,
                 )
                 await self.coordinator.async_request_refresh()
         except Exception as err:
-            from homeassistant.exceptions import HomeAssistantError
             raise HomeAssistantError(
-                translation_domain="roborock",
+                translation_domain=DOMAIN,
                 translation_key="select_option_failed",
             ) from err
 
@@ -343,10 +341,15 @@ class RoborockSelectEntityA01(RoborockCoordinatedEntityA01, SelectEntity):
         """Get the current status of the select entity from coordinator data."""
         if self.entity_description.data_protocol not in self.coordinator.data:
             return None
-        
+
         current_value = self.coordinator.data[self.entity_description.data_protocol]
         if current_value is None:
             return None
-        _LOGGER.debug(f"current_value: {current_value} for {self.entity_description.key} with values {self.entity_description.option_values}")
+        _LOGGER.debug(
+            "current_value: %s for %s with values %s",
+            current_value,
+            self.entity_description.key,
+            self.entity_description.option_values,
+        )
         # Find the option name that matches the current value
         return current_value
