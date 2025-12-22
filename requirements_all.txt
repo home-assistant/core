@@ -1816,7 +1816,7 @@ py-improv-ble-client==2.0.1
 py-madvr2==1.6.40
 
 # homeassistant.components.melissa
-py-melissa-climate==3.0.2
+py-melissa-climate==3.0.3
 
 # homeassistant.components.nextbus
 py-nextbusnext==2.3.0
