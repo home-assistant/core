@@ -69,6 +69,15 @@
       },
       "reset_side_brush_consumable": {
         "name": "Reset side brush consumable"
+      },
+      "start": {
+        "name": "Start"
+      },
+      "pause": {
+        "name": "Pause"
+      },
+      "shutdown": {
+        "name": "Shutdown"
       }
     },
     "number": {
@@ -117,6 +126,101 @@
       },
       "selected_map": {
         "name": "Selected map"
+      },
+      "zeo_mode": {
+        "name": "Operating mode",
+        "state": {
+          "wash": "Wash",
+          "wash_and_dry": "Wash and Dry",
+          "dry": "Dry",
+          "heavy": "Heavy",
+          "pre_wash": "Pre-wash",
+          "rinse_spin": "Rinse & Spin",
+          "spin": "Spin",
+          "drain": "Drain"
+        }
+      },
+      "zeo_program": {
+        "name": "Wash program",
+        "state": {
+          "standard": "Standard",
+          "quick": "Quick",
+          "sanitize": "Sanitize",
+          "wool": "Wool",
+          "air_refresh": "Air refresh",
+          "custom": "Custom",
+          "bedding": "Bedding",
+          "down": "Down",
+          "silk": "Silk",
+          "rinse_and_spin": "Rinse and spin",
+          "down_clean": "Down clean",
+          "baby_care": "Baby care",
+          "anti_allergen": "Anti-allergen",
+          "sportswear": "Sportswear",
+          "night": "Night",
+          "new_clothes": "New clothes",
+          "shirts": "Shirts",
+          "synthetics": "Synthetics",
+          "underwear": "Underwear",
+          "gentle": "Gentle",
+          "intensive": "Intensive",
+          "cotton_linen": "Cotton/Linen",
+          "season": "Season",
+          "warming": "Warming",
+          "bra": "Bra",
+          "panties": "Panties",
+          "boiling_wash": "Boiling wash",
+          "socks": "Socks",
+          "towels": "Towels",
+          "anti_mites": "Anti-mites",
+          "exo_40_60": "Exo 40/60",
+          "twenty_c": "20°C",
+          "t_shirts": "T-shirts",
+          "stain_removal": "Stain removal"
+        }
+      },
+      "zeo_temperature": {
+        "name": "Water temperature",
+        "state": {
+          "cold": "Cold",
+          "30": "30°C",
+          "40": "40°C",
+          "60": "60°C",
+          "90": "90°C",
+          "auto": "Auto"
+        }
+      },
+      "zeo_rinse_times": {
+        "name": "Rinse times",
+        "state": {
+          "none": "Default",
+          "min": "1",
+          "low": "2",
+          "mid": "3",
+          "high": "4",
+          "max": "5"
+        }
+      },
+      "zeo_spin_level": {
+        "name": "Spin level",
+        "state": {
+          "none": "Default",
+          "very_low": "600 RPM",
+          "mid": "800 RPM",
+          "high": "1000 RPM",
+          "very_high": "1200 RPM",
+          "max": "1400 RPM"
+        }
+      },
+      "zeo_drying_mode": {
+        "name": "Drying mode",
+        "state": {
+          "none": "No drying",
+          "quick": "Quick",
+          "iron": "Iron",
+          "store": "Store",
+          "time_dry": "Time dry"
+        }
       }
     },
     "sensor": {
@@ -375,6 +479,45 @@
           "washing": "Washing",
           "weighing": "Weighing"
         }
+      },
+      "times_after_clean": {
+        "name": "Times after clean"
+      },
+      "detergent_empty": {
+        "name": "Detergent empty",
+        "state": {
+          "True": "Empty",
+          "False": "Available"
+        }
+      },
+      "softener_empty": {
+        "name": "Softener empty",
+        "state": {
+          "True": "Empty",
+          "False": "Available"
+        }
+      },
+      "zeo_detergent_type": {
+        "name": "Detergent type",
+        "state": {
+          "liquid": "Liquid",
+          "powder": "Powder",
+          "none": "None"
+        }
+      },
+      "zeo_softener_type": {
+        "name": "Softener type",
+        "state": {
+          "liquid": "Liquid",
+          "none": "None"
+        }
+      },
+      "zeo_sound_setting": {
+        "name": "Sound setting",
+        "state": {
+          "True": "Enabled",
+          "False": "Disabled"
+        }
       }
     },
     "switch": {
@@ -389,6 +532,9 @@
       },
       "status_indicator": {
         "name": "Status indicator light"
+      },
+      "zeo_sound_setting": {
+        "name": "Sound setting"
       }
     },
     "time": {
@@ -470,7 +616,6 @@
       "title": "Cloud API used"
     }
   },
-
   "options": {
     "step": {
       "drawables": {
