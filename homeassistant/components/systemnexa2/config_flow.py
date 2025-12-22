@@ -26,6 +26,8 @@ _SCHEMA = vol.Schema(
 
 
 def _is_valid_host(ip_or_hostname: str) -> bool:
+    if not ip_or_hostname:
+        return False
     if is_ip_address(ip_or_hostname):
         return True
     try:
@@ -64,9 +66,9 @@ class SystemNexa2ConfigFlownfigFlow(ConfigFlow, domain=DOMAIN):
         return await self._async_add_by_ip_or_hostname(user_input[CONF_HOST])
 
     async def _async_add_by_ip_or_hostname(self, host_or_ip: str) -> ConfigFlowResult:
-        temp_dev = Device(host=host_or_ip)
         if not _is_valid_host(host_or_ip):
             return self.async_abort(reason="invalid_host")
+        temp_dev = await Device.initiate_device(host=host_or_ip)
 
         try:
             info = await temp_dev.get_info()

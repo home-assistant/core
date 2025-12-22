@@ -91,6 +91,46 @@ async def test_connection_timeout(
     assert result["description_placeholders"] == {"host": "10.0.0.131"}
 
 
+async def test_empty_host(
+    hass: HomeAssistant,
+) -> None:
+    """Test invalid hostname/IP address handling."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    # Test with empty string
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: ""},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "invalid_host"
+
+
+async def test_invalid_hostname(
+    hass: HomeAssistant,
+) -> None:
+    """Test invalid hostname/IP address handling."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    # Test with empty string
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "invalid hostname"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "invalid_host"
+
+
 async def test_unsupported_device(
     hass: HomeAssistant, mock_system_nexa_2_device_unsupported: MagicMock
 ) -> None:
