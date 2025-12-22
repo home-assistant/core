@@ -10,6 +10,8 @@ from typing import Any
 
 from roborock.devices.traits.v1.consumeable import ConsumableAttribute
 from roborock.exceptions import RoborockException
+from roborock.roborock_message import RoborockZeoProtocol
+from roborock.roborock_typing import RoborockCommand
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
@@ -18,8 +20,16 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import RoborockConfigEntry, RoborockDataUpdateCoordinator
-from .entity import RoborockEntity, RoborockEntityV1
+from .coordinator import (
+    RoborockConfigEntry,
+    RoborockDataUpdateCoordinator,
+    RoborockDataUpdateCoordinatorA01,
+)
+from .entity import (
+    RoborockCoordinatedEntityA01,
+    RoborockEntity,
+    RoborockEntityV1,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,6 +75,36 @@ CONSUMABLE_BUTTON_DESCRIPTIONS = [
 ]
 
 
+@dataclass(frozen=True, kw_only=True)
+class RoborockButtonDescriptionA01(ButtonEntityDescription):
+    """Describes a Roborock A01 button entity."""
+
+    data_protocol: RoborockZeoProtocol
+    param: Any = None
+
+
+A01_BUTTON_DESCRIPTIONS = [
+    RoborockButtonDescriptionA01(
+        key="start",
+        data_protocol=RoborockZeoProtocol.START,
+        translation_key="start",
+        #entity_category=EntityCategory.CONFIG,
+    ),
+    RoborockButtonDescriptionA01(
+        key="pause",
+        data_protocol=RoborockZeoProtocol.PAUSE,
+        translation_key="pause",
+        #entity_category=EntityCategory.CONFIG,
+    ),
+    RoborockButtonDescriptionA01(
+        key="shutdown",
+        data_protocol=RoborockZeoProtocol.SHUTDOWN,
+        translation_key="shutdown",
+        #entity_category=EntityCategory.CONFIG,
+    ),
+]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: RoborockConfigEntry,
@@ -97,6 +137,14 @@ async def async_setup_entry(
                     config_entry.runtime_data.v1, routines_lists, strict=True
                 )
                 for routine in routines
+            ),
+            (
+                RoborockButtonEntityA01(
+                    coordinator,
+                    description,
+                )
+                for coordinator in config_entry.runtime_data.a01
+                for description in A01_BUTTON_DESCRIPTIONS
             ),
         )
     )
@@ -160,3 +208,39 @@ class RoborockRoutineButtonEntity(RoborockEntity, ButtonEntity):
     async def async_press(self, **kwargs: Any) -> None:
         """Press the button."""
         await self._coordinator.execute_routines(self._routine_id)
+
+
+class RoborockButtonEntityA01(RoborockCoordinatedEntityA01, ButtonEntity):
+    """A class to define Roborock A01 button entities."""
+
+    entity_description: RoborockButtonDescriptionA01
+
+    def __init__(
+        self,
+        coordinator: RoborockDataUpdateCoordinatorA01,
+        entity_description: RoborockButtonDescriptionA01,
+    ) -> None:
+        """Create an A01 button entity."""
+        self.entity_description = entity_description
+        super().__init__(f"{entity_description.key}_{coordinator.duid_slug}", coordinator)
+
+    async def async_press(self) -> None:
+        """Press the button."""
+        try:
+            if self.entity_description.param is not None:
+                await self.coordinator.api.set_value(
+                    self.entity_description.data_protocol, 
+                    self.entity_description.param
+                )
+            else:
+                await self.coordinator.api.set_value(
+                    self.entity_description.data_protocol, 
+                    1  # Default value for button press
+                )
+            await self.coordinator.async_request_refresh()
+        except Exception as err:
+            from homeassistant.exceptions import HomeAssistantError
+            raise HomeAssistantError(
+                translation_domain="roborock",
+                translation_key="button_press_failed",
+            ) from err
