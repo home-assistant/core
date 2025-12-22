@@ -1,6 +1,6 @@
 """Test the Tibber diagnostics."""
 
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 import aiohttp
 import pytest
@@ -14,7 +14,7 @@ from homeassistant.components.tibber.diagnostics import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 
-from .conftest import create_mock_runtime, create_tibber_device
+from .conftest import create_tibber_device
 from .test_common import mock_get_homes
 
 from tests.common import MockConfigEntry
@@ -34,9 +34,6 @@ async def test_entry_diagnostics(
     tibber_mock = mock_tibber_setup
     tibber_mock.get_homes.return_value = []
 
-    config_entry.runtime_data.data_api_coordinator.data = {}
-    config_entry.runtime_data.data_api_coordinator.sensors_by_device = {}
-
     result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
     assert result == snapshot(name="empty")
 
@@ -49,20 +46,28 @@ async def test_entry_diagnostics(
 async def test_data_api_diagnostics_no_data(
     recorder_mock: Recorder,
     hass: HomeAssistant,
-    data_api_entry: MockConfigEntry,
+    config_entry: MockConfigEntry,
+    data_api_client_mock: MagicMock,
+    setup_credentials: None,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test Data API diagnostics when coordinator has no data."""
-    data_api_entry.runtime_data = create_mock_runtime()
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    result = await async_get_config_entry_diagnostics(hass, data_api_entry)
+    data_api_client_mock.get_all_devices.assert_awaited_once()
+    data_api_client_mock.update_devices.assert_awaited_once()
+
+    result = await async_get_config_entry_diagnostics(hass, config_entry)
     assert result == snapshot
 
 
 async def test_data_api_diagnostics_with_devices(
     recorder_mock: Recorder,
     hass: HomeAssistant,
-    data_api_entry: MockConfigEntry,
+    config_entry: MockConfigEntry,
+    data_api_client_mock: MagicMock,
+    setup_credentials: None,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test Data API diagnostics with successful device retrieval."""
@@ -81,9 +86,13 @@ async def test_data_api_diagnostics_with_devices(
         ),
     }
 
-    data_api_entry.runtime_data = create_mock_runtime(coordinator_data=devices)
+    data_api_client_mock.get_all_devices = AsyncMock(return_value=devices)
+    data_api_client_mock.update_devices = AsyncMock(return_value=devices)
 
-    result = await async_get_config_entry_diagnostics(hass, data_api_entry)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await async_get_config_entry_diagnostics(hass, config_entry)
     assert result == snapshot
 
 
@@ -101,15 +110,16 @@ async def test_data_api_diagnostics_with_devices(
 async def test_data_api_diagnostics_exceptions(
     recorder_mock: Recorder,
     hass: HomeAssistant,
-    data_api_entry: MockConfigEntry,
+    config_entry: MockConfigEntry,
+    tibber_mock: MagicMock,
+    setup_credentials: None,
     exception: Exception,
 ) -> None:
     """Test Data API diagnostics with various exception scenarios."""
-    runtime = create_mock_runtime()
-    type(runtime.data_api_coordinator).data = property(
-        lambda self: (_ for _ in ()).throw(exception)
-    )
-    data_api_entry.runtime_data = runtime
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    tibber_mock.get_homes.side_effect = exception
 
     with pytest.raises(type(exception)):
-        await async_get_config_entry_diagnostics(hass, data_api_entry)
+        await async_get_config_entry_diagnostics(hass, config_entry)
