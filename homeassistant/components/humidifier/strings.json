@@ -91,11 +91,25 @@
     }
   },
   "selector": {
+    "number_or_entity": {
+      "choices": {
+        "entity": "Entity",
+        "number": "Number"
+      }
+    },
     "trigger_behavior": {
       "options": {
         "any": "Any",
         "first": "First",
         "last": "Last"
+      }
+    },
+    "trigger_threshold_type": {
+      "options": {
+        "above": "Above a value",
+        "below": "Below a value",
+        "between": "In a range",
+        "outside": "Outside a range"
       }
     }
   },
@@ -135,6 +149,42 @@
   },
   "title": "Humidifier",
   "triggers": {
+    "current_humidity_changed": {
+      "description": "Triggers after the humidity measured by one or more humidifiers changes.",
+      "fields": {
+        "above": {
+          "description": "Trigger when the humidity is above this value.",
+          "name": "Above"
+        },
+        "below": {
+          "description": "Trigger when the humidity is below this value.",
+          "name": "Below"
+        }
+      },
+      "name": "Humidifier current humidity changed"
+    },
+    "current_humidity_crossed_threshold": {
+      "description": "Triggers after the humidity measured by one or more humidifiers crosses a threshold.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::climate::common::trigger_behavior_description%]",
+          "name": "[%key:component::climate::common::trigger_behavior_name%]"
+        },
+        "lower_limit": {
+          "description": "Lower threshold limit.",
+          "name": "Lower threshold"
+        },
+        "threshold_type": {
+          "description": "Type of threshold crossing to trigger on.",
+          "name": "Threshold type"
+        },
+        "upper_limit": {
+          "description": "Upper threshold limit.",
+          "name": "Upper threshold"
+        }
+      },
+      "name": "Humidifier current humidity crossed threshold"
+    },
     "started_drying": {
       "description": "Triggers after one or more humidifiers start drying.",
       "fields": {
