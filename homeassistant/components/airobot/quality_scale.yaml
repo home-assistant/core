@@ -48,7 +48,7 @@ rules:
   docs-supported-devices: done
   docs-supported-functions: done
   docs-troubleshooting: done
-  docs-use-cases: todo
+  docs-use-cases: done
   dynamic-devices:
     status: exempt
     comment: Single device integration, no dynamic device discovery needed.
@@ -57,7 +57,9 @@ rules:
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations: done
-  icon-translations: todo
+  icon-translations:
+    status: exempt
+    comment: Integration entities use static icons that don't benefit from state-based icon translations.
   reconfiguration-flow: todo
   repair-issues:
     status: exempt
