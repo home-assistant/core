@@ -199,6 +199,11 @@
         }
       }
     },
+    "fan": {
+      "fan_speed": {
+        "name": "Hood"
+      }
+    },
     "humidifier": {
       "dehumidifier": {
         "state_attributes": {
