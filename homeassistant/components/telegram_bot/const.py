@@ -25,6 +25,9 @@ ERROR_MESSAGE = "error_message"
 
 DEFAULT_TRUSTED_NETWORKS = [ip_network("149.154.160.0/20"), ip_network("91.108.4.0/22")]
 
+# Auth signature expiry time in seconds for internal URLs
+CONTENT_AUTH_EXPIRY_TIME = 300
+
 SERVICE_SEND_CHAT_ACTION = "send_chat_action"
 SERVICE_SEND_MESSAGE = "send_message"
 SERVICE_SEND_PHOTO = "send_photo"
