@@ -35,9 +35,15 @@ from homeassistant.const import (
 from homeassistant.core import Context, HomeAssistant, State
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
 
-from .conftest import ConfigurationStyle, async_get_flow_preview_state
+from .conftest import (
+    ConfigurationStyle,
+    TemplatePlatformSetup,
+    async_get_flow_preview_state,
+    async_trigger,
+    make_test_trigger,
+    setup_entity,
+)
 
 from tests.common import (
     MockConfigEntry,
@@ -49,198 +55,247 @@ from tests.typing import WebSocketGenerator
 
 ATTR_FORECAST = "forecast"
 
-TEST_OBJECT_ID = "template_weather"
-TEST_WEATHER = f"weather.{TEST_OBJECT_ID}"
 TEST_STATE_ENTITY_ID = "weather.test_state"
+TEST_SENSORS = (
+    "sensor.apparent_temperature",
+    "sensor.attribution",
+    "sensor.cloud_coverage",
+    "sensor.condition",
+    "sensor.dew_point",
+    "sensor.forecast",
+    "sensor.forecast_daily",
+    "sensor.forecast_hourly",
+    "sensor.forecast_twice_daily",
+    "sensor.humidity",
+    "sensor.ozone",
+    "sensor.pressure",
+    "sensor.temperature",
+    "sensor.uv_index",
+    "sensor.visibility",
+    "sensor.wind_bearing",
+    "sensor.wind_gust_speed",
+    "sensor.wind_speed",
+)
+TEST_WEATHER = TemplatePlatformSetup(
+    WEATHER_DOMAIN,
+    None,
+    "template_weather",
+    make_test_trigger(TEST_STATE_ENTITY_ID, *TEST_SENSORS),
+)
 
-TEST_STATE_TRIGGER = {
-    "trigger": {
-        "trigger": "state",
-        "entity_id": [TEST_STATE_ENTITY_ID],
-    },
-    "variables": {"triggering_entity": "{{ trigger.entity_id }}"},
-    "action": [
-        {"event": "action_event", "event_data": {"what": "{{ triggering_entity }}"}}
-    ],
-}
-TEST_REQUIRED = {
-    "condition_template": "cloudy",
+TEST_LEGACY_REQUIRED = {
+    "condition_template": "sunny",
     "temperature_template": "{{ 20 }}",
     "humidity_template": "{{ 25 }}",
 }
 
-
-async def async_setup_modern_format(
-    hass: HomeAssistant, count: int, weather_config: dict[str, Any]
-) -> None:
-    """Do setup of weather integration via new format."""
-    config = {"template": {"weather": weather_config}}
-
-    with assert_setup_component(count, template.DOMAIN):
-        assert await async_setup_component(
-            hass,
-            template.DOMAIN,
-            config,
-        )
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
-
-async def async_setup_trigger_format(
-    hass: HomeAssistant, count: int, weather_config: dict[str, Any]
-) -> None:
-    """Do setup of weather integration via trigger format."""
-    config = {"template": {**TEST_STATE_TRIGGER, "weather": weather_config}}
-
-    with assert_setup_component(count, template.DOMAIN):
-        assert await async_setup_component(
-            hass,
-            template.DOMAIN,
-            config,
-        )
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
+TEST_MODERN_REQUIRED = {
+    "condition": "sunny",
+    "temperature": "{{ 20 }}",
+    "humidity": "{{ 25 }}",
+}
 
 
 @pytest.fixture
 async def setup_weather(
     hass: HomeAssistant,
-    count: int,
     style: ConfigurationStyle,
-    weather_config: dict[str, Any],
+    config: dict[str, Any],
 ) -> None:
-    """Do setup of weather integration."""
-    if style == ConfigurationStyle.MODERN:
-        await async_setup_modern_format(
-            hass, count, {"name": TEST_OBJECT_ID, **weather_config}
-        )
-    if style == ConfigurationStyle.TRIGGER:
-        await async_setup_trigger_format(
-            hass, count, {"name": TEST_OBJECT_ID, **weather_config}
-        )
+    """Do setup of number integration."""
+    await setup_entity(hass, TEST_WEATHER, style, 1, config)
 
 
-@pytest.fixture
-async def setup_weather_single_attribute(
-    hass: HomeAssistant,
-    count: int,
-    style: ConfigurationStyle,
-    attribute: str,
-    attribute_template: str,
-    weather_config: dict[str, Any],
-) -> None:
-    """Do setup of weather integration."""
-    extra = {attribute: attribute_template}
-    if style == ConfigurationStyle.MODERN:
-        await async_setup_modern_format(
-            hass, count, {"name": TEST_OBJECT_ID, **weather_config, **extra}
-        )
-    if style == ConfigurationStyle.TRIGGER:
-        await async_setup_trigger_format(
-            hass, count, {"name": TEST_OBJECT_ID, **weather_config, **extra}
-        )
-
-
-@pytest.mark.parametrize(("count", "domain"), [(1, WEATHER_DOMAIN)])
 @pytest.mark.parametrize(
-    "config",
+    ("style", "config"),
     [
-        {
-            "weather": [
-                {"weather": {"platform": "demo"}},
-                {
-                    "platform": "template",
-                    "name": "test",
-                    "unique_id": "abc123",
-                    "attribution_template": "{{ states('sensor.attribution') }}",
-                    "condition_template": "sunny",
-                    "temperature_template": "{{ states('sensor.temperature') | float }}",
-                    "humidity_template": "{{ states('sensor.humidity') | int }}",
-                    "pressure_template": "{{ states('sensor.pressure') }}",
-                    "wind_speed_template": "{{ states('sensor.windspeed') }}",
-                    "wind_bearing_template": "{{ states('sensor.windbearing') }}",
-                    "ozone_template": "{{ states('sensor.ozone') }}",
-                    "visibility_template": "{{ states('sensor.visibility') }}",
-                    "wind_gust_speed_template": "{{ states('sensor.wind_gust_speed') }}",
-                    "cloud_coverage_template": "{{ states('sensor.cloud_coverage') }}",
-                    "dew_point_template": "{{ states('sensor.dew_point') }}",
-                    "apparent_temperature_template": "{{ states('sensor.apparent_temperature') }}",
-                },
-            ]
-        },
+        (
+            ConfigurationStyle.LEGACY,
+            {
+                "apparent_temperature_template": "{{ states('sensor.apparent_temperature') }}",
+                "attribution_template": "{{ states('sensor.attribution') }}",
+                "cloud_coverage_template": "{{ states('sensor.cloud_coverage') }}",
+                "condition_template": "{{ states('sensor.condition') }}",
+                "dew_point_template": "{{ states('sensor.dew_point') }}",
+                "humidity_template": "{{ states('sensor.humidity') | int }}",
+                "ozone_template": "{{ states('sensor.ozone') }}",
+                "pressure_template": "{{ states('sensor.pressure') }}",
+                "temperature_template": "{{ states('sensor.temperature') | float }}",
+                "unique_id": "abc123",
+                "visibility_template": "{{ states('sensor.visibility') }}",
+                "wind_bearing_template": "{{ states('sensor.wind_bearing') }}",
+                "wind_gust_speed_template": "{{ states('sensor.wind_gust_speed') }}",
+                "wind_speed_template": "{{ states('sensor.wind_speed') }}",
+            },
+        ),
+        (
+            ConfigurationStyle.MODERN,
+            {
+                "apparent_temperature_template": "{{ states('sensor.apparent_temperature') }}",
+                "attribution_template": "{{ states('sensor.attribution') }}",
+                "cloud_coverage_template": "{{ states('sensor.cloud_coverage') }}",
+                "condition_template": "{{ states('sensor.condition') }}",
+                "dew_point_template": "{{ states('sensor.dew_point') }}",
+                "humidity_template": "{{ states('sensor.humidity') | int }}",
+                "ozone_template": "{{ states('sensor.ozone') }}",
+                "pressure_template": "{{ states('sensor.pressure') }}",
+                "temperature_template": "{{ states('sensor.temperature') | float }}",
+                "unique_id": "abc123",
+                "uv_index_template": "{{ states('sensor.uv_index') }}",
+                "visibility_template": "{{ states('sensor.visibility') }}",
+                "wind_bearing_template": "{{ states('sensor.wind_bearing') }}",
+                "wind_gust_speed_template": "{{ states('sensor.wind_gust_speed') }}",
+                "wind_speed_template": "{{ states('sensor.wind_speed') }}",
+            },
+        ),
+        (
+            ConfigurationStyle.TRIGGER,
+            {
+                "apparent_temperature_template": "{{ states('sensor.apparent_temperature') }}",
+                "attribution_template": "{{ states('sensor.attribution') }}",
+                "cloud_coverage_template": "{{ states('sensor.cloud_coverage') }}",
+                "condition_template": "{{ states('sensor.condition') }}",
+                "dew_point_template": "{{ states('sensor.dew_point') }}",
+                "humidity_template": "{{ states('sensor.humidity') | int }}",
+                "ozone_template": "{{ states('sensor.ozone') }}",
+                "pressure_template": "{{ states('sensor.pressure') }}",
+                "temperature_template": "{{ states('sensor.temperature') | float }}",
+                "unique_id": "abc123",
+                "uv_index_template": "{{ states('sensor.uv_index') }}",
+                "visibility_template": "{{ states('sensor.visibility') }}",
+                "wind_bearing_template": "{{ states('sensor.wind_bearing') }}",
+                "wind_gust_speed_template": "{{ states('sensor.wind_gust_speed') }}",
+                "wind_speed_template": "{{ states('sensor.wind_speed') }}",
+            },
+        ),
+        (
+            ConfigurationStyle.MODERN,
+            {
+                "apparent_temperature": "{{ states('sensor.apparent_temperature') }}",
+                "attribution": "{{ states('sensor.attribution') }}",
+                "cloud_coverage": "{{ states('sensor.cloud_coverage') }}",
+                "condition": "{{ states('sensor.condition') }}",
+                "dew_point": "{{ states('sensor.dew_point') }}",
+                "humidity": "{{ states('sensor.humidity') | int }}",
+                "ozone": "{{ states('sensor.ozone') }}",
+                "pressure": "{{ states('sensor.pressure') }}",
+                "temperature": "{{ states('sensor.temperature') | float }}",
+                "unique_id": "abc123",
+                "uv_index": "{{ states('sensor.uv_index') }}",
+                "visibility": "{{ states('sensor.visibility') }}",
+                "wind_bearing": "{{ states('sensor.wind_bearing') }}",
+                "wind_gust_speed": "{{ states('sensor.wind_gust_speed') }}",
+                "wind_speed": "{{ states('sensor.wind_speed') }}",
+            },
+        ),
+        (
+            ConfigurationStyle.TRIGGER,
+            {
+                "apparent_temperature": "{{ states('sensor.apparent_temperature') }}",
+                "attribution": "{{ states('sensor.attribution') }}",
+                "cloud_coverage": "{{ states('sensor.cloud_coverage') }}",
+                "condition": "{{ states('sensor.condition') }}",
+                "dew_point": "{{ states('sensor.dew_point') }}",
+                "humidity": "{{ states('sensor.humidity') }}",
+                "ozone": "{{ states('sensor.ozone') }}",
+                "pressure": "{{ states('sensor.pressure') }}",
+                "temperature": "{{ states('sensor.temperature') }}",
+                "unique_id": "abc123",
+                "uv_index": "{{ states('sensor.uv_index') }}",
+                "visibility": "{{ states('sensor.visibility') }}",
+                "wind_bearing": "{{ states('sensor.wind_bearing') }}",
+                "wind_gust_speed": "{{ states('sensor.wind_gust_speed') }}",
+                "wind_speed": "{{ states('sensor.wind_speed') }}",
+            },
+        ),
     ],
 )
-@pytest.mark.usefixtures("start_ha")
-async def test_template_state_text(hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("setup_weather")
+async def test_template_state_text(
+    hass: HomeAssistant, style: ConfigurationStyle
+) -> None:
     """Test the state text of a template."""
-    for attr, v_attr, value in (
-        (
-            "sensor.attribution",
-            ATTR_ATTRIBUTION,
-            "The custom attribution",
-        ),
-        ("sensor.temperature", ATTR_WEATHER_TEMPERATURE, 22.3),
-        ("sensor.humidity", ATTR_WEATHER_HUMIDITY, 60),
-        ("sensor.pressure", ATTR_WEATHER_PRESSURE, 1000),
-        ("sensor.windspeed", ATTR_WEATHER_WIND_SPEED, 20),
-        ("sensor.windbearing", ATTR_WEATHER_WIND_BEARING, 180),
-        ("sensor.ozone", ATTR_WEATHER_OZONE, 25),
-        ("sensor.visibility", ATTR_WEATHER_VISIBILITY, 4.6),
-        ("sensor.wind_gust_speed", ATTR_WEATHER_WIND_GUST_SPEED, 30),
+    await async_trigger(hass, "sensor.condition", "sunny")
+    for entity_id, v_attr, value in (
+        ("sensor.apparent_temperature", ATTR_WEATHER_APPARENT_TEMPERATURE, 25),
+        ("sensor.attribution", ATTR_ATTRIBUTION, "Custom"),
         ("sensor.cloud_coverage", ATTR_WEATHER_CLOUD_COVERAGE, 75),
         ("sensor.dew_point", ATTR_WEATHER_DEW_POINT, 2.2),
-        ("sensor.apparent_temperature", ATTR_WEATHER_APPARENT_TEMPERATURE, 25),
+        ("sensor.humidity", ATTR_WEATHER_HUMIDITY, 60),
+        ("sensor.ozone", ATTR_WEATHER_OZONE, 25),
+        ("sensor.pressure", ATTR_WEATHER_PRESSURE, 1000),
+        ("sensor.temperature", ATTR_WEATHER_TEMPERATURE, 22.3),
+        ("sensor.uv_index", ATTR_WEATHER_UV_INDEX, 3.7),
+        ("sensor.visibility", ATTR_WEATHER_VISIBILITY, 4.6),
+        ("sensor.wind_bearing", ATTR_WEATHER_WIND_BEARING, 180),
+        ("sensor.wind_gust_speed", ATTR_WEATHER_WIND_GUST_SPEED, 30),
+        ("sensor.wind_speed", ATTR_WEATHER_WIND_SPEED, 20),
     ):
-        hass.states.async_set(attr, value)
-        await hass.async_block_till_done()
-        state = hass.states.get("weather.test")
+        await async_trigger(hass, entity_id, str(value))
+        state = hass.states.get(TEST_WEATHER.entity_id)
         assert state is not None
         assert state.state == "sunny"
-        assert state.attributes.get(v_attr) == value
+        # Legacy template entities do not support uv_index, modern and trigger do.
+        assert state.attributes.get(v_attr) == value or (
+            entity_id == "sensor.uv_index" and style == ConfigurationStyle.LEGACY
+        )
 
 
 @pytest.mark.parametrize(
-    ("service"),
-    [SERVICE_GET_FORECASTS],
-)
-@pytest.mark.parametrize(("count", "domain"), [(1, WEATHER_DOMAIN)])
-@pytest.mark.parametrize(
-    "config",
+    ("style", "config"),
     [
-        {
-            "weather": [
-                {
-                    "platform": "template",
-                    "name": "forecast",
-                    "condition_template": "sunny",
-                    "forecast_daily_template": "{{ states.weather.forecast.attributes.forecast }}",
-                    "forecast_hourly_template": "{{ states.weather.forecast.attributes.forecast }}",
-                    "forecast_twice_daily_template": "{{ states.weather.forecast_twice_daily.attributes.forecast }}",
-                    "temperature_template": "{{ states('sensor.temperature') | float }}",
-                    "humidity_template": "{{ states('sensor.humidity') | int }}",
-                },
-            ]
-        },
+        (
+            ConfigurationStyle.LEGACY,
+            {
+                "forecast_daily_template": "{{ state_attr('sensor.forecast', 'forecast') }}",
+                "forecast_hourly_template": "{{ state_attr('sensor.forecast', 'forecast') }}",
+                "forecast_twice_daily_template": "{{ state_attr('sensor.forecast_twice_daily', 'forecast') }}",
+                **TEST_LEGACY_REQUIRED,
+            },
+        ),
+        (
+            ConfigurationStyle.MODERN,
+            {
+                "forecast_daily_template": "{{ state_attr('sensor.forecast', 'forecast') }}",
+                "forecast_hourly_template": "{{ state_attr('sensor.forecast', 'forecast') }}",
+                "forecast_twice_daily_template": "{{ state_attr('sensor.forecast_twice_daily', 'forecast') }}",
+                **TEST_LEGACY_REQUIRED,
+            },
+        ),
+        (
+            ConfigurationStyle.TRIGGER,
+            {
+                "forecast_daily_template": "{{ state_attr('sensor.forecast', 'forecast') }}",
+                "forecast_hourly_template": "{{ state_attr('sensor.forecast', 'forecast') }}",
+                "forecast_twice_daily_template": "{{ state_attr('sensor.forecast_twice_daily', 'forecast') }}",
+                **TEST_LEGACY_REQUIRED,
+            },
+        ),
+        (
+            ConfigurationStyle.MODERN,
+            {
+                "forecast_daily": "{{ state_attr('sensor.forecast', 'forecast') }}",
+                "forecast_hourly": "{{ state_attr('sensor.forecast', 'forecast') }}",
+                "forecast_twice_daily": "{{ state_attr('sensor.forecast_twice_daily', 'forecast') }}",
+                **TEST_MODERN_REQUIRED,
+            },
+        ),
+        (
+            ConfigurationStyle.TRIGGER,
+            {
+                "forecast_daily": "{{ state_attr('sensor.forecast', 'forecast') }}",
+                "forecast_hourly": "{{ state_attr('sensor.forecast', 'forecast') }}",
+                "forecast_twice_daily": "{{ state_attr('sensor.forecast_twice_daily', 'forecast') }}",
+                **TEST_MODERN_REQUIRED,
+            },
+        ),
     ],
 )
-@pytest.mark.usefixtures("start_ha")
-async def test_forecasts(
-    hass: HomeAssistant, snapshot: SnapshotAssertion, service: str
-) -> None:
+@pytest.mark.usefixtures("setup_weather")
+async def test_forecasts(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
     """Test forecast service."""
-    for attr, _v_attr, value in (
-        ("sensor.temperature", ATTR_WEATHER_TEMPERATURE, 22.3),
-        ("sensor.humidity", ATTR_WEATHER_HUMIDITY, 60),
-    ):
-        hass.states.async_set(attr, value)
-        await hass.async_block_till_done()
-
     hass.states.async_set(
-        "weather.forecast",
+        "sensor.forecast",
         "sunny",
         {
             ATTR_FORECAST: [
@@ -253,7 +308,7 @@ async def test_forecasts(
         },
     )
     hass.states.async_set(
-        "weather.forecast_twice_daily",
+        "sensor.forecast_twice_daily",
         "fog",
         {
             ATTR_FORECAST: [
@@ -267,40 +322,34 @@ async def test_forecasts(
         },
     )
     await hass.async_block_till_done()
-    state = hass.states.get("weather.forecast")
-    assert state is not None
-    assert state.state == "sunny"
-    state2 = hass.states.get("weather.forecast_twice_daily")
-    assert state2 is not None
-    assert state2.state == "fog"
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        service,
-        {"entity_id": "weather.forecast", "type": "daily"},
+        SERVICE_GET_FORECASTS,
+        {"entity_id": TEST_WEATHER.entity_id, "type": "daily"},
         blocking=True,
         return_response=True,
     )
     assert response == snapshot
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        service,
-        {"entity_id": "weather.forecast", "type": "hourly"},
+        SERVICE_GET_FORECASTS,
+        {"entity_id": TEST_WEATHER.entity_id, "type": "hourly"},
         blocking=True,
         return_response=True,
     )
     assert response == snapshot
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        service,
-        {"entity_id": "weather.forecast", "type": "twice_daily"},
+        SERVICE_GET_FORECASTS,
+        {"entity_id": TEST_WEATHER.entity_id, "type": "twice_daily"},
         blocking=True,
         return_response=True,
     )
     assert response == snapshot
 
     hass.states.async_set(
-        "weather.forecast",
+        "sensor.forecast",
         "sunny",
         {
             ATTR_FORECAST: [
@@ -313,14 +362,11 @@ async def test_forecasts(
         },
     )
     await hass.async_block_till_done()
-    state = hass.states.get("weather.forecast")
-    assert state is not None
-    assert state.state == "sunny"
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        service,
-        {"entity_id": "weather.forecast", "type": "daily"},
+        SERVICE_GET_FORECASTS,
+        {"entity_id": TEST_WEATHER.entity_id, "type": "daily"},
         blocking=True,
         return_response=True,
     )
@@ -328,47 +374,66 @@ async def test_forecasts(
 
 
 @pytest.mark.parametrize(
-    ("service", "expected"),
+    ("style", "config"),
     [
-        (SERVICE_GET_FORECASTS, {"weather.forecast": {"forecast": []}}),
+        (
+            ConfigurationStyle.LEGACY,
+            {
+                "forecast_daily_template": "{{ state_attr('sensor.forecast_daily', 'forecast') }}",
+                "forecast_hourly_template": "{{ state_attr('sensor.forecast_hourly', 'forecast') }}",
+                "forecast_twice_daily_template": "{{ state_attr('sensor.forecast_twice_daily', 'forecast') }}",
+                **TEST_LEGACY_REQUIRED,
+            },
+        ),
+        (
+            ConfigurationStyle.MODERN,
+            {
+                "forecast_daily_template": "{{ state_attr('sensor.forecast_daily', 'forecast') }}",
+                "forecast_hourly_template": "{{ state_attr('sensor.forecast_hourly', 'forecast') }}",
+                "forecast_twice_daily_template": "{{ state_attr('sensor.forecast_twice_daily', 'forecast') }}",
+                **TEST_LEGACY_REQUIRED,
+            },
+        ),
+        (
+            ConfigurationStyle.TRIGGER,
+            {
+                "forecast_daily_template": "{{ state_attr('sensor.forecast_daily', 'forecast') }}",
+                "forecast_hourly_template": "{{ state_attr('sensor.forecast_hourly', 'forecast') }}",
+                "forecast_twice_daily_template": "{{ state_attr('sensor.forecast_twice_daily', 'forecast') }}",
+                **TEST_LEGACY_REQUIRED,
+            },
+        ),
+        (
+            ConfigurationStyle.MODERN,
+            {
+                "forecast_daily": "{{ state_attr('sensor.forecast_daily', 'forecast') }}",
+                "forecast_hourly": "{{ state_attr('sensor.forecast_hourly', 'forecast') }}",
+                "forecast_twice_daily": "{{ state_attr('sensor.forecast_twice_daily', 'forecast') }}",
+                **TEST_MODERN_REQUIRED,
+            },
+        ),
+        (
+            ConfigurationStyle.TRIGGER,
+            {
+                "forecast_daily": "{{ state_attr('sensor.forecast_daily', 'forecast') }}",
+                "forecast_hourly": "{{ state_attr('sensor.forecast_hourly', 'forecast') }}",
+                "forecast_twice_daily": "{{ state_attr('sensor.forecast_twice_daily', 'forecast') }}",
+                **TEST_MODERN_REQUIRED,
+            },
+        ),
     ],
 )
-@pytest.mark.parametrize(("count", "domain"), [(1, WEATHER_DOMAIN)])
-@pytest.mark.parametrize(
-    "config",
-    [
-        {
-            "weather": [
-                {
-                    "platform": "template",
-                    "name": "forecast",
-                    "condition_template": "sunny",
-                    "forecast_daily_template": "{{ states.weather.forecast.attributes.forecast }}",
-                    "forecast_hourly_template": "{{ states.weather.forecast_hourly.attributes.forecast }}",
-                    "temperature_template": "{{ states('sensor.temperature') | float }}",
-                    "humidity_template": "{{ states('sensor.humidity') | int }}",
-                },
-            ]
-        },
-    ],
-)
-@pytest.mark.usefixtures("start_ha")
-async def test_forecast_invalid(
+@pytest.mark.usefixtures("setup_weather")
+async def test_forecasts_invalid(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
-    service: str,
-    expected: dict[str, Any],
 ) -> None:
     """Test invalid forecasts."""
-    for attr, _v_attr, value in (
-        ("sensor.temperature", ATTR_WEATHER_TEMPERATURE, 22.3),
-        ("sensor.humidity", ATTR_WEATHER_HUMIDITY, 60),
-    ):
-        hass.states.async_set(attr, value)
-        await hass.async_block_till_done()
+    expected = {TEST_WEATHER.entity_id: {"forecast": []}}
 
+    # Test valid keys
     hass.states.async_set(
-        "weather.forecast",
+        "sensor.forecast_daily",
         "sunny",
         {
             ATTR_FORECAST: [
@@ -382,75 +447,33 @@ async def test_forecast_invalid(
         },
     )
     hass.states.async_set(
-        "weather.forecast_hourly",
+        "sensor.forecast_hourly",
         "sunny",
         {ATTR_FORECAST: None},
     )
     await hass.async_block_till_done()
-    state = hass.states.get("weather.forecast_hourly")
-    assert state is not None
-    assert state.state == "sunny"
-
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        service,
-        {"entity_id": "weather.forecast", "type": "daily"},
+        SERVICE_GET_FORECASTS,
+        {"entity_id": TEST_WEATHER.entity_id, "type": "hourly"},
         blocking=True,
         return_response=True,
     )
     assert response == expected
+
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        service,
-        {"entity_id": "weather.forecast", "type": "hourly"},
+        SERVICE_GET_FORECASTS,
+        {"entity_id": TEST_WEATHER.entity_id, "type": "daily"},
         blocking=True,
         return_response=True,
     )
     assert response == expected
     assert "Only valid keys in Forecast are allowed" in caplog.text
 
-
-@pytest.mark.parametrize(
-    ("service", "expected"),
-    [
-        (SERVICE_GET_FORECASTS, {"weather.forecast": {"forecast": []}}),
-    ],
-)
-@pytest.mark.parametrize(("count", "domain"), [(1, WEATHER_DOMAIN)])
-@pytest.mark.parametrize(
-    "config",
-    [
-        {
-            "weather": [
-                {
-                    "platform": "template",
-                    "name": "forecast",
-                    "condition_template": "sunny",
-                    "forecast_twice_daily_template": "{{ states.weather.forecast_twice_daily.attributes.forecast }}",
-                    "temperature_template": "{{ states('sensor.temperature') | float }}",
-                    "humidity_template": "{{ states('sensor.humidity') | int }}",
-                },
-            ]
-        },
-    ],
-)
-@pytest.mark.usefixtures("start_ha")
-async def test_forecast_invalid_is_daytime_missing_in_twice_daily(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    service: str,
-    expected: dict[str, Any],
-) -> None:
-    """Test forecast service invalid when is_daytime missing in twice_daily forecast."""
-    for attr, _v_attr, value in (
-        ("sensor.temperature", ATTR_WEATHER_TEMPERATURE, 22.3),
-        ("sensor.humidity", ATTR_WEATHER_HUMIDITY, 60),
-    ):
-        hass.states.async_set(attr, value)
-        await hass.async_block_till_done()
-
+    # Test twice daily missing is_daytime
     hass.states.async_set(
-        "weather.forecast_twice_daily",
+        "sensor.forecast_twice_daily",
         "sunny",
         {
             ATTR_FORECAST: [
@@ -463,62 +486,20 @@ async def test_forecast_invalid_is_daytime_missing_in_twice_daily(
         },
     )
     await hass.async_block_till_done()
-    state = hass.states.get("weather.forecast_twice_daily")
-    assert state is not None
-    assert state.state == "sunny"
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        service,
-        {"entity_id": "weather.forecast", "type": "twice_daily"},
+        SERVICE_GET_FORECASTS,
+        {"entity_id": TEST_WEATHER.entity_id, "type": "twice_daily"},
         blocking=True,
         return_response=True,
     )
     assert response == expected
     assert "`is_daytime` is missing in twice_daily forecast" in caplog.text
 
-
-@pytest.mark.parametrize(
-    ("service", "expected"),
-    [
-        (SERVICE_GET_FORECASTS, {"weather.forecast": {"forecast": []}}),
-    ],
-)
-@pytest.mark.parametrize(("count", "domain"), [(1, WEATHER_DOMAIN)])
-@pytest.mark.parametrize(
-    "config",
-    [
-        {
-            "weather": [
-                {
-                    "platform": "template",
-                    "name": "forecast",
-                    "condition_template": "sunny",
-                    "forecast_twice_daily_template": "{{ states.weather.forecast_twice_daily.attributes.forecast }}",
-                    "temperature_template": "{{ states('sensor.temperature') | float }}",
-                    "humidity_template": "{{ states('sensor.humidity') | int }}",
-                },
-            ]
-        },
-    ],
-)
-@pytest.mark.usefixtures("start_ha")
-async def test_forecast_invalid_datetime_missing(
-    hass: HomeAssistant,
-    caplog: pytest.LogCaptureFixture,
-    service: str,
-    expected: dict[str, Any],
-) -> None:
-    """Test forecast service invalid when datetime missing."""
-    for attr, _v_attr, value in (
-        ("sensor.temperature", ATTR_WEATHER_TEMPERATURE, 22.3),
-        ("sensor.humidity", ATTR_WEATHER_HUMIDITY, 60),
-    ):
-        hass.states.async_set(attr, value)
-        await hass.async_block_till_done()
-
+    # Test twice daily missing datetime
     hass.states.async_set(
-        "weather.forecast_twice_daily",
+        "sensor.forecast_twice_daily",
         "sunny",
         {
             ATTR_FORECAST: [
@@ -531,14 +512,11 @@ async def test_forecast_invalid_datetime_missing(
         },
     )
     await hass.async_block_till_done()
-    state = hass.states.get("weather.forecast_twice_daily")
-    assert state is not None
-    assert state.state == "sunny"
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        service,
-        {"entity_id": "weather.forecast", "type": "twice_daily"},
+        SERVICE_GET_FORECASTS,
+        {"entity_id": TEST_WEATHER.entity_id, "type": "twice_daily"},
         blocking=True,
         return_response=True,
     )
@@ -547,42 +525,63 @@ async def test_forecast_invalid_datetime_missing(
 
 
 @pytest.mark.parametrize(
-    ("service"),
-    [SERVICE_GET_FORECASTS],
-)
-@pytest.mark.parametrize(("count", "domain"), [(1, WEATHER_DOMAIN)])
-@pytest.mark.parametrize(
-    "config",
+    ("style", "config"),
     [
-        {
-            "weather": [
-                {
-                    "platform": "template",
-                    "name": "forecast",
-                    "condition_template": "sunny",
-                    "forecast_daily_template": "{{ states.weather.forecast_daily.attributes.forecast }}",
-                    "forecast_hourly_template": "{{ states.weather.forecast_hourly.attributes.forecast }}",
-                    "temperature_template": "{{ states('sensor.temperature') | float }}",
-                    "humidity_template": "{{ states('sensor.humidity') | int }}",
-                },
-            ]
-        },
+        (
+            ConfigurationStyle.LEGACY,
+            {
+                "forecast_daily_template": "{{ state_attr('sensor.forecast_daily', 'forecast') }}",
+                "forecast_hourly_template": "{{ state_attr('sensor.forecast_hourly', 'forecast') }}",
+                "forecast_twice_daily_template": "{{ state_attr('sensor.forecast_twice_daily', 'forecast') }}",
+                **TEST_LEGACY_REQUIRED,
+            },
+        ),
+        (
+            ConfigurationStyle.MODERN,
+            {
+                "forecast_daily_template": "{{ state_attr('sensor.forecast_daily', 'forecast') }}",
+                "forecast_hourly_template": "{{ state_attr('sensor.forecast_hourly', 'forecast') }}",
+                "forecast_twice_daily_template": "{{ state_attr('sensor.forecast_twice_daily', 'forecast') }}",
+                **TEST_LEGACY_REQUIRED,
+            },
+        ),
+        (
+            ConfigurationStyle.TRIGGER,
+            {
+                "forecast_daily_template": "{{ state_attr('sensor.forecast_daily', 'forecast') }}",
+                "forecast_hourly_template": "{{ state_attr('sensor.forecast_hourly', 'forecast') }}",
+                "forecast_twice_daily_template": "{{ state_attr('sensor.forecast_twice_daily', 'forecast') }}",
+                **TEST_LEGACY_REQUIRED,
+            },
+        ),
+        (
+            ConfigurationStyle.MODERN,
+            {
+                "forecast_daily": "{{ state_attr('sensor.forecast_daily', 'forecast') }}",
+                "forecast_hourly": "{{ state_attr('sensor.forecast_hourly', 'forecast') }}",
+                "forecast_twice_daily": "{{ state_attr('sensor.forecast_twice_daily', 'forecast') }}",
+                **TEST_MODERN_REQUIRED,
+            },
+        ),
+        (
+            ConfigurationStyle.TRIGGER,
+            {
+                "forecast_daily": "{{ state_attr('sensor.forecast_daily', 'forecast') }}",
+                "forecast_hourly": "{{ state_attr('sensor.forecast_hourly', 'forecast') }}",
+                "forecast_twice_daily": "{{ state_attr('sensor.forecast_twice_daily', 'forecast') }}",
+                **TEST_MODERN_REQUIRED,
+            },
+        ),
     ],
 )
-@pytest.mark.usefixtures("start_ha")
+@pytest.mark.usefixtures("setup_weather")
 async def test_forecast_format_error(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, service: str
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test forecast service invalid on incorrect format."""
-    for attr, _v_attr, value in (
-        ("sensor.temperature", ATTR_WEATHER_TEMPERATURE, 22.3),
-        ("sensor.humidity", ATTR_WEATHER_HUMIDITY, 60),
-    ):
-        hass.states.async_set(attr, value)
-        await hass.async_block_till_done()
 
     hass.states.async_set(
-        "weather.forecast_daily",
+        "sensor.forecast_daily",
         "sunny",
         {
             ATTR_FORECAST: [
@@ -594,7 +593,7 @@ async def test_forecast_format_error(
         },
     )
     hass.states.async_set(
-        "weather.forecast_hourly",
+        "sensor.forecast_hourly",
         "sunny",
         {
             ATTR_FORECAST: {
@@ -608,20 +607,20 @@ async def test_forecast_format_error(
 
     await hass.services.async_call(
         WEATHER_DOMAIN,
-        service,
-        {"entity_id": "weather.forecast", "type": "daily"},
-        blocking=True,
-        return_response=True,
-    )
-    assert "Forecasts is not a list, see Weather documentation" in caplog.text
-    await hass.services.async_call(
-        WEATHER_DOMAIN,
-        service,
-        {"entity_id": "weather.forecast", "type": "hourly"},
+        SERVICE_GET_FORECASTS,
+        {"entity_id": TEST_WEATHER.entity_id, "type": "daily"},
         blocking=True,
         return_response=True,
     )
     assert "Forecast in list is not a dict, see Weather documentation" in caplog.text
+    await hass.services.async_call(
+        WEATHER_DOMAIN,
+        SERVICE_GET_FORECASTS,
+        {"entity_id": TEST_WEATHER.entity_id, "type": "hourly"},
+        blocking=True,
+        return_response=True,
+    )
+    assert "Forecasts is not a list, see Weather documentation" in caplog.text
 
 
 SAVED_EXTRA_DATA = {
@@ -780,164 +779,6 @@ async def test_trigger_action(hass: HomeAssistant) -> None:
     assert state.context is context
 
 
-@pytest.mark.parametrize(
-    ("service"),
-    [SERVICE_GET_FORECASTS],
-)
-@pytest.mark.parametrize(("count", "domain"), [(1, "template")])
-@pytest.mark.parametrize(
-    "config",
-    [
-        {
-            "template": [
-                {
-                    "unique_id": "listening-test-event",
-                    "trigger": {"platform": "event", "event_type": "test_event"},
-                    "action": [
-                        {
-                            "variables": {
-                                "my_variable": "{{ trigger.event.data.information + 1 }}",
-                                "var_forecast_daily": "{{ trigger.event.data.forecast_daily }}",
-                                "var_forecast_hourly": "{{ trigger.event.data.forecast_hourly }}",
-                                "var_forecast_twice_daily": "{{ trigger.event.data.forecast_twice_daily }}",
-                            },
-                        },
-                    ],
-                    "weather": [
-                        {
-                            "name": "Test",
-                            "condition_template": "sunny",
-                            "precipitation_unit": "mm",
-                            "pressure_unit": "hPa",
-                            "visibility_unit": "km",
-                            "wind_speed_unit": "km/h",
-                            "temperature_unit": "°C",
-                            "temperature_template": "{{ my_variable + 1 }}",
-                            "humidity_template": "{{ my_variable + 1 }}",
-                            "wind_speed_template": "{{ my_variable + 1 }}",
-                            "wind_bearing_template": "{{ my_variable + 1 }}",
-                            "ozone_template": "{{ my_variable + 1 }}",
-                            "uv_index_template": "{{ my_variable + 1 }}",
-                            "visibility_template": "{{ my_variable + 1 }}",
-                            "pressure_template": "{{ my_variable + 1 }}",
-                            "wind_gust_speed_template": "{{ my_variable + 1 }}",
-                            "cloud_coverage_template": "{{ my_variable + 1 }}",
-                            "dew_point_template": "{{ my_variable + 1 }}",
-                            "apparent_temperature_template": "{{ my_variable + 1 }}",
-                            "forecast_daily_template": "{{ var_forecast_daily }}",
-                            "forecast_hourly_template": "{{ var_forecast_hourly }}",
-                            "forecast_twice_daily_template": "{{ var_forecast_twice_daily }}",
-                        }
-                    ],
-                },
-            ],
-        },
-    ],
-)
-@pytest.mark.usefixtures("start_ha")
-@pytest.mark.freeze_time("2023-10-19 13:50:05")
-async def test_trigger_weather_services(
-    hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
-    service: str,
-) -> None:
-    """Test trigger weather entity with services."""
-    state = hass.states.get("weather.test")
-    assert state is not None
-    assert state.state == STATE_UNKNOWN
-
-    context = Context()
-    now = dt_util.now().isoformat()
-    hass.bus.async_fire(
-        "test_event",
-        {
-            "information": 1,
-            "forecast_daily": [
-                {
-                    "datetime": now,
-                    "condition": "sunny",
-                    "precipitation": 20,
-                    "temperature": 20,
-                    "templow": 15,
-                }
-            ],
-            "forecast_hourly": [
-                {
-                    "datetime": now,
-                    "condition": "sunny",
-                    "precipitation": 20,
-                    "temperature": 20,
-                    "templow": 15,
-                }
-            ],
-            "forecast_twice_daily": [
-                {
-                    "datetime": now,
-                    "condition": "sunny",
-                    "precipitation": 20,
-                    "temperature": 20,
-                    "templow": 15,
-                    "is_daytime": True,
-                }
-            ],
-        },
-        context=context,
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get("weather.test")
-    assert state.state == "sunny"
-    assert state.attributes["temperature"] == 3.0
-    assert state.attributes["humidity"] == 3.0
-    assert state.attributes["wind_speed"] == 3.0
-    assert state.attributes["wind_bearing"] == 3.0
-    assert state.attributes["ozone"] == 3.0
-    assert state.attributes["uv_index"] == 3.0
-    assert state.attributes["visibility"] == 3.0
-    assert state.attributes["pressure"] == 3.0
-    assert state.attributes["wind_gust_speed"] == 3.0
-    assert state.attributes["cloud_coverage"] == 3.0
-    assert state.attributes["dew_point"] == 3.0
-    assert state.attributes["apparent_temperature"] == 3.0
-    assert state.context is context
-
-    response = await hass.services.async_call(
-        WEATHER_DOMAIN,
-        service,
-        {
-            "entity_id": state.entity_id,
-            "type": "daily",
-        },
-        blocking=True,
-        return_response=True,
-    )
-    assert response == snapshot
-
-    response = await hass.services.async_call(
-        WEATHER_DOMAIN,
-        service,
-        {
-            "entity_id": state.entity_id,
-            "type": "hourly",
-        },
-        blocking=True,
-        return_response=True,
-    )
-    assert response == snapshot
-
-    response = await hass.services.async_call(
-        WEATHER_DOMAIN,
-        service,
-        {
-            "entity_id": state.entity_id,
-            "type": "twice_daily",
-        },
-        blocking=True,
-        return_response=True,
-    )
-    assert response == snapshot
-
-
 async def test_restore_weather_save_state(
     hass: HomeAssistant, hass_storage: dict[str, Any], snapshot: SnapshotAssertion
 ) -> None:
@@ -1045,82 +886,17 @@ async def test_trigger_entity_restore_state_fail(
     assert state.attributes.get("temperature") is None
 
 
-async def test_new_style_template_state_text(hass: HomeAssistant) -> None:
-    """Test the state text of a template."""
-    assert await async_setup_component(
-        hass,
-        "weather",
-        {
-            "weather": [
-                {"weather": {"platform": "demo"}},
-            ]
-        },
-    )
-    assert await async_setup_component(
-        hass,
-        "template",
-        {
-            "template": {
-                "weather": {
-                    "name": "test",
-                    "attribution_template": "{{ states('sensor.attribution') }}",
-                    "condition_template": "sunny",
-                    "temperature_template": "{{ states('sensor.temperature') | float }}",
-                    "humidity_template": "{{ states('sensor.humidity') | int }}",
-                    "pressure_template": "{{ states('sensor.pressure') }}",
-                    "wind_speed_template": "{{ states('sensor.windspeed') }}",
-                    "wind_bearing_template": "{{ states('sensor.windbearing') }}",
-                    "ozone_template": "{{ states('sensor.ozone') }}",
-                    "uv_index_template": "{{ states('sensor.uv_index') }}",
-                    "visibility_template": "{{ states('sensor.visibility') }}",
-                    "wind_gust_speed_template": "{{ states('sensor.wind_gust_speed') }}",
-                    "cloud_coverage_template": "{{ states('sensor.cloud_coverage') }}",
-                    "dew_point_template": "{{ states('sensor.dew_point') }}",
-                    "apparent_temperature_template": "{{ states('sensor.apparent_temperature') }}",
-                },
-            },
-        },
-    )
-
-    for attr, v_attr, value in (
-        (
-            "sensor.attribution",
-            ATTR_ATTRIBUTION,
-            "The custom attribution",
-        ),
-        ("sensor.temperature", ATTR_WEATHER_TEMPERATURE, 22.3),
-        ("sensor.humidity", ATTR_WEATHER_HUMIDITY, 60),
-        ("sensor.pressure", ATTR_WEATHER_PRESSURE, 1000),
-        ("sensor.windspeed", ATTR_WEATHER_WIND_SPEED, 20),
-        ("sensor.windbearing", ATTR_WEATHER_WIND_BEARING, 180),
-        ("sensor.ozone", ATTR_WEATHER_OZONE, 25),
-        ("sensor.uv_index", ATTR_WEATHER_UV_INDEX, 3.7),
-        ("sensor.visibility", ATTR_WEATHER_VISIBILITY, 4.6),
-        ("sensor.wind_gust_speed", ATTR_WEATHER_WIND_GUST_SPEED, 30),
-        ("sensor.cloud_coverage", ATTR_WEATHER_CLOUD_COVERAGE, 75),
-        ("sensor.dew_point", ATTR_WEATHER_DEW_POINT, 2.2),
-        ("sensor.apparent_temperature", ATTR_WEATHER_APPARENT_TEMPERATURE, 25),
-    ):
-        hass.states.async_set(attr, value)
-        await hass.async_block_till_done()
-        state = hass.states.get("weather.test")
-        assert state is not None
-        assert state.state == "sunny"
-        assert state.attributes.get(v_attr) == value
-
-
-@pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
     ("style", "initial_expected_state"),
     [(ConfigurationStyle.MODERN, ""), (ConfigurationStyle.TRIGGER, None)],
 )
 @pytest.mark.parametrize(
-    ("weather_config", "attribute", "expected"),
+    ("config", "attribute", "expected"),
     [
         (
             {
                 CONF_ICON: "{% if states.weather.test_state.state == 'sunny' %}mdi:check{% endif %}",
-                **TEST_REQUIRED,
+                **TEST_LEGACY_REQUIRED,
             },
             ATTR_ICON,
             "mdi:check",
@@ -1128,7 +904,7 @@ async def test_new_style_template_state_text(hass: HomeAssistant) -> None:
         (
             {
                 CONF_PICTURE: "{% if states.weather.test_state.state == 'sunny' %}check.jpg{% endif %}",
-                **TEST_REQUIRED,
+                **TEST_LEGACY_REQUIRED,
             },
             ATTR_ENTITY_PICTURE,
             "check.jpg",
@@ -1143,13 +919,13 @@ async def test_templated_optional_config(
     initial_expected_state: str | None,
 ) -> None:
     """Test optional config templates."""
-    state = hass.states.get(TEST_WEATHER)
+    state = hass.states.get(TEST_WEATHER.entity_id)
     assert state.attributes.get(attribute) == initial_expected_state
 
     state = hass.states.async_set(TEST_STATE_ENTITY_ID, "sunny")
     await hass.async_block_till_done()
 
-    state = hass.states.get(TEST_WEATHER)
+    state = hass.states.get(TEST_WEATHER.entity_id)
 
     assert state.attributes[attribute] == expected
 
