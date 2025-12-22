@@ -1,0 +1,43 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "account_has_no_homes": "The account has no homes attached.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "home": {
+        "data": {
+          "home_id": "Specific home"
+        },
+        "data_description": {
+          "home_id": "ID of a home within the KlikAanKlikUit account"
+        },
+        "description": "Select a home to connect with"
+      },
+      "user": {
+        "data": {
+          "ip_address": "[%key:common::config_flow::data::ip%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "ip_address": "IP address to connect with the ICS-2000 locally (optional)",
+          "password": "The password of your KlikAanKlikUit account.",
+          "username": "The email address of your KlikAanKlikUit account."
+        },
+        "description": "Connect with your KlikAanKlikUit account",
+        "title": "[%key:common::action::connect%]"
+      }
+    }
+  },
+  "exceptions": {
+    "home_id_not_set": {
+      "message": "The config is missing a home id"
+    }
+  }
+}
