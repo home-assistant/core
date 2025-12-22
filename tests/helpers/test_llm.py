@@ -459,6 +459,7 @@ async def test_assist_api_prompt(
         connections={("test", "1234")},
         suggested_area="Test Area",
     )
+    device_registry.async_update_device(device.id, name_by_user="Friendly Device")
     area = area_registry.async_get_area_by_name("Test Area")
     area_registry.async_update(area.id, aliases=["Alternative name"])
     entry1 = entity_registry.async_get_or_create(
@@ -576,9 +577,9 @@ async def test_assist_api_prompt(
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             connections={("test", "9876-integer-values")},
-            name=1,
-            manufacturer=2,
-            model=3,
+            name="1",
+            manufacturer="2",
+            model="3",
             suggested_area="Test Area 2",
         )
     )
@@ -596,10 +597,12 @@ async def test_assist_api_prompt(
 - names: Living Room
   domain: light
   state: 'on'
+  device: Friendly Device
   areas: Test Area, Alternative name
 - names: Test Device, my test light
   domain: light
   state: unavailable
+  device: Friendly Device
   areas: Test Area, Alternative name
 - names: Test Device 2
   domain: light
@@ -638,9 +641,11 @@ async def test_assist_api_prompt(
   domain: light
 - names: Living Room
   domain: light
+  device: Friendly Device
   areas: Test Area, Alternative name
 - names: Test Device, my test light
   domain: light
+  device: Friendly Device
   areas: Test Area, Alternative name
 - names: Test Device 2
   domain: light
