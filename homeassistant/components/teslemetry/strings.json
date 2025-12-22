@@ -42,12 +42,18 @@
         "data": {
           "access_token": "[%key:common::config_flow::data::access_token%]"
         },
+        "data_description": {
+          "access_token": "Your Teslemetry access token."
+        },
         "description": "The {name} integration needs to re-authenticate your account, please enter an access token from {url}",
         "title": "[%key:common::config_flow::title::reauth%]"
       },
       "user": {
         "data": {
           "access_token": "[%key:common::config_flow::data::access_token%]"
+        },
+        "data_description": {
+          "access_token": "Your Teslemetry access token."
         },
         "description": "Enter an access token from {url}."
       }
@@ -1128,6 +1134,9 @@
     },
     "no_vehicle_data_for_device": {
       "message": "No vehicle data for device ID: {device_id}"
+    },
+    "unknown_response": {
+      "message": "Unknown response: {response}"
     },
     "wake_up_failed": {
       "message": "Failed to wake up vehicle: {message}"
