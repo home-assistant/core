@@ -243,7 +243,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==43.3.0
+aioesphomeapi==43.4.0
 
 # homeassistant.components.matrix
 # homeassistant.components.slack
@@ -354,7 +354,7 @@ aiopvpc==4.2.2
 aiopyarr==23.4.0
 
 # homeassistant.components.qnap_qsw
-aioqsw==0.4.1
+aioqsw==0.4.2
 
 # homeassistant.components.rainforest_raven
 aioraven==0.7.1
@@ -944,7 +944,7 @@ gios==6.1.2
 glances-api==0.8.0
 
 # homeassistant.components.go2rtc
-go2rtc-client==0.3.0
+go2rtc-client==0.4.0
 
 # homeassistant.components.goalzero
 goalzero==0.2.2
@@ -1068,7 +1068,7 @@ hole==0.9.0
 holidays==0.84
 
 # homeassistant.components.frontend
-home-assistant-frontend==20251203.2
+home-assistant-frontend==20251203.3
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.12.2
@@ -1137,7 +1137,7 @@ influxdb==5.3.1
 inkbird-ble==1.1.1
 
 # homeassistant.components.insteon
-insteon-frontend-home-assistant==0.5.0
+insteon-frontend-home-assistant==0.6.0
 
 # homeassistant.components.intellifire
 intellifire4py==4.2.1
@@ -1180,7 +1180,7 @@ kegtron-ble==1.0.2
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2025.10.31.195356
+knx-frontend==2025.12.19.150946
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -1556,7 +1556,7 @@ py-improv-ble-client==2.0.1
 py-madvr2==1.6.40
 
 # homeassistant.components.melissa
-py-melissa-climate==3.0.2
+py-melissa-climate==3.0.3
 
 # homeassistant.components.nextbus
 py-nextbusnext==2.3.0
@@ -1882,7 +1882,7 @@ pynina==0.3.6
 pynintendoauth==1.0.2
 
 # homeassistant.components.nintendo_parental_controls
-pynintendoparental==2.1.3
+pynintendoparental==2.3.0
 
 # homeassistant.components.nobo_hub
 pynobo==1.8.1
@@ -2286,7 +2286,7 @@ refoss-ha==1.2.5
 regenmaschine==2024.03.0
 
 # homeassistant.components.renault
-renault-api==0.5.1
+renault-api==0.5.2
 
 # homeassistant.components.renson
 renson-endura-delta==1.7.2
@@ -2556,7 +2556,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.33.2
+uiprotect==7.33.3
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -2594,7 +2594,7 @@ vegehub==0.1.26
 vehicle==2.2.2
 
 # homeassistant.components.velbus
-velbus-aio==2025.11.0
+velbus-aio==2025.12.0
 
 # homeassistant.components.venstar
 venstarcolortouch==0.21
@@ -2691,7 +2691,7 @@ yalesmartalarmclient==0.4.3
 # homeassistant.components.august
 # homeassistant.components.yale
 # homeassistant.components.yalexs_ble
-yalexs-ble==3.2.2
+yalexs-ble==3.2.4
 
 # homeassistant.components.august
 # homeassistant.components.yale
@@ -2701,7 +2701,7 @@ yalexs==9.2.0
 yeelight==0.7.16
 
 # homeassistant.components.yolink
-yolink-api==0.5.8
+yolink-api==0.5.9
 
 # homeassistant.components.youless
 youless-api==2.2.0
