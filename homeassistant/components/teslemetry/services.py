@@ -160,7 +160,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
             )
 
         await handle_vehicle_command(
-            vehicle.api.set_scheduled_charging(enable=call.data["enable"], time=time)
+            vehicle.api.set_scheduled_charging(
+                enable=call.data["enable"], time=time or 0
+            )
         )
 
     hass.services.async_register(
@@ -220,10 +222,10 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 enable,
                 preconditioning_enabled,
                 preconditioning_weekdays_only,
-                departure_time,
+                departure_time or 0,
                 off_peak_charging_enabled,
                 off_peak_charging_weekdays_only,
-                end_off_peak_time,
+                end_off_peak_time or 0,
             )
         )
 
@@ -252,9 +254,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         vehicle = async_get_vehicle_for_entry(hass, device, config)
 
         await handle_vehicle_command(
-            vehicle.api.set_valet_mode(
-                call.data.get("enable"), call.data.get("pin", "")
-            )
+            vehicle.api.set_valet_mode(call.data["enable"], call.data["pin"])
         )
 
     hass.services.async_register(
@@ -276,14 +276,14 @@ def async_setup_services(hass: HomeAssistant) -> None:
         config = async_get_config_for_device(hass, device)
         vehicle = async_get_vehicle_for_entry(hass, device, config)
 
-        enable = call.data.get("enable")
+        enable = call.data["enable"]
         if enable is True:
             await handle_vehicle_command(
-                vehicle.api.speed_limit_activate(call.data.get("pin"))
+                vehicle.api.speed_limit_activate(call.data["pin"])
             )
         elif enable is False:
             await handle_vehicle_command(
-                vehicle.api.speed_limit_deactivate(call.data.get("pin"))
+                vehicle.api.speed_limit_deactivate(call.data["pin"])
             )
 
     hass.services.async_register(
@@ -306,7 +306,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         site = async_get_energy_site_for_entry(hass, device, config)
 
         resp = await handle_command(
-            site.api.time_of_use_settings(call.data.get(ATTR_TOU_SETTINGS))
+            site.api.time_of_use_settings(call.data[ATTR_TOU_SETTINGS])
         )
         if "error" in resp:
             raise HomeAssistantError(
