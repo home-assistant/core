@@ -99,16 +99,16 @@ DEVICE_TYPE_NUMBER_MAP: dict[DeviceType, tuple[NumberEntityDescription, ...]] = 
     ),
     DeviceType.DRYER: WASHER_NUMBERS,
     DeviceType.HOOD: (
-        NUMBER_DESC[ThinQProperty.FAN_SPEED],
         NUMBER_DESC[ThinQProperty.LAMP_BRIGHTNESS],
+        NUMBER_DESC[ThinQProperty.FAN_SPEED],
     ),
     DeviceType.HUMIDIFIER: (
         NUMBER_DESC[ThinQProperty.TARGET_HUMIDITY],
         TIMER_NUMBER_DESC[ThinQProperty.SLEEP_TIMER_RELATIVE_HOUR_TO_STOP],
     ),
     DeviceType.MICROWAVE_OVEN: (
-        NUMBER_DESC[ThinQProperty.FAN_SPEED],
         NUMBER_DESC[ThinQProperty.LAMP_BRIGHTNESS],
+        NUMBER_DESC[ThinQProperty.FAN_SPEED],
     ),
     DeviceType.OVEN: (NUMBER_DESC[ThinQProperty.TARGET_TEMPERATURE],),
     DeviceType.REFRIGERATOR: (NUMBER_DESC[ThinQProperty.TARGET_TEMPERATURE],),
