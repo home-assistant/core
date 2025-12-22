@@ -691,6 +691,10 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             )
 
         if old_provider != new_provider:
+            if old_provider:
+                await old_provider.async_unregister_camera(self)
+            if new_provider:
+                await new_provider.async_register_camera(self)
             self._webrtc_provider = new_provider
             self._invalidate_camera_capabilities_cache()
             if write_state:
@@ -947,6 +951,10 @@ async def websocket_update_prefs(
         _LOGGER.error("Error setting camera preferences: %s", ex)
         connection.send_error(msg["id"], "update_failed", str(ex))
     else:
+        if (camera := hass.data[DATA_COMPONENT].get_entity(entity_id)) and (
+            provider := camera._webrtc_provider  # noqa: SLF001
+        ):
+            await provider.async_on_camera_prefs_update(camera)
         connection.send_result(msg["id"], entity_prefs)
 
 
