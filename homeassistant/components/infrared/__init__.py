@@ -20,34 +20,34 @@ from homeassistant.util.hass_dict import HassKey
 from .const import DOMAIN, InfraredEntityFeature
 from .protocols import (
     PULSE_WIDTH_COMPAT_PROTOCOLS,
-    BaseIRCommand,
-    BaseIRProtocol,
-    IRProtocolType,
+    InfraredCommand,
+    InfraredProtocol,
+    InfraredProtocolType,
     IRTiming,
-    NECIRCommand,
-    NECIRProtocol,
-    PulseWidthIRCommand,
+    NECInfraredCommand,
+    NECInfraredProtocol,
+    PulseWidthInfraredCommand,
     PulseWidthIRProtocol,
-    SamsungIRCommand,
-    SamsungIRProtocol,
+    SamsungInfraredCommand,
+    SamsungInfraredProtocol,
 )
 
 __all__ = [
     "DOMAIN",
     "PULSE_WIDTH_COMPAT_PROTOCOLS",
-    "BaseIRCommand",
-    "BaseIRProtocol",
-    "IRProtocolType",
     "IRTiming",
+    "InfraredCommand",
     "InfraredEntity",
     "InfraredEntityDescription",
     "InfraredEntityFeature",
-    "NECIRCommand",
-    "NECIRProtocol",
-    "PulseWidthIRCommand",
+    "InfraredProtocol",
+    "InfraredProtocolType",
+    "NECInfraredCommand",
+    "NECInfraredProtocol",
     "PulseWidthIRProtocol",
-    "SamsungIRCommand",
-    "SamsungIRProtocol",
+    "PulseWidthInfraredCommand",
+    "SamsungInfraredCommand",
+    "SamsungInfraredProtocol",
     "async_get_entities",
 ]
 
@@ -132,7 +132,7 @@ class InfraredEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return {ATTR_SUPPORTED_PROTOCOLS: sorted(self.supported_protocols)}
 
     @abstractmethod
-    async def async_send_command(self, command: BaseIRCommand) -> None:
+    async def async_send_command(self, command: InfraredCommand) -> None:
         """Send an IR command.
 
         Args:

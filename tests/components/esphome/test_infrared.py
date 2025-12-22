@@ -12,16 +12,16 @@ from aioesphomeapi import (
 import pytest
 
 from homeassistant.components.infrared import (
-    BaseIRCommand,
+    InfraredCommand,
     InfraredEntityFeature,
-    IRProtocolType,
+    InfraredProtocolType,
     IRTiming,
-    NECIRCommand,
-    NECIRProtocol,
-    PulseWidthIRCommand,
+    NECInfraredCommand,
+    NECInfraredProtocol,
+    PulseWidthInfraredCommand,
     PulseWidthIRProtocol,
-    SamsungIRCommand,
-    SamsungIRProtocol,
+    SamsungInfraredCommand,
+    SamsungInfraredProtocol,
     async_get_entities,
 )
 from homeassistant.const import STATE_UNAVAILABLE
@@ -89,9 +89,9 @@ async def test_supported_protocols(
     assert state is not None
     protocols = state.attributes.get("supported_protocols")
     assert protocols is not None
-    assert IRProtocolType.NEC.value in protocols
-    assert IRProtocolType.PULSE_WIDTH.value in protocols
-    assert IRProtocolType.SAMSUNG.value in protocols
+    assert InfraredProtocolType.NEC.value in protocols
+    assert InfraredProtocolType.PULSE_WIDTH.value in protocols
+    assert InfraredProtocolType.SAMSUNG.value in protocols
 
 
 async def test_unavailability(
@@ -160,8 +160,8 @@ async def test_receive_event(
     ("command", "expected_json"),
     [
         (
-            NECIRCommand(
-                protocol=NECIRProtocol(),
+            NECInfraredCommand(
+                protocol=NECInfraredProtocol(),
                 repeat_count=1,
                 address=0x10,
                 command=0x20,
@@ -169,8 +169,8 @@ async def test_receive_event(
             {"protocol": "nec", "address": 0x10, "command": 0x20, "repeat": 1},
         ),
         (
-            SamsungIRCommand(
-                protocol=SamsungIRProtocol(),
+            SamsungInfraredCommand(
+                protocol=SamsungInfraredProtocol(),
                 repeat_count=2,
                 code=0xE0E040BF,
                 length_in_bits=32,
@@ -183,7 +183,7 @@ async def test_send_nec_command(
     hass: HomeAssistant,
     mock_client: APIClient,
     mock_esphome_device: MockESPHomeDeviceType,
-    command: BaseIRCommand,
+    command: InfraredCommand,
     expected_json: dict,
 ) -> None:
     """Test sending command via native API."""
@@ -234,7 +234,7 @@ async def test_send_pulse_width_command(
         frequency=38000,
         msb_first=False,
     )
-    command = PulseWidthIRCommand(
+    command = PulseWidthInfraredCommand(
         protocol=protocol, repeat_count=1, code=0x20DF10EF, length_in_bits=32
     )
 
@@ -271,8 +271,8 @@ async def test_send_command_no_transmitter(
     assert len(entities) == 1
     entity = entities[0]
 
-    command = NECIRCommand(
-        protocol=NECIRProtocol(), repeat_count=1, address=0x04, command=0x08
+    command = NECInfraredCommand(
+        protocol=NECInfraredProtocol(), repeat_count=1, address=0x04, command=0x08
     )
 
     with pytest.raises(HomeAssistantError):

@@ -4,9 +4,9 @@ from homeassistant.components.infrared import (
     DATA_COMPONENT,
     DOMAIN,
     InfraredEntityFeature,
-    IRProtocolType,
-    NECIRCommand,
-    NECIRProtocol,
+    InfraredProtocolType,
+    NECInfraredCommand,
+    NECInfraredProtocol,
     async_get_entities,
 )
 from homeassistant.core import HomeAssistant
@@ -49,11 +49,13 @@ async def test_get_entities_filter_by_protocol(
     assert all_entities[0] is mock_infrared_entity
 
     # Filter by NEC protocol (should match)
-    nec_entities = async_get_entities(hass, protocols=[IRProtocolType.NEC])
+    nec_entities = async_get_entities(hass, protocols=[InfraredProtocolType.NEC])
     assert len(nec_entities) == 1
 
     # Filter by Samsung protocol (should not match since mock only supports NEC and PULSE_WIDTH)
-    samsung_entities = async_get_entities(hass, protocols=[IRProtocolType.SAMSUNG])
+    samsung_entities = async_get_entities(
+        hass, protocols=[InfraredProtocolType.SAMSUNG]
+    )
     assert len(samsung_entities) == 0
 
 
@@ -68,8 +70,8 @@ async def test_infrared_entity_send_command(
     await component.async_add_entities([mock_infrared_entity])
 
     # Create a test command
-    command = NECIRCommand(
-        protocol=NECIRProtocol(),
+    command = NECInfraredCommand(
+        protocol=NECInfraredProtocol(),
         repeat_count=1,
         address=0x04FB,
         command=0x08F7,
@@ -90,5 +92,5 @@ async def test_infrared_entity_features(
 ) -> None:
     """Test infrared entity features property."""
     assert mock_infrared_entity.supported_features == InfraredEntityFeature.TRANSMIT
-    assert IRProtocolType.NEC in mock_infrared_entity.supported_protocols
-    assert IRProtocolType.PULSE_WIDTH in mock_infrared_entity.supported_protocols
+    assert InfraredProtocolType.NEC in mock_infrared_entity.supported_protocols
+    assert InfraredProtocolType.PULSE_WIDTH in mock_infrared_entity.supported_protocols

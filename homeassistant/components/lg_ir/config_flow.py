@@ -4,7 +4,7 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.infrared import IRProtocolType, async_get_entities
+from homeassistant.components.infrared import InfraredProtocolType, async_get_entities
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers.selector import (
     SelectOptionDict,
@@ -28,7 +28,7 @@ class LgIrConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
 
-        entities = async_get_entities(self.hass, protocols={IRProtocolType.NEC})
+        entities = async_get_entities(self.hass, protocols={InfraredProtocolType.NEC})
         if not entities:
             return self.async_abort(reason="no_emitters")
 

@@ -9,8 +9,8 @@ from typing import Any
 from homeassistant.components.infrared import (
     DATA_COMPONENT,
     InfraredEntity,
-    NECIRCommand,
-    NECIRProtocol,
+    NECInfraredCommand,
+    NECInfraredProtocol,
 )
 from homeassistant.components.remote import ATTR_HOLD_SECS, RemoteEntity
 from homeassistant.config_entries import ConfigEntry
@@ -22,7 +22,7 @@ from .const import CONF_INFRARED_ENTITY_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-LG_PROTOCOL = NECIRProtocol()
+LG_PROTOCOL = NECInfraredProtocol()
 LG_ADDRESS = 0xFB04
 
 # NEC protocol timing for hold duration calculation.
@@ -144,7 +144,7 @@ class LgIrRemote(RemoteEntity):
             _LOGGER.error("Infrared entity %s not found", self._infrared_entity_id)
             return
 
-        command = NECIRCommand(
+        command = NECInfraredCommand(
             address=LG_ADDRESS,
             command=command_code,
             protocol=LG_PROTOCOL,

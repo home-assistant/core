@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from abc import ABC
 from dataclasses import dataclass
 from enum import StrEnum
 
 
-class IRProtocolType(StrEnum):
+class InfraredProtocolType(StrEnum):
     """IR protocol type identifiers."""
 
     PULSE_WIDTH = "pulse_width"
@@ -15,7 +14,7 @@ class IRProtocolType(StrEnum):
     SAMSUNG = "samsung"
 
 
-PULSE_WIDTH_COMPAT_PROTOCOLS = {IRProtocolType.NEC, IRProtocolType.SAMSUNG}
+PULSE_WIDTH_COMPAT_PROTOCOLS = {InfraredProtocolType.NEC, InfraredProtocolType.SAMSUNG}
 
 
 @dataclass(frozen=True, slots=True)
@@ -26,14 +25,14 @@ class IRTiming:
     low_us: int
 
 
-class BaseIRProtocol:
+class InfraredProtocol:
     """Base class for IR protocol definitions."""
 
-    type: IRProtocolType
+    type: InfraredProtocolType
 
 
 @dataclass(frozen=True, slots=True)
-class PulseWidthIRProtocol(BaseIRProtocol):
+class PulseWidthIRProtocol(InfraredProtocol):
     """Pulse-width modulated IR protocol.
 
     Defines timing for header, one bit, zero bit, and footer.
@@ -49,7 +48,7 @@ class PulseWidthIRProtocol(BaseIRProtocol):
         minimum_idle_time_us: Minimum gap between transmissions in microseconds.
     """
 
-    type = IRProtocolType.PULSE_WIDTH
+    type = InfraredProtocolType.PULSE_WIDTH
 
     header: IRTiming
     one: IRTiming
@@ -61,10 +60,10 @@ class PulseWidthIRProtocol(BaseIRProtocol):
 
 
 @dataclass(frozen=True, slots=True)
-class NECIRProtocol(BaseIRProtocol):
+class NECInfraredProtocol(InfraredProtocol):
     """NEC IR protocol."""
 
-    type = IRProtocolType.NEC
+    type = InfraredProtocolType.NEC
 
     def get_pulse_width_compat_protocol(self) -> PulseWidthIRProtocol:
         """Convert to a PulseWidthIRProtocol for encoding."""
@@ -79,10 +78,10 @@ class NECIRProtocol(BaseIRProtocol):
 
 
 @dataclass(frozen=True, slots=True)
-class SamsungIRProtocol(BaseIRProtocol):
+class SamsungInfraredProtocol(InfraredProtocol):
     """Samsung 32-bit IR protocol."""
 
-    type = IRProtocolType.SAMSUNG
+    type = InfraredProtocolType.SAMSUNG
 
     def get_pulse_width_compat_protocol(self) -> PulseWidthIRProtocol:
         """Convert to a PulseWidthIRProtocol for encoding."""
@@ -97,20 +96,15 @@ class SamsungIRProtocol(BaseIRProtocol):
 
 
 @dataclass(frozen=True, slots=True)
-class BaseIRCommand[P: BaseIRProtocol](ABC):
-    """Base class for IR commands.
-
-    Attributes:
-        protocol: The IR protocol to use for encoding the command.
-        repeat_count: How many times to send the command.
-    """
+class InfraredCommand[P: InfraredProtocol]:
+    """Base class for IR commands."""
 
     protocol: P
     repeat_count: int
 
 
 @dataclass(frozen=True, slots=True)
-class PulseWidthIRCommand(BaseIRCommand[PulseWidthIRProtocol]):
+class PulseWidthInfraredCommand(InfraredCommand[PulseWidthIRProtocol]):
     """IR command with a numeric code for pulse-width protocols."""
 
     code: int
@@ -118,7 +112,7 @@ class PulseWidthIRCommand(BaseIRCommand[PulseWidthIRProtocol]):
 
 
 @dataclass(frozen=True, slots=True)
-class NECIRCommand(BaseIRCommand[NECIRProtocol]):
+class NECInfraredCommand(InfraredCommand[NECInfraredProtocol]):
     """NEC IR command."""
 
     address: int
@@ -132,7 +126,7 @@ class NECIRCommand(BaseIRCommand[NECIRProtocol]):
 
 
 @dataclass(frozen=True, slots=True)
-class SamsungIRCommand(BaseIRCommand[SamsungIRProtocol]):
+class SamsungInfraredCommand(InfraredCommand[SamsungInfraredProtocol]):
     """Samsung IR command."""
 
     code: int

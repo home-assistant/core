@@ -16,13 +16,13 @@ from aioesphomeapi import (
 
 from homeassistant.components.infrared import (
     PULSE_WIDTH_COMPAT_PROTOCOLS,
-    BaseIRCommand,
+    InfraredCommand,
     InfraredEntity,
     InfraredEntityFeature,
-    IRProtocolType,
-    NECIRCommand,
-    PulseWidthIRCommand,
-    SamsungIRCommand,
+    InfraredProtocolType,
+    NECInfraredCommand,
+    PulseWidthInfraredCommand,
+    SamsungInfraredCommand,
 )
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
@@ -56,9 +56,9 @@ class EsphomeInfraredEntity(
 
         if capabilities & InfraredProxyCapability.TRANSMITTER:
             self._attr_supported_protocols = {
-                IRProtocolType.PULSE_WIDTH,
-                IRProtocolType.NEC,
-                IRProtocolType.SAMSUNG,
+                InfraredProtocolType.PULSE_WIDTH,
+                InfraredProtocolType.NEC,
+                InfraredProtocolType.SAMSUNG,
             }
         else:
             self._attr_supported_protocols = set()
@@ -71,7 +71,7 @@ class EsphomeInfraredEntity(
             # Infrared entities should go available as soon as the device comes online
             self.async_write_ha_state()
 
-    async def async_send_command(self, command: BaseIRCommand) -> None:
+    async def async_send_command(self, command: InfraredCommand) -> None:
         """Send an IR command.
 
         Raises:
@@ -83,15 +83,15 @@ class EsphomeInfraredEntity(
                 translation_key="infrared_proxy_transmitter_not_supported",
             )
 
-        if isinstance(command, (NECIRCommand, SamsungIRCommand)):
+        if isinstance(command, (NECInfraredCommand, SamsungInfraredCommand)):
             await self._async_send_protocol_command(command)
         else:
             # Fall back to pulse-width transmission if the protocol is compatible
             await self._async_send_pulse_width_command(command)
 
-    async def _async_send_protocol_command(self, command: BaseIRCommand) -> None:
+    async def _async_send_protocol_command(self, command: InfraredCommand) -> None:
         """Send command using protocol-specific arguments."""
-        if isinstance(command, NECIRCommand):
+        if isinstance(command, NECInfraredCommand):
             cmd_json = json.dumps(
                 {
                     "protocol": "nec",
@@ -100,7 +100,7 @@ class EsphomeInfraredEntity(
                     "repeat": command.repeat_count,
                 }
             )
-        elif isinstance(command, SamsungIRCommand):
+        elif isinstance(command, SamsungInfraredCommand):
             cmd_json = json.dumps(
                 {
                     "protocol": "samsung",
@@ -130,9 +130,9 @@ class EsphomeInfraredEntity(
                 },
             ) from err
 
-    async def _async_send_pulse_width_command(self, command: BaseIRCommand) -> None:
+    async def _async_send_pulse_width_command(self, command: InfraredCommand) -> None:
         """Send command using the pulse-width generic protocol."""
-        if isinstance(command, PulseWidthIRCommand):
+        if isinstance(command, PulseWidthInfraredCommand):
             protocol = command.protocol
             code = command.code
             length_in_bits = command.length_in_bits
