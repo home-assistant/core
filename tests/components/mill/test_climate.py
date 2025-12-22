@@ -37,13 +37,9 @@ async def mock_mill():
 
     with (
         patch(
-            "mill.Mill",
+            "homeassistant.components.mill.Mill",
             autospec=True,
         ) as mock_mill_class,
-        patch(
-            "homeassistant.components.mill.Mill",
-            new=mock_mill_class,
-        ),
         # disable recorder behaviour
         patch(
             "homeassistant.components.mill.coordinator.MillHistoricDataUpdateCoordinator._async_update_data",
@@ -63,13 +59,9 @@ async def mock_mill_local():
 
     with (
         patch(
-            "mill_local.Mill",
+            "homeassistant.components.mill.MillLocal",
             autospec=True,
         ) as mock_mill_local_class,
-        patch(
-            "homeassistant.components.mill.MillLocal",
-            new=mock_mill_local_class,
-        ),
     ):
         milllocal = mock_mill_local_class.return_value
         milllocal.url = "http://dummy.url"
