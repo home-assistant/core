@@ -18,7 +18,7 @@ import sqlite3
 import ssl
 import sys
 import threading
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, Self, cast
 from unittest.mock import AsyncMock, MagicMock, Mock, _patch, patch
 
 from aiohttp import client
@@ -176,21 +176,37 @@ def pytest_configure(config: pytest.Config) -> None:
     SnapshotSession.finish = override_syrupy_finish
 
 
+class HASocketBlockedError(pytest_socket.SocketBlockedError):
+    """SocketBlockedError variant which counts instances."""
+
+    instances: list[Self] = []
+
+    def __init__(self, *_args, **_kwargs) -> None:
+        """Initialize HASocketBlockedError and increment instance count."""
+        super().__init__(*_args, **_kwargs)
+        self.__class__.instances.append(self)
+
+
 def pytest_runtest_setup() -> None:
     """Prepare pytest_socket and freezegun.
 
     pytest_socket:
-    Throw if tests attempt to open sockets.
+    - Throw if tests attempt to open sockets.
 
-    allow_unix_socket is set to True because it's needed by asyncio.
-    Important: socket_allow_hosts must be called before disable_socket, otherwise all
-    destinations will be allowed.
+    - allow_unix_socket is set to True because it's needed by asyncio.
+      Important: socket_allow_hosts must be called before disable_socket, otherwise all
+      destinations will be allowed.
+
+    - Replace pytest_socket.SocketBlockedError with a variant which counts the number
+      of times it was raised.
 
     freezegun:
-    Modified to include https://github.com/spulec/freezegun/pull/424 and improve class str.
+    - Modified to include https://github.com/spulec/freezegun/pull/424 and improve class str.
     """
     pytest_socket.socket_allow_hosts(["127.0.0.1"])
     pytest_socket.disable_socket(allow_unix_socket=True)
+
+    pytest_socket.SocketBlockedError = HASocketBlockedError
 
     freezegun.api.FakeDate = patch_time.HAFakeDate  # type: ignore[attr-defined]
 
@@ -406,6 +422,17 @@ def verify_cleanup(
     finally:
         # Clear mock routes not break subsequent tests
         respx.mock.clear()
+
+    try:
+        # Verify no socket connections were attempted
+        assert not HASocketBlockedError.instances, "the test opens sockets"
+    except AssertionError:
+        for instance in HASocketBlockedError.instances:
+            _LOGGER.exception("Socket opened during test", exc_info=instance)
+        raise
+    finally:
+        # Reset socket connection instance count to not break subsequent tests
+        HASocketBlockedError.instances = []
 
 
 @pytest.fixture(autouse=True)
