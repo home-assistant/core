@@ -308,7 +308,6 @@ A01_SENSOR_DESCRIPTIONS: list[RoborockSensorDescriptionA01] = [
         key="state",
         data_protocol=RoborockZeoProtocol.STATE,
         translation_key="zeo_state",
-        #entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENUM,
         options=ZeoState.keys(),
     ),
@@ -326,14 +325,12 @@ A01_SENSOR_DESCRIPTIONS: list[RoborockSensorDescriptionA01] = [
         data_protocol=RoborockZeoProtocol.WASHING_LEFT,
         device_class=SensorDeviceClass.DURATION,
         translation_key="washing_left",
-        #entity_category=EntityCategory.DIAGNOSTIC,
     ),
     RoborockSensorDescriptionA01(
         key="zeo_error",
         data_protocol=RoborockZeoProtocol.ERROR,
         device_class=SensorDeviceClass.ENUM,
         translation_key="zeo_error",
-        #entity_category=EntityCategory.DIAGNOSTIC,
         options=ZeoError.keys(),
     ),
     # Additional Zeo sensors

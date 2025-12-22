@@ -88,19 +88,16 @@ A01_BUTTON_DESCRIPTIONS = [
         key="start",
         data_protocol=RoborockZeoProtocol.START,
         translation_key="start",
-        #entity_category=EntityCategory.CONFIG,
     ),
     RoborockButtonDescriptionA01(
         key="pause",
         data_protocol=RoborockZeoProtocol.PAUSE,
         translation_key="pause",
-        #entity_category=EntityCategory.CONFIG,
     ),
     RoborockButtonDescriptionA01(
         key="shutdown",
         data_protocol=RoborockZeoProtocol.SHUTDOWN,
         translation_key="shutdown",
-        #entity_category=EntityCategory.CONFIG,
     ),
 ]
 
@@ -229,18 +226,17 @@ class RoborockButtonEntityA01(RoborockCoordinatedEntityA01, ButtonEntity):
         try:
             if self.entity_description.param is not None:
                 await self.coordinator.api.set_value(
-                    self.entity_description.data_protocol, 
-                    self.entity_description.param
+                    self.entity_description.data_protocol,
+                    self.entity_description.param,
                 )
             else:
                 await self.coordinator.api.set_value(
-                    self.entity_description.data_protocol, 
-                    1  # Default value for button press
+                    self.entity_description.data_protocol,
+                    1,  # Default value for button press
                 )
             await self.coordinator.async_request_refresh()
         except Exception as err:
-            from homeassistant.exceptions import HomeAssistantError
             raise HomeAssistantError(
-                translation_domain="roborock",
+                translation_domain=DOMAIN,
                 translation_key="button_press_failed",
             ) from err
