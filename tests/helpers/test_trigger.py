@@ -1038,7 +1038,17 @@ async def test_subscribe_triggers(
 @pytest.mark.parametrize(
     ("new_triggers_conditions_enabled", "expected_events"),
     [
-        (True, [{"light.turned_off", "light.turned_on"}]),
+        (
+            True,
+            [
+                {
+                    "light.brightness_changed",
+                    "light.brightness_crossed_threshold",
+                    "light.turned_off",
+                    "light.turned_on",
+                }
+            ],
+        ),
         (False, []),
     ],
 )
