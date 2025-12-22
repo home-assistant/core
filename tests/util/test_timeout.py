@@ -359,7 +359,7 @@ async def test_mix_zone_timeout_freeze_and_global_freeze() -> None:
         await asyncio.sleep(0.3)
 
 
-async def test_mix_global_and_zone_timeout_freeze_() -> None:
+async def test_mix_global_and_zone_timeout_freeze() -> None:
     """Test a mix zone timeout freeze and global freeze."""
     timeout = TimeoutManager()
 
