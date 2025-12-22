@@ -12,7 +12,7 @@ from homeassistant.exceptions import ConfigEntryError
 type OpenEVSEConfigEntry = ConfigEntry[openevsewifi.Charger]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: OpenEVSEConfigEntry) -> bool:
     """Set up openevse from a config entry."""
 
     entry.runtime_data = openevsewifi.Charger(entry.data[CONF_HOST])
