@@ -1,0 +1,127 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      This integration does not provide additional actions.
+  appropriate-polling:
+    status: exempt
+    comment: |
+      This integration does not poll.
+  brands:
+    status: exempt
+    comment: |
+      This is a proof of concept integration, brand assets will be added later.
+  common-modules:
+    status: exempt
+    comment: |
+      This integration is simple and does not share patterns with others.
+  config-flow-test-coverage:
+    status: exempt
+    comment: |
+      This is a proof of concept integration, config flow tests will be added later.
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: |
+      This integration does not provide additional actions.
+  docs-high-level-description:
+    status: exempt
+    comment: |
+      This is a proof of concept integration, documentation will be added later.
+  docs-installation-instructions:
+    status: exempt
+    comment: |
+      This is a proof of concept integration, documentation will be added later.
+  docs-removal-instructions:
+    status: exempt
+    comment: |
+      This is a proof of concept integration, documentation will be added later.
+  entity-event-setup:
+    status: exempt
+    comment: |
+      This integration does not subscribe to events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data:
+    status: exempt
+    comment: |
+      This integration does not store runtime data.
+  test-before-configure: done
+  test-before-setup:
+    status: exempt
+    comment: |
+      Setup validation is handled by checking emitter existence in remote.py.
+  unique-config-entry: done
+  # Silver
+  action-exceptions: todo
+  config-entry-unloading: done
+  docs-configuration-parameters: todo
+  docs-installation-parameters: todo
+  entity-unavailable: done
+  integration-owner: todo
+  log-when-unavailable: todo
+  parallel-updates: todo
+  reauthentication-flow:
+    status: exempt
+    comment: |
+      This integration does not require authentication.
+  test-coverage: todo
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery-update-info:
+    status: exempt
+    comment: |
+      This integration does not support discovery.
+  discovery:
+    status: exempt
+    comment: |
+      This integration is configured manually via config flow.
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices:
+    status: exempt
+    comment: |
+      Each config entry creates a single device.
+  entity-category:
+    status: exempt
+    comment: |
+      The remote entity is the primary entity and does not need a category.
+  entity-device-class:
+    status: exempt
+    comment: |
+      Remote entities do not have a device class.
+  entity-disabled-by-default:
+    status: exempt
+    comment: |
+      The remote entity is the primary entity and should be enabled by default.
+  entity-translations: todo
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow: todo
+  repair-issues:
+    status: exempt
+    comment: |
+      This integration does not have repairable issues.
+  stale-devices:
+    status: exempt
+    comment: |
+      Each config entry manages exactly one device.
+
+  # Platinum
+  async-dependency:
+    status: exempt
+    comment: |
+      This integration only depends on ir_proxy which is part of Home Assistant.
+  inject-websession:
+    status: exempt
+    comment: |
+      This integration does not make HTTP requests.
+  strict-typing: todo
