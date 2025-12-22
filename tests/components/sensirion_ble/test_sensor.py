@@ -11,8 +11,11 @@ from homeassistant.core import HomeAssistant
 
 from .fixtures import (
     CONFIGURED_NAME_MYCO2,
+    CONFIGURED_NAME_SHT43,
     CONFIGURED_PREFIX_MYCO2,
+    CONFIGURED_PREFIX_SHT43,
     SENSIRION_SERVICE_INFO_MYCO2,
+    SENSIRION_SERVICE_INFO_SHT43,
 )
 
 from tests.common import MockConfigEntry
@@ -36,6 +39,15 @@ from tests.components.bluetooth import inject_bluetooth_service_info
                 ("carbon_dioxide", "724", "ppm", "measurement"),
                 ("humidity", "27.8", "%", "measurement"),
                 ("temperature", "20.1", "°C", "measurement"),
+            ],
+        ),
+        (
+            SENSIRION_SERVICE_INFO_SHT43,
+            CONFIGURED_PREFIX_SHT43,
+            CONFIGURED_NAME_SHT43,
+            [
+                ("humidity", "45.75", "%", "measurement"),
+                ("temperature", "21.47", "°C", "measurement"),
             ],
         ),
     ],
