@@ -51,7 +51,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslaFleetNumberVehicleEntityDescription, ...] = (
         device_class=NumberDeviceClass.CURRENT,
         mode=NumberMode.AUTO,
         max_key="charge_state_charge_current_request_max",
-        func=lambda api, value: api.set_charging_amps(value),
+        func=lambda api, value: api.set_charging_amps(int(value)),
         scopes=[Scope.VEHICLE_CHARGING_CMDS],
     ),
     TeslaFleetNumberVehicleEntityDescription(
@@ -64,7 +64,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslaFleetNumberVehicleEntityDescription, ...] = (
         mode=NumberMode.AUTO,
         min_key="charge_state_charge_limit_soc_min",
         max_key="charge_state_charge_limit_soc_max",
-        func=lambda api, value: api.set_charge_limit(value),
+        func=lambda api, value: api.set_charge_limit(int(value)),
         scopes=[Scope.VEHICLE_CHARGING_CMDS, Scope.VEHICLE_CMDS],
     ),
 )
