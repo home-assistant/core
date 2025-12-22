@@ -135,7 +135,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             # Remove the protobuff 'cached_data' that we do not use to save memory
             product.pop("cached_data", None)
             vin = product["vin"]
-            api = teslemetry.vehicles.create(vin)
+            api = teslemetry.vehicles.create(vin)  # type: ignore[attr-defined]
             coordinator = TeslemetryVehicleDataCoordinator(hass, entry, api, product)
             device = DeviceInfo(
                 identifiers={(DOMAIN, vin)},
