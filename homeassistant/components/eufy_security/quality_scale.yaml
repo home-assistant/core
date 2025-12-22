@@ -1,0 +1,82 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: Integration does not register custom actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: Integration does not register custom actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: Integration does not subscribe to events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: Integration does not register custom actions.
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow: done
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery:
+    status: exempt
+    comment: Eufy Security uses cloud-based authentication and does not support local discovery.
+  discovery-update-info:
+    status: exempt
+    comment: Eufy Security uses cloud-based authentication and does not support local discovery.
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices: done
+  entity-category:
+    status: exempt
+    comment: Camera entities are primary entities, not diagnostic or config entities.
+  entity-device-class:
+    status: exempt
+    comment: Camera entity does not have a device class.
+  entity-disabled-by-default:
+    status: exempt
+    comment: Camera entities are the primary functionality and should be enabled by default.
+  entity-translations: done
+  exception-translations: done
+  icon-translations:
+    status: exempt
+    comment: Camera entity uses default icon.
+  reconfiguration-flow: done
+  repair-issues:
+    status: exempt
+    comment: No repair issues identified yet.
+  stale-devices: done
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done
