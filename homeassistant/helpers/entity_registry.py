@@ -78,8 +78,8 @@ EVENT_ENTITY_REGISTRY_UPDATED: EventType[EventEntityRegistryUpdatedData] = Event
 
 _LOGGER = logging.getLogger(__name__)
 
-STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 19
+STORAGE_VERSION_MAJOR = 2
+STORAGE_VERSION_MINOR = 1
 STORAGE_KEY = "core.entity_registry"
 
 CLEANUP_INTERVAL = 3600 * 24
@@ -209,7 +209,6 @@ class RegistryEntry:
     original_device_class: str | None = attr.ib()
     original_icon: str | None = attr.ib()
     original_name: str | None = attr.ib()
-    suggested_object_id: str | None = attr.ib()
     supported_features: int = attr.ib()
     translation_key: str | None = attr.ib()
     unit_of_measurement: str | None = attr.ib()
@@ -371,7 +370,6 @@ class RegistryEntry:
                     "original_icon": self.original_icon,
                     "original_name": self.original_name,
                     "platform": self.platform,
-                    "suggested_object_id": self.suggested_object_id,
                     "supported_features": self.supported_features,
                     "translation_key": self.translation_key,
                     "unique_id": self.unique_id,
@@ -619,8 +617,14 @@ class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
                     entity["hidden_by_undefined"] = set_to_undefined
                     entity["options_undefined"] = set_to_undefined
 
-        if old_major_version > 1:
+            # Migrate to next major version
+            # Version 2.1 removes suggested_object_id
+            for entity in data["entities"]:
+                del entity["suggested_object_id"]
+
+        if old_major_version > 2:
             raise NotImplementedError
+
         return data
 
 
@@ -914,7 +918,6 @@ class EntityRegistry(BaseRegistry):
         unique_id: str,
         *,
         # To influence entity ID generation
-        calculated_object_id: str | None = None,
         suggested_object_id: str | None = None,
         # To disable or hide an entity if it gets created, does not affect
         # existing entities
@@ -1025,9 +1028,7 @@ class EntityRegistry(BaseRegistry):
         if not entity_id:
             entity_id = self.async_generate_entity_id(
                 domain,
-                suggested_object_id
-                or calculated_object_id
-                or f"{platform}_{unique_id}",
+                suggested_object_id or f"{platform}_{unique_id}",
             )
 
         if (
@@ -1066,7 +1067,6 @@ class EntityRegistry(BaseRegistry):
             original_icon=none_if_undefined(original_icon),
             original_name=none_if_undefined(original_name),
             platform=platform,
-            suggested_object_id=suggested_object_id,
             supported_features=none_if_undefined(supported_features) or 0,
             translation_key=none_if_undefined(translation_key),
             unique_id=unique_id,
@@ -1557,7 +1557,6 @@ class EntityRegistry(BaseRegistry):
                     original_icon=entity["original_icon"],
                     original_name=entity["original_name"],
                     platform=entity["platform"],
-                    suggested_object_id=entity["suggested_object_id"],
                     supported_features=entity["supported_features"],
                     translation_key=entity["translation_key"],
                     unique_id=entity["unique_id"],

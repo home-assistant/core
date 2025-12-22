@@ -17,7 +17,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.entity_component import async_get_entity_suggested_object_id
+from homeassistant.helpers.entity_platform import async_get_suggested_object_id
 from homeassistant.helpers.json import json_dumps
 
 _LOGGER = logging.getLogger(__name__)
@@ -352,7 +352,7 @@ def websocket_get_automatic_entity_ids(
             automatic_entity_ids[entity_id] = None
             continue
         try:
-            suggested = async_get_entity_suggested_object_id(hass, entity_id)
+            suggested = async_get_suggested_object_id(hass, entity_id)
         except HomeAssistantError as err:
             # This is raised if the entity has no object.
             _LOGGER.debug(
@@ -365,7 +365,7 @@ def websocket_get_automatic_entity_ids(
             continue
         suggested_entity_id = registry.async_generate_entity_id(
             entry.domain,
-            suggested or f"{entry.platform}_{entry.unique_id}",
+            suggested,
             current_entity_id=entity_id,
             reserved_entity_ids=reserved_entity_ids,
         )
