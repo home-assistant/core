@@ -732,7 +732,7 @@ async def async_setup_entry(
                     and total_export > 0
                 )
             ),
-            has_fn=lambda data: data.measurement.power_w is not None,
+            has_fn=lambda x: True,
             value_fn=lambda data: power_w * -1
             if (power_w := data.measurement.power_w)
             else power_w,
