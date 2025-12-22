@@ -8,6 +8,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .coordinator import CompitConfigEntry, CompitDataUpdateCoordinator
+from .device import setup_devices
 
 PLATFORMS = [
     Platform.CLIMATE,
@@ -36,6 +37,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: CompitConfigEntry) -> bo
     coordinator = CompitDataUpdateCoordinator(hass, entry, connector)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
+
+    setup_devices(hass, entry)
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
