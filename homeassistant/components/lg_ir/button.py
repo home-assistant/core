@@ -1,0 +1,215 @@
+"""Button platform for LG IR integration."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+import logging
+
+from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
+from homeassistant.components.infrared import (
+    DATA_COMPONENT,
+    InfraredEntity,
+    NECInfraredCommand,
+    NECInfraredProtocol,
+)
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.event import async_track_state_change_event
+
+from .const import CONF_INFRARED_ENTITY_ID, DOMAIN, LG_ADDRESS, LGCommand
+
+_LOGGER = logging.getLogger(__name__)
+
+LG_PROTOCOL = NECInfraredProtocol()
+
+
+@dataclass(frozen=True, kw_only=True)
+class LgIrButtonEntityDescription(ButtonEntityDescription):
+    """Describes LG IR button entity."""
+
+    command_code: int
+
+
+BUTTON_DESCRIPTIONS: tuple[LgIrButtonEntityDescription, ...] = (
+    LgIrButtonEntityDescription(
+        key="up",
+        translation_key="up",
+        command_code=LGCommand.NAV_UP,
+    ),
+    LgIrButtonEntityDescription(
+        key="down",
+        translation_key="down",
+        command_code=LGCommand.NAV_DOWN,
+    ),
+    LgIrButtonEntityDescription(
+        key="left",
+        translation_key="left",
+        command_code=LGCommand.NAV_LEFT,
+    ),
+    LgIrButtonEntityDescription(
+        key="right",
+        translation_key="right",
+        command_code=LGCommand.NAV_RIGHT,
+    ),
+    LgIrButtonEntityDescription(
+        key="ok",
+        translation_key="ok",
+        command_code=LGCommand.OK,
+    ),
+    LgIrButtonEntityDescription(
+        key="back",
+        translation_key="back",
+        command_code=LGCommand.BACK,
+    ),
+    LgIrButtonEntityDescription(
+        key="home",
+        translation_key="home",
+        command_code=LGCommand.HOME,
+    ),
+    LgIrButtonEntityDescription(
+        key="menu",
+        translation_key="menu",
+        command_code=LGCommand.MENU,
+    ),
+    LgIrButtonEntityDescription(
+        key="input",
+        translation_key="input",
+        command_code=LGCommand.INPUT,
+    ),
+    LgIrButtonEntityDescription(
+        key="num_0",
+        translation_key="num_0",
+        command_code=LGCommand.NUM_0,
+    ),
+    LgIrButtonEntityDescription(
+        key="num_1",
+        translation_key="num_1",
+        command_code=LGCommand.NUM_1,
+    ),
+    LgIrButtonEntityDescription(
+        key="num_2",
+        translation_key="num_2",
+        command_code=LGCommand.NUM_2,
+    ),
+    LgIrButtonEntityDescription(
+        key="num_3",
+        translation_key="num_3",
+        command_code=LGCommand.NUM_3,
+    ),
+    LgIrButtonEntityDescription(
+        key="num_4",
+        translation_key="num_4",
+        command_code=LGCommand.NUM_4,
+    ),
+    LgIrButtonEntityDescription(
+        key="num_5",
+        translation_key="num_5",
+        command_code=LGCommand.NUM_5,
+    ),
+    LgIrButtonEntityDescription(
+        key="num_6",
+        translation_key="num_6",
+        command_code=LGCommand.NUM_6,
+    ),
+    LgIrButtonEntityDescription(
+        key="num_7",
+        translation_key="num_7",
+        command_code=LGCommand.NUM_7,
+    ),
+    LgIrButtonEntityDescription(
+        key="num_8",
+        translation_key="num_8",
+        command_code=LGCommand.NUM_8,
+    ),
+    LgIrButtonEntityDescription(
+        key="num_9",
+        translation_key="num_9",
+        command_code=LGCommand.NUM_9,
+    ),
+)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up LG IR buttons from config entry."""
+    infrared_entity_id = entry.data[CONF_INFRARED_ENTITY_ID]
+    async_add_entities(
+        LgIrButton(entry, infrared_entity_id, description)
+        for description in BUTTON_DESCRIPTIONS
+    )
+
+
+class LgIrButton(ButtonEntity):
+    """LG IR button entity."""
+
+    _attr_has_entity_name = True
+    _description: LgIrButtonEntityDescription
+
+    def __init__(
+        self,
+        entry: ConfigEntry,
+        infrared_entity_id: str,
+        description: LgIrButtonEntityDescription,
+    ) -> None:
+        """Initialize LG IR button."""
+        self._entry = entry
+        self._infrared_entity_id = infrared_entity_id
+        self._description = description
+        self.entity_description = description
+        self._attr_unique_id = f"{entry.entry_id}_{description.key}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry.entry_id)},
+        )
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to infrared entity state changes."""
+        await super().async_added_to_hass()
+
+        @callback
+        def _async_ir_state_changed(event: Event[EventStateChangedData]) -> None:
+            """Handle infrared entity state changes."""
+            new_state = event.data["new_state"]
+            self._attr_available = (
+                new_state is not None and new_state.state != STATE_UNAVAILABLE
+            )
+            self.async_write_ha_state()
+
+        self.async_on_remove(
+            async_track_state_change_event(
+                self.hass, [self._infrared_entity_id], _async_ir_state_changed
+            )
+        )
+
+        # Set initial availability based on current infrared entity state
+        ir_state = self.hass.states.get(self._infrared_entity_id)
+        self._attr_available = (
+            ir_state is not None and ir_state.state != STATE_UNAVAILABLE
+        )
+
+    def _get_infrared_entity(self) -> InfraredEntity | None:
+        """Get the infrared entity."""
+        component = self.hass.data.get(DATA_COMPONENT)
+        if component is None:
+            return None
+        return component.get_entity(self._infrared_entity_id)
+
+    async def async_press(self) -> None:
+        """Press the button."""
+        entity = self._get_infrared_entity()
+        if entity is None:
+            _LOGGER.error("Infrared entity %s not found", self._infrared_entity_id)
+            return
+
+        command = NECInfraredCommand(
+            address=LG_ADDRESS,
+            command=self._description.command_code,
+            protocol=LG_PROTOCOL,
+            repeat_count=1,
+        )
+        await entity.async_send_command(command)

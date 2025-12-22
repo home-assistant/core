@@ -16,5 +16,66 @@
         "title": "Set up LG IR Remote"
       }
     }
+  },
+  "entity": {
+    "button": {
+      "back": {
+        "name": "Back"
+      },
+      "down": {
+        "name": "Down"
+      },
+      "home": {
+        "name": "Home"
+      },
+      "input": {
+        "name": "Input"
+      },
+      "left": {
+        "name": "Left"
+      },
+      "menu": {
+        "name": "Menu"
+      },
+      "num_0": {
+        "name": "0"
+      },
+      "num_1": {
+        "name": "1"
+      },
+      "num_2": {
+        "name": "2"
+      },
+      "num_3": {
+        "name": "3"
+      },
+      "num_4": {
+        "name": "4"
+      },
+      "num_5": {
+        "name": "5"
+      },
+      "num_6": {
+        "name": "6"
+      },
+      "num_7": {
+        "name": "7"
+      },
+      "num_8": {
+        "name": "8"
+      },
+      "num_9": {
+        "name": "9"
+      },
+      "ok": {
+        "name": "OK"
+      },
+      "right": {
+        "name": "Right"
+      },
+      "up": {
+        "name": "Up"
+      }
+    }
   }
 }
