@@ -52,7 +52,6 @@ class VeluxRainSensor(VeluxEntity, BinarySensorEntity):
         super().__init__(node, config_entry_id)
         self._attr_unique_id = f"{self._attr_unique_id}_rain_sensor"
 
-    @property
     async def async_update(self) -> None:
         """Fetch the latest state from the device."""
         try:
