@@ -214,7 +214,9 @@ class RoborockButtonEntityA01(RoborockCoordinatedEntityA01, ButtonEntity):
     ) -> None:
         """Create an A01 button entity."""
         self.entity_description = entity_description
-        super().__init__(f"{entity_description.key}_{coordinator.duid_slug}", coordinator)
+        super().__init__(
+            f"{entity_description.key}_{coordinator.duid_slug}", coordinator
+        )
 
     async def async_press(self) -> None:
         """Press the button."""

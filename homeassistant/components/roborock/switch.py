@@ -190,7 +190,9 @@ class RoborockSwitchA01(RoborockCoordinatedEntityA01, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         try:
-            await self.coordinator.api.set_value(self.entity_description.data_protocol, 0)
+            await self.coordinator.api.set_value(
+                self.entity_description.data_protocol, 0
+            )
             await self.coordinator.async_request_refresh()
         except RoborockException as err:
             raise HomeAssistantError(
@@ -201,7 +203,9 @@ class RoborockSwitchA01(RoborockCoordinatedEntityA01, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         try:
-            await self.coordinator.api.set_value(self.entity_description.data_protocol, 1)
+            await self.coordinator.api.set_value(
+                self.entity_description.data_protocol, 1
+            )
             await self.coordinator.async_request_refresh()
         except RoborockException as err:
             raise HomeAssistantError(
@@ -216,4 +220,3 @@ class RoborockSwitchA01(RoborockCoordinatedEntityA01, SwitchEntity):
         if status is None:
             return None
         return bool(status)
-
