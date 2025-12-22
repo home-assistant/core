@@ -160,7 +160,7 @@ class MatterLock(MatterEntity, LockEntity):
         code: str | None = kwargs.get(ATTR_CODE)
         code_bytes = code.encode() if code else None
         await self.send_device_command(
-            command=clusters.DoorLock.Commands.LockDoor(code_bytes),
+            command=clusters.DoorLock.Commands.LockDoor(PINCode=code_bytes),
             timed_request_timeout_ms=1000,
         )
 
@@ -182,12 +182,12 @@ class MatterLock(MatterEntity, LockEntity):
             # the unlock command should unbolt only on the unlock command
             # and unlatch on the HA 'open' command.
             await self.send_device_command(
-                command=clusters.DoorLock.Commands.UnboltDoor(code_bytes),
+                command=clusters.DoorLock.Commands.UnboltDoor(PINCode=code_bytes),
                 timed_request_timeout_ms=1000,
             )
         else:
             await self.send_device_command(
-                command=clusters.DoorLock.Commands.UnlockDoor(code_bytes),
+                command=clusters.DoorLock.Commands.UnlockDoor(PINCode=code_bytes),
                 timed_request_timeout_ms=1000,
             )
 
@@ -204,7 +204,7 @@ class MatterLock(MatterEntity, LockEntity):
         code: str | None = kwargs.get(ATTR_CODE)
         code_bytes = code.encode() if code else None
         await self.send_device_command(
-            command=clusters.DoorLock.Commands.UnlockDoor(code_bytes),
+            command=clusters.DoorLock.Commands.UnlockDoor(PINCode=code_bytes),
             timed_request_timeout_ms=1000,
         )
 
