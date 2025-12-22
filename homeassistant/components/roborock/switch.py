@@ -24,10 +24,7 @@ from .coordinator import (
     RoborockDataUpdateCoordinator,
     RoborockDataUpdateCoordinatorA01,
 )
-from .entity import (
-    RoborockCoordinatedEntityA01,
-    RoborockEntityV1,
-)
+from .entity import RoborockCoordinatedEntityA01, RoborockEntityV1
 
 _LOGGER = logging.getLogger(__name__)
 

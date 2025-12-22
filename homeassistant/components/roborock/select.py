@@ -1,9 +1,9 @@
 """Support for Roborock select."""
 
 import asyncio
-import logging
 from collections.abc import Callable
 from dataclasses import dataclass
+import logging
 
 from roborock.data import (
     RoborockDockDustCollectionModeCode,
