@@ -8,7 +8,12 @@ import pytest
 from pyvlx import PyVLXException
 
 from homeassistant.components.velux import DOMAIN
-from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER, ConfigEntryState
+from homeassistant.config_entries import (
+    SOURCE_DHCP,
+    SOURCE_REAUTH,
+    SOURCE_USER,
+    ConfigEntryState,
+)
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -55,6 +60,41 @@ async def test_user_flow(
 
     mock_pyvlx.disconnect.assert_called_once()
     mock_pyvlx.connect.assert_called_once()
+
+
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyvlx: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test that reauth flow works with valid credentials."""
+
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_REAUTH, "entry_id": mock_config_entry.entry_id},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_PASSWORD: "New Password",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+    assert mock_config_entry.data[CONF_PASSWORD] == "New Password"
+
+    mock_pyvlx.connect.assert_called_once()
+    mock_pyvlx.disconnect.assert_called_once()
 
 
 @pytest.mark.parametrize(
@@ -175,6 +215,10 @@ async def test_dhcp_discovery(
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
+        (
+            PyVLXException("Login to KLF 200 failed, check credentials"),
+            "invalid_auth",
+        ),
         (PyVLXException("DUMMY"), "cannot_connect"),
         (Exception("DUMMY"), "unknown"),
     ],
