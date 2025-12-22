@@ -79,7 +79,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Roborock sensor."""
     async_add_entities(
-        (RoborockVacuum(coordinator) for coordinator in config_entry.runtime_data.v1),
+        RoborockVacuum(coordinator) for coordinator in config_entry.runtime_data.v1
     )
     async_add_entities(
         RoborockQ7Vacuum(coordinator)
