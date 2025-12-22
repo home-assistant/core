@@ -200,3 +200,211 @@ async def test_scene_updates(
     await hass.async_block_till_done()
     test_entity = hass.states.get(test_entity_id)
     assert test_entity is None
+
+
+async def test_scene_activation_on_recall(
+    hass: HomeAssistant, mock_bridge_v2: Mock, v2_resources_test_data: JsonArrayType
+) -> None:
+    """Test scene activation is detected when last_recall timestamp changes.
+
+    When a scene is recalled (activated) from any source (Hue app, physical button,
+    voice assistant, or HA), the bridge updates the status.last_recall timestamp.
+    This should trigger _async_record_activation() and update the scene state.
+    """
+    await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
+    await setup_platform(hass, mock_bridge_v2, Platform.SCENE)
+
+    test_entity_id = "scene.test_room_regular_test_scene"
+    test_scene_id = "cdbf3740-7977-4a11-8275-8c78636ad4bd"
+
+    # Verify initial state is unknown (no activation recorded yet)
+    test_entity = hass.states.get(test_entity_id)
+    assert test_entity is not None
+    assert test_entity.state == STATE_UNKNOWN
+
+    # Simulate scene recall by updating last_recall timestamp
+    mock_bridge_v2.api.emit_event(
+        "update",
+        {
+            "type": "scene",
+            "id": test_scene_id,
+            "status": {"last_recall": "2024-01-15T10:30:00.000Z"},
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Scene state should now be updated (activation recorded)
+    test_entity = hass.states.get(test_entity_id)
+    assert test_entity is not None
+    assert test_entity.state != STATE_UNKNOWN  # State should be a timestamp now
+
+
+async def test_scene_no_false_activation_on_update(
+    hass: HomeAssistant, mock_bridge_v2: Mock, v2_resources_test_data: JsonArrayType
+) -> None:
+    """Test that scene updates without last_recall change don't trigger activation.
+
+    This is the critical bug fix: when a light in an active scene is modified,
+    the scene receives an update event but last_recall stays unchanged.
+    We must NOT record this as a new activation.
+    """
+    await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
+    await setup_platform(hass, mock_bridge_v2, Platform.SCENE)
+
+    test_entity_id = "scene.test_room_regular_test_scene"
+    test_scene_id = "cdbf3740-7977-4a11-8275-8c78636ad4bd"
+
+    # First, trigger an activation with initial last_recall
+    mock_bridge_v2.api.emit_event(
+        "update",
+        {
+            "type": "scene",
+            "id": test_scene_id,
+            "status": {"last_recall": "2024-01-15T10:30:00.000Z"},
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Get the state after first activation
+    test_entity = hass.states.get(test_entity_id)
+    first_activation_state = test_entity.state
+    assert first_activation_state != STATE_UNKNOWN
+
+    # Now simulate a scene update WITHOUT changing last_recall
+    # (e.g., light brightness changed while scene is active)
+    mock_bridge_v2.api.emit_event(
+        "update",
+        {
+            "type": "scene",
+            "id": test_scene_id,
+            "actions": [
+                {
+                    "action": {
+                        "dimming": {"brightness": 75.0},
+                        "on": {"on": True},
+                    },
+                    "target": {
+                        "rid": "3a6710fa-4474-4eba-b533-5e6e72968feb",
+                        "rtype": "light",
+                    },
+                },
+            ],
+            # Note: last_recall is NOT included - simulates light change, not scene recall
+        },
+    )
+    await hass.async_block_till_done()
+
+    # State should NOT have changed (no new activation recorded)
+    test_entity = hass.states.get(test_entity_id)
+    assert test_entity.state == first_activation_state
+
+
+async def test_smart_scene_activation_on_state_change(
+    hass: HomeAssistant, mock_bridge_v2: Mock, v2_resources_test_data: JsonArrayType
+) -> None:
+    """Test smart scene activation is detected on state transition to active.
+
+    Smart scenes use state transition detection instead of last_recall timestamp.
+    Activation should only be recorded when state changes FROM inactive TO active.
+    """
+    await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
+    await setup_platform(hass, mock_bridge_v2, Platform.SCENE)
+
+    test_entity_id = "scene.test_room_smart_test_scene"
+    test_scene_id = "redacted-8abe5a3e-94c8-4058-908f-56241818509a"
+
+    # Verify initial state - smart scene is already active in test data
+    test_entity = hass.states.get(test_entity_id)
+    assert test_entity is not None
+
+    # Set smart scene to inactive first
+    mock_bridge_v2.api.emit_event(
+        "update",
+        {
+            "type": "smart_scene",
+            "id": test_scene_id,
+            "state": "inactive",
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Get state after deactivation
+    test_entity = hass.states.get(test_entity_id)
+    inactive_state = test_entity.state
+
+    # Now activate the smart scene (state transition: inactive -> active)
+    mock_bridge_v2.api.emit_event(
+        "update",
+        {
+            "type": "smart_scene",
+            "id": test_scene_id,
+            "state": "active",
+        },
+    )
+    await hass.async_block_till_done()
+
+    # State should be updated (activation recorded)
+    test_entity = hass.states.get(test_entity_id)
+    assert test_entity.state != inactive_state  # State changed
+
+
+async def test_smart_scene_no_false_activation_while_active(
+    hass: HomeAssistant, mock_bridge_v2: Mock, v2_resources_test_data: JsonArrayType
+) -> None:
+    """Test smart scene doesn't record false activation when staying active.
+
+    When a light in an active smart scene is modified, the scene receives
+    an update event but state stays 'active'. We must NOT record this as
+    a new activation - only state transitions should trigger activation.
+    """
+    await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
+    await setup_platform(hass, mock_bridge_v2, Platform.SCENE)
+
+    test_entity_id = "scene.test_room_smart_test_scene"
+    test_scene_id = "redacted-8abe5a3e-94c8-4058-908f-56241818509a"
+
+    # First deactivate, then activate to get a known activation timestamp
+    mock_bridge_v2.api.emit_event(
+        "update",
+        {
+            "type": "smart_scene",
+            "id": test_scene_id,
+            "state": "inactive",
+        },
+    )
+    await hass.async_block_till_done()
+
+    mock_bridge_v2.api.emit_event(
+        "update",
+        {
+            "type": "smart_scene",
+            "id": test_scene_id,
+            "state": "active",
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Get the state after activation
+    test_entity = hass.states.get(test_entity_id)
+    first_activation_state = test_entity.state
+    assert first_activation_state != STATE_UNKNOWN
+
+    # Now send another update with state still 'active'
+    # (simulates light modification while smart scene is active)
+    mock_bridge_v2.api.emit_event(
+        "update",
+        {
+            "type": "smart_scene",
+            "id": test_scene_id,
+            "state": "active",  # State unchanged
+            "active_timeslot": {
+                "timeslot_id": 2,  # Different timeslot
+                "weekday": "thursday",
+            },
+        },
+    )
+    await hass.async_block_till_done()
+
+    # State should NOT have changed (no new activation recorded)
+    test_entity = hass.states.get(test_entity_id)
+    assert test_entity.state == first_activation_state
