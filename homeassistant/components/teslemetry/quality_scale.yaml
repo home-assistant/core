@@ -28,7 +28,7 @@ rules:
   log-when-unavailable: done
   parallel-updates: done
   reauthentication-flow: done
-  test-coverage: done
+  test-coverage: todo
   # Gold
   devices: done
   diagnostics: done
