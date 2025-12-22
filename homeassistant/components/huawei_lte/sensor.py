@@ -216,7 +216,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 key="ecio",
                 translation_key="ecio",
                 device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-                # https://wiki.teltonika.lt/view/EC/IO
+                # https://wiki.teltonika-networks.com/view/EC/IO
                 icon_fn=lambda x: signal_icon((-20, -10, -6), x),
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
@@ -386,7 +386,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 key="rscp",
                 translation_key="rscp",
                 device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-                # https://wiki.teltonika.lt/view/RSCP
+                # https://wiki.teltonika-networks.com/view/RSCP
                 icon_fn=lambda x: signal_icon((-95, -85, -75), x),
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
@@ -395,8 +395,8 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 key="rsrp",
                 translation_key="rsrp",
                 device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-                # http://www.lte-anbieter.info/technik/rsrp.php  # codespell:ignore technik
-                icon_fn=lambda x: signal_icon((-110, -95, -80), x),
+                # https://wiki.teltonika-networks.com/view/RSRP_and_RSRQ
+                icon_fn=lambda x: signal_icon((-100, -90, -80), x),
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
                 entity_registry_enabled_default=True,
@@ -405,8 +405,8 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 key="rsrq",
                 translation_key="rsrq",
                 device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-                # http://www.lte-anbieter.info/technik/rsrq.php  # codespell:ignore technik
-                icon_fn=lambda x: signal_icon((-11, -8, -5), x),
+                # https://wiki.teltonika-networks.com/view/RSRP_and_RSRQ
+                icon_fn=lambda x: signal_icon((-20, -15, -10), x),
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
                 entity_registry_enabled_default=True,
@@ -415,8 +415,8 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 key="rssi",
                 translation_key="rssi",
                 device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-                # https://eyesaas.com/wi-fi-signal-strength/
-                icon_fn=lambda x: signal_icon((-80, -70, -60), x),
+                # https://wiki.teltonika-networks.com/view/RSSI
+                icon_fn=lambda x: signal_icon((-95, -85, -75), x),
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
                 entity_registry_enabled_default=True,
@@ -436,8 +436,8 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 key="sinr",
                 translation_key="sinr",
                 device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-                # http://www.lte-anbieter.info/technik/sinr.php  # codespell:ignore technik
-                icon_fn=lambda x: signal_icon((0, 5, 10), x),
+                # https://wiki.teltonika-networks.com/view/SINR
+                icon_fn=lambda x: signal_icon((0, 13, 20), x),
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
                 entity_registry_enabled_default=True,
