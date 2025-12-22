@@ -350,10 +350,3 @@ class RoborockSelectEntityA01(RoborockCoordinatedEntityA01, SelectEntity):
         _LOGGER.debug(f"current_value: {current_value} for {self.entity_description.key} with values {self.entity_description.option_values}")
         # Find the option name that matches the current value
         return current_value
-        #return self.entity_description.option_values.get(current_value, None)
-        #for option_name, option_value in self.entity_description.option_values.items():
-        #    _LOGGER.debug(f"Checking option: {option_name} with value: {option_value}")
-        #    if option_name == current_value:
-        #        return option_value
-        #
-        #return None
