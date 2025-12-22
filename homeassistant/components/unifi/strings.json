@@ -85,6 +85,7 @@
       "device_tracker": {
         "data": {
           "detection_time": "Time in seconds from last seen until considered away",
+          "wired_detection_time": "Time in seconds from last seen until considered away for wired clients",
           "ignore_wired_bug": "Disable UniFi Network wired bug logic",
           "ssid_filter": "Select SSIDs to track wireless clients on",
           "track_clients": "Track network clients",
