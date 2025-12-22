@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
+from contextlib import ExitStack
 from functools import wraps
 import inspect
 from typing import TYPE_CHECKING, Any, Final, overload
@@ -22,6 +23,7 @@ from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util.ulid import ulid_now
 
 from .const import DOMAIN, KNX_MODULE_KEY, SUPPORTED_PLATFORMS_UI
+from .dpt import get_supported_dpts
 from .storage.config_store import ConfigStoreException
 from .storage.const import CONF_DATA
 from .storage.entity_store_schema import (
@@ -34,7 +36,11 @@ from .storage.entity_store_validation import (
     validate_entity_data,
 )
 from .storage.serialize import get_serialized_schema
-from .telegrams import SIGNAL_KNX_TELEGRAM, TelegramDict
+from .telegrams import (
+    SIGNAL_KNX_DATA_SECURE_ISSUE_TELEGRAM,
+    SIGNAL_KNX_TELEGRAM,
+    TelegramDict,
+)
 
 if TYPE_CHECKING:
     from .knx_module import KNXModule
@@ -186,6 +192,7 @@ def ws_get_base_data(
         msg["id"],
         {
             "connection_info": connection_info,
+            "dpt_metadata": get_supported_dpts(),
             "project_info": _project_info,
             "supported_platforms": sorted(SUPPORTED_PLATFORMS_UI),
         },
@@ -334,11 +341,23 @@ def ws_subscribe_telegram(
             telegram_dict,
         )
 
-    connection.subscriptions[msg["id"]] = async_dispatcher_connect(
-        hass,
-        signal=SIGNAL_KNX_TELEGRAM,
-        target=forward_telegram,
+    stack = ExitStack()
+    stack.callback(
+        async_dispatcher_connect(
+            hass,
+            signal=SIGNAL_KNX_TELEGRAM,
+            target=forward_telegram,
+        )
     )
+    stack.callback(
+        async_dispatcher_connect(
+            hass,
+            signal=SIGNAL_KNX_DATA_SECURE_ISSUE_TELEGRAM,
+            target=forward_telegram,
+        )
+    )
+
+    connection.subscriptions[msg["id"]] = stack.close
     connection.send_result(msg["id"])
 
 
