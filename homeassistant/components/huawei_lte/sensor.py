@@ -315,7 +315,8 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 key="nrrsrp",
                 translation_key="nrrsrp",
                 device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-                # Could add icon_fn as in rsrp, source for 5G thresholds?
+                # https://wiki.teltonika-networks.com/view/RSRP_and_RSRQ
+                icon_fn=lambda x: signal_icon((-100, -90, -80), x),
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
                 entity_registry_enabled_default=True,
@@ -324,7 +325,8 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 key="nrrsrq",
                 translation_key="nrrsrq",
                 device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-                # Could add icon_fn as in rsrq, source for 5G thresholds?
+                # https://wiki.teltonika-networks.com/view/RSRP_and_RSRQ
+                icon_fn=lambda x: signal_icon((-20, -15, -10), x),
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
                 entity_registry_enabled_default=True,
@@ -333,7 +335,8 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 key="nrsinr",
                 translation_key="nrsinr",
                 device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-                # Could add icon_fn as in sinr, source for thresholds?
+                # https://wiki.teltonika-networks.com/view/SINR
+                icon_fn=lambda x: signal_icon((0, 13, 20), x),
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
                 entity_registry_enabled_default=True,
