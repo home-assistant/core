@@ -23,8 +23,6 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-JOB_PRINTING_STATES = ["Printing from SD", "Printing"]
-
 
 def _is_printer_printing(printer: OctoprintPrinterInfo) -> bool:
     return (
@@ -110,10 +108,38 @@ class OctoPrintSensorBase(
         self._attr_device_info = coordinator.device_info
 
 
+# Map the strings returned by the OctoPrint API back into values based on the underlying OctoPrint constants.
+# See octoprint.util.comm.MahcineCom.getStateString():
+# https://github.com/OctoPrint/OctoPrint/blob/7e7d418dac467e308b24c669a03e8b4256f04b45/src/octoprint/util/comm.py#L965
+_API_STATE_VALUE = {
+    "Opening serial connection": "open_serial",
+    "Detecting serial connection": "detect_serial",
+    "Connecting": "connecting",
+    "Operational": "operational",
+    "Starting print from SD": "starting_sd",
+    "Starting to send file to SD": "starting_streaming",
+    "Starting": "starting",
+    "Printing from SD": "printing_sd",
+    "Sending file to SD": "printing_streaming",
+    "Printing": "printing",
+    "Cancelling": "cancelling",
+    "Pausing": "pausing",
+    "Paused": "paused",
+    "Resuming": "resuming",
+    "Finishing": "finishing",
+    "Offline": "offline",
+    "Error": "error",
+    "Offline after error": "offline_after_error",
+    "Transferring file to SD": "transferring_file",
+}
+
+
 class OctoPrintStatusSensor(OctoPrintSensorBase):
     """Representation of an OctoPrint status sensor."""
 
-    _attr_icon = "mdi:printer-3d"
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = list(_API_STATE_VALUE.values())
+    _attr_translation_key = "status"
 
     def __init__(
         self, coordinator: OctoprintDataUpdateCoordinator, device_id: str
@@ -124,11 +150,14 @@ class OctoPrintStatusSensor(OctoPrintSensorBase):
     @property
     def native_value(self):
         """Return sensor state."""
+
+        # Get printer data from the coordinator
         printer: OctoprintPrinterInfo = self.coordinator.data["printer"]
         if not printer:
             return None
 
-        return printer.state.text
+        # Translate the string from the API into an internal state value, or return None (Unknown) if no match
+        return _API_STATE_VALUE.get(printer.state.text)
 
     @property
     def available(self) -> bool:
@@ -272,7 +301,7 @@ class OctoPrintTemperatureSensor(OctoPrintSensorBase):
 class OctoPrintFileNameSensor(OctoPrintSensorBase):
     """Representation of an OctoPrint file name sensor."""
 
-    _attr_icon = "mdi:printer-3d-nozzle"
+    _attr_translation_key = "file_name"
 
     def __init__(
         self,

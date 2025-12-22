@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-from ipaddress import IPv4Network, ip_network
 import logging
 from types import ModuleType
-from typing import Any
 
 from telegram import Bot
 from telegram.constants import InputMediaType
@@ -13,17 +11,13 @@ from telegram.error import InvalidToken, TelegramError
 import voluptuous as vol
 
 from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     ATTR_SERVICE,
-    CONF_API_KEY,
     CONF_PLATFORM,
-    CONF_SOURCE,
-    CONF_URL,
     Platform,
 )
 from homeassistant.core import (
@@ -69,6 +63,7 @@ from .const import (
     ATTR_PASSWORD,
     ATTR_QUESTION,
     ATTR_REACTION,
+    ATTR_REPLY_TO_MSGID,
     ATTR_RESIZE_KEYBOARD,
     ATTR_SHOW_ALERT,
     ATTR_STICKER_ID,
@@ -89,14 +84,8 @@ from .const import (
     CHAT_ACTION_UPLOAD_VIDEO,
     CHAT_ACTION_UPLOAD_VIDEO_NOTE,
     CHAT_ACTION_UPLOAD_VOICE,
-    CONF_ALLOWED_CHAT_IDS,
-    CONF_BOT_COUNT,
     CONF_CONFIG_ENTRY_ID,
-    CONF_PROXY_URL,
-    CONF_TRUSTED_NETWORKS,
-    DEFAULT_TRUSTED_NETWORKS,
     DOMAIN,
-    PARSER_MD,
     PLATFORM_BROADCAST,
     PLATFORM_POLLING,
     PLATFORM_WEBHOOKS,
@@ -122,34 +111,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.All(
-            cv.ensure_list,
-            [
-                vol.Schema(
-                    {
-                        vol.Required(CONF_PLATFORM): vol.In(
-                            (PLATFORM_BROADCAST, PLATFORM_POLLING, PLATFORM_WEBHOOKS)
-                        ),
-                        vol.Required(CONF_API_KEY): cv.string,
-                        vol.Required(CONF_ALLOWED_CHAT_IDS): vol.All(
-                            cv.ensure_list, [vol.Coerce(int)]
-                        ),
-                        vol.Optional(ATTR_PARSER, default=PARSER_MD): cv.string,
-                        vol.Optional(CONF_PROXY_URL): cv.string,
-                        # webhooks
-                        vol.Optional(CONF_URL): cv.url,
-                        vol.Optional(
-                            CONF_TRUSTED_NETWORKS, default=DEFAULT_TRUSTED_NETWORKS
-                        ): vol.All(cv.ensure_list, [ip_network]),
-                    }
-                )
-            ],
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 BASE_SERVICE_SCHEMA = vol.Schema(
     {
@@ -165,21 +127,26 @@ BASE_SERVICE_SCHEMA = vol.Schema(
         vol.Optional(ATTR_TIMEOUT): cv.positive_int,
         vol.Optional(ATTR_MESSAGE_TAG): cv.string,
         vol.Optional(ATTR_MESSAGE_THREAD_ID): vol.Coerce(int),
-    },
-    extra=vol.ALLOW_EXTRA,
+    }
 )
 
 SERVICE_SCHEMA_SEND_MESSAGE = vol.All(
     cv.deprecated(ATTR_TIMEOUT),
     BASE_SERVICE_SCHEMA.extend(
-        {vol.Required(ATTR_MESSAGE): cv.string, vol.Optional(ATTR_TITLE): cv.string}
+        {
+            vol.Required(ATTR_MESSAGE): cv.string,
+            vol.Optional(ATTR_TITLE): cv.string,
+            vol.Optional(ATTR_REPLY_TO_MSGID): vol.Coerce(int),
+        }
     ),
 )
 
 SERVICE_SCHEMA_SEND_CHAT_ACTION = vol.All(
     cv.deprecated(ATTR_TIMEOUT),
-    BASE_SERVICE_SCHEMA.extend(
+    vol.Schema(
         {
+            vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
+            vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [vol.Coerce(int)]),
             vol.Required(ATTR_CHAT_ACTION): vol.In(
                 (
                     CHAT_ACTION_TYPING,
@@ -195,6 +162,7 @@ SERVICE_SCHEMA_SEND_CHAT_ACTION = vol.All(
                     CHAT_ACTION_UPLOAD_VIDEO_NOTE,
                 )
             ),
+            vol.Optional(ATTR_MESSAGE_THREAD_ID): vol.Coerce(int),
         }
     ),
 )
@@ -208,6 +176,7 @@ SERVICE_SCHEMA_BASE_SEND_FILE = BASE_SERVICE_SCHEMA.extend(
         vol.Optional(ATTR_PASSWORD): cv.string,
         vol.Optional(ATTR_AUTHENTICATION): cv.string,
         vol.Optional(ATTR_VERIFY_SSL): cv.boolean,
+        vol.Optional(ATTR_REPLY_TO_MSGID): vol.Coerce(int),
     }
 )
 
@@ -227,6 +196,7 @@ SERVICE_SCHEMA_SEND_LOCATION = vol.All(
         {
             vol.Required(ATTR_LONGITUDE): cv.string,
             vol.Required(ATTR_LATITUDE): cv.string,
+            vol.Optional(ATTR_REPLY_TO_MSGID): vol.Coerce(int),
         }
     ),
 )
@@ -244,18 +214,25 @@ SERVICE_SCHEMA_SEND_POLL = vol.All(
             vol.Optional(ATTR_ALLOWS_MULTIPLE_ANSWERS, default=False): cv.boolean,
             vol.Optional(ATTR_DISABLE_NOTIF): cv.boolean,
             vol.Optional(ATTR_MESSAGE_THREAD_ID): vol.Coerce(int),
+            vol.Optional(ATTR_REPLY_TO_MSGID): vol.Coerce(int),
         }
     ),
 )
 
 SERVICE_SCHEMA_EDIT_MESSAGE = vol.All(
     cv.deprecated(ATTR_TIMEOUT),
-    SERVICE_SCHEMA_BASE_SEND_FILE.extend(
+    vol.Schema(
         {
+            vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
+            vol.Optional(ATTR_TITLE): cv.string,
+            vol.Required(ATTR_MESSAGE): cv.string,
             vol.Required(ATTR_MESSAGEID): vol.Any(
                 cv.positive_int, vol.All(cv.string, "last")
             ),
             vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
+            vol.Optional(ATTR_PARSER): cv.string,
+            vol.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
+            vol.Optional(ATTR_DISABLE_WEB_PREV): cv.boolean,
         }
     ),
 )
@@ -384,34 +361,6 @@ PLATFORMS: list[Platform] = [Platform.EVENT, Platform.NOTIFY]
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Telegram bot component."""
-
-    # import the last YAML config since existing behavior only works with the last config
-    domain_config: list[dict[str, Any]] | None = config.get(DOMAIN)
-    if domain_config:
-        trusted_networks: list[IPv4Network] = domain_config[-1].get(
-            CONF_TRUSTED_NETWORKS, []
-        )
-        trusted_networks_str: list[str] = (
-            [str(trusted_network) for trusted_network in trusted_networks]
-            if trusted_networks
-            else []
-        )
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={CONF_SOURCE: SOURCE_IMPORT},
-                data={
-                    CONF_PLATFORM: domain_config[-1][CONF_PLATFORM],
-                    CONF_API_KEY: domain_config[-1][CONF_API_KEY],
-                    CONF_ALLOWED_CHAT_IDS: domain_config[-1][CONF_ALLOWED_CHAT_IDS],
-                    ATTR_PARSER: domain_config[-1][ATTR_PARSER],
-                    CONF_PROXY_URL: domain_config[-1].get(CONF_PROXY_URL),
-                    CONF_URL: domain_config[-1].get(CONF_URL),
-                    CONF_TRUSTED_NETWORKS: trusted_networks_str,
-                    CONF_BOT_COUNT: len(domain_config),
-                },
-            )
-        )
 
     async def async_send_telegram_message(service: ServiceCall) -> ServiceResponse:
         """Handle sending Telegram Bot message service calls."""
