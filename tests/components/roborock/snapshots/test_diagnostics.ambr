@@ -4,22 +4,22 @@
     'config_entry': dict({
       'base_url': 'https://usiot.roborock.com',
       'user_data': dict({
-        'avatarurl': 'https://files.roborock.com/iottest/default_avatar.png',
+        'avatarurl': '**REDACTED**',
         'country': 'US',
         'countrycode': '1',
-        'nickname': 'user_nickname',
+        'nickname': '**REDACTED**',
         'region': 'us',
         'rriot': dict({
-          'h': 'abc123',
-          'k': 'abc123',
+          'h': '**REDACTED**',
+          'k': '**REDACTED**',
           'r': dict({
             'a': 'https://api-us.roborock.com',
             'l': 'https://wood-us.roborock.com',
             'm': 'ssl://mqtt-us-2.roborock.com:8883',
             'r': 'US',
           }),
-          's': 'abc123',
-          'u': 'abc123',
+          's': '**REDACTED**',
+          'u': '**REDACTED**',
         }),
         'rruid': '**REDACTED**',
         'token': '**REDACTED**',
