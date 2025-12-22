@@ -82,6 +82,9 @@
       }
     },
     "sensor": {
+      "alarm_next": {
+        "name": "Next alarm"
+      },
       "info_total_albums": {
         "name": "Total albums",
         "unit_of_measurement": "albums"
