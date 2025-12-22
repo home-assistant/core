@@ -17,15 +17,9 @@ from roborock.data import (
     RoborockStateCode,
     WorkStatusMapping,
     ZeoDetergentType,
-    ZeoDryingMode,
     ZeoError,
-    ZeoMode,
-    ZeoProgram,
-    ZeoRinse,
     ZeoSoftenerType,
-    ZeoSpin,
     ZeoState,
-    ZeoTemperature,
 )
 from roborock.roborock_message import RoborockDyadDataProtocol, RoborockZeoProtocol
 

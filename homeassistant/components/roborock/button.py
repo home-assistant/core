@@ -11,7 +11,6 @@ from typing import Any
 from roborock.devices.traits.v1.consumeable import ConsumableAttribute
 from roborock.exceptions import RoborockException
 from roborock.roborock_message import RoborockZeoProtocol
-from roborock.roborock_typing import RoborockCommand
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory

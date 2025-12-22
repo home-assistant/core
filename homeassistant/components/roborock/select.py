@@ -18,8 +18,8 @@ from roborock.devices.traits.v1 import PropertiesApi
 from roborock.devices.traits.v1.home import HomeTrait
 from roborock.devices.traits.v1.maps import MapsTrait
 from roborock.exceptions import RoborockException
-from roborock.roborock_message import RoborockDataProtocol, RoborockZeoProtocol
-from roborock.roborock_typing import DeviceProp, RoborockCommand
+from roborock.roborock_message import RoborockZeoProtocol
+from roborock.roborock_typing import RoborockCommand
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
@@ -125,7 +125,7 @@ A01_SELECT_DESCRIPTIONS: list[RoborockSelectDescriptionA01] = [
         translation_key="zeo_program",
         entity_category=EntityCategory.CONFIG,
         options=list(ZeoProgram.keys()),
-        option_values={name: code for name, code in ZeoProgram.as_dict().items()},
+        option_values=dict(ZeoProgram.as_dict().items()),
     ),
     RoborockSelectDescriptionA01(
         key="mode",
@@ -133,7 +133,7 @@ A01_SELECT_DESCRIPTIONS: list[RoborockSelectDescriptionA01] = [
         translation_key="zeo_mode",
         entity_category=EntityCategory.CONFIG,
         options=list(ZeoMode.keys()),
-        option_values={name: code for name, code in ZeoMode.as_dict().items()},
+        option_values=dict(ZeoMode.as_dict().items()),
     ),
     RoborockSelectDescriptionA01(
         key="temperature",
@@ -141,7 +141,7 @@ A01_SELECT_DESCRIPTIONS: list[RoborockSelectDescriptionA01] = [
         translation_key="zeo_temperature",
         entity_category=EntityCategory.CONFIG,
         options=list(ZeoTemperature.keys()),
-        option_values={name: code for name, code in ZeoTemperature.as_dict().items()},
+        option_values=dict(ZeoTemperature.as_dict().items()),
     ),
     RoborockSelectDescriptionA01(
         key="drying_mode",
@@ -149,7 +149,7 @@ A01_SELECT_DESCRIPTIONS: list[RoborockSelectDescriptionA01] = [
         translation_key="zeo_drying_mode",
         entity_category=EntityCategory.CONFIG,
         options=list(ZeoDryingMode.keys()),
-        option_values={name: code for name, code in ZeoDryingMode.as_dict().items()},
+        option_values=dict(ZeoDryingMode.as_dict().items()),
     ),
     RoborockSelectDescriptionA01(
         key="spin_level",
@@ -157,7 +157,7 @@ A01_SELECT_DESCRIPTIONS: list[RoborockSelectDescriptionA01] = [
         translation_key="zeo_spin_level",
         entity_category=EntityCategory.CONFIG,
         options=list(ZeoSpin.keys()),
-        option_values={name: code for name, code in ZeoSpin.as_dict().items()},
+        option_values=dict(ZeoSpin.as_dict().items()),
     ),
     RoborockSelectDescriptionA01(
         key="rinse_times",
@@ -165,7 +165,7 @@ A01_SELECT_DESCRIPTIONS: list[RoborockSelectDescriptionA01] = [
         translation_key="zeo_rinse_times",
         entity_category=EntityCategory.CONFIG,
         options=list(ZeoRinse.keys()),
-        option_values={name: code for name, code in ZeoRinse.as_dict().items()},
+        option_values=dict(ZeoRinse.as_dict().items()),
     ),
 ]
 
