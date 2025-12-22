@@ -537,7 +537,7 @@ automower-ble==0.2.8
 av==16.0.1
 
 # homeassistant.components.axis
-axis==65
+axis==66
 
 # homeassistant.components.fujitsu_fglair
 ayla-iot-unofficial==1.4.7
