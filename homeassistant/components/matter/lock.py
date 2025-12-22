@@ -69,6 +69,21 @@ class MatterLock(MatterEntity, LockEntity):
     async def async_added_to_hass(self) -> None:
         """Subscribe to events."""
         await super().async_added_to_hass()
+
+        # Debug: Log feature map to check USR support
+        feature_map = self.get_matter_attribute_value(
+            clusters.DoorLock.Attributes.FeatureMap
+        )
+        LOGGER.info(
+            "Lock %s feature map: 0x%X (%d) - USR bit (0x100) is %s",
+            self.entity_id,
+            feature_map or 0,
+            feature_map or 0,
+            "SET (supports user management)"
+            if feature_map and (feature_map & DOOR_LOCK_FEATURE_USR)
+            else "NOT SET",
+        )
+
         # subscribe to NodeEvent events
         self._unsubscribes.append(
             self.matter_client.subscribe_events(
@@ -259,9 +274,10 @@ class MatterLock(MatterEntity, LockEntity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return entity specific state attributes for lock capabilities."""
-        feature_map = self.get_matter_attribute_value(
-            clusters.DoorLock.Attributes.FeatureMap
-        ) or 0
+        feature_map = (
+            self.get_matter_attribute_value(clusters.DoorLock.Attributes.FeatureMap)
+            or 0
+        )
         supports_usr = bool(feature_map & DOOR_LOCK_FEATURE_USR)
 
         attrs: dict[str, Any] = {

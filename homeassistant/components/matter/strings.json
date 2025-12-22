@@ -175,12 +175,12 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "door_open": "Door opened",
+              "door_ajar": "Door ajar",
               "door_closed": "Door closed",
-              "door_jammed": "Door jammed",
               "door_forced_open": "Door forced open",
-              "door_unspecified_error": "Door error",
-              "door_ajar": "Door ajar"
+              "door_jammed": "Door jammed",
+              "door_open": "Door opened",
+              "door_unspecified_error": "Door error"
             }
           }
         }
@@ -190,14 +190,14 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "lock_jammed": "Lock jammed",
-              "lock_factory_reset": "Factory reset",
-              "lock_radio_power_cycled": "Radio power cycled",
-              "wrong_code_entry_limit": "Wrong code entry limit exceeded",
-              "front_escutcheon_removed": "Front escutcheon removed",
-              "door_forced_open": "Door forced open",
               "door_ajar": "Door ajar",
-              "forced_user": "Forced user event"
+              "door_forced_open": "Door forced open",
+              "forced_user": "Forced user event",
+              "front_escutcheon_removed": "Front escutcheon removed",
+              "lock_factory_reset": "Factory reset",
+              "lock_jammed": "Lock jammed",
+              "lock_radio_power_cycled": "Radio power cycled",
+              "wrong_code_entry_limit": "Wrong code entry limit exceeded"
             }
           }
         }
@@ -207,12 +207,12 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "locked": "Locked",
-              "unlocked": "Unlocked",
-              "unlatched": "Unlatched",
               "lock_failed": "Lock failed",
+              "locked": "Locked",
+              "unlatch_failed": "Unlatch failed",
+              "unlatched": "Unlatched",
               "unlock_failed": "Unlock failed",
-              "unlatch_failed": "Unlatch failed"
+              "unlocked": "Unlocked"
             }
           }
         }
@@ -222,12 +222,12 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "user_added": "User added",
-              "user_cleared": "User cleared",
-              "user_modified": "User modified",
               "credential_added": "Credential added",
               "credential_cleared": "Credential cleared",
-              "credential_modified": "Credential modified"
+              "credential_modified": "Credential modified",
+              "user_added": "User added",
+              "user_cleared": "User cleared",
+              "user_modified": "User modified"
             }
           }
         }
@@ -661,17 +661,20 @@
     }
   },
   "exceptions": {
+    "holiday_schedules_not_supported": {
+      "message": "This lock does not support holiday schedules."
+    },
+    "invalid_time_range": {
+      "message": "Invalid time range: end time must be after start time."
+    },
     "lock_not_found": {
       "message": "No lock endpoint found on this device."
     },
-    "usr_not_supported": {
-      "message": "This lock does not support user and credential management."
+    "schedule_not_found": {
+      "message": "Schedule at index {schedule_index} was not found."
     },
-    "user_already_exists": {
-      "message": "User slot {user_index} is already occupied."
-    },
-    "user_not_found": {
-      "message": "User slot {user_index} is empty."
+    "set_credential_duplicate_code_error": {
+      "message": "Failed to set credential because this code is already in use."
     },
     "set_credential_general_failure": {
       "message": "Failed to set credential due to a general failure."
@@ -679,26 +682,23 @@
     "set_credential_memory_full": {
       "message": "Failed to set credential because the lock memory is full."
     },
-    "set_credential_duplicate_code_error": {
-      "message": "Failed to set credential because this code is already in use."
-    },
     "set_credential_occupied": {
       "message": "Failed to set credential because the slot is already occupied."
+    },
+    "user_already_exists": {
+      "message": "User slot {user_index} is already occupied."
+    },
+    "user_not_found": {
+      "message": "User slot {user_index} is empty."
+    },
+    "usr_not_supported": {
+      "message": "This lock does not support user and credential management."
     },
     "week_day_schedules_not_supported": {
       "message": "This lock does not support week day schedules."
     },
     "year_day_schedules_not_supported": {
       "message": "This lock does not support year day schedules."
-    },
-    "holiday_schedules_not_supported": {
-      "message": "This lock does not support holiday schedules."
-    },
-    "schedule_not_found": {
-      "message": "Schedule at index {schedule_index} was not found."
-    },
-    "invalid_time_range": {
-      "message": "Invalid time range: end time must be after start time."
     }
   },
   "issues": {

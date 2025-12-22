@@ -6,11 +6,11 @@ import asyncio
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from chip.clusters import Objects as clusters
+
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
-
-from chip.clusters import Objects as clusters
 
 from .const import DOMAIN, ID_TYPE_DEVICE_ID
 
@@ -21,10 +21,10 @@ if TYPE_CHECKING:
     from .adapter import MatterAdapter
 
 # DoorLock FeatureMap bits
-DOOR_LOCK_FEATURE_WDSCH = 0x4    # Bit 2 - Week Day Schedules
-DOOR_LOCK_FEATURE_YDSCH = 0x8    # Bit 3 - Year Day Schedules
-DOOR_LOCK_FEATURE_HDSCH = 0x10   # Bit 4 - Holiday Schedules
-DOOR_LOCK_FEATURE_USR = 0x100    # Bit 8 - User Management
+DOOR_LOCK_FEATURE_WDSCH = 0x4  # Bit 2 - Week Day Schedules
+DOOR_LOCK_FEATURE_YDSCH = 0x8  # Bit 3 - Year Day Schedules
+DOOR_LOCK_FEATURE_HDSCH = 0x10  # Bit 4 - Holiday Schedules
+DOOR_LOCK_FEATURE_USR = 0x100  # Bit 8 - User Management
 
 
 class MissingNode(HomeAssistantError):

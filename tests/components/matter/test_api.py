@@ -777,9 +777,7 @@ async def test_get_lock_users(
     mock_user3.credentials = []
     mock_user3.nextUserIndex = None  # No more users
 
-    matter_client.send_device_command = AsyncMock(
-        side_effect=[mock_user1, mock_user3]
-    )
+    matter_client.send_device_command = AsyncMock(side_effect=[mock_user1, mock_user3])
 
     ws_client = await hass_ws_client(hass)
     await ws_client.send_json(

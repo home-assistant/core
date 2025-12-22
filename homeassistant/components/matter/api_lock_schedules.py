@@ -78,7 +78,15 @@ OPERATING_MODE_MAP = {
 OPERATING_MODE_REVERSE_MAP = {v: k for k, v in OPERATING_MODE_MAP.items()}
 
 # Day names for days mask
-DAY_NAMES = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"]
+DAY_NAMES = [
+    "sunday",
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+]
 
 
 def _days_mask_to_list(days_mask: int) -> list[str]:
@@ -181,7 +189,9 @@ def async_register_lock_schedules_api(hass: HomeAssistant) -> None:
         vol.Required("user_index"): vol.All(vol.Coerce(int), vol.Range(min=1)),
         vol.Required("days_mask"): vol.All(vol.Coerce(int), vol.Range(min=1, max=127)),
         vol.Required("start_hour"): vol.All(vol.Coerce(int), vol.Range(min=0, max=23)),
-        vol.Required("start_minute"): vol.All(vol.Coerce(int), vol.Range(min=0, max=59)),
+        vol.Required("start_minute"): vol.All(
+            vol.Coerce(int), vol.Range(min=0, max=59)
+        ),
         vol.Required("end_hour"): vol.All(vol.Coerce(int), vol.Range(min=0, max=23)),
         vol.Required("end_minute"): vol.All(vol.Coerce(int), vol.Range(min=0, max=59)),
     }

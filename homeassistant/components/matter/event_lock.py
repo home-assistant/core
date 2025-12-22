@@ -278,13 +278,12 @@ class MatterLockUserChangeEventEntity(MatterLockEventEntityBase):
                 event_type = "user_cleared"
             else:
                 event_type = "user_modified"
+        elif data_operation == 0:
+            event_type = "credential_added"
+        elif data_operation == 1:
+            event_type = "credential_cleared"
         else:
-            if data_operation == 0:
-                event_type = "credential_added"
-            elif data_operation == 1:
-                event_type = "credential_cleared"
-            else:
-                event_type = "credential_modified"
+            event_type = "credential_modified"
 
         # Add human-readable fields to event data
         enriched_data = {
