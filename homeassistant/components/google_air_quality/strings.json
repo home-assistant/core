@@ -95,6 +95,11 @@
       }
     }
   },
+  "device": {
+    "forecast": {
+      "name": "{location} forecast {forecast_period}h"
+    }
+  },
   "entity": {
     "sensor": {
       "local_aqi": {

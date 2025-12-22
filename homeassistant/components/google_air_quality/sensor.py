@@ -272,7 +272,11 @@ class AirQualityForecastSensorEntity(
                     f"{self.coordinator.config_entry.entry_id}_{subentry_id}_forecast_{hour}h",
                 )
             },
-            name=f"{subentry.title} forecast {hour}h",
+            translation_key="forecast",
+            translation_placeholders={
+                "location": subentry.title,
+                "forecast_period": str(hour),
+            },
             entry_type=DeviceEntryType.SERVICE,
         )
         if description.translation_placeholders_fn:
