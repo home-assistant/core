@@ -29,13 +29,11 @@ async def async_setup_entry(
     """Set up the WMS based switches from a config entry."""
     hub = config_entry.runtime_data
 
-    entities: list[WebControlProGenericEntity] = [
+    async_add_entities(
         WebControlProSwitch(config_entry.entry_id, dest)
         for dest in hub.dests.values()
         if dest.hasAction(WMS_WebControl_pro_API_actionDescription.LoadSwitch)
-    ]
-
-    async_add_entities(entities)
+    )
 
 
 class WebControlProSwitch(WebControlProGenericEntity, SwitchEntity):
