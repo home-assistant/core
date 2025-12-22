@@ -63,6 +63,27 @@ DEVICE_DATA: list[dict[str, Any]] = [
     },
 ]
 
+SENSOR_DEVICE_DATA: list[dict[str, Any]] = [
+    {
+        "dev_id": "02010000106A242121110E",
+        "dev_type": "0201",
+        "name": "Motion Sensor 0000-10",
+        "model": "DALI Motion Sensor",
+        "color_mode": None,
+        "address": 10,
+        "channel": 0,
+    },
+    {
+        "dev_id": "02020000206A242121110E",
+        "dev_type": "0202",
+        "name": "Illuminance Sensor 0000-20",
+        "model": "DALI Illuminance Sensor",
+        "color_mode": None,
+        "address": 20,
+        "channel": 0,
+    },
+]
+
 
 @pytest.fixture
 async def init_integration(
@@ -124,6 +145,12 @@ def mock_devices() -> list[MagicMock]:
     devices = [_create_mock_device(data) for data in DEVICE_DATA]
     devices.append(_create_mock_device(DEVICE_DATA[0]))
     return devices
+
+
+@pytest.fixture
+def mock_sensor_devices() -> list[MagicMock]:
+    """Return mocked sensor Device objects."""
+    return [_create_mock_device(data) for data in SENSOR_DEVICE_DATA]
 
 
 def _create_scene_device_property(
