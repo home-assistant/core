@@ -9,6 +9,9 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.climate.const import (
+    ATTR_CURRENT_HUMIDITY,
+    ATTR_CURRENT_TEMPERATURE,
+    ATTR_HUMIDITY,
     ATTR_HVAC_ACTION,
     HVACAction,
     HVACMode,
@@ -67,7 +70,13 @@ async def target_climates(hass: HomeAssistant) -> list[str]:
 @pytest.mark.parametrize(
     "trigger_key",
     [
+        "climate.current_humidity_changed",
+        "climate.current_humidity_crossed_threshold",
+        "climate.current_temperature_changed",
+        "climate.current_temperature_crossed_threshold",
         "climate.hvac_mode_changed",
+        "climate.target_humidity_changed",
+        "climate.target_humidity_crossed_threshold",
         "climate.target_temperature_changed",
         "climate.target_temperature_crossed_threshold",
         "climate.turned_off",
@@ -368,7 +377,25 @@ async def test_climate_state_trigger_behavior_any(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_xxx_changed_trigger_states(
+            "climate.current_humidity_changed", ATTR_CURRENT_HUMIDITY
+        ),
+        *parametrize_xxx_changed_trigger_states(
+            "climate.current_temperature_changed", ATTR_CURRENT_TEMPERATURE
+        ),
+        *parametrize_xxx_changed_trigger_states(
+            "climate.target_humidity_changed", ATTR_HUMIDITY
+        ),
+        *parametrize_xxx_changed_trigger_states(
             "climate.target_temperature_changed", ATTR_TEMPERATURE
+        ),
+        *parametrize_xxx_crossed_threshold_trigger_states(
+            "climate.current_humidity_crossed_threshold", ATTR_CURRENT_HUMIDITY
+        ),
+        *parametrize_xxx_crossed_threshold_trigger_states(
+            "climate.current_temperature_crossed_threshold", ATTR_CURRENT_TEMPERATURE
+        ),
+        *parametrize_xxx_crossed_threshold_trigger_states(
+            "climate.target_humidity_crossed_threshold", ATTR_HUMIDITY
         ),
         *parametrize_xxx_crossed_threshold_trigger_states(
             "climate.target_temperature_crossed_threshold", ATTR_TEMPERATURE
@@ -511,6 +538,15 @@ async def test_climate_state_trigger_behavior_first(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_xxx_crossed_threshold_trigger_states(
+            "climate.current_humidity_crossed_threshold", ATTR_CURRENT_HUMIDITY
+        ),
+        *parametrize_xxx_crossed_threshold_trigger_states(
+            "climate.current_temperature_crossed_threshold", ATTR_CURRENT_TEMPERATURE
+        ),
+        *parametrize_xxx_crossed_threshold_trigger_states(
+            "climate.target_humidity_crossed_threshold", ATTR_HUMIDITY
+        ),
+        *parametrize_xxx_crossed_threshold_trigger_states(
             "climate.target_temperature_crossed_threshold", ATTR_TEMPERATURE
         ),
         *parametrize_climate_trigger_states(
@@ -650,6 +686,15 @@ async def test_climate_state_trigger_behavior_last(
 @pytest.mark.parametrize(
     ("trigger", "trigger_options", "states"),
     [
+        *parametrize_xxx_crossed_threshold_trigger_states(
+            "climate.current_humidity_crossed_threshold", ATTR_CURRENT_HUMIDITY
+        ),
+        *parametrize_xxx_crossed_threshold_trigger_states(
+            "climate.current_temperature_crossed_threshold", ATTR_CURRENT_TEMPERATURE
+        ),
+        *parametrize_xxx_crossed_threshold_trigger_states(
+            "climate.target_humidity_crossed_threshold", ATTR_HUMIDITY
+        ),
         *parametrize_xxx_crossed_threshold_trigger_states(
             "climate.target_temperature_crossed_threshold", ATTR_TEMPERATURE
         ),
