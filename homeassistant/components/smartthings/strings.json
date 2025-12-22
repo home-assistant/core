@@ -74,6 +74,9 @@
       }
     },
     "button": {
+      "reset_hood_filter": {
+        "name": "Reset filter"
+      },
       "reset_water_filter": {
         "name": "Reset water filter"
       },
@@ -147,6 +150,9 @@
       },
       "hood_fan_speed": {
         "name": "Fan speed"
+      },
+      "target_temperature": {
+        "name": "Target temperature"
       },
       "washer_rinse_cycles": {
         "name": "Rinse cycles",

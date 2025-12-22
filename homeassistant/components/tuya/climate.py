@@ -68,7 +68,7 @@ class _SwingModeWrapper(DeviceWrapper):
     on_off: DPCodeBooleanWrapper | None = None
     horizontal: DPCodeBooleanWrapper | None = None
     vertical: DPCodeBooleanWrapper | None = None
-    modes: list[str]
+    options: list[str]
 
     @classmethod
     def find_dpcode(cls, device: CustomerDevice) -> Self | None:
@@ -83,18 +83,18 @@ class _SwingModeWrapper(DeviceWrapper):
             device, DPCode.SWITCH_VERTICAL, prefer_function=True
         )
         if on_off or horizontal or vertical:
-            modes = [SWING_OFF]
+            options = [SWING_OFF]
             if on_off:
-                modes.append(SWING_ON)
+                options.append(SWING_ON)
             if horizontal:
-                modes.append(SWING_HORIZONTAL)
+                options.append(SWING_HORIZONTAL)
             if vertical:
-                modes.append(SWING_VERTICAL)
+                options.append(SWING_VERTICAL)
             return cls(
                 on_off=on_off,
                 horizontal=horizontal,
                 vertical=vertical,
-                modes=modes,
+                options=options,
             )
         return None
 
@@ -207,6 +207,18 @@ def _get_temperature_wrappers(
     temp_set_f = DPCodeIntegerWrapper.find_dpcode(
         device, DPCode.TEMP_SET_F, prefer_function=True
     )
+
+    # If there is a temp unit convert dpcode, override empty units
+    if (
+        temp_unit_convert := DPCodeEnumWrapper.find_dpcode(
+            device, DPCode.TEMP_UNIT_CONVERT
+        )
+    ) is not None:
+        for wrapper in (temp_current, temp_current_f, temp_set, temp_set_f):
+            if wrapper is not None and not wrapper.type_information.unit:
+                wrapper.type_information.unit = temp_unit_convert.read_device_status(
+                    device
+                )
 
     # Get wrappers for celsius and fahrenheit
     # We need to check the unit of measurement
@@ -349,11 +361,9 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         # it to define min, max & step temperatures
         if self._set_temperature:
             self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
-            self._attr_max_temp = self._set_temperature.type_information.max_scaled
-            self._attr_min_temp = self._set_temperature.type_information.min_scaled
-            self._attr_target_temperature_step = (
-                self._set_temperature.type_information.step_scaled
-            )
+            self._attr_max_temp = self._set_temperature.max_value
+            self._attr_min_temp = self._set_temperature.min_value
+            self._attr_target_temperature_step = self._set_temperature.value_step
 
         # Determine HVAC modes
         self._attr_hvac_modes: list[HVACMode] = []
@@ -361,7 +371,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         if hvac_mode_wrapper:
             self._attr_hvac_modes = [HVACMode.OFF]
             unknown_hvac_modes: list[str] = []
-            for tuya_mode in hvac_mode_wrapper.type_information.range:
+            for tuya_mode in hvac_mode_wrapper.options:
                 if tuya_mode in TUYA_HVAC_TO_HA:
                     ha_mode = TUYA_HVAC_TO_HA[tuya_mode]
                     self._hvac_to_tuya[ha_mode] = tuya_mode
@@ -382,22 +392,18 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         # Determine dpcode to use for setting the humidity
         if target_humidity_wrapper:
             self._attr_supported_features |= ClimateEntityFeature.TARGET_HUMIDITY
-            self._attr_min_humidity = round(
-                target_humidity_wrapper.type_information.min_scaled
-            )
-            self._attr_max_humidity = round(
-                target_humidity_wrapper.type_information.max_scaled
-            )
+            self._attr_min_humidity = round(target_humidity_wrapper.min_value)
+            self._attr_max_humidity = round(target_humidity_wrapper.max_value)
 
         # Determine fan modes
         if fan_mode_wrapper:
             self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
-            self._attr_fan_modes = fan_mode_wrapper.type_information.range
+            self._attr_fan_modes = fan_mode_wrapper.options
 
         # Determine swing modes
         if swing_wrapper:
             self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
-            self._attr_swing_modes = swing_wrapper.modes
+            self._attr_swing_modes = swing_wrapper.options
 
         if switch_wrapper:
             self._attr_supported_features |= (
@@ -464,23 +470,23 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         return self._read_wrapper(self._target_humidity_wrapper)
 
     @property
-    def hvac_mode(self) -> HVACMode:
+    def hvac_mode(self) -> HVACMode | None:
         """Return hvac mode."""
-        # If the switch is off, hvac mode is off as well.
-        # Unless the switch doesn't exists of course...
+        # If the switch is off, hvac mode is off.
+        switch_status: bool | None
         if (switch_status := self._read_wrapper(self._switch_wrapper)) is False:
             return HVACMode.OFF
 
-        # If the mode is known and maps to an HVAC mode, return it.
-        if (mode := self._read_wrapper(self._hvac_mode_wrapper)) and (
-            hvac_mode := TUYA_HVAC_TO_HA.get(mode)
-        ):
-            return hvac_mode
+        # If we don't have a mode wrapper, return switch only mode.
+        if self._hvac_mode_wrapper is None:
+            if switch_status is True:
+                return self.entity_description.switch_only_hvac_mode
+            return None
 
-        # If hvac_mode is unknown, return the switch only mode.
-        if switch_status:
-            return self.entity_description.switch_only_hvac_mode
-        return HVACMode.OFF
+        # If we do have a mode wrapper, check if the mode maps to an HVAC mode.
+        if (hvac_status := self._read_wrapper(self._hvac_mode_wrapper)) is None:
+            return None
+        return TUYA_HVAC_TO_HA.get(hvac_status)
 
     @property
     def preset_mode(self) -> str | None:
