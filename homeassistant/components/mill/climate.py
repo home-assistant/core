@@ -1,6 +1,5 @@
 """Support for mill wifi-enabled home heaters."""
 
-import logging
 from typing import Any
 
 import mill
@@ -44,8 +43,6 @@ from .const import (
 )
 from .coordinator import MillDataUpdateCoordinator
 from .entity import MillBaseEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 SET_ROOM_TEMP_SCHEMA = vol.Schema(
     {
