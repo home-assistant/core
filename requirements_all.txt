@@ -252,7 +252,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==43.3.0
+aioesphomeapi==43.4.0
 
 # homeassistant.components.matrix
 # homeassistant.components.slack
@@ -1068,7 +1068,7 @@ gitterpy==0.1.7
 glances-api==0.8.0
 
 # homeassistant.components.go2rtc
-go2rtc-client==0.3.0
+go2rtc-client==0.4.0
 
 # homeassistant.components.goalzero
 goalzero==0.2.2
@@ -1816,7 +1816,7 @@ py-improv-ble-client==2.0.1
 py-madvr2==1.6.40
 
 # homeassistant.components.melissa
-py-melissa-climate==3.0.2
+py-melissa-climate==3.0.3
 
 # homeassistant.components.nextbus
 py-nextbusnext==2.3.0
@@ -3065,7 +3065,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.33.2
+uiprotect==7.33.3
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -3109,7 +3109,7 @@ vegehub==0.1.26
 vehicle==2.2.2
 
 # homeassistant.components.velbus
-velbus-aio==2025.11.0
+velbus-aio==2025.12.0
 
 # homeassistant.components.venstar
 venstarcolortouch==0.21
@@ -3237,7 +3237,7 @@ yeelight==0.7.16
 yeelightsunflower==0.0.10
 
 # homeassistant.components.yolink
-yolink-api==0.5.8
+yolink-api==0.5.9
 
 # homeassistant.components.youless
 youless-api==2.2.0
