@@ -18,7 +18,7 @@ import voluptuous as vol
 
 from homeassistant.components.recorder import SupportedDialect, get_instance
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, async_get_hass, callback
 from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.template import Template
@@ -46,11 +46,15 @@ def resolve_db_url(hass: HomeAssistant, db_url: str | None) -> str:
     return get_instance(hass).db_url
 
 
-def validate_sql_select(value: Template) -> Template:
+def validate_sql_select(value: Template | str) -> Template | str:
     """Validate that value is a SQL SELECT query."""
+    hass: HomeAssistant
+    if isinstance(value, str):
+        hass = async_get_hass()
+    else:
+        hass = value.hass  # type: ignore[assignment]
     try:
-        assert value.hass
-        check_and_render_sql_query(value.hass, value)
+        check_and_render_sql_query(hass, value)
     except (TemplateError, InvalidSqlQuery) as err:
         raise vol.Invalid(str(err)) from err
     return value
