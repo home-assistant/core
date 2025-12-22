@@ -525,6 +525,7 @@ FLOWS = {
         "portainer",
         "powerfox",
         "powerwall",
+        "prana",
         "private_ble_device",
         "probe_plus",
         "profiler",
