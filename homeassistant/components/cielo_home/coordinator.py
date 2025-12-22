@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from time import time
 from typing import Any, Final, NamedTuple
 
 from aiohttp import ClientError
@@ -12,10 +11,10 @@ from cieloconnectapi.exceptions import AuthenticationError, CieloError
 from cieloconnectapi.model import CieloDevice
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_SCAN_INTERVAL, CONF_TOKEN
+from homeassistant.const import CONF_API_KEY, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -35,9 +34,9 @@ class CieloData(NamedTuple):
 class CieloDataUpdateCoordinator(DataUpdateCoordinator[CieloData]):
     """Cielo Data Update Coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: CieloHomeConfigEntry
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: CieloHomeConfigEntry) -> None:
         """Initialize the coordinator."""
         self.client = CieloClient(
             api_key=entry.data[CONF_API_KEY],
@@ -46,84 +45,43 @@ class CieloDataUpdateCoordinator(DataUpdateCoordinator[CieloData]):
             session=async_get_clientsession(hass),
         )
 
-        self._recent_actions: dict[str, dict[str, Any]] = {}
-        self._hold_seconds: Final[int] = 10
-
-        # scan interval calculation
-        seconds: Final[int] = entry.options.get(
-            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-        )
-
         super().__init__(
             hass,
             LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(seconds=seconds),
+            update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
             request_refresh_debouncer=Debouncer(
                 hass, LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
             ),
         )
 
-    def note_recent_action(self, device_id: str, state: dict[str, Any]) -> None:
-        """Cache recent action."""
-        self._recent_actions[device_id] = {
-            "ts": int(time()),
-            "state": dict(state or {}),
-        }
-
     async def _async_update_data(self) -> CieloData:
         """Fetch data from the API."""
         try:
             data = await self.client.get_devices_data()
-
-            old_devices = (
-                set(getattr(self.data, "parsed", {}).keys()) if self.data else set()
-            )
-            new_devices = set(data.parsed.keys())
-            removed = old_devices - new_devices
-
-            if removed:
-                self.logger.info(
-                    "Found removed devices: %s. Initiating cleanup.", removed
-                )
-                er_reg = er.async_get(self.hass)
-                dev_reg = dr.async_get(self.hass)
-
-                for dev_id in removed:
-                    # Remove Entities
-                    for ent in list(er_reg.entities.values()):
-                        if (
-                            ent.config_entry_id == self.config_entry.entry_id
-                            and dev_id in ent.unique_id
-                        ):
-                            er_reg.async_remove(ent.entity_id)
-
-                    # Remove Device
-                    device_entry = dev_reg.async_get_device(
-                        identifiers={(DOMAIN, dev_id)}
-                    )
-                    if device_entry:
-                        dev_reg.async_remove_device(device_entry.id)
-
-            now = int(time())
-            parsed = dict(data.parsed or {})
-
-            to_delete = []
-            for dev_id, info in list(self._recent_actions.items()):
-                ts = info.get("ts", 0)
-                if now - ts <= self._hold_seconds and dev_id in parsed:
-                    recent = dict(info.get("state") or {})
-                    device = parsed[dev_id]
-                    device.apply_update(recent)
-                else:
-                    to_delete.append(dev_id)
-
-            for dev_id in to_delete:
-                self._recent_actions.pop(dev_id, None)
-
-            return CieloData(raw=data.raw, parsed=parsed)  # pyright: ignore[reportArgumentType]
-
         except AuthenticationError as err:
             raise ConfigEntryAuthFailed from err
         except (TimeoutError, CieloError, ClientError) as err:
             raise UpdateFailed(err) from err
+
+        # Handle removed devices by removing this config entry from them
+        if self.data and self.data.parsed:
+            old_ids = set(self.data.parsed.keys())
+            new_ids = set(data.parsed.keys()) if data.parsed else set()
+            removed_ids = old_ids - new_ids
+
+            if removed_ids:
+                dev_reg = dr.async_get(self.hass)
+                for dev_id in removed_ids:
+                    device = dev_reg.async_get_device(identifiers={(DOMAIN, dev_id)})
+                    if device:
+                        dev_reg.async_update_device(
+                            device.id, remove_config_entry_id=self.config_entry.entry_id
+                        )
+
+        parsed = dict(data.parsed or {})
+        return CieloData(raw=data.raw, parsed=parsed)
+
+
+# Define the ConfigEntry type here to avoid circular imports
+type CieloHomeConfigEntry = ConfigEntry[CieloDataUpdateCoordinator]

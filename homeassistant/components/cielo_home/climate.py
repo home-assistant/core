@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Coroutine
-from time import time
 from typing import Any, Concatenate, ParamSpec, TypeVar
 
 from homeassistant.components.climate import (
@@ -12,14 +11,13 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CIELO_ERRORS, LOGGER, TIMEOUT
-from .coordinator import CieloDataUpdateCoordinator
+from .coordinator import CieloDataUpdateCoordinator, CieloHomeConfigEntry
 from .entity import CieloDeviceBaseEntity
 
 _T = TypeVar("_T", bound="CieloDeviceBaseEntity")
@@ -28,7 +26,7 @@ _P = ParamSpec("_P")
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry[CieloDataUpdateCoordinator],
+    entry: CieloHomeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Cielo climate platform."""
@@ -40,19 +38,18 @@ async def async_setup_entry(
 def async_handle_api_call(
     function: Callable[Concatenate[_T, _P], Coroutine[Any, Any, Any]],
 ) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, Any]]:
-    """Decorate api calls to handle exceptions, update state, and note recent actions."""
+    """Decorate api calls to handle exceptions and update state."""
 
     async def wrap_api_call(*args: Any, **kwargs: Any) -> dict[str, Any] | None:
         """Wrap services for api calls."""
         entity: _T = args[0]
         res: Any = None
 
-        try:
-            client = getattr(entity, "_client", None)
-            if client is not None:
-                if entity.device_data:
-                    client.device_data = entity.device_data
+        # Inject the latest device data into the client before the call
+        if entity.client and entity.device_data:
+            entity.client.device_data = entity.device_data
 
+        try:
             async with asyncio.timeout(TIMEOUT):
                 res = await function(*args, **kwargs)
 
@@ -76,25 +73,19 @@ def async_handle_api_call(
             return None
 
         if entity.device_data is None:
-            LOGGER.error("Cannot update state: entity.device_data is None")
             return None
 
         try:
             entity.device_data.apply_update(data)
         except (KeyError, ValueError, TypeError) as err:
             LOGGER.error(
-                "Failed to apply API response data to device model for entity %s: %s",
+                "Failed to apply API response data for entity %s: %s",
                 entity.entity_id,
                 err,
             )
             return None
 
-        entity.last_action = data
-        entity.last_action_timestamp = int(time())
-
         entity.async_write_ha_state()
-        entity.coordinator.note_recent_action(entity._device_id, data)  # noqa: SLF001
-
         return data
 
     return wrap_api_call
@@ -103,10 +94,10 @@ def async_handle_api_call(
 class CieloClimate(CieloDeviceBaseEntity, ClimateEntity):
     """Representation of a Cielo Smart AC Controller."""
 
-    _attr_name: None = None
-    _attr_translation_key: str = "climate_device"
+    _attr_name = None
+    _attr_translation_key = "climate_device"
 
-    _attr_supported_features: ClimateEntityFeature = (
+    _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.PRESET_MODE
@@ -143,7 +134,7 @@ class CieloClimate(CieloDeviceBaseEntity, ClimateEntity):
         if caps.get("swing"):
             flags |= ClimateEntityFeature.SWING_MODE
 
-        if getattr(self.device_data, "preset_modes", None):
+        if self.device_data and self.device_data.preset_modes:
             flags |= ClimateEntityFeature.PRESET_MODE
 
         flags |= ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
@@ -153,7 +144,9 @@ class CieloClimate(CieloDeviceBaseEntity, ClimateEntity):
     @property
     def current_humidity(self) -> int | None:
         """Return the current humidity, if available."""
-        return self.device_data.humidity  # type: ignore[union-attr]
+        if self.device_data:
+            return self.device_data.humidity
+        return None
 
     def _get_home_assistant_unit(self) -> UnitOfTemperature:
         """Return the Home Assistant temperature unit."""
@@ -240,9 +233,11 @@ class CieloClimate(CieloDeviceBaseEntity, ClimateEntity):
     @property
     def available(self) -> bool:
         """Return if the device is available and online."""
+        if not super().available:
+            return False
         if self.device_data is None:
             return False
-        return bool(self.device_data.device_status) and super().available
+        return bool(self.device_data.device_status)
 
     @property
     def precision(self) -> float:

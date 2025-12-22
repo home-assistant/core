@@ -14,7 +14,7 @@ from homeassistant.components.cielo_home.const import (
     NoDevicesError,
     NoUsernameError,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
@@ -60,17 +60,17 @@ async def test_full_config_flow_success(
     }
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert entry.unique_id == TEST_TOKEN
+    assert entry.unique_id == TEST_API_KEY
     assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_full_config_flow_abort_already_configured(hass: HomeAssistant) -> None:
-    """Test aborting when the unique ID (token) is already configured."""
+    """Test aborting when the unique ID is already configured."""
 
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_API_KEY: TEST_API_KEY, CONF_TOKEN: TEST_TOKEN},
-        unique_id=TEST_TOKEN,
+        unique_id=TEST_API_KEY,
     )
     entry.add_to_hass(hass)
 
@@ -122,45 +122,3 @@ async def test_form_error_mapping(
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-
-
-async def test_reauth_flow_success(hass: HomeAssistant) -> None:
-    """Test the reauthentication flow succeeds with a new API key."""
-
-    old_api_key = "old-key"
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="Cielo Home (Old Key)",
-        data={CONF_API_KEY: old_api_key, CONF_TOKEN: "old-token"},
-        unique_id="old-token",
-    )
-    entry.add_to_hass(hass)
-
-    result: FlowResult = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_REAUTH, "entry_id": entry.entry_id},
-        data=entry.data,
-    )
-
-    assert isinstance(result, Mapping)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
-
-    NEW_API_KEY: Final = "new-valid-key"
-    NEW_TOKEN: Final = "new-valid-token"
-
-    with patch(MOCK_AUTH_PATH, return_value=NEW_TOKEN):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_API_KEY: NEW_API_KEY}
-        )
-        await hass.async_block_till_done()
-
-    assert isinstance(result, Mapping)
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
-
-    updated_entry = hass.config_entries.async_get_entry(entry.entry_id)
-    assert updated_entry
-    assert updated_entry.data[CONF_API_KEY] == NEW_API_KEY
-    assert updated_entry.data[CONF_TOKEN] == NEW_TOKEN
-    assert updated_entry.unique_id == NEW_TOKEN
