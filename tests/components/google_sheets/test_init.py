@@ -11,6 +11,7 @@ from gspread.exceptions import APIError
 import pytest
 from requests.models import Response
 from syrupy.assertion import SnapshotAssertion
+import voluptuous as vol
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -25,6 +26,7 @@ from homeassistant.components.google_sheets.services import (
     SERVICE_APPEND_SHEET,
     SERVICE_GET_SHEET,
     WORKSHEET,
+    WORKSHEET_ID,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -491,3 +493,47 @@ async def test_get_sheet_invalid_worksheet(
                 blocking=True,
                 return_response=True,
             )
+
+
+async def test_get_sheet_too_many_worksheet_identifiers(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
+    expires_at: int,
+    scopes: list[str],
+) -> None:
+    """Test service call get sheet with too many worksheet identifiers (i.e. both title and ID)."""
+    config_entry2 = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_SHEET_ID + "2",
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {
+                "access_token": "mock-access-token",
+                "refresh_token": "mock-refresh-token",
+                "expires_at": expires_at,
+                "scope": " ".join(scopes),
+            },
+        },
+    )
+    config_entry2.add_to_hass(hass)
+
+    await setup_integration()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry2.state is ConfigEntryState.LOADED
+
+    with pytest.raises(vol.error.MultipleInvalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_SHEET,
+            {
+                DATA_CONFIG_ENTRY: config_entry.entry_id,
+                ROWS: 2,
+                # Define both title and ID
+                WORKSHEET: "Sheet1",
+                WORKSHEET_ID: "0",
+            },
+            blocking=True,
+            return_response=True,
+        )

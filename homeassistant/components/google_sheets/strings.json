@@ -58,8 +58,12 @@
           "name": "Data"
         },
         "worksheet": {
-          "description": "Name of the worksheet. Defaults to the first one in the document.",
+          "description": "Name of the worksheet. Defaults to the first one in the document. Cannot be used together with `worksheet_id`.",
           "name": "Worksheet"
+        },
+        "worksheet_id": {
+          "description": "ID of the worksheet. Can be found in the URL of the sheet via the `gid` query parameter. Cannot be used together with `worksheet`.",
+          "name": "Worksheet ID"
         }
       },
       "name": "Append to sheet"
@@ -78,6 +82,10 @@
         "worksheet": {
           "description": "[%key:component::google_sheets::services::append_sheet::fields::worksheet::description%]",
           "name": "[%key:component::google_sheets::services::append_sheet::fields::worksheet::name%]"
+        },
+        "worksheet_id": {
+          "description": "[%key:component::google_sheets::services::append_sheet::fields::worksheet_id::description%]",
+          "name": "[%key:component::google_sheets::services::append_sheet::fields::worksheet_id::name%]"
         }
       },
       "name": "Get data from sheet"

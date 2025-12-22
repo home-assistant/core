@@ -9,6 +9,11 @@ append_sheet:
       example: "Sheet1"
       selector:
         text:
+    worksheet_id:
+      advanced: true
+      example: "0"
+      selector:
+        text:
     add_created_column:
       required: false
       default: true
@@ -28,6 +33,11 @@ get_sheet:
           integration: google_sheets
     worksheet:
       example: "Sheet1"
+      selector:
+        text:
+    worksheet_id:
+      advanced: true
+      example: "0"
       selector:
         text:
     rows:
