@@ -109,7 +109,7 @@ async def async_setup_entry(
             if (trait := description.trait(coordinator.properties_api)) is not None
         ]
     )
-    
+
     # A01 switches
     async_add_entities(
         RoborockSwitchA01(
