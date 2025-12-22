@@ -92,8 +92,14 @@
       }
     },
     "climate": {
+      "fht": {
+        "name": "Underfloor heating"
+      },
       "heating": {
         "name": "Heating"
+      },
+      "trv": {
+        "name": "Thermostatic radiator valve"
       }
     },
     "fan": {
