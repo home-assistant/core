@@ -198,6 +198,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
             "dlbandwidth": HuaweiSensorEntityDescription(
                 key="dlbandwidth",
                 translation_key="downlink_bandwidth",
+                # https://en.wikipedia.org/wiki/LTE_frequency_bands, arbitrary
                 icon_fn=lambda x: bandwidth_icon((8, 15), x),
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
@@ -479,6 +480,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
             "ulbandwidth": HuaweiSensorEntityDescription(
                 key="ulbandwidth",
                 translation_key="uplink_bandwidth",
+                # https://en.wikipedia.org/wiki/LTE_frequency_bands, arbitrary
                 icon_fn=lambda x: bandwidth_icon((8, 15), x),
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
