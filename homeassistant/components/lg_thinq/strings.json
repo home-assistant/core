@@ -199,10 +199,12 @@
         }
       }
     },
-    "number": {
+    "fan": {
       "fan_speed": {
-        "name": "Fan"
-      },
+        "name": "Hood"
+      }
+    },
+    "number": {
       "lamp_brightness": {
         "name": "[%key:component::lg_thinq::entity::number::light_status::name%]"
       },
