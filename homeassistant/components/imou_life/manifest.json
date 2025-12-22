@@ -1,0 +1,12 @@
+{
+  "domain": "imou_life",
+  "name": "Imou Life Official",
+  "codeowners": ["@Imou-OpenPlatform"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://next.home-assistant.io/integrations/imou_life",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": ["pyimouapi==1.2.2"]
+}
