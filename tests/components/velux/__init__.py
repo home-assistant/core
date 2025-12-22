@@ -28,4 +28,4 @@ async def update_polled_entities(
 
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
