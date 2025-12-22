@@ -52,7 +52,7 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, data) -> ConfigFlowResult:
+    async def async_step_import(self, data: dict[str, str]) -> ConfigFlowResult:
         """Handle the initial step."""
 
         if not await self.check_status(data[CONF_HOST]):
