@@ -1762,12 +1762,10 @@ async def test_download_file_no_custom_dir(
     await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    allowlist_dir = hass.config.path(DOMAIN)
+    download_dir = hass.config.path(DOMAIN)
     expected_path = expected_download_path(hass)
     # verify dir exists, if not create it
-    await hass.async_add_executor_job(os.makedirs, allowlist_dir, 0o777, True)
-
-    hass.config.allowlist_external_dirs.add(allowlist_dir)
+    await hass.async_add_executor_job(os.makedirs, download_dir, 0o777, True)
 
     file_id = schema_request[ATTR_FILE_ID]
     telegram_file = File(
@@ -1839,11 +1837,8 @@ async def test_download_file_custom_dir(
     await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    allowlist_dir = tmp_path.as_posix()
-    schema_request[ATTR_DIRECTORY_PATH] = allowlist_dir
+    schema_request[ATTR_DIRECTORY_PATH] = tmp_path.as_posix()
     expected_path = expected_download_path(tmp_path.as_posix())
-
-    hass.config.allowlist_external_dirs.add(allowlist_dir)
 
     file_id = schema_request[ATTR_FILE_ID]
     telegram_file = File(
@@ -1886,9 +1881,7 @@ async def test_download_file_directory_created_successfully(
     await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    allowlist_dir = tmp_path.as_posix()
-    hass.config.allowlist_external_dirs.add(allowlist_dir)
-    download_path = os.path.join(allowlist_dir, "download_dir")
+    download_path = os.path.join(tmp_path.as_posix(), "download_dir")
 
     schema_request = {
         ATTR_FILE_ID: "file-id-for-new-dir",
@@ -1935,9 +1928,6 @@ async def test_download_file_when_bot_failed_to_get_file(
     await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    allowlist_dir = tmp_path.as_posix()
-    hass.config.allowlist_external_dirs.add(allowlist_dir)
-
     schema_request = {
         ATTR_FILE_ID: "some-file-id",
         ATTR_DIRECTORY_PATH: tmp_path.as_posix(),
@@ -1961,37 +1951,6 @@ async def test_download_file_when_bot_failed_to_get_file(
     assert err.value.translation_key == "action_failed"
 
 
-async def test_download_file_when_dir_not_allowed(
-    tmp_path: Path,
-    hass: HomeAssistant,
-    mock_broadcast_config_entry: MockConfigEntry,
-    mock_external_calls: None,
-) -> None:
-    """Test download file when bot failed to get file."""
-    mock_broadcast_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
-    await hass.async_block_till_done()
-    telegram_file_name = "some_file.jpg"
-
-    schema_request = {
-        ATTR_FILE_ID: "some-file-id",
-        ATTR_DIRECTORY_PATH: tmp_path.as_posix(),
-        ATTR_FILE_NAME: telegram_file_name,
-    }
-
-    with pytest.raises(ServiceValidationError) as err:
-        await hass.services.async_call(
-            DOMAIN,
-            "download_file",
-            schema_request,
-            blocking=True,
-            return_response=True,
-        )
-
-    await hass.async_block_till_done()
-    assert err.value.translation_key == "allowlist_external_dirs_error"
-
-
 async def test_download_file_when_empty_file_path(
     tmp_path: Path,
     hass: HomeAssistant,
@@ -2002,9 +1961,6 @@ async def test_download_file_when_empty_file_path(
     mock_broadcast_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
     await hass.async_block_till_done()
-
-    allowlist_dir = tmp_path.as_posix()
-    hass.config.allowlist_external_dirs.add(allowlist_dir)
 
     schema_request = {
         ATTR_FILE_ID: "some-file-id",
@@ -2048,9 +2004,6 @@ async def test_download_file_when_error_when_downloading(
     mock_broadcast_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_broadcast_config_entry.entry_id)
     await hass.async_block_till_done()
-
-    allowlist_dir = tmp_path.as_posix()
-    hass.config.allowlist_external_dirs.add(allowlist_dir)
 
     schema_request = {
         ATTR_FILE_ID: "some-file-id",

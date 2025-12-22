@@ -1053,14 +1053,6 @@ class TelegramNotificationService:
         """Download a file from Telegram."""
         if not directory_path:
             directory_path = self.hass.config.path(DOMAIN)
-        if not await self.hass.async_add_executor_job(
-            self.hass.config.is_allowed_path, directory_path
-        ):
-            raise ServiceValidationError(
-                "File path has not been configured in allowlist_external_dirs.",
-                translation_domain=DOMAIN,
-                translation_key="allowlist_external_dirs_error",
-            )
         file: File = await self._send_msg(
             self.bot.get_file,
             "Error getting file",
