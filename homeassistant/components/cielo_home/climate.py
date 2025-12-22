@@ -45,7 +45,6 @@ def async_handle_api_call(
         entity: _T = args[0]
         res: Any = None
 
-        # Inject the latest device data into the client before the call
         if entity.client and entity.device_data:
             entity.client.device_data = entity.device_data
 
