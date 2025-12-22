@@ -292,8 +292,8 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
             "nrdlbandwidth": HuaweiSensorEntityDescription(
                 key="nrdlbandwidth",
                 translation_key="nrdlbandwidth",
-                # Could add icon_fn like we have for dlbandwidth,
-                # if we find a good source what to use as 5G thresholds.
+                # https://en.wikipedia.org/wiki/5G_NR_frequency_bands, arbitrary
+                icon_fn=lambda x: bandwidth_icon((33, 66), x),
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
             "nrdlmcs": HuaweiSensorEntityDescription(
@@ -355,7 +355,8 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
             "nrulbandwidth": HuaweiSensorEntityDescription(
                 key="nrulbandwidth",
                 translation_key="nrulbandwidth",
-                # Could add icon_fn as in ulbandwidth, source for 5G thresholds?
+                # https://en.wikipedia.org/wiki/5G_NR_frequency_bands, arbitrary
+                icon_fn=lambda x: bandwidth_icon((33, 66), x),
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
             "nrulmcs": HuaweiSensorEntityDescription(
