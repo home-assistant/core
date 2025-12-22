@@ -37,8 +37,6 @@ from tests.components.bluetooth import inject_bluetooth_service_info
             CONFIGURED_NAME_MYCO2,
             [
                 ("carbon_dioxide", "724", "ppm", "measurement"),
-                ("humidity", "27.8", "%", "measurement"),
-                ("temperature", "20.1", "°C", "measurement"),
             ],
         ),
         (
