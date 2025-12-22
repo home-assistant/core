@@ -153,6 +153,9 @@ class _OctoprintCamera(CoordinatorEntity[OctoprintDataUpdateCoordinator], Camera
         if not (url := self._camera_settings.internal_snapshot_url):
             return None
 
+        # Lock to prevent concurrent calls to async_camera_image() from making concurrent requests to the snapshot URL,
+        # and thus violating our _attr_frame_interval limit. When the first call releases the lock, other waiting calls
+        # will (usually) just immediately return the cached _last_image from the first.
         async with self._update_lock:
             if (
                 self._last_image is not None
