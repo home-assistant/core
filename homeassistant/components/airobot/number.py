@@ -8,7 +8,11 @@ from dataclasses import dataclass
 from pyairobotrest.const import HYSTERESIS_BAND_MAX, HYSTERESIS_BAND_MIN
 from pyairobotrest.exceptions import AirobotError
 
-from homeassistant.components.number import NumberEntity, NumberEntityDescription
+from homeassistant.components.number import (
+    NumberDeviceClass,
+    NumberEntity,
+    NumberEntityDescription,
+)
 from homeassistant.const import EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -34,8 +38,9 @@ NUMBERS: tuple[AirobotNumberEntityDescription, ...] = (
     AirobotNumberEntityDescription(
         key="hysteresis_band",
         translation_key="hysteresis_band",
+        device_class=NumberDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.CONFIG,
-        icon="mdi:delta",
+        entity_registry_enabled_default=False,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         native_min_value=HYSTERESIS_BAND_MIN / 10.0,
         native_max_value=HYSTERESIS_BAND_MAX / 10.0,

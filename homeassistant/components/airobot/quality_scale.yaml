@@ -57,9 +57,7 @@ rules:
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations: done
-  icon-translations:
-    status: exempt
-    comment: Integration entities use static icons that don't benefit from state-based icon translations.
+  icon-translations: done
   reconfiguration-flow: todo
   repair-issues:
     status: exempt
