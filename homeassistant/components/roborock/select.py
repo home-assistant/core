@@ -1,9 +1,9 @@
 """Support for Roborock select."""
 
 import asyncio
-import logging
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+import logging
 from typing import Any
 
 from roborock import B01Props, CleanTypeMapping
