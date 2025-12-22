@@ -45,6 +45,7 @@ def cync_client():
             "homeassistant.components.cync.Cync",
             new=cync_mock,
         ),
+        patch("pycync.devices.devices.CyncLight.set_combo", autospec=True),
     ):
         cync_mock.get_logged_in_user.return_value = MOCKED_USER
 
