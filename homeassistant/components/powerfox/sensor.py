@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import TYPE_CHECKING, Generic
 
-from powerfox import Device, HeatMeter, PowerMeter, WaterMeter
+from powerfox import Device, GasReport, HeatMeter, PowerMeter, WaterMeter
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -13,12 +14,16 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfEnergy, UnitOfPower, UnitOfVolume
+from homeassistant.const import CURRENCY_EURO, UnitOfEnergy, UnitOfPower, UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import PowerfoxConfigEntry, PowerfoxDataUpdateCoordinator
-from .entity import PowerfoxEntity
+from .coordinator import (
+    PowerfoxConfigEntry,
+    PowerfoxDataUpdateCoordinator,
+    PowerfoxReportDataUpdateCoordinator,
+)
+from .entity import CoordinatorT, PowerfoxEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -28,6 +33,13 @@ class PowerfoxSensorEntityDescription[T: (PowerMeter, WaterMeter, HeatMeter)](
     """Describes Poweropti sensor entity."""
 
     value_fn: Callable[[T], float | int | None]
+
+
+@dataclass(frozen=True, kw_only=True)
+class PowerfoxReportSensorEntityDescription(SensorEntityDescription):
+    """Describes Powerfox report sensor entity."""
+
+    value_fn: Callable[[GasReport], float | int | None]
 
 
 SENSORS_POWER: tuple[PowerfoxSensorEntityDescription[PowerMeter], ...] = (
@@ -126,6 +138,103 @@ SENSORS_HEAT: tuple[PowerfoxSensorEntityDescription[HeatMeter], ...] = (
     ),
 )
 
+SENSORS_GAS: tuple[PowerfoxReportSensorEntityDescription, ...] = (
+    PowerfoxReportSensorEntityDescription(
+        key="gas_consumption_today",
+        translation_key="gas_consumption_today",
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+        device_class=SensorDeviceClass.GAS,
+        state_class=SensorStateClass.TOTAL,
+        value_fn=lambda gas: gas.sum,
+    ),
+    PowerfoxReportSensorEntityDescription(
+        key="gas_consumption_energy_today",
+        translation_key="gas_consumption_energy_today",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL,
+        entity_registry_enabled_default=False,
+        value_fn=lambda gas: gas.consumption_kwh,
+    ),
+    PowerfoxReportSensorEntityDescription(
+        key="gas_current_consumption",
+        translation_key="gas_current_consumption",
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+        device_class=SensorDeviceClass.GAS,
+        value_fn=lambda gas: gas.current_consumption,
+    ),
+    PowerfoxReportSensorEntityDescription(
+        key="gas_current_consumption_energy",
+        translation_key="gas_current_consumption_energy",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        entity_registry_enabled_default=False,
+        value_fn=lambda gas: gas.current_consumption_kwh,
+    ),
+    PowerfoxReportSensorEntityDescription(
+        key="gas_cost_today",
+        translation_key="gas_cost_today",
+        native_unit_of_measurement=CURRENCY_EURO,
+        device_class=SensorDeviceClass.MONETARY,
+        suggested_display_precision=2,
+        state_class=SensorStateClass.TOTAL,
+        value_fn=lambda gas: gas.sum_currency,
+    ),
+    PowerfoxReportSensorEntityDescription(
+        key="gas_max_consumption_today",
+        translation_key="gas_max_consumption_today",
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+        device_class=SensorDeviceClass.GAS,
+        value_fn=lambda gas: gas.max_consumption,
+    ),
+    PowerfoxReportSensorEntityDescription(
+        key="gas_min_consumption_today",
+        translation_key="gas_min_consumption_today",
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+        device_class=SensorDeviceClass.GAS,
+        value_fn=lambda gas: gas.min_consumption,
+    ),
+    PowerfoxReportSensorEntityDescription(
+        key="gas_avg_consumption_today",
+        translation_key="gas_avg_consumption_today",
+        native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+        device_class=SensorDeviceClass.GAS,
+        value_fn=lambda gas: gas.avg_consumption,
+    ),
+    PowerfoxReportSensorEntityDescription(
+        key="gas_max_consumption_energy_today",
+        translation_key="gas_max_consumption_energy_today",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        entity_registry_enabled_default=False,
+        value_fn=lambda gas: gas.max_consumption_kwh,
+    ),
+    PowerfoxReportSensorEntityDescription(
+        key="gas_min_consumption_energy_today",
+        translation_key="gas_min_consumption_energy_today",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        entity_registry_enabled_default=False,
+        value_fn=lambda gas: gas.min_consumption_kwh,
+    ),
+    PowerfoxReportSensorEntityDescription(
+        key="gas_avg_consumption_energy_today",
+        translation_key="gas_avg_consumption_energy_today",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        entity_registry_enabled_default=False,
+        value_fn=lambda gas: gas.avg_consumption_kwh,
+    ),
+    PowerfoxReportSensorEntityDescription(
+        key="gas_max_cost_today",
+        translation_key="gas_max_cost_today",
+        native_unit_of_measurement=CURRENCY_EURO,
+        device_class=SensorDeviceClass.MONETARY,
+        suggested_display_precision=2,
+        value_fn=lambda gas: gas.max_currency,
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -135,6 +244,20 @@ async def async_setup_entry(
     """Set up Powerfox sensors based on a config entry."""
     entities: list[SensorEntity] = []
     for coordinator in entry.runtime_data:
+        if isinstance(coordinator, PowerfoxReportDataUpdateCoordinator):
+            gas_report = coordinator.data.gas
+            if gas_report is None:
+                continue
+            entities.extend(
+                PowerfoxGasSensorEntity(
+                    coordinator=coordinator,
+                    description=description,
+                    device=coordinator.device,
+                )
+                for description in SENSORS_GAS
+                if description.value_fn(gas_report) is not None
+            )
+            continue
         if isinstance(coordinator.data, PowerMeter):
             entities.extend(
                 PowerfoxSensorEntity(
@@ -166,8 +289,27 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class PowerfoxSensorEntity(PowerfoxEntity, SensorEntity):
-    """Defines a powerfox power meter sensor."""
+class BasePowerfoxSensorEntity(
+    PowerfoxEntity[CoordinatorT], SensorEntity, Generic[CoordinatorT]
+):
+    """Common base for Powerfox sensor entities."""
+
+    entity_description: SensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: CoordinatorT,
+        device: Device,
+        description: SensorEntityDescription,
+    ) -> None:
+        """Initialize the shared Powerfox sensor."""
+        super().__init__(coordinator, device)
+        self.entity_description = description
+        self._attr_unique_id = f"{device.id}_{description.key}"
+
+
+class PowerfoxSensorEntity(BasePowerfoxSensorEntity[PowerfoxDataUpdateCoordinator]):
+    """Defines a powerfox poweropti sensor."""
 
     entity_description: PowerfoxSensorEntityDescription
 
@@ -177,12 +319,35 @@ class PowerfoxSensorEntity(PowerfoxEntity, SensorEntity):
         device: Device,
         description: PowerfoxSensorEntityDescription,
     ) -> None:
-        """Initialize Powerfox power meter sensor."""
-        super().__init__(coordinator, device)
-        self.entity_description = description
-        self._attr_unique_id = f"{device.id}_{description.key}"
+        """Initialize Powerfox poweropti sensor."""
+        super().__init__(coordinator, device, description)
 
     @property
     def native_value(self) -> float | int | None:
         """Return the state of the entity."""
         return self.entity_description.value_fn(self.coordinator.data)
+
+
+class PowerfoxGasSensorEntity(
+    BasePowerfoxSensorEntity[PowerfoxReportDataUpdateCoordinator]
+):
+    """Defines a powerfox gas meter sensor."""
+
+    entity_description: PowerfoxReportSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: PowerfoxReportDataUpdateCoordinator,
+        device: Device,
+        description: PowerfoxReportSensorEntityDescription,
+    ) -> None:
+        """Initialize Powerfox gas meter sensor."""
+        super().__init__(coordinator, device, description)
+
+    @property
+    def native_value(self) -> float | int | None:
+        """Return the state of the entity."""
+        gas_report = self.coordinator.data.gas
+        if TYPE_CHECKING:
+            assert gas_report is not None
+        return self.entity_description.value_fn(gas_report)
