@@ -108,11 +108,6 @@ class OAuth2FlowHandler(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauth on failure."""
-        await async_import_client_credential(
-            self.hass,
-            DOMAIN,
-            ClientCredential(CLIENT_ID, "", name="Teslemetry"),
-        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
