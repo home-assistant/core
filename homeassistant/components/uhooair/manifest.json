@@ -3,12 +3,8 @@
   "name": "uHoo",
   "codeowners": ["@getuhoo"],
   "config_flow": true,
-  "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/uhooair",
-  "homekit": {},
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": ["aiohttp==3.13.2", "uhooapi==1.0.0"],
-  "ssdp": [],
-  "zeroconf": []
+  "requirements": ["uhooapi==1.0.0"]
 }

@@ -4,43 +4,23 @@ from typing import Any
 
 from uhooapi import Client
 from uhooapi.errors import UnauthorizedError
-import voluptuous as vol
 
-from homeassistant.config_entries import (
-    CONN_CLASS_CLOUD_POLL,
-    ConfigFlow,
-    ConfigFlowResult,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
-from homeassistant.helpers.selector import (
-    TextSelector,
-    TextSelectorConfig,
-    TextSelectorType,
-)
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER, USER_DATA_SCHEMA
 
 
 class UhooFlowHandler(ConfigFlow, domain=DOMAIN):
     """Setup Uhoo flow handlers."""
 
     VERSION = 1
-    CONNECTION_CLASS = CONN_CLASS_CLOUD_POLL
 
     def __init__(self) -> None:
         """Initialize the config flow."""
         self._errors: dict = {}
-        self.data_schema = vol.Schema(
-            {
-                vol.Required(CONF_API_KEY): TextSelector(
-                    TextSelectorConfig(
-                        type=TextSelectorType.PASSWORD,  # This makes it a censored password field
-                        autocomplete="current-password",  # Helps browser password managers
-                    )
-                ),
-            }
-        )
+        self.data_schema = (self.add_suggested_values_to_schema(USER_DATA_SCHEMA, {}),)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -75,17 +55,8 @@ class UhooFlowHandler(ConfigFlow, domain=DOMAIN):
             return await self._show_config_form(user_input)
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_API_KEY, default=user_input[CONF_API_KEY]
-                    ): TextSelector(
-                        TextSelectorConfig(
-                            type=TextSelectorType.PASSWORD,  # This makes it a censored password field
-                            autocomplete="current-password",  # Helps browser password managers
-                        )
-                    ),
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                USER_DATA_SCHEMA, user_input or {}
             ),
             errors=self._errors,
         )

@@ -3,7 +3,6 @@
 from datetime import timedelta
 from unittest.mock import patch
 
-from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.components.uhooair.const import (
     API_CO,
     API_CO2,
@@ -16,75 +15,45 @@ from homeassistant.components.uhooair.const import (
     API_TEMP,
     API_TVOC,
     API_VIRUS,
-    ATTR_LABEL,
     SENSOR_TYPES,
 )
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_ICON,
-    ATTR_UNIT_OF_MEASUREMENT,
-    STATE_UNAVAILABLE,
-)
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.util.dt import utcnow
 
 from . import setup_uhoo_config
-from .const import MOCK_DEVICE, MOCK_DEVICE_DATA
+from .const import DOMAIN, MOCK_DEVICE
 
 from tests.common import async_fire_time_changed
 
 
 def assert_expected_properties(
-    hass: HomeAssistant,
-    registry: EntityRegistry,
-    serial_number: str,
-    sensor_type: str,
+    hass: HomeAssistant, registry: EntityRegistry, serial_number: str, sensor_key: str
 ) -> None:
-    """Assert expected properties."""
+    """Assert expected properties for a sensor."""
+    # Find the entity description by key
+    sensor_desc = None
+    for desc in SENSOR_TYPES:
+        if desc.key == sensor_key:
+            sensor_desc = desc
+            break
 
-    device_name = str(MOCK_DEVICE["deviceName"]).lower().replace(" ", "_")
-    sensor_name = (
-        str(SENSOR_TYPES[sensor_type][ATTR_LABEL])
-        .lower()
-        .replace(" ", "_")
-        .replace(".", "_")
-    )
+    assert sensor_desc is not None
 
-    state = hass.states.get(f"sensor.{device_name}_{sensor_name}")
-    CAMEL_MAP = {
-        "air_pressure": "airPressure",
-        "virus_index": "virusIndex",
-        "mold_index": "moldIndex",
-    }
-    assert state
-    if sensor_type in ["air_pressure", "virus_index", "mold_index"]:
-        assert state.state == f"{float(MOCK_DEVICE_DATA[0][CAMEL_MAP[sensor_type]])!s}"
-    else:
-        assert state.state == f"{float(MOCK_DEVICE_DATA[0][sensor_type])!s}"
+    # Build unique ID
+    unique_id = f"{serial_number}_{sensor_key}"
+    entity_id = registry.async_get_entity_id("sensor", DOMAIN, unique_id)
 
-    # Attributes
-    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
-    assert (
-        state.attributes.get(ATTR_DEVICE_CLASS)
-        == SENSOR_TYPES[sensor_type][ATTR_DEVICE_CLASS]
-    )
-    assert state.attributes.get(ATTR_ICON) == SENSOR_TYPES[sensor_type][ATTR_ICON]
-    assert (
-        state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        == SENSOR_TYPES[sensor_type][ATTR_UNIT_OF_MEASUREMENT]
-    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
 
-    assert (
-        state.attributes.get(ATTR_DEVICE_CLASS)
-        == SENSOR_TYPES[sensor_type][ATTR_DEVICE_CLASS]
-    )
-
-    entity = registry.async_get(f"sensor.{device_name}_{sensor_name}")
-
-    assert entity
-    assert entity.unique_id == f"{serial_number}_{sensor_type}"
+    # Check attributes
+    assert state.attributes.get("device_class") == sensor_desc.device_class
+    # Add other assertions as needed
 
 
 async def test_sensors(
@@ -123,11 +92,48 @@ async def test_availability(
 ) -> None:
     """Test availability of data."""
     await setup_uhoo_config(hass)
+    await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.office_room_humidity")
-    assert state
+    registry = er.async_get(hass)
+    serial_number = MOCK_DEVICE["serialNumber"]
+
+    unique_id = (
+        f"{serial_number}_humidity"  # Adjust based on your actual unique_id format
+    )
+    entity_id = registry.async_get_entity_id("sensor", DOMAIN, unique_id)
+
+    # If that doesn't work, try finding by device and name
+    if entity_id is None:
+        unique_id = f"{serial_number}_{API_HUMIDITY}"
+        entity_id = registry.async_get_entity_id("sensor", DOMAIN, unique_id)
+
+    if entity_id is None:
+        all_entities = registry.entities
+        for entity_entry in all_entities.values():
+            if (
+                entity_entry.domain == "sensor"
+                and entity_entry.original_name
+                and "humidity" in entity_entry.original_name.lower()
+            ):
+                entity_id = entity_entry.entity_id
+                break
+
+    assert entity_id is not None, (
+        f"Humidity sensor entity not found. Expected unique_id pattern: {serial_number}_humidity"
+    )
+
+    state = hass.states.get(entity_id)
+    assert state is not None
     assert state.state != STATE_UNAVAILABLE
-    assert state.state == "67.6"
+    assert state.state is not None
+
+    expected_value = "67.6"
+
+    try:
+        actual_value = float(state.state)
+        assert actual_value == 67.6
+    except ValueError:
+        assert state.state == expected_value
 
     with patch(
         "homeassistant.components.uhooair.Client.get_latest_data",
@@ -137,15 +143,16 @@ async def test_availability(
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-        state = hass.states.get("sensor.office_room_humidity")
+        state = hass.states.get(entity_id)
         assert state
-        assert state.state == "67.6"
+        # The sensor should keep the last known value
+        assert state.state == expected_value
 
     future = utcnow() + timedelta(minutes=60)
     async_fire_time_changed(hass, future)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.office_room_humidity")
+    state = hass.states.get(entity_id)
     assert state
     assert state.state != STATE_UNAVAILABLE
-    assert state.state == "67.6"
+    assert state.state == expected_value

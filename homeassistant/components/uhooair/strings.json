@@ -21,5 +21,42 @@
         "title": "Connect to uHoo"
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "co": {
+        "name": "Carbon monoxide"
+      },
+      "co2": {
+        "name": "Carbon dioxide"
+      },
+      "humidity": {
+        "name": "Humidity"
+      },
+      "mold": {
+        "name": "Mold index"
+      },
+      "no2": {
+        "name": "Nitrogen dioxide"
+      },
+      "ozone": {
+        "name": "Ozone"
+      },
+      "pm25": {
+        "name": "PM2.5"
+      },
+      "pressure": {
+        "name": "Air pressure"
+      },
+      "temp": {
+        "name": "Temperature"
+      },
+      "tvoc": {
+        "name": "Total volatile organic compounds"
+      },
+      "virus": {
+        "name": "Virus index"
+      }
+    }
   }
 }

@@ -1,5 +1,9 @@
 """Test uHoo setup process."""
 
+import re
+
+import pytest
+
 from homeassistant.components.uhooair import (
     UhooDataUpdateCoordinator,
     async_setup_entry,
@@ -7,6 +11,7 @@ from homeassistant.components.uhooair import (
 from homeassistant.components.uhooair.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.setup import async_setup_component
 
 from .const import MOCK_CONFIG
@@ -47,10 +52,14 @@ async def test_async_setup_entry(
 
 async def test_async_setup_entry_exception(hass: HomeAssistant, error_on_login) -> None:
     """Test when API raises an exception during entry setup."""
-
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
 
-    assert await async_setup_entry(hass, config_entry) is False
+    # Expect ConfigEntryError to be raised instead of returning False
+    with pytest.raises(
+        ConfigEntryError,
+        match=re.escape("Unauthorized (401): Invalid API key or token."),
+    ):
+        await async_setup_entry(hass, config_entry)
 
 
 async def test_unload_entry(
@@ -61,7 +70,6 @@ async def test_unload_entry(
     bypass_setup_devices,
 ) -> None:
     """Test successful unload of entry."""
-
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         entry_id="1",
@@ -82,4 +90,3 @@ async def test_unload_entry(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.NOT_LOADED
-    assert not hass.data.get(DOMAIN) or hass.data[DOMAIN] == {}
