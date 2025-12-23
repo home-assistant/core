@@ -157,7 +157,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         # Check if a dashboard entry already exists (only one allowed)
         for entry in self._async_current_entries():
             if entry.data.get(CONF_IS_DASHBOARD):
-                return self.async_abort(reason="single_instance_allowed")
+                return self.async_abort(reason="single_dashboard_allowed")
 
         errors: dict[str, str] = {}
         if user_input is not None:

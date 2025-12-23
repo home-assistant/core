@@ -23,8 +23,10 @@ from homeassistant.components.esphome import dashboard
 from homeassistant.components.esphome.const import (
     CONF_ALLOW_SERVICE_CALLS,
     CONF_DEVICE_NAME,
+    CONF_IS_DASHBOARD,
     CONF_NOISE_PSK,
     CONF_SUBSCRIBE_LOGS,
+    DEFAULT_DASHBOARD_PORT,
     DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
     DOMAIN,
 )
@@ -2999,3 +3001,259 @@ async def test_zeroconf_when_improv_ble_not_available(
     # Flow should still work even without improv_ble
     assert flow["type"] is FlowResultType.FORM
     assert flow["step_id"] == "discovery_confirm"
+
+
+async def test_user_step_shows_menu_when_no_dashboard(
+    hass: HomeAssistant,
+) -> None:
+    """Test user step shows menu when no dashboard is configured."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+    assert result["menu_options"] == ["device", "dashboard"]
+
+
+async def test_user_step_skips_menu_when_dashboard_exists(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+) -> None:
+    """Test user step skips menu when dashboard already configured."""
+
+    # Create a dashboard entry
+    dashboard_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_IS_DASHBOARD: True, "host": "192.168.1.100", "port": 6052},
+        title="Dashboard (192.168.1.100:6052)",
+    )
+    dashboard_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    # Should skip menu and go directly to device form
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_dashboard_step_success(
+    hass: HomeAssistant,
+) -> None:
+    """Test dashboard step creates entry successfully."""
+
+    with patch(
+        "homeassistant.components.esphome.config_flow.async_set_dashboard_info",
+        return_value=None,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] is FlowResultType.MENU
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"next_step_id": "dashboard"}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "dashboard"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "192.168.1.100", CONF_PORT: 6052}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Dashboard (192.168.1.100:6052)"
+    assert result["data"] == {
+        CONF_IS_DASHBOARD: True,
+        "host": "192.168.1.100",
+        "port": 6052,
+    }
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_dashboard_step_default_port(
+    hass: HomeAssistant,
+) -> None:
+    """Test dashboard step uses default port when not specified."""
+
+    with patch(
+        "homeassistant.components.esphome.config_flow.async_set_dashboard_info",
+        return_value=None,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"next_step_id": "dashboard"}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "192.168.1.100"}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"]["port"] == DEFAULT_DASHBOARD_PORT
+
+
+async def test_dashboard_step_cannot_connect(
+    hass: HomeAssistant,
+) -> None:
+    """Test dashboard step shows error on connection failure."""
+    with patch(
+        "homeassistant.components.esphome.config_flow.async_set_dashboard_info",
+        side_effect=Exception("Connection failed"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"next_step_id": "dashboard"}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "192.168.1.100", CONF_PORT: 6052}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "dashboard"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_dashboard_step_single_instance(
+    hass: HomeAssistant,
+) -> None:
+    """Test only one dashboard entry is allowed."""
+
+    # Create existing dashboard entry
+    dashboard_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_IS_DASHBOARD: True, "host": "192.168.1.100", "port": 6052},
+        title="Dashboard (192.168.1.100:6052)",
+    )
+    dashboard_entry.add_to_hass(hass)
+
+    # Try to add another dashboard - need to manually trigger step_dashboard
+    # since menu is hidden when dashboard exists
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    # Menu is skipped, but we can test by creating a new flow and navigating manually
+    # Let's remove the entry and test the abort
+    await hass.config_entries.async_remove(dashboard_entry.entry_id)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "dashboard"}
+    )
+
+    # Re-add the dashboard entry while in the flow
+    dashboard_entry2 = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_IS_DASHBOARD: True, "host": "192.168.1.100", "port": 6052},
+        title="Dashboard (192.168.1.100:6052)",
+    )
+    dashboard_entry2.add_to_hass(hass)
+
+    # Now try to complete the dashboard step
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.200", CONF_PORT: 6052}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "single_dashboard_allowed"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_dashboard_options_flow_success(
+    hass: HomeAssistant,
+) -> None:
+    """Test dashboard options flow updates entry successfully."""
+
+    # Create dashboard entry
+    dashboard_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_IS_DASHBOARD: True, "host": "192.168.1.100", "port": 6052},
+        title="Dashboard (192.168.1.100:6052)",
+    )
+    dashboard_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(dashboard_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.esphome.config_flow.async_set_dashboard_info",
+        return_value=None,
+    ):
+        result = await hass.config_entries.options.async_init(dashboard_entry.entry_id)
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "init"
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], {CONF_HOST: "192.168.1.200", CONF_PORT: 6053}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert dashboard_entry.data["host"] == "192.168.1.200"
+    assert dashboard_entry.data["port"] == 6053
+
+
+async def test_dashboard_options_flow_cannot_connect(
+    hass: HomeAssistant,
+) -> None:
+    """Test dashboard options flow shows error on connection failure."""
+
+    # Create dashboard entry
+    dashboard_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_IS_DASHBOARD: True, "host": "192.168.1.100", "port": 6052},
+        title="Dashboard (192.168.1.100:6052)",
+    )
+    dashboard_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(dashboard_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.esphome.config_flow.async_set_dashboard_info",
+        side_effect=Exception("Connection failed"),
+    ):
+        result = await hass.config_entries.options.async_init(dashboard_entry.entry_id)
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], {CONF_HOST: "192.168.1.200", CONF_PORT: 6053}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_device_menu_option(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_zeroconf: MagicMock,
+) -> None:
+    """Test selecting device option from menu."""
+    mock_client.device_info.return_value = DeviceInfo(
+        uses_password=False,
+        name="test",
+        mac_address="11:22:33:44:55:AA",
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "device"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "127.0.0.1", CONF_PORT: 6053}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY

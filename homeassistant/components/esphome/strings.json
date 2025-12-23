@@ -21,6 +21,7 @@
       "single_dashboard_allowed": "Only one dashboard configuration is allowed. Please update the existing dashboard configuration instead."
     },
     "error": {
+      "cannot_connect": "Unable to connect to the ESPHome Dashboard. Please verify the host and port are correct and the dashboard is running.",
       "connection_error": "Unable to connect to the ESPHome device. Make sure the device’s YAML configuration includes an `api` section.",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_psk": "The encryption key is invalid. Make sure it matches the value in the device’s YAML configuration under `api -> encryption -> key`.",
@@ -208,6 +209,9 @@
     }
   },
   "options": {
+    "error": {
+      "cannot_connect": "Unable to connect to the ESPHome Dashboard. Please verify the host and port are correct and the dashboard is running."
+    },
     "step": {
       "init": {
         "data": {
