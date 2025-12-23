@@ -323,16 +323,15 @@ async def test_migrate_from_version_1_success(hass: HomeAssistant) -> None:
             CLIENT_ID, CONFIG_V1[CONF_ACCESS_TOKEN], hass.config.location_name
         )
 
-    entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
-    assert entry is not None
-    assert entry.version == 2
+    assert mock_entry is not None
+    assert mock_entry.version == 2
     # Verify data was converted to OAuth format
-    assert "token" in entry.data
-    assert entry.data["token"]["access_token"] == "migrated_token"
-    assert entry.data["token"]["refresh_token"] == "migrated_refresh_token"
+    assert "token" in mock_entry.data
+    assert mock_entry.data["token"]["access_token"] == "migrated_token"
+    assert mock_entry.data["token"]["refresh_token"] == "migrated_refresh_token"
     # Verify auth_implementation was added for OAuth2 flow compatibility
-    assert entry.data["auth_implementation"] == DOMAIN
-    assert entry.state is ConfigEntryState.LOADED
+    assert mock_entry.data["auth_implementation"] == DOMAIN
+    assert mock_entry.state is ConfigEntryState.LOADED
 
 
 async def test_migrate_from_version_1_token_endpoint_error(hass: HomeAssistant) -> None:
