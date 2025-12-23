@@ -23,6 +23,7 @@ PLATFORMS = [
     Platform.BUTTON,
     Platform.CAMERA,
     Platform.DEVICE_TRACKER,
+    Platform.LIGHT,
     Platform.SENSOR,
     Platform.SWITCH,
 ]
