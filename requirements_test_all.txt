@@ -543,7 +543,7 @@ automower-ble==0.2.8
 av==16.0.1
 
 # homeassistant.components.axis
-axis==65
+axis==66
 
 # homeassistant.components.fujitsu_fglair
 ayla-iot-unofficial==1.4.7
@@ -2487,7 +2487,7 @@ tesla-powerwall==0.5.2
 tesla-wall-connector==1.1.0
 
 # homeassistant.components.teslemetry
-teslemetry-stream==0.8.2
+teslemetry-stream==0.9.0
 
 # homeassistant.components.tessie
 tessie-api==0.1.1
