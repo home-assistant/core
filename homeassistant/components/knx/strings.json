@@ -774,6 +774,19 @@
             }
           }
         },
+        "scene": {
+          "description": "A KNX entity can activate a KNX scene and updates when the scene number is received.",
+          "knx": {
+            "ga_scene": {
+              "description": "Group address to activate a scene.",
+              "label": "Scene"
+            },
+            "scene_number": {
+              "description": "The scene number this entity is associated with.",
+              "label": "Scene number"
+            }
+          }
+        },
         "sensor": {
           "description": "Read-only entity for numeric or string datapoints. Temperature, percent etc.",
           "knx": {

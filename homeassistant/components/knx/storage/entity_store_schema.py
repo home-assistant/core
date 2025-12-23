@@ -40,6 +40,7 @@ from ..const import (
     CoverConf,
     FanConf,
     FanZeroMode,
+    SceneConf,
 )
 from ..dpt import get_supported_dpts
 from .const import (
@@ -82,6 +83,7 @@ from .const import (
     CONF_GA_RED_BRIGHTNESS,
     CONF_GA_RED_SWITCH,
     CONF_GA_SATURATION,
+    CONF_GA_SCENE,
     CONF_GA_SENSOR,
     CONF_GA_SETPOINT_SHIFT,
     CONF_GA_SPEED,
@@ -419,6 +421,25 @@ LIGHT_KNX_SCHEMA = AllSerializeFirst(
     ),
 )
 
+SCENE_KNX_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_GA_SCENE): GASelector(
+            state=False,
+            passive=False,
+            write_required=True,
+            valid_dpt=["17.001", "18.001"],
+        ),
+        vol.Required(SceneConf.SCENE_NUMBER): AllSerializeFirst(
+            selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    min=1, max=64, step=1, mode=selector.NumberSelectorMode.BOX
+                )
+            ),
+            vol.Coerce(int),
+        ),
+    },
+)
+
 SWITCH_KNX_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_GA_SWITCH): GASelector(write_required=True, valid_dpt="1"),
@@ -694,6 +715,7 @@ KNX_SCHEMA_FOR_PLATFORM = {
     Platform.DATETIME: DATETIME_KNX_SCHEMA,
     Platform.FAN: FAN_KNX_SCHEMA,
     Platform.LIGHT: LIGHT_KNX_SCHEMA,
+    Platform.SCENE: SCENE_KNX_SCHEMA,
     Platform.SENSOR: SENSOR_KNX_SCHEMA,
     Platform.SWITCH: SWITCH_KNX_SCHEMA,
     Platform.TIME: TIME_KNX_SCHEMA,
