@@ -32,6 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmazonConfigEntry) -> bo
     coordinator = AmazonDevicesCoordinator(hass, entry, session)
 
     await coordinator.async_config_entry_first_refresh()
+    await coordinator.api.start_http2_thread()
 
     entry.runtime_data = coordinator
 
