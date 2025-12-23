@@ -78,22 +78,19 @@ async def test_setup(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -
 
 @pytest.mark.parametrize(
     "side_effect",
-    [
-        [False] * len(BACKOFF_INTERVALS),
-        [ClientError] * len(BACKOFF_INTERVALS),
-    ],
+    [False, ClientError],
 )
 @pytest.mark.freeze_time
 async def test_setup_backoff(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    side_effect: list[Exception | bool],
+    side_effect: Exception | bool,
 ) -> None:
     """Test update fails with backoffs and recovers."""
 
     with patch(
         "homeassistant.components.duckdns.coordinator.update_duckdns",
-        side_effect=side_effect,
+        side_effect=[side_effect] * len(BACKOFF_INTERVALS),
     ) as client_mock:
         config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
