@@ -1,4 +1,4 @@
-"""Signal notification test helpers."""
+"""Common fixtures for the Signal Messenger tests."""
 
 from http import HTTPStatus
 

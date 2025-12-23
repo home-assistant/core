@@ -1,4 +1,4 @@
-"""The tests for the signal_messenger platform."""
+"""Test the Signal Messenger config flow."""
 
 import base64
 import json
@@ -7,7 +7,7 @@ import os
 import tempfile
 from unittest.mock import patch
 
-from pysignalclirestapi.api import SignalCliRestApiError
+from pysignalclirestapi import SignalCliRestApiError
 import pytest
 from requests_mock.mocker import Mocker
 import voluptuous as vol
