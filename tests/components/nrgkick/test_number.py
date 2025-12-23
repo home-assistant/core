@@ -8,7 +8,7 @@ from homeassistant.components.nrgkick.api import NRGkickApiClientError
 from homeassistant.components.number import SERVICE_SET_VALUE
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 
@@ -114,6 +114,81 @@ async def test_number_entities(
     state = hass.states.get(entity_id)
     assert state
     assert float(state.state) == 1.0
+
+
+async def test_current_set_dynamic_max_value(
+    hass: HomeAssistant,
+    mock_config_entry,
+    mock_nrgkick_api,
+    mock_info_data,
+    mock_control_data,
+    mock_values_data,
+) -> None:
+    """Test current_set max updates when connector changes."""
+    mock_config_entry.add_to_hass(hass)
+
+    # Setup mock data
+    mock_nrgkick_api.get_info.return_value = mock_info_data
+    mock_nrgkick_api.get_control.return_value = mock_control_data
+    mock_nrgkick_api.get_values.return_value = mock_values_data
+
+    with (
+        patch(
+            "homeassistant.components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
+        ),
+        patch("homeassistant.components.nrgkick.async_get_clientsession"),
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Helper to get entity_id by unique ID
+    entity_registry = er.async_get(hass)
+    unique_id = "TEST123456_current_set"
+    entity_id = entity_registry.async_get_entity_id("number", "nrgkick", unique_id)
+    assert entity_id
+
+    # Initial max should be rated_current/connector max from mock_info_data.
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["max"] == 32.0
+
+    # Simulate connector change: max_current drops to 16A.
+    updated_info = {
+        **mock_info_data,
+        "connector": {**mock_info_data["connector"], "max_current": 16.0},
+    }
+    mock_nrgkick_api.get_info.return_value = updated_info
+
+    coordinator = mock_config_entry.runtime_data
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["max"] == 16.0
+
+    # HA validates service calls against max before calling the entity.
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            "number",
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: entity_id, "value": 32.0},
+            blocking=True,
+        )
+    mock_nrgkick_api.set_current.assert_not_called()
+
+    # If connector max_current is below the entity min, expose min as max.
+    updated_info = {
+        **mock_info_data,
+        "connector": {**mock_info_data["connector"], "max_current": 4.0},
+    }
+    mock_nrgkick_api.get_info.return_value = updated_info
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["max"] == 6.0
 
 
 async def test_number_set_value_error(

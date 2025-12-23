@@ -6,7 +6,6 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.nrgkick import async_setup_entry
 from homeassistant.components.nrgkick.api import (
     NRGkickApiClientAuthenticationError,
     NRGkickApiClientCommunicationError,
@@ -45,16 +44,18 @@ async def test_setup_entry_failed_connection(
     """Test setup entry with failed connection."""
     mock_config_entry.add_to_hass(hass)
 
-    mock_nrgkick_api.get_info.side_effect = Exception("Connection failed")
+    mock_nrgkick_api.get_info.side_effect = NRGkickApiClientCommunicationError
 
     with (
         patch(
             "homeassistant.components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
         ),
         patch("homeassistant.components.nrgkick.async_get_clientsession"),
-        pytest.raises(Exception, match="Connection failed"),
     ):
-        await async_setup_entry(hass, mock_config_entry)
+        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_unload_entry(

@@ -87,11 +87,55 @@ class NRGkickNumber(NRGkickEntity, NumberEntity):
         super().__init__(coordinator, key)
         self._attr_native_unit_of_measurement = unit
         self._attr_native_min_value = min_value
+        self._static_native_max_value = max_value
         self._attr_native_max_value = max_value
         self._attr_native_step = step
         self._attr_mode = mode
         self._value_path = value_path
         self._attr_entity_category = entity_category
+
+    def _connector_max_current(self) -> float | None:
+        """Return connector max current in A if available.
+
+        Returns:
+            The connector max current in A, or None if not available.
+
+        """
+        info = self.coordinator.data.get("info")
+        if not isinstance(info, dict):
+            return None
+
+        connector = info.get("connector")
+        if not isinstance(connector, dict):
+            return None
+
+        max_current = connector.get("max_current")
+        if max_current is None:
+            return None
+
+        try:
+            return float(max_current)
+        except (TypeError, ValueError):
+            return None
+
+    @property
+    def native_max_value(self) -> float:
+        """Return the maximum value.
+
+        For `current_set`, the device-reported connector max current can change
+        at runtime (e.g., when users change the connector). Expose a dynamic
+        maximum so the UI slider reflects the currently allowed range.
+
+        """
+        if self._key != "current_set":
+            return self._static_native_max_value
+
+        connector_max = self._connector_max_current()
+        if connector_max is None:
+            return self._static_native_max_value
+
+        effective_max = min(self._static_native_max_value, connector_max)
+        return max(self._attr_native_min_value, effective_max)
 
     @property
     def native_value(self) -> float | None:
