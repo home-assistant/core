@@ -25,15 +25,17 @@ from homeassistant.components.cover import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .entity import HausbusEntity
+from .const import NEW_CHANNEL_ADDED
 
 if TYPE_CHECKING:
-    from . import HausbusConfigEntry
+  from . import HausbusConfigEntry
 
 import logging
 
-LOGGER = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -42,9 +44,18 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a cover from a config entry."""
-
-    gateway = config_entry.runtime_data
-    gateway.register_platform_add_channel_callback(COVER_DOMAIN, async_add_entities)
+    
+    def _handle_channel_added(channel, device_info):
+        if isinstance(channel, Rollladen):
+            _LOGGER.debug("creating new COVER entity for %s", channel)
+            hass.loop.call_soon_threadsafe(
+              async_add_entities,
+              [HausbusCover(channel, device_info)],
+            )
+            
+    config_entry.async_on_unload(
+        async_dispatcher_connect(hass, NEW_CHANNEL_ADDED, _handle_channel_added)
+    )
 
 
 class HausbusCover(HausbusEntity, CoverEntity):
@@ -66,6 +77,7 @@ class HausbusCover(HausbusEntity, CoverEntity):
         self._position: int | None = None
         self._is_opening: bool | None = None
         self._is_closing: bool | None = None
+        self.get_hardware_status();
 
     @property
     def current_cover_position(self) -> int | None:
@@ -91,23 +103,23 @@ class HausbusCover(HausbusEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Opens the cover."""
-        LOGGER.debug("opening cover %s", self._debug_identifier)
+        _LOGGER.debug("opening cover %s", self._debug_identifier)
         self._channel.start(EDirection.TO_OPEN)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Closes the cover."""
-        LOGGER.debug("closing cover %s", self._debug_identifier)
+        _LOGGER.debug("closing cover %s", self._debug_identifier)
         self._channel.start(EDirection.TO_CLOSE)
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stops the actual cover movevent."""
-        LOGGER.debug("stop cover %s", self._debug_identifier)
+        _LOGGER.debug("stop cover %s", self._debug_identifier)
         self._channel.stop()
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Moves cover to the given position."""
         position = kwargs.get("position")
-        LOGGER.debug(
+        _LOGGER.debug(
             "set cover position to %s for %s", position, self._debug_identifier
         )
 
@@ -132,7 +144,7 @@ class HausbusCover(HausbusEntity, CoverEntity):
                 self._is_opening = False
                 self._is_closing = True
             else:
-                LOGGER.debug("unexpected direction %s", direction)
+                _LOGGER.debug("unexpected direction %s", direction)
             self.schedule_update_ha_state()
 
         elif isinstance(data, EvClosed):

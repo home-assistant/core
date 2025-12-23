@@ -11,7 +11,7 @@ from pyhausbus.ObjectId import ObjectId
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.dispatcher import dispatcher_connect
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -34,21 +34,8 @@ class HausbusEntity(Entity):
         super().__init__()
 
         self._channel = channel
-
         self._objectId = ObjectId(channel.getObjectId())
         self._device_id = self._objectId.getDeviceId()
-
-        self._type = "to be overridden"
-        self._attr_name = "to be overridden"
-        self._attr_unique_id = "to be overridden"
-
-        if channel is not None:
-            self._type = channel.__class__.__name__.lower()
-            self._attr_name = channel.getName()
-            self._attr_unique_id = (
-                f"{self._device_id}-{self._type}-{self._objectId.getInstanceId()}"
-            )
-
         self._attr_device_info = device_info
         self._attr_translation_key = self._type
         self._attr_extra_state_attributes = {}
@@ -56,6 +43,13 @@ class HausbusEntity(Entity):
         self._debug_identifier = f"{self._device_id} {self._attr_name}"
         self._unsub_dispatcher: Any = None
         self._domain = domain
+
+        if channel is not None:
+            self._type = channel.__class__.__name__.lower()
+            self._attr_name = channel.getName()
+            self._attr_unique_id = (
+                f"{self._device_id}-{self._type}-{self._objectId.getInstanceId()}"
+            )
 
     def get_domain(self) -> str:
         """Returns the domain of this entity."""
@@ -79,9 +73,10 @@ class HausbusEntity(Entity):
     async def async_added_to_hass(self) -> None:
         """Called when entity is added to HA."""
 
-        self.async_on_remove(dispatcher_connect(
+        self.async_on_remove(async_dispatcher_connect(
             self.hass, f"hausbus_update_{self._objectId.getValue()}", self.handle_event
         ))
+        
         LOGGER.debug(
             "added_to_hass %s type %s",
             self._debug_identifier,
