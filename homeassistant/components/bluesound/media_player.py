@@ -475,7 +475,7 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
             DOMAIN,
             f"deprecated_service_{SERVICE_JOIN}",
             is_fixable=False,
-            breaks_in_ha_version="2026.12.0",
+            breaks_in_ha_version="2026.7.0",
             issue_domain=DOMAIN,
             severity=ir.IssueSeverity.WARNING,
             translation_key="deprecated_service_join",
