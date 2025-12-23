@@ -1,5 +1,6 @@
 """Test the Teslemetry config flow."""
 
+import time
 from unittest.mock import AsyncMock, patch
 from urllib.parse import parse_qs, urlparse
 
@@ -33,7 +34,7 @@ REDIRECT = "https://example.com/auth/external/callback"
 
 
 @pytest.mark.usefixtures("current_request_with_host")
-@pytest.mark.usefixtures("mock_async_setup_entry")
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_oauth_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -97,7 +98,7 @@ async def test_oauth_flow(
 
 
 @pytest.mark.usefixtures("current_request_with_host")
-@pytest.mark.usefixtures("mock_async_setup_entry")
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -151,8 +152,28 @@ async def test_reauth_account_mismatch(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test Tesla Fleet reauthentication with different account."""
-    old_entry = MockConfigEntry(domain=DOMAIN, unique_id="baduid", version=1, data={})
+    # Create an entry with a different unique_id to test account mismatch
+    old_entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=2,
+        unique_id="baduid",
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {
+                "access_token": "old_access_token",
+                "refresh_token": "old_refresh_token",
+                "expires_at": int(time.time()) + 3600,
+            },
+        },
+    )
     old_entry.add_to_hass(hass)
+
+    # Setup the integration properly to import client credentials
+    with patch(
+        "homeassistant.components.teslemetry.async_setup_entry", return_value=True
+    ):
+        await hass.config_entries.async_setup(old_entry.entry_id)
+        await hass.async_block_till_done()
 
     result = await old_entry.start_reauth_flow(hass)
 
