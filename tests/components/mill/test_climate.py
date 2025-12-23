@@ -348,7 +348,8 @@ async def functional_local_heater(
             [],
             [call(HEATER_ID, float(TEST_SET_TEMPERATURE))],
             HVACMode.OFF,
-            # likewise, in this test, it hasn't had the chance to update its ambient temperature, because the exception is raised before a refresh can be requested from the coordinator
+            # likewise, in this test, it hasn't had the chance to update its ambient temperature,
+            # because the exception is raised before a refresh can be requested from the coordinator
             {ATTR_TEMPERATURE: TEST_AMBIENT_TEMPERATURE},
         ),
     ],
@@ -482,13 +483,14 @@ async def test_cloud_heater(
             SERVICE_SET_TEMPERATURE,
             {ATTR_TEMPERATURE: TEST_SET_TEMPERATURE, ATTR_HVAC_MODE: HVACMode.COOL},
             pytest.raises(HomeAssistantError),
-            # MillHeater will set the temperature before calling async_handle_set_hvac_mode,
+            # LocalMillHeater will set the temperature before calling async_handle_set_hvac_mode,
             #   meaning an invalid HVAC mode will raise only after the temperature is set.
             [],
             [],
             [call(float(TEST_SET_TEMPERATURE))],
             HVACMode.OFF,
-            # likewise, in this test, it hasn't had the chance to update its ambient temperature, because the exception is raised before a refresh can be requested from the coordinator
+            # likewise, in this test, it hasn't had the chance to update its ambient temperature,
+            # because the exception is raised before a refresh can be requested from the coordinator
             {ATTR_TEMPERATURE: TEST_AMBIENT_TEMPERATURE},
         ),
     ],
