@@ -59,7 +59,7 @@ class MatterEventEntityDescription(EventEntityDescription, MatterEntityDescripti
 
 
 class MatterEventEntity(MatterEntity, EventEntity):
-    """Representation of a Matter Switch Event entity."""
+    """Representation of a Matter Event entity."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the entity."""
