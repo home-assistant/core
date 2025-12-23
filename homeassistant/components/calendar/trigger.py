@@ -10,8 +10,14 @@ from typing import TYPE_CHECKING, Any, cast
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_ENTITY_ID, CONF_EVENT, CONF_OFFSET, CONF_OPTIONS
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.const import (
+    CONF_ENTITY_ID,
+    CONF_EVENT,
+    CONF_OFFSET,
+    CONF_OPTIONS,
+    CONF_TARGET,
+)
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.automation import move_top_level_schema_fields_to_options
@@ -20,12 +26,13 @@ from homeassistant.helpers.event import (
     async_track_point_in_time,
     async_track_time_interval,
 )
+from homeassistant.helpers.target import TargetEntityChangeTracker, TargetSelection
 from homeassistant.helpers.trigger import Trigger, TriggerActionRunner, TriggerConfig
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 from . import CalendarEntity, CalendarEvent
-from .const import DATA_COMPONENT
+from .const import DATA_COMPONENT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,17 +40,33 @@ EVENT_START = "start"
 EVENT_END = "end"
 UPDATE_INTERVAL = datetime.timedelta(minutes=15)
 
+CONF_OFFSET_TYPE = "offset_type"
+OFFSET_TYPE_BEFORE = "before"
+OFFSET_TYPE_AFTER = "after"
 
-_OPTIONS_SCHEMA_DICT = {
+
+_SINGLE_ENTITY_OPTIONS_SCHEMA_DICT = {
     vol.Required(CONF_ENTITY_ID): cv.entity_id,
     vol.Optional(CONF_EVENT, default=EVENT_START): vol.In({EVENT_START, EVENT_END}),
     vol.Optional(CONF_OFFSET, default=datetime.timedelta(0)): cv.time_period,
 }
 
-_CONFIG_SCHEMA = vol.Schema(
+_SINGLE_ENTITY_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_OPTIONS): _OPTIONS_SCHEMA_DICT,
+        vol.Required(CONF_OPTIONS): _SINGLE_ENTITY_OPTIONS_SCHEMA_DICT,
     },
+)
+
+_EVENT_TRIGGER_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_OPTIONS, default={}): {
+            vol.Optional(CONF_OFFSET, default=datetime.timedelta(0)): cv.time_period,
+            vol.Optional(CONF_OFFSET_TYPE, default=OFFSET_TYPE_BEFORE): vol.In(
+                {OFFSET_TYPE_BEFORE, OFFSET_TYPE_AFTER}
+            ),
+        },
+        vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
+    }
 )
 
 # mypy: disallow-any-generics
@@ -110,15 +133,19 @@ def get_entity(hass: HomeAssistant, entity_id: str) -> CalendarEntity:
     return entity
 
 
-def event_fetcher(hass: HomeAssistant, entity_id: str) -> EventFetcher:
+def event_fetcher(hass: HomeAssistant, entity_ids: set[str]) -> EventFetcher:
     """Build an async_get_events wrapper to fetch events during a time span."""
 
     async def async_get_events(timespan: Timespan) -> list[CalendarEvent]:
         """Return events active in the specified time span."""
-        entity = get_entity(hass, entity_id)
         # Expand by one second to make the end time exclusive
         end_time = timespan.end + datetime.timedelta(seconds=1)
-        return await entity.async_get_events(hass, timespan.start, end_time)
+
+        events: list[CalendarEvent] = []
+        for entity_id in entity_ids:
+            entity = get_entity(hass, entity_id)
+            events.extend(await entity.async_get_events(hass, timespan.start, end_time))
+        return events
 
     return async_get_events
 
@@ -260,8 +287,68 @@ class CalendarEventListener:
         self._listen_next_calendar_event()
 
 
-class EventTrigger(Trigger):
-    """Calendar event trigger."""
+class TargetCalendarEventListener(TargetEntityChangeTracker):
+    """Helper class to listen to calendar events for target entity changes."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        target_selection: TargetSelection,
+        event_type: str,
+        offset: datetime.timedelta,
+        run_action: TriggerActionRunner,
+    ) -> None:
+        """Initialize the state change tracker."""
+
+        def entity_filter(entities: set[str]) -> set[str]:
+            return {
+                entity_id
+                for entity_id in entities
+                if split_entity_id(entity_id)[0] == DOMAIN
+            }
+
+        super().__init__(hass, target_selection, entity_filter)
+        self._event_type = event_type
+        self._offset = offset
+        self._run_action = run_action
+        self._trigger_data = {
+            "event": event_type,
+            "offset": offset,
+        }
+
+        self._calendar_event_listener: CalendarEventListener | None = None
+
+    def _handle_entities(self, tracked_entities: set[str]) -> None:
+        """Handle the tracked entities."""
+        self._hass.async_create_task(self._start_listening(tracked_entities))
+
+    async def _start_listening(self, tracked_entities: set[str]) -> None:
+        """Start listening for calendar events."""
+        _LOGGER.debug("Tracking events for calendars: %s", tracked_entities)
+        if self._calendar_event_listener:
+            self._calendar_event_listener.async_detach()
+        self._calendar_event_listener = CalendarEventListener(
+            self._hass,
+            self._run_action,
+            self._trigger_data,
+            queued_event_fetcher(
+                event_fetcher(self._hass, tracked_entities),
+                self._event_type,
+                self._offset,
+            ),
+        )
+        await self._calendar_event_listener.async_attach()
+
+    def _unsubscribe(self) -> None:
+        """Unsubscribe from all events."""
+        super()._unsubscribe()
+        if self._calendar_event_listener:
+            self._calendar_event_listener.async_detach()
+            self._calendar_event_listener = None
+
+
+class SingleEntityEventTrigger(Trigger):
+    """Legacy single calendar entity event trigger."""
 
     _options: dict[str, Any]
 
@@ -271,7 +358,7 @@ class EventTrigger(Trigger):
     ) -> ConfigType:
         """Validate complete config."""
         complete_config = move_top_level_schema_fields_to_options(
-            complete_config, _OPTIONS_SCHEMA_DICT
+            complete_config, _SINGLE_ENTITY_OPTIONS_SCHEMA_DICT
         )
         return await super().async_validate_complete_config(hass, complete_config)
 
@@ -280,7 +367,7 @@ class EventTrigger(Trigger):
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
         """Validate config."""
-        return cast(ConfigType, _CONFIG_SCHEMA(config))
+        return cast(ConfigType, _SINGLE_ENTITY_SCHEMA(config))
 
     def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
         """Initialize trigger."""
@@ -311,15 +398,72 @@ class EventTrigger(Trigger):
             run_action,
             trigger_data,
             queued_event_fetcher(
-                event_fetcher(self._hass, entity_id), event_type, offset
+                event_fetcher(self._hass, {entity_id}), event_type, offset
             ),
         )
         await listener.async_attach()
         return listener.async_detach
 
 
+class EventTrigger(Trigger):
+    """Calendar event trigger."""
+
+    _options: dict[str, Any]
+    _event_type: str
+
+    @classmethod
+    async def async_validate_config(
+        cls, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
+        return cast(ConfigType, _EVENT_TRIGGER_SCHEMA(config))
+
+    def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
+        """Initialize trigger."""
+        super().__init__(hass, config)
+
+        if TYPE_CHECKING:
+            assert config.target is not None
+            assert config.options is not None
+        self._target = config.target
+        self._options = config.options
+
+    async def async_attach_runner(
+        self, run_action: TriggerActionRunner
+    ) -> CALLBACK_TYPE:
+        """Attach a trigger."""
+
+        offset = self._options[CONF_OFFSET]
+        offset_type = self._options.get(CONF_OFFSET_TYPE, OFFSET_TYPE_BEFORE)
+
+        if offset_type == OFFSET_TYPE_BEFORE:
+            offset = -offset
+
+        target_selection = TargetSelection(self._target)
+        if not target_selection.has_any_target:
+            raise HomeAssistantError(f"No target defined in {self._target}")
+        listener = TargetCalendarEventListener(
+            self._hass, target_selection, self._event_type, offset, run_action
+        )
+        return listener.async_setup()
+
+
+class EventStartedTrigger(EventTrigger):
+    """Calendar event started trigger."""
+
+    _event_type = EVENT_START
+
+
+class EventEndedTrigger(EventTrigger):
+    """Calendar event ended trigger."""
+
+    _event_type = EVENT_END
+
+
 TRIGGERS: dict[str, type[Trigger]] = {
-    "_": EventTrigger,
+    "_": SingleEntityEventTrigger,
+    "event_started": EventStartedTrigger,
+    "event_ended": EventEndedTrigger,
 }
 
 
