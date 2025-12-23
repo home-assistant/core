@@ -460,7 +460,7 @@ async def test_local_set_hvac_mode_heat(
     local_heater_set_mode_control_individually: MagicMock,
     local_heater_set_mode_off: MagicMock,
 ) -> None:
-    """Tests locally setting a temperature with HVAC mode HEAT."""
+    """Tests locally setting HVAC mode HEAT."""
 
     state = hass.states.get(ENTITY_CLIMATE)
     assert state is not None
