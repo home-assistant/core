@@ -78,7 +78,7 @@ async def setup_state_sensor(
     style: ConfigurationStyle,
     state_template: str,
     config: ConfigType,
-):
+) -> None:
     """Do setup of sensor integration using a state template."""
     await setup_entity(hass, TEST_SENSOR, style, count, config, state_template)
 
