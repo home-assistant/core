@@ -213,7 +213,7 @@ class SmartThingsHood(SmartThingsEntity, FanEntity):
         )
 
     async def async_set_percentage(self, percentage: int) -> None:
-        """Set the preset_mode of the fan."""
+        """Set the speed percentage of the fan."""
         if percentage == 0:
             await self.execute_device_command(Capability.SWITCH, Command.OFF)
         else:
