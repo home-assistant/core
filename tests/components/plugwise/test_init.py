@@ -382,7 +382,9 @@ async def test_update_interval_adam(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert mock_smile_adam_heat_cool.async_update.call_count == 1
 
-    assert DEFAULT_SCAN_INTERVAL[mock_smile_adam_heat_cool.smile.type] == timedelta(seconds=60)
+    assert DEFAULT_SCAN_INTERVAL[mock_smile_adam_heat_cool.smile.type] == timedelta(
+        seconds=60
+    )
     freezer.tick(DEFAULT_SCAN_INTERVAL[mock_smile_adam_heat_cool.smile.type])
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
