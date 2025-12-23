@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
+from datetime import timedelta
 import logging
 from typing import Any
 
@@ -28,10 +30,17 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import SectionConfig, section
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.selector import LocationSelector, LocationSelectorConfig
+from homeassistant.helpers.selector import (
+    LocationSelector,
+    LocationSelectorConfig,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 
 from .const import CONF_REFERRER, DOMAIN, SECTION_API_KEY_OPTIONS
 
+SECTIONS_ADDITIONAL_FORECASTS = "section_addtitional_forecasts"
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
@@ -46,16 +55,12 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 
 async def _validate_input(
-    user_input: dict[str, Any],
-    api: GoogleAirQualityApi,
+    request_fn: Callable[[], Awaitable[Any]],
     errors: dict[str, str],
     description_placeholders: dict[str, str],
 ) -> bool:
     try:
-        await api.async_get_current_conditions(
-            lat=user_input[CONF_LOCATION][CONF_LATITUDE],
-            lon=user_input[CONF_LOCATION][CONF_LONGITUDE],
-        )
+        await request_fn()
     except GoogleAirQualityApiError as err:
         errors["base"] = "cannot_connect"
         description_placeholders["error_message"] = str(err)
@@ -134,7 +139,15 @@ class GoogleAirQualityConfigFlow(ConfigFlow, domain=DOMAIN):
             referrer = user_input.get(SECTION_API_KEY_OPTIONS, {}).get(CONF_REFERRER)
             auth = Auth(session, user_input[CONF_API_KEY], referrer=referrer)
             api = GoogleAirQualityApi(auth)
-            if await _validate_input(user_input, api, errors, description_placeholders):
+            location = user_input[CONF_LOCATION]
+            if await _validate_input(
+                request_fn=lambda: api.async_get_current_conditions(
+                    lat=location[CONF_LATITUDE],
+                    lon=location[CONF_LONGITUDE],
+                ),
+                errors=errors,
+                description_placeholders=description_placeholders,
+            ):
                 return self.async_create_entry(
                     title="Google Air Quality",
                     data={
@@ -200,7 +213,15 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
                     errors=errors,
                     description_placeholders=description_placeholders,
                 )
-            if await _validate_input(user_input, api, errors, description_placeholders):
+            location = user_input[CONF_LOCATION]
+            if await _validate_input(
+                request_fn=lambda: api.async_get_current_conditions(
+                    lat=location[CONF_LATITUDE],
+                    lon=location[CONF_LONGITUDE],
+                ),
+                errors=errors,
+                description_placeholders=description_placeholders,
+            ):
                 return self.async_create_entry(
                     title=user_input[CONF_NAME],
                     data=user_input[CONF_LOCATION],
@@ -217,3 +238,78 @@ class LocationSubentryFlowHandler(ConfigSubentryFlow):
         )
 
     async_step_user = async_step_location
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Reconfigure a sensor subentry."""
+        return await self.async_step_forecast()
+
+    async def async_step_forecast(
+        self,
+        user_input: dict[str, Any] | None = None,
+    ) -> SubentryFlowResult:
+        """Handle the forecast step."""
+        subentry = self._get_reconfigure_subentry()
+        errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {}
+        if user_input:
+            mutable_data = dict(subentry.data)
+            forecast_hours: list[int] = []
+            if user_input.get("forecast") is True:
+                _LOGGER.debug("user_input: %s", user_input)
+                forecast_hours.append(1)
+            section_data = user_input.get(SECTIONS_ADDITIONAL_FORECASTS) or {}
+            additional_times = section_data.get("additional_forecast_times", [])
+            forecast_hours.extend(int(value) for value in additional_times)
+            mutable_data["forecast"] = forecast_hours
+            api: GoogleAirQualityApi = self._get_entry().runtime_data.api
+            if await _validate_input(
+                request_fn=lambda: api.async_get_forecast(
+                    lat=subentry.data[CONF_LATITUDE],
+                    lon=subentry.data[CONF_LONGITUDE],
+                    forecast_timedelta=timedelta(hours=1),
+                ),
+                errors=errors,
+                description_placeholders=description_placeholders,
+            ):
+                return self.async_update_reload_and_abort(
+                    self._get_entry(),
+                    self._get_reconfigure_subentry(),
+                    data=mutable_data,
+                    title=subentry.title,
+                )
+        else:
+            user_input = {}
+        return self.async_show_form(
+            step_id="forecast",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        "forecast",
+                        default=bool(subentry.data.get("forecast")),
+                    ): bool,
+                    vol.Optional("section_addtitional_forecasts"): section(
+                        vol.Schema(
+                            {
+                                vol.Optional(
+                                    "additional_forecast_times",
+                                    default=[
+                                        str(value)
+                                        for value in subentry.data.get("forecast", [])
+                                        if value != 1
+                                    ],
+                                ): SelectSelector(
+                                    SelectSelectorConfig(
+                                        options=[str(hour) for hour in range(2, 97)],
+                                        multiple=True,
+                                        mode=SelectSelectorMode.DROPDOWN,
+                                    )
+                                ),
+                            }
+                        ),
+                        SectionConfig(collapsed=True),
+                    ),
+                }
+            ),
+        )

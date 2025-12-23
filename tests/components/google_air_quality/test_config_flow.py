@@ -10,7 +10,7 @@ from homeassistant.components.google_air_quality.const import (
     DOMAIN,
     SECTION_API_KEY_OPTIONS,
 )
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
@@ -404,3 +404,33 @@ async def test_subentry_flow_entry_not_loaded(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "entry_not_loaded"
+
+
+async def test_reconfigure_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api: AsyncMock,
+) -> None:
+    """Test reconfigure and adding forecast hours to a subentry."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    subentry_id = "home-subentry-id"
+    result = await mock_config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "forecast"
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            "forecast": True,
+            "section_addtitional_forecasts": {"additional_forecast_times": []},
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    subentry = mock_config_entry.subentries[subentry_id]
+    assert subentry.data == {
+        "forecast": [1],
+        CONF_LATITUDE: 10.1,
+        CONF_LONGITUDE: 20.1,
+    }

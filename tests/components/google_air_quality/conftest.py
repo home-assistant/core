@@ -4,7 +4,10 @@ from collections.abc import AsyncGenerator, Generator
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
-from google_air_quality_api.model import AirQualityCurrentConditionsData
+from google_air_quality_api.model import (
+    AirQualityCurrentConditionsData,
+    AirQualityForecastData,
+)
 import pytest
 
 from homeassistant.components.google_air_quality import CONF_REFERRER
@@ -41,6 +44,7 @@ def mock_subentries() -> list[ConfigSubentryDataWithId]:
     return [
         ConfigSubentryDataWithId(
             data={
+                "forecast": [1, 3, 6],
                 CONF_LATITUDE: 10.1,
                 CONF_LONGITUDE: 20.1,
             },
@@ -70,6 +74,7 @@ def mock_config_entry(
 def mock_client_api() -> Generator[Mock]:
     """Set up fake Google Air Quality API responses from fixtures."""
     responses = load_json_object_fixture("air_quality_data.json", DOMAIN)
+    responses_f = load_json_object_fixture("forecast.json", DOMAIN)
     with (
         patch(
             "homeassistant.components.google_air_quality.GoogleAirQualityApi",
@@ -83,6 +88,9 @@ def mock_client_api() -> Generator[Mock]:
         api = mock_api.return_value
         api.async_get_current_conditions.return_value = (
             AirQualityCurrentConditionsData.from_dict(responses)
+        )
+        api.async_get_forecast.return_value = AirQualityForecastData.from_dict(
+            responses_f
         )
 
         yield api
