@@ -1576,6 +1576,50 @@
     'type': 'result',
   })
 # ---
+# name: test_knx_get_schema[scene]
+  dict({
+    'id': 1,
+    'result': list([
+      dict({
+        'name': 'ga_scene',
+        'options': dict({
+          'passive': False,
+          'state': False,
+          'validDPTs': list([
+            dict({
+              'main': 17,
+              'sub': 1,
+            }),
+            dict({
+              'main': 18,
+              'sub': 1,
+            }),
+          ]),
+          'write': dict({
+            'required': True,
+          }),
+        }),
+        'required': True,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'name': 'scene_number',
+        'required': True,
+        'selector': dict({
+          'number': dict({
+            'max': 64.0,
+            'min': 1.0,
+            'mode': 'box',
+            'step': 1.0,
+          }),
+        }),
+        'type': 'ha_selector',
+      }),
+    ]),
+    'success': True,
+    'type': 'result',
+  })
+# ---
 # name: test_knx_get_schema[sensor]
   dict({
     'id': 1,
