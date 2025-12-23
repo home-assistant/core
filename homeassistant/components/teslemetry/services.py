@@ -149,7 +149,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         config = async_get_config_for_device(hass, device)
         vehicle = async_get_vehicle_for_entry(hass, device, config)
 
-        time: int | None = None
+        time: int
         # Convert time to minutes since minute
         if "time" in call.data:
             (hours, minutes, *_seconds) = call.data["time"].split(":")
@@ -158,11 +158,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN, translation_key="set_scheduled_charging_time"
             )
+        else:
+            time = 0
 
         await handle_vehicle_command(
-            vehicle.api.set_scheduled_charging(
-                enable=call.data["enable"], time=time or 0
-            )
+            vehicle.api.set_scheduled_charging(enable=call.data["enable"], time=time)
         )
 
     hass.services.async_register(
@@ -200,6 +200,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 translation_domain=DOMAIN,
                 translation_key="set_scheduled_departure_preconditioning",
             )
+        else:
+            departure_time = 0
 
         # Off peak charging
         off_peak_charging_enabled = call.data.get(ATTR_OFF_PEAK_CHARGING_ENABLED, False)
@@ -216,16 +218,18 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 translation_domain=DOMAIN,
                 translation_key="set_scheduled_departure_off_peak",
             )
+        else:
+            end_off_peak_time = 0
 
         await handle_vehicle_command(
             vehicle.api.set_scheduled_departure(
                 enable,
                 preconditioning_enabled,
                 preconditioning_weekdays_only,
-                departure_time or 0,
+                departure_time,
                 off_peak_charging_enabled,
                 off_peak_charging_weekdays_only,
-                end_off_peak_time or 0,
+                end_off_peak_time,
             )
         )
 
