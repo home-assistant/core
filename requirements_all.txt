@@ -2572,7 +2572,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==3.19.0
+python-roborock==3.20.1
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.46
@@ -2984,7 +2984,7 @@ tesla-powerwall==0.5.2
 tesla-wall-connector==1.1.0
 
 # homeassistant.components.teslemetry
-teslemetry-stream==0.8.2
+teslemetry-stream==0.9.0
 
 # homeassistant.components.tessie
 tessie-api==0.1.1
