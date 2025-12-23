@@ -492,6 +492,7 @@ FLOWS = {
         "opentherm_gw",
         "openuv",
         "openweathermap",
+        "opnsense",
         "opower",
         "oralb",
         "osoenergy",
