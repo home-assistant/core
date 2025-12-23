@@ -1,0 +1,169 @@
+"""Config flow for olarm integration."""
+
+from __future__ import annotations
+
+import logging
+from typing import Any
+
+from olarmflowclient import DevicesNotFound, OlarmFlowClient, OlarmFlowClientApiError
+import voluptuous as vol
+
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
+from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_entry_oauth2_flow
+
+from .const import DOMAIN, OAUTH2_CLIENT_ID, OAUTH2_CLIENT_SECRET
+
+_LOGGER = logging.getLogger(__name__)
+
+
+class OlarmOauth2FlowHandler(
+    config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
+):
+    """Handle a config flow for Olarm using OAuth2."""
+
+    DOMAIN = DOMAIN
+
+    _access_token: str | None = None
+    _refresh_token: str | None = None
+    _expires_at: int | None = None
+    _user_id: str | None = None
+    _systems: list[dict[str, Any]] | None = None
+    _device_id: str | None = None
+    _oauth_data: dict[str, Any] | None = None
+
+    @property
+    def logger(self) -> logging.Logger:
+        """Return logger."""
+        return logging.getLogger(__name__)
+
+    @property
+    def extra_authorize_params(self) -> dict[str, str]:
+        """Extra parameters for authorize. PKCE is handled automatically."""
+        return {
+            "scope": "email",
+            "client_id": OAUTH2_CLIENT_ID,
+        }
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a flow initiated by the user."""
+        # Import the default client credential for public OAuth client
+        await async_import_client_credential(
+            self.hass,
+            DOMAIN,
+            ClientCredential(OAUTH2_CLIENT_ID, OAUTH2_CLIENT_SECRET, name="Olarm"),
+        )
+        return await super().async_step_user(user_input)
+
+    async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
+        """Create an entry for the flow, or update existing entry."""
+        errors: dict[str, str] = {}
+
+        # Extract oauth tokens to connect to use to connect to Olarm services
+        self._oauth_data = data
+        self._access_token = data["token"]["access_token"]
+        self._refresh_token = data["token"]["refresh_token"]
+        self._expires_at = data["token"]["expires_at"]
+
+        _LOGGER.debug("OAuth2 tokens fetched successfully, fetching systems")
+
+        olarm_connect_client = OlarmFlowClient(self._access_token, self._expires_at)
+
+        try:
+            api_result = await olarm_connect_client.get_devices()  # OlarmFlowClient uses "devices" terminology but an Olarm is connected to a system
+        except DevicesNotFound:
+            # Handle if user has no systems
+            return self.async_abort(reason="no_systems_found")
+        except OlarmFlowClientApiError:
+            # Otherwise, assume it's an auth-related error
+            errors["base"] = "invalid_auth"
+            return self.async_show_form(step_id="user", errors=errors)
+
+        _LOGGER.debug(api_result)
+        self._systems = api_result.get("data")
+        self._user_id = api_result.get("userId")
+        return await self.async_step_system()
+
+    async def async_step_system(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the system selection step.
+
+        A user can have many Olarm systems so we need to ask them to select one for this home assistant instance
+        """
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            _LOGGER.debug(user_input)
+            self._device_id = user_input["select_system"]
+
+            # abort if oauth data is not available
+            if self._oauth_data is None:
+                return self.async_abort(reason="oauth_data_missing")
+
+            # Find next available client_id_suffix
+            client_id_suffix = self._get_next_client_id_suffix()
+
+            # load system details into config
+            data = {
+                "user_id": self._user_id,
+                "device_id": self._device_id,
+                "client_id_suffix": client_id_suffix,
+                "auth_implementation": self._oauth_data["auth_implementation"],
+                "token": self._oauth_data["token"],
+            }
+
+            # Create a unique ID using the device identifier and abort if it already exists
+            unique_id = self._device_id
+            await self.async_set_unique_id(unique_id)
+            self._abort_if_unique_id_configured()
+
+            return self.async_create_entry(title="Olarm Integration", data=data)
+
+        # abort if no systems are found
+        if self._systems is None:
+            return self.async_abort(reason="no_systems_found")
+
+        # setup system selection dropdown and sort by system name
+        system_options: dict[str, str] = {
+            system["deviceId"]: f"{system['deviceName']} - {system['deviceSerial']}"
+            for system in self._systems
+        }
+        sorted_system_options = dict(
+            sorted(system_options.items(), key=lambda item: item[1])
+        )
+        schema = vol.Schema(
+            {
+                vol.Required("select_system"): vol.In(sorted_system_options),
+            },
+        )
+
+        return self.async_show_form(step_id="system", data_schema=schema, errors=errors)
+
+    def _get_next_client_id_suffix(self) -> str:
+        """Get next available client_id_suffix."""
+        used_suffixes = {
+            int(entry.data.get("client_id_suffix", 0))
+            for entry in self.hass.config_entries.async_entries(DOMAIN)
+            if entry.data.get("client_id_suffix")
+        }
+
+        for suffix in range(1, 101):
+            if suffix not in used_suffixes:
+                return str(suffix)
+
+        # If all are used, cycle back to 1
+        return "1"
+
+
+class CannotConnect(HomeAssistantError):
+    """Error to indicate we cannot connect."""
+
+
+class InvalidAuth(HomeAssistantError):
+    """Error to indicate there is invalid auth."""
