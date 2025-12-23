@@ -98,6 +98,18 @@
     }
   },
   "triggers": {
+    "current_humidity_changed": {
+      "trigger": "mdi:water-percent"
+    },
+    "current_humidity_crossed_threshold": {
+      "trigger": "mdi:water-percent"
+    },
+    "current_temperature_changed": {
+      "trigger": "mdi:thermometer"
+    },
+    "current_temperature_crossed_threshold": {
+      "trigger": "mdi:thermometer"
+    },
     "hvac_mode_changed": {
       "trigger": "mdi:thermostat"
     },
@@ -109,6 +121,12 @@
     },
     "started_heating": {
       "trigger": "mdi:fire"
+    },
+    "target_humidity_changed": {
+      "trigger": "mdi:water-percent"
+    },
+    "target_humidity_crossed_threshold": {
+      "trigger": "mdi:water-percent"
     },
     "target_temperature_changed": {
       "trigger": "mdi:thermometer"
