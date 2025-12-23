@@ -99,9 +99,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async def clear_cache(call: ServiceCall) -> None:
         """Handle a clear cache service call."""
         entry = await get_config_entry(call)
-        with suppress(FileNotFoundError):
-            try:
-                if call.data.get(CONF_ADDRESS):
+        try:
+            if call.data.get(CONF_ADDRESS):
+                with suppress(FileNotFoundError):
                     await hass.async_add_executor_job(
                         os.unlink,
                         hass.config.path(
@@ -109,17 +109,18 @@ def async_setup_services(hass: HomeAssistant) -> None:
                             f"velbuscache-{entry.entry_id}/{call.data[CONF_ADDRESS]}.p",
                         ),
                     )
-                else:
+            else:
+                with suppress(FileNotFoundError):
                     await hass.async_add_executor_job(
                         shutil.rmtree,
                         hass.config.path(STORAGE_DIR, f"velbuscache-{entry.entry_id}/"),
                     )
-            except OSError as exc:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="clear_cache_failed",
-                    translation_placeholders={"error": str(exc)},
-                ) from exc
+        except OSError as exc:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="clear_cache_failed",
+                translation_placeholders={"error": str(exc)},
+            ) from exc
         # call a scan to repopulate
         await scan(call)
 
