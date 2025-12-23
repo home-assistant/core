@@ -57,7 +57,7 @@ SENSOR_DESCRIPTIONS: dict[str, VelbusSensorEntityDescription] = {
         device_class=SensorDeviceClass.ENERGY,
         icon="mdi:counter",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda channel: channel.get_counter_state(),
+        value_fn=lambda channel: float(channel.get_counter_state()),
         unit_fn=lambda channel: channel.get_counter_unit(),
         unique_id_suffix="-counter",
     ),
