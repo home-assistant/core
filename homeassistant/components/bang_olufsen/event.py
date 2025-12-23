@@ -16,11 +16,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BeoConfigEntry
 from .const import (
-    BEO_REMOTE_CONTROL_KEYS,
     BEO_REMOTE_KEY_EVENTS,
-    BEO_REMOTE_KEYS,
-    BEO_REMOTE_SUBMENU_CONTROL,
-    BEO_REMOTE_SUBMENU_LIGHT,
     CONNECTION_STATUS,
     DEVICE_BUTTON_EVENTS,
     DOMAIN,
@@ -29,7 +25,7 @@ from .const import (
     WebsocketNotification,
 )
 from .entity import BeoEntity
-from .util import get_device_buttons, get_remotes
+from .util import get_device_buttons, get_remote_keys, get_remotes
 
 PARALLEL_UPDATES = 0
 
@@ -40,38 +36,19 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Event entities from config entry."""
-    entities: list[BeoEvent] = []
-
-    async_add_entities(
+    entities: list[BeoEvent] = [
         BeoButtonEvent(config_entry, button_type)
         for button_type in get_device_buttons(config_entry.data[CONF_MODEL])
-    )
+    ]
 
     # Check for connected Beoremote One
     remotes = await get_remotes(config_entry.runtime_data.client)
 
     for remote in remotes:
-        # Add Light keys
         entities.extend(
             [
-                BeoRemoteKeyEvent(
-                    config_entry,
-                    remote,
-                    f"{BEO_REMOTE_SUBMENU_LIGHT}/{key_type}",
-                )
-                for key_type in BEO_REMOTE_KEYS
-            ]
-        )
-
-        # Add Control keys
-        entities.extend(
-            [
-                BeoRemoteKeyEvent(
-                    config_entry,
-                    remote,
-                    f"{BEO_REMOTE_SUBMENU_CONTROL}/{key_type}",
-                )
-                for key_type in (*BEO_REMOTE_KEYS, *BEO_REMOTE_CONTROL_KEYS)
+                BeoRemoteKeyEvent(config_entry, remote, key_type)
+                for key_type in get_remote_keys()
             ]
         )
 
