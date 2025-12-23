@@ -73,12 +73,9 @@ class TeslaFleetUpdateEntity(TeslaFleetVehicleEntity, UpdateEntity):
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
 
-        # Supported Features
-        if self.scoped and self._value in (
-            AVAILABLE,
-            SCHEDULED,
-        ):
-            # Only allow install when an update has been fully downloaded
+        # Supported Features - only show install button if update is available
+        # but not already scheduled
+        if self.scoped and self._value == AVAILABLE:
             self._attr_supported_features = (
                 UpdateEntityFeature.PROGRESS | UpdateEntityFeature.INSTALL
             )
