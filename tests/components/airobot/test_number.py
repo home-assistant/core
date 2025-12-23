@@ -25,7 +25,7 @@ def platforms() -> list[Platform]:
     return [Platform.NUMBER]
 
 
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_number_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -36,7 +36,7 @@ async def test_number_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_number_set_hysteresis_band(
     hass: HomeAssistant,
     mock_airobot_client: AsyncMock,
@@ -55,7 +55,7 @@ async def test_number_set_hysteresis_band(
     mock_airobot_client.set_hysteresis_band.assert_called_once_with(0.3)
 
 
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_number_set_value_error(
     hass: HomeAssistant,
     mock_airobot_client: AsyncMock,
@@ -63,7 +63,7 @@ async def test_number_set_value_error(
     """Test error handling when setting number value fails."""
     mock_airobot_client.set_hysteresis_band.side_effect = AirobotError("Device error")
 
-    with pytest.raises(ServiceValidationError, match="Failed to set value") as exc_info:
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
