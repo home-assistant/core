@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 from dataclasses import dataclass
 
 from velbusaio.channels import ButtonCounter, LightSensor, SensorNumber, Temperature
@@ -21,17 +20,25 @@ from .entity import VelbusEntity
 
 PARALLEL_UPDATES = 0
 
+type VelbusSensorChannel = ButtonCounter | Temperature | LightSensor | SensorNumber
+
+
+def _default_value_fn(channel) -> float | int | None:
+    """Get the default state value from the channel."""
+    return channel.get_state()
+
+
+def _default_unit_fn(channel) -> str | None:
+    """Get the default unit from the channel."""
+    return channel.get_unit()
+
 
 @dataclass(frozen=True, kw_only=True)
 class VelbusSensorEntityDescription(SensorEntityDescription):
     """Describes Velbus sensor entity."""
 
-    value_fn: Callable[
-        [ButtonCounter | Temperature | LightSensor | SensorNumber], float | int | None
-    ]
-    unit_fn: Callable[
-        [ButtonCounter | Temperature | LightSensor | SensorNumber], str | None
-    ]
+    value_fn: callable = _default_value_fn
+    unit_fn: callable = _default_unit_fn
 
 
 SENSOR_DESCRIPTIONS: tuple[VelbusSensorEntityDescription, ...] = (
@@ -39,31 +46,36 @@ SENSOR_DESCRIPTIONS: tuple[VelbusSensorEntityDescription, ...] = (
         key="power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda channel: float(channel.get_state()),
-        unit_fn=lambda channel: channel.get_unit(),
     ),
     VelbusSensorEntityDescription(
         key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda channel: float(channel.get_state()),
-        unit_fn=lambda channel: channel.get_unit(),
     ),
     VelbusSensorEntityDescription(
         key="measurement",
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda channel: float(channel.get_state()),
-        unit_fn=lambda channel: channel.get_unit(),
     ),
 )
+
+
+def _counter_value_fn(channel) -> float | int | None:
+    """Get the counter state value from the channel."""
+    return channel.get_counter_state()
+
+
+def _counter_unit_fn(channel) -> str | None:
+    """Get the counter unit from the channel."""
+    return channel.get_counter_unit()
+
 
 COUNTER_DESCRIPTION = VelbusSensorEntityDescription(
     key="counter",
     device_class=SensorDeviceClass.ENERGY,
     icon="mdi:counter",
     state_class=SensorStateClass.TOTAL_INCREASING,
-    value_fn=lambda channel: float(channel.get_counter_state()),
-    unit_fn=lambda channel: channel.get_counter_unit(),
+    value_fn=_counter_value_fn,
+    unit_fn=_counter_unit_fn,
 )
 
 
@@ -96,12 +108,12 @@ async def async_setup_entry(
 class VelbusSensor(VelbusEntity, SensorEntity):
     """Representation of a sensor."""
 
-    _channel: ButtonCounter | Temperature | LightSensor | SensorNumber
+    _channel: VelbusSensorChannel
     entity_description: VelbusSensorEntityDescription
 
     def __init__(
         self,
-        channel: ButtonCounter | Temperature | LightSensor | SensorNumber,
+        channel: VelbusSensorChannel,
         description: VelbusSensorEntityDescription,
         is_counter: bool = False,
     ) -> None:
