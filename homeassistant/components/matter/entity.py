@@ -271,8 +271,11 @@ class MatterEntity(Entity):
         self, attribute: type[ClusterAttributeDescriptor]
     ) -> str:
         """Return AttributePath by providing the endpoint and Attribute class."""
-        return create_attribute_path(
-            self._endpoint.endpoint_id, attribute.cluster_id, attribute.attribute_id
+        return cast(
+            str,
+            create_attribute_path(
+                self._endpoint.endpoint_id, attribute.cluster_id, attribute.attribute_id
+            ),
         )
 
     @catch_matter_error

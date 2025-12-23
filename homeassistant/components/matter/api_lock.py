@@ -505,7 +505,7 @@ async def websocket_update_lock_user(
         vol.Optional("user_status", default="occupied_enabled"): vol.In(
             ["occupied_enabled", "occupied_disabled"]
         ),
-        vol.Optional("user_type", default="unrestricted"): vol.In(
+        vol.Optional("user_type", default="unrestricted_user"): vol.In(
             USER_TYPE_REVERSE_MAP.keys()
         ),
         vol.Optional("credential_rule", default="single"): vol.In(
@@ -579,7 +579,7 @@ async def websocket_set_lock_user(
                 userUniqueID=msg.get("user_unique_id"),
                 userStatus=user_status_enum,
                 userType=USER_TYPE_REVERSE_MAP.get(
-                    msg.get("user_type", "unrestricted"), 0
+                    msg.get("user_type", "unrestricted_user"), 0
                 ),
                 credentialRule=CREDENTIAL_RULE_REVERSE_MAP.get(
                     msg.get("credential_rule", "single"), 0
@@ -746,8 +746,14 @@ async def websocket_get_lock_users(
             break
         current_index = next_index
 
-    # Return just the users array as expected by the frontend
-    connection.send_result(msg[ID], users)
+    connection.send_result(
+        msg[ID],
+        {
+            "total_users": len(users),
+            "max_users": max_users,
+            "users": users,
+        },
+    )
 
 
 @websocket_api.require_admin

@@ -25,3 +25,97 @@ water_heater_boost:
           step: 1
           mode: slider
       default: 65
+
+lock_set_pin:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: matter
+    pin_code:
+      required: true
+      selector:
+        text:
+    user_name:
+      selector:
+        text:
+    user_type:
+      default: unrestricted
+      selector:
+        select:
+          options:
+            - unrestricted
+            - year_day_schedule
+            - week_day_schedule
+            - programming
+            - non_access
+            - forced
+            - disposable
+            - expiring
+
+lock_clear_pin:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: matter
+    user_index:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 255
+          mode: box
+    credential_index:
+      selector:
+        number:
+          min: 1
+          max: 255
+          mode: box
+
+lock_set_user:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: matter
+    user_index:
+      selector:
+        number:
+          min: 1
+          max: 255
+          mode: box
+    user_name:
+      selector:
+        text:
+    user_type:
+      default: unrestricted
+      selector:
+        select:
+          options:
+            - unrestricted
+            - year_day_schedule
+            - week_day_schedule
+            - programming
+            - non_access
+            - forced
+            - disposable
+            - expiring
+
+lock_clear_user:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: matter
+    user_index:
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 255
+          mode: box
