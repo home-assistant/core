@@ -90,13 +90,19 @@ async def test_actions_cannot_connect(
     before = hass.states.get(entity_id)
     snapshot.assert_match(_normalize_state(before))
 
-    # Configure the appropriate method to raise
+    # Configure the appropriate method to raise a ServiceValidationError
+    err = ServiceValidationError(
+        translation_domain="pooldose",
+        translation_key="cannot_connect",
+        translation_placeholders={"error": "mocked error"},
+    )
+
     if domain == "number":
-        client.set_number = AsyncMock(side_effect=TimeoutError("timeout"))
+        client.set_number = AsyncMock(side_effect=err)
     elif domain == "switch":
-        client.set_switch = AsyncMock(side_effect=ConnectionError("conn"))
+        client.set_switch = AsyncMock(side_effect=err)
     else:
-        client.set_select = AsyncMock(side_effect=OSError("os"))
+        client.set_select = AsyncMock(side_effect=err)
 
     with pytest.raises(ServiceValidationError) as excinfo:
         await hass.services.async_call(

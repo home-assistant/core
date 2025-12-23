@@ -79,7 +79,9 @@ class PooldoseEntity(CoordinatorEntity[PooldoseCoordinator]):
         platform_data = self.coordinator.data[self.platform_name]
         return platform_data.get(self.entity_description.key)
 
-    async def _async_perform_write(self, api_call, key: str, value=None) -> None:
+    async def _async_perform_write(
+        self, api_call, key: str, value: bool | str | float
+    ) -> None:
         """Perform a write call to the API with unified error handling.
 
         - `api_call` should be a bound coroutine function like
@@ -87,19 +89,7 @@ class PooldoseEntity(CoordinatorEntity[PooldoseCoordinator]):
         - Raises ServiceValidationError on connection errors or when the API
           returns False.
         """
-        try:
-            if value is None:
-                success = await api_call(key)
-            else:
-                success = await api_call(key, value)
-        except (TimeoutError, ConnectionError, OSError) as err:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect",
-                translation_placeholders={"error": str(err)},
-            ) from err
-
-        if not success:
+        if not await api_call(key, value):
             # If client is not connected, surface a cannot_connect error
             if not self.coordinator.client.is_connected:
                 raise ServiceValidationError(
