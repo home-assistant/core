@@ -21,7 +21,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import LOGGER
 from .entity import MatterEntity, MatterEntityDescription
-from .helpers import DOOR_LOCK_FEATURE_USR, get_matter
+from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
 DOOR_LOCK_OPERATION_SOURCE = {
@@ -324,7 +324,7 @@ class MatterLock(MatterEntity, LockEntity):
             self.get_matter_attribute_value(clusters.DoorLock.Attributes.FeatureMap)
             or 0
         )
-        supports_usr = bool(feature_map & DOOR_LOCK_FEATURE_USR)
+        supports_usr = bool(feature_map & DoorLockFeature.kUser)
 
         attrs: dict[str, Any] = {
             "supports_user_management": supports_usr,

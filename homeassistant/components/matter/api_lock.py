@@ -47,11 +47,8 @@ class UsrNotSupported(Exception):
     """Exception raised when lock does not support USR feature."""
 
 
-# Feature bits for DoorLock FeatureMap (per Matter spec)
-DOOR_LOCK_FEATURE_PIN = 0x1  # Bit 0 - PIN credential support
-DOOR_LOCK_FEATURE_RFID = 0x2  # Bit 1 - RFID credential support
-DOOR_LOCK_FEATURE_FINGER = 0x4  # Bit 2 - Fingerprint credential support
-DOOR_LOCK_FEATURE_FACE = 0x40  # Bit 6 - Face credential support
+# DoorLock Feature bitmap from Matter SDK
+DoorLockFeature = clusters.DoorLock.Bitmaps.Feature
 
 # User status mapping (Matter DoorLock UserStatusEnum)
 USER_STATUS_MAP = {
@@ -149,13 +146,13 @@ def async_handle_lock_errors[**_P](
 def _get_supported_credential_types(feature_map: int) -> list[str]:
     """Get list of supported credential types from feature map."""
     types = []
-    if feature_map & DOOR_LOCK_FEATURE_PIN:
+    if feature_map & DoorLockFeature.kPinCredential:
         types.append("pin")
-    if feature_map & DOOR_LOCK_FEATURE_RFID:
+    if feature_map & DoorLockFeature.kRfidCredential:
         types.append("rfid")
-    if feature_map & DOOR_LOCK_FEATURE_FINGER:
+    if feature_map & DoorLockFeature.kFingerCredentials:
         types.append("fingerprint")
-    if feature_map & DOOR_LOCK_FEATURE_FACE:
+    if feature_map & DoorLockFeature.kFaceCredentials:
         types.append("face")
     return types
 

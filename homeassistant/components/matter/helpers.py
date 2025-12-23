@@ -20,11 +20,8 @@ if TYPE_CHECKING:
 
     from .adapter import MatterAdapter
 
-# DoorLock FeatureMap bits
-DOOR_LOCK_FEATURE_WDSCH = 0x4  # Bit 2 - Week Day Schedules
-DOOR_LOCK_FEATURE_YDSCH = 0x8  # Bit 3 - Year Day Schedules
-DOOR_LOCK_FEATURE_HDSCH = 0x10  # Bit 4 - Holiday Schedules
-DOOR_LOCK_FEATURE_USR = 0x100  # Bit 8 - User Management
+# DoorLock Feature bitmap from Matter SDK
+DoorLockFeature = clusters.DoorLock.Bitmaps.Feature
 
 
 class MissingNode(HomeAssistantError):
@@ -152,7 +149,7 @@ def lock_supports_usr_feature(endpoint: MatterEndpoint) -> bool:
     )
     if feature_map is None:
         return False
-    return bool(feature_map & DOOR_LOCK_FEATURE_USR)
+    return bool(feature_map & DoorLockFeature.kUser)
 
 
 @callback
@@ -167,7 +164,7 @@ def lock_supports_week_day_schedules(endpoint: MatterEndpoint) -> bool:
     )
     if feature_map is None:
         return False
-    return bool(feature_map & DOOR_LOCK_FEATURE_WDSCH)
+    return bool(feature_map & DoorLockFeature.kWeekDayAccessSchedules)
 
 
 @callback
@@ -182,7 +179,7 @@ def lock_supports_year_day_schedules(endpoint: MatterEndpoint) -> bool:
     )
     if feature_map is None:
         return False
-    return bool(feature_map & DOOR_LOCK_FEATURE_YDSCH)
+    return bool(feature_map & DoorLockFeature.kYearDayAccessSchedules)
 
 
 @callback
@@ -197,4 +194,4 @@ def lock_supports_holiday_schedules(endpoint: MatterEndpoint) -> bool:
     )
     if feature_map is None:
         return False
-    return bool(feature_map & DOOR_LOCK_FEATURE_HDSCH)
+    return bool(feature_map & DoorLockFeature.kHolidaySchedules)
