@@ -129,6 +129,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "airpatrol": {
+      "name": "AirPatrol",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "airq": {
       "name": "air-Q",
       "integration_type": "hub",
@@ -499,7 +505,7 @@
     },
     "arcam_fmj": {
       "name": "Arcam FMJ Receivers",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -657,7 +663,7 @@
     },
     "baf": {
       "name": "Big Ass Fans",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -772,7 +778,7 @@
     },
     "bluemaestro": {
       "name": "BlueMaestro",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -1273,7 +1279,7 @@
           "name": "Denon Network Receivers"
         },
         "denonavr": {
-          "integration_type": "hub",
+          "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_push",
           "name": "Denon AVR Network Receivers"
@@ -1591,6 +1597,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "egauge": {
+      "name": "eGauge",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "eheimdigital": {
       "name": "EHEIM Digital",
       "integration_type": "hub",
@@ -1764,7 +1776,7 @@
     },
     "entur_public_transport": {
       "name": "Entur",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
@@ -2294,6 +2306,12 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "gentex_homelink": {
+      "name": "HomeLink",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push"
     },
     "geo_json_events": {
       "name": "GeoJSON",
@@ -3503,6 +3521,11 @@
         "zwave"
       ]
     },
+    "levoit": {
+      "name": "Levoit",
+      "integration_type": "virtual",
+      "supported_by": "vesync"
+    },
     "lg": {
       "name": "LG",
       "integrations": {
@@ -4506,7 +4529,7 @@
     },
     "nordpool": {
       "name": "Nord Pool",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling",
       "single_config_entry": true
@@ -4827,7 +4850,7 @@
     },
     "oralb": {
       "name": "Oral-B",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -7339,7 +7362,7 @@
     "vivotek": {
       "name": "VIVOTEK",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "vizio": {
@@ -7415,7 +7438,7 @@
     },
     "wake_on_lan": {
       "name": "Wake on LAN",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_push"
     },

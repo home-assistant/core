@@ -4,6 +4,14 @@
       "pet": {
         "default": "mdi:paw"
       }
+    },
+    "switch": {
+      "energy_saving": {
+        "default": "mdi:sleep",
+        "state": {
+          "off": "mdi:sleep-off"
+        }
+      }
     }
   }
 }
