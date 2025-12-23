@@ -15,7 +15,7 @@ from plugwise.exceptions import (
 )
 import pytest
 
-from homeassistant.components.plugwise.const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from homeassistant.components.plugwise.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -23,6 +23,8 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
+DEFAULT_UPDATE_INTERVAL = timedelta(seconds=60)
+P1_UPDATE_INTERVAL = timedelta(seconds=10)
 HA_PLUGWISE_SMILE_ASYNC_UPDATE = (
     "homeassistant.components.plugwise.coordinator.Smile.async_update"
 )
@@ -382,10 +384,7 @@ async def test_update_interval_adam(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert mock_smile_adam_heat_cool.async_update.call_count == 1
 
-    assert DEFAULT_SCAN_INTERVAL[mock_smile_adam_heat_cool.smile.type] == timedelta(
-        seconds=60
-    )
-    freezer.tick(DEFAULT_SCAN_INTERVAL[mock_smile_adam_heat_cool.smile.type])
+    freezer.tick(DEFAULT_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -410,8 +409,7 @@ async def test_update_interval_p1(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert mock_smile_p1.async_update.call_count == 1
 
-    assert DEFAULT_SCAN_INTERVAL[mock_smile_p1.smile.type] == timedelta(seconds=10)
-    freezer.tick(DEFAULT_SCAN_INTERVAL[mock_smile_p1.smile.type])
+    freezer.tick(P1_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 

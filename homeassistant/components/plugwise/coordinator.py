@@ -23,7 +23,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_PORT, DEFAULT_SCAN_INTERVAL, DEFAULT_USERNAME, DOMAIN, LOGGER
+from .const import DEFAULT_PORT, DEFAULT_USERNAME, DOMAIN, LOGGER
 
 type PlugwiseConfigEntry = ConfigEntry[PlugwiseDataUpdateCoordinator]
 
@@ -74,10 +74,8 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[dict[str, GwEntityData
         """
         version = await self.api.connect()
         self._connected = isinstance(version, Version)
-        if self._connected:
-            self.update_interval = DEFAULT_SCAN_INTERVAL.get(
-                self.api.smile.type, timedelta(seconds=60)
-            )
+        if self._connected and self.api.smile.type == "power":
+            self.update_interval = timedelta(seconds=10)
 
     async def _async_setup(self) -> None:
         """Initialize the update_data process."""

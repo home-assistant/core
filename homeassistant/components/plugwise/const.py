@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 from typing import Final, Literal
 
@@ -71,11 +70,6 @@ type SelectOptionsType = Literal[
 DEFAULT_MAX_TEMP: Final = 30
 DEFAULT_MIN_TEMP: Final = 4
 DEFAULT_PORT: Final = 80
-DEFAULT_SCAN_INTERVAL: Final[dict[str, timedelta]] = {
-    "power": timedelta(seconds=10),
-    "stretch": timedelta(seconds=60),
-    "thermostat": timedelta(seconds=60),
-}
 DEFAULT_USERNAME: Final = "smile"
 
 MASTER_THERMOSTATS: Final[list[str]] = [
