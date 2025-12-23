@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 from types import ModuleType
-from typing import Any
 
 from telegram import Bot
 from telegram.constants import InputMediaType
@@ -43,6 +42,7 @@ from homeassistant.helpers.target import (
     async_extract_referenced_entity_ids,
 )
 from homeassistant.helpers.typing import ConfigType, VolSchemaType
+from homeassistant.util.json import JsonValueType
 
 from . import broadcast, polling, webhooks
 from .bot import TelegramBotConfigEntry, TelegramNotificationService, initialize_bot
@@ -403,7 +403,7 @@ MODULES: dict[str, ModuleType] = {
 PLATFORMS: list[Platform] = [Platform.EVENT, Platform.NOTIFY]
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa: C901 ignore complexity caused by _call_service()
     """Set up the Telegram bot component."""
 
     async def async_send_telegram_message(service: ServiceCall) -> ServiceResponse:
@@ -416,7 +416,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             hass, service
         )
 
-        service_responses: list[dict[str, Any]] = []
+        service_responses: JsonValueType = []
         errors: list[tuple[HomeAssistantError, str]] = []
 
         # invoke the service for each target
@@ -432,20 +432,25 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 service_response = await _call_service(
                     service, target_config_entry.runtime_data, target_chat_id
                 )
+
+                if service.service == SERVICE_DOWNLOAD_FILE:
+                    return service_response
+
                 if service_response is not None:
-                    formatted_response: list[dict[str, Any]] = [
+                    formatted_response: list[JsonValueType] = [
                         {
-                            ATTR_CHAT_ID: chat_id,
+                            ATTR_CHAT_ID: int(chat_id),
                             ATTR_MESSAGEID: message_id,
                             ATTR_ENTITY_ID: target_notify_entity_id,
                         }
                         if target_notify_entity_id
                         else {
-                            ATTR_CHAT_ID: chat_id,
+                            ATTR_CHAT_ID: int(chat_id),
                             ATTR_MESSAGEID: message_id,
                         }
                         for chat_id, message_id in service_response.items()
                     ]
+                    assert isinstance(service_responses, list)
                     service_responses.extend(formatted_response)
             except HomeAssistantError as ex:
                 target = (
@@ -470,20 +475,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
 
         if service.return_response:
-            # return is correct, but mypy cannot infer it
-            return {"chats": service_responses}  # type: ignore[dict-item]
+            return {"chats": service_responses}
 
         return None
 
     async def _call_service(
         service: ServiceCall, notify_service: TelegramNotificationService, target: int
-    ) -> dict[int, int] | None:
+    ) -> dict[str, JsonValueType] | None:
         msgtype = service.service
 
         kwargs = dict(service.data)
         kwargs[ATTR_TARGET] = target
 
-        messages = None
+        messages: dict[str, JsonValueType] | None = None
         if msgtype == SERVICE_SEND_MESSAGE:
             messages = await notify_service.send_message(
                 context=service.context, **kwargs
