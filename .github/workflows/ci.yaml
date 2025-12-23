@@ -1187,7 +1187,9 @@ jobs:
         with:
           pattern: coverage-*
       - name: Upload coverage to Codecov
-        if: needs.info.outputs.test_full_suite == 'true'
+        if: |
+          needs.info.outputs.test_full_suite == 'true'
+          && (github.event_name != 'pull_request' || !github.event.pull_request.head.repo.fork)
         uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5.5.1
         with:
           fail_ci_if_error: true
@@ -1312,7 +1314,9 @@ jobs:
         with:
           pattern: coverage-*
       - name: Upload coverage to Codecov
-        if: needs.info.outputs.test_full_suite == 'false'
+        if: |
+          needs.info.outputs.test_full_suite == 'false'
+          && (github.event_name != 'pull_request' || !github.event.pull_request.head.repo.fork)
         uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5.5.1
         with:
           fail_ci_if_error: true
