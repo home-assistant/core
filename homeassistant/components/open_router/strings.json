@@ -32,7 +32,7 @@
       "step": {
         "init": {
           "data": {
-            "model": "Model"
+            "model": "[%key:component::open_router::config_subentries::conversation::step::user::data::model%]"
           },
           "data_description": {
             "model": "The model to use for the AI task"
