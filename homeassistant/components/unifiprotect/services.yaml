@@ -29,8 +29,6 @@ set_chime_paired_doorbells:
       selector:
         device:
           integration: unifiprotect
-          entity:
-            device_class: unifiprotect__chime_button
     doorbells:
       example: "binary_sensor.front_doorbell_doorbell"
       required: false

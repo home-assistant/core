@@ -151,6 +151,9 @@
       "hood_fan_speed": {
         "name": "Fan speed"
       },
+      "target_temperature": {
+        "name": "Target temperature"
+      },
       "washer_rinse_cycles": {
         "name": "Rinse cycles",
         "unit_of_measurement": "cycles"
