@@ -1,0 +1,57 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "Select device"
+        },
+        "data_description": {
+          "host": "Select a DayBetter device to add or enter IP address manually."
+        }
+      },
+      "manual": {
+        "data": {
+          "host": "Host IP address"
+        },
+        "data_description": {
+          "host": "Select a DayBetter device to add or enter IP address manually."
+        }
+      },
+      "confirm": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      }
+    },
+    "abort": {
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "address_in_use": "Port already in use",
+      "connection_failed": "Connection failed",
+      "invalid_host": "Invalid host address"
+    },
+    "error": {
+      "invalid_host": "Please enter a valid host IP address",
+      "no_devices_found": "No DayBetter devices found at this address",
+      "address_in_use": "Network port is already in use",
+      "connection_failed": "Failed to connect to the device"
+    }
+  },
+  "entity": {
+    "light": {
+      "daybetter_light": {
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "none": "None",
+              "christmas": "Christmas",
+              "halloween": "Halloween",
+              "carnival": "Carnival",
+              "fathery": "Fathery",
+              "mothers": "Mothers",
+              "lover": "Lover"
+            }
+          }
+        }
+      }
+    }
+  }
+}
