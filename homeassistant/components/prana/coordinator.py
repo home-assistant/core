@@ -10,6 +10,7 @@ from prana_local_api_client.exceptions import (
     PranaApiCommunicationError,
     PranaApiUpdateFailed,
 )
+from prana_local_api_client.models.prana_device_info import PranaDeviceInfo
 from prana_local_api_client.models.prana_state import PranaState
 from prana_local_api_client.prana_api_client import PranaLocalApiClient
 
@@ -46,6 +47,7 @@ class PranaCoordinator(DataUpdateCoordinator[PranaState]):
         self.max_speed: int | None = None
         host = self.config_entry.data[CONF_HOST]
         self.api_client = PranaLocalApiClient(host=host, port=80)
+        self.device_info: PranaDeviceInfo | None = None
 
     async def _async_update_data(self) -> PranaState:
         """Fetch and normalize device state for all platforms."""
@@ -58,3 +60,10 @@ class PranaCoordinator(DataUpdateCoordinator[PranaState]):
                 f"Network error communicating with device: {err}"
             ) from err
         return state
+
+    async def _async_setup(self) -> None:
+        try:
+            self.device_info = await self.api_client.get_device_info()
+        except PranaApiCommunicationError as err:
+            _LOGGER.info("Error fetching device info during setup: %s", err)
+            raise UpdateFailed("Could not fetch device info") from err

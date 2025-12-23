@@ -6,16 +6,16 @@ The flow is discovery-only. Users confirm a found device; manual starts abort.
 import logging
 from typing import Any
 
-from aiohttp.client_exceptions import ClientError
+from prana_local_api_client.exceptions import PranaApiCommunicationError
 from prana_local_api_client.models.prana_device_info import PranaDeviceInfo
 from prana_local_api_client.prana_api_client import PranaLocalApiClient
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_NAME
+from homeassistant.const import CONF_BASE, CONF_HOST
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import CONF_MANUFACTURE_ID, CONF_SW_VERSION, DOMAIN
+from .const import DOMAIN
 
 SERVICE_TYPE = "_prana._tcp.local."
 
@@ -46,19 +46,17 @@ class PranaConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_confirm()
 
     async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
+        self,
+        user_input: dict[str, Any] | None = None,
+        errors: dict[str, str] | None = None,
     ) -> ConfigFlowResult:
         """Manual entry by IP address."""
         if user_input is not None:
-            host = user_input[CONF_HOST]
-            # Avoid creating duplicate entries for same host
-            self._async_abort_entries_match({CONF_HOST: host})
-
-            self._host = host
+            self._host = user_input[CONF_HOST]
             return await self.async_step_confirm()
 
         schema = vol.Schema({vol.Required(CONF_HOST): str})
-        return self.async_show_form(step_id="user", data_schema=schema)
+        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
@@ -70,9 +68,11 @@ class PranaConfigFlow(ConfigFlow, domain=DOMAIN):
         api_client = PranaLocalApiClient(host=self._host, port=80)
         try:
             device_info = await api_client.get_device_info()
-        except (ClientError, TimeoutError) as err:
-            _LOGGER.error("Error fetching device info from %s: %s", self._host, err)
-            return self.async_abort(reason="invalid_device_or_unreachable")
+        except PranaApiCommunicationError as err:
+            _LOGGER.debug("Error fetching device info from %s: %s", self._host, err)
+            return await self.async_step_user(
+                errors={CONF_BASE: "invalid_device_or_unreachable"}
+            )
         if not device_info.isValid:
             return self.async_abort(reason="invalid_device")
 
@@ -83,13 +83,8 @@ class PranaConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(
                 title=device_info.label,
                 data={
-                    CONF_NAME: device_info.label,
                     CONF_HOST: self._host,
-                    CONF_MODEL: device_info.pranaModel,
-                    CONF_MANUFACTURE_ID: device_info.manufactureId,
-                    CONF_SW_VERSION: device_info.fwVersion,
                 },
-                options={},
                 description_placeholders={
                     "name": device_info.label,
                     "host": self._host,

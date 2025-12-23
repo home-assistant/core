@@ -31,8 +31,6 @@ class PranaSwitchType(StrEnum):
 class PranaSwitchEntityDescription(SwitchEntityDescription, PranaEntityDescription):
     """Description of a Prana switch entity."""
 
-    key: PranaSwitchType
-
 
 ENTITIES: tuple[PranaEntityDescription, ...] = (
     PranaSwitchEntityDescription(

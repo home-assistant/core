@@ -1,126 +1,110 @@
-"""Tests for the Prana switch platform."""
+"""Integration-style tests for Prana switches."""
 
-from types import SimpleNamespace
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.prana.const import DOMAIN
-from homeassistant.components.prana.switch import (
-    PranaSwitch,
-    PranaSwitchEntityDescription,
-    PranaSwitchType,
-    async_setup_entry,
+from homeassistant.components.switch import (
+    DOMAIN as SWITCH_DOMAIN,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
 )
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+
+from . import async_init_integration
+
+from tests.common import MockConfigEntry, snapshot_platform
 
 
-@pytest.fixture
-def coordinator():
-    """Mock coordinator for tests. Use SimpleNamespace for .data so getattr works."""
-    coord = MagicMock()
-    coord.data = SimpleNamespace(
-        **{
-            PranaSwitchType.BOUND: True,
-            PranaSwitchType.HEATER: False,
-            PranaSwitchType.WINTER: True,
-            PranaSwitchType.AUTO: False,
-            PranaSwitchType.AUTO_PLUS: True,
-        }
-    )
-    coord.async_refresh = AsyncMock()
-    coord.async_add_listener = MagicMock(return_value=lambda: None)
-    # Provide mocked api_client used by entities (do not perform real HTTP in entities)
-    coord.api_client = MagicMock()
-    coord.api_client.set_switch = AsyncMock(return_value=None)
-    return coord
-
-
-@pytest.fixture
-def config_entry(coordinator: MagicMock, hass: HomeAssistant):
-    """Mock config entry with runtime_data set to coordinator."""
-    entry = MagicMock()
-    entry.entry_id = "test_switch_entry"
-    entry.data = {"host": "127.0.0.1", "name": "Prana Device"}
-    entry.runtime_data = coordinator
-    # mirror pattern used by other tests if needed
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {}
-    return entry
-
-
-def test_switch_properties(coordinator: MagicMock, config_entry: MagicMock) -> None:
-    """Test switch entity properties (is_on reflects coordinator.data)."""
-    bound_desc = PranaSwitchEntityDescription(
-        key=PranaSwitchType.BOUND, translation_key="bound"
-    )
-    bound_switch = PranaSwitch(config_entry, bound_desc)
-    assert bound_switch.is_on is True
-
-    heat_desc = PranaSwitchEntityDescription(
-        key=PranaSwitchType.HEATER, translation_key="heater"
-    )
-    heating = PranaSwitch(config_entry, heat_desc)
-    assert heating.is_on is False
-
-
-@pytest.mark.asyncio
-async def test_switch_turn_on_off(
-    hass: HomeAssistant, coordinator: MagicMock, config_entry: MagicMock
+async def test_switches(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_prana_api: MagicMock,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test turning switch on and off triggers API call and refresh."""
-    winter_desc = PranaSwitchEntityDescription(
-        key=PranaSwitchType.WINTER, translation_key="winter"
+    """Test the Prana switches snapshot."""
+    with patch("homeassistant.components.prana.PLATFORMS", [Platform.SWITCH]):
+        await async_init_integration(hass, mock_config_entry)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.parametrize(
+    ("type_key", "entity_suffix"),
+    [
+        ("winter", "_winter"),
+        ("heater", "_heater"),
+        ("auto", "_auto"),
+        ("bound", "_bound"),
+        ("auto_plus", "_auto_plus"),
+    ],
+)
+async def test_switches_actions(
+    hass: HomeAssistant,
+    mock_prana_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    type_key: str,
+    entity_suffix: str,
+) -> None:
+    """Test turning switches on and off calls the API through the coordinator."""
+    await async_init_integration(hass, mock_config_entry)
+
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
     )
-    switch = PranaSwitch(config_entry, winter_desc)
-    switch.hass = hass
+    assert entries
+    target = None
+    for entry in entries:
+        if entry.entity_id.endswith(entity_suffix):
+            target = entry.entity_id
+            break
+    assert target is not None, f"Entity for {type_key} not found"
 
-    # initial state True as per fixture
-    assert switch.is_on is True
-
-    await switch.async_turn_off()
-    coordinator.api_client.set_switch.assert_awaited_with(PranaSwitchType.WINTER, False)
-    assert coordinator.async_refresh.await_count >= 1
-
-    # simulate coordinator refresh updating state
-    setattr(coordinator.data, PranaSwitchType.WINTER, False)
-    assert switch.is_on is False
-
-    await switch.async_turn_on()
-    coordinator.api_client.set_switch.assert_awaited_with(PranaSwitchType.WINTER, True)
-    assert coordinator.async_refresh.await_count >= 2
-
-    setattr(coordinator.data, PranaSwitchType.WINTER, True)
-    assert switch.is_on is True
-
-
-@pytest.mark.asyncio
-async def test_async_setup_entry(hass: HomeAssistant, config_entry: MagicMock) -> None:
-    """Test setup entry for switch platform adds 5 switches."""
-    # Create an async-style coordinator for setup (runtime_data)
-    coordinator = AsyncMock()
-    coordinator.data = SimpleNamespace(
-        **{
-            PranaSwitchType.BOUND: True,
-            PranaSwitchType.HEATER: False,
-            PranaSwitchType.AUTO: True,
-            PranaSwitchType.AUTO_PLUS: False,
-            PranaSwitchType.WINTER: True,
-        }
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: target},
+        blocking=True,
     )
-    coordinator.async_add_listener = MagicMock(return_value=lambda: None)
-    coordinator.api_client = AsyncMock()
-    coordinator.api_client.set_switch = AsyncMock(return_value=None)
 
-    # attach runtime_data to config_entry used by async_setup_entry
-    config_entry.runtime_data = coordinator
+    mock_prana_api.set_switch.assert_called()
 
-    added = []
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: target},
+        blocking=True,
+    )
 
-    def async_add_entities(entities):
-        added.extend(entities)
+    assert mock_prana_api.set_switch.call_count >= 2
 
-    await async_setup_entry(hass, config_entry, async_add_entities)
 
-    # The platform unconditionally adds 5 switches
-    assert len(added) == 5
-    assert all(isinstance(s, PranaSwitch) for s in added)
+async def test_switch_exceptions(
+    hass: HomeAssistant,
+    mock_prana_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Service calls surface API exceptions to the caller."""
+    await async_init_integration(hass, mock_config_entry)
+
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    assert entries
+    target = entries[0].entity_id
+
+    mock_prana_api.set_switch.side_effect = RuntimeError("boom")
+
+    with pytest.raises(RuntimeError):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: target},
+            blocking=True,
+        )
