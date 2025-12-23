@@ -80,6 +80,13 @@ def disable_platform_only():
 
 
 @pytest.fixture(autouse=True)
+def reduce_pre_confirm_delay():
+    """Disable pre-confirm step delay to speed up tests."""
+    with patch("homeassistant.components.zha.config_flow.PRE_CONFIRM_DELAY", 0):
+        yield
+
+
+@pytest.fixture(autouse=True)
 def mock_multipan_platform():
     """Mock the multipan platform."""
     with (
@@ -328,11 +335,17 @@ async def test_zeroconf_discovery(
     result_init = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=service_info
     )
-    assert result_init["step_id"] == "confirm"
+
+    result_pre_confirm = await consume_progress_flow(
+        hass,
+        flow_id=result_init["flow_id"],
+        valid_step_ids=("pre_confirm",),
+    )
+    assert result_pre_confirm["step_id"] == "confirm"
 
     # Confirm port settings
     result_confirm = await hass.config_entries.flow.async_configure(
-        result_init["flow_id"], user_input={}
+        result_pre_confirm["flow_id"], user_input={}
     )
 
     assert result_confirm["type"] is FlowResultType.MENU
@@ -381,11 +394,17 @@ async def test_legacy_zeroconf_discovery_zigate(
     result_init = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=service_info
     )
-    assert result_init["step_id"] == "confirm"
+
+    result_pre_confirm = await consume_progress_flow(
+        hass,
+        flow_id=result_init["flow_id"],
+        valid_step_ids=("pre_confirm",),
+    )
+    assert result_pre_confirm["step_id"] == "confirm"
 
     # Confirm the radio is deprecated
     result_confirm_deprecated = await hass.config_entries.flow.async_configure(
-        result_init["flow_id"], user_input={}
+        result_pre_confirm["flow_id"], user_input={}
     )
     assert result_confirm_deprecated["step_id"] == "verify_radio"
     assert "ZiGate" in result_confirm_deprecated["description_placeholders"]["name"]
@@ -494,7 +513,13 @@ async def test_legacy_zeroconf_discovery_confirm_final_abort_if_entries(
     flow = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=service_info
     )
-    assert flow["step_id"] == "confirm"
+
+    result_pre_confirm = await consume_progress_flow(
+        hass,
+        flow_id=flow["flow_id"],
+        valid_step_ids=("pre_confirm",),
+    )
+    assert result_pre_confirm["step_id"] == "confirm"
 
     # ZHA was somehow set up while we were in the config flow
     with patch(
@@ -503,7 +528,7 @@ async def test_legacy_zeroconf_discovery_confirm_final_abort_if_entries(
     ):
         # Confirm discovery
         result = await hass.config_entries.flow.async_configure(
-            flow["flow_id"], user_input={}
+            result_pre_confirm["flow_id"], user_input={}
         )
 
     # Now prompts to migrate instead of aborting
@@ -522,12 +547,16 @@ async def test_discovery_via_usb(hass: HomeAssistant) -> None:
         description="zigbee radio",
         manufacturer="test",
     )
-    result1 = await hass.config_entries.flow.async_init(
+    result_init = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USB}, data=discovery_info
     )
     await hass.async_block_till_done()
 
-    assert result1["type"] is FlowResultType.FORM
+    result1 = await consume_progress_flow(
+        hass,
+        flow_id=result_init["flow_id"],
+        valid_step_ids=("pre_confirm",),
+    )
     assert result1["step_id"] == "confirm"
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -577,11 +606,16 @@ async def test_discovery_via_usb_no_radio(hass: HomeAssistant) -> None:
         description="zigbee radio",
         manufacturer="test",
     )
-    result = await hass.config_entries.flow.async_init(
+    result_init = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USB}, data=discovery_info
     )
     await hass.async_block_till_done()
-    assert result["type"] is FlowResultType.FORM
+
+    result = await consume_progress_flow(
+        hass,
+        flow_id=result_init["flow_id"],
+        valid_step_ids=("pre_confirm",),
+    )
     assert result["step_id"] == "confirm"
 
     with patch("homeassistant.components.zha.async_setup_entry", return_value=True):
@@ -662,8 +696,15 @@ async def test_migration_strategy_recommended(
             DOMAIN, context={"source": SOURCE_USB}, data=discovery_info
         )
 
+        result_pre_confirm = await consume_progress_flow(
+            hass,
+            flow_id=result_init["flow_id"],
+            valid_step_ids=("pre_confirm",),
+        )
+        assert result_pre_confirm["step_id"] == "confirm"
+
         result_confirm = await hass.config_entries.flow.async_configure(
-            result_init["flow_id"], user_input={}
+            result_pre_confirm["flow_id"], user_input={}
         )
 
         assert result_confirm["step_id"] == "choose_migration_strategy"
@@ -720,12 +761,19 @@ async def test_migration_strategy_recommended_cannot_write(
         DOMAIN, context={"source": SOURCE_USB}, data=discovery_info
     )
 
+    result_pre_confirm = await consume_progress_flow(
+        hass,
+        flow_id=result_init["flow_id"],
+        valid_step_ids=("pre_confirm",),
+    )
+    assert result_pre_confirm["step_id"] == "confirm"
+
     with patch(
         "homeassistant.components.zha.radio_manager.ZhaRadioManager._async_read_backups_from_database",
         return_value=[backup],
     ):
         result_confirm = await hass.config_entries.flow.async_configure(
-            result_init["flow_id"], user_input={}
+            result_pre_confirm["flow_id"], user_input={}
         )
 
     assert result_confirm["step_id"] == "choose_migration_strategy"
@@ -776,8 +824,15 @@ async def test_multiple_zha_entries_aborts(hass: HomeAssistant, mock_app) -> Non
         DOMAIN, context={"source": SOURCE_USB}, data=discovery_info
     )
 
+    result_pre_confirm = await consume_progress_flow(
+        hass,
+        flow_id=result_init["flow_id"],
+        valid_step_ids=("pre_confirm",),
+    )
+    assert result_pre_confirm["step_id"] == "confirm"
+
     result_confirm = await hass.config_entries.flow.async_configure(
-        result_init["flow_id"], user_input={}
+        result_pre_confirm["flow_id"], user_input={}
     )
 
     assert result_confirm["step_id"] == "choose_migration_strategy"
@@ -821,12 +876,16 @@ async def test_discovery_via_usb_duplicate_unique_id(hass: HomeAssistant) -> Non
         description="zigbee radio",
         manufacturer="test",
     )
-    result = await hass.config_entries.flow.async_init(
+    result_init = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USB}, data=discovery_info
     )
     await hass.async_block_till_done()
 
-    assert result["type"] is FlowResultType.FORM
+    result = await consume_progress_flow(
+        hass,
+        flow_id=result_init["flow_id"],
+        valid_step_ids=("pre_confirm",),
+    )
     assert result["step_id"] == "confirm"
 
 
@@ -901,12 +960,16 @@ async def test_discovery_via_usb_deconz_ignored(hass: HomeAssistant) -> None:
         description="zigbee radio",
         manufacturer="test",
     )
-    result = await hass.config_entries.flow.async_init(
+    result_init = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USB}, data=discovery_info
     )
     await hass.async_block_till_done()
 
-    assert result["type"] is FlowResultType.FORM
+    result = await consume_progress_flow(
+        hass,
+        flow_id=result_init["flow_id"],
+        valid_step_ids=("pre_confirm",),
+    )
     assert result["step_id"] == "confirm"
 
 
@@ -962,10 +1025,16 @@ async def test_discovery_via_usb_same_device_already_setup(hass: HomeAssistant) 
         "homeassistant.components.zha.config_flow.usb.get_serial_by_id",
         return_value="/dev/serial/by-id/usb-device123",
     ) as mock_get_serial_by_id:
-        result = await hass.config_entries.flow.async_init(
+        result_init = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USB}, data=discovery_info
         )
         await hass.async_block_till_done()
+
+        result = await consume_progress_flow(
+            hass,
+            flow_id=result_init["flow_id"],
+            valid_step_ids=("pre_confirm",),
+        )
 
     # Verify get_serial_by_id was called to normalize the path
     assert mock_get_serial_by_id.mock_calls == [call("/dev/ttyUSB0")]
@@ -1031,10 +1100,16 @@ async def test_zeroconf_discovery_via_socket_already_setup_with_ip_match(
     )
 
     # Discovery should abort due to single instance check
-    result = await hass.config_entries.flow.async_init(
+    result_init = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=service_info
     )
     await hass.async_block_till_done()
+
+    result = await consume_progress_flow(
+        hass,
+        flow_id=result_init["flow_id"],
+        valid_step_ids=("pre_confirm",),
+    )
 
     # Should abort since one of the advertised IPs matches existing socket path
     assert result["type"] is FlowResultType.ABORT
@@ -1056,15 +1131,20 @@ async def test_zeroconf_not_onboarded(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.onboarding.async_is_onboarded", return_value=False
     ):
-        result_create = await hass.config_entries.flow.async_init(
+        result_init = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=service_info,
         )
         await hass.async_block_till_done()
 
+    result_create = await consume_progress_flow(
+        hass,
+        flow_id=result_init["flow_id"],
+        valid_step_ids=("pre_confirm",),
+    )
+
     # not automatically confirmed
-    assert result_create["type"] is FlowResultType.FORM
     assert result_create["step_id"] == "confirm"
 
 
@@ -1342,7 +1422,7 @@ async def test_hardware_not_onboarded(hass: HomeAssistant) -> None:
         result_create = await consume_progress_flow(
             hass,
             flow_id=result_init["flow_id"],
-            valid_step_ids=("form_new_network",),
+            valid_step_ids=("pre_confirm", "form_new_network"),
         )
         await hass.async_block_till_done()
 
@@ -1372,12 +1452,17 @@ async def test_hardware_no_flow_strategy(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.onboarding.async_is_onboarded", return_value=True
     ):
-        result1 = await hass.config_entries.flow.async_init(
+        result_init = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_HARDWARE}, data=data
         )
 
+    result1 = await consume_progress_flow(
+        hass,
+        flow_id=result_init["flow_id"],
+        valid_step_ids=("pre_confirm",),
+    )
+
     # Confirm discovery
-    assert result1["type"] is FlowResultType.FORM
     assert result1["step_id"] == "confirm"
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -1427,29 +1512,29 @@ async def test_hardware_flow_strategy_advanced(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.onboarding.async_is_onboarded", return_value=True
     ):
-        result_hardware = await hass.config_entries.flow.async_init(
+        result_init = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_HARDWARE}, data=data
         )
 
-    assert result_hardware["type"] is FlowResultType.FORM
-    assert result_hardware["step_id"] == "confirm"
-
-    confirm_result = await hass.config_entries.flow.async_configure(
-        result_hardware["flow_id"],
-        user_input={},
+    result_hardware = await consume_progress_flow(
+        hass,
+        flow_id=result_init["flow_id"],
+        valid_step_ids=("pre_confirm",),
     )
 
-    assert confirm_result["type"] is FlowResultType.MENU
-    assert confirm_result["step_id"] == "choose_formation_strategy"
+    # When flow_strategy is provided, confirmation is skipped
+    assert result_hardware["type"] is FlowResultType.MENU
+    assert result_hardware["step_id"] == "choose_formation_strategy"
 
-    result_form = await hass.config_entries.flow.async_configure(
-        confirm_result["flow_id"],
+    # Select formation strategy from menu
+    result_formation = await hass.config_entries.flow.async_configure(
+        result_hardware["flow_id"],
         user_input={"next_step_id": "form_new_network"},
     )
 
     result_create = await consume_progress_flow(
         hass,
-        flow_id=result_form["flow_id"],
+        flow_id=result_formation["flow_id"],
         valid_step_ids=("form_new_network",),
     )
     await hass.async_block_till_done()
@@ -1482,25 +1567,18 @@ async def test_hardware_flow_strategy_recommended(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.onboarding.async_is_onboarded", return_value=True
     ):
-        result_hardware = await hass.config_entries.flow.async_init(
+        result_init = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_HARDWARE}, data=data
         )
 
-    assert result_hardware["type"] is FlowResultType.FORM
-    assert result_hardware["step_id"] == "confirm"
-
-    result_confirm = await hass.config_entries.flow.async_configure(
-        result_hardware["flow_id"],
-        user_input={},
-    )
-
+    # Consume pre_confirm and form_new_network progress steps
     result_create = await consume_progress_flow(
         hass,
-        flow_id=result_confirm["flow_id"],
-        valid_step_ids=("form_new_network",),
+        flow_id=result_init["flow_id"],
+        valid_step_ids=("pre_confirm", "form_new_network"),
     )
-    await hass.async_block_till_done()
 
+    # Entry is created directly without interaction
     assert result_create["type"] is FlowResultType.CREATE_ENTRY
     assert result_create["title"] == "Yellow"
     assert result_create["data"] == {
@@ -1561,34 +1639,32 @@ async def test_hardware_migration_flow_strategy_advanced(
             return_value=True,
         ) as mock_async_unload,
     ):
-        result_hardware = await hass.config_entries.flow.async_init(
+        result_hardware_init = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_HARDWARE}, data=data
         )
 
-        assert result_hardware["type"] is FlowResultType.FORM
-        assert result_hardware["step_id"] == "confirm"
-
-        result_confirm = await hass.config_entries.flow.async_configure(
-            result_hardware["flow_id"], user_input={}
-        )
-
-        assert result_confirm["type"] is FlowResultType.MENU
-        assert result_confirm["step_id"] == "choose_formation_strategy"
-
-        result_form = await hass.config_entries.flow.async_configure(
-            result_confirm["flow_id"],
-            user_input={"next_step_id": "form_new_network"},
-        )
-
-        result_formation_strategy = await consume_progress_flow(
+        result_hardware = await consume_progress_flow(
             hass,
-            flow_id=result_form["flow_id"],
+            flow_id=result_hardware_init["flow_id"],
+            valid_step_ids=("pre_confirm",),
+        )
+
+        # When flow_strategy is provided, confirmation is skipped
+        assert result_hardware["type"] is FlowResultType.MENU
+        assert result_hardware["step_id"] == "choose_formation_strategy"
+
+        result_formation_strategy = await hass.config_entries.flow.async_configure(
+            result_hardware["flow_id"], user_input={"next_step_id": "form_new_network"}
+        )
+
+        result_reconfigure = await consume_progress_flow(
+            hass,
+            flow_id=result_formation_strategy["flow_id"],
             valid_step_ids=("form_new_network",),
         )
-        await hass.async_block_till_done()
 
-    assert result_formation_strategy["type"] is FlowResultType.ABORT
-    assert result_formation_strategy["reason"] == "reconfigure_successful"
+    assert result_reconfigure["type"] is FlowResultType.ABORT
+    assert result_reconfigure["reason"] == "reconfigure_successful"
     assert mock_async_unload.call_count == 0
     assert mock_restore_backup.call_count == 0
 
@@ -1641,25 +1717,20 @@ async def test_hardware_migration_flow_strategy_recommended(
             return_value=True,
         ) as mock_async_unload,
     ):
-        result_hardware = await hass.config_entries.flow.async_init(
+        result_init = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_HARDWARE}, data=data
         )
 
-        assert result_hardware["type"] is FlowResultType.FORM
-        assert result_hardware["step_id"] == "confirm"
-
-        result_migrate = await hass.config_entries.flow.async_configure(
-            result_hardware["flow_id"], user_input={}
-        )
-
-        result_confirm = await consume_progress_flow(
+        # Consume pre_confirm and migration progress steps
+        result_hardware = await consume_progress_flow(
             hass,
-            flow_id=result_migrate["flow_id"],
-            valid_step_ids=("maybe_reset_old_radio", "restore_backup"),
+            flow_id=result_init["flow_id"],
+            valid_step_ids=("pre_confirm", "maybe_reset_old_radio", "restore_backup"),
         )
 
-    assert result_confirm["type"] is FlowResultType.ABORT
-    assert result_confirm["reason"] == "reconfigure_successful"
+    # Reconfiguration happens without interaction once we pass a flow strategy (after progress steps)
+    assert result_hardware["type"] is FlowResultType.ABORT
+    assert result_hardware["reason"] == "reconfigure_successful"
     assert mock_async_unload.mock_calls == [call(entry.entry_id)]
     assert mock_restore_backup.call_count == 1
 
@@ -1878,7 +1949,7 @@ async def test_onboarding_auto_formation_new_hardware(
         result = await consume_progress_flow(
             hass,
             flow_id=result_init["flow_id"],
-            valid_step_ids=("form_new_network",),
+            valid_step_ids=("pre_confirm", "form_new_network"),
         )
         await hass.async_block_till_done()
 
@@ -3037,8 +3108,14 @@ async def test_migration_resets_old_radio(
             DOMAIN, context={"source": SOURCE_USB}, data=discovery_info
         )
 
+        result_pre_confirm = await consume_progress_flow(
+            hass,
+            flow_id=result_init["flow_id"],
+            valid_step_ids=("pre_confirm",),
+        )
+
         result_confirm = await hass.config_entries.flow.async_configure(
-            result_init["flow_id"], user_input={}
+            result_pre_confirm["flow_id"], user_input={}
         )
 
         assert result_confirm["step_id"] == "choose_migration_strategy"
@@ -3094,6 +3171,12 @@ async def test_config_flow_serial_resolution_oserror(
     ):
         result_init = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USB}, data=discovery_info
+        )
+
+        result_init = await consume_progress_flow(
+            hass,
+            flow_id=result_init["flow_id"],
+            valid_step_ids=("pre_confirm",),
         )
 
     assert result_init["type"] is FlowResultType.ABORT
@@ -3382,8 +3465,14 @@ async def test_plug_in_old_radio_retry(hass: HomeAssistant, backup, mock_app) ->
             DOMAIN, context={"source": SOURCE_USB}, data=discovery_info
         )
 
+        result_pre_confirm = await consume_progress_flow(
+            hass,
+            flow_id=result_init["flow_id"],
+            valid_step_ids=("pre_confirm",),
+        )
+
         result_confirm = await hass.config_entries.flow.async_configure(
-            result_init["flow_id"], user_input={}
+            result_pre_confirm["flow_id"], user_input={}
         )
 
         assert result_confirm["step_id"] == "choose_migration_strategy"
@@ -3510,8 +3599,14 @@ async def test_plug_in_old_radio_config_entry_removed(
             DOMAIN, context={"source": SOURCE_USB}, data=discovery_info
         )
 
+        result_pre_confirm = await consume_progress_flow(
+            hass,
+            flow_id=result_init["flow_id"],
+            valid_step_ids=("pre_confirm",),
+        )
+
         result_confirm = await hass.config_entries.flow.async_configure(
-            result_init["flow_id"], user_input={}
+            result_pre_confirm["flow_id"], user_input={}
         )
 
         assert result_confirm["step_id"] == "choose_migration_strategy"
