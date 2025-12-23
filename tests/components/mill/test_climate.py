@@ -1,6 +1,6 @@
 """Tests for Mill climate."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from mill import Heater
 from mill_local import OperationMode
@@ -92,7 +92,7 @@ async def mock_mill_local():
 
 
 @pytest.fixture
-async def cloud_heater(hass: HomeAssistant, mock_mill) -> Heater:
+async def cloud_heater(hass: HomeAssistant, mock_mill: MagicMock) -> Heater:
     """Load Mill integration and creates one cloud heater."""
 
     heater = Heater(
@@ -130,20 +130,22 @@ async def cloud_heater(hass: HomeAssistant, mock_mill) -> Heater:
 
 
 @pytest.fixture
-async def cloud_heater_set_temp(mock_mill, cloud_heater):
+async def cloud_heater_set_temp(mock_mill: MagicMock, cloud_heater: MagicMock):
     """Gets mock for the cloud heater `set_heater_temp` method."""
     return mock_mill.set_heater_temp
 
 
 @pytest.fixture
-async def cloud_heater_control(mock_mill, cloud_heater):
+async def cloud_heater_control(mock_mill: MagicMock, cloud_heater: MagicMock):
     """Gets mock for the cloud heater `heater_control` method."""
     return mock_mill.heater_control
 
 
 @pytest.fixture
 async def functional_cloud_heater(
-    cloud_heater, cloud_heater_set_temp, cloud_heater_control
+    cloud_heater: MagicMock,
+    cloud_heater_set_temp: MagicMock,
+    cloud_heater_control: MagicMock,
 ) -> Heater:
     """Make sure the cloud heater is "functional".
 
@@ -182,7 +184,7 @@ async def functional_cloud_heater(
 
 
 @pytest.fixture
-async def local_heater(hass: HomeAssistant, mock_mill_local) -> dict:
+async def local_heater(hass: HomeAssistant, mock_mill_local: MagicMock) -> dict:
     """Local Mill Heater.
 
     This returns a by-reference status dict with which this heater's information is organised and updated.
@@ -206,30 +208,36 @@ async def local_heater(hass: HomeAssistant, mock_mill_local) -> dict:
 
 
 @pytest.fixture
-async def local_heater_set_target_temperature(mock_mill_local, local_heater):
+async def local_heater_set_target_temperature(
+    mock_mill_local: MagicMock, local_heater: MagicMock
+):
     """Gets mock for the local heater `set_target_temperature` method."""
     return mock_mill_local.set_target_temperature
 
 
 @pytest.fixture
-async def local_heater_set_mode_control_individually(mock_mill_local, local_heater):
+async def local_heater_set_mode_control_individually(
+    mock_mill_local: MagicMock, local_heater: MagicMock
+):
     """Gets mock for the local heater `set_operation_mode_control_individually` method."""
     return mock_mill_local.set_operation_mode_control_individually
 
 
 @pytest.fixture
-async def local_heater_set_mode_off(mock_mill_local, local_heater):
+async def local_heater_set_mode_off(
+    mock_mill_local: MagicMock, local_heater: MagicMock
+):
     """Gets mock for the local heater `set_operation_mode_off` method."""
     return mock_mill_local.set_operation_mode_off
 
 
 @pytest.fixture
 async def functional_local_heater(
-    mock_mill_local,
-    local_heater_set_target_temperature,
-    local_heater_set_mode_control_individually,
-    local_heater_set_mode_off,
-    local_heater,
+    mock_mill_local: MagicMock,
+    local_heater_set_target_temperature: MagicMock,
+    local_heater_set_mode_control_individually: MagicMock,
+    local_heater_set_mode_off: MagicMock,
+    local_heater: MagicMock,
 ) -> None:
     """Make sure the local heater is "functional".
 
@@ -258,8 +266,8 @@ async def functional_local_heater(
 
 async def test_set_hvac_mode_heat(
     hass: HomeAssistant,
-    functional_cloud_heater,
-    cloud_heater_control,
+    functional_cloud_heater: MagicMock,
+    cloud_heater_control: MagicMock,
 ) -> None:
     """Tests setting the HVAC mode HEAT."""
 
@@ -284,7 +292,7 @@ async def test_set_hvac_mode_heat(
 
 async def test_set_hvac_mode_off(
     hass: HomeAssistant,
-    cloud_heater_control,
+    cloud_heater_control: MagicMock,
 ) -> None:
     """Tests setting the HVAC mode OFF."""
 
@@ -305,7 +313,7 @@ async def test_set_hvac_mode_off(
 
 async def test_set_bad_hvac_mode(
     hass: HomeAssistant,
-    cloud_heater_control,
+    cloud_heater_control: MagicMock,
 ) -> None:
     """Tests setting the HVAC mode to an unsupported value."""
 
@@ -324,9 +332,9 @@ async def test_set_bad_hvac_mode(
 
 async def test_set_temperature_hvac_heat(
     hass: HomeAssistant,
-    functional_cloud_heater,
-    cloud_heater_set_temp,
-    cloud_heater_control,
+    functional_cloud_heater: MagicMock,
+    cloud_heater_set_temp: MagicMock,
+    cloud_heater_control: MagicMock,
 ) -> None:
     """Tests setting a temperature with HVAC mode HEAT."""
 
@@ -355,9 +363,9 @@ async def test_set_temperature_hvac_heat(
 
 async def test_set_temperature_hvac_off(
     hass: HomeAssistant,
-    functional_cloud_heater,
-    cloud_heater_set_temp,
-    cloud_heater_control,
+    functional_cloud_heater: MagicMock,
+    cloud_heater_set_temp: MagicMock,
+    cloud_heater_control: MagicMock,
 ) -> None:
     """Tests setting a temperature with HVAC mode OFF."""
 
@@ -386,9 +394,9 @@ async def test_set_temperature_hvac_off(
 
 async def test_set_temperature_no_hvac(
     hass: HomeAssistant,
-    functional_cloud_heater,
-    cloud_heater_set_temp,
-    cloud_heater_control,
+    functional_cloud_heater: MagicMock,
+    cloud_heater_set_temp: MagicMock,
+    cloud_heater_control: MagicMock,
 ) -> None:
     """Tests setting a temperature with no HVAC mode."""
 
@@ -415,9 +423,9 @@ async def test_set_temperature_no_hvac(
 
 async def test_set_temperature_bad_hvac(
     hass: HomeAssistant,
-    functional_cloud_heater,
-    cloud_heater_set_temp,
-    cloud_heater_control,
+    functional_cloud_heater: MagicMock,
+    cloud_heater_set_temp: MagicMock,
+    cloud_heater_control: MagicMock,
 ) -> None:
     """Tests setting a temperature with a bad HVAC mode."""
 
@@ -448,9 +456,9 @@ async def test_set_temperature_bad_hvac(
 
 async def test_local_set_hvac_mode_heat(
     hass: HomeAssistant,
-    functional_local_heater,
-    local_heater_set_mode_control_individually,
-    local_heater_set_mode_off,
+    functional_local_heater: MagicMock,
+    local_heater_set_mode_control_individually: MagicMock,
+    local_heater_set_mode_off: MagicMock,
 ) -> None:
     """Tests locally setting a temperature with HVAC mode HEAT."""
 
@@ -476,9 +484,9 @@ async def test_local_set_hvac_mode_heat(
 
 async def test_local_set_hvac_mode_off(
     hass: HomeAssistant,
-    functional_local_heater,
-    local_heater_set_mode_control_individually,
-    local_heater_set_mode_off,
+    functional_local_heater: MagicMock,
+    local_heater_set_mode_control_individually: MagicMock,
+    local_heater_set_mode_off: MagicMock,
 ) -> None:
     """Tests locally setting a temperature with HVAC mode OFF."""
 
@@ -504,8 +512,8 @@ async def test_local_set_hvac_mode_off(
 
 async def test_local_set_bad_hvac_mode(
     hass: HomeAssistant,
-    local_heater_set_mode_control_individually,
-    local_heater_set_mode_off,
+    local_heater_set_mode_control_individually: MagicMock,
+    local_heater_set_mode_off: MagicMock,
 ) -> None:
     """Tests locally setting the HVAC mode to an unsupported value."""
 
@@ -525,10 +533,10 @@ async def test_local_set_bad_hvac_mode(
 
 async def test_local_set_temperature_hvac_heat(
     hass: HomeAssistant,
-    functional_local_heater,
-    local_heater_set_target_temperature,
-    local_heater_set_mode_control_individually,
-    local_heater_set_mode_off,
+    functional_local_heater: MagicMock,
+    local_heater_set_target_temperature: MagicMock,
+    local_heater_set_mode_control_individually: MagicMock,
+    local_heater_set_mode_off: MagicMock,
 ) -> None:
     """Tests locally setting a temperature with HVAC mode HEAT."""
 
@@ -558,10 +566,10 @@ async def test_local_set_temperature_hvac_heat(
 
 async def test_local_set_temperature_hvac_off(
     hass: HomeAssistant,
-    functional_local_heater,
-    local_heater_set_target_temperature,
-    local_heater_set_mode_control_individually,
-    local_heater_set_mode_off,
+    functional_local_heater: MagicMock,
+    local_heater_set_target_temperature: MagicMock,
+    local_heater_set_mode_control_individually: MagicMock,
+    local_heater_set_mode_off: MagicMock,
 ) -> None:
     """Tests locally setting a temperature with HVAC mode OFF."""
 
@@ -591,10 +599,10 @@ async def test_local_set_temperature_hvac_off(
 
 async def test_local_set_temperature_no_hvac(
     hass: HomeAssistant,
-    functional_local_heater,
-    local_heater_set_target_temperature,
-    local_heater_set_mode_control_individually,
-    local_heater_set_mode_off,
+    functional_local_heater: MagicMock,
+    local_heater_set_target_temperature: MagicMock,
+    local_heater_set_mode_control_individually: MagicMock,
+    local_heater_set_mode_off: MagicMock,
 ) -> None:
     """Tests locally setting a temperature with no HVAC mode."""
 
@@ -622,10 +630,10 @@ async def test_local_set_temperature_no_hvac(
 
 async def test_local_set_temperature_bad_hvac(
     hass: HomeAssistant,
-    functional_local_heater,
-    local_heater_set_target_temperature,
-    local_heater_set_mode_control_individually,
-    local_heater_set_mode_off,
+    functional_local_heater: MagicMock,
+    local_heater_set_target_temperature: MagicMock,
+    local_heater_set_mode_control_individually: MagicMock,
+    local_heater_set_mode_off: MagicMock,
 ) -> None:
     """Tests locally setting a temperature with an unsupported HVAC mode."""
 
