@@ -32,7 +32,6 @@
     'original_name': 'Max screentime today',
     'platform': 'nintendo_parental_controls',
     'previous_unique_id': None,
-    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <NintendoParentalNumber.TODAY_MAX_SCREENTIME: 'today_max_screentime'>,
     'unique_id': 'testdevid_today_max_screentime',

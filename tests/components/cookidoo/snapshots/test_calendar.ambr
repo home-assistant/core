@@ -27,7 +27,6 @@
     'original_name': 'Meal plan',
     'platform': 'cookidoo',
     'previous_unique_id': None,
-    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'meal_plan',
     'unique_id': 'sub_uuid',

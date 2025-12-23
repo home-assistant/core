@@ -27,7 +27,6 @@
     'original_name': 'Protection window',
     'platform': 'openuv',
     'previous_unique_id': None,
-    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'protection_window',
     'unique_id': '51.528308_-0.3817765_uv_protection_window',

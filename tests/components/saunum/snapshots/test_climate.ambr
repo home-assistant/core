@@ -40,7 +40,6 @@
     'original_name': None,
     'platform': 'saunum',
     'previous_unique_id': None,
-    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 9>,
     'translation_key': None,
     'unique_id': '01K98T2T85R5GN0ZHYV25VFMMA',

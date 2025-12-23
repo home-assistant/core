@@ -32,7 +32,6 @@
     'original_name': 'Restriction mode',
     'platform': 'nintendo_parental_controls',
     'previous_unique_id': None,
-    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <NintendoParentalSelect.TIMER_MODE: 'timer_mode'>,
     'unique_id': 'testdevid_timer_mode',

@@ -27,7 +27,6 @@
     'original_name': 'Test Scene',
     'platform': 'velux',
     'previous_unique_id': None,
-    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'test_entry_id_scene_1234',

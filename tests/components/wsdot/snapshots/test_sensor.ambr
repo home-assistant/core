@@ -27,7 +27,6 @@
     'original_name': 'Seattle-Bellevue via I-90 (EB AM)',
     'platform': 'wsdot',
     'previous_unique_id': None,
-    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'travel_time-96',
