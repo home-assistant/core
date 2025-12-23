@@ -1,17 +1,19 @@
 """Common fixtures for the Anglian Water tests."""
 
-from collections.abc import Generator
+from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from pyanglianwater.api import API
 from pyanglianwater.meter import SmartMeter
 import pytest
 
 from homeassistant.components.anglian_water.const import CONF_ACCOUNT_NUMBER, DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 
 from .const import ACCESS_TOKEN, ACCOUNT_NUMBER, PASSWORD, USERNAME
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 @pytest.fixture
@@ -67,9 +69,11 @@ def mock_anglian_water_authenticator() -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def mock_anglian_water_client(
-    mock_smart_meter: SmartMeter, mock_anglian_water_authenticator: MagicMock
-) -> Generator[AsyncMock]:
+async def mock_anglian_water_client(
+    hass: HomeAssistant,
+    mock_smart_meter: SmartMeter,
+    mock_anglian_water_authenticator: MagicMock,
+) -> AsyncGenerator[AsyncMock]:
     """Mock a Anglian Water client."""
     # Create a mock instance with our meters and config first.
     with (
@@ -86,6 +90,12 @@ def mock_anglian_water_client(
         mock_client.account_config = {"meter_type": "SmartMeter"}
         mock_client.updated_data_callbacks = []
         mock_client.validate_smart_meter.return_value = None
+        mock_client.api = AsyncMock(spec=API)
+        mock_client.api.get_associated_accounts.return_value = (
+            await async_load_json_object_fixture(
+                hass, "multi_associated_accounts.json", DOMAIN
+            )
+        )
         yield mock_client
 
 
