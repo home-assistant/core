@@ -38,19 +38,14 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[dict[str, GwEntityData
 
     config_entry: PlugwiseConfigEntry
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config_entry: PlugwiseConfigEntry,
-        update_interval: timedelta = timedelta(seconds=60),
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: PlugwiseConfigEntry) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
             LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=update_interval,
+            update_interval=timedelta(seconds=60),
             # Don't refresh immediately, give the device time to process
             # the change in state before we query it.
             request_refresh_debouncer=Debouncer(
