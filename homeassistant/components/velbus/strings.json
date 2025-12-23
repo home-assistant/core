@@ -58,7 +58,7 @@
   },
   "exceptions": {
     "clear_cache_failed": {
-      "message": "Could not execute clear cache: {error}"
+      "message": "Could not cleat the Velbus cache: {error}"
     },
     "integration_not_found": {
       "message": "Integration \"{target}\" not found in registry."
@@ -73,13 +73,13 @@
       "message": "{target} is not loaded."
     },
     "scan_failed": {
-      "message": "Could not execute scan service: {error}"
+      "message": "Scan service: {error}."
     },
     "set_memo_text_failed": {
-      "message": "Could not execute set memo text service: {error}"
+      "message": "Failed to set the memo text on the Velbus module: {error}."
     },
     "sync_clock_failed": {
-      "message": "Could not execute sync clock service: {error}"
+      "message": "Failed to sync the Velbus clock: {error}."
     }
   },
   "issues": {
