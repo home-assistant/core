@@ -1045,13 +1045,13 @@ async def test_browse_media_browse_whole_month_december(
 
 
 @pytest.mark.parametrize(
-    ("year", "month", "expected_days"),
+    ("year", "month", "expected_days", "expected_end_month", "expected_end_year"),
     [
-        (2024, 1, 31),  # January
-        (2024, 2, 29),  # February (leap year)
-        (2023, 2, 28),  # February (non-leap year)
-        (2024, 4, 30),  # April
-        (2024, 12, 31),  # December - critical edge case
+        (2024, 1, 31, 2, 2024),  # January
+        (2024, 2, 29, 3, 2024),  # February (leap year)
+        (2023, 2, 28, 3, 2023),  # February (non-leap year)
+        (2024, 4, 30, 5, 2024),  # April
+        (2024, 12, 31, 1, 2025),  # December - critical edge case
     ],
 )
 async def test_build_days_whole_month_date_calculation(
@@ -1060,6 +1060,8 @@ async def test_build_days_whole_month_date_calculation(
     year: int,
     month: int,
     expected_days: int,
+    expected_end_month: int,
+    expected_end_year: int,
 ) -> None:
     """Test that whole month date calculation works for all month types.
 
@@ -1084,16 +1086,9 @@ async def test_build_days_whole_month_date_calculation(
     # Verify we got the expected number of days
     expected_end = start_dt + timedelta(days=expected_days)
 
-    # For December, verify it correctly goes to January of next year
-    if month == 12:
-        assert expected_end.month == 1
-        assert expected_end.year == year + 1
-    # For other months except December
-    elif month < 12:
-        assert expected_end.month == month + 1
-        assert expected_end.year == year
-
-    # For any month, verify we're on day 1 of next month
+    # Verify it correctly goes to the expected month/year
+    assert expected_end.month == expected_end_month
+    assert expected_end.year == expected_end_year
     assert expected_end.day == 1
 
     # Build the media source with is_all=True (whole month)
