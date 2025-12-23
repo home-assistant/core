@@ -156,9 +156,9 @@
     },
     "reasoning_summary": {
       "options": {
-        "auto": "Auto",
+        "auto": "[%key:common::state::auto%]",
         "detailed": "Detailed",
-        "off": "Off",
+        "off": "[%key:common::state::off%]",
         "short": "Short"
       }
     },
