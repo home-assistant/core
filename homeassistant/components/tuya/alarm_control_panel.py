@@ -5,6 +5,11 @@ from __future__ import annotations
 from base64 import b64decode
 from typing import Any
 
+from tuya_device_handlers.device_wrapper.common import (
+    DPCodeEnumWrapper,
+    DPCodeRawWrapper,
+)
+from tuya_device_handlers.type_information import EnumTypeInformation
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.alarm_control_panel import (
@@ -20,8 +25,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .models import DPCodeEnumWrapper, DPCodeRawWrapper
-from .type_information import EnumTypeInformation
 
 ALARM: dict[DeviceCategory, tuple[AlarmControlPanelEntityDescription, ...]] = {
     DeviceCategory.MAL: (
@@ -39,7 +42,7 @@ class _AlarmChangedByWrapper(DPCodeRawWrapper):
     Decode base64 to utf-16be string, but only if alarm has been triggered.
     """
 
-    def read_device_status(self, device: CustomerDevice) -> str | None:
+    def read_device_status(self, device: CustomerDevice) -> str | None:  # type: ignore[override]
         """Read the device status."""
         if (
             device.status.get(DPCode.MASTER_STATE) != "alarm"
