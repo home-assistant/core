@@ -1,6 +1,7 @@
 {
   "domain": "octoprint",
   "name": "OctoPrint",
+  "after_dependencies": ["mjpeg"],
   "codeowners": ["@rfleming71"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/octoprint",
