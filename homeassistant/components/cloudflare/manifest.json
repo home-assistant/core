@@ -3,6 +3,7 @@
   "name": "Cloudflare",
   "codeowners": ["@ludeeus", "@ctalkington"],
   "config_flow": true,
+  "dependencies": ["network"],
   "documentation": "https://www.home-assistant.io/integrations/cloudflare",
   "integration_type": "service",
   "iot_class": "cloud_push",
