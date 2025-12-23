@@ -642,3 +642,158 @@ async def test_second_dashboard_aborted(
     # Actually, let's test via the internal method directly
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len([e for e in entries if e.data.get(CONF_IS_DASHBOARD)]) == 1
+
+
+@pytest.mark.usefixtures("hassio_stubs")
+async def test_clear_dashboard_restores_addon_dashboard(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test that clearing dashboard restores HA add-on if available.
+
+    When running on Hassio and the ESPHome add-on is installed,
+    clearing the external dashboard should auto-restore the add-on.
+    """
+    await _create_dashboard_entry(hass)
+
+    # Find the dashboard entry
+    entries = hass.config_entries.async_entries(DOMAIN)
+    dashboard_entry = next(e for e in entries if e.data.get(CONF_IS_DASHBOARD))
+
+    # Create a mock discovery entry for ESPHome add-on
+    mock_discovery = MagicMock()
+    mock_discovery.service = DOMAIN
+    mock_discovery.addon = "esphome-addon"
+    mock_discovery.config = {"host": "addon-host", "port": 6052}
+
+    mock_supervisor_client = MagicMock()
+    mock_supervisor_client.discovery.list = AsyncMock(return_value=[mock_discovery])
+
+    with (
+        patch(
+            "homeassistant.components.esphome.dashboard.is_hassio",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.hassio.get_supervisor_client",
+            return_value=mock_supervisor_client,
+        ),
+        patch(
+            "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_devices",
+            return_value={"configured": []},
+        ),
+    ):
+        await hass.config_entries.async_remove(dashboard_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Storage should be updated with the add-on info
+    assert hass_storage[dashboard.STORAGE_KEY]["data"] == {
+        "info": {"addon_slug": "esphome-addon", "host": "addon-host", "port": 6052}
+    }
+
+
+@pytest.mark.usefixtures("hassio_stubs")
+async def test_clear_dashboard_no_addon_discovery(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test clearing dashboard when no ESPHome add-on discovery exists."""
+    await _create_dashboard_entry(hass)
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    dashboard_entry = next(e for e in entries if e.data.get(CONF_IS_DASHBOARD))
+
+    # Return empty discovery list
+    mock_supervisor_client = MagicMock()
+    mock_supervisor_client.discovery.list = AsyncMock(return_value=[])
+
+    with (
+        patch(
+            "homeassistant.components.esphome.dashboard.is_hassio",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.hassio.get_supervisor_client",
+            return_value=mock_supervisor_client,
+        ),
+    ):
+        await hass.config_entries.async_remove(dashboard_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Storage should be cleared (no add-on to restore)
+    assert dashboard.STORAGE_KEY not in hass_storage
+    assert "No ESPHome add-on discovery found" in caplog.text
+
+
+@pytest.mark.usefixtures("hassio_stubs")
+async def test_clear_dashboard_addon_missing_host_port(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test clearing dashboard when add-on discovery has invalid config."""
+    await _create_dashboard_entry(hass)
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    dashboard_entry = next(e for e in entries if e.data.get(CONF_IS_DASHBOARD))
+
+    # Discovery with missing host/port
+    mock_discovery = MagicMock()
+    mock_discovery.service = DOMAIN
+    mock_discovery.addon = "esphome-addon"
+    mock_discovery.config = {}  # Missing host and port
+
+    mock_supervisor_client = MagicMock()
+    mock_supervisor_client.discovery.list = AsyncMock(return_value=[mock_discovery])
+
+    with (
+        patch(
+            "homeassistant.components.esphome.dashboard.is_hassio",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.hassio.get_supervisor_client",
+            return_value=mock_supervisor_client,
+        ),
+    ):
+        await hass.config_entries.async_remove(dashboard_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Storage should be cleared
+    assert dashboard.STORAGE_KEY not in hass_storage
+    assert "ESPHome add-on discovery missing host/port" in caplog.text
+
+
+@pytest.mark.usefixtures("hassio_stubs")
+async def test_clear_dashboard_supervisor_error(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test clearing dashboard when Supervisor API fails."""
+    await _create_dashboard_entry(hass)
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    dashboard_entry = next(e for e in entries if e.data.get(CONF_IS_DASHBOARD))
+
+    mock_supervisor_client = MagicMock()
+    mock_supervisor_client.discovery.list = AsyncMock(
+        side_effect=SupervisorError("API error")
+    )
+
+    with (
+        patch(
+            "homeassistant.components.esphome.dashboard.is_hassio",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.hassio.get_supervisor_client",
+            return_value=mock_supervisor_client,
+        ),
+    ):
+        await hass.config_entries.async_remove(dashboard_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Storage should be cleared
+    assert dashboard.STORAGE_KEY not in hass_storage
+    assert "Could not query Supervisor for ESPHome add-on" in caplog.text
