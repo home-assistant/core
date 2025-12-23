@@ -8,7 +8,7 @@ import pytest
 from pyvlx import PyVLXException
 
 from homeassistant.components.velux import DOMAIN
-from homeassistant.config_entries import SOURCE_DHCP, SOURCE_REAUTH, SOURCE_USER, ConfigEntryState
+from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
