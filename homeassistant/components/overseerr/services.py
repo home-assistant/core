@@ -209,7 +209,7 @@ async def _async_create_issue(call: ServiceCall) -> ServiceResponse:
     media_id = call.data[ATTR_MEDIA_ID]
 
     try:
-        issue = await client.create_issue(  # type: ignore[attr-defined]
+        issue = await client.create_issue(
             issue_type=issue_type,
             message=message,
             media_id=media_id,
@@ -239,7 +239,7 @@ async def _async_update_issue(call: ServiceCall) -> ServiceResponse:
     message = call.data.get(ATTR_MESSAGE)
 
     try:
-        issue = await client.update_issue(  # type: ignore[attr-defined]
+        issue = await client.update_issue(
             issue_id=issue_id,
             status=status,
             message=message,
@@ -265,7 +265,7 @@ async def _async_delete_issue(call: ServiceCall) -> None:
     issue_id = call.data[ATTR_ISSUE_ID]
 
     try:
-        await client.delete_issue(issue_id=issue_id)  # type: ignore[attr-defined]
+        await client.delete_issue(issue_id=issue_id)
     except OverseerrConnectionError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
