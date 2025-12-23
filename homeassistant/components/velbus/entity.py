@@ -81,7 +81,7 @@ def api_call[_T: VelbusEntity, **_P](
         try:
             await func(self, *args, **kwargs)
         except OSError as exc:
-            entity_name = self.name if isinstance(self.name, str) else "Unknown"
+            entity_name = self.name or "Unknown"
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="api_call_failed",
