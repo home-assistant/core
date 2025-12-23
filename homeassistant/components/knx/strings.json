@@ -187,7 +187,7 @@
         "8_005": "[%key:component::knx::config_panel::dpt::options::8_002%]",
         "8_006": "[%key:component::knx::config_panel::dpt::options::8_002%]",
         "8_007": "[%key:component::knx::config_panel::dpt::options::8_002%]",
-        "8_010": "Percent (-327,68 … 327,67)",
+        "8_010": "Percent (-327.68 … 327.67)",
         "8_011": "Rotation angle",
         "8_012": "Length (Altitude)",
         "9": "Generic 2-byte floating point",
@@ -1061,7 +1061,7 @@
           "name": "[%key:component::knx::services::send::fields::address::name%]"
         },
         "attribute": {
-          "description": "Attribute of the entity that shall be sent to the KNX bus. If not set the state will be sent. Eg. for a light the state is eigther “on” or “off” - with attribute you can expose its “brightness”.",
+          "description": "Attribute of the entity that shall be sent to the KNX bus. If not set, the state will be sent. Eg. for a light the state is either “on” or “off” - with attribute you can expose its “brightness”.",
           "name": "Entity attribute"
         },
         "default": {
