@@ -60,7 +60,8 @@ ATTR_AUDIO_INFORMATION = "audio_information"
 ATTR_VIDEO_INFORMATION = "video_information"
 ATTR_VIDEO_OUT = "video_out"
 
-AUDIO_VIDEO_INFORMATION_UPDATE_WAIT_TIME = 8
+QUERY_STATE_DELAY = 4
+QUERY_AV_INFO_DELAY = 8
 
 AUDIO_INFORMATION_MAPPING = [
     "audio_input_port",
@@ -112,7 +113,13 @@ async def async_setup_entry(
         if reconnect:
             for entity in entities.values():
                 if entity.enabled:
-                    await entity.backfill_state()
+                    await entity.query_state()
+
+    async def disconnect_callback() -> None:
+        for entity in entities.values():
+            if entity.enabled:
+                entity.cancel_tasks()
+                entity.async_write_ha_state()
 
     async def update_callback(message: Status) -> None:
         if isinstance(message, status.Raw):
@@ -145,6 +152,7 @@ async def async_setup_entry(
             async_add_entities([zone_entity])
 
     manager.callbacks.connect.append(connect_callback)
+    manager.callbacks.disconnect.append(disconnect_callback)
     manager.callbacks.update.append(update_callback)
 
 
@@ -160,7 +168,8 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
     _supports_audio_info: bool = False
     _supports_video_info: bool = False
 
-    _query_task: asyncio.Task | None = None
+    _query_state_task: asyncio.Task | None = None
+    _query_av_info_task: asyncio.Task | None = None
 
     def __init__(
         self,
@@ -220,20 +229,19 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
 
     async def async_added_to_hass(self) -> None:
         """Entity has been added to hass."""
-        await self.backfill_state()
+        await self.query_state()
 
     async def async_will_remove_from_hass(self) -> None:
-        """Cancel the query timer when the entity is removed."""
-        if self._query_task:
-            self._query_task.cancel()
-            self._query_task = None
+        """Entity will be removed from hass."""
+        self.cancel_tasks()
 
-    async def backfill_state(self) -> None:
-        """Get the receiver to send all the info we care about.
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self._manager.connected
 
-        Usually run only on connect, as we can otherwise rely on the
-        receiver to keep us informed of changes.
-        """
+    async def query_state(self) -> None:
+        """Query the receiver for all the info, that we care about."""
         await self._manager.write(query.Power(self._zone))
         await self._manager.write(query.Volume(self._zone))
         await self._manager.write(query.Muting(self._zone))
@@ -245,6 +253,15 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
             await self._manager.write(query.HDMIOutput())
             await self._manager.write(query.AudioInformation())
             await self._manager.write(query.VideoInformation())
+
+    def cancel_tasks(self) -> None:
+        """Cancel the tasks."""
+        if self._query_state_task is not None:
+            self._query_state_task.cancel()
+            self._query_state_task = None
+        if self._query_av_info_task is not None:
+            self._query_av_info_task.cancel()
+            self._query_av_info_task = None
 
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
@@ -341,12 +358,14 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
     def process_update(self, message: status.Known) -> None:
         """Process update."""
         match message:
-            case status.Power(status.Power.Param.ON):
+            case status.Power(param=status.Power.Param.ON):
+                if self.state != MediaPlayerState.ON:
+                    self._query_state_delayed()
                 self._attr_state = MediaPlayerState.ON
-            case status.Power(status.Power.Param.STANDBY):
+            case status.Power(param=status.Power.Param.STANDBY):
                 self._attr_state = MediaPlayerState.OFF
 
-            case status.Volume(volume):
+            case status.Volume(param=volume):
                 if not self._supports_volume:
                     self._attr_supported_features |= SUPPORTED_FEATURES_VOLUME
                     self._supports_volume = True
@@ -356,10 +375,10 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
                 )
                 self._attr_volume_level = min(1, volume_level)
 
-            case status.Muting(muting):
+            case status.Muting(param=muting):
                 self._attr_is_volume_muted = bool(muting == status.Muting.Param.ON)
 
-            case status.InputSource(source):
+            case status.InputSource(param=source):
                 if source in self._source_mapping:
                     self._attr_source = self._source_mapping[source]
                 else:
@@ -373,7 +392,7 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
 
                 self._query_av_info_delayed()
 
-            case status.ListeningMode(sound_mode):
+            case status.ListeningMode(param=sound_mode):
                 if not self._supports_sound_mode:
                     self._attr_supported_features |= (
                         MediaPlayerEntityFeature.SELECT_SOUND_MODE
@@ -393,13 +412,13 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
 
                 self._query_av_info_delayed()
 
-            case status.HDMIOutput(hdmi_output):
+            case status.HDMIOutput(param=hdmi_output):
                 self._attr_extra_state_attributes[ATTR_VIDEO_OUT] = (
                     self._hdmi_output_mapping[hdmi_output]
                 )
                 self._query_av_info_delayed()
 
-            case status.TunerPreset(preset):
+            case status.TunerPreset(param=preset):
                 self._attr_extra_state_attributes[ATTR_PRESET] = preset
 
             case status.AudioInformation():
@@ -427,25 +446,38 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
             case status.FLDisplay():
                 self._query_av_info_delayed()
 
-            case status.NotAvailable(Kind.AUDIO_INFORMATION):
+            case status.NotAvailable(kind=Kind.AUDIO_INFORMATION):
                 # Not available right now, but still supported
                 self._supports_audio_info = True
 
-            case status.NotAvailable(Kind.VIDEO_INFORMATION):
+            case status.NotAvailable(kind=Kind.VIDEO_INFORMATION):
                 # Not available right now, but still supported
                 self._supports_video_info = True
 
         self.async_write_ha_state()
 
+    def _query_state_delayed(self) -> None:
+        if self._query_state_task is not None:
+            self._query_state_task.cancel()
+            self._query_state_task = None
+
+        async def coro() -> None:
+            await asyncio.sleep(QUERY_STATE_DELAY)
+            await self.query_state()
+            self._query_state_task = None
+
+        self._query_state_task = asyncio.create_task(coro())
+
     def _query_av_info_delayed(self) -> None:
-        if self._zone == Zone.MAIN and not self._query_task:
+        if self._zone is not Zone.MAIN or self._query_av_info_task is not None:
+            return
 
-            async def _query_av_info() -> None:
-                await asyncio.sleep(AUDIO_VIDEO_INFORMATION_UPDATE_WAIT_TIME)
-                if self._supports_audio_info:
-                    await self._manager.write(query.AudioInformation())
-                if self._supports_video_info:
-                    await self._manager.write(query.VideoInformation())
-                self._query_task = None
+        async def coro() -> None:
+            await asyncio.sleep(QUERY_AV_INFO_DELAY)
+            if self._supports_audio_info:
+                await self._manager.write(query.AudioInformation())
+            if self._supports_video_info:
+                await self._manager.write(query.VideoInformation())
+            self._query_av_info_task = None
 
-            self._query_task = asyncio.create_task(_query_av_info())
+        self._query_av_info_task = asyncio.create_task(coro())

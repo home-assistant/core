@@ -210,6 +210,182 @@
     'state': 'heat',
   })
 # ---
+# name: test_rpc_linkedgo_st1820_thermostat[climate.test_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 15,
+      'preset_modes': list([
+        'none',
+        'frost_protection',
+      ]),
+      'target_temp_step': 0.5,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.test_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 401>,
+    'translation_key': 'thermostat',
+    'unique_id': '123456789ABC-number:202-linkedgo_thermostat_climate',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_rpc_linkedgo_st1820_thermostat[climate.test_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_humidity': 59,
+      'current_temperature': 25.5,
+      'friendly_name': 'Test name',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 15,
+      'preset_mode': 'none',
+      'preset_modes': list([
+        'none',
+        'frost_protection',
+      ]),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'target_temp_step': 0.5,
+      'temperature': 27,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.test_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_rpc_linkedgo_st802_thermostat[climate.test_name-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'fan_modes': list([
+        'auto',
+        'low',
+        'medium',
+        'high',
+      ]),
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.DRY: 'dry'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+      ]),
+      'max_humidity': 75,
+      'max_temp': 35,
+      'min_humidity': 40,
+      'min_temp': 5,
+      'preset_modes': list([
+        'none',
+        'frost_protection',
+      ]),
+      'target_temp_step': 0.5,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.test_name',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 413>,
+    'translation_key': 'thermostat',
+    'unique_id': '123456789ABC-number:203-linkedgo_thermostat_climate',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_rpc_linkedgo_st802_thermostat[climate.test_name-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_humidity': 58,
+      'current_temperature': 25.1,
+      'fan_mode': 'auto',
+      'fan_modes': list([
+        'auto',
+        'low',
+        'medium',
+        'high',
+      ]),
+      'friendly_name': 'Test name',
+      'humidity': 60,
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.DRY: 'dry'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+      ]),
+      'max_humidity': 75,
+      'max_temp': 35,
+      'min_humidity': 40,
+      'min_temp': 5,
+      'preset_mode': 'none',
+      'preset_modes': list([
+        'none',
+        'frost_protection',
+      ]),
+      'supported_features': <ClimateEntityFeature: 413>,
+      'target_temp_step': 0.5,
+      'temperature': 20.5,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.test_name',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
 # name: test_wall_display_thermostat_mode[climate.test_name-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

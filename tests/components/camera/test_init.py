@@ -3,7 +3,6 @@
 from collections.abc import Callable
 from http import HTTPStatus
 import io
-from types import ModuleType
 from unittest.mock import ANY, AsyncMock, Mock, PropertyMock, mock_open, patch
 
 import pytest
@@ -40,11 +39,7 @@ from homeassistant.util import dt as dt_util
 
 from .common import EMPTY_8_6_JPEG, STREAM_SOURCE, mock_turbo_jpeg
 
-from tests.common import (
-    async_fire_time_changed,
-    help_test_all,
-    import_and_test_deprecated_constant_enum,
-)
+from tests.common import async_fire_time_changed
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
@@ -351,20 +346,14 @@ async def test_websocket_stream_no_source(
 
 @pytest.mark.usefixtures("mock_camera", "mock_stream")
 async def test_websocket_camera_stream(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, mock_create_stream: Mock
 ) -> None:
     """Test camera/stream websocket command."""
     await async_setup_component(hass, "camera", {})
 
-    with (
-        patch(
-            "homeassistant.components.camera.Stream.endpoint_url",
-            return_value="http://home.assistant/playlist.m3u8",
-        ) as mock_stream_view_url,
-        patch(
-            "homeassistant.components.demo.camera.DemoCamera.stream_source",
-            return_value="http://example.com",
-        ),
+    with patch(
+        "homeassistant.components.demo.camera.DemoCamera.stream_source",
+        return_value="http://example.com",
     ):
         # Request playlist through WebSocket
         client = await hass_ws_client(hass)
@@ -374,7 +363,7 @@ async def test_websocket_camera_stream(
         msg = await client.receive_json()
 
         # Assert WebSocket response
-        assert mock_stream_view_url.called
+        assert mock_create_stream.endpoint_url.called
         assert msg["id"] == 6
         assert msg["type"] == TYPE_RESULT
         assert msg["success"]
@@ -510,21 +499,18 @@ async def test_play_stream_service_no_source(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("mock_camera", "mock_stream")
-async def test_handle_play_stream_service(hass: HomeAssistant) -> None:
+async def test_handle_play_stream_service(
+    hass: HomeAssistant, mock_create_stream: Mock
+) -> None:
     """Test camera play_stream service."""
     await async_process_ha_core_config(
         hass,
         {"external_url": "https://example.com"},
     )
     await async_setup_component(hass, "media_player", {})
-    with (
-        patch(
-            "homeassistant.components.camera.Stream.endpoint_url",
-        ) as mock_request_stream,
-        patch(
-            "homeassistant.components.demo.camera.DemoCamera.stream_source",
-            return_value="http://example.com",
-        ),
+    with patch(
+        "homeassistant.components.demo.camera.DemoCamera.stream_source",
+        return_value="http://example.com",
     ):
         # Call service
         await hass.services.async_call(
@@ -538,17 +524,14 @@ async def test_handle_play_stream_service(hass: HomeAssistant) -> None:
         )
         # So long as we request the stream, the rest should be covered
         # by the play_media service tests.
-        assert mock_request_stream.called
+        assert mock_create_stream.endpoint_url.called
 
 
 @pytest.mark.usefixtures("mock_stream")
-async def test_no_preload_stream(hass: HomeAssistant) -> None:
+async def test_no_preload_stream(hass: HomeAssistant, mock_create_stream: Mock) -> None:
     """Test camera preload preference."""
     demo_settings = camera.DynamicStreamSettings()
     with (
-        patch(
-            "homeassistant.components.camera.Stream.endpoint_url",
-        ) as mock_request_stream,
         patch(
             "homeassistant.components.camera.prefs.CameraPreferences.get_dynamic_stream_settings",
             return_value=demo_settings,
@@ -562,15 +545,14 @@ async def test_no_preload_stream(hass: HomeAssistant) -> None:
         await async_setup_component(hass, "camera", {DOMAIN: {"platform": "demo"}})
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
-        assert not mock_request_stream.called
+        assert not mock_create_stream.endpoint_url.called
 
 
 @pytest.mark.usefixtures("mock_stream")
-async def test_preload_stream(hass: HomeAssistant) -> None:
+async def test_preload_stream(hass: HomeAssistant, mock_create_stream: Mock) -> None:
     """Test camera preload preference."""
     demo_settings = camera.DynamicStreamSettings(preload_stream=True)
     with (
-        patch("homeassistant.components.camera.create_stream") as mock_create_stream,
         patch(
             "homeassistant.components.camera.prefs.CameraPreferences.get_dynamic_stream_settings",
             return_value=demo_settings,
@@ -580,14 +562,13 @@ async def test_preload_stream(hass: HomeAssistant) -> None:
             return_value="http://example.com",
         ),
     ):
-        mock_create_stream.return_value.start = AsyncMock()
         assert await async_setup_component(
             hass, "camera", {DOMAIN: {"platform": "demo"}}
         )
         await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
-        assert mock_create_stream.called
+        assert mock_create_stream.start.called
 
 
 @pytest.mark.usefixtures("mock_camera")
@@ -699,25 +680,16 @@ async def test_state_streaming(hass: HomeAssistant) -> None:
     assert demo_camera.state == camera.CameraState.STREAMING
 
 
-@pytest.mark.usefixtures("mock_camera", "mock_stream")
+@pytest.mark.usefixtures("mock_camera", "mock_stream", "mock_create_stream")
 async def test_stream_unavailable(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, mock_create_stream: Mock
 ) -> None:
     """Camera state."""
     await async_setup_component(hass, "camera", {})
 
-    with (
-        patch(
-            "homeassistant.components.camera.Stream.endpoint_url",
-            return_value="http://home.assistant/playlist.m3u8",
-        ),
-        patch(
-            "homeassistant.components.demo.camera.DemoCamera.stream_source",
-            return_value="http://example.com",
-        ),
-        patch(
-            "homeassistant.components.camera.Stream.set_update_callback",
-        ) as mock_update_callback,
+    with patch(
+        "homeassistant.components.demo.camera.DemoCamera.stream_source",
+        return_value="http://example.com",
     ):
         # Request playlist through WebSocket. We just want to create the stream
         # but don't care about the result.
@@ -726,26 +698,22 @@ async def test_stream_unavailable(
             {"id": 10, "type": "camera/stream", "entity_id": "camera.demo_camera"}
         )
         await client.receive_json()
-        assert mock_update_callback.called
+        assert mock_create_stream.set_update_callback.called
 
     # Simulate the stream going unavailable
-    callback = mock_update_callback.call_args.args[0]
-    with patch(
-        "homeassistant.components.camera.Stream.available", new_callable=lambda: False
-    ):
-        callback()
-        await hass.async_block_till_done()
+    callback = mock_create_stream.set_update_callback.call_args.args[0]
+    mock_create_stream.available = False
+    callback()
+    await hass.async_block_till_done()
 
     demo_camera = hass.states.get("camera.demo_camera")
     assert demo_camera is not None
     assert demo_camera.state == STATE_UNAVAILABLE
 
     # Simulate stream becomes available
-    with patch(
-        "homeassistant.components.camera.Stream.available", new_callable=lambda: True
-    ):
-        callback()
-        await hass.async_block_till_done()
+    mock_create_stream.available = True
+    callback()
+    await hass.async_block_till_done()
 
     demo_camera = hass.states.get("camera.demo_camera")
     assert demo_camera is not None
@@ -805,32 +773,6 @@ async def test_use_stream_for_stills(
         mock_stream.async_get_image.assert_called_once()
         assert resp.status == HTTPStatus.OK
         assert await resp.read() == b"stream_keyframe_image"
-
-
-@pytest.mark.parametrize(
-    "module",
-    [camera],
-)
-def test_all(module: ModuleType) -> None:
-    """Test module.__all__ is correctly set."""
-    help_test_all(module)
-
-
-@pytest.mark.parametrize(
-    "enum",
-    list(camera.const.CameraState),
-)
-@pytest.mark.parametrize(
-    "module",
-    [camera],
-)
-def test_deprecated_state_constants(
-    caplog: pytest.LogCaptureFixture,
-    enum: camera.const.StreamType,
-    module: ModuleType,
-) -> None:
-    """Test deprecated stream type constants."""
-    import_and_test_deprecated_constant_enum(caplog, module, enum, "STATE_", "2025.10")
 
 
 @pytest.mark.usefixtures("mock_camera")

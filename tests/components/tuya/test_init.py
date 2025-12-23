@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 from syrupy.assertion import SnapshotAssertion
-from tuya_sharing import CustomerDevice
+from tuya_sharing import CustomerDevice, Manager
 
-from homeassistant.components.tuya import ManagerCompat
 from homeassistant.components.tuya.const import DOMAIN
+from homeassistant.components.tuya.diagnostics import _REDACTED_DPCODES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -17,7 +17,7 @@ from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 async def test_device_registry(
     hass: HomeAssistant,
-    mock_manager: ManagerCompat,
+    mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_devices: CustomerDevice,
     device_registry: dr.DeviceRegistry,
@@ -66,3 +66,11 @@ async def test_fixtures_valid(hass: HomeAssistant) -> None:
             assert key not in details, (
                 f"Please remove data[`'{key}']` from {device_code}.json"
             )
+        if "status" in details:
+            statuses = details["status"]
+            for key in statuses:
+                if key in _REDACTED_DPCODES:
+                    assert statuses[key] == "**REDACTED**", (
+                        f"Please mark `data['status']['{key}']` as `**REDACTED**`"
+                        f" in {device_code}.json"
+                    )

@@ -7,25 +7,26 @@
   "homekit": {
     "models": ["EB", "ecobee*"]
   },
+  "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["pyecobee"],
-  "requirements": ["python-ecobee-api==0.2.20"],
+  "requirements": ["python-ecobee-api==0.3.2"],
   "single_config_entry": true,
   "zeroconf": [
     {
       "type": "_ecobee._tcp.local."
     },
     {
-      "type": "_sideplay._tcp.local.",
       "properties": {
         "mdl": "eb-*"
-      }
+      },
+      "type": "_sideplay._tcp.local."
     },
     {
-      "type": "_sideplay._tcp.local.",
       "properties": {
         "mdl": "ecobee*"
-      }
+      },
+      "type": "_sideplay._tcp.local."
     }
   ]
 }

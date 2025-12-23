@@ -2,25 +2,23 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, Protocol
+from typing import Any, Protocol
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_DOMAIN
+from homeassistant.const import CONF_DOMAIN, CONF_OPTIONS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.condition import (
     Condition,
+    ConditionChecker,
     ConditionCheckerType,
-    trace_condition_function,
+    ConditionConfig,
 )
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from . import DeviceAutomationType, async_get_device_automation_platform
 from .helpers import async_validate_device_automation_config
-
-if TYPE_CHECKING:
-    from homeassistant.helpers import condition
 
 
 class DeviceAutomationConditionProtocol(Protocol):
@@ -55,28 +53,54 @@ class DeviceAutomationConditionProtocol(Protocol):
 class DeviceCondition(Condition):
     """Device condition."""
 
-    def __init__(self, hass: HomeAssistant, config: ConfigType) -> None:
-        """Initialize condition."""
-        self._config = config
-        self._hass = hass
+    _config: ConfigType
+
+    @classmethod
+    async def async_validate_complete_config(
+        cls, hass: HomeAssistant, complete_config: ConfigType
+    ) -> ConfigType:
+        """Validate complete config."""
+        complete_config = await async_validate_device_automation_config(
+            hass,
+            complete_config,
+            cv.DEVICE_CONDITION_SCHEMA,
+            DeviceAutomationType.CONDITION,
+        )
+        # Since we don't want to migrate device conditions to a new format
+        # we just pass the entire config as options.
+        complete_config[CONF_OPTIONS] = complete_config.copy()
+        return complete_config
 
     @classmethod
     async def async_validate_config(
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
-        """Validate device condition config."""
-        return await async_validate_device_automation_config(
-            hass, config, cv.DEVICE_CONDITION_SCHEMA, DeviceAutomationType.CONDITION
-        )
+        """Validate config.
 
-    async def async_get_checker(self) -> condition.ConditionCheckerType:
+        This is here just to satisfy the abstract class interface. It is never called.
+        """
+        raise NotImplementedError
+
+    def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
+        """Initialize condition."""
+        super().__init__(hass, config)
+        assert config.options is not None
+        self._config = config.options
+
+    async def async_get_checker(self) -> ConditionChecker:
         """Test a device condition."""
         platform = await async_get_device_automation_platform(
             self._hass, self._config[CONF_DOMAIN], DeviceAutomationType.CONDITION
         )
-        return trace_condition_function(
-            platform.async_condition_from_config(self._hass, self._config)
+        platform_checker = platform.async_condition_from_config(
+            self._hass, self._config
         )
+
+        def checker(variables: TemplateVarsType = None, **kwargs: Any) -> bool:
+            result = platform_checker(self._hass, variables)
+            return result is not False
+
+        return checker
 
 
 CONDITIONS: dict[str, type[Condition]] = {

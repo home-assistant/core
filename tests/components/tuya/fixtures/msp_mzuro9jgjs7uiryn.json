@@ -1,0 +1,155 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Poopy Nano 2",
+  "category": "msp",
+  "product_id": "mzuro9jgjs7uiryn",
+  "product_name": "Poopy Nano 2",
+  "online": true,
+  "sub": false,
+  "time_zone": "+02:00",
+  "active_time": "2025-07-08T18:02:16+00:00",
+  "create_time": "2025-07-08T18:02:16+00:00",
+  "update_time": "2025-07-08T18:02:16+00:00",
+  "function": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "start": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "auto_clean": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "delay_clean_time": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 1,
+        "max": 600,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "manual_clean": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "factory_reset": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "status": {
+      "type": "Enum",
+      "value": {
+        "range": ["sleep"]
+      }
+    }
+  },
+  "status_range": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "start": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "auto_clean": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "delay_clean_time": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 1,
+        "max": 600,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "cat_weight": {
+      "type": "Integer",
+      "value": {
+        "unit": "kg",
+        "min": 6,
+        "max": 100,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "excretion_times_day": {
+      "type": "Integer",
+      "value": {
+        "unit": "times",
+        "min": 0,
+        "max": 999999999,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "excretion_time_day": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 1800,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "manual_clean": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "notification": {
+      "type": "Bitmap",
+      "value": {
+        "label": [
+          "garbage_box_full",
+          "excessive_clean_times",
+          "cleaning",
+          "no_weight"
+        ]
+      }
+    },
+    "fault": {
+      "type": "Bitmap",
+      "value": {
+        "label": ["E01", "E02", "E03", "00"]
+      }
+    },
+    "factory_reset": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "status": {
+      "type": "Enum",
+      "value": {
+        "range": ["sleep"]
+      }
+    }
+  },
+  "status": {
+    "switch": true,
+    "start": false,
+    "auto_clean": false,
+    "delay_clean_time": 1,
+    "cat_weight": 36,
+    "excretion_times_day": 4,
+    "excretion_time_day": 85,
+    "manual_clean": false,
+    "notification": 0,
+    "fault": 0,
+    "factory_reset": false,
+    "status": "standly"
+  },
+  "set_up": true,
+  "support_local": true
+}
