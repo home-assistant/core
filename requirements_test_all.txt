@@ -870,6 +870,9 @@ flexit_bacnet==2.2.3
 # homeassistant.components.flipr
 flipr-api==1.6.1
 
+# homeassistant.components.fluss
+fluss-api==0.1.9.20
+
 # homeassistant.components.flux_led
 flux-led==1.2.0
 
@@ -1219,7 +1222,7 @@ libpyfoscamcgi==0.0.9
 libpyvivotek==0.6.1
 
 # homeassistant.components.libre_hardware_monitor
-librehardwaremonitor-api==1.5.0
+librehardwaremonitor-api==1.6.0
 
 # homeassistant.components.mikrotik
 librouteros==3.2.0
@@ -2292,7 +2295,7 @@ renault-api==0.5.2
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.17.1
+reolink-aio==0.18.0
 
 # homeassistant.components.rflink
 rflink==0.0.67
