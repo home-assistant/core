@@ -543,7 +543,7 @@ automower-ble==0.2.8
 av==16.0.1
 
 # homeassistant.components.axis
-axis==65
+axis==66
 
 # homeassistant.components.fujitsu_fglair
 ayla-iot-unofficial==1.4.7
@@ -944,7 +944,7 @@ gios==6.1.2
 glances-api==0.8.0
 
 # homeassistant.components.go2rtc
-go2rtc-client==0.3.0
+go2rtc-client==0.4.0
 
 # homeassistant.components.goalzero
 goalzero==0.2.2
@@ -1885,7 +1885,7 @@ pynina==0.3.6
 pynintendoauth==1.0.2
 
 # homeassistant.components.nintendo_parental_controls
-pynintendoparental==2.1.3
+pynintendoparental==2.3.0
 
 # homeassistant.components.nobo_hub
 pynobo==1.8.1
@@ -2159,7 +2159,7 @@ python-pooldose==0.8.1
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==3.19.0
+python-roborock==3.20.1
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.46
@@ -2490,7 +2490,7 @@ tesla-powerwall==0.5.2
 tesla-wall-connector==1.1.0
 
 # homeassistant.components.teslemetry
-teslemetry-stream==0.8.2
+teslemetry-stream==0.9.0
 
 # homeassistant.components.tessie
 tessie-api==0.1.1
@@ -2559,7 +2559,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.33.2
+uiprotect==7.33.3
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -2597,7 +2597,7 @@ vegehub==0.1.26
 vehicle==2.2.2
 
 # homeassistant.components.velbus
-velbus-aio==2025.11.0
+velbus-aio==2025.12.0
 
 # homeassistant.components.venstar
 venstarcolortouch==0.21
@@ -2704,7 +2704,7 @@ yalexs==9.2.0
 yeelight==0.7.16
 
 # homeassistant.components.yolink
-yolink-api==0.5.8
+yolink-api==0.5.9
 
 # homeassistant.components.youless
 youless-api==2.2.0
