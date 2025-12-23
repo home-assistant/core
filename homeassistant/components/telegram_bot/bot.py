@@ -555,7 +555,7 @@ class TelegramNotificationService:
     async def send_message(
         self,
         message: str = "",
-        target: Any = None,
+        target: int | None = None,
         context: Context | None = None,
         **kwargs: dict[str, Any],
     ) -> dict[int, int]:
