@@ -870,6 +870,9 @@ flexit_bacnet==2.2.3
 # homeassistant.components.flipr
 flipr-api==1.6.1
 
+# homeassistant.components.fluss
+fluss-api==0.1.9.20
+
 # homeassistant.components.flux_led
 flux-led==1.2.0
 
