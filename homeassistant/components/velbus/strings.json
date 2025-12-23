@@ -57,14 +57,29 @@
     }
   },
   "exceptions": {
+    "clear_cache_failed": {
+      "message": "Could not cleat the Velbus cache: {error}"
+    },
     "integration_not_found": {
       "message": "Integration \"{target}\" not found in registry."
     },
     "invalid_hvac_mode": {
       "message": "Climate mode {hvac_mode} is not supported."
     },
+    "module_not_found": {
+      "message": "Module with address {address} not found."
+    },
     "not_loaded": {
       "message": "{target} is not loaded."
+    },
+    "scan_failed": {
+      "message": "Scan service: {error}."
+    },
+    "set_memo_text_failed": {
+      "message": "Failed to set the memo text on the Velbus module: {error}."
+    },
+    "sync_clock_failed": {
+      "message": "Failed to sync the Velbus clock: {error}."
     }
   },
   "issues": {
