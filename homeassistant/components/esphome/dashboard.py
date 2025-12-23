@@ -142,6 +142,19 @@ class ESPHomeDashboardManager:
         if reloads or reauths:
             await asyncio.gather(*reloads, *reauths)
 
+    async def async_clear_dashboard(self) -> None:
+        """Clear the dashboard info and allow add-on to take over again."""
+        if self._current_dashboard:
+            await self._current_dashboard.async_shutdown()
+            if self._cancel_shutdown is not None:
+                self._cancel_shutdown()
+                self._cancel_shutdown = None
+            self._current_dashboard = None
+
+        self._data = None
+        await self._store.async_remove()
+        _LOGGER.debug("Dashboard info cleared from storage")
+
 
 @callback
 def async_get_dashboard(hass: HomeAssistant) -> ESPHomeDashboardCoordinator | None:
@@ -163,3 +176,62 @@ async def async_set_dashboard_info(
     """Set the dashboard info."""
     manager = await async_get_or_create_dashboard_manager(hass)
     await manager.async_set_dashboard_info(addon_slug, host, port)
+
+
+async def async_clear_dashboard_info(hass: HomeAssistant) -> None:
+    """Clear the dashboard info and check if HA add-on can take over.
+
+    If running on Home Assistant OS/Supervised and the ESPHome add-on is
+    installed and running, it will be automatically configured as the dashboard.
+    """
+    if not (manager := hass.data.get(KEY_DASHBOARD_MANAGER)):
+        return
+
+    await manager.async_clear_dashboard()
+
+    # Check if we're running on Hassio and ESPHome add-on is available
+    if is_hassio(hass):
+        await _async_try_restore_addon_dashboard(hass, manager)
+
+
+async def _async_try_restore_addon_dashboard(
+    hass: HomeAssistant, manager: ESPHomeDashboardManager
+) -> None:
+    """Try to restore the ESPHome add-on as dashboard if available.
+
+    Queries the Supervisor discovery API for ESPHome discovery entries.
+    """
+    try:
+        from homeassistant.components import hassio  # noqa: PLC0415
+
+        supervisor_client = hassio.get_supervisor_client(hass)
+        discoveries = await supervisor_client.discovery.list()
+
+        for discovery in discoveries:
+            if discovery.service == DOMAIN:
+                host = discovery.config.get("host")
+                port = discovery.config.get("port")
+                if not host or not port:
+                    _LOGGER.warning(
+                        "ESPHome add-on discovery missing host/port: %s",
+                        discovery.config,
+                    )
+                    continue
+                _LOGGER.info(
+                    "Restoring ESPHome add-on dashboard: %s (host=%s, port=%s)",
+                    discovery.addon,
+                    host,
+                    port,
+                )
+                await manager.async_set_dashboard_info(
+                    discovery.addon,
+                    host,
+                    port,
+                )
+                return
+
+        _LOGGER.debug("No ESPHome add-on discovery found")
+    except ImportError:
+        _LOGGER.debug("Supervisor not available, cannot restore add-on dashboard")
+    except hassio.SupervisorError:
+        _LOGGER.debug("Could not query Supervisor for ESPHome add-on", exc_info=True)

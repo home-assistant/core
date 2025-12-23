@@ -11,11 +11,16 @@ CONF_SUBSCRIBE_LOGS = "subscribe_logs"
 CONF_DEVICE_NAME = "device_name"
 CONF_NOISE_PSK = "noise_psk"
 CONF_BLUETOOTH_MAC_ADDRESS = "bluetooth_mac_address"
+CONF_IS_DASHBOARD = "is_dashboard"  # Marker for dashboard-only config entries
 
 DEFAULT_ALLOW_SERVICE_CALLS = True
 DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS = False
 
-DEFAULT_PORT: Final = 6053
+DEFAULT_PORT: Final = 6053  # ESPHome device API port
+DEFAULT_DASHBOARD_PORT: Final = 6052  # ESPHome Dashboard web interface port
+
+# Addon slug used for external dashboards (not running as HA add-on)
+EXTERNAL_DASHBOARD_ADDON_SLUG: Final = "external"
 
 STABLE_BLE_VERSION_STR = "2025.11.0"
 STABLE_BLE_VERSION = AwesomeVersion(STABLE_BLE_VERSION_STR)

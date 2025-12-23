@@ -49,12 +49,15 @@ from homeassistant.util.json import json_loads_object
 from .const import (
     CONF_ALLOW_SERVICE_CALLS,
     CONF_DEVICE_NAME,
+    CONF_IS_DASHBOARD,
     CONF_NOISE_PSK,
     CONF_SUBSCRIBE_LOGS,
     DEFAULT_ALLOW_SERVICE_CALLS,
+    DEFAULT_DASHBOARD_PORT,
     DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
     DEFAULT_PORT,
     DOMAIN,
+    EXTERNAL_DASHBOARD_ADDON_SLUG,
 )
 from .dashboard import async_get_or_create_dashboard_manager, async_set_dashboard_info
 from .encryption_key_storage import async_get_encryption_key_storage
@@ -118,8 +121,74 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle a flow initialized by the user."""
+        """Handle a flow initialized by the user.
+
+        Offer choice between adding a single ESPHome device or configuring the
+        ESPHome Dashboard (builder) when starting via the Integrations UI.
+        """
+        if user_input is None:
+            # Check if a dashboard is already configured
+            dashboard_exists = any(
+                entry.data.get(CONF_IS_DASHBOARD)
+                for entry in self._async_current_entries()
+            )
+            if dashboard_exists:
+                # Skip menu, go directly to device flow
+                return await self._async_step_user_base(user_input=None)
+
+            return self.async_show_menu(
+                step_id="user",
+                menu_options=["device", "dashboard"],
+            )
+
+        # If the user returns here with values, defer to the device flow
         return await self._async_step_user_base(user_input=user_input)
+
+    async def async_step_device(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Proceed to the existing device add flow."""
+        return await self._async_step_user_base(user_input=user_input)
+
+    async def async_step_dashboard(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Configure an external ESPHome Dashboard (host + port)."""
+        # Check if a dashboard entry already exists (only one allowed)
+        for entry in self._async_current_entries():
+            if entry.data.get(CONF_IS_DASHBOARD):
+                return self.async_abort(reason="single_instance_allowed")
+
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            host = user_input[CONF_HOST]
+            port = user_input.get(CONF_PORT, DEFAULT_DASHBOARD_PORT)
+            try:
+                await async_set_dashboard_info(
+                    self.hass, EXTERNAL_DASHBOARD_ADDON_SLUG, host, port
+                )
+            except Exception:  # noqa: BLE001
+                errors["base"] = "cannot_connect"
+            else:
+                return self.async_create_entry(
+                    title=f"Dashboard ({host}:{port})",
+                    data={
+                        CONF_IS_DASHBOARD: True,
+                        "host": host,
+                        "port": port,
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="dashboard",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_HOST): str,
+                    vol.Optional(CONF_PORT, default=DEFAULT_DASHBOARD_PORT): int,
+                }
+            ),
+            errors=errors,
+        )
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
@@ -913,9 +982,61 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(
         config_entry: ESPHomeConfigEntry,
-    ) -> OptionsFlowHandler:
-        """Get the options flow for this handler."""
+    ) -> OptionsFlowWithReload:
+        """Get the options flow for this handler.
+
+        We provide two different option handlers:
+        - Dashboard entry: allows updating host/port
+        - Device entry: device specific options (allow_service_calls/subscribe_logs)
+        """
+        if config_entry.data.get(CONF_IS_DASHBOARD):
+            return EsphomeDashboardOptionsFlowHandler(config_entry)
         return OptionsFlowHandler()
+
+
+class EsphomeDashboardOptionsFlowHandler(OptionsFlowWithReload):
+    """Options flow for an ESPHome Dashboard entry."""
+
+    def __init__(self, config_entry: ConfigEntry) -> None:
+        """Initialize options flow."""
+        self._config_entry = config_entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage dashboard host/port."""
+        errors: dict[str, str] = {}
+        data = self._config_entry.data
+
+        if user_input is not None:
+            host = user_input[CONF_HOST]
+            port = user_input.get(CONF_PORT, DEFAULT_DASHBOARD_PORT)
+            try:
+                await async_set_dashboard_info(
+                    self.hass, EXTERNAL_DASHBOARD_ADDON_SLUG, host, port
+                )
+            except Exception:  # noqa: BLE001
+                errors["base"] = "cannot_connect"
+            else:
+                # Persist into the config entry data so it survives restarts
+                self.hass.config_entries.async_update_entry(
+                    self._config_entry,
+                    data={**self._config_entry.data, "host": host, "port": port},
+                )
+                return self.async_create_entry(data={})
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_HOST, default=data.get("host", "")): str,
+                    vol.Required(
+                        CONF_PORT, default=data.get("port", DEFAULT_DASHBOARD_PORT)
+                    ): int,
+                }
+            ),
+            errors=errors,
+        )
 
 
 class OptionsFlowHandler(OptionsFlowWithReload):

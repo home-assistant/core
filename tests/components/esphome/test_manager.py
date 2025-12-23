@@ -30,6 +30,7 @@ import pytest
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.esphome import dashboard
 from homeassistant.components.esphome.const import (
     CONF_ALLOW_SERVICE_CALLS,
     CONF_BLUETOOTH_MAC_ADDRESS,
@@ -1665,6 +1666,33 @@ async def test_esphome_device_with_web_server(
         connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
     )
     assert dev.configuration_url == "http://test.local:80"
+
+
+async def test_esphome_device_with_external_dashboard(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test a device with an external dashboard uses direct URL instead of ingress."""
+    # Set up an external dashboard (addon_slug = "external")
+    await dashboard.async_set_dashboard_info(hass, "external", "192.168.1.100", 6052)
+
+    # Mock the dashboard data to include the device name
+    dash = dashboard.async_get_dashboard(hass)
+    with patch.object(dash, "data", {"test": {"name": "test"}}):
+        device = await mock_esphome_device(
+            mock_client=mock_client,
+        )
+        await hass.async_block_till_done()
+
+    entry = device.entry
+    dev = device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
+    )
+    # External dashboards use the direct URL instead of ingress
+    assert dev.configuration_url == "http://192.168.1.100:6052"
 
 
 async def test_esphome_device_with_ipv6_web_server(

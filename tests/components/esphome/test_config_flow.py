@@ -191,6 +191,15 @@ async def test_user_connection_works(
         context={"source": config_entries.SOURCE_USER},
     )
 
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+
+    # Select device from menu
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"next_step_id": "device"},
+    )
+
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
@@ -235,6 +244,15 @@ async def test_user_connection_updates_host(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data=None,
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+
+    # Select device from menu
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"next_step_id": "device"},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -297,6 +315,15 @@ async def test_user_sets_unique_id(hass: HomeAssistant) -> None:
         data=None,
     )
 
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+
+    # Select device from menu
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"next_step_id": "device"},
+    )
+
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
@@ -325,7 +352,23 @@ async def test_user_resolve_error(hass: HomeAssistant, mock_client: APIClient) -
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
-            data={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
+        )
+
+        assert result["type"] is FlowResultType.MENU
+        assert result["step_id"] == "user"
+
+        # Select device from menu
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"next_step_id": "device"},
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_HOST: "127.0.0.1", CONF_PORT: 6053},
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -383,6 +426,15 @@ async def test_user_causes_zeroconf_to_abort(hass: HomeAssistant) -> None:
         DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data=None,
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "user"
+
+    # Select device from menu
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"next_step_id": "device"},
     )
 
     assert result["type"] is FlowResultType.FORM

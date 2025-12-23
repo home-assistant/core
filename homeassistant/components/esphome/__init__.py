@@ -20,7 +20,7 @@ from homeassistant.helpers.issue_registry import async_delete_issue
 from homeassistant.helpers.typing import ConfigType
 
 from . import assist_satellite, dashboard, ffmpeg_proxy
-from .const import CONF_BLUETOOTH_MAC_ADDRESS, CONF_NOISE_PSK, DOMAIN
+from .const import CONF_BLUETOOTH_MAC_ADDRESS, CONF_IS_DASHBOARD, CONF_NOISE_PSK, DOMAIN
 from .domain_data import DomainData
 from .encryption_key_storage import async_get_encryption_key_storage
 from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
@@ -45,9 +45,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> bool:
     """Set up the esphome component."""
+    # Dashboard-only config entries are stored to persist dashboard info
+    # but should not trigger device setup. Ignore them here.
+    if entry.data.get(CONF_IS_DASHBOARD):
+        return True
+
     host: str = entry.data[CONF_HOST]
     port: int = entry.data[CONF_PORT]
-    password: str | None = entry.data[CONF_PASSWORD]
+    password: str | None = entry.data.get(CONF_PASSWORD)
     noise_psk: str | None = entry.data.get(CONF_NOISE_PSK)
 
     zeroconf_instance = await zeroconf.async_get_instance(hass)
@@ -82,6 +87,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> bool:
     """Unload an esphome config entry."""
+    # Dashboard-only entries don't load platforms and should be treated as
+    # unloaded immediately.
+    if entry.data.get(CONF_IS_DASHBOARD):
+        return True
+
     unload_ok = await hass.config_entries.async_unload_platforms(
         entry, entry.runtime_data.loaded_platforms
     )
@@ -92,6 +102,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> 
 
 async def async_remove_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> None:
     """Remove an esphome config entry."""
+    # For dashboard entries, clear the dashboard info so the HA add-on can take over
+    if entry.data.get(CONF_IS_DASHBOARD):
+        from .dashboard import async_clear_dashboard_info  # noqa: PLC0415
+
+        await async_clear_dashboard_info(hass)
+        return
+
     if bluetooth_mac_address := entry.data.get(CONF_BLUETOOTH_MAC_ADDRESS):
         async_remove_scanner(hass, bluetooth_mac_address.upper())
     async_delete_issue(

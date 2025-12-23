@@ -86,6 +86,7 @@ from .const import (
     DEFAULT_ALLOW_SERVICE_CALLS,
     DEFAULT_URL,
     DOMAIN,
+    EXTERNAL_DASHBOARD_ADDON_SLUG,
     PROJECT_URLS,
     STABLE_BLE_VERSION,
     STABLE_BLE_VERSION_STR,
@@ -1034,7 +1035,14 @@ def _async_setup_device_registry(
         and dashboard.data
         and dashboard.data.get(device_info.name)
     ):
-        configuration_url = f"homeassistant://hassio/ingress/{dashboard.addon_slug}"
+        # For HA add-on dashboards, use Ingress URL; for external dashboards, use direct URL
+        if (
+            dashboard.addon_slug
+            and dashboard.addon_slug != EXTERNAL_DASHBOARD_ADDON_SLUG
+        ):
+            configuration_url = f"homeassistant://hassio/ingress/{dashboard.addon_slug}"
+        else:
+            configuration_url = dashboard.url
 
     manufacturer = "espressif"
     if device_info.manufacturer:

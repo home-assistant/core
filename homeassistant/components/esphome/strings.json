@@ -17,7 +17,8 @@
       "reconfigure_name_conflict": "**Reconfiguration of `{name}` was aborted** because the address `{host}` points to a device named `{name}` (MAC: `{expected_mac}`), which is already in use by another configuration entry: `{existing_title}`.",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "reconfigure_unique_id_changed": "**Reconfiguration of `{name}` was aborted** because the address `{host}` points to a different device: `{unexpected_device_name}` (MAC: `{unexpected_mac}`) instead of the expected one (MAC: `{expected_mac}`).",
-      "service_received": "Action received"
+      "service_received": "Action received",
+      "single_dashboard_allowed": "Only one dashboard configuration is allowed. Please update the existing dashboard configuration instead."
     },
     "error": {
       "connection_error": "Unable to connect to the ESPHome device. Make sure the device’s YAML configuration includes an `api` section.",
@@ -36,6 +37,17 @@
           "password": "Passwords are deprecated and will be removed in a future version. Please update your ESPHome device YAML configuration to use an encryption key instead."
         },
         "description": "Please enter the password you set in your ESPHome device YAML configuration for `{name}`."
+      },
+      "dashboard": {
+        "data": {
+          "host": "Dashboard URL or IP",
+          "port": "Dashboard port"
+        },
+        "data_description": {
+          "host": "Hostname or IP address where the ESPHome Dashboard web interface is running (for example, 192.168.1.100 or esphome.local)",
+          "port": "Port the dashboard web interface is running on (default: 6052)"
+        },
+        "description": "Connect Home Assistant to an ESPHome Dashboard running on another machine (for example, a separate server or Docker container).\n\n**Note:** If you use the official ESPHome add-on, this is configured automatically. You only need this for dashboards running outside of Home Assistant."
       },
       "discovery_confirm": {
         "description": "Do you want to add the device `{name}` to Home Assistant?",
@@ -79,7 +91,11 @@
           "host": "IP address or hostname of the ESPHome device",
           "port": "Port that the native API is running on"
         },
-        "description": "Please enter connection settings of your ESPHome device."
+        "description": "Please enter connection settings of your ESPHome device.",
+        "menu_options": {
+          "dashboard": "Connect to external dashboard",
+          "device": "Add ESPHome device"
+        }
       }
     }
   },
@@ -195,11 +211,15 @@
     "step": {
       "init": {
         "data": {
-          "allow_service_calls": "Allow the device to perform Home Assistant actions.",
-          "subscribe_logs": "Subscribe to logs from the device."
+          "allow_service_calls": "Allow the device to perform Home Assistant actions",
+          "host": "Dashboard URL or IP",
+          "port": "Dashboard port",
+          "subscribe_logs": "Subscribe to logs from the device"
         },
         "data_description": {
           "allow_service_calls": "When enabled, ESPHome devices can perform Home Assistant actions or send events. Only enable this if you trust the device.",
+          "host": "Hostname or IP address where the ESPHome Dashboard web interface is running",
+          "port": "Port the dashboard web interface is running on",
           "subscribe_logs": "When enabled, the device will send logs to Home Assistant and you can view them in the logs panel."
         }
       }
