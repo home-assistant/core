@@ -260,6 +260,31 @@ async def test_fan_mode_service_call(
     hass: HomeAssistant,
     mock_saunum_client,
 ) -> None:
+    """Test validation error when trying to heat with door open."""
+    entity_id = "climate.saunum_leil"
+
+    # Set door to open
+    mock_saunum_client.async_get_data.return_value.door_open = True
+
+    # Try to turn on heating with door open
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_HVAC_MODE,
+            {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: HVACMode.HEAT},
+            blocking=True,
+        )
+
+    # Verify the exception has the correct translation key
+    assert exc_info.value.translation_key == "door_open"
+    assert exc_info.value.translation_domain == "saunum"
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_temperature_error_handling(
+    hass: HomeAssistant,
+    mock_saunum_client,
+) -> None:
     """Test setting fan mode."""
     mock_saunum_client.async_get_data.return_value.session_active = True
 
