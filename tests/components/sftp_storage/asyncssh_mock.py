@@ -69,6 +69,7 @@ class SFTPClientMock:
     def __init__(self, *args, **kwargs) -> None:
         """Initialize `SFTPClientMock`."""
         self._mock_chdir = AsyncMock()
+        self._mock_getcwd = ""
         self._mock_listdir = AsyncMock()
         self._mock_exists = AsyncMock(return_value=True)
         self._mock_unlink = AsyncMock()
@@ -85,6 +86,10 @@ class SFTPClientMock:
     async def chdir(self, *args) -> None:
         """Mock `chdir` method from SFTPClient."""
         await self._mock_chdir(*args)
+
+    async def getcwd(self):
+        """Mock `getcwd` method from SFTPClient."""
+        return self._mock_getcwd
 
     async def listdir(self, *args) -> list[str]:
         """Mock `listdir` method from SFTPClient."""

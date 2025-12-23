@@ -10,6 +10,8 @@
       "permission_denied": "{error_message}",
       "sftp_no_such_file": "Could not check directory {backup_location}. Make sure directory exists.",
       "sftp_permission_denied": "Permission denied for directory {backup_location}",
+      "sftp_write_permission_denied": "Successfully connected but unable to write to directory {backup_location}",
+      "sftp_write_root_permission_denied": "Successfully connected but unable to write to root (/) directory of file system. Please select another remote path.",
       "unknown": "Unexpected exception ({exception}) occurred during config flow. {error_message}"
     },
     "step": {
