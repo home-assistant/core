@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 from uiprotect.data import Camera, Doorlock, IRLEDMode, Light
@@ -19,6 +19,7 @@ from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
+from . import patch_ufp_method
 from .utils import (
     MockUFPFixture,
     adopt_devices,
@@ -166,18 +167,21 @@ async def test_number_light_sensitivity(
     description = LIGHT_NUMBERS[0]
     assert description.ufp_set_method is not None
 
-    light.__pydantic_fields__["set_sensitivity"] = Mock(final=False, frozen=False)
-    light.set_sensitivity = AsyncMock()
-
     _, entity_id = await ids_from_device_description(
         hass, Platform.NUMBER, light, description
     )
 
-    await hass.services.async_call(
-        "number", "set_value", {ATTR_ENTITY_ID: entity_id, "value": 15.0}, blocking=True
-    )
+    with patch_ufp_method(
+        light, "set_sensitivity", new_callable=AsyncMock
+    ) as mock_method:
+        await hass.services.async_call(
+            "number",
+            "set_value",
+            {ATTR_ENTITY_ID: entity_id, "value": 15.0},
+            blocking=True,
+        )
 
-    light.set_sensitivity.assert_called_once_with(15.0)
+        mock_method.assert_called_once_with(15.0)
 
 
 async def test_number_light_duration(
@@ -190,18 +194,19 @@ async def test_number_light_duration(
 
     description = LIGHT_NUMBERS[1]
 
-    light.__pydantic_fields__["set_duration"] = Mock(final=False, frozen=False)
-    light.set_duration = AsyncMock()
-
     _, entity_id = await ids_from_device_description(
         hass, Platform.NUMBER, light, description
     )
 
-    await hass.services.async_call(
-        "number", "set_value", {ATTR_ENTITY_ID: entity_id, "value": 15.0}, blocking=True
-    )
+    with patch_ufp_method(light, "set_duration", new_callable=AsyncMock) as mock_method:
+        await hass.services.async_call(
+            "number",
+            "set_value",
+            {ATTR_ENTITY_ID: entity_id, "value": 15.0},
+            blocking=True,
+        )
 
-    light.set_duration.assert_called_once_with(timedelta(seconds=15.0))
+        mock_method.assert_called_once_with(timedelta(seconds=15.0))
 
 
 @pytest.mark.parametrize("description", CAMERA_NUMBERS)
@@ -221,11 +226,9 @@ async def test_number_camera_simple(
         hass, Platform.NUMBER, camera_all_features, description
     )
 
-    camera_all_features.__pydantic_fields__[description.ufp_set_method] = Mock(
-        final=False, frozen=False
-    )
-    mock_method = AsyncMock()
-    with patch.object(camera_all_features, description.ufp_set_method, mock_method):
+    with patch_ufp_method(
+        camera_all_features, description.ufp_set_method, new_callable=AsyncMock
+    ) as mock_method:
         await hass.services.async_call(
             "number",
             "set_value",
@@ -246,17 +249,18 @@ async def test_number_lock_auto_close(
 
     description = DOORLOCK_NUMBERS[0]
 
-    doorlock.__pydantic_fields__["set_auto_close_time"] = Mock(
-        final=False, frozen=False
-    )
-    doorlock.set_auto_close_time = AsyncMock()
-
     _, entity_id = await ids_from_device_description(
         hass, Platform.NUMBER, doorlock, description
     )
 
-    await hass.services.async_call(
-        "number", "set_value", {ATTR_ENTITY_ID: entity_id, "value": 15.0}, blocking=True
-    )
+    with patch_ufp_method(
+        doorlock, "set_auto_close_time", new_callable=AsyncMock
+    ) as mock_method:
+        await hass.services.async_call(
+            "number",
+            "set_value",
+            {ATTR_ENTITY_ID: entity_id, "value": 15.0},
+            blocking=True,
+        )
 
-    doorlock.set_auto_close_time.assert_called_once_with(timedelta(seconds=15.0))
+        mock_method.assert_called_once_with(timedelta(seconds=15.0))
