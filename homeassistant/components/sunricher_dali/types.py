@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 
-from PySrDaliGateway import DaliGateway, Device
+from PySrDaliGateway import DaliGateway, Device, Scene
 
 from homeassistant.config_entries import ConfigEntry
 
@@ -13,6 +13,7 @@ class DaliCenterData:
 
     gateway: DaliGateway
     devices: list[Device]
+    scenes: list[Scene]
 
 
 type DaliCenterConfigEntry = ConfigEntry[DaliCenterData]

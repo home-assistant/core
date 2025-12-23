@@ -163,9 +163,6 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
             LOGGER.exception("Unexpected exception during add-on discovery")
             return self.async_abort(reason="unknown")
 
-        if not server_info.onboard_done:
-            return self.async_abort(reason="server_not_ready")
-
         # We trust the token from hassio discovery and validate it during setup
         self.token = discovery_info.config["auth_token"]
 
@@ -182,6 +179,7 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
                     ConfigEntryState.LOADED,
                     ConfigEntryState.SETUP_ERROR,
                     ConfigEntryState.SETUP_RETRY,
+                    ConfigEntryState.SETUP_IN_PROGRESS,
                 ):
                     self.hass.config_entries.async_schedule_reload(entry.entry_id)
 
@@ -225,11 +223,6 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
             if server_info.homeassistant_addon:
                 LOGGER.debug("Ignoring add-on server in zeroconf discovery")
                 return self.async_abort(reason="already_discovered_addon")
-
-            # Ignore servers that have not completed onboarding yet
-            if not server_info.onboard_done:
-                LOGGER.debug("Ignoring server that hasn't completed onboarding")
-                return self.async_abort(reason="server_not_ready")
 
         self.url = server_info.base_url
         self.server_info = server_info
