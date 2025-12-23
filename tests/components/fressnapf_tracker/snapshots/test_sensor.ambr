@@ -29,7 +29,6 @@
     'original_name': 'Battery',
     'platform': 'fressnapf_tracker',
     'previous_unique_id': None,
-    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'ABC123456_battery',

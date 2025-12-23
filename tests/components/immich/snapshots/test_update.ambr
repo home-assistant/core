@@ -27,7 +27,6 @@
     'original_name': 'Version',
     'platform': 'immich',
     'previous_unique_id': None,
-    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'update',
     'unique_id': 'e7ef5713-9dab-4bd4-b899-715b0ca4379e_update',

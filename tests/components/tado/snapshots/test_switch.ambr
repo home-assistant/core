@@ -27,7 +27,6 @@
     'original_name': 'Child lock',
     'platform': 'tado',
     'previous_unique_id': None,
-    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'child_lock',
     'unique_id': '1 1 child-lock',
