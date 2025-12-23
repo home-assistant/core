@@ -110,13 +110,6 @@ def _data_secure_group_key_issue_handler(
 class DataSecureGroupIssueRepairFlow(RepairsFlow):
     """Handler for an issue fixing flow for outdated DataSecure keys."""
 
-    @callback
-    def _async_get_placeholders(self) -> dict[str, str]:
-        issue_registry = ir.async_get(self.hass)
-        issue = issue_registry.async_get_issue(self.handler, self.issue_id)
-        assert issue is not None
-        return issue.translation_placeholders or {}
-
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
     ) -> data_entry_flow.FlowResult:
@@ -157,7 +150,6 @@ class DataSecureGroupIssueRepairFlow(RepairsFlow):
         return self.async_show_form(
             step_id="secure_knxkeys",
             data_schema=vol.Schema(fields),
-            description_placeholders=self._async_get_placeholders(),
             errors=errors,
         )
 
