@@ -33,7 +33,7 @@ cryptography==46.0.2
 dbus-fast==3.1.2
 file-read-backwards==2.0.0
 fnv-hash-fast==1.6.0
-go2rtc-client==0.3.0
+go2rtc-client==0.4.0
 ha-ffmpeg==3.2.2
 habluetooth==5.8.0
 hass-nabucasa==1.7.0

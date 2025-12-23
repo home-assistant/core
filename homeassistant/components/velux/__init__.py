@@ -15,6 +15,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
+    HomeAssistantError,
     ServiceValidationError,
 )
 from homeassistant.helpers import (
@@ -52,8 +53,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         # (this is no change to the previous behavior, the alternative would be to reboot all)
         for entry in hass.config_entries.async_entries(DOMAIN):
             if entry.state is ConfigEntryState.LOADED:
-                await entry.runtime_data.reboot_gateway()
-                return
+                try:
+                    await entry.runtime_data.reboot_gateway()
+                except (OSError, PyVLXException) as err:
+                    raise HomeAssistantError(
+                        translation_domain=DOMAIN,
+                        translation_key="reboot_failed",
+                    ) from err
+                else:
+                    return
 
         raise ServiceValidationError(
             translation_domain=DOMAIN,
