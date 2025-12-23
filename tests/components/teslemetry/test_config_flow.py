@@ -156,8 +156,7 @@ async def test_reauth_account_mismatch(
 
     result = await old_entry.start_reauth_flow(hass)
 
-    flows = hass.config_entries.flow.async_progress()
-    result = await hass.config_entries.flow.async_configure(flows[0]["flow_id"], {})
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
