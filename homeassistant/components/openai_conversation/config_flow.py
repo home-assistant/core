@@ -392,7 +392,8 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         elif CONF_VERBOSITY in options:
             options.pop(CONF_VERBOSITY)
         if CONF_REASONING_SUMMARY in options:
-            options.pop(CONF_REASONING_SUMMARY)
+            if not model.startswith("gpt-5"):
+                options.pop(CONF_REASONING_SUMMARY)
 
         if self._subentry_type == "conversation" and not model.startswith(
             tuple(UNSUPPORTED_WEB_SEARCH_MODELS)
