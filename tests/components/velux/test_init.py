@@ -64,6 +64,30 @@ async def test_setup_retry_on_oserror_during_scenes(
     mock_pyvlx.load_nodes.assert_not_called()
 
 
+async def test_setup_auth_error(
+    mock_config_entry: ConfigEntry, hass: HomeAssistant, mock_pyvlx: AsyncMock
+) -> None:
+    """Test that PyVLXException with auth message raises ConfigEntryAuthFailed and starts reauth flow."""
+
+    mock_pyvlx.load_scenes.side_effect = PyVLXException(
+        "Login to KLF 200 failed, check credentials"
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # ConfigEntryAuthFailed results in SETUP_ERROR state
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
+
+    mock_pyvlx.load_scenes.assert_awaited_once()
+    mock_pyvlx.load_nodes.assert_not_called()
+
+
 @pytest.fixture
 def platform() -> Platform:
     """Fixture to specify platform to test."""
