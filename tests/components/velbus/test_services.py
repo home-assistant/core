@@ -164,7 +164,7 @@ async def test_clear_cache(
 
     # Test with OSError
     with (
-        patch.object(hass, "async_add_executor_job", side_effect=OSError("Boom")),
+        patch("os.unlink", side_effect=OSError("Boom")),
         pytest.raises(HomeAssistantError),
     ):
         await hass.services.async_call(
