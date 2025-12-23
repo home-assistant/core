@@ -136,15 +136,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
             product.pop("cached_data", None)
             vin = product["vin"]
             signing = product["command_signing"] == "required"
-            api: VehicleFleet
+            api_vehicle: VehicleFleet
             if signing:
                 if not tesla.private_key:
                     await tesla.get_private_key(hass.config.path("tesla_fleet.key"))
-                api = tesla.vehicles.createSigned(vin)
+                api_vehicle = tesla.vehicles.createSigned(vin)
             else:
-                api = tesla.vehicles.createFleet(vin)
+                api_vehicle = tesla.vehicles.createFleet(vin)
             coordinator = TeslaFleetVehicleDataCoordinator(
-                hass, entry, api, product, Scope.VEHICLE_LOCATION in scopes
+                hass, entry, api_vehicle, product, Scope.VEHICLE_LOCATION in scopes
             )
 
             await coordinator.async_config_entry_first_refresh()
@@ -159,7 +159,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
 
             vehicles.append(
                 TeslaFleetVehicleData(
-                    api=api,
+                    api=api_vehicle,
                     coordinator=coordinator,
                     vin=vin,
                     device=device,
