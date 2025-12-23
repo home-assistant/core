@@ -1,13 +1,14 @@
 """Test the Tesla Fleet update platform."""
 
 import copy
+import time
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.tesla_fleet.coordinator import VEHICLE_INTERVAL
-from homeassistant.components.tesla_fleet.update import AVAILABLE, INSTALLING, SCHEDULED
+from homeassistant.components.tesla_fleet.update import INSTALLING, SCHEDULED
 from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN, SERVICE_INSTALL
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
@@ -81,39 +82,99 @@ async def test_update_services(
 
     state = hass.states.get(entity_id)
     assert state.attributes["in_progress"] is True  # type: ignore[union-attr]
-    assert state.attributes["update_status"] == INSTALLING  # type: ignore[union-attr]
 
 
-async def test_update_scheduled_not_in_progress(
+async def test_update_scheduled_far_future_not_in_progress(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
     mock_vehicle_data: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Tests that a scheduled update is not shown as in_progress."""
+    """Tests that a scheduled update far in the future is not shown as in_progress."""
 
     await setup_platform(hass, normal_config_entry, [Platform.UPDATE])
 
     entity_id = "update.test_update"
 
-    # Verify initial state (available) is not in_progress and shows correct status
+    # Verify initial state (available) is not in_progress
     state = hass.states.get(entity_id)
     assert state.attributes["in_progress"] is False  # type: ignore[union-attr]
-    assert state.attributes["update_status"] == AVAILABLE  # type: ignore[union-attr]
-    assert state.attributes["release_summary"] is None  # type: ignore[union-attr]
 
-    # Simulate update being scheduled for later
+    # Simulate update being scheduled for 1 hour in the future
     vehicle_scheduled = copy.deepcopy(VEHICLE_DATA)
     vehicle_scheduled["response"]["vehicle_state"]["software_update"]["status"] = (  # type: ignore[index]
         SCHEDULED
     )
+    # Set scheduled time to 1 hour from now (well beyond threshold)
+    scheduled_time_ms = int((time.time() + 3600) * 1000)
+    vehicle_scheduled["response"]["vehicle_state"]["software_update"][  # type: ignore[index]
+        "scheduled_time_ms"
+    ] = scheduled_time_ms
     mock_vehicle_data.return_value = vehicle_scheduled
     freezer.tick(VEHICLE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    # Scheduled update should NOT be in_progress but should show scheduled status
+    # Scheduled update far in future should NOT be in_progress
     state = hass.states.get(entity_id)
     assert state.attributes["in_progress"] is False  # type: ignore[union-attr]
-    assert state.attributes["update_status"] == SCHEDULED  # type: ignore[union-attr]
-    assert state.attributes["release_summary"] == "Update scheduled"  # type: ignore[union-attr]
+
+
+async def test_update_scheduled_soon_in_progress(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_vehicle_data: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Tests that a scheduled update within threshold is shown as in_progress."""
+
+    await setup_platform(hass, normal_config_entry, [Platform.UPDATE])
+
+    entity_id = "update.test_update"
+
+    # Simulate update being scheduled within threshold (1 minute from now)
+    vehicle_scheduled = copy.deepcopy(VEHICLE_DATA)
+    vehicle_scheduled["response"]["vehicle_state"]["software_update"]["status"] = (  # type: ignore[index]
+        SCHEDULED
+    )
+    # Set scheduled time to 1 minute from now (within 2 minute threshold)
+    scheduled_time_ms = int((time.time() + 60) * 1000)
+    vehicle_scheduled["response"]["vehicle_state"]["software_update"][  # type: ignore[index]
+        "scheduled_time_ms"
+    ] = scheduled_time_ms
+    mock_vehicle_data.return_value = vehicle_scheduled
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Scheduled update within threshold should be in_progress
+    state = hass.states.get(entity_id)
+    assert state.attributes["in_progress"] is True  # type: ignore[union-attr]
+
+
+async def test_update_scheduled_no_time_not_in_progress(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    mock_vehicle_data: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Tests that a scheduled update without scheduled_time_ms is not in_progress."""
+
+    await setup_platform(hass, normal_config_entry, [Platform.UPDATE])
+
+    entity_id = "update.test_update"
+
+    # Simulate update being scheduled but without scheduled_time_ms
+    vehicle_scheduled = copy.deepcopy(VEHICLE_DATA)
+    vehicle_scheduled["response"]["vehicle_state"]["software_update"]["status"] = (  # type: ignore[index]
+        SCHEDULED
+    )
+    # No scheduled_time_ms field
+    mock_vehicle_data.return_value = vehicle_scheduled
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Scheduled update without time should NOT be in_progress
+    state = hass.states.get(entity_id)
+    assert state.attributes["in_progress"] is False  # type: ignore[union-attr]
