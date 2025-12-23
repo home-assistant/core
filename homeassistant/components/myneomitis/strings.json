@@ -4,9 +4,9 @@
       "already_configured": "This integration is already configured."
     },
     "error": {
-      "auth_failed": "Authentication failed. Please check your email address and password.",
-      "connection_error": "Could not connect to the MyNeomitis service. Please try again later.",
-      "unknown_error": "An unexpected error occurred. Please try again."
+      "cannot_connect": "Could not connect to the MyNeomitis service. Please try again later.",
+      "invalid_auth": "Authentication failed. Please check your email address and password.",
+      "unknown": "An unexpected error occurred. Please try again."
     },
     "step": {
       "user": {

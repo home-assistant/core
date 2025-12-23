@@ -8,10 +8,10 @@ from pyaxencoapi import PyAxencoAPI
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
+from .const import CONF_REFRESH_TOKEN, CONF_USER_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,16 +39,16 @@ class MyNeoConfigFlow(ConfigFlow, domain=DOMAIN):
                 await api.login(email, password)
             except aiohttp.ClientResponseError as e:
                 if e.status == 401:
-                    errors["base"] = "auth_failed"
+                    errors["base"] = "invalid_auth"
                 else:
-                    errors["base"] = "connection_error"
+                    errors["base"] = "cannot_connect"
             except aiohttp.ClientConnectionError:
-                errors["base"] = "connection_error"
+                errors["base"] = "cannot_connect"
             except aiohttp.ClientError:
-                errors["base"] = "unknown_error"
+                errors["base"] = "unknown"
             except Exception:
                 _LOGGER.exception("Unexpected error during login")
-                errors["base"] = "unknown_error"
+                errors["base"] = "unknown"
 
             if not errors:
                 # Prevent duplicate configuration with the same user ID
@@ -58,11 +58,11 @@ class MyNeoConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=f"MyNeo ({email})",
                     data={
-                        "email": email,
-                        "password": password,
-                        "token": api.token,
-                        "refresh_token": api.refresh_token,
-                        "user_id": api.user_id,
+                        CONF_EMAIL: email,
+                        CONF_PASSWORD: password,
+                        CONF_TOKEN: api.token,
+                        CONF_REFRESH_TOKEN: api.refresh_token,
+                        CONF_USER_ID: api.user_id,
                     },
                 )
 

@@ -19,7 +19,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import MyNeomitisConfigEntry
 from .const import DOMAIN
-from .logger import log_ws_update
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -187,9 +186,6 @@ class MyNeoSelect(SelectEntity):
                         mode, STATE_UNKNOWN
                     )
                 )
-                # Log with device name from original device dict
-                device_name: str = self._device["name"]
-                log_ws_update(device_name, new_state)
 
         self.async_write_ha_state()
 

@@ -9,8 +9,13 @@ from typing import Any
 import pyaxencoapi
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.const import (
+    CONF_EMAIL,
+    CONF_PASSWORD,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -52,6 +57,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: MyNeomitisConfigEntry) -
         ) from err
 
     entry.runtime_data = MyNeomitisRuntimeData(api=api, devices=devices)
+
+    async def _async_disconnect_websocket(event: Event) -> None:
+        """Disconnect WebSocket on Home Assistant shutdown."""
+        try:
+            await api.disconnect_websocket()
+        except (TimeoutError, ConnectionError) as err:
+            _LOGGER.error(
+                "Error while disconnecting WebSocket for %s: %s",
+                entry.entry_id,
+                err,
+            )
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, _async_disconnect_websocket
+        )
+    )
 
     # Load platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

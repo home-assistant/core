@@ -8,8 +8,12 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.frontend import URL
-from homeassistant.components.myneomitis.const import DOMAIN
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.components.myneomitis.const import (
+    CONF_REFRESH_TOKEN,
+    CONF_USER_ID,
+    DOMAIN,
+)
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import event
 
@@ -56,9 +60,9 @@ async def test_user_flow_success(hass: HomeAssistant) -> None:
         assert result2["data"] == {
             CONF_EMAIL: TEST_EMAIL,
             CONF_PASSWORD: TEST_PASSWORD,
-            "token": "tok",
-            "refresh_token": "rtok",
-            "user_id": "user-123",
+            CONF_TOKEN: "tok",
+            CONF_REFRESH_TOKEN: "rtok",
+            CONF_USER_ID: "user-123",
         }
 
 
@@ -80,7 +84,7 @@ async def test_flow_raises_on_network_error(hass: HomeAssistant) -> None:
             user_input={CONF_EMAIL: TEST_EMAIL, CONF_PASSWORD: TEST_PASSWORD},
         )
         assert result2["type"] == "form"
-        assert result2["errors"]["base"] == "unknown_error"
+        assert result2["errors"]["base"] == "unknown"
 
 
 @pytest.mark.asyncio
@@ -163,7 +167,7 @@ async def test_auth_failed(hass: HomeAssistant) -> None:
             user_input={CONF_EMAIL: TEST_EMAIL, CONF_PASSWORD: TEST_PASSWORD},
         )
         assert result2["type"] == "form"
-        assert result2["errors"]["base"] == "auth_failed"
+        assert result2["errors"]["base"] == "invalid_auth"
 
 
 @pytest.mark.asyncio
@@ -187,7 +191,7 @@ async def test_http_error(hass: HomeAssistant) -> None:
             user_input={CONF_EMAIL: TEST_EMAIL, CONF_PASSWORD: TEST_PASSWORD},
         )
         assert result2["type"] == "form"
-        assert result2["errors"]["base"] == "connection_error"
+        assert result2["errors"]["base"] == "cannot_connect"
 
 
 @pytest.mark.asyncio
@@ -207,7 +211,7 @@ async def test_connection_error(hass: HomeAssistant) -> None:
             user_input={CONF_EMAIL: TEST_EMAIL, CONF_PASSWORD: TEST_PASSWORD},
         )
         assert result2["type"] == "form"
-        assert result2["errors"]["base"] == "connection_error"
+        assert result2["errors"]["base"] == "cannot_connect"
 
 
 @pytest.mark.asyncio
@@ -227,7 +231,7 @@ async def test_generic_client_error(hass: HomeAssistant) -> None:
             user_input={CONF_EMAIL: TEST_EMAIL, CONF_PASSWORD: TEST_PASSWORD},
         )
         assert result2["type"] == "form"
-        assert result2["errors"]["base"] == "unknown_error"
+        assert result2["errors"]["base"] == "unknown"
 
 
 @pytest.mark.asyncio
@@ -247,4 +251,4 @@ async def test_runtime_error(hass: HomeAssistant) -> None:
             user_input={CONF_EMAIL: TEST_EMAIL, CONF_PASSWORD: TEST_PASSWORD},
         )
         assert result2["type"] == "form"
-        assert result2["errors"]["base"] == "unknown_error"
+        assert result2["errors"]["base"] == "unknown"

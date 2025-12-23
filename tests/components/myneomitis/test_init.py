@@ -10,6 +10,7 @@ from homeassistant.components.myneomitis import (
     async_unload_entry,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
@@ -23,6 +24,11 @@ class DummyEntry:
         self.data = data
         self.unique_id = entry_id
         self.runtime_data = None
+        self._on_unload_callbacks: list = []
+
+    def async_on_unload(self, callback) -> None:
+        """Register a callback to be called when the entry is unloaded."""
+        self._on_unload_callbacks.append(callback)
 
 
 @pytest.mark.asyncio
@@ -173,3 +179,66 @@ async def test_unload_entry_logs_on_disconnect_error(
 
     assert result is True
     assert "Error while disconnecting WebSocket" in caplog.text
+
+
+@pytest.mark.asyncio
+async def test_homeassistant_stop_disconnects_websocket(hass: HomeAssistant) -> None:
+    """Test that WebSocket is disconnected on Home Assistant stop event."""
+
+    entry = DummyEntry("e4", {"email": "u@d.e", "password": "pw"})
+
+    with (
+        patch("pyaxencoapi.PyAxencoAPI") as api_cls,
+        patch.object(
+            hass.config_entries,
+            "async_forward_entry_setups",
+            new=AsyncMock(return_value=None),
+        ),
+    ):
+        api = api_cls.return_value
+        api.login = AsyncMock()
+        api.connect_websocket = AsyncMock()
+        api.get_devices = AsyncMock(return_value=[])
+        api.disconnect_websocket = AsyncMock()
+
+        await async_setup_entry(hass, entry)
+
+        # Fire the Home Assistant stop event
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
+
+        api.disconnect_websocket.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_homeassistant_stop_logs_on_disconnect_error(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that WebSocket disconnect errors are logged on HA stop."""
+
+    entry = DummyEntry("e5", {"email": "u@d.e", "password": "pw"})
+
+    with (
+        patch("pyaxencoapi.PyAxencoAPI") as api_cls,
+        patch.object(
+            hass.config_entries,
+            "async_forward_entry_setups",
+            new=AsyncMock(return_value=None),
+        ),
+    ):
+        api = api_cls.return_value
+        api.login = AsyncMock()
+        api.connect_websocket = AsyncMock()
+        api.get_devices = AsyncMock(return_value=[])
+        api.disconnect_websocket = AsyncMock(
+            side_effect=TimeoutError("disconnect failed")
+        )
+
+        await async_setup_entry(hass, entry)
+
+        caplog.set_level("ERROR")
+        # Fire the Home Assistant stop event
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+        await hass.async_block_till_done()
+
+        assert "Error while disconnecting WebSocket" in caplog.text
