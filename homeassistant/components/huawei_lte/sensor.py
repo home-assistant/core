@@ -773,10 +773,15 @@ async def async_setup_entry(
             continue
         if key_meta := SENSOR_META.get(key):
             if key_meta.include:
-                items = filter(key_meta.include.search, items)
+                items = {k: v for k, v in items.items() if key_meta.include.search(k)}
             if key_meta.exclude:
-                items = [x for x in items if not key_meta.exclude.search(x)]
-        for item in items:
+                items = {
+                    k: v for k, v in items.items() if not key_meta.exclude.search(k)
+                }
+        for item, value in items.items():
+            if value is None:
+                _LOGGER.debug("Ignoring sensor %s.%s due to None value", key, item)
+                continue
             if not (desc := SENSOR_META[key].descriptions.get(item)):
                 _LOGGER.debug(  # pylint: disable=hass-logger-period # false positive
                     (
