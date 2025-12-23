@@ -28,40 +28,39 @@ type VelbusSensorChannel = ButtonCounter | Temperature | LightSensor | SensorNum
 class VelbusSensorEntityDescription(SensorEntityDescription):
     """Describes Velbus sensor entity."""
 
-    value_fn: Callable[[VelbusSensorChannel], float | None] = (
-        lambda channel: channel.get_state()
+    value_fn: Callable[[VelbusSensorChannel], float | None] = lambda channel: float(
+        channel.get_state()
     )
-    unit_fn: Callable[[VelbusSensorChannel], float | None] = (
+    unit_fn: Callable[[VelbusSensorChannel], str | None] = (
         lambda channel: channel.get_unit()
     )
+    unique_id_suffix: str = ""
 
 
-SENSOR_DESCRIPTIONS: tuple[VelbusSensorEntityDescription, ...] = (
-    VelbusSensorEntityDescription(
+SENSOR_DESCRIPTIONS: dict[str, VelbusSensorEntityDescription] = {
+    "power": VelbusSensorEntityDescription(
         key="power",
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    VelbusSensorEntityDescription(
+    "temperature": VelbusSensorEntityDescription(
         key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    VelbusSensorEntityDescription(
+    "measurement": VelbusSensorEntityDescription(
         key="measurement",
         state_class=SensorStateClass.MEASUREMENT,
     ),
-)
-
-
-COUNTER_DESCRIPTION = VelbusSensorEntityDescription(
-    key="counter",
-    device_class=SensorDeviceClass.ENERGY,
-    icon="mdi:counter",
-    state_class=SensorStateClass.TOTAL_INCREASING,
-    value_fn=lambda channel: float(channel.get_counter_state()),
-    unit_fn=lambda channel: channel.get_counter_unit(),
-)
+    "counter": VelbusSensorEntityDescription(
+        key="counter",
+        device_class=SensorDeviceClass.ENERGY,
+        icon="mdi:counter",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda channel: channel.get_counter_state(),
+        unit_fn=lambda channel: channel.get_counter_unit(),
+    ),
+}
 
 
 async def async_setup_entry(
@@ -75,17 +74,19 @@ async def async_setup_entry(
     for channel in entry.runtime_data.controller.get_all_sensor():
         # Determine which description to use for the main sensor
         if channel.is_counter_channel():
-            description = SENSOR_DESCRIPTIONS[0]  # power
+            description = SENSOR_DESCRIPTIONS["power"]
         elif channel.is_temperature():
-            description = SENSOR_DESCRIPTIONS[1]  # temperature
+            description = SENSOR_DESCRIPTIONS["temperature"]
         else:
-            description = SENSOR_DESCRIPTIONS[2]  # measurement
+            description = SENSOR_DESCRIPTIONS["measurement"]
 
         entities.append(VelbusSensor(channel, description))
 
         # Add counter entity if applicable
         if channel.is_counter_channel():
-            entities.append(VelbusSensor(channel, COUNTER_DESCRIPTION, is_counter=True))
+            entities.append(
+                VelbusSensor(channel, SENSOR_DESCRIPTIONS["counter"], is_counter=True)
+            )
 
     async_add_entities(entities)
 
@@ -106,13 +107,11 @@ class VelbusSensor(VelbusEntity, SensorEntity):
         super().__init__(channel)
         self.entity_description = description
         self._is_counter = is_counter
-
-        # Set unit of measurement
         self._attr_native_unit_of_measurement = description.unit_fn(channel)
+        self._attr_unique_id = f"{self._attr_unique_id}{description.unique_id_suffix}"
 
-        # Modify unique_id and name for counter entities
+        # Modify name for counter entities
         if is_counter:
-            self._attr_unique_id = f"{self._attr_unique_id}-counter"
             self._attr_name = f"{self._attr_name}-counter"
 
     @property
