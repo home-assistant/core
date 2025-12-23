@@ -362,6 +362,24 @@
     "command_failure": {
       "message": "Command {command} failed. Status: {status}. Message: {message}"
     },
+    "entry_not_found": {
+      "message": "Entry not found: {entry_id}"
+    },
+    "entry_not_loaded": {
+      "message": "Entry not loaded: {entry_id}"
+    },
+    "image_error": {
+      "message": "Error while checking image url: {url}"
+    },
+    "invalid_entry": {
+      "message": "Invalid entry: {entry_id}"
+    },
+    "invalid_entry_id": {
+      "message": "Invalid entry id: {entry_id}"
+    },
+    "invalid_image_type": {
+      "message": "Invalid image type: {image_type}"
+    },
     "no_vehicle": {
       "message": "Unable to retrieve vehicle details."
     },

@@ -3,18 +3,19 @@
 from collections.abc import Awaitable, Callable
 from unittest.mock import AsyncMock, patch
 
-from httpx import AsyncClient, Request, RequestError
+from httpx import AsyncClient, HTTPError, HTTPStatusError, Request, Response
 import pytest
 
 from homeassistant.components.volvo.const import DOMAIN
 from homeassistant.components.volvo.services import (
+    CONF_CONFIG_ENTRY_ID,
+    CONF_IMAGE_TYPES,
     SERVICE_GET_IMAGE_URL,
-    SERVICE_PARAM_ENTRY,
-    SERVICE_PARAM_IMAGES,
     _async_image_exists,
     _parse_exterior_image_url,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from tests.common import MockConfigEntry
 
@@ -49,8 +50,8 @@ async def test_get_image_url_all(
             DOMAIN,
             SERVICE_GET_IMAGE_URL,
             {
-                SERVICE_PARAM_ENTRY: mock_config_entry.entry_id,
-                SERVICE_PARAM_IMAGES: [],
+                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                CONF_IMAGE_TYPES: [],
             },
             blocking=True,
             return_response=True,
@@ -94,8 +95,8 @@ async def test_get_image_url_selected(
             DOMAIN,
             SERVICE_GET_IMAGE_URL,
             {
-                SERVICE_PARAM_ENTRY: mock_config_entry.entry_id,
-                SERVICE_PARAM_IMAGES: [image_type],
+                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                CONF_IMAGE_TYPES: [image_type],
             },
             blocking=True,
             return_response=True,
@@ -107,7 +108,69 @@ async def test_get_image_url_selected(
         assert len(images["images"]) == 1
 
 
-async def test_async_image_exists_succeeds(hass: HomeAssistant) -> None:
+@pytest.mark.usefixtures("mock_api")
+@pytest.mark.parametrize(
+    ("entry_id", "translation_key"),
+    [
+        ("", "invalid_entry_id"),
+        ("fake_entry_id", "invalid_entry"),
+        ("wrong_entry_id", "entry_not_found"),
+    ],
+)
+async def test_invalid_config_entry(
+    hass: HomeAssistant,
+    setup_integration: Callable[[], Awaitable[bool]],
+    entry_id: str,
+    translation_key: str,
+) -> None:
+    """Test invalid config entry parameters."""
+    assert await setup_integration()
+
+    config_entry = MockConfigEntry(domain="fake_entry", entry_id="fake_entry_id")
+    config_entry.add_to_hass(hass)
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_IMAGE_URL,
+            {
+                CONF_CONFIG_ENTRY_ID: entry_id,
+                CONF_IMAGE_TYPES: [],
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == translation_key
+
+
+@pytest.mark.usefixtures("mock_api")
+async def test_invalid_image_type(
+    hass: HomeAssistant,
+    setup_integration: Callable[[], Awaitable[bool]],
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test invalid image type parameters."""
+    assert await setup_integration()
+
+    with pytest.raises(ServiceValidationError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_IMAGE_URL,
+            {
+                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                CONF_IMAGE_TYPES: ["top"],
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "invalid_image_type"
+
+
+async def test_async_image_exists(hass: HomeAssistant) -> None:
     """Test _async_image_exists returns True on successful response."""
     client = AsyncMock(spec=AsyncClient)
     response = AsyncMock()
@@ -117,14 +180,28 @@ async def test_async_image_exists_succeeds(hass: HomeAssistant) -> None:
     assert await _async_image_exists(client, "http://example.com/image.jpg")
 
 
-async def test_async_image_exists_fails(hass: HomeAssistant) -> None:
-    """Test _async_image_exists returns False on request error."""
+async def test_async_image_does_not_exist(hass: HomeAssistant) -> None:
+    """Test _async_image_exists returns False when image does not exist."""
     client = AsyncMock(spec=AsyncClient)
-    client.get.side_effect = RequestError(
-        "Network error", request=Request("GET", "http://example.com")
+    client.get.side_effect = HTTPStatusError(
+        "Not found",
+        request=Request("GET", "http://example.com"),
+        response=Response(status_code=404),
     )
 
     assert not await _async_image_exists(client, "http://example.com/image.jpg")
+
+
+async def test_async_image_error(hass: HomeAssistant) -> None:
+    """Test _async_image_exists raises."""
+    client = AsyncMock(spec=AsyncClient)
+    client.get.side_effect = HTTPError("HTTP error")
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await _async_image_exists(client, "http://example.com/image.jpg")
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "image_error"
 
 
 def test_parse_exterior_image_url_wizz_valid_angle() -> None:
