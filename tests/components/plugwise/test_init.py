@@ -402,7 +402,7 @@ async def test_update_interval_p1(
     mock_smile_p1: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test Adam update interval."""
+    """Test Smile P1 update interval."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
