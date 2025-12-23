@@ -60,7 +60,7 @@
         "init": {
           "data": {
             "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]",
-            "model": "Model",
+            "model": "[%key:component::open_router::config_subentries::conversation::step::user::data::model%]",
             "prompt": "[%key:common::config_flow::data::prompt%]"
           },
           "data_description": {
