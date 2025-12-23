@@ -44,6 +44,11 @@
     }
   },
   "entity": {
+    "number": {
+      "hysteresis_band": {
+        "name": "Hysteresis band"
+      }
+    },
     "sensor": {
       "air_temperature": {
         "name": "Air temperature"
@@ -74,6 +79,9 @@
     },
     "set_temperature_failed": {
       "message": "Failed to set temperature to {temperature}."
+    },
+    "set_value_failed": {
+      "message": "Failed to set value: {error}"
     }
   }
 }
