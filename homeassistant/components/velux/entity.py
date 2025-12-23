@@ -1,6 +1,7 @@
 """Support for VELUX KLF 200 devices."""
 
 from collections.abc import Awaitable, Callable
+import logging
 
 from pyvlx import Node
 
@@ -9,6 +10,8 @@ from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 
+_LOGGER = logging.getLogger(__name__)
+
 
 class VeluxEntity(Entity):
     """Abstraction for all Velux entities."""
@@ -16,6 +19,8 @@ class VeluxEntity(Entity):
     _attr_should_poll = False
     _attr_has_entity_name = True
     update_callback: Callable[["Node"], Awaitable[None]] | None = None
+    _attr_available = True
+    _unavailable_logged = False
 
     def __init__(self, node: Node, config_entry_id: str) -> None:
         """Initialize the Velux device."""
@@ -42,6 +47,15 @@ class VeluxEntity(Entity):
 
     async def after_update_callback(self, node) -> None:
         """Call after device was updated."""
+        self._attr_available = self.node.pyvlx.get_connected()
+        if not self._attr_available:
+            if not self._unavailable_logged:
+                _LOGGER.info("Entity %s is unavailable", self.entity_id)
+                self._unavailable_logged = True
+        elif self._unavailable_logged:
+            _LOGGER.info("Entity %s is back online", self.entity_id)
+            self._unavailable_logged = False
+
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
