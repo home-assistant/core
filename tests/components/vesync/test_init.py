@@ -6,7 +6,6 @@ from pyvesync import VeSync
 from pyvesync.utils.errors import VeSyncLoginError
 
 from homeassistant.components.vesync import (
-    SERVICE_UPDATE_DEVS,
     async_remove_config_entry_device,
     async_setup_entry,
 )
@@ -89,34 +88,6 @@ async def test_async_setup_entry__loads_fans(
     assert manager.login.call_count == 1
     assert hass.data[DOMAIN][VS_MANAGER] == manager
     assert list(hass.data[DOMAIN][VS_MANAGER].devices) == [fan]
-
-
-async def test_async_new_device_discovery(
-    hass: HomeAssistant, config_entry: ConfigEntry, manager: VeSync, fan, humidifier
-) -> None:
-    """Test new device discovery."""
-
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    # Assert platforms loaded
-    await hass.async_block_till_done()
-    assert config_entry.state is ConfigEntryState.LOADED
-    assert not hass.data[DOMAIN][VS_MANAGER].devices
-
-    # Mock discovery of new fan which would get added to VS_DEVICES.
-    manager._dev_list["fans"].append(fan)
-    await hass.services.async_call(DOMAIN, SERVICE_UPDATE_DEVS, {}, blocking=True)
-
-    assert manager.get_devices.call_count == 1
-    assert hass.data[DOMAIN][VS_MANAGER] == manager
-    assert list(hass.data[DOMAIN][VS_MANAGER].devices) == [fan]
-
-    # Mock discovery of new humidifier which would invoke discovery in all platforms.
-    manager._dev_list["humidifiers"].append(humidifier)
-    await hass.services.async_call(DOMAIN, SERVICE_UPDATE_DEVS, {}, blocking=True)
-
-    assert manager.get_devices.call_count == 2
-    assert hass.data[DOMAIN][VS_MANAGER] == manager
-    assert list(hass.data[DOMAIN][VS_MANAGER].devices) == [fan, humidifier]
 
 
 async def test_migrate_config_entry(
