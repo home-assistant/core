@@ -70,20 +70,6 @@ class MatterLock(MatterEntity, LockEntity):
         """Subscribe to events."""
         await super().async_added_to_hass()
 
-        # Debug: Log feature map to check USR support
-        feature_map = self.get_matter_attribute_value(
-            clusters.DoorLock.Attributes.FeatureMap
-        )
-        LOGGER.info(
-            "Lock %s feature map: 0x%X (%d) - USR bit (0x100) is %s",
-            self.entity_id,
-            feature_map or 0,
-            feature_map or 0,
-            "SET (supports user management)"
-            if feature_map and (feature_map & DOOR_LOCK_FEATURE_USR)
-            else "NOT SET",
-        )
-
         # subscribe to NodeEvent events
         self._unsubscribes.append(
             self.matter_client.subscribe_events(
@@ -126,6 +112,66 @@ class MatterLock(MatterEntity, LockEntity):
                 )
                 self.async_write_ha_state()
 
+                # Check if a disposable user was used and clean up if disabled
+                user_index = node_event_data.get("userIndex")
+                if user_index is not None:
+                    self.hass.async_create_task(
+                        self._cleanup_disposable_user(user_index)
+                    )
+
+    async def _cleanup_disposable_user(self, user_index: int) -> None:
+        """Clean up a disposable user if they've been used and disabled.
+
+        Disposable users (one-time codes) should be deleted after use.
+        Some locks disable them (status=3) instead of deleting them,
+        so we clean them up automatically.
+        """
+        try:
+            # Query the user to check their type and status
+            get_user_response = await self.matter_client.send_device_command(
+                node_id=self._endpoint.node.node_id,
+                endpoint_id=self._endpoint.endpoint_id,
+                command=clusters.DoorLock.Commands.GetUser(userIndex=user_index),
+            )
+
+            # Check if user exists and get their status/type
+            user_status = getattr(get_user_response, "userStatus", None)
+            user_type = getattr(get_user_response, "userType", None)
+
+            # UserType 6 = disposable_user, UserStatus 3 = occupied_disabled
+            if user_type == 6 and user_status == 3:
+                LOGGER.debug(
+                    "Cleaning up disabled disposable user at index %s for %s",
+                    user_index,
+                    self.entity_id,
+                )
+                await self.matter_client.send_device_command(
+                    node_id=self._endpoint.node.node_id,
+                    endpoint_id=self._endpoint.endpoint_id,
+                    command=clusters.DoorLock.Commands.ClearUser(userIndex=user_index),
+                    timed_request_timeout_ms=1000,
+                )
+                LOGGER.info(
+                    "Deleted disposable user at index %s after one-time use for %s",
+                    user_index,
+                    self.entity_id,
+                )
+                # Fire an event so automations can react to disposable user cleanup
+                self.hass.bus.async_fire(
+                    "matter_lock_disposable_user_deleted",
+                    {
+                        "entity_id": self.entity_id,
+                        "user_index": user_index,
+                    },
+                )
+        except Exception:  # noqa: BLE001
+            LOGGER.debug(
+                "Failed to cleanup disposable user at index %s for %s",
+                user_index,
+                self.entity_id,
+                exc_info=True,
+            )
+
     @property
     def code_format(self) -> str | None:
         """Regex for code format or None if no code is required."""
@@ -160,7 +206,7 @@ class MatterLock(MatterEntity, LockEntity):
         code: str | None = kwargs.get(ATTR_CODE)
         code_bytes = code.encode() if code else None
         await self.send_device_command(
-            command=clusters.DoorLock.Commands.LockDoor(PINCode=code_bytes),
+            command=clusters.DoorLock.Commands.LockDoor(code_bytes),
             timed_request_timeout_ms=1000,
         )
 
@@ -182,12 +228,12 @@ class MatterLock(MatterEntity, LockEntity):
             # the unlock command should unbolt only on the unlock command
             # and unlatch on the HA 'open' command.
             await self.send_device_command(
-                command=clusters.DoorLock.Commands.UnboltDoor(PINCode=code_bytes),
+                command=clusters.DoorLock.Commands.UnboltDoor(code_bytes),
                 timed_request_timeout_ms=1000,
             )
         else:
             await self.send_device_command(
-                command=clusters.DoorLock.Commands.UnlockDoor(PINCode=code_bytes),
+                command=clusters.DoorLock.Commands.UnlockDoor(code_bytes),
                 timed_request_timeout_ms=1000,
             )
 
@@ -204,7 +250,7 @@ class MatterLock(MatterEntity, LockEntity):
         code: str | None = kwargs.get(ATTR_CODE)
         code_bytes = code.encode() if code else None
         await self.send_device_command(
-            command=clusters.DoorLock.Commands.UnlockDoor(PINCode=code_bytes),
+            command=clusters.DoorLock.Commands.UnlockDoor(code_bytes),
             timed_request_timeout_ms=1000,
         )
 
