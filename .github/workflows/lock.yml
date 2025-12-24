@@ -5,6 +5,11 @@ on:
   schedule:
     - cron: "0 * * * *"
 
+permissions:
+  issues: write
+  pull-requests: write
+  discussions: write
+
 jobs:
   lock:
     if: github.repository_owner == 'home-assistant'
