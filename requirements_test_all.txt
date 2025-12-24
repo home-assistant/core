@@ -2004,7 +2004,7 @@ pyschlage==2025.9.0
 pysensibo==1.2.1
 
 # homeassistant.components.senz
-pysenz==1.0.0
+pysenz==1.0.2
 
 # homeassistant.components.acer_projector
 # homeassistant.components.crownstone
