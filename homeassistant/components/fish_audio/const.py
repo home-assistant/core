@@ -41,6 +41,6 @@ SORT_BY_OPTIONS: list[SelectOptionDict] = [
 ]
 LATENCY_OPTIONS = ["normal", "balanced"]
 
-SIGNUP_URL = "https://fish.audio/?fp" + "r=homeassistant"
+SIGNUP_URL = "https://fish.audio/?fpr=homeassistant"  # codespell:ignore fpr
 BILLING_URL = "https://fish.audio/app/billing/"
 API_KEYS_URL = "https://fish.audio/app/api-keys/"
