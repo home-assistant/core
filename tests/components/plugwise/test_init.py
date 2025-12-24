@@ -15,7 +15,11 @@ from plugwise.exceptions import (
 )
 import pytest
 
-from homeassistant.components.plugwise.const import DOMAIN
+from homeassistant.components.plugwise.const import (
+    DEFAULT_UPDATE_INTERVAL,
+    DOMAIN,
+    P1_UPDATE_INTERVAL,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -23,8 +27,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
-DEFAULT_UPDATE_INTERVAL = timedelta(seconds=60)
-P1_UPDATE_INTERVAL = timedelta(seconds=10)
 HA_PLUGWISE_SMILE_ASYNC_UPDATE = (
     "homeassistant.components.plugwise.coordinator.Smile.async_update"
 )
