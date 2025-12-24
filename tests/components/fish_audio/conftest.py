@@ -1,17 +1,25 @@
 """Common fixtures for the Fish Audio tests."""
 
 from collections.abc import Generator
-from decimal import Decimal
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
-from fish_audio_sdk.exceptions import HttpCodeErr
-from fish_audio_sdk.schemas import APICreditEntity
+from fishaudio import AuthenticationError, FishAudioError
+from fishaudio.exceptions import ServerError
 import pytest
 
-from homeassistant.config_entries import ConfigSubentry
+from homeassistant.components.fish_audio.const import (
+    CONF_BACKEND,
+    CONF_LATENCY,
+    CONF_VOICE_ID,
+    DOMAIN,
+)
+from homeassistant.components.fish_audio.error import (
+    CannotGetModelsError,
+    UnexpectedError,
+)
+from homeassistant.config_entries import ConfigSubentryDataWithId
+from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-
-from .const import CONF_API_KEY, CONF_BACKEND, CONF_VOICE_ID, DOMAIN
 
 from tests.common import MockConfigEntry
 
@@ -25,127 +33,218 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         yield mock_setup_entry
 
 
-def _get_session_mock() -> MagicMock:
-    """Return a mock session."""
-    session_mock = MagicMock()
-    session_mock.get_api_credit.return_value = APICreditEntity(
-        _id="test_id",
-        user_id="test_user",
-        credit=Decimal("100.0"),
-        created_at="2023-01-01T00:00:00Z",
-        updated_at="2023-01-01T00:00:00Z",
-    )
-    return session_mock
-
-
 @pytest.fixture
-def mock_async_client(hass: HomeAssistant) -> Generator[AsyncMock]:
-    """Mock the async client."""
-    with (
-        patch(
-            "homeassistant.components.fish_audio.config_flow.Session",
-            autospec=True,
-        ) as mock_client,
-        patch(
-            "homeassistant.components.fish_audio.Session",
-            new=mock_client,
+def mock_subentries() -> list[ConfigSubentryDataWithId]:
+    """Fixture for subentries."""
+    return [
+        ConfigSubentryDataWithId(
+            data={
+                CONF_VOICE_ID: "voice-123",
+                CONF_BACKEND: "s1",
+                CONF_LATENCY: "balanced",
+            },
+            subentry_type="tts",
+            title="Test Voice",
+            subentry_id="test-subentry-id",
+            unique_id="voice-123-s1",
         ),
-    ):
-        client = mock_client.return_value
-        client.get_api_credit.return_value = APICreditEntity(
-            _id="test_id",
-            user_id="test_user",
-            credit=Decimal("100.0"),
-            created_at="2023-01-01T00:00:00Z",
-            updated_at="2023-01-01T00:00:00Z",
-        )
-        yield mock_client
-
-
-@pytest.fixture
-def mock_tts_subentry() -> MagicMock:
-    """Mock a TTS sub-entry."""
-    mock_subentry = MagicMock(spec=ConfigSubentry)
-    mock_subentry.subentry_id = "test-subentry"
-    mock_subentry.subentry_type = "tts"
-    mock_subentry.title = "Test TTS"
-    mock_subentry.data = {CONF_VOICE_ID: "voice-123", CONF_BACKEND: "s1"}
-    return mock_subentry
-
-
-@pytest.fixture
-def mock_config_entry(mock_tts_subentry: MagicMock) -> MockConfigEntry:
-    """Mock a config entry with a TTS sub-entry."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_API_KEY: "key123"},
-        title="Fish Audio",
-    )
-    entry.subentries = {mock_tts_subentry.subentry_id: mock_tts_subentry}
-    return entry
-
-
-@pytest.fixture
-def mock_async_client_connect_error() -> Generator[MagicMock]:
-    """Override Session client with a connection error."""
-    session_mock = _get_session_mock()
-    session_mock.get_api_credit.side_effect = HttpCodeErr(500, "Server Error")
-    with (
-        patch(
-            "homeassistant.components.fish_audio.Session",
-            return_value=session_mock,
-        ) as mock_session,
-        patch(
-            "homeassistant.components.fish_audio.config_flow.Session",
-            new=mock_session,
+        ConfigSubentryDataWithId(
+            data={
+                CONF_VOICE_ID: "voice-beta",
+                CONF_BACKEND: "s1",
+                CONF_LATENCY: "normal",
+            },
+            subentry_type="tts",
+            title="Second Voice",
+            subentry_id="test-subentry-id-2",
+            unique_id="voice-beta-s1",
         ),
-    ):
-        yield mock_session
+    ]
 
 
 @pytest.fixture
-def mock_async_client_generic_error() -> Generator[MagicMock]:
-    """Override Session client with a generic error."""
-    session_mock = _get_session_mock()
-    session_mock.get_api_credit.side_effect = Exception("Generic Error")
-    with (
-        patch(
-            "homeassistant.components.fish_audio.Session",
-            return_value=session_mock,
-        ) as mock_session,
-        patch(
-            "homeassistant.components.fish_audio.config_flow.Session",
-            new=mock_session,
-        ),
-    ):
-        yield mock_session
-
-
-@pytest.fixture
-def mock_async_client_auth_error() -> Generator[MagicMock]:
-    """Override Session client with an authentication error."""
-    session_mock = _get_session_mock()
-    session_mock.get_api_credit.side_effect = HttpCodeErr(401, "Auth Error")
-    with (
-        patch(
-            "homeassistant.components.fish_audio.Session",
-            return_value=session_mock,
-        ) as mock_session,
-        patch(
-            "homeassistant.components.fish_audio.config_flow.Session",
-            new=mock_session,
-        ),
-    ):
-        yield mock_session
-
-
-@pytest.fixture
-def mock_entry() -> MockConfigEntry:
-    """Mock a config entry."""
+def mock_config_entry(
+    hass: HomeAssistant, mock_subentries: list[ConfigSubentryDataWithId]
+) -> MockConfigEntry:
+    """Fixture for a config entry with subentries."""
     return MockConfigEntry(
         domain=DOMAIN,
-        unique_id="test_user",
-        data={CONF_API_KEY: "test-api-key"},
-        options={"voice_id": "1"},
         title="Fish Audio",
+        data={CONF_API_KEY: "test-api-key"},
+        unique_id="test_user",
+        entry_id="test-entry-id",
+        subentries_data=[*mock_subentries],
     )
+
+
+@pytest.fixture
+def mock_fishaudio_client() -> Generator[AsyncMock]:
+    """Mock AsyncFishAudio client."""
+    with (
+        patch(
+            "homeassistant.components.fish_audio.AsyncFishAudio",
+            autospec=True,
+        ) as mock_client_class,
+        patch(
+            "homeassistant.components.fish_audio.config_flow.AsyncFishAudio",
+            new=mock_client_class,
+        ),
+    ):
+        client = mock_client_class.return_value
+
+        # Mock account.get_credits()
+        client.account.get_credits = AsyncMock(
+            return_value=AsyncMock(user_id="test_user")
+        )
+
+        # Mock voices.list() with default voices
+        mock_voice_1 = AsyncMock()
+        mock_voice_1.id = "voice-alpha"
+        mock_voice_1.title = "Alpha Voice"
+        mock_voice_1.languages = ["en", "es"]
+        mock_voice_1.task_count = 1000
+
+        mock_voice_2 = AsyncMock()
+        mock_voice_2.id = "voice-beta"
+        mock_voice_2.title = "Beta Voice"
+        mock_voice_2.languages = ["en", "zh"]
+        mock_voice_2.task_count = 500
+
+        client.voices.list = AsyncMock(
+            return_value=AsyncMock(items=[mock_voice_1, mock_voice_2])
+        )
+
+        # Mock tts.convert()
+        client.tts.convert = AsyncMock(return_value=b"fake_audio_data")
+
+        yield client
+
+
+@pytest.fixture
+def mock_fishaudio_client_auth_error() -> Generator[AsyncMock]:
+    """Mock AsyncFishAudio client with authentication error."""
+    with (
+        patch(
+            "homeassistant.components.fish_audio.AsyncFishAudio",
+            autospec=True,
+        ) as mock_client_class,
+        patch(
+            "homeassistant.components.fish_audio.config_flow.AsyncFishAudio",
+            new=mock_client_class,
+        ),
+    ):
+        client = mock_client_class.return_value
+        client.account.get_credits = AsyncMock(
+            side_effect=AuthenticationError(401, "Invalid API key")
+        )
+
+        yield client
+
+
+@pytest.fixture
+def mock_fishaudio_client_connection_error() -> Generator[AsyncMock]:
+    """Mock AsyncFishAudio client with connection error."""
+    with (
+        patch(
+            "homeassistant.components.fish_audio.AsyncFishAudio",
+            autospec=True,
+        ) as mock_client_class,
+        patch(
+            "homeassistant.components.fish_audio.config_flow.AsyncFishAudio",
+            new=mock_client_class,
+        ),
+    ):
+        client = mock_client_class.return_value
+        client.account.get_credits = AsyncMock(
+            side_effect=FishAudioError("Connection error")
+        )
+
+        yield client
+
+
+@pytest.fixture
+def mock_fishaudio_client_server_error() -> Generator[AsyncMock]:
+    """Mock AsyncFishAudio client with server error."""
+    with (
+        patch(
+            "homeassistant.components.fish_audio.AsyncFishAudio",
+            autospec=True,
+        ) as mock_client_class,
+        patch(
+            "homeassistant.components.fish_audio.config_flow.AsyncFishAudio",
+            new=mock_client_class,
+        ),
+    ):
+        client = mock_client_class.return_value
+        client.account.get_credits = AsyncMock(
+            side_effect=ServerError(500, "Internal Server Error")
+        )
+
+        yield client
+
+
+@pytest.fixture
+def mock_fishaudio_client_voices_error() -> Generator[AsyncMock]:
+    """Mock AsyncFishAudio client with voices.list() error."""
+    with (
+        patch(
+            "homeassistant.components.fish_audio.AsyncFishAudio",
+            autospec=True,
+        ) as mock_client_class,
+        patch(
+            "homeassistant.components.fish_audio.config_flow.AsyncFishAudio",
+            new=mock_client_class,
+        ),
+    ):
+        client = mock_client_class.return_value
+        client.account.get_credits = AsyncMock(
+            return_value=AsyncMock(user_id="test_user")
+        )
+        client.voices.list = AsyncMock(
+            side_effect=CannotGetModelsError(FishAudioError("API Error"))
+        )
+
+        yield client
+
+
+@pytest.fixture
+def mock_fishaudio_client_no_voices() -> Generator[AsyncMock]:
+    """Mock AsyncFishAudio client that returns no voices."""
+    with (
+        patch(
+            "homeassistant.components.fish_audio.AsyncFishAudio",
+            autospec=True,
+        ) as mock_client_class,
+        patch(
+            "homeassistant.components.fish_audio.config_flow.AsyncFishAudio",
+            new=mock_client_class,
+        ),
+    ):
+        client = mock_client_class.return_value
+        client.account.get_credits = AsyncMock(
+            return_value=AsyncMock(user_id="test_user")
+        )
+        client.voices.list = AsyncMock(return_value=AsyncMock(items=[]))
+
+        yield client
+
+
+@pytest.fixture
+def mock_fishaudio_client_unknown_error() -> Generator[AsyncMock]:
+    """Mock AsyncFishAudio client with unknown error."""
+    with (
+        patch(
+            "homeassistant.components.fish_audio.AsyncFishAudio",
+            autospec=True,
+        ) as mock_client_class,
+        patch(
+            "homeassistant.components.fish_audio.config_flow.AsyncFishAudio",
+            new=mock_client_class,
+        ),
+    ):
+        client = mock_client_class.return_value
+        client.account.get_credits = AsyncMock(
+            side_effect=UnexpectedError("Unexpected Error")
+        )
+
+        yield client

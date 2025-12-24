@@ -1,8 +1,8 @@
-"""Tests for the Fish Audio entity."""
+"""Tests for the Fish Audio integration setup."""
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -14,54 +14,40 @@ from tests.common import MockConfigEntry
 
 async def test_setup(
     hass: HomeAssistant,
-    mock_async_client: MagicMock,
-    mock_entry: MockConfigEntry,
+    mock_fishaudio_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test entry setup without any exceptions."""
-    mock_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_entry.entry_id)
+    """Test entry setup and unload."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_entry.state == ConfigEntryState.LOADED
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
     # Unload
-    await hass.config_entries.async_unload(mock_entry.entry_id)
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_entry.state == ConfigEntryState.NOT_LOADED
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 @pytest.mark.parametrize(
     "fixture",
     [
-        "mock_async_client_connect_error",
-        "mock_async_client_generic_error",
+        "mock_fishaudio_client_connection_error",
+        "mock_fishaudio_client_server_error",
     ],
 )
 async def test_setup_retry_on_error(
     hass: HomeAssistant,
     request: pytest.FixtureRequest,
-    mock_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     fixture: str,
 ) -> None:
-    """Test entry setup with a connection error."""
+    """Test entry setup with API errors that should trigger retry."""
     request.getfixturevalue(fixture)
-    mock_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_entry.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Ensure is not ready
-    assert mock_entry.state == ConfigEntryState.SETUP_RETRY
-
-
-async def test_setup_auth_error(
-    hass: HomeAssistant,
-    mock_async_client_auth_error: MagicMock,
-    mock_entry: MockConfigEntry,
-) -> None:
-    """Test entry setup with an authentication error."""
-    mock_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Ensure it's in a failed state
-    assert mock_entry.state == ConfigEntryState.SETUP_ERROR
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
