@@ -1,41 +1,41 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "title": "Connect to Proxmox VE",
-        "description": "Enter your Proxmox VE server details to set up the integration.",
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "realm": "Realm",
-          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
-        }
-      },
-      "setup": {
-        "title": "Set up Proxmox VE",
-        "description": "Select the nodes you want to integrate with Home Assistant.",
-        "data": {
-          "nodes": "Nodes"
-        }
-      }
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "cannot_connect": "Cannot connect to Proxmox VE server",
       "connect_timeout": "[%key:common::config_flow::error::timeout_connect%]",
-      "ssl_error": "SSL check failed. Check the SSL settings",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "no_nodes_found": "No active nodes found"
+      "no_nodes_found": "No active nodes found",
+      "ssl_error": "SSL check failed. Check the SSL settings"
     },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    "step": {
+      "setup": {
+        "data": {
+          "nodes": "Nodes"
+        },
+        "description": "Select the nodes you want to integrate with Home Assistant.",
+        "title": "Set up Proxmox VE"
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "realm": "Realm",
+          "username": "[%key:common::config_flow::data::username%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "description": "Enter your Proxmox VE server details to set up the integration.",
+        "title": "Connect to Proxmox VE"
+      }
     }
   },
   "issues": {
     "deprecated_yaml": {
-      "title": "The {integration_title} YAML configuration is being removed",
-      "description": "Configuring Proxmox VE using YAML is being removed but there was a connection error importing your YAML configuration.\n\nEnsure connection to Proxmox VE works and restart Home Assistant to try again or remove the Proxmox VE YAML configuration from your configuration.yaml file and continue to set up the integration manually."
+      "description": "Configuring Proxmox VE using YAML is being removed but there was a connection error importing your YAML configuration.\n\nEnsure connection to Proxmox VE works and restart Home Assistant to try again or remove the Proxmox VE YAML configuration from your configuration.yaml file and continue to set up the integration manually.",
+      "title": "The {integration_title} YAML configuration is being removed"
     }
   }
 }
