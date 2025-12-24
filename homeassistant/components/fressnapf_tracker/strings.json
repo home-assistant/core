@@ -59,6 +59,9 @@
     }
   },
   "exceptions": {
+    "api_error": {
+      "message": "An error occurred while communicating with the Fressnapf Tracker API: {error_message}"
+    },
     "charging": {
       "message": "The flashlight cannot be activated while charging."
     },
