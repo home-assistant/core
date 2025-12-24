@@ -8,7 +8,7 @@ import dataclasses
 from functools import partial
 import logging
 import os
-from typing import TYPE_CHECKING, Any, Final, Self, cast, final
+from typing import TYPE_CHECKING, Any, Final, Self, cast, final, override
 
 from propcache.api import cached_property
 import voluptuous as vol
@@ -364,6 +364,15 @@ def filter_turn_off_params(
     return {k: v for k, v in params.items() if k in (ATTR_TRANSITION, ATTR_FLASH)}
 
 
+def process_turn_off_params(
+    hass: HomeAssistant, light: LightEntity, params: dict[str, Any]
+) -> dict[str, Any]:
+    if ATTR_TRANSITION not in params:
+        hass.data[DATA_PROFILES].apply_default(light.entity_id, True, params)
+
+    return params
+
+
 def filter_turn_on_params(light: LightEntity, params: dict[str, Any]) -> dict[str, Any]:
     """Filter out params not supported by the light."""
     supported_features = light.supported_features_compat
@@ -399,7 +408,219 @@ def filter_turn_on_params(light: LightEntity, params: dict[str, Any]) -> dict[st
     return params
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa: C901
+def process_turn_on_params(  # noqa: C901
+    hass: HomeAssistant, light: LightEntity, params: dict[str, Any]
+) -> dict[str, Any]:
+    # Only process params once we processed brightness step
+    if params and (
+        ATTR_BRIGHTNESS_STEP in params or ATTR_BRIGHTNESS_STEP_PCT in params
+    ):
+        brightness = light.brightness if light.is_on and light.brightness else 0
+
+        if ATTR_BRIGHTNESS_STEP in params:
+            brightness += params.pop(ATTR_BRIGHTNESS_STEP)
+
+        else:
+            brightness_pct = round(brightness / 255 * 100)
+            brightness = round(
+                (brightness_pct + params.pop(ATTR_BRIGHTNESS_STEP_PCT)) / 100 * 255
+            )
+
+        params[ATTR_BRIGHTNESS] = max(0, min(255, brightness))
+
+        preprocess_turn_on_alternatives(hass, params)
+
+    if (not params or not light.is_on) or (params and ATTR_TRANSITION not in params):
+        hass.data[DATA_PROFILES].apply_default(light.entity_id, light.is_on, params)
+
+    legacy_supported_color_modes = light._light_internal_supported_color_modes  # noqa: SLF001
+    supported_color_modes = light.supported_color_modes
+
+    # If a color temperature is specified, emulate it if not supported by the light
+    if ATTR_COLOR_TEMP_KELVIN in params:
+        if (
+            supported_color_modes
+            and ColorMode.COLOR_TEMP not in supported_color_modes
+            and ColorMode.RGBWW in supported_color_modes
+        ):
+            params.pop(_DEPRECATED_ATTR_COLOR_TEMP.value)
+            color_temp = params.pop(ATTR_COLOR_TEMP_KELVIN)
+            brightness = cast(int, params.get(ATTR_BRIGHTNESS, light.brightness))
+            params[ATTR_RGBWW_COLOR] = color_util.color_temperature_to_rgbww(
+                color_temp,
+                brightness,
+                light.min_color_temp_kelvin,
+                light.max_color_temp_kelvin,
+            )
+        elif ColorMode.COLOR_TEMP not in legacy_supported_color_modes:
+            params.pop(_DEPRECATED_ATTR_COLOR_TEMP.value)
+            color_temp = params.pop(ATTR_COLOR_TEMP_KELVIN)
+            if color_supported(legacy_supported_color_modes):
+                params[ATTR_HS_COLOR] = color_util.color_temperature_to_hs(color_temp)
+
+    # If a color is specified, convert to the color space supported by the light
+    # Backwards compatibility: Fall back to hs color if light.supported_color_modes
+    # is not implemented
+    rgb_color: tuple[int, int, int] | None
+    rgbww_color: tuple[int, int, int, int, int] | None
+    if not supported_color_modes:
+        if (rgb_color := params.pop(ATTR_RGB_COLOR, None)) is not None:
+            params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
+        elif (xy_color := params.pop(ATTR_XY_COLOR, None)) is not None:
+            params[ATTR_HS_COLOR] = color_util.color_xy_to_hs(*xy_color)
+        elif (rgbw_color := params.pop(ATTR_RGBW_COLOR, None)) is not None:
+            rgb_color = color_util.color_rgbw_to_rgb(*rgbw_color)
+            params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
+        elif (rgbww_color := params.pop(ATTR_RGBWW_COLOR, None)) is not None:
+            # https://github.com/python/mypy/issues/13673
+            rgb_color = color_util.color_rgbww_to_rgb(  # type: ignore[call-arg]
+                *rgbww_color,
+                light.min_color_temp_kelvin,
+                light.max_color_temp_kelvin,
+            )
+            params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
+    elif ATTR_HS_COLOR in params and ColorMode.HS not in supported_color_modes:
+        hs_color = params.pop(ATTR_HS_COLOR)
+        if ColorMode.RGB in supported_color_modes:
+            params[ATTR_RGB_COLOR] = color_util.color_hs_to_RGB(*hs_color)
+        elif ColorMode.RGBW in supported_color_modes:
+            rgb_color = color_util.color_hs_to_RGB(*hs_color)
+            params[ATTR_RGBW_COLOR] = color_util.color_rgb_to_rgbw(*rgb_color)
+        elif ColorMode.RGBWW in supported_color_modes:
+            rgb_color = color_util.color_hs_to_RGB(*hs_color)
+            params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(
+                *rgb_color, light.min_color_temp_kelvin, light.max_color_temp_kelvin
+            )
+        elif ColorMode.XY in supported_color_modes:
+            params[ATTR_XY_COLOR] = color_util.color_hs_to_xy(*hs_color)
+        elif ColorMode.COLOR_TEMP in supported_color_modes:
+            xy_color = color_util.color_hs_to_xy(*hs_color)
+            params[ATTR_COLOR_TEMP_KELVIN] = color_util.color_xy_to_temperature(
+                *xy_color
+            )
+            params[_DEPRECATED_ATTR_COLOR_TEMP.value] = (
+                color_util.color_temperature_kelvin_to_mired(
+                    params[ATTR_COLOR_TEMP_KELVIN]
+                )
+            )
+    elif ATTR_RGB_COLOR in params and ColorMode.RGB not in supported_color_modes:
+        rgb_color = params.pop(ATTR_RGB_COLOR)
+        assert rgb_color is not None
+        if TYPE_CHECKING:
+            rgb_color = cast(tuple[int, int, int], rgb_color)
+        if ColorMode.RGBW in supported_color_modes:
+            params[ATTR_RGBW_COLOR] = color_util.color_rgb_to_rgbw(*rgb_color)
+        elif ColorMode.RGBWW in supported_color_modes:
+            params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(
+                *rgb_color,
+                light.min_color_temp_kelvin,
+                light.max_color_temp_kelvin,
+            )
+        elif ColorMode.HS in supported_color_modes:
+            params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
+        elif ColorMode.XY in supported_color_modes:
+            params[ATTR_XY_COLOR] = color_util.color_RGB_to_xy(*rgb_color)
+        elif ColorMode.COLOR_TEMP in supported_color_modes:
+            xy_color = color_util.color_RGB_to_xy(*rgb_color)
+            params[ATTR_COLOR_TEMP_KELVIN] = color_util.color_xy_to_temperature(
+                *xy_color
+            )
+            params[_DEPRECATED_ATTR_COLOR_TEMP.value] = (
+                color_util.color_temperature_kelvin_to_mired(
+                    params[ATTR_COLOR_TEMP_KELVIN]
+                )
+            )
+    elif ATTR_XY_COLOR in params and ColorMode.XY not in supported_color_modes:
+        xy_color = params.pop(ATTR_XY_COLOR)
+        if ColorMode.HS in supported_color_modes:
+            params[ATTR_HS_COLOR] = color_util.color_xy_to_hs(*xy_color)
+        elif ColorMode.RGB in supported_color_modes:
+            params[ATTR_RGB_COLOR] = color_util.color_xy_to_RGB(*xy_color)
+        elif ColorMode.RGBW in supported_color_modes:
+            rgb_color = color_util.color_xy_to_RGB(*xy_color)
+            params[ATTR_RGBW_COLOR] = color_util.color_rgb_to_rgbw(*rgb_color)
+        elif ColorMode.RGBWW in supported_color_modes:
+            rgb_color = color_util.color_xy_to_RGB(*xy_color)
+            params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(
+                *rgb_color, light.min_color_temp_kelvin, light.max_color_temp_kelvin
+            )
+        elif ColorMode.COLOR_TEMP in supported_color_modes:
+            params[ATTR_COLOR_TEMP_KELVIN] = color_util.color_xy_to_temperature(
+                *xy_color
+            )
+            params[_DEPRECATED_ATTR_COLOR_TEMP.value] = (
+                color_util.color_temperature_kelvin_to_mired(
+                    params[ATTR_COLOR_TEMP_KELVIN]
+                )
+            )
+    elif ATTR_RGBW_COLOR in params and ColorMode.RGBW not in supported_color_modes:
+        rgbw_color = params.pop(ATTR_RGBW_COLOR)
+        rgb_color = color_util.color_rgbw_to_rgb(*rgbw_color)
+        if ColorMode.RGB in supported_color_modes:
+            params[ATTR_RGB_COLOR] = rgb_color
+        elif ColorMode.RGBWW in supported_color_modes:
+            params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(
+                *rgb_color, light.min_color_temp_kelvin, light.max_color_temp_kelvin
+            )
+        elif ColorMode.HS in supported_color_modes:
+            params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
+        elif ColorMode.XY in supported_color_modes:
+            params[ATTR_XY_COLOR] = color_util.color_RGB_to_xy(*rgb_color)
+        elif ColorMode.COLOR_TEMP in supported_color_modes:
+            xy_color = color_util.color_RGB_to_xy(*rgb_color)
+            params[ATTR_COLOR_TEMP_KELVIN] = color_util.color_xy_to_temperature(
+                *xy_color
+            )
+            params[_DEPRECATED_ATTR_COLOR_TEMP.value] = (
+                color_util.color_temperature_kelvin_to_mired(
+                    params[ATTR_COLOR_TEMP_KELVIN]
+                )
+            )
+    elif ATTR_RGBWW_COLOR in params and ColorMode.RGBWW not in supported_color_modes:
+        rgbww_color = params.pop(ATTR_RGBWW_COLOR)
+        assert rgbww_color is not None
+        if TYPE_CHECKING:
+            rgbww_color = cast(tuple[int, int, int, int, int], rgbww_color)
+        rgb_color = color_util.color_rgbww_to_rgb(
+            *rgbww_color, light.min_color_temp_kelvin, light.max_color_temp_kelvin
+        )
+        if ColorMode.RGB in supported_color_modes:
+            params[ATTR_RGB_COLOR] = rgb_color
+        elif ColorMode.RGBW in supported_color_modes:
+            params[ATTR_RGBW_COLOR] = color_util.color_rgb_to_rgbw(*rgb_color)
+        elif ColorMode.HS in supported_color_modes:
+            params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
+        elif ColorMode.XY in supported_color_modes:
+            params[ATTR_XY_COLOR] = color_util.color_RGB_to_xy(*rgb_color)
+        elif ColorMode.COLOR_TEMP in supported_color_modes:
+            xy_color = color_util.color_RGB_to_xy(*rgb_color)
+            params[ATTR_COLOR_TEMP_KELVIN] = color_util.color_xy_to_temperature(
+                *xy_color
+            )
+            params[_DEPRECATED_ATTR_COLOR_TEMP.value] = (
+                color_util.color_temperature_kelvin_to_mired(
+                    params[ATTR_COLOR_TEMP_KELVIN]
+                )
+            )
+
+    # If white is set to True, set it to the light's brightness
+    # Add a warning in Home Assistant Core 2024.3 if the brightness is set to an
+    # integer.
+    if params.get(ATTR_WHITE) is True:
+        params[ATTR_WHITE] = light.brightness
+
+    # If both white and brightness are specified, override white
+    if (
+        supported_color_modes
+        and ATTR_WHITE in params
+        and ColorMode.WHITE in supported_color_modes
+    ):
+        params[ATTR_WHITE] = params.pop(ATTR_BRIGHTNESS, params[ATTR_WHITE])
+
+    return params
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Expose light control via state machine and services."""
     component = hass.data[DATA_COMPONENT] = EntityComponent[LightEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
@@ -423,228 +644,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         base["params"] = data
         return base
 
-    async def async_handle_light_on_service(  # noqa: C901
+    async def async_handle_light_on_service(
         light: LightEntity, call: ServiceCall
     ) -> None:
         """Handle turning a light on.
 
         If brightness is set to 0, this service will turn the light off.
         """
-        params: dict[str, Any] = dict(call.data["params"])
+        params = process_turn_on_params(hass, light, dict(call.data["params"]))
 
-        # Only process params once we processed brightness step
-        if params and (
-            ATTR_BRIGHTNESS_STEP in params or ATTR_BRIGHTNESS_STEP_PCT in params
-        ):
-            brightness = light.brightness if light.is_on and light.brightness else 0
-
-            if ATTR_BRIGHTNESS_STEP in params:
-                brightness += params.pop(ATTR_BRIGHTNESS_STEP)
-
-            else:
-                brightness_pct = round(brightness / 255 * 100)
-                brightness = round(
-                    (brightness_pct + params.pop(ATTR_BRIGHTNESS_STEP_PCT)) / 100 * 255
-                )
-
-            params[ATTR_BRIGHTNESS] = max(0, min(255, brightness))
-
-            preprocess_turn_on_alternatives(hass, params)
-
-        if (not params or not light.is_on) or (
-            params and ATTR_TRANSITION not in params
-        ):
-            profiles.apply_default(light.entity_id, light.is_on, params)
-
-        legacy_supported_color_modes = light._light_internal_supported_color_modes  # noqa: SLF001
-        supported_color_modes = light.supported_color_modes
-
-        # If a color temperature is specified, emulate it if not supported by the light
-        if ATTR_COLOR_TEMP_KELVIN in params:
-            if (
-                supported_color_modes
-                and ColorMode.COLOR_TEMP not in supported_color_modes
-                and ColorMode.RGBWW in supported_color_modes
-            ):
-                params.pop(_DEPRECATED_ATTR_COLOR_TEMP.value)
-                color_temp = params.pop(ATTR_COLOR_TEMP_KELVIN)
-                brightness = cast(int, params.get(ATTR_BRIGHTNESS, light.brightness))
-                params[ATTR_RGBWW_COLOR] = color_util.color_temperature_to_rgbww(
-                    color_temp,
-                    brightness,
-                    light.min_color_temp_kelvin,
-                    light.max_color_temp_kelvin,
-                )
-            elif ColorMode.COLOR_TEMP not in legacy_supported_color_modes:
-                params.pop(_DEPRECATED_ATTR_COLOR_TEMP.value)
-                color_temp = params.pop(ATTR_COLOR_TEMP_KELVIN)
-                if color_supported(legacy_supported_color_modes):
-                    params[ATTR_HS_COLOR] = color_util.color_temperature_to_hs(
-                        color_temp
-                    )
-
-        # If a color is specified, convert to the color space supported by the light
-        # Backwards compatibility: Fall back to hs color if light.supported_color_modes
-        # is not implemented
-        rgb_color: tuple[int, int, int] | None
-        rgbww_color: tuple[int, int, int, int, int] | None
-        if not supported_color_modes:
-            if (rgb_color := params.pop(ATTR_RGB_COLOR, None)) is not None:
-                params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
-            elif (xy_color := params.pop(ATTR_XY_COLOR, None)) is not None:
-                params[ATTR_HS_COLOR] = color_util.color_xy_to_hs(*xy_color)
-            elif (rgbw_color := params.pop(ATTR_RGBW_COLOR, None)) is not None:
-                rgb_color = color_util.color_rgbw_to_rgb(*rgbw_color)
-                params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
-            elif (rgbww_color := params.pop(ATTR_RGBWW_COLOR, None)) is not None:
-                # https://github.com/python/mypy/issues/13673
-                rgb_color = color_util.color_rgbww_to_rgb(  # type: ignore[call-arg]
-                    *rgbww_color,
-                    light.min_color_temp_kelvin,
-                    light.max_color_temp_kelvin,
-                )
-                params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
-        elif ATTR_HS_COLOR in params and ColorMode.HS not in supported_color_modes:
-            hs_color = params.pop(ATTR_HS_COLOR)
-            if ColorMode.RGB in supported_color_modes:
-                params[ATTR_RGB_COLOR] = color_util.color_hs_to_RGB(*hs_color)
-            elif ColorMode.RGBW in supported_color_modes:
-                rgb_color = color_util.color_hs_to_RGB(*hs_color)
-                params[ATTR_RGBW_COLOR] = color_util.color_rgb_to_rgbw(*rgb_color)
-            elif ColorMode.RGBWW in supported_color_modes:
-                rgb_color = color_util.color_hs_to_RGB(*hs_color)
-                params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(
-                    *rgb_color, light.min_color_temp_kelvin, light.max_color_temp_kelvin
-                )
-            elif ColorMode.XY in supported_color_modes:
-                params[ATTR_XY_COLOR] = color_util.color_hs_to_xy(*hs_color)
-            elif ColorMode.COLOR_TEMP in supported_color_modes:
-                xy_color = color_util.color_hs_to_xy(*hs_color)
-                params[ATTR_COLOR_TEMP_KELVIN] = color_util.color_xy_to_temperature(
-                    *xy_color
-                )
-                params[_DEPRECATED_ATTR_COLOR_TEMP.value] = (
-                    color_util.color_temperature_kelvin_to_mired(
-                        params[ATTR_COLOR_TEMP_KELVIN]
-                    )
-                )
-        elif ATTR_RGB_COLOR in params and ColorMode.RGB not in supported_color_modes:
-            rgb_color = params.pop(ATTR_RGB_COLOR)
-            assert rgb_color is not None
-            if TYPE_CHECKING:
-                rgb_color = cast(tuple[int, int, int], rgb_color)
-            if ColorMode.RGBW in supported_color_modes:
-                params[ATTR_RGBW_COLOR] = color_util.color_rgb_to_rgbw(*rgb_color)
-            elif ColorMode.RGBWW in supported_color_modes:
-                params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(
-                    *rgb_color,
-                    light.min_color_temp_kelvin,
-                    light.max_color_temp_kelvin,
-                )
-            elif ColorMode.HS in supported_color_modes:
-                params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
-            elif ColorMode.XY in supported_color_modes:
-                params[ATTR_XY_COLOR] = color_util.color_RGB_to_xy(*rgb_color)
-            elif ColorMode.COLOR_TEMP in supported_color_modes:
-                xy_color = color_util.color_RGB_to_xy(*rgb_color)
-                params[ATTR_COLOR_TEMP_KELVIN] = color_util.color_xy_to_temperature(
-                    *xy_color
-                )
-                params[_DEPRECATED_ATTR_COLOR_TEMP.value] = (
-                    color_util.color_temperature_kelvin_to_mired(
-                        params[ATTR_COLOR_TEMP_KELVIN]
-                    )
-                )
-        elif ATTR_XY_COLOR in params and ColorMode.XY not in supported_color_modes:
-            xy_color = params.pop(ATTR_XY_COLOR)
-            if ColorMode.HS in supported_color_modes:
-                params[ATTR_HS_COLOR] = color_util.color_xy_to_hs(*xy_color)
-            elif ColorMode.RGB in supported_color_modes:
-                params[ATTR_RGB_COLOR] = color_util.color_xy_to_RGB(*xy_color)
-            elif ColorMode.RGBW in supported_color_modes:
-                rgb_color = color_util.color_xy_to_RGB(*xy_color)
-                params[ATTR_RGBW_COLOR] = color_util.color_rgb_to_rgbw(*rgb_color)
-            elif ColorMode.RGBWW in supported_color_modes:
-                rgb_color = color_util.color_xy_to_RGB(*xy_color)
-                params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(
-                    *rgb_color, light.min_color_temp_kelvin, light.max_color_temp_kelvin
-                )
-            elif ColorMode.COLOR_TEMP in supported_color_modes:
-                params[ATTR_COLOR_TEMP_KELVIN] = color_util.color_xy_to_temperature(
-                    *xy_color
-                )
-                params[_DEPRECATED_ATTR_COLOR_TEMP.value] = (
-                    color_util.color_temperature_kelvin_to_mired(
-                        params[ATTR_COLOR_TEMP_KELVIN]
-                    )
-                )
-        elif ATTR_RGBW_COLOR in params and ColorMode.RGBW not in supported_color_modes:
-            rgbw_color = params.pop(ATTR_RGBW_COLOR)
-            rgb_color = color_util.color_rgbw_to_rgb(*rgbw_color)
-            if ColorMode.RGB in supported_color_modes:
-                params[ATTR_RGB_COLOR] = rgb_color
-            elif ColorMode.RGBWW in supported_color_modes:
-                params[ATTR_RGBWW_COLOR] = color_util.color_rgb_to_rgbww(
-                    *rgb_color, light.min_color_temp_kelvin, light.max_color_temp_kelvin
-                )
-            elif ColorMode.HS in supported_color_modes:
-                params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
-            elif ColorMode.XY in supported_color_modes:
-                params[ATTR_XY_COLOR] = color_util.color_RGB_to_xy(*rgb_color)
-            elif ColorMode.COLOR_TEMP in supported_color_modes:
-                xy_color = color_util.color_RGB_to_xy(*rgb_color)
-                params[ATTR_COLOR_TEMP_KELVIN] = color_util.color_xy_to_temperature(
-                    *xy_color
-                )
-                params[_DEPRECATED_ATTR_COLOR_TEMP.value] = (
-                    color_util.color_temperature_kelvin_to_mired(
-                        params[ATTR_COLOR_TEMP_KELVIN]
-                    )
-                )
-        elif (
-            ATTR_RGBWW_COLOR in params and ColorMode.RGBWW not in supported_color_modes
-        ):
-            rgbww_color = params.pop(ATTR_RGBWW_COLOR)
-            assert rgbww_color is not None
-            if TYPE_CHECKING:
-                rgbww_color = cast(tuple[int, int, int, int, int], rgbww_color)
-            rgb_color = color_util.color_rgbww_to_rgb(
-                *rgbww_color, light.min_color_temp_kelvin, light.max_color_temp_kelvin
-            )
-            if ColorMode.RGB in supported_color_modes:
-                params[ATTR_RGB_COLOR] = rgb_color
-            elif ColorMode.RGBW in supported_color_modes:
-                params[ATTR_RGBW_COLOR] = color_util.color_rgb_to_rgbw(*rgb_color)
-            elif ColorMode.HS in supported_color_modes:
-                params[ATTR_HS_COLOR] = color_util.color_RGB_to_hs(*rgb_color)
-            elif ColorMode.XY in supported_color_modes:
-                params[ATTR_XY_COLOR] = color_util.color_RGB_to_xy(*rgb_color)
-            elif ColorMode.COLOR_TEMP in supported_color_modes:
-                xy_color = color_util.color_RGB_to_xy(*rgb_color)
-                params[ATTR_COLOR_TEMP_KELVIN] = color_util.color_xy_to_temperature(
-                    *xy_color
-                )
-                params[_DEPRECATED_ATTR_COLOR_TEMP.value] = (
-                    color_util.color_temperature_kelvin_to_mired(
-                        params[ATTR_COLOR_TEMP_KELVIN]
-                    )
-                )
-
-        # If white is set to True, set it to the light's brightness
-        # Add a warning in Home Assistant Core 2024.3 if the brightness is set to an
-        # integer.
-        if params.get(ATTR_WHITE) is True:
-            params[ATTR_WHITE] = light.brightness
-
-        # If both white and brightness are specified, override white
-        if (
-            supported_color_modes
-            and ATTR_WHITE in params
-            and ColorMode.WHITE in supported_color_modes
-        ):
-            params[ATTR_WHITE] = params.pop(ATTR_BRIGHTNESS, params[ATTR_WHITE])
-
-        # Remove deprecated white value if the light supports color mode
         if params.get(ATTR_BRIGHTNESS) == 0 or params.get(ATTR_WHITE) == 0:
             await async_handle_light_off_service(light, call)
         else:
@@ -654,10 +662,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         light: LightEntity, call: ServiceCall
     ) -> None:
         """Handle turning off a light."""
-        params = dict(call.data["params"])
-
-        if ATTR_TRANSITION not in params:
-            profiles.apply_default(light.entity_id, True, params)
+        params = process_turn_off_params(hass, light, dict(call.data["params"]))
 
         await light.async_turn_off(**filter_turn_off_params(light, params))
 
@@ -665,10 +670,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         light: LightEntity, call: ServiceCall
     ) -> None:
         """Handle toggling a light."""
-        if light.is_on:
-            await async_handle_light_off_service(light, call)
-        else:
-            await async_handle_light_on_service(light, call)
+        params = dict(call.data["params"])
+        await light.async_toggle(**params)
 
     # Listen for light on and light off service calls.
 
@@ -1425,6 +1428,18 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return True
         # philips_js has known issues, we don't need users to open issues
         return self.platform.platform_name not in {"philips_js"}
+
+    @override
+    async def async_toggle(self, **kwargs: Any) -> None:
+        params = kwargs
+        if not self.is_on:
+            params = process_turn_on_params(self.hass, self, params)
+            if params.get(ATTR_BRIGHTNESS) != 0 and params.get(ATTR_WHITE) != 0:
+                await self.async_turn_on(**filter_turn_on_params(self, params))
+                return
+
+        params = process_turn_off_params(self.hass, self, params)
+        await self.async_turn_off(**params)
 
 
 # These can be removed if no deprecated constant are in this module anymore
