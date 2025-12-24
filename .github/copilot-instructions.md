@@ -8,7 +8,7 @@ Home Assistant uses an Integration Quality Scale to ensure code quality and cons
 
 ### Quality Scale Levels
 - **Bronze**: Basic requirements (ALL Bronze rules are mandatory)
-- **Silver**: Enhanced functionality 
+- **Silver**: Enhanced functionality
 - **Gold**: Advanced features
 - **Platinum**: Highest quality standards
 
@@ -30,15 +30,15 @@ rules:
   action-setup:
     status: exempt
     comment: Integration does not register custom actions.
-  
+
   # Silver (if targeting Silver+)
   entity-unavailable: done
   parallel-updates: done
-  
+
   # Gold (if targeting Gold+)
   devices: done
   diagnostics: done
-  
+
   # Platinum (if targeting Platinum)
   strict-typing: done
 ```
@@ -108,9 +108,9 @@ rules:
   class MyCoordinator(DataUpdateCoordinator[MyData]):
       def __init__(self, hass: HomeAssistant, client: MyClient, config_entry: ConfigEntry) -> None:
           super().__init__(
-              hass, 
-              logger=LOGGER, 
-              name=DOMAIN, 
+              hass,
+              logger=LOGGER,
+              name=DOMAIN,
               update_interval=timedelta(minutes=1),
               config_entry=config_entry,  # ✅ Pass config_entry - it's accepted and recommended
           )
@@ -125,7 +125,7 @@ rules:
 - **Use ConfigEntry.runtime_data**: Store non-persistent runtime data
   ```python
   type MyIntegrationConfigEntry = ConfigEntry[MyClient]
-  
+
   async def async_setup_entry(hass: HomeAssistant, entry: MyIntegrationConfigEntry) -> bool:
       client = MyClient(entry.data[CONF_HOST])
       entry.runtime_data = client
@@ -228,7 +228,7 @@ rules:
               config_entry=config_entry,  # ✅ Pass config_entry - it's accepted and recommended
           )
           self.client = client
-      
+
       async def _async_update_data(self):
           try:
               return await self.client.fetch_data()
@@ -247,7 +247,7 @@ rules:
   - Connection-critical config: Store in `ConfigEntry.data`
   - Non-critical settings: Store in `ConfigEntry.options`
 - **Validation**: Always validate user input before creating entries
-- **Config Entry Naming**: 
+- **Config Entry Naming**:
   - ❌ Do NOT allow users to set config entry names in config flows
   - Names are automatically generated or can be customized later in UI
   - ✅ Exception: Helper integrations MAY allow custom names in config flow
@@ -263,7 +263,7 @@ rules:
   # Using unique ID
   await self.async_set_unique_id(identifier)
   self._abort_if_unique_id_configured()
-  
+
   # Using unique data
   self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
   ```
@@ -311,7 +311,7 @@ rules:
   ```python
   entry.async_on_unload(
       ssdp.async_register_callback(
-          hass, _async_discovered_device, 
+          hass, _async_discovered_device,
           {"st": "urn:schemas-upnp-org:device:ZonePlayer:1"}
       )
   )
@@ -368,7 +368,7 @@ rules:
   # For invalid input
   if end_date < start_date:
       raise ServiceValidationError("End date must be after start date")
-  
+
   # For service errors
   try:
       await client.set_schedule(start_date, end_date)
@@ -440,7 +440,7 @@ rules:
     except DeviceError:
         _LOGGER.error("Failed to get data")
         return
-    
+
     # ✅ Process data outside try block
     processed = data.get("value", 0) * 100
     self._attr_native_value = processed
@@ -452,14 +452,14 @@ rules:
       data = await device.get_data()
   except Exception:  # Too broad
       _LOGGER.error("Failed")
-  
+
   # ✅ Allowed in config flow for robustness
   async def async_step_user(self, user_input=None):
       try:
           await self._test_connection(user_input)
       except Exception:  # Allowed here
           errors["base"] = "unknown"
-  
+
   # ✅ Allowed in background tasks
   async def _background_refresh():
       try:
@@ -494,7 +494,7 @@ rules:
 - **Implementation Pattern**:
   ```python
   _unavailable_logged: bool = False
-  
+
   if not self._unavailable_logged:
       _LOGGER.info("The sensor is unavailable: %s", ex)
       self._unavailable_logged = True
@@ -542,7 +542,7 @@ rules:
 - **Good pattern**:
   ```python
   SensorEntityDescription(
-      key="temperature", 
+      key="temperature",
       name="Temperature",
       value_fn=lambda data: (  # ✅ Parenthesis on same line as lambda
           round(data["temp_value"] * 1.8 + 32, 1)
@@ -637,7 +637,7 @@ rules:
       if new_devices:
           known_devices.update(new_devices)
           async_add_entities([MySensor(coordinator, device_id) for device_id in new_devices])
-  
+
   entry.async_on_unload(coordinator.async_add_listener(_check_device))
   ```
 
@@ -659,7 +659,7 @@ rules:
 - **Implementation**:
   ```python
   TO_REDACT = [CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE]
-  
+
   async def async_get_config_entry_diagnostics(
       hass: HomeAssistant, entry: MyConfigEntry
   ) -> dict[str, Any]:
@@ -709,7 +709,7 @@ rules:
 - **Avoid Vague Instructions**: Don't just say "update firmware" - provide specific steps
 - **Severity Guidelines**:
   - `CRITICAL`: Reserved for extreme scenarios only
-  - `ERROR`: Requires immediate user attention  
+  - `ERROR`: Requires immediate user attention
   - `WARNING`: Indicates future potential breakage
 - **Additional Attributes**:
   ```python
@@ -872,23 +872,23 @@ rules:
 
 ### Dependencies & Requirements
 - **Update generated files after dependency changes**: `python -m script.gen_requirements_all`
-- **Install all Python requirements**: 
+- **Install all Python requirements**:
   ```bash
   uv pip install -r requirements_all.txt -r requirements.txt -r requirements_test.txt
   ```
-- **Install test requirements only**: 
+- **Install test requirements only**:
   ```bash
   uv pip install -r requirements_test_all.txt -r requirements.txt
   ```
 
 ### Translations
-- **Update translations after strings.json changes**: 
+- **Update translations after strings.json changes**:
   ```bash
   python -m script.translations develop --all
   ```
 
 ### Project Validation
-- **Run hassfest** (checks project structure and updates generated files): 
+- **Run hassfest** (checks project structure and updates generated files):
   ```bash
   python -m script.hassfest
   ```
@@ -916,7 +916,7 @@ homeassistant/components/my_integration/
 
 ### Quality Scale Progression
 - **Bronze → Silver**: Add entity unavailability, parallel updates, auth flows
-- **Silver → Gold**: Add device management, diagnostics, translations  
+- **Silver → Gold**: Add device management, diagnostics, translations
 - **Gold → Platinum**: Add strict typing, async dependencies, websession injection
 
 ### Minimal Integration Checklist
@@ -968,7 +968,7 @@ try:
     response = await client.get_data()  # Can throw
     # ❌ Data processing should be outside try block
     temperature = response["temperature"] / 10
-    humidity = response["humidity"] 
+    humidity = response["humidity"]
     self._attr_native_value = temperature
 except ClientError:
     _LOGGER.error("Failed to fetch data")
@@ -1016,9 +1016,9 @@ class MyCoordinator(DataUpdateCoordinator[MyData]):
         # ✅ Integration determines interval based on device capabilities, connection type, etc.
         interval = timedelta(minutes=1) if client.is_local else SCAN_INTERVAL
         super().__init__(
-            hass, 
-            logger=LOGGER, 
-            name=DOMAIN, 
+            hass,
+            logger=LOGGER,
+            name=DOMAIN,
             update_interval=interval,
             config_entry=config_entry,  # ✅ Pass config_entry - it's accepted and recommended
         )
@@ -1029,8 +1029,8 @@ class MyCoordinator(DataUpdateCoordinator[MyData]):
 # Use __slots__ for memory efficiency
 class MySensor(SensorEntity):
     __slots__ = ("_attr_native_value", "_attr_available")
-    
-    @property 
+
+    @property
     def should_poll(self) -> bool:
         """Disable polling when using coordinator."""
         return False  # ✅ Let coordinator handle updates
@@ -1154,7 +1154,7 @@ async def init_integration(
 
 ### Common Issues & Solutions
 - **Integration won't load**: Check `manifest.json` syntax and required fields
-- **Entities not appearing**: Verify `unique_id` and `has_entity_name` implementation  
+- **Entities not appearing**: Verify `unique_id` and `has_entity_name` implementation
 - **Config flow errors**: Check `strings.json` entries and error handling
 - **Discovery not working**: Verify manifest discovery configuration and callbacks
 - **Tests failing**: Check mock setup and async context
@@ -1182,3 +1182,4 @@ pytest ./tests/components/my_integration \
   --cov=homeassistant.components.my_integration \
   --cov-report term-missing
 ```
+
