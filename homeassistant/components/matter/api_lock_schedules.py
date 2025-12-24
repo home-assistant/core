@@ -296,21 +296,21 @@ async def websocket_get_week_day_schedule(
     )
 
     # Check if schedule exists (status 0 = success)
-    if response.status != 0:
+    if response["status"] != 0:
         raise ScheduleNotFound(msg["week_day_index"])
 
     connection.send_result(
         msg[ID],
         {
-            "week_day_index": response.weekDayIndex,
-            "user_index": response.userIndex,
+            "week_day_index": response["weekDayIndex"],
+            "user_index": response["userIndex"],
             "status": "occupied",
-            "days_mask": response.daysMask,
-            "days": _days_mask_to_list(response.daysMask),
-            "start_hour": response.startHour,
-            "start_minute": response.startMinute,
-            "end_hour": response.endHour,
-            "end_minute": response.endMinute,
+            "days_mask": response["daysMask"],
+            "days": _days_mask_to_list(response["daysMask"]),
+            "start_hour": response["startHour"],
+            "start_minute": response["startMinute"],
+            "end_hour": response["endHour"],
+            "end_minute": response["endMinute"],
         },
     )
 
@@ -464,17 +464,17 @@ async def websocket_get_year_day_schedule(
     )
 
     # Check if schedule exists (status 0 = success)
-    if response.status != 0:
+    if response["status"] != 0:
         raise ScheduleNotFound(msg["year_day_index"])
 
     connection.send_result(
         msg[ID],
         {
-            "year_day_index": response.yearDayIndex,
-            "user_index": response.userIndex,
+            "year_day_index": response["yearDayIndex"],
+            "user_index": response["userIndex"],
             "status": "occupied",
-            "local_start_time": response.localStartTime,
-            "local_end_time": response.localEndTime,
+            "local_start_time": response["localStartTime"],
+            "local_end_time": response["localEndTime"],
         },
     )
 
@@ -634,17 +634,19 @@ async def websocket_get_holiday_schedule(
     )
 
     # Check if schedule exists (status 0 = success)
-    if response.status != 0:
+    if response["status"] != 0:
         raise ScheduleNotFound(msg["holiday_index"])
 
     connection.send_result(
         msg[ID],
         {
-            "holiday_index": response.holidayIndex,
+            "holiday_index": response["holidayIndex"],
             "status": "occupied",
-            "local_start_time": response.localStartTime,
-            "local_end_time": response.localEndTime,
-            "operating_mode": OPERATING_MODE_MAP.get(response.operatingMode, "unknown"),
+            "local_start_time": response["localStartTime"],
+            "local_end_time": response["localEndTime"],
+            "operating_mode": OPERATING_MODE_MAP.get(
+                response["operatingMode"], "unknown"
+            ),
         },
     )
 

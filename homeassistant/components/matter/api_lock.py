@@ -305,21 +305,28 @@ async def websocket_get_lock_info(
         lock_endpoint
     )
 
-    # Include schedule capacity if respective features are supported
-    if result["supports_week_day_schedules"]:
-        result["max_week_day_schedules_per_user"] = lock_endpoint.get_attribute_value(
+    # Always include schedule capacity (0 if not supported)
+    result["max_week_day_schedules_per_user"] = (
+        lock_endpoint.get_attribute_value(
             None, clusters.DoorLock.Attributes.NumberOfWeekDaySchedulesSupportedPerUser
         )
-
-    if result["supports_year_day_schedules"]:
-        result["max_year_day_schedules_per_user"] = lock_endpoint.get_attribute_value(
+        if result["supports_week_day_schedules"]
+        else 0
+    )
+    result["max_year_day_schedules_per_user"] = (
+        lock_endpoint.get_attribute_value(
             None, clusters.DoorLock.Attributes.NumberOfYearDaySchedulesSupportedPerUser
         )
-
-    if result["supports_holiday_schedules"]:
-        result["max_holiday_schedules"] = lock_endpoint.get_attribute_value(
+        if result["supports_year_day_schedules"]
+        else 0
+    )
+    result["max_holiday_schedules"] = (
+        lock_endpoint.get_attribute_value(
             None, clusters.DoorLock.Attributes.NumberOfHolidaySchedulesSupported
         )
+        if result["supports_holiday_schedules"]
+        else 0
+    )
 
     connection.send_result(msg[ID], result)
 
