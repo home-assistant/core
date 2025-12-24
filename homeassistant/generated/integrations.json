@@ -1763,7 +1763,7 @@
     },
     "enocean": {
       "name": "EnOcean",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push",
       "single_config_entry": true
@@ -2092,6 +2092,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "fluss": {
+      "name": "Fluss+",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "flux": {
       "name": "Flux",
       "integration_type": "hub",
@@ -2165,7 +2171,7 @@
     },
     "freebox": {
       "name": "Freebox",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -2819,7 +2825,7 @@
       ]
     },
     "homewizard": {
-      "name": "HomeWizard Energy",
+      "name": "HomeWizard",
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -2874,7 +2880,7 @@
     },
     "huisbaasje": {
       "name": "EnergyFlip",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -3557,7 +3563,7 @@
     },
     "libre_hardware_monitor": {
       "name": "Libre Hardware Monitor",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -3932,7 +3938,7 @@
     },
     "met_eireann": {
       "name": "Met \u00c9ireann",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -3956,13 +3962,13 @@
     },
     "meteoclimatic": {
       "name": "Meteoclimatic",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "metoffice": {
       "name": "Met Office",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -4081,7 +4087,7 @@
     },
     "minecraft_server": {
       "name": "Minecraft Server",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -4258,7 +4264,7 @@
     },
     "mullvad": {
       "name": "Mullvad VPN",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling",
       "single_config_entry": true
@@ -6350,7 +6356,7 @@
           "name": "Sony Songpal"
         },
         "playstation_network": {
-          "integration_type": "service",
+          "integration_type": "hub",
           "config_flow": true,
           "iot_class": "cloud_polling",
           "name": "PlayStation Network"
@@ -7472,6 +7478,12 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
+    "watts": {
+      "name": "Watts Vision +",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "watttime": {
       "name": "WattTime",
       "integration_type": "service",
@@ -7590,7 +7602,7 @@
       "iot_class": "cloud_polling"
     },
     "workday": {
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
     },

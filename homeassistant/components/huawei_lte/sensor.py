@@ -198,6 +198,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
             "dlbandwidth": HuaweiSensorEntityDescription(
                 key="dlbandwidth",
                 translation_key="downlink_bandwidth",
+                # https://en.wikipedia.org/wiki/LTE_frequency_bands, arbitrary
                 icon_fn=lambda x: bandwidth_icon((8, 15), x),
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
@@ -216,7 +217,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 key="ecio",
                 translation_key="ecio",
                 device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-                # https://wiki.teltonika.lt/view/EC/IO
+                # https://wiki.teltonika-networks.com/view/EC/IO
                 icon_fn=lambda x: signal_icon((-20, -10, -6), x),
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
@@ -291,8 +292,8 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
             "nrdlbandwidth": HuaweiSensorEntityDescription(
                 key="nrdlbandwidth",
                 translation_key="nrdlbandwidth",
-                # Could add icon_fn like we have for dlbandwidth,
-                # if we find a good source what to use as 5G thresholds.
+                # https://en.wikipedia.org/wiki/5G_NR_frequency_bands, arbitrary
+                icon_fn=lambda x: bandwidth_icon((33, 66), x),
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
             "nrdlmcs": HuaweiSensorEntityDescription(
@@ -314,7 +315,8 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 key="nrrsrp",
                 translation_key="nrrsrp",
                 device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-                # Could add icon_fn as in rsrp, source for 5G thresholds?
+                # https://wiki.teltonika-networks.com/view/RSRP_and_RSRQ
+                icon_fn=lambda x: signal_icon((-100, -90, -80), x),
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
                 entity_registry_enabled_default=True,
@@ -323,7 +325,8 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 key="nrrsrq",
                 translation_key="nrrsrq",
                 device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-                # Could add icon_fn as in rsrq, source for 5G thresholds?
+                # https://wiki.teltonika-networks.com/view/RSRP_and_RSRQ
+                icon_fn=lambda x: signal_icon((-20, -15, -10), x),
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
                 entity_registry_enabled_default=True,
@@ -332,7 +335,8 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 key="nrsinr",
                 translation_key="nrsinr",
                 device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-                # Could add icon_fn as in sinr, source for thresholds?
+                # https://wiki.teltonika-networks.com/view/SINR
+                icon_fn=lambda x: signal_icon((0, 13, 20), x),
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
                 entity_registry_enabled_default=True,
@@ -354,7 +358,8 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
             "nrulbandwidth": HuaweiSensorEntityDescription(
                 key="nrulbandwidth",
                 translation_key="nrulbandwidth",
-                # Could add icon_fn as in ulbandwidth, source for 5G thresholds?
+                # https://en.wikipedia.org/wiki/5G_NR_frequency_bands, arbitrary
+                icon_fn=lambda x: bandwidth_icon((33, 66), x),
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
             "nrulmcs": HuaweiSensorEntityDescription(
@@ -386,7 +391,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 key="rscp",
                 translation_key="rscp",
                 device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-                # https://wiki.teltonika.lt/view/RSCP
+                # https://wiki.teltonika-networks.com/view/RSCP
                 icon_fn=lambda x: signal_icon((-95, -85, -75), x),
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
@@ -395,8 +400,8 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 key="rsrp",
                 translation_key="rsrp",
                 device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-                # http://www.lte-anbieter.info/technik/rsrp.php  # codespell:ignore technik
-                icon_fn=lambda x: signal_icon((-110, -95, -80), x),
+                # https://wiki.teltonika-networks.com/view/RSRP_and_RSRQ
+                icon_fn=lambda x: signal_icon((-100, -90, -80), x),
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
                 entity_registry_enabled_default=True,
@@ -405,8 +410,8 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 key="rsrq",
                 translation_key="rsrq",
                 device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-                # http://www.lte-anbieter.info/technik/rsrq.php  # codespell:ignore technik
-                icon_fn=lambda x: signal_icon((-11, -8, -5), x),
+                # https://wiki.teltonika-networks.com/view/RSRP_and_RSRQ
+                icon_fn=lambda x: signal_icon((-20, -15, -10), x),
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
                 entity_registry_enabled_default=True,
@@ -415,8 +420,8 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 key="rssi",
                 translation_key="rssi",
                 device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-                # https://eyesaas.com/wi-fi-signal-strength/
-                icon_fn=lambda x: signal_icon((-80, -70, -60), x),
+                # https://wiki.teltonika-networks.com/view/RSSI
+                icon_fn=lambda x: signal_icon((-95, -85, -75), x),
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
                 entity_registry_enabled_default=True,
@@ -436,8 +441,8 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 key="sinr",
                 translation_key="sinr",
                 device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-                # http://www.lte-anbieter.info/technik/sinr.php  # codespell:ignore technik
-                icon_fn=lambda x: signal_icon((0, 5, 10), x),
+                # https://wiki.teltonika-networks.com/view/SINR
+                icon_fn=lambda x: signal_icon((0, 13, 20), x),
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
                 entity_registry_enabled_default=True,
@@ -479,6 +484,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
             "ulbandwidth": HuaweiSensorEntityDescription(
                 key="ulbandwidth",
                 translation_key="uplink_bandwidth",
+                # https://en.wikipedia.org/wiki/LTE_frequency_bands, arbitrary
                 icon_fn=lambda x: bandwidth_icon((8, 15), x),
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
@@ -773,10 +779,15 @@ async def async_setup_entry(
             continue
         if key_meta := SENSOR_META.get(key):
             if key_meta.include:
-                items = filter(key_meta.include.search, items)
+                items = {k: v for k, v in items.items() if key_meta.include.search(k)}
             if key_meta.exclude:
-                items = [x for x in items if not key_meta.exclude.search(x)]
-        for item in items:
+                items = {
+                    k: v for k, v in items.items() if not key_meta.exclude.search(k)
+                }
+        for item, value in items.items():
+            if value is None:
+                _LOGGER.debug("Ignoring sensor %s.%s due to None value", key, item)
+                continue
             if not (desc := SENSOR_META[key].descriptions.get(item)):
                 _LOGGER.debug(  # pylint: disable=hass-logger-period # false positive
                     (
