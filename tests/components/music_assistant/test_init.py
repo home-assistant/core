@@ -5,18 +5,24 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, MagicMock
 
 from music_assistant_models.enums import EventType
-from music_assistant_models.errors import ActionUnavailable
+from music_assistant_models.errors import ActionUnavailable, AuthenticationRequired
 
 from homeassistant.components.music_assistant.const import (
     ATTR_CONF_EXPOSE_PLAYER_TO_HA,
     DOMAIN,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.setup import async_setup_component
 
 from .common import setup_integration_from_fixtures, trigger_subscription_callback
 
+from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
 
 
@@ -151,3 +157,59 @@ async def test_player_config_expose_to_ha_toggle(
     assert entity_registry.async_get(entity_id)
     device_entry = device_registry.async_get_device({(DOMAIN, player_id)})
     assert device_entry
+
+
+async def test_authentication_required_triggers_reauth(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test that AuthenticationRequired exception triggers reauth flow."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Music Assistant",
+        data={"url": "http://localhost:8095", "token": "old_token"},
+        unique_id="test_server_id",
+    )
+    config_entry.add_to_hass(hass)
+
+    music_assistant_client.connect.side_effect = AuthenticationRequired(
+        "Authentication required"
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    issue_reg = ir.async_get(hass)
+    issue_id = f"config_entry_reauth_{DOMAIN}_{config_entry.entry_id}"
+    assert issue_reg.async_get_issue("homeassistant", issue_id)
+
+
+async def test_authentication_required_addon_no_reauth(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test that AuthenticationRequired exception does not trigger reauth for addon."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Music Assistant",
+        data={"url": "http://localhost:8095", "token": "old_token"},
+        unique_id="test_server_id",
+    )
+    config_entry.add_to_hass(hass)
+
+    music_assistant_client.server_info.homeassistant_addon = True
+
+    music_assistant_client.connect.side_effect = AuthenticationRequired(
+        "Authentication required"
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    issue_reg = ir.async_get(hass)
+    issue_id = f"config_entry_reauth_{DOMAIN}_{config_entry.entry_id}"
+    assert issue_reg.async_get_issue("homeassistant", issue_id) is None

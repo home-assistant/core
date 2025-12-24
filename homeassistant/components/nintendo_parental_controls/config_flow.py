@@ -6,9 +6,9 @@ from collections.abc import Mapping
 import logging
 from typing import TYPE_CHECKING, Any
 
+from pynintendoauth.exceptions import HttpException, InvalidSessionTokenException
 from pynintendoparental import Authenticator
 from pynintendoparental.api import Api
-from pynintendoparental.exceptions import HttpException, InvalidSessionTokenException
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -33,18 +33,14 @@ class NintendoConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if self.auth is None:
-            self.auth = Authenticator.generate_login(
-                client_session=async_get_clientsession(self.hass)
-            )
+            self.auth = Authenticator(client_session=async_get_clientsession(self.hass))
 
         if user_input is not None:
             nintendo_api = Api(
                 self.auth, self.hass.config.time_zone, self.hass.config.language
             )
             try:
-                await self.auth.complete_login(
-                    self.auth, user_input[CONF_API_TOKEN], False
-                )
+                await self.auth.async_complete_login(user_input[CONF_API_TOKEN])
             except (ValueError, InvalidSessionTokenException, HttpException):
                 errors["base"] = "invalid_auth"
             else:
@@ -67,7 +63,7 @@ class NintendoConfigFlow(ConfigFlow, domain=DOMAIN):
                     return self.async_create_entry(
                         title=self.auth.account_id,
                         data={
-                            CONF_SESSION_TOKEN: self.auth.get_session_token,
+                            CONF_SESSION_TOKEN: self.auth.session_token,
                         },
                     )
         return self.async_show_form(
@@ -90,14 +86,10 @@ class NintendoConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         reauth_entry = self._get_reauth_entry()
         if self.auth is None:
-            self.auth = Authenticator.generate_login(
-                client_session=async_get_clientsession(self.hass)
-            )
+            self.auth = Authenticator(client_session=async_get_clientsession(self.hass))
         if user_input is not None:
             try:
-                await self.auth.complete_login(
-                    self.auth, user_input[CONF_API_TOKEN], False
-                )
+                await self.auth.async_complete_login(user_input[CONF_API_TOKEN])
             except (ValueError, InvalidSessionTokenException, HttpException):
                 errors["base"] = "invalid_auth"
             else:
@@ -105,7 +97,7 @@ class NintendoConfigFlow(ConfigFlow, domain=DOMAIN):
                     reauth_entry,
                     data={
                         **reauth_entry.data,
-                        CONF_SESSION_TOKEN: self.auth.get_session_token,
+                        CONF_SESSION_TOKEN: self.auth.session_token,
                     },
                 )
         return self.async_show_form(

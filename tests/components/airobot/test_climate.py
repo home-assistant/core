@@ -17,12 +17,18 @@ from homeassistant.components.climate import (
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 import homeassistant.helpers.entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Fixture to specify platforms to test."""
+    return [Platform.CLIMATE]
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -31,6 +37,7 @@ async def test_climate_entities(
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
+    platforms: list[Platform],
 ) -> None:
     """Test climate entities."""
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
@@ -81,7 +88,9 @@ async def test_climate_set_temperature_error(
     """Test error handling when setting temperature fails."""
     mock_airobot_client.set_home_temperature.side_effect = AirobotError("Device error")
 
-    with pytest.raises(ServiceValidationError, match="Failed to set temperature"):
+    with pytest.raises(
+        ServiceValidationError, match="Failed to set temperature"
+    ) as exc_info:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
@@ -91,6 +100,10 @@ async def test_climate_set_temperature_error(
             },
             blocking=True,
         )
+
+    assert exc_info.value.translation_domain == "airobot"
+    assert exc_info.value.translation_key == "set_temperature_failed"
+    assert exc_info.value.translation_placeholders == {"temperature": "24.0"}
 
 
 @pytest.mark.parametrize(
@@ -160,7 +173,9 @@ async def test_climate_set_preset_mode_error(
     """Test error handling when setting preset mode fails."""
     mock_airobot_client.set_boost_mode.side_effect = AirobotError("Device error")
 
-    with pytest.raises(ServiceValidationError, match="Failed to set preset mode"):
+    with pytest.raises(
+        ServiceValidationError, match="Failed to set preset mode"
+    ) as exc_info:
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_PRESET_MODE,
@@ -170,6 +185,10 @@ async def test_climate_set_preset_mode_error(
             },
             blocking=True,
         )
+
+    assert exc_info.value.translation_domain == "airobot"
+    assert exc_info.value.translation_key == "set_preset_mode_failed"
+    assert exc_info.value.translation_placeholders == {"preset_mode": "boost"}
 
 
 async def test_climate_heating_state(

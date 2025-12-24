@@ -42,7 +42,6 @@ CONDITION_DESCRIPTIONS = {
                 "_": {
                     "name": "Sun",
                     "description": "When the sun is above/below the horizon",
-                    "description_configured": "When a the sun rises or sets.",
                     "fields": {
                         "after": {"name": "After event", "description": "The event."},
                         "after_offset": {

@@ -10,10 +10,11 @@ from mozart_api.models import (
     WebsocketNotificationTag,
 )
 import pytest
+from pytest_unordered import unordered
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.bang_olufsen.const import (
-    BANG_OLUFSEN_WEBSOCKET_EVENT,
+    BEO_WEBSOCKET_EVENT,
     CONNECTION_STATUS,
     DOMAIN,
     WebsocketNotification,
@@ -29,7 +30,7 @@ from .const import (
     TEST_REMOTE_SERIAL_PAIRED,
     TEST_SERIAL_NUMBER,
 )
-from .util import get_button_entity_ids, get_remote_entity_ids
+from .util import get_balance_entity_ids, get_remote_entity_ids
 
 from tests.common import MockConfigEntry
 
@@ -133,9 +134,8 @@ async def test_on_remote_control_already_added(
     assert device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL_PAIRED)})
 
     # Check number of entities (remote and button events and media_player)
-    assert (
-        len(list(entity_registry.entities.keys()))
-        == len(get_remote_entity_ids()) + len(get_button_entity_ids()) + 1
+    assert list(entity_registry.entities.keys()) == unordered(
+        [*get_balance_entity_ids(), *get_remote_entity_ids()]
     )
     remote_callback = mock_mozart_client.get_notification_notifications.call_args[0][0]
 
@@ -152,12 +152,11 @@ async def test_on_remote_control_already_added(
     assert mock_mozart_client.get_bluetooth_remotes.call_count == 2
     assert device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL_PAIRED)})
 
-    # Check number of entities
+    # Check number of entities (remote and button events and media_player)
     entity_ids_available = list(entity_registry.entities.keys())
 
-    assert (
-        len(entity_ids_available)
-        == len(get_remote_entity_ids()) + len(get_button_entity_ids()) + 1
+    assert list(entity_registry.entities.keys()) == unordered(
+        [*get_balance_entity_ids(), *get_remote_entity_ids()]
     )
     assert entity_ids_available == snapshot
 
@@ -180,10 +179,9 @@ async def test_on_remote_control_paired(
     assert mock_mozart_client.get_bluetooth_remotes.call_count == 1
     assert device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL_PAIRED)})
 
-    # Check number of entities (button events and media_player)
-    assert (
-        len(list(entity_registry.entities.keys()))
-        == len(get_remote_entity_ids()) + len(get_button_entity_ids()) + 1
+    # Check number of entities (button and remote events and media_player)
+    assert list(entity_registry.entities.keys()) == unordered(
+        [*get_balance_entity_ids(), *get_remote_entity_ids()]
     )
     # "Pair" a new remote
     mock_mozart_client.get_bluetooth_remotes.return_value = PairedRemoteResponse(
@@ -234,12 +232,12 @@ async def test_on_remote_control_paired(
     # Check number of entities (remote and button events and media_player)
     entity_ids_available = list(entity_registry.entities.keys())
 
-    assert (
-        len(entity_ids_available)
-        == len(get_remote_entity_ids())
-        + len(get_remote_entity_ids())
-        + len(get_button_entity_ids())
-        + 1
+    assert entity_ids_available == unordered(
+        [
+            *get_balance_entity_ids(),
+            *get_remote_entity_ids(),
+            *get_remote_entity_ids("66666666"),
+        ]
     )
     assert entity_ids_available == snapshot
 
@@ -262,11 +260,11 @@ async def test_on_remote_control_unpaired(
     assert mock_mozart_client.get_bluetooth_remotes.call_count == 1
     assert device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL_PAIRED)})
 
-    # Check number of entities (button events and media_player)
-    assert (
-        len(list(entity_registry.entities.keys()))
-        == len(get_remote_entity_ids()) + len(get_button_entity_ids()) + 1
+    # Check number of entities (button and remote events and media_player)
+    assert list(entity_registry.entities.keys()) == unordered(
+        [*get_balance_entity_ids(), *get_remote_entity_ids()]
     )
+
     # "Unpair" the remote
     mock_mozart_client.get_bluetooth_remotes.return_value = PairedRemoteResponse(
         items=[]
@@ -296,7 +294,7 @@ async def test_on_remote_control_unpaired(
     # Check number of entities (button events and media_player)
     entity_ids_available = list(entity_registry.entities.keys())
 
-    assert len(entity_ids_available) == +len(get_button_entity_ids()) + 1
+    assert entity_ids_available == unordered(get_balance_entity_ids())
     assert entity_ids_available == snapshot
 
 
@@ -376,8 +374,8 @@ async def test_on_all_notifications_raw(
 
     mock_event_callback = Mock()
 
-    # Listen to BANG_OLUFSEN_WEBSOCKET_EVENT events
-    hass.bus.async_listen(BANG_OLUFSEN_WEBSOCKET_EVENT, mock_event_callback)
+    # Listen to BEO_WEBSOCKET_EVENT events
+    hass.bus.async_listen(BEO_WEBSOCKET_EVENT, mock_event_callback)
 
     # Trigger the notification
     all_notifications_raw_callback(raw_notification)
@@ -386,5 +384,5 @@ async def test_on_all_notifications_raw(
     assert str(raw_notification_full) in caplog.text
 
     mocked_call = mock_event_callback.call_args[0][0].as_dict()
-    assert mocked_call["event_type"] == BANG_OLUFSEN_WEBSOCKET_EVENT
+    assert mocked_call["event_type"] == BEO_WEBSOCKET_EVENT
     assert mocked_call["data"] == raw_notification_full

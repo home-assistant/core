@@ -78,7 +78,7 @@ from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.target import (
-    TargetSelectorData,
+    TargetSelection,
     async_extract_referenced_entity_ids,
 )
 from homeassistant.helpers.typing import ConfigType
@@ -483,7 +483,7 @@ def _async_register_events_and_services(hass: HomeAssistant) -> None:
     async def async_handle_homekit_unpair(service: ServiceCall) -> None:
         """Handle unpair HomeKit service call."""
         referenced = async_extract_referenced_entity_ids(
-            hass, TargetSelectorData(service.data)
+            hass, TargetSelection(service.data)
         )
         dev_reg = dr.async_get(hass)
         for device_id in referenced.referenced_devices:

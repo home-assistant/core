@@ -34,6 +34,7 @@ ATTR_ISSUES = "issues"
 ATTR_MESSAGE = "message"
 ATTR_METHOD = "method"
 ATTR_PANELS = "panels"
+ATTR_PARAMS = "params"
 ATTR_PASSWORD = "password"
 ATTR_RESULT = "result"
 ATTR_STARTUP = "startup"
@@ -161,6 +162,7 @@ EXTRA_PLACEHOLDERS = {
     ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED: HELP_URLS,
     ISSUE_KEY_SYSTEM_FREE_SPACE: {
         "more_info_free_space": "https://www.home-assistant.io/more-info/free-space",
+        "storage_url": "/config/storage",
     },
     ISSUE_KEY_ADDON_PWNED: {
         "more_info_pwned": "https://www.home-assistant.io/more-info/pwned-passwords",

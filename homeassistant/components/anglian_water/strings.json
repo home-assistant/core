@@ -10,16 +10,23 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "select_account": {
+        "data": {
+          "account_number": "Billing account number"
+        },
+        "data_description": {
+          "account_number": "Select the billing account you wish to use."
+        },
+        "description": "Multiple active billing accounts were found with your credentials. Please select the account you wish to use. If this is unexpected, contact Anglian Water to confirm your active accounts."
+      },
       "user": {
         "data": {
-          "account_number": "Billing Account Number",
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "account_number": "Your account number found on your latest bill.",
           "password": "Your password",
-          "username": "Username or email used to login to the Anglian Water website."
+          "username": "Username or email used to log in to the Anglian Water website."
         },
         "description": "Enter your Anglian Water account credentials to connect to Home Assistant."
       }

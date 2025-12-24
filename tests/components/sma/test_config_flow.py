@@ -175,7 +175,7 @@ async def test_dhcp_already_configured_duplicate(
         data=DHCP_DISCOVERY_DUPLICATE_001,
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     await hass.async_block_till_done()
 

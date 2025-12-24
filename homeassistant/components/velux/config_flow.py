@@ -1,5 +1,6 @@
 """Config flow for Velux integration."""
 
+from collections.abc import Mapping
 from typing import Any
 
 from pyvlx import PyVLX, PyVLXException
@@ -28,6 +29,15 @@ async def _check_connection(host: str, password: str) -> dict[str, Any]:
         await pyvlx.connect()
         await pyvlx.disconnect()
     except (PyVLXException, ConnectionError) as err:
+        # since pyvlx raises the same exception for auth and connection errors,
+        # we need to check the exception message to distinguish them
+        if (
+            isinstance(err, PyVLXException)
+            and err.description == "Login to KLF 200 failed, check credentials"
+        ):
+            LOGGER.debug("Invalid password")
+            return {"base": "invalid_auth"}
+
         LOGGER.debug("Cannot connect: %s", err)
         return {"base": "cannot_connect"}
     except Exception as err:  # noqa: BLE001
@@ -67,6 +77,42 @@ class VeluxConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=USER_SCHEMA,
             errors=errors,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauth flow."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reauth flow when password has changed."""
+        reauth_entry = self._get_reauth_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            errors = await _check_connection(
+                reauth_entry.data[CONF_HOST], user_input[CONF_PASSWORD]
+            )
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates={CONF_PASSWORD: user_input[CONF_PASSWORD]},
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_PASSWORD): cv.string,
+                }
+            ),
+            errors=errors,
+            description_placeholders={
+                "host": reauth_entry.data[CONF_HOST],
+            },
         )
 
     async def async_step_dhcp(

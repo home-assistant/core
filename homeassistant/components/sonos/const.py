@@ -20,6 +20,9 @@ PLATFORMS = [
     Platform.SWITCH,
 ]
 
+UPNP_ISSUE_ID = "upnp_disabled"
+UPNP_DOCUMENTATION_URL = "https://www.home-assistant.io/integrations/sonos/#403-error-when-setting-up-the-integration"
+
 SUB_FAIL_ISSUE_ID = "subscriptions_failed"
 SUB_FAIL_URL = "https://www.home-assistant.io/integrations/sonos/#network-requirements"
 

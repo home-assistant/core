@@ -229,7 +229,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -268,6 +270,7 @@
       'device_class': 'power',
       'friendly_name': 'MIN123456 Battery 1 charging W',
       'icon': 'mdi:solar-power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
@@ -283,7 +286,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -322,6 +327,7 @@
       'device_class': 'power',
       'friendly_name': 'MIN123456 Battery 1 discharging W',
       'icon': 'mdi:solar-power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
@@ -337,7 +343,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -376,6 +384,7 @@
       'device_class': 'power',
       'friendly_name': 'MIN123456 Battery 2 charging W',
       'icon': 'mdi:solar-power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
@@ -391,7 +400,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -430,6 +441,7 @@
       'device_class': 'power',
       'friendly_name': 'MIN123456 Battery 2 discharging W',
       'icon': 'mdi:solar-power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
@@ -730,7 +742,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -769,6 +783,7 @@
       'device_class': 'power',
       'friendly_name': 'MIN123456 Export power',
       'icon': 'mdi:solar-power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
@@ -898,7 +913,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -937,6 +954,7 @@
       'device_class': 'power',
       'friendly_name': 'MIN123456 Import power',
       'icon': 'mdi:solar-power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
@@ -1060,7 +1078,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -1099,6 +1119,7 @@
       'device_class': 'power',
       'friendly_name': 'MIN123456 Input 1 wattage',
       'icon': 'mdi:solar-power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
@@ -1222,7 +1243,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -1261,6 +1284,7 @@
       'device_class': 'power',
       'friendly_name': 'MIN123456 Input 2 wattage',
       'icon': 'mdi:solar-power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
@@ -1384,7 +1408,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -1423,6 +1449,7 @@
       'device_class': 'power',
       'friendly_name': 'MIN123456 Input 3 wattage',
       'icon': 'mdi:solar-power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
@@ -1546,7 +1573,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -1585,6 +1614,7 @@
       'device_class': 'power',
       'friendly_name': 'MIN123456 Input 4 wattage',
       'icon': 'mdi:solar-power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
@@ -1600,7 +1630,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -1639,6 +1671,7 @@
       'device_class': 'power',
       'friendly_name': 'MIN123456 Internal wattage',
       'icon': 'mdi:solar-power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
@@ -2737,7 +2770,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -2776,6 +2811,7 @@
       'device_class': 'power',
       'friendly_name': 'MIN123456 Local load power',
       'icon': 'mdi:solar-power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
@@ -2791,7 +2827,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -2830,6 +2868,7 @@
       'device_class': 'power',
       'friendly_name': 'MIN123456 Output power',
       'icon': 'mdi:solar-power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
@@ -2956,7 +2995,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -2995,6 +3036,7 @@
       'device_class': 'power',
       'friendly_name': 'MIN123456 Self power',
       'icon': 'mdi:solar-power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
@@ -3118,7 +3160,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -3157,6 +3201,7 @@
       'device_class': 'power',
       'friendly_name': 'MIN123456 System power',
       'icon': 'mdi:solar-power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
@@ -3613,7 +3658,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -3652,6 +3699,7 @@
       'device_class': 'power',
       'friendly_name': 'Test Plant Total Maximum power',
       'icon': 'mdi:solar-power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
@@ -3936,7 +3984,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -3975,6 +4025,7 @@
       'device_class': 'power',
       'friendly_name': 'Test Plant Total Maximum power',
       'icon': 'mdi:solar-power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
@@ -4372,7 +4423,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -4411,6 +4464,7 @@
       'device_class': 'power',
       'friendly_name': 'TLX123456 Battery 1 charging W',
       'icon': 'mdi:solar-power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
@@ -4426,7 +4480,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -4465,6 +4521,7 @@
       'device_class': 'power',
       'friendly_name': 'TLX123456 Battery 1 discharging W',
       'icon': 'mdi:solar-power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
@@ -4480,7 +4537,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -4519,6 +4578,7 @@
       'device_class': 'power',
       'friendly_name': 'TLX123456 Battery 2 charging W',
       'icon': 'mdi:solar-power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
@@ -4534,7 +4594,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -4573,6 +4635,7 @@
       'device_class': 'power',
       'friendly_name': 'TLX123456 Battery 2 discharging W',
       'icon': 'mdi:solar-power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
@@ -4873,7 +4936,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -4912,6 +4977,7 @@
       'device_class': 'power',
       'friendly_name': 'TLX123456 Export power',
       'icon': 'mdi:solar-power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
@@ -5041,7 +5107,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -5080,6 +5148,7 @@
       'device_class': 'power',
       'friendly_name': 'TLX123456 Import power',
       'icon': 'mdi:solar-power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
@@ -5203,7 +5272,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -5242,6 +5313,7 @@
       'device_class': 'power',
       'friendly_name': 'TLX123456 Input 1 wattage',
       'icon': 'mdi:solar-power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
@@ -5365,7 +5437,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -5404,6 +5478,7 @@
       'device_class': 'power',
       'friendly_name': 'TLX123456 Input 2 wattage',
       'icon': 'mdi:solar-power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
@@ -5527,7 +5602,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -5566,6 +5643,7 @@
       'device_class': 'power',
       'friendly_name': 'TLX123456 Input 3 wattage',
       'icon': 'mdi:solar-power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
@@ -5689,7 +5767,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -5728,6 +5808,7 @@
       'device_class': 'power',
       'friendly_name': 'TLX123456 Input 4 wattage',
       'icon': 'mdi:solar-power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
@@ -5743,7 +5824,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -5782,6 +5865,7 @@
       'device_class': 'power',
       'friendly_name': 'TLX123456 Internal wattage',
       'icon': 'mdi:solar-power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
@@ -6880,7 +6964,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -6919,6 +7005,7 @@
       'device_class': 'power',
       'friendly_name': 'TLX123456 Local load power',
       'icon': 'mdi:solar-power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
@@ -6934,7 +7021,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -6973,6 +7062,7 @@
       'device_class': 'power',
       'friendly_name': 'TLX123456 Output power',
       'icon': 'mdi:solar-power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
@@ -7099,7 +7189,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -7138,6 +7230,7 @@
       'device_class': 'power',
       'friendly_name': 'TLX123456 Self power',
       'icon': 'mdi:solar-power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
@@ -7261,7 +7354,9 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -7300,6 +7395,7 @@
       'device_class': 'power',
       'friendly_name': 'TLX123456 System power',
       'icon': 'mdi:solar-power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,

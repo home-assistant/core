@@ -1,13 +1,27 @@
 """Test light trigger."""
 
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import patch
 
 import pytest
 
-from homeassistant.const import ATTR_LABEL_ID, CONF_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.components.light import ATTR_BRIGHTNESS
+from homeassistant.const import (
+    ATTR_LABEL_ID,
+    CONF_ABOVE,
+    CONF_BELOW,
+    CONF_ENTITY_ID,
+    STATE_OFF,
+    STATE_ON,
+)
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.setup import async_setup_component
+from homeassistant.helpers.trigger import (
+    CONF_LOWER_LIMIT,
+    CONF_THRESHOLD_TYPE,
+    CONF_UPPER_LIMIT,
+    ThresholdType,
+)
 
 from tests.components import (
     StateDescription,
@@ -37,12 +51,14 @@ def enable_experimental_triggers_conditions() -> Generator[None]:
 @pytest.fixture
 async def target_lights(hass: HomeAssistant) -> list[str]:
     """Create multiple light entities associated with different targets."""
-    return await target_entities(hass, "light")
+    return (await target_entities(hass, "light"))["included"]
 
 
 @pytest.mark.parametrize(
     "trigger_key",
     [
+        "light.brightness_changed",
+        "light.brightness_crossed_threshold",
         "light.turned_off",
         "light.turned_on",
     ],
@@ -58,6 +74,147 @@ async def test_light_triggers_gated_by_labs_flag(
         "feature to be enabled in Home Assistant Labs settings (feature flag: "
         "'new_triggers_conditions')"
     ) in caplog.text
+
+
+def parametrize_light_trigger_states(
+    *,
+    trigger: str,
+    trigger_options: dict | None = None,
+    target_states: list[str | None | tuple[str | None, dict]],
+    other_states: list[str | None | tuple[str | None, dict]],
+    additional_attributes: dict | None = None,
+    trigger_from_none: bool = True,
+    retrigger_on_target_state: bool = False,
+) -> list[tuple[str, dict[str, Any], list[StateDescription]]]:
+    """Parametrize states and expected service call counts."""
+    trigger_options = trigger_options or {}
+    return [
+        (s[0], trigger_options, *s[1:])
+        for s in parametrize_trigger_states(
+            trigger=trigger,
+            target_states=target_states,
+            other_states=other_states,
+            additional_attributes=additional_attributes,
+            trigger_from_none=trigger_from_none,
+            retrigger_on_target_state=retrigger_on_target_state,
+        )
+    ]
+
+
+def parametrize_xxx_changed_trigger_states(
+    trigger: str, attribute: str
+) -> list[tuple[str, dict[str, Any], list[StateDescription]]]:
+    """Parametrize states and expected service call counts for xxx_changed triggers."""
+    return [
+        *parametrize_light_trigger_states(
+            trigger=trigger,
+            target_states=[
+                (STATE_ON, {attribute: 0}),
+                (STATE_ON, {attribute: 50}),
+                (STATE_ON, {attribute: 100}),
+            ],
+            other_states=[(STATE_ON, {attribute: None})],
+            retrigger_on_target_state=True,
+        ),
+        *parametrize_light_trigger_states(
+            trigger=trigger,
+            trigger_options={CONF_ABOVE: 10},
+            target_states=[
+                (STATE_ON, {attribute: 50}),
+                (STATE_ON, {attribute: 100}),
+            ],
+            other_states=[
+                (STATE_ON, {attribute: None}),
+                (STATE_ON, {attribute: 0}),
+            ],
+            retrigger_on_target_state=True,
+        ),
+        *parametrize_light_trigger_states(
+            trigger=trigger,
+            trigger_options={CONF_BELOW: 90},
+            target_states=[
+                (STATE_ON, {attribute: 0}),
+                (STATE_ON, {attribute: 50}),
+            ],
+            other_states=[
+                (STATE_ON, {attribute: None}),
+                (STATE_ON, {attribute: 100}),
+            ],
+            retrigger_on_target_state=True,
+        ),
+    ]
+
+
+def parametrize_xxx_crossed_threshold_trigger_states(
+    trigger: str, attribute: str
+) -> list[tuple[str, dict[str, Any], list[StateDescription]]]:
+    """Parametrize states and expected service call counts for xxx_crossed_threshold triggers."""
+    return [
+        *parametrize_light_trigger_states(
+            trigger=trigger,
+            trigger_options={
+                CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN,
+                CONF_LOWER_LIMIT: 10,
+                CONF_UPPER_LIMIT: 90,
+            },
+            target_states=[
+                (STATE_ON, {attribute: 50}),
+                (STATE_ON, {attribute: 60}),
+            ],
+            other_states=[
+                (STATE_ON, {attribute: None}),
+                (STATE_ON, {attribute: 0}),
+                (STATE_ON, {attribute: 100}),
+            ],
+        ),
+        *parametrize_light_trigger_states(
+            trigger=trigger,
+            trigger_options={
+                CONF_THRESHOLD_TYPE: ThresholdType.OUTSIDE,
+                CONF_LOWER_LIMIT: 10,
+                CONF_UPPER_LIMIT: 90,
+            },
+            target_states=[
+                (STATE_ON, {attribute: 0}),
+                (STATE_ON, {attribute: 100}),
+            ],
+            other_states=[
+                (STATE_ON, {attribute: None}),
+                (STATE_ON, {attribute: 50}),
+                (STATE_ON, {attribute: 60}),
+            ],
+        ),
+        *parametrize_light_trigger_states(
+            trigger=trigger,
+            trigger_options={
+                CONF_THRESHOLD_TYPE: ThresholdType.ABOVE,
+                CONF_LOWER_LIMIT: 10,
+            },
+            target_states=[
+                (STATE_ON, {attribute: 50}),
+                (STATE_ON, {attribute: 100}),
+            ],
+            other_states=[
+                (STATE_ON, {attribute: None}),
+                (STATE_ON, {attribute: 0}),
+            ],
+        ),
+        *parametrize_light_trigger_states(
+            trigger=trigger,
+            trigger_options={
+                CONF_THRESHOLD_TYPE: ThresholdType.BELOW,
+                CONF_UPPER_LIMIT: 90,
+            },
+            target_states=[
+                (STATE_ON, {attribute: 0}),
+                (STATE_ON, {attribute: 50}),
+            ],
+            other_states=[
+                (STATE_ON, {attribute: None}),
+                (STATE_ON, {attribute: 100}),
+            ],
+        ),
+    ]
 
 
 @pytest.mark.usefixtures("enable_experimental_triggers_conditions")
@@ -91,19 +248,18 @@ async def test_light_state_trigger_behavior_any(
     states: list[StateDescription],
 ) -> None:
     """Test that the light state trigger fires when any light state changes to a specific state."""
-    await async_setup_component(hass, "light", {})
-
     other_entity_ids = set(target_lights) - {entity_id}
 
     # Set all lights, including the tested light, to the initial state
     for eid in target_lights:
-        set_or_remove_state(hass, eid, states[0])
+        set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
     await arm_trigger(hass, trigger, {}, trigger_target_config)
 
     for state in states[1:]:
-        set_or_remove_state(hass, entity_id, state)
+        included_state = state["included"]
+        set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
         assert len(service_calls) == state["count"]
         for service_call in service_calls:
@@ -112,7 +268,61 @@ async def test_light_state_trigger_behavior_any(
 
         # Check if changing other lights also triggers
         for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, state)
+            set_or_remove_state(hass, other_entity_id, included_state)
+            await hass.async_block_till_done()
+        assert len(service_calls) == (entities_in_target - 1) * state["count"]
+        service_calls.clear()
+
+
+@pytest.mark.usefixtures("enable_experimental_triggers_conditions")
+@pytest.mark.parametrize(
+    ("trigger_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities("light"),
+)
+@pytest.mark.parametrize(
+    ("trigger", "trigger_options", "states"),
+    [
+        *parametrize_xxx_changed_trigger_states(
+            "light.brightness_changed", ATTR_BRIGHTNESS
+        ),
+        *parametrize_xxx_crossed_threshold_trigger_states(
+            "light.brightness_crossed_threshold", ATTR_BRIGHTNESS
+        ),
+    ],
+)
+async def test_light_state_attribute_trigger_behavior_any(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    target_lights: list[str],
+    trigger_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    trigger: str,
+    trigger_options: dict[str, Any],
+    states: list[StateDescription],
+) -> None:
+    """Test that the light state trigger fires when any light state changes to a specific state."""
+    other_entity_ids = set(target_lights) - {entity_id}
+
+    # Set all lights, including the tested light, to the initial state
+    for eid in target_lights:
+        set_or_remove_state(hass, eid, states[0]["included"])
+        await hass.async_block_till_done()
+
+    await arm_trigger(hass, trigger, trigger_options, trigger_target_config)
+
+    for state in states[1:]:
+        included_state = state["included"]
+        set_or_remove_state(hass, entity_id, included_state)
+        await hass.async_block_till_done()
+        assert len(service_calls) == state["count"]
+        for service_call in service_calls:
+            assert service_call.data[CONF_ENTITY_ID] == entity_id
+        service_calls.clear()
+
+        # Check if changing other lights also triggers
+        for other_entity_id in other_entity_ids:
+            set_or_remove_state(hass, other_entity_id, included_state)
             await hass.async_block_till_done()
         assert len(service_calls) == (entities_in_target - 1) * state["count"]
         service_calls.clear()
@@ -149,19 +359,18 @@ async def test_light_state_trigger_behavior_first(
     states: list[StateDescription],
 ) -> None:
     """Test that the light state trigger fires when the first light changes to a specific state."""
-    await async_setup_component(hass, "light", {})
-
     other_entity_ids = set(target_lights) - {entity_id}
 
     # Set all lights, including the tested light, to the initial state
     for eid in target_lights:
-        set_or_remove_state(hass, eid, states[0])
+        set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
     await arm_trigger(hass, trigger, {"behavior": "first"}, trigger_target_config)
 
     for state in states[1:]:
-        set_or_remove_state(hass, entity_id, state)
+        included_state = state["included"]
+        set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
         assert len(service_calls) == state["count"]
         for service_call in service_calls:
@@ -170,7 +379,59 @@ async def test_light_state_trigger_behavior_first(
 
         # Triggering other lights should not cause the trigger to fire again
         for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, state)
+            set_or_remove_state(hass, other_entity_id, included_state)
+            await hass.async_block_till_done()
+        assert len(service_calls) == 0
+
+
+@pytest.mark.usefixtures("enable_experimental_triggers_conditions")
+@pytest.mark.parametrize(
+    ("trigger_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities("light"),
+)
+@pytest.mark.parametrize(
+    ("trigger", "trigger_options", "states"),
+    [
+        *parametrize_xxx_crossed_threshold_trigger_states(
+            "light.brightness_crossed_threshold", ATTR_BRIGHTNESS
+        ),
+    ],
+)
+async def test_light_state_attribute_trigger_behavior_first(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    target_lights: list[str],
+    trigger_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    trigger: str,
+    trigger_options: dict[str, Any],
+    states: list[tuple[tuple[str, dict], int]],
+) -> None:
+    """Test that the light state trigger fires when the first light state changes to a specific state."""
+    other_entity_ids = set(target_lights) - {entity_id}
+
+    # Set all lights, including the tested light, to the initial state
+    for eid in target_lights:
+        set_or_remove_state(hass, eid, states[0]["included"])
+        await hass.async_block_till_done()
+
+    await arm_trigger(
+        hass, trigger, {"behavior": "first"} | trigger_options, trigger_target_config
+    )
+
+    for state in states[1:]:
+        included_state = state["included"]
+        set_or_remove_state(hass, entity_id, included_state)
+        await hass.async_block_till_done()
+        assert len(service_calls) == state["count"]
+        for service_call in service_calls:
+            assert service_call.data[CONF_ENTITY_ID] == entity_id
+        service_calls.clear()
+
+        # Triggering other lights should not cause the trigger to fire again
+        for other_entity_id in other_entity_ids:
+            set_or_remove_state(hass, other_entity_id, included_state)
             await hass.async_block_till_done()
         assert len(service_calls) == 0
 
@@ -206,24 +467,74 @@ async def test_light_state_trigger_behavior_last(
     states: list[StateDescription],
 ) -> None:
     """Test that the light state trigger fires when the last light changes to a specific state."""
-    await async_setup_component(hass, "light", {})
-
     other_entity_ids = set(target_lights) - {entity_id}
 
     # Set all lights, including the tested light, to the initial state
     for eid in target_lights:
-        set_or_remove_state(hass, eid, states[0])
+        set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
     await arm_trigger(hass, trigger, {"behavior": "last"}, trigger_target_config)
 
     for state in states[1:]:
+        included_state = state["included"]
         for other_entity_id in other_entity_ids:
-            set_or_remove_state(hass, other_entity_id, state)
+            set_or_remove_state(hass, other_entity_id, included_state)
             await hass.async_block_till_done()
         assert len(service_calls) == 0
 
-        set_or_remove_state(hass, entity_id, state)
+        set_or_remove_state(hass, entity_id, included_state)
+        await hass.async_block_till_done()
+        assert len(service_calls) == state["count"]
+        for service_call in service_calls:
+            assert service_call.data[CONF_ENTITY_ID] == entity_id
+        service_calls.clear()
+
+
+@pytest.mark.usefixtures("enable_experimental_triggers_conditions")
+@pytest.mark.parametrize(
+    ("trigger_target_config", "entity_id", "entities_in_target"),
+    parametrize_target_entities("light"),
+)
+@pytest.mark.parametrize(
+    ("trigger", "trigger_options", "states"),
+    [
+        *parametrize_xxx_crossed_threshold_trigger_states(
+            "light.brightness_crossed_threshold", ATTR_BRIGHTNESS
+        ),
+    ],
+)
+async def test_light_state_attribute_trigger_behavior_last(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    target_lights: list[str],
+    trigger_target_config: dict,
+    entity_id: str,
+    entities_in_target: int,
+    trigger: str,
+    trigger_options: dict[str, Any],
+    states: list[tuple[tuple[str, dict], int]],
+) -> None:
+    """Test that the light state trigger fires when the last light state changes to a specific state."""
+    other_entity_ids = set(target_lights) - {entity_id}
+
+    # Set all lights, including the tested light, to the initial state
+    for eid in target_lights:
+        set_or_remove_state(hass, eid, states[0]["included"])
+        await hass.async_block_till_done()
+
+    await arm_trigger(
+        hass, trigger, {"behavior": "last"} | trigger_options, trigger_target_config
+    )
+
+    for state in states[1:]:
+        included_state = state["included"]
+        for other_entity_id in other_entity_ids:
+            set_or_remove_state(hass, other_entity_id, included_state)
+            await hass.async_block_till_done()
+        assert len(service_calls) == 0
+
+        set_or_remove_state(hass, entity_id, included_state)
         await hass.async_block_till_done()
         assert len(service_calls) == state["count"]
         for service_call in service_calls:

@@ -1553,7 +1553,9 @@ class Entity(
         # Clear the remove future to handle entity added again after entity id change
         self.__remove_future = None
         self._platform_state = EntityPlatformState.NOT_ADDED
-        await self.platform.async_add_entities([self])
+        await self.platform.async_add_entities(
+            [self], config_subentry_id=registry_entry.config_subentry_id
+        )
 
     @callback
     def _async_unsubscribe_device_updates(self) -> None:

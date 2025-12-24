@@ -60,7 +60,7 @@
               "proxy_url": "Proxy URL"
             },
             "data_description": {
-              "proxy_url": "Proxy URL if working behind one, optionally including username and password.\n(socks5://username:password@proxy_ip:proxy_port)"
+              "proxy_url": "Proxy URL if working behind one, optionally including username and password.\n({socks_url})"
             },
             "name": "Advanced settings"
           }
@@ -99,6 +99,7 @@
           "data_description": {
             "chat_id": "ID representing the user or group chat to which messages can be sent."
           },
+          "description": "To get your chat ID, follow these steps:\n\n1. Open Telegram and start a chat with [{getidsbot_username}]({getidsbot_url}).\n1. Send any message to the bot.\n1. Your chat ID is in the `id` field of the bot's response.",
           "title": "Add chat"
         }
       }
@@ -209,17 +210,16 @@
     }
   },
   "issues": {
-    "deprecated_yaml": {
-      "description": "Configuring {integration_title} using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the `{domain}` configuration from your configuration.yaml file and restart Home Assistant to fix this issue.",
-      "title": "The {integration_title} YAML configuration is being removed"
-    },
-    "deprecated_yaml_import_issue_error": {
-      "description": "Configuring {integration_title} using YAML is being removed but there was an error while importing your existing configuration ({telegram_bot}): {error_message}.\nSetup will not proceed.\n\nVerify that your {telegram_bot} is operating correctly and restart Home Assistant to attempt the import again.\n\nAlternatively, you may remove the `{domain}` configuration from your configuration.yaml entirely, restart Home Assistant, and add the {integration_title} integration manually.",
-      "title": "YAML import failed due to invalid {error_field}"
-    },
-    "deprecated_yaml_import_issue_has_more_platforms": {
-      "description": "Configuring {integration_title} using YAML is being removed.\n\nThe last entry of your existing YAML configuration ({telegram_bot}) has been imported into the UI automatically.\n\nRemove the `{domain}` configuration from your configuration.yaml file and restart Home Assistant to fix this issue. The other Telegram bots will need to be configured manually in the UI.",
-      "title": "The {integration_title} YAML configuration is being removed"
+    "deprecated_timeout_parameter": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "Update all affected automations and scripts to remove the `timeout` parameter and then click SUBMIT to fix this issue.\n\nThe deprecated parameter was last seen in the `{action}` action originating from `{action_origin}`.",
+            "title": "The `timeout` parameter for {integration_title} is being removed"
+          }
+        }
+      },
+      "title": "The `timeout` parameter for {integration_title} is being removed"
     }
   },
   "options": {
@@ -302,10 +302,6 @@
         "show_alert": {
           "description": "Show a permanent notification.",
           "name": "Show alert"
-        },
-        "timeout": {
-          "description": "Timeout for sending the answer in seconds.",
-          "name": "Read timeout"
         }
       },
       "name": "Answer callback query"
@@ -327,6 +323,29 @@
         }
       },
       "name": "Delete message"
+    },
+    "download_file": {
+      "description": "Download the file to a local path.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The config entry representing the Telegram bot to get the file.",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]"
+        },
+        "directory_path": {
+          "description": "Local directory path to save the file to. Defaults to the 'telegram_bot' directory within your Home Assistant configuration directory.",
+          "example": "/config/telegram_bot",
+          "name": "Directory path"
+        },
+        "file_id": {
+          "description": "ID of the file to get.",
+          "name": "File ID"
+        },
+        "file_name": {
+          "description": "Name to save the file as. If not provided, the original file name will be used.",
+          "name": "File name"
+        }
+      },
+      "name": "Download file"
     },
     "edit_caption": {
       "description": "Edits the caption of a previously sent message.",
@@ -400,7 +419,7 @@
           "name": "[%key:component::telegram_bot::services::send_photo::fields::authentication::name%]"
         },
         "caption": {
-          "description": "The title of the media.",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::caption::description%]",
           "name": "[%key:component::telegram_bot::services::send_photo::fields::caption::name%]"
         },
         "chat_id": {
@@ -430,10 +449,6 @@
         "password": {
           "description": "[%key:component::telegram_bot::services::send_photo::fields::password::description%]",
           "name": "[%key:common::config_flow::data::password%]"
-        },
-        "timeout": {
-          "description": "Timeout for sending the media in seconds.",
-          "name": "[%key:component::telegram_bot::services::send_photo::fields::timeout::name%]"
         },
         "url": {
           "description": "Remote path to the media.",
@@ -499,7 +514,7 @@
           "name": "[%key:component::telegram_bot::services::send_photo::fields::authentication::name%]"
         },
         "caption": {
-          "description": "The title of the animation.",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::caption::description%]",
           "name": "[%key:component::telegram_bot::services::send_photo::fields::caption::name%]"
         },
         "config_entry_id": {
@@ -545,10 +560,6 @@
         "target": {
           "description": "[%key:component::telegram_bot::services::send_photo::fields::target::description%]",
           "name": "Target"
-        },
-        "timeout": {
-          "description": "[%key:component::telegram_bot::services::send_sticker::fields::timeout::description%]",
-          "name": "Read timeout"
         },
         "url": {
           "description": "Remote path to a GIF or H.264/MPEG-4 AVC video without sound.",
@@ -600,7 +611,7 @@
           "name": "[%key:component::telegram_bot::services::send_photo::fields::authentication::name%]"
         },
         "caption": {
-          "description": "The title of the document.",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::caption::description%]",
           "name": "[%key:component::telegram_bot::services::send_photo::fields::caption::name%]"
         },
         "config_entry_id": {
@@ -646,10 +657,6 @@
         "target": {
           "description": "[%key:component::telegram_bot::services::send_photo::fields::target::description%]",
           "name": "Target"
-        },
-        "timeout": {
-          "description": "Timeout for sending the document in seconds.",
-          "name": "Read timeout"
         },
         "url": {
           "description": "Remote path to a document.",
@@ -713,10 +720,6 @@
         "target": {
           "description": "An array of pre-authorized chat IDs to send the location to. If not present, first allowed chat ID is the default.",
           "name": "Target"
-        },
-        "timeout": {
-          "description": "[%key:component::telegram_bot::services::send_photo::fields::timeout::description%]",
-          "name": "Read timeout"
         }
       },
       "name": "Send location"
@@ -745,7 +748,7 @@
           "name": "Keyboard"
         },
         "message": {
-          "description": "Message body of the notification.",
+          "description": "Message body of the notification.\nCan't parse entities? Format your message according to the [formatting options]({formatting_options_url}).",
           "name": "Message"
         },
         "message_tag": {
@@ -757,7 +760,7 @@
           "name": "Message thread ID"
         },
         "parse_mode": {
-          "description": "Parser for the message text.",
+          "description": "Parser for the message text.\nSee [formatting options]({formatting_options_url}) for more details.",
           "name": "Parse mode"
         },
         "reply_to_message_id": {
@@ -767,10 +770,6 @@
         "target": {
           "description": "An array of pre-authorized chat IDs to send the notification to. If not present, first allowed chat ID is the default.",
           "name": "Target"
-        },
-        "timeout": {
-          "description": "Timeout for sending the message in seconds. Will help with timeout errors (poor Internet connection, etc).",
-          "name": "Read timeout"
         },
         "title": {
           "description": "Optional title for your notification. Will be composed as '%title\\n%message'.",
@@ -787,7 +786,7 @@
           "name": "Authentication method"
         },
         "caption": {
-          "description": "The title of the image.",
+          "description": "The title of the media.\nCan't parse entities? Format your message according to the [formatting options]({formatting_options_url}).",
           "name": "Caption"
         },
         "config_entry_id": {
@@ -833,10 +832,6 @@
         "target": {
           "description": "An array of pre-authorized chat IDs to send the document to. If not present, first allowed chat ID is the default.",
           "name": "Target"
-        },
-        "timeout": {
-          "description": "Timeout for sending the photo in seconds.",
-          "name": "Read timeout"
         },
         "url": {
           "description": "Remote path to an image.",
@@ -900,10 +895,6 @@
         "target": {
           "description": "[%key:component::telegram_bot::services::send_location::fields::target::description%]",
           "name": "Target"
-        },
-        "timeout": {
-          "description": "Timeout for sending the poll in seconds.",
-          "name": "Read timeout"
         }
       },
       "name": "Send poll"
@@ -959,10 +950,6 @@
           "description": "[%key:component::telegram_bot::services::send_photo::fields::target::description%]",
           "name": "Target"
         },
-        "timeout": {
-          "description": "Timeout for sending the sticker in seconds.",
-          "name": "Read timeout"
-        },
         "url": {
           "description": "Remote path to a static .webp or animated .tgs sticker.",
           "name": "[%key:common::config_flow::data::url%]"
@@ -991,7 +978,7 @@
           "name": "[%key:component::telegram_bot::services::send_photo::fields::authentication::name%]"
         },
         "caption": {
-          "description": "The title of the video.",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::caption::description%]",
           "name": "[%key:component::telegram_bot::services::send_photo::fields::caption::name%]"
         },
         "config_entry_id": {
@@ -1038,10 +1025,6 @@
           "description": "[%key:component::telegram_bot::services::send_photo::fields::target::description%]",
           "name": "Target"
         },
-        "timeout": {
-          "description": "Timeout for sending the video in seconds.",
-          "name": "Read timeout"
-        },
         "url": {
           "description": "Remote path to a video.",
           "name": "[%key:common::config_flow::data::url%]"
@@ -1070,7 +1053,7 @@
           "name": "[%key:component::telegram_bot::services::send_photo::fields::authentication::name%]"
         },
         "caption": {
-          "description": "The title of the voice message.",
+          "description": "[%key:component::telegram_bot::services::send_photo::fields::caption::description%]",
           "name": "[%key:component::telegram_bot::services::send_photo::fields::caption::name%]"
         },
         "config_entry_id": {
@@ -1112,10 +1095,6 @@
         "target": {
           "description": "[%key:component::telegram_bot::services::send_photo::fields::target::description%]",
           "name": "Target"
-        },
-        "timeout": {
-          "description": "Timeout for sending the voice in seconds.",
-          "name": "Read timeout"
         },
         "url": {
           "description": "Remote path to a voice message.",

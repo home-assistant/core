@@ -1,13 +1,13 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_dhcp_flow": "No DHCP flow"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "discovery_failed": "Failed to discover Sunricher DALI gateways on the network",
-      "no_devices_found": "No Sunricher DALI gateways found on the network",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "no_devices_found": "No Sunricher DALI gateways found on the network"
     },
     "step": {
       "select_gateway": {

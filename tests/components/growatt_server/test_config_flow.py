@@ -13,19 +13,14 @@ from homeassistant.components.growatt_server.const import (
     AUTH_PASSWORD,
     CONF_AUTH_TYPE,
     CONF_PLANT_ID,
+    CONF_REGION,
     DEFAULT_URL,
     DOMAIN,
     ERROR_CANNOT_CONNECT,
     ERROR_INVALID_AUTH,
     LOGIN_INVALID_AUTH_CODE,
 )
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_TOKEN,
-    CONF_URL,
-    CONF_USERNAME,
-)
+from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -34,11 +29,12 @@ from tests.common import MockConfigEntry
 FIXTURE_USER_INPUT_PASSWORD = {
     CONF_USERNAME: "username",
     CONF_PASSWORD: "password",
-    CONF_URL: DEFAULT_URL,
+    CONF_REGION: DEFAULT_URL,
 }
 
 FIXTURE_USER_INPUT_TOKEN = {
     CONF_TOKEN: "test_api_token_12345",
+    CONF_REGION: DEFAULT_URL,
 }
 
 GROWATT_PLANT_LIST_RESPONSE = {
@@ -109,8 +105,8 @@ async def test_show_auth_menu(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("auth_type", "expected_fields"),
     [
-        ("password_auth", [CONF_USERNAME, CONF_PASSWORD, CONF_URL]),
-        ("token_auth", [CONF_TOKEN]),
+        ("password_auth", [CONF_USERNAME, CONF_PASSWORD, CONF_REGION]),
+        ("token_auth", [CONF_TOKEN, CONF_REGION]),
     ],
 )
 async def test_auth_form_display(

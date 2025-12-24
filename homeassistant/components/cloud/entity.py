@@ -8,10 +8,9 @@ import logging
 import re
 from typing import Any, Literal, cast
 
-from hass_nabucasa import Cloud
+from hass_nabucasa import Cloud, NabuCasaBaseError
 from hass_nabucasa.llm import (
     LLMAuthenticationError,
-    LLMError,
     LLMRateLimitError,
     LLMResponseError,
     LLMServiceError,
@@ -37,7 +36,7 @@ from voluptuous_openapi import convert
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
@@ -562,7 +561,7 @@ class BaseCloudLLMEntity(Entity):
                         "schema": _format_structured_output(
                             structure, chat_log.llm_api
                         ),
-                        "strict": True,
+                        "strict": False,
                     },
                 }
 
@@ -601,14 +600,14 @@ class BaseCloudLLMEntity(Entity):
                 )
 
             except LLMAuthenticationError as err:
-                raise ConfigEntryAuthFailed("Cloud LLM authentication failed") from err
+                raise HomeAssistantError("Cloud LLM authentication failed") from err
             except LLMRateLimitError as err:
                 raise HomeAssistantError("Cloud LLM is rate limited") from err
             except LLMResponseError as err:
                 raise HomeAssistantError(str(err)) from err
             except LLMServiceError as err:
                 raise HomeAssistantError("Error talking to Cloud LLM") from err
-            except LLMError as err:
+            except NabuCasaBaseError as err:
                 raise HomeAssistantError(str(err)) from err
 
             if not chat_log.unresponded_tool_results:

@@ -1,5 +1,7 @@
 """Event platform for ekey bionyx integration."""
 
+from http import HTTPStatus
+
 from aiohttp.hdrs import METH_POST
 from aiohttp.web import Request, Response
 
@@ -52,8 +54,18 @@ class EkeyEvent(EventEntity):
         async def async_webhook_handler(
             hass: HomeAssistant, webhook_id: str, request: Request
         ) -> Response | None:
-            if (await request.json())["auth"] == self._auth:
-                self._async_handle_event()
+            try:
+                payload = await request.json()
+            except ValueError:
+                return Response(status=HTTPStatus.BAD_REQUEST)
+            auth = payload.get("auth")
+
+            if auth is None:
+                return Response(status=HTTPStatus.BAD_REQUEST)
+            if auth != self._auth:
+                return Response(status=HTTPStatus.UNAUTHORIZED)
+
+            self._async_handle_event()
             return None
 
         webhook_register(

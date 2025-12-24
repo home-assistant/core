@@ -1,19 +1,22 @@
 """The Rituals Perfume Genie integration."""
 
 import asyncio
+import logging
 
-import aiohttp
-from pyrituals import Account, Diffuser
+from aiohttp import ClientError, ClientResponseError
+from pyrituals import Account, AuthenticationException, Diffuser
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import ACCOUNT_HASH, DOMAIN, UPDATE_INTERVAL
 from .coordinator import RitualsDataUpdateCoordinator
+
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -26,12 +29,38 @@ PLATFORMS = [
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Rituals Perfume Genie from a config entry."""
+    # Initiate reauth for old config entries which don't have username / password in the entry data
+    if CONF_EMAIL not in entry.data or CONF_PASSWORD not in entry.data:
+        raise ConfigEntryAuthFailed("Missing credentials")
+
     session = async_get_clientsession(hass)
-    account = Account(session=session, account_hash=entry.data[ACCOUNT_HASH])
+
+    account = Account(
+        email=entry.data[CONF_EMAIL],
+        password=entry.data[CONF_PASSWORD],
+        session=session,
+    )
 
     try:
+        # Authenticate first so API token/cookies are available for subsequent calls
+        await account.authenticate()
         account_devices = await account.get_devices()
-    except aiohttp.ClientError as err:
+
+    except AuthenticationException as err:
+        # Credentials invalid/expired -> raise AuthFailed to trigger reauth flow
+
+        raise ConfigEntryAuthFailed(err) from err
+
+    except ClientResponseError as err:
+        _LOGGER.debug(
+            "HTTP error during Rituals setup: status=%s, url=%s, headers=%s",
+            err.status,
+            err.request_info,
+            dict(err.headers or {}),
+        )
+        raise ConfigEntryNotReady from err
+
+    except ClientError as err:
         raise ConfigEntryNotReady from err
 
     # Migrate old unique_ids to the new format
@@ -45,7 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Create a coordinator for each diffuser
     coordinators = {
         diffuser.hublot: RitualsDataUpdateCoordinator(
-            hass, entry, diffuser, update_interval
+            hass, entry, account, diffuser, update_interval
         )
         for diffuser in account_devices
     }
@@ -106,3 +135,14 @@ def async_migrate_entities_unique_ids(
                     registry_entry.entity_id,
                     new_unique_id=f"{diffuser.hublot}-{new_unique_id}",
                 )
+
+
+# Migration helpers for API v2
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Migrate config entry to version 2: drop legacy ACCOUNT_HASH and bump version."""
+    if entry.version < 2:
+        data = dict(entry.data)
+        data.pop(ACCOUNT_HASH, None)
+        hass.config_entries.async_update_entry(entry, data=data, version=2)
+        return True
+    return True

@@ -452,6 +452,9 @@ class ZWaveServices:
                     has_at_least_one_node,
                 ),
             ),
+            description_placeholders={
+                "api_docs_url": "https://zwave-js.github.io/node-zwave-js/#/api/CCs/index"
+            },
         )
 
         self._hass.services.async_register(

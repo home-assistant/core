@@ -6,7 +6,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from gios.model import GiosSensors, GiosStation, Sensor as GiosSensor
 import pytest
 
-from homeassistant.components.gios.const import DOMAIN
+from homeassistant.components.gios.const import CONF_STATION_ID, DOMAIN
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
@@ -21,7 +22,10 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         title="Home",
         unique_id="123",
-        data={"station_id": 123, "name": "Home"},
+        data={
+            CONF_STATION_ID: 123,
+            CONF_NAME: "Home",
+        },
         entry_id="86129426118ae32020417a53712d6eef",
     )
 
@@ -49,7 +53,7 @@ def mock_gios_sensors() -> GiosSensors:
 def mock_gios_stations() -> dict[int, GiosStation]:
     """Return the default mocked gios stations."""
     return {
-        123: GiosStation(id=123, name="Test Name 1", latitude=99.99, longitude=88.88),
+        123: GiosStation(id=123, name="Home", latitude=99.99, longitude=88.88),
         321: GiosStation(id=321, name="Test Name 2", latitude=77.77, longitude=66.66),
     }
 

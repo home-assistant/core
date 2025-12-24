@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Iterable
 from datetime import timedelta
 import logging
+import types
 from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
@@ -1609,6 +1610,32 @@ async def test_platform_with_no_setup(
         "platform_key": "platform: mock-platform",
         "yaml_example": "```yaml\nmock-integration:\n  - platform: mock-platform\n```",
     }
+
+
+async def test_platform_with_no_setup_custom_component_hint(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test setting up a custom integration platform without setup logs extra warning."""
+    platform_mod = types.ModuleType("custom_components.mock_integration.mock_platform")
+    platform_mod.__file__ = (
+        "/config/custom_components/mock_integration/mock_platform.py"
+    )
+
+    entity_platform = MockEntityPlatform(
+        hass,
+        domain="mock-integration",
+        platform_name="mock-platform",
+        platform=platform_mod,
+    )
+
+    await entity_platform.async_setup(None)
+
+    assert (
+        "The mock-platform platform module for the mock-integration custom integration "
+        "does not implement async_setup_platform or setup_platform." in caplog.text
+    )
 
 
 async def test_platforms_sharing_services(hass: HomeAssistant) -> None:
