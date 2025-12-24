@@ -10,7 +10,7 @@ from fishaudio.exceptions import FishAudioError, RateLimitError
 from homeassistant.components.tts import TextToSpeechEntity, TtsAudioType
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -59,7 +59,7 @@ class FishAudioTTSEntity(TextToSpeechEntity):
         self.sub_entry = sub_entry
         self._attr_unique_id = sub_entry.subentry_id
         title = sub_entry.title
-        backend = sub_entry.data.get(CONF_BACKEND)
+        backend = sub_entry.data[CONF_BACKEND]
         self._attr_name = title
 
         self._attr_device_info = DeviceInfo(
@@ -96,13 +96,10 @@ class FishAudioTTSEntity(TextToSpeechEntity):
             CONF_LATENCY, self.sub_entry.data.get(CONF_LATENCY, "balanced")
         )
 
-        _LOGGER.debug("Voice ID: %s", voice_id)
         if voice_id is None:
-            _LOGGER.error("Voice ID not configured")
-            return None, None
+            raise ServiceValidationError("Voice ID not configured")
         if backend is None:
-            _LOGGER.error("Backend model not configured")
-            return None, None
+            raise ServiceValidationError("Backend model not configured")
 
         try:
             audio = await self.client.tts.convert(
