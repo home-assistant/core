@@ -146,7 +146,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     proxmox: ProxmoxAPI = proxmox_client.get_api_client()
 
-    updated_nodes: list[dict[str, Any]] = []
     for node_config in entry.data[CONF_NODES]:
         node_name = node_config[CONF_NODE]
         node_coordinators = coordinators[host_name][node_name] = {}
