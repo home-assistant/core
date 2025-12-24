@@ -9,6 +9,7 @@ from __future__ import annotations
 import asyncio
 from collections import UserDict, defaultdict
 from collections.abc import (
+    Awaitable,
     Callable,
     Collection,
     Coroutine,
@@ -18,7 +19,7 @@ from collections.abc import (
     ValuesView,
 )
 import concurrent.futures
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import datetime
 import enum
 import functools
@@ -106,8 +107,8 @@ from .util.ulid import ulid_at_time, ulid_now
 if TYPE_CHECKING:
     from .auth import AuthManager
     from .components.http import HomeAssistantHTTP
-    from .config_entries import ConfigEntries
-    from .helpers.entity import StateInfo
+    from .config_entries import ConfigEntries, ConfigEntry
+    from .helpers.entity import Entity, StateInfo
 
 STOPPING_STAGE_SHUTDOWN_TIMEOUT = 20
 STOP_STAGE_SHUTDOWN_TIMEOUT = 100
@@ -126,6 +127,10 @@ BLOCK_LOG_TIMEOUT = 60
 
 type ServiceResponse = JsonObjectType | None
 type EntityServiceResponse = dict[str, ServiceResponse]
+type ConfigEntryServiceCallback = Callable[
+    [ConfigEntry, set[Entity], ServiceCall | None],
+    Awaitable[dict[str, EntityServiceResponse] | None],
+]
 
 
 class EventStateEventData(TypedDict):
@@ -2407,6 +2412,19 @@ class SupportsResponse(enum.StrEnum):
     """The service is read-only and the caller must always ask for response data."""
 
 
+@dataclass(slots=True)
+class ConfigEntryServiceOverride:
+    """Per-ConfigEntry service override that can handle multiple entities.
+
+    The `entities` set accumulates all entities targeted during a service call,
+    allowing the callback to process them in a single invocation instead of
+    individual entity calls.
+    """
+
+    handler: ConfigEntryServiceCallback
+    entities: set[Entity] = field(default_factory=set)
+
+
 class Service:
     """Representation of a callable service."""
 
@@ -2414,6 +2432,7 @@ class Service:
         "description_placeholders",
         "domain",
         "job",
+        "overrides",
         "schema",
         "service",
         "supports_response",
@@ -2441,6 +2460,23 @@ class Service:
         self.schema = schema
         self.supports_response = supports_response
         self.description_placeholders = description_placeholders
+        self.overrides: dict[ConfigEntry, ConfigEntryServiceOverride] = {}
+
+    @callback
+    def async_register_config_entry_override(
+        self,
+        config_entry: ConfigEntry,
+        handler: ConfigEntryServiceCallback,
+    ) -> None:
+        """Register or update a per-ConfigEntry override for this service.
+
+        The override handler will receive a set of entities and an optional ServiceCall.
+        Entities will be accumulated for multi-entity execution.
+        """
+        override = self.overrides.setdefault(
+            config_entry, ConfigEntryServiceOverride(handler)
+        )
+        override.handler = handler
 
 
 class ServiceCall:
@@ -2646,6 +2682,32 @@ class ServiceRegistry:
         self._hass.bus.async_fire_internal(
             EVENT_SERVICE_REGISTERED, {ATTR_DOMAIN: domain, ATTR_SERVICE: service}
         )
+
+    @callback
+    def async_register_config_entry_override(
+        self,
+        domain: str,
+        service: str,
+        config_entry: ConfigEntry,
+        handler: ConfigEntryServiceCallback,
+    ) -> None:
+        """Register a per-ConfigEntry override for a specific service.
+
+        The override will be stored on the Service object and scoped to
+        the given ConfigEntry. The handler receives a set of entities and
+        an optional ServiceCall, allowing multi-entity execution.
+        """
+        domain = domain.lower()
+        service = service.lower()
+
+        try:
+            service_obj = self._services[domain][service]
+        except KeyError as err:
+            raise HomeAssistantError(
+                f"Service {domain}.{service} does not exist; register it first"
+            ) from err
+
+        service_obj.async_register_config_entry_override(config_entry, handler)
 
     def remove(self, domain: str, service: str) -> None:
         """Remove a registered service from service handler."""

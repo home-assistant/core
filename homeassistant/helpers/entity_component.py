@@ -17,6 +17,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import (
+    ConfigEntryServiceCallback,
     Event,
     HassJobType,
     HomeAssistant,
@@ -267,6 +268,28 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
             supports_response=supports_response,
             description_placeholders=description_placeholders,
         )
+
+    @callback
+    def async_register_entity_service_override(
+        self,
+        name: str,
+        config_entry: ConfigEntry,
+        handler: ConfigEntryServiceCallback,
+    ) -> None:
+        """Register a per-ConfigEntry override for an entity service.
+
+        This allows the integration to register a handler that receives all
+        entities associated with a specific ConfigEntry.
+        """
+        # Look up the service object in the registry
+        service_obj = (
+            self.hass.services.async_services_internal().get(self.domain, {}).get(name)
+        )
+        if service_obj is None:
+            raise HomeAssistantError(f"Service {self.domain}.{name} is not registered")
+
+        # Register the override
+        service_obj.async_register_config_entry_override(config_entry, handler)
 
     async def async_setup_platform(
         self,
