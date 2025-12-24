@@ -860,7 +860,8 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 )
             except (HomeAssistantError, SoCoException, OSError) as err:
                 unjoin_data.exception = err
-            unjoin_data.event.set()
+            finally:
+                unjoin_data.event.set()
 
         if unjoin_data := sonos_data.unjoin_data.get(household_id):
             unjoin_data.speakers.append(self.speaker)
