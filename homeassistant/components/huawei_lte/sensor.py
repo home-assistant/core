@@ -6,6 +6,7 @@ from bisect import bisect
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+import ipaddress
 import logging
 import re
 
@@ -85,6 +86,17 @@ def format_last_reset_elapsed_seconds(value: str | None) -> datetime | None:
     return last_reset
 
 
+def format_ipv6(value: StateType) -> tuple[StateType, str | None]:
+    """Format an IPv6 address for tidy display.
+
+    Raw values from the device may contain uppercase and redundant segments.
+    """
+    try:
+        return str(ipaddress.IPv6Address(str(value))), None
+    except ValueError:
+        return value, None
+
+
 def signal_icon(limits: Sequence[int], value: StateType) -> str:
     """Get signal icon."""
     return (
@@ -151,6 +163,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
             "WanIPv6Address": HuaweiSensorEntityDescription(
                 key="WanIPv6Address",
                 translation_key="wan_ipv6_address",
+                format_fn=format_ipv6,
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
         },
@@ -583,6 +596,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
             "PrimaryIPv6Dns": HuaweiSensorEntityDescription(
                 key="PrimaryIPv6Dns",
                 translation_key="primary_ipv6_dns_server",
+                format_fn=format_ipv6,
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
             "SecondaryDns": HuaweiSensorEntityDescription(
@@ -593,6 +607,7 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
             "SecondaryIPv6Dns": HuaweiSensorEntityDescription(
                 key="SecondaryIPv6Dns",
                 translation_key="secondary_ipv6_dns_server",
+                format_fn=format_ipv6,
                 entity_category=EntityCategory.DIAGNOSTIC,
             ),
         },
