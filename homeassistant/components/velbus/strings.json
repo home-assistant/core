@@ -58,7 +58,7 @@
   },
   "exceptions": {
     "api_call_failed": {
-      "message": "Could not execute {service} service for {entity}."
+      "message": "Action execute for {entity} failed: {service}."
     },
     "clear_cache_failed": {
       "message": "Could not clear the Velbus cache: {error}"
