@@ -15,7 +15,7 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from tests.common import MockConfigEntry
 
-CONFIG = {CONF_HOST: "example.com"}
+CONFIG = {CONF_HOST: "10.10.0.10"}
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_wled")
@@ -71,7 +71,7 @@ async def test_full_reconfigure_flow_success(
     assert result.get("reason") == "reconfigure_successful"
 
     # Assert config entry has been updated.
-    assert mock_config_entry.data[CONF_HOST] == "example.com"
+    assert mock_config_entry.data[CONF_HOST] == "10.10.0.10"
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_wled")
@@ -139,7 +139,7 @@ async def test_full_reconfigure_flow_connection_error_and_success(
     assert result.get("reason") == "reconfigure_successful"
 
     # Assert config entry has been updated.
-    assert mock_config_entry.data[CONF_HOST] == "example.com"
+    assert mock_config_entry.data[CONF_HOST] == "10.10.0.10"
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_wled")
