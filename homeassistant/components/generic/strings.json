@@ -26,17 +26,24 @@
     "step": {
       "user": {
         "data": {
-          "authentication": "Authentication",
-          "framerate": "Frame rate (Hz)",
-          "limit_refetch_to_url_change": "Limit refetch to URL change",
           "password": "[%key:common::config_flow::data::password%]",
-          "rtsp_transport": "RTSP transport protocol",
           "still_image_url": "Still image URL (e.g. http://...)",
           "stream_source": "Stream source URL (e.g. rtsp://...)",
-          "username": "[%key:common::config_flow::data::username%]",
-          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+          "username": "[%key:common::config_flow::data::username%]"
         },
-        "description": "Enter the settings to connect to the camera."
+        "sections": {
+          "advanced": {
+            "data": {
+              "authentication": "Authentication",
+              "framerate": "Frame rate (Hz)",
+              "limit_refetch_to_url_change": "Limit refetch to URL change",
+              "rtsp_transport": "RTSP transport protocol",
+              "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+            },
+            "description": "Advanced settings are only needed for special cases. Leave them unchanged unless you know what you are doing.",
+            "name": "Advanced settings"
+          }
+        }
       },
       "user_confirm": {
         "data": {
@@ -70,19 +77,27 @@
     "step": {
       "init": {
         "data": {
-          "authentication": "[%key:component::generic::config::step::user::data::authentication%]",
-          "framerate": "[%key:component::generic::config::step::user::data::framerate%]",
-          "limit_refetch_to_url_change": "[%key:component::generic::config::step::user::data::limit_refetch_to_url_change%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "rtsp_transport": "[%key:component::generic::config::step::user::data::rtsp_transport%]",
           "still_image_url": "[%key:component::generic::config::step::user::data::still_image_url%]",
           "stream_source": "[%key:component::generic::config::step::user::data::stream_source%]",
-          "use_wallclock_as_timestamps": "Use wallclock as timestamps",
-          "username": "[%key:common::config_flow::data::username%]",
-          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+          "username": "[%key:common::config_flow::data::username%]"
         },
-        "data_description": {
-          "use_wallclock_as_timestamps": "This option may correct segmenting or crashing issues arising from buggy timestamp implementations on some cameras"
+        "sections": {
+          "advanced": {
+            "data": {
+              "authentication": "[%key:component::generic::config::step::user::sections::advanced::data::authentication%]",
+              "framerate": "[%key:component::generic::config::step::user::sections::advanced::data::framerate%]",
+              "limit_refetch_to_url_change": "[%key:component::generic::config::step::user::sections::advanced::data::limit_refetch_to_url_change%]",
+              "rtsp_transport": "[%key:component::generic::config::step::user::sections::advanced::data::rtsp_transport%]",
+              "use_wallclock_as_timestamps": "Use wallclock as timestamps",
+              "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+            },
+            "data_description": {
+              "use_wallclock_as_timestamps": "This option may correct segmenting or crashing issues arising from buggy timestamp implementations on some cameras"
+            },
+            "description": "[%key:component::generic::config::step::user::sections::advanced::description%]",
+            "name": "[%key:component::generic::config::step::user::sections::advanced::name%]"
+          }
         }
       },
       "user_confirm": {

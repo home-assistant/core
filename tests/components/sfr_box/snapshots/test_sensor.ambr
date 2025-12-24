@@ -137,14 +137,14 @@
     'supported_features': 0,
     'translation_key': 'dsl_connect_count',
     'unique_id': 'e4:5d:51:00:11:22_dsl_counter',
-    'unit_of_measurement': 'connects',
+    'unit_of_measurement': 'attempts',
   })
 # ---
 # name: test_sensors[sensor.sfr_box_dsl_connect_count-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'SFR Box DSL connect count',
-      'unit_of_measurement': 'connects',
+      'unit_of_measurement': 'attempts',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.sfr_box_dsl_connect_count',

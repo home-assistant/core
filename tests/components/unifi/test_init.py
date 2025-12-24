@@ -39,7 +39,7 @@ async def test_setup_entry_fails_config_entry_not_ready(
     ):
         config_entry = await config_entry_factory()
 
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_entry_fails_trigger_reauth_flow(
@@ -56,7 +56,7 @@ async def test_setup_entry_fails_trigger_reauth_flow(
         config_entry = await config_entry_factory()
         mock_flow_init.assert_called_once()
 
-    assert config_entry.state == ConfigEntryState.SETUP_ERROR
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 @pytest.mark.parametrize(

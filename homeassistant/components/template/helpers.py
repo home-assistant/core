@@ -1,7 +1,7 @@
 """Helpers for template integration."""
 
 from collections.abc import Callable
-from enum import Enum
+from enum import StrEnum
 import hashlib
 import itertools
 import logging
@@ -12,6 +12,7 @@ import voluptuous as vol
 from homeassistant.components import blueprint
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     CONF_ENTITY_PICTURE_TEMPLATE,
     CONF_FRIENDLY_NAME,
     CONF_ICON,
@@ -33,6 +34,7 @@ from homeassistant.helpers.entity_platform import (
     async_get_platforms,
 )
 from homeassistant.helpers.issue_registry import IssueSeverity
+from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import yaml as yaml_util
@@ -132,6 +134,9 @@ def rewrite_legacy_to_modern_config(
     """Rewrite legacy config."""
     entity_cfg = {**entity_cfg}
 
+    # Remove deprecated entity_id field from legacy syntax
+    entity_cfg.pop(ATTR_ENTITY_ID, None)
+
     for from_key, to_key in itertools.chain(
         LEGACY_FIELDS.items(), extra_legacy_fields.items()
     ):
@@ -190,12 +195,12 @@ def async_create_template_tracking_entities(
     async_add_entities(entities)
 
 
-def _format_template(value: Any) -> Any:
+def _format_template(value: Any, field: str | None = None) -> Any:
     if isinstance(value, template.Template):
         return value.template
 
-    if isinstance(value, Enum):
-        return value.name
+    if isinstance(value, StrEnum):
+        return value.value
 
     if isinstance(value, (int, float, str, bool)):
         return value
@@ -207,14 +212,13 @@ def format_migration_config(
     config: ConfigType | list[ConfigType], depth: int = 0
 ) -> ConfigType | list[ConfigType]:
     """Recursive method to format templates as strings from ConfigType."""
-    types = (dict, list)
     if depth > 9:
         raise RecursionError
 
     if isinstance(config, list):
         items = []
         for item in config:
-            if isinstance(item, types):
+            if isinstance(item, (dict, list)):
                 if len(item) > 0:
                     items.append(format_migration_config(item, depth + 1))
             else:
@@ -223,9 +227,18 @@ def format_migration_config(
 
     formatted_config = {}
     for field, value in config.items():
-        if isinstance(value, types):
+        if isinstance(value, dict):
             if len(value) > 0:
                 formatted_config[field] = format_migration_config(value, depth + 1)
+        elif isinstance(value, list):
+            if len(value) > 0:
+                formatted_config[field] = format_migration_config(value, depth + 1)
+            else:
+                formatted_config[field] = []
+        elif isinstance(value, ScriptVariables):
+            formatted_config[field] = format_migration_config(
+                value.as_dict(), depth + 1
+            )
         else:
             formatted_config[field] = _format_template(value)
 
@@ -260,9 +273,9 @@ def create_legacy_template_issue(
     try:
         config.pop(CONF_PLATFORM, None)
         modified_yaml = format_migration_config(config)
-        yaml_config = yaml_util.dump({DOMAIN: [{domain: [modified_yaml]}]})
-        # Format to show up properly in a numbered bullet on the repair.
-        yaml_config = "    ```\n    " + yaml_config.replace("\n", "\n    ") + "```"
+        yaml_config = (
+            f"```\n{yaml_util.dump({DOMAIN: [{domain: [modified_yaml]}]})}\n```"
+        )
     except RecursionError:
         yaml_config = f"{DOMAIN}:\n  - {domain}:      - ..."
 
@@ -278,6 +291,7 @@ def create_legacy_template_issue(
             "domain": domain,
             "breadcrumb": breadcrumb,
             "config": yaml_config,
+            "filename": "<filename>",
         },
     )
 
