@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from fishaudio.exceptions import FishAudioError, RateLimitError
+from fishaudio.exceptions import APIError, RateLimitError
 
 from homeassistant.components.tts import TextToSpeechEntity, TtsAudioType
 from homeassistant.config_entries import ConfigSubentry
@@ -22,6 +22,7 @@ from .const import (
     DOMAIN,
     TTS_SUPPORTED_LANGUAGES,
 )
+from .error import UnexpectedError
 
 PARALLEL_UPDATES = 1
 _LOGGER = logging.getLogger(__name__)
@@ -112,11 +113,10 @@ class FishAudioTTSEntity(TextToSpeechEntity):
         except RateLimitError as err:
             _LOGGER.error("Fish Audio TTS rate limited: %s", err)
             raise HomeAssistantError(f"Rate limited: {err}") from err
-        except FishAudioError as err:
+        except APIError as err:
             _LOGGER.error("Fish Audio TTS request failed: %s", err)
             raise HomeAssistantError(f"TTS request failed: {err}") from err
-        except Exception:
-            _LOGGER.exception("Fish Audio TTS request failed with unexpected error")
-            return None, None
+        except Exception as err:
+            raise UnexpectedError(err) from err
 
         return "mp3", audio
