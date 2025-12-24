@@ -29,6 +29,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
+    API_KEYS_URL,
     BACKEND_MODELS,
     CONF_API_KEY,
     CONF_BACKEND,
@@ -209,7 +210,10 @@ class FishAudioConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=get_api_key_schema(),
             errors=errors,
-            description_placeholders={"signup_url": SIGNUP_URL},
+            description_placeholders={
+                "signup_url": SIGNUP_URL,
+                "api_keys_url": API_KEYS_URL,
+            },
         )
 
     @classmethod
