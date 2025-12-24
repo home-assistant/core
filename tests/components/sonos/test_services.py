@@ -131,7 +131,7 @@ async def test_media_player_join_timeout(
 
     expected = (
         "Timeout while waiting for Sonos player to join the "
-        "group ['Living Room: Living Room, Bedroom']"
+        "group Living Room: Living Room, Bedroom"
     )
     with (
         patch(
@@ -168,7 +168,7 @@ async def test_media_player_unjoin_timeout(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     expected = (
-        "Timeout while waiting for Sonos player to join the group ['Bedroom: Bedroom']"
+        "Timeout while waiting for Sonos player to unjoin the group Bedroom: Bedroom"
     )
     with (
         patch(
