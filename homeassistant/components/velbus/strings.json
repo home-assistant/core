@@ -57,6 +57,12 @@
     }
   },
   "exceptions": {
+    "api_call_failed": {
+      "message": "Could not execute {service} service for {entity}."
+    },
+    "connection_failed": {
+      "message": "Could not connect to Velbus."
+    },
     "integration_not_found": {
       "message": "Integration \"{target}\" not found in registry."
     },
