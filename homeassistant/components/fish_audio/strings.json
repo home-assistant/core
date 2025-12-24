@@ -52,7 +52,7 @@
             "title": "Filter by name"
           },
           "data_description": {
-            "language": "Display only voices that support the selected language. Leave empty to show all languages.",
+            "language": "Display only voices that support the selected language.",
             "self_only": "When checked, this will only show the voices you have personally created or cloned.",
             "sort_by": "Choose the order in which the voices are displayed.",
             "title": "Filter voices by name."
