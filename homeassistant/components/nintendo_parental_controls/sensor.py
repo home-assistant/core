@@ -16,7 +16,6 @@ from homeassistant.components.sensor import (
 from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util import dt as dt_util
 
 from .coordinator import NintendoParentalControlsConfigEntry, NintendoUpdateCoordinator
 from .entity import Device, NintendoDevice
@@ -30,7 +29,6 @@ class NintendoParentalControlsSensor(StrEnum):
 
     PLAYING_TIME = "playing_time"
     TIME_REMAINING = "time_remaining"
-    LAST_SYNC = "last_sync"
     TIME_EXTENDED = "time_extended"
 
 
@@ -67,14 +65,6 @@ SENSOR_DESCRIPTIONS: tuple[NintendoParentalControlsSensorEntityDescription, ...]
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda device: device.extra_playing_time,
         available_fn=lambda device: device.extra_playing_time is not None,
-    ),
-    NintendoParentalControlsSensorEntityDescription(
-        key=NintendoParentalControlsSensor.LAST_SYNC,
-        translation_key=NintendoParentalControlsSensor.LAST_SYNC,
-        device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda device: dt_util.utc_from_timestamp(device.last_sync)
-        if device.last_sync
-        else None,
     ),
 )
 

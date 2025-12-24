@@ -47,9 +47,6 @@
       }
     },
     "sensor": {
-      "last_sync": {
-        "name": "Last successful sync"
-      },
       "playing_time": {
         "name": "Used screen time"
       },
