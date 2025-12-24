@@ -560,7 +560,7 @@ class TelegramNotificationService:
     async def send_message(
         self,
         message: str = "",
-        target: int | None = None,
+        target: Any = None,
         context: Context | None = None,
         **kwargs: dict[str, Any],
     ) -> dict[str, JsonValueType]:

@@ -1640,8 +1640,7 @@ async def test_notify_entity_send_message(
     response = await hass.services.async_call(
         DOMAIN,
         SERVICE_SEND_MESSAGE,
-        {ATTR_MESSAGE: "test_message"},
-        target={ATTR_ENTITY_ID: "notify.mock_title_mock_chat_2"},
+        {ATTR_TARGET: "notify.mock_title_mock_chat_2", ATTR_MESSAGE: "test_message"},
         blocking=True,
         return_response=True,
     )
@@ -1651,7 +1650,7 @@ async def test_notify_entity_send_message(
             {
                 ATTR_CHAT_ID: 654321,
                 ATTR_MESSAGEID: 12345,
-                ATTR_ENTITY_ID: "notify.mock_title_mock_chat_2",
+                ATTR_TARGET: "notify.mock_title_mock_chat_2",
             }
         ]
     }
@@ -1782,9 +1781,9 @@ async def test_notify_entity_not_found(
             DOMAIN,
             SERVICE_SEND_MESSAGE,
             {
+                ATTR_TARGET: "notify.non_existent_entity",
                 ATTR_MESSAGE: "test_message",
             },
-            target={ATTR_ENTITY_ID: "notify.non_existent_entity"},
             blocking=True,
             return_response=True,
         )

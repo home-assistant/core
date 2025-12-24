@@ -331,6 +331,10 @@
         "message_id": {
           "description": "ID of the message to delete.",
           "name": "[%key:component::telegram_bot::services::edit_message::fields::message_id::name%]"
+        },
+        "target": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::target::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::target::name%]"
         }
       },
       "name": "Delete message",
@@ -385,6 +389,10 @@
         "message_id": {
           "description": "[%key:component::telegram_bot::services::edit_message::fields::message_id::description%]",
           "name": "[%key:component::telegram_bot::services::edit_message::fields::message_id::name%]"
+        },
+        "target": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::target::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::target::name%]"
         }
       },
       "name": "Edit caption",
@@ -424,6 +432,10 @@
         "parse_mode": {
           "description": "[%key:component::telegram_bot::services::send_message::fields::parse_mode::description%]",
           "name": "[%key:component::telegram_bot::services::send_message::fields::parse_mode::name%]"
+        },
+        "target": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::target::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::target::name%]"
         },
         "title": {
           "description": "[%key:component::telegram_bot::services::send_message::fields::title::description%]",
@@ -476,6 +488,10 @@
           "description": "[%key:component::telegram_bot::services::send_photo::fields::password::description%]",
           "name": "[%key:common::config_flow::data::password%]"
         },
+        "target": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::target::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::target::name%]"
+        },
         "url": {
           "description": "Remote path to the media.",
           "name": "[%key:common::config_flow::data::url%]"
@@ -517,6 +533,10 @@
         "message_id": {
           "description": "[%key:component::telegram_bot::services::edit_message::fields::message_id::description%]",
           "name": "[%key:component::telegram_bot::services::edit_message::fields::message_id::name%]"
+        },
+        "target": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::target::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::target::name%]"
         }
       },
       "name": "Edit reply markup",
@@ -536,6 +556,10 @@
         "config_entry_id": {
           "description": "The config entry representing the Telegram bot to leave the chat.",
           "name": "[%key:component::telegram_bot::services::send_message::fields::config_entry_id::name%]"
+        },
+        "target": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::target::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::target::name%]"
         }
       },
       "name": "Leave chat",
@@ -600,6 +624,10 @@
           "description": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::description%]",
           "name": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::name%]"
         },
+        "target": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::target::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::target::name%]"
+        },
         "url": {
           "description": "Remote path to a GIF or H.264/MPEG-4 AVC video without sound.",
           "name": "[%key:common::config_flow::data::url%]"
@@ -641,6 +669,10 @@
         "message_thread_id": {
           "description": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::description%]",
           "name": "[%key:component::telegram_bot::services::send_message::fields::message_thread_id::name%]"
+        },
+        "target": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::target::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::target::name%]"
         }
       },
       "name": "Send chat action",
@@ -704,6 +736,10 @@
         "reply_to_message_id": {
           "description": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::description%]",
           "name": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::name%]"
+        },
+        "target": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::target::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::target::name%]"
         },
         "url": {
           "description": "Remote path to a document.",
@@ -770,6 +806,10 @@
         "reply_to_message_id": {
           "description": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::description%]",
           "name": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::name%]"
+        },
+        "target": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::target::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::target::name%]"
         }
       },
       "name": "Send location",
@@ -825,6 +865,10 @@
         "reply_to_message_id": {
           "description": "Mark the message as a reply to a previous message.",
           "name": "Reply to message ID"
+        },
+        "target": {
+          "description": "Notification targets.",
+          "name": "Notify target"
         },
         "title": {
           "description": "Optional title for your notification. Will be composed as '%title\\n%message'.",
@@ -893,6 +937,10 @@
           "description": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::description%]",
           "name": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::name%]"
         },
+        "target": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::target::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::target::name%]"
+        },
         "url": {
           "description": "Remote path to an image.",
           "name": "[%key:common::config_flow::data::url%]"
@@ -958,6 +1006,10 @@
         "reply_to_message_id": {
           "description": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::description%]",
           "name": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::name%]"
+        },
+        "target": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::target::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::target::name%]"
         }
       },
       "name": "Send poll",
@@ -1017,6 +1069,10 @@
         "sticker_id": {
           "description": "ID of a sticker that exists on telegram servers.",
           "name": "Sticker ID"
+        },
+        "target": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::target::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::target::name%]"
         },
         "url": {
           "description": "Remote path to a static .webp or animated .tgs sticker.",
@@ -1096,6 +1152,10 @@
           "description": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::description%]",
           "name": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::name%]"
         },
+        "target": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::target::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::target::name%]"
+        },
         "url": {
           "description": "Remote path to a video.",
           "name": "[%key:common::config_flow::data::url%]"
@@ -1170,6 +1230,10 @@
           "description": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::description%]",
           "name": "[%key:component::telegram_bot::services::send_message::fields::reply_to_message_id::name%]"
         },
+        "target": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::target::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::target::name%]"
+        },
         "url": {
           "description": "Remote path to a voice message.",
           "name": "[%key:common::config_flow::data::url%]"
@@ -1215,6 +1279,10 @@
         "reaction": {
           "description": "Emoji reaction to use.",
           "name": "Reaction"
+        },
+        "target": {
+          "description": "[%key:component::telegram_bot::services::send_message::fields::target::description%]",
+          "name": "[%key:component::telegram_bot::services::send_message::fields::target::name%]"
         }
       },
       "name": "Set message reaction",

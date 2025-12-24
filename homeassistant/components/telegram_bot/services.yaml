@@ -1,11 +1,15 @@
 # Describes the format for available Telegram bot services
 
 send_message:
-  target:
-    entity:
-      domain: notify
-      integration: telegram_bot
   fields:
+    target:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
     custom_targets:
       collapsed: true
       fields:
@@ -68,11 +72,15 @@ send_message:
           mode: box
 
 send_chat_action:
-  target:
-    entity:
-      domain: notify
-      integration: telegram_bot
   fields:
+    target:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
     custom_targets:
       collapsed: true
       fields:
@@ -107,11 +115,15 @@ send_chat_action:
           mode: box
 
 send_photo:
-  target:
-    entity:
-      domain: notify
-      integration: telegram_bot
   fields:
+    target:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
     custom_targets:
       collapsed: true
       fields:
@@ -197,11 +209,15 @@ send_photo:
           mode: box
 
 send_sticker:
-  target:
-    entity:
-      domain: notify
-      integration: telegram_bot
   fields:
+    target:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
     custom_targets:
       collapsed: true
       fields:
@@ -278,11 +294,15 @@ send_sticker:
           mode: box
 
 send_animation:
-  target:
-    entity:
-      domain: notify
-      integration: telegram_bot
   fields:
+    target:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
     custom_targets:
       collapsed: true
       fields:
@@ -368,11 +388,15 @@ send_animation:
           mode: box
 
 send_video:
-  target:
-    entity:
-      domain: notify
-      integration: telegram_bot
   fields:
+    target:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
     custom_targets:
       collapsed: true
       fields:
@@ -458,11 +482,15 @@ send_video:
           mode: box
 
 send_voice:
-  target:
-    entity:
-      domain: notify
-      integration: telegram_bot
   fields:
+    target:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
     custom_targets:
       collapsed: true
       fields:
@@ -539,11 +567,15 @@ send_voice:
           mode: box
 
 send_document:
-  target:
-    entity:
-      domain: notify
-      integration: telegram_bot
   fields:
+    target:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
     custom_targets:
       collapsed: true
       fields:
@@ -629,11 +661,15 @@ send_document:
           mode: box
 
 send_location:
-  target:
-    entity:
-      domain: notify
-      integration: telegram_bot
   fields:
+    target:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
     custom_targets:
       collapsed: true
       fields:
@@ -690,11 +726,15 @@ send_location:
           mode: box
 
 send_poll:
-  target:
-    entity:
-      domain: notify
-      integration: telegram_bot
   fields:
+    target:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          multiple: true
+          reorder: true
     custom_targets:
       collapsed: true
       fields:
@@ -743,11 +783,14 @@ send_poll:
           mode: box
 
 edit_message:
-  target:
-    entity:
-      domain: notify
-      integration: telegram_bot
   fields:
+    target:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          reorder: true
     custom_targets:
       collapsed: true
       fields:
@@ -793,11 +836,14 @@ edit_message:
         object:
 
 edit_message_media:
-  target:
-    entity:
-      domain: notify
-      integration: telegram_bot
   fields:
+    target:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          reorder: true
     custom_targets:
       collapsed: true
       fields:
@@ -869,11 +915,14 @@ edit_message_media:
         object:
 
 edit_caption:
-  target:
-    entity:
-      domain: notify
-      integration: telegram_bot
   fields:
+    target:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          reorder: true
     custom_targets:
       collapsed: true
       fields:
@@ -904,11 +953,14 @@ edit_caption:
         object:
 
 edit_replymarkup:
-  target:
-    entity:
-      domain: notify
-      integration: telegram_bot
   fields:
+    target:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          reorder: true
     custom_targets:
       collapsed: true
       fields:
@@ -956,11 +1008,14 @@ answer_callback_query:
         boolean:
 
 delete_message:
-  target:
-    entity:
-      domain: notify
-      integration: telegram_bot
   fields:
+    target:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          reorder: true
     custom_targets:
       collapsed: true
       fields:
@@ -980,11 +1035,14 @@ delete_message:
         text:
 
 leave_chat:
-  target:
-    entity:
-      domain: notify
-      integration: telegram_bot
   fields:
+    target:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          reorder: true
     custom_targets:
       collapsed: true
       fields:
@@ -999,11 +1057,14 @@ leave_chat:
               multiple: true
 
 set_message_reaction:
-  target:
-    entity:
-      domain: notify
-      integration: telegram_bot
   fields:
+    target:
+      selector:
+        entity:
+          filter:
+            domain: notify
+            integration: telegram_bot
+          reorder: true
     custom_targets:
       collapsed: true
       fields:
