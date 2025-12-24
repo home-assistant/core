@@ -27,7 +27,6 @@
     'original_name': 'Subscribed to PlayStation Plus',
     'platform': 'playstation_network',
     'previous_unique_id': None,
-    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': <PlaystationNetworkBinarySensor.PS_PLUS_STATUS: 'ps_plus_status'>,
     'unique_id': 'my-psn-id_ps_plus_status',
