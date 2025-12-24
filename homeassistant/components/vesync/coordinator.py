@@ -26,7 +26,7 @@ class VeSyncDataCoordinator(DataUpdateCoordinator[None]):
         self, hass: HomeAssistant, config_entry: ConfigEntry, manager: VeSync
     ) -> None:
         """Initialize."""
-        self._manager = manager
+        self.manager = manager
 
         super().__init__(
             hass,
@@ -48,9 +48,9 @@ class VeSyncDataCoordinator(DataUpdateCoordinator[None]):
     async def _async_update_data(self) -> None:
         """Fetch data from API endpoint."""
 
-        await self._manager.update_all_devices()
+        await self.manager.update_all_devices()
 
         if self.should_update_energy():
             self.update_time = datetime.now()
-            for outlet in self._manager.devices.outlets:
+            for outlet in self.manager.devices.outlets:
                 await outlet.update_energy()

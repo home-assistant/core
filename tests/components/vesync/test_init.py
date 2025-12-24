@@ -9,7 +9,7 @@ from homeassistant.components.vesync import (
     async_remove_config_entry_device,
     async_setup_entry,
 )
-from homeassistant.components.vesync.const import DOMAIN, VS_MANAGER
+from homeassistant.components.vesync.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -58,8 +58,8 @@ async def test_async_setup_entry__no_devices(
         ]
 
     assert manager.login.call_count == 1
-    assert hass.data[DOMAIN][VS_MANAGER] == manager
-    assert not hass.data[DOMAIN][VS_MANAGER].devices
+    assert config_entry.runtime_data.manager == manager
+    assert not config_entry.runtime_data.manager.devices
 
 
 async def test_async_setup_entry__loads_fans(
@@ -86,8 +86,8 @@ async def test_async_setup_entry__loads_fans(
             Platform.UPDATE,
         ]
     assert manager.login.call_count == 1
-    assert hass.data[DOMAIN][VS_MANAGER] == manager
-    assert list(hass.data[DOMAIN][VS_MANAGER].devices) == [fan]
+    assert config_entry.runtime_data.manager == manager
+    assert list(config_entry.runtime_data.manager.devices) == [fan]
 
 
 async def test_migrate_config_entry(

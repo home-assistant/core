@@ -19,15 +19,12 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
-    DOMAIN,
-    VS_COORDINATOR,
     VS_DEVICES,
     VS_DISCOVERY,
     VS_HUMIDIFIER_MODE_AUTO,
     VS_HUMIDIFIER_MODE_HUMIDITY,
     VS_HUMIDIFIER_MODE_MANUAL,
     VS_HUMIDIFIER_MODE_SLEEP,
-    VS_MANAGER,
 )
 from .coordinator import VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
@@ -50,7 +47,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the VeSync humidifier platform."""
 
-    coordinator = hass.data[DOMAIN][VS_COORDINATOR]
+    coordinator = config_entry.runtime_data
 
     @callback
     def discover(devices: list[VeSyncBaseDevice]) -> None:
@@ -62,7 +59,7 @@ async def async_setup_entry(
     )
 
     _setup_entities(
-        hass.data[DOMAIN][VS_MANAGER].devices.humidifiers,
+        config_entry.runtime_data.manager.devices.humidifiers,
         async_add_entities,
         coordinator,
     )
