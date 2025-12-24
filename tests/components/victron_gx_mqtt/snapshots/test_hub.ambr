@@ -1,0 +1,43 @@
+# serializer version: 1
+# name: test_victron_battery_sensor
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.battery_dc_bus_current',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+        'sensor': dict({
+          'suggested_display_precision': 1,
+        }),
+      }),
+      'original_device_class': <SensorDeviceClass.CURRENT: 'current'>,
+      'original_icon': None,
+      'original_name': 'DC bus current',
+      'platform': 'victron_gx_mqtt',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'battery_current',
+      'unique_id': 'battery_0_battery_current',
+      'unit_of_measurement': 'A',
+    }),
+  ])
+# ---
