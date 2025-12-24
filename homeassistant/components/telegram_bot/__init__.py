@@ -37,6 +37,10 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
+from homeassistant.helpers.target import (
+    TargetSelection,
+    async_extract_referenced_entity_ids,
+)
 from homeassistant.helpers.typing import ConfigType, VolSchemaType
 from homeassistant.util.json import JsonValueType
 
@@ -125,7 +129,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 BASE_SERVICE_SCHEMA = vol.Schema(
     {
         vol.Optional(ATTR_ENTITY_ID): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [vol.Coerce(int)]),
         vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
         vol.Optional(ATTR_CHAT_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
         vol.Optional(ATTR_PARSER): cv.string,
@@ -156,6 +160,7 @@ SERVICE_SCHEMA_SEND_CHAT_ACTION = vol.All(
     cv.deprecated(ATTR_TIMEOUT),
     vol.Schema(
         {
+            vol.Optional(ATTR_ENTITY_ID): vol.All(cv.ensure_list, [cv.string]),
             vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
             vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [vol.Coerce(int)]),
             vol.Optional(ATTR_CHAT_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
@@ -218,6 +223,7 @@ SERVICE_SCHEMA_SEND_POLL = vol.All(
     cv.deprecated(ATTR_TIMEOUT),
     vol.Schema(
         {
+            vol.Optional(ATTR_ENTITY_ID): vol.All(cv.ensure_list, [cv.string]),
             vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
             vol.Optional(ATTR_CHAT_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
             vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [vol.Coerce(int)]),
@@ -237,7 +243,8 @@ SERVICE_SCHEMA_EDIT_MESSAGE = vol.All(
     cv.deprecated(ATTR_TIMEOUT),
     vol.Schema(
         {
-            vol.Optional(ATTR_TARGET): cv.string,
+            vol.Optional(ATTR_ENTITY_ID): vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional(ATTR_TARGET): vol.Coerce(int),
             vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
             vol.Optional(ATTR_TITLE): cv.string,
             vol.Required(ATTR_MESSAGE): cv.string,
@@ -256,7 +263,8 @@ SERVICE_SCHEMA_EDIT_MESSAGE_MEDIA = vol.All(
     cv.deprecated(ATTR_TIMEOUT),
     vol.Schema(
         {
-            vol.Optional(ATTR_TARGET): cv.string,
+            vol.Optional(ATTR_ENTITY_ID): vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional(ATTR_TARGET): vol.Coerce(int),
             vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
             vol.Required(ATTR_MESSAGEID): vol.Any(
                 cv.positive_int, vol.All(cv.string, "last")
@@ -285,7 +293,8 @@ SERVICE_SCHEMA_EDIT_MESSAGE_MEDIA = vol.All(
 
 SERVICE_SCHEMA_EDIT_CAPTION = vol.Schema(
     {
-        vol.Optional(ATTR_TARGET): cv.string,
+        vol.Optional(ATTR_ENTITY_ID): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(ATTR_TARGET): vol.Coerce(int),
         vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
         vol.Required(ATTR_MESSAGEID): vol.Any(
             cv.positive_int, vol.All(cv.string, "last")
@@ -298,7 +307,8 @@ SERVICE_SCHEMA_EDIT_CAPTION = vol.Schema(
 
 SERVICE_SCHEMA_EDIT_REPLYMARKUP = vol.Schema(
     {
-        vol.Optional(ATTR_TARGET): cv.string,
+        vol.Optional(ATTR_ENTITY_ID): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(ATTR_TARGET): vol.Coerce(int),
         vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
         vol.Required(ATTR_MESSAGEID): vol.Any(
             cv.positive_int, vol.All(cv.string, "last")
@@ -319,7 +329,8 @@ SERVICE_SCHEMA_ANSWER_CALLBACK_QUERY = vol.Schema(
 
 SERVICE_SCHEMA_DELETE_MESSAGE = vol.Schema(
     {
-        vol.Optional(ATTR_TARGET): cv.string,
+        vol.Optional(ATTR_ENTITY_ID): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(ATTR_TARGET): vol.Coerce(int),
         vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
         vol.Optional(ATTR_CHAT_ID): vol.Coerce(int),
         vol.Required(ATTR_MESSAGEID): vol.Any(
@@ -330,7 +341,8 @@ SERVICE_SCHEMA_DELETE_MESSAGE = vol.Schema(
 
 SERVICE_SCHEMA_LEAVE_CHAT = vol.Schema(
     {
-        vol.Optional(ATTR_TARGET): cv.string,
+        vol.Optional(ATTR_ENTITY_ID): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(ATTR_TARGET): vol.Coerce(int),
         vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
         vol.Optional(ATTR_CHAT_ID): vol.Coerce(int),
     }
@@ -338,7 +350,7 @@ SERVICE_SCHEMA_LEAVE_CHAT = vol.Schema(
 
 SERVICE_SCHEMA_SET_MESSAGE_REACTION = vol.Schema(
     {
-        vol.Optional(ATTR_TARGET): cv.string,
+        vol.Optional(ATTR_TARGET): vol.Coerce(int),
         vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
         vol.Required(ATTR_MESSAGEID): vol.Any(
             cv.positive_int, vol.All(cv.string, "last")
@@ -598,47 +610,41 @@ def _build_targets(
 ) -> list[tuple[TelegramBotConfigEntry, int, str | None]]:
     """Build list of targets where each target is represented by its corresponding config entry, chat ID and notify entity id (if target is a notify entity)."""
 
+    migrate_chat_ids = _warn_chat_id_migration(hass, service)
+
     targets: list[tuple[TelegramBotConfigEntry, int, str | None]] = []
-    migrated_chat_ids: dict[str, list[int]] = {
-        ATTR_CHAT_ID: service.data.get(ATTR_CHAT_ID, [])
-    }
 
     # build target list from notify entities using service data: `entity_id`
 
-    if ATTR_ENTITY_ID in service.data:
-        notify_entity_ids: list[str] = service.data[ATTR_ENTITY_ID]
-        entity_registry = er.async_get(hass)
+    referenced = async_extract_referenced_entity_ids(
+        hass, TargetSelection(service.data)
+    )
+    notify_entity_ids = referenced.referenced | referenced.indirectly_referenced
 
-        # parse entity IDs
-        for notify_entity_id in notify_entity_ids:
-            # deprecation: chat IDs should be specified using `chat_id` instead of `target`
-            if notify_entity_id.isdigit():
-                migrated_chat_ids[ATTR_CHAT_ID].append(int(notify_entity_id))
-                continue
-
-            # get config entry from notify entity
-            registry_entry = entity_registry.async_get(notify_entity_id)
-            if not registry_entry:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="action_failed",
-                    translation_placeholders={
-                        "error": f"Notify entity not found: {notify_entity_id}"
-                    },
-                )
-            notify_config_entry = hass.config_entries.async_get_known_entry(
-                str(registry_entry.config_entry_id)
+    # parse entity IDs
+    entity_registry = er.async_get(hass)
+    for notify_entity_id in notify_entity_ids:
+        # get config entry from notify entity
+        registry_entry = entity_registry.async_get(notify_entity_id)
+        if not registry_entry:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="action_failed",
+                translation_placeholders={
+                    "error": f"Notify entity not found: {notify_entity_id}"
+                },
             )
+        notify_config_entry = hass.config_entries.async_get_known_entry(
+            str(registry_entry.config_entry_id)
+        )
 
-            # get chat id from subentry
-            notify_config_subentry = notify_config_entry.subentries[
-                str(registry_entry.config_subentry_id)
-            ]
-            notify_chat_id: int = notify_config_subentry.data[ATTR_CHAT_ID]
+        # get chat id from subentry
+        notify_config_subentry = notify_config_entry.subentries[
+            str(registry_entry.config_subentry_id)
+        ]
+        notify_chat_id: int = notify_config_subentry.data[ATTR_CHAT_ID]
 
-            targets.append((notify_config_entry, notify_chat_id, notify_entity_id))
-
-        _warn_chat_id_migration(hass, service, migrated_chat_ids[ATTR_CHAT_ID])
+        targets.append((notify_config_entry, notify_chat_id, notify_entity_id))
 
     has_notify_targets = len(targets) > 0
 
@@ -659,11 +665,15 @@ def _build_targets(
 
     # parse chat IDs from service data: `chat_id`
     if config_entry is not None:
-        chat_ids: list[int] = []
-        if migrated_chat_ids.get(ATTR_CHAT_ID):
-            target: int | list[int] = migrated_chat_ids[ATTR_CHAT_ID]
-            chat_ids = [target] if isinstance(target, int) else target
-        elif not has_notify_targets:
+        chat_ids: list[int] = migrate_chat_ids
+        if ATTR_CHAT_ID in service.data:
+            chat_ids = chat_ids + (
+                [service.data[ATTR_CHAT_ID]]
+                if isinstance(service.data[ATTR_CHAT_ID], int)
+                else service.data[ATTR_CHAT_ID]
+            )
+
+        if not chat_ids and not has_notify_targets:
             # no targets from service data, so we default to the first allowed chat IDs of the config entry
             subentries = list(config_entry.subentries.values())
             if len(subentries) == 0:
@@ -696,11 +706,15 @@ def _build_targets(
     )
 
 
-def _warn_chat_id_migration(
-    hass: HomeAssistant, service: ServiceCall, chat_ids: list[int]
-) -> None:
-    if not chat_ids:
-        return
+def _warn_chat_id_migration(hass: HomeAssistant, service: ServiceCall) -> list[int]:
+    if not service.data.get(ATTR_TARGET):
+        return []
+
+    chat_ids: list[int] = (
+        [service.data[ATTR_TARGET]]
+        if isinstance(service.data[ATTR_TARGET], int)
+        else service.data[ATTR_TARGET]
+    )
 
     # default: service was called using frontend such as developer tools or automation editor
     service_call_origin = "call_service"
@@ -730,6 +744,8 @@ def _warn_chat_id_migration(
         },
         learn_more_url="https://github.com/home-assistant/core/pull/154868",
     )
+
+    return chat_ids
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) -> bool:
