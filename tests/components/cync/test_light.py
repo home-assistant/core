@@ -1,5 +1,7 @@
 """Tests for the Cync integration light platform."""
 
+from unittest.mock import AsyncMock
+
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -25,20 +27,26 @@ async def test_entities(
 
 
 @pytest.mark.parametrize(
-    ("brightness_percentage", "color_temp_kelvin", "rgb"),
+    ("input_parameters", "expected_brightness", "expected_color_temp", "expected_rgb"),
     [
-        (100, 2500, None),
-        (100, None, (50, 100, 150)),
-        (None, 2500, None),
-        (None, None, (50, 100, 150)),
+        ({"brightness_pct": 100, "color_temp_kelvin": 2500}, 100, 10, None),
+        (
+            {"brightness_pct": 100, "rgb_color": (50, 100, 150)},
+            100,
+            None,
+            (50, 100, 150),
+        ),
+        ({"color_temp_kelvin": 2500}, 90, 10, None),
+        ({"rgb_color": (50, 100, 150)}, 90, None, (50, 100, 150)),
     ],
 )
 async def test_turn_on(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    brightness_percentage: int | None,
-    color_temp_kelvin: int | None,
-    rgb: tuple[int, int, int] | None,
+    input_parameters: dict,
+    expected_brightness: int | None,
+    expected_color_temp: int | None,
+    expected_rgb: tuple[int, int, int] | None,
 ) -> None:
     """Test that turning on the light changes all necessary attributes."""
 
@@ -46,13 +54,11 @@ async def test_turn_on(
 
     assert hass.states.get("light.lamp_bulb_1").state == "off"
 
-    action_parameters = {
-        "entity_id": "light.lamp_bulb_1",
-        "brightness_pct": brightness_percentage,
-        "color_temp_kelvin": color_temp_kelvin,
-        "rgb_color": rgb,
-    }
-    action_parameters = {k: v for k, v in action_parameters.items() if v is not None}
+    entity_id_parameter = {"entity_id": "light.lamp_bulb_1"}
+    action_parameters = entity_id_parameter | input_parameters
+
+    test_device = mock_config_entry.runtime_data.data.get(1111)
+    test_device.set_combo = AsyncMock(name="set_combo")
 
     # now call the HA turn_on service
     await hass.services.async_call(
@@ -62,45 +68,6 @@ async def test_turn_on(
         blocking=True,
     )
 
-    changed_device = mock_config_entry.runtime_data.data.get(1111)
-
-    expected_brightness = 90
-    if brightness_percentage is not None:
-        expected_brightness = brightness_percentage
-
-    expected_kelvin = None
-    if color_temp_kelvin is not None:
-        min_kelvin = hass.states.get("light.lamp_bulb_1").attributes.get(
-            "min_color_temp_kelvin", 2000
-        )
-        max_kelvin = hass.states.get("light.lamp_bulb_1").attributes.get(
-            "max_color_temp_kelvin", 7000
-        )
-        expected_kelvin = _normalize_color_temp(
-            min_kelvin, max_kelvin, color_temp_kelvin
-        )
-
-    if expected_kelvin is not None:
-        expected_rgb = None
-    elif rgb is not None:
-        expected_rgb = rgb
-    else:
-        expected_rgb = (120, 145, 180)
-
-    changed_device.set_combo.assert_called_once_with(
-        changed_device, True, expected_brightness, expected_kelvin, expected_rgb
+    test_device.set_combo.assert_called_once_with(
+        True, expected_brightness, expected_color_temp, expected_rgb
     )
-
-
-def _normalize_color_temp(
-    min_kelvin: float, max_kelvin: float, color_temp_kelvin: float | None
-) -> int | None:
-    """Return calculated color temp value scaled between 1-100."""
-    if color_temp_kelvin is not None:
-        kelvin_range = max_kelvin - min_kelvin
-        scaled_kelvin = int(((color_temp_kelvin - min_kelvin) / kelvin_range) * 100)
-        if scaled_kelvin == 0:
-            scaled_kelvin += 1
-
-        return scaled_kelvin
-    return None
