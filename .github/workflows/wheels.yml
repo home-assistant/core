@@ -23,6 +23,9 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref_name}}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   init:
     name: Initialize wheels builder

@@ -12,6 +12,9 @@ on:
 env:
   DEFAULT_PYTHON: "3.13"
 
+permissions:
+  contents: read
+
 jobs:
   upload:
     name: Upload

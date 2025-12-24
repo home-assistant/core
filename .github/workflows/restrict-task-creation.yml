@@ -5,6 +5,10 @@ on:
   issues:
     types: [opened]
 
+permissions:
+  contents: read
+  issues: write
+
 jobs:
   check-authorization:
     runs-on: ubuntu-latest
