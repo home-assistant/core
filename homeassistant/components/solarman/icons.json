@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "sensor": {
+      "sn": {
+        "default": "mdi:information-outline"
+      },
+      "device_version": {
+        "default": "mdi:information-outline"
+      }
+    }
+  }
+}
