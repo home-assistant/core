@@ -4,7 +4,7 @@ from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import get_device_class
-from homeassistant.helpers.trigger import EntityStateTriggerBase, Trigger
+from homeassistant.helpers.trigger import EntityTargetStateTriggerBase, Trigger
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from . import DOMAIN, BinarySensorDeviceClass
@@ -20,7 +20,7 @@ def get_device_class_or_undefined(
         return UNDEFINED
 
 
-class BinarySensorOnOffTrigger(EntityStateTriggerBase):
+class BinarySensorOnOffTrigger(EntityTargetStateTriggerBase):
     """Class for binary sensor on/off triggers."""
 
     _device_class: BinarySensorDeviceClass | None
@@ -47,7 +47,7 @@ def make_binary_sensor_trigger(
         """Trigger for entity state changes."""
 
         _device_class = device_class
-        _to_state = to_state
+        _to_states = {to_state}
 
     return CustomTrigger
 

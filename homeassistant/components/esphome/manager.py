@@ -15,12 +15,14 @@ from aioesphomeapi import (
     APIVersion,
     DeviceInfo as EsphomeDeviceInfo,
     EncryptionPlaintextAPIError,
+    ExecuteServiceResponse,
     HomeassistantServiceCall,
     InvalidAuthAPIError,
     InvalidEncryptionKeyAPIError,
     LogLevel,
     ReconnectLogic,
     RequiresEncryptionAPIError,
+    SupportsResponseType,
     UserService,
     UserServiceArgType,
     ZWaveProxyRequest,
@@ -44,7 +46,9 @@ from homeassistant.core import (
     EventStateChangedData,
     HomeAssistant,
     ServiceCall,
+    ServiceResponse,
     State,
+    SupportsResponse,
     callback,
 )
 from homeassistant.exceptions import (
@@ -58,7 +62,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
     issue_registry as ir,
-    json,
+    json as json_helper,
     template,
 )
 from homeassistant.helpers.device_registry import format_mac
@@ -70,6 +74,7 @@ from homeassistant.helpers.issue_registry import (
 )
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.template import Template
+from homeassistant.util.json import json_loads_object
 
 from .bluetooth import async_connect_scanner
 from .const import (
@@ -91,6 +96,7 @@ from .encryption_key_storage import async_get_encryption_key_storage
 
 # Import config flow so that it's added to the registry
 from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
+from .enum_mapper import EsphomeEnumMapper
 
 DEVICE_CONFLICT_ISSUE_FORMAT = "device_conflict-{}"
 UNPACK_UINT32_BE = struct.Struct(">I").unpack_from
@@ -367,7 +373,7 @@ class ESPHomeManager:
                 response_dict = {"response": action_response}
 
             # JSON encode response data for ESPHome
-            response_data = json.json_bytes(response_dict)
+            response_data = json_helper.json_bytes(response_dict)
 
         except (
             ServiceNotFound,
@@ -1150,13 +1156,52 @@ ARG_TYPE_METADATA = {
 }
 
 
-@callback
-def execute_service(
-    entry_data: RuntimeEntryData, service: UserService, call: ServiceCall
-) -> None:
-    """Execute a service on a node."""
+async def execute_service(
+    entry_data: RuntimeEntryData,
+    service: UserService,
+    call: ServiceCall,
+    *,
+    supports_response: SupportsResponseType,
+) -> ServiceResponse:
+    """Execute a service on a node and optionally wait for response."""
+    # Determine if we should wait for a response
+    # NONE: fire and forget
+    # OPTIONAL/ONLY/STATUS: always wait for success/error confirmation
+    wait_for_response = supports_response != SupportsResponseType.NONE
+
+    if not wait_for_response:
+        # Fire and forget - no response expected
+        try:
+            await entry_data.client.execute_service(service, call.data)
+        except APIConnectionError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="action_call_failed",
+                translation_placeholders={
+                    "call_name": service.name,
+                    "device_name": entry_data.name,
+                    "error": str(err),
+                },
+            ) from err
+        else:
+            return None
+
+    # Determine if we need response_data from ESPHome
+    # ONLY: always need response_data
+    # OPTIONAL: only if caller requested it
+    # STATUS: never need response_data (just success/error)
+    need_response_data = supports_response == SupportsResponseType.ONLY or (
+        supports_response == SupportsResponseType.OPTIONAL and call.return_response
+    )
+
     try:
-        entry_data.client.execute_service(service, call.data)
+        response: (
+            ExecuteServiceResponse | None
+        ) = await entry_data.client.execute_service(
+            service,
+            call.data,
+            return_response=need_response_data,
+        )
     except APIConnectionError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
@@ -1167,11 +1212,62 @@ def execute_service(
                 "error": str(err),
             },
         ) from err
+    except TimeoutError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="action_call_timeout",
+            translation_placeholders={
+                "call_name": service.name,
+                "device_name": entry_data.name,
+            },
+        ) from err
+
+    assert response is not None
+
+    if not response.success:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="action_call_failed",
+            translation_placeholders={
+                "call_name": service.name,
+                "device_name": entry_data.name,
+                "error": response.error_message,
+            },
+        )
+
+    # Parse and return response data as JSON if we requested it
+    if need_response_data and response.response_data:
+        try:
+            return json_loads_object(response.response_data)
+        except ValueError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="action_call_failed",
+                translation_placeholders={
+                    "call_name": service.name,
+                    "device_name": entry_data.name,
+                    "error": f"Invalid JSON response: {err}",
+                },
+            ) from err
+    return None
 
 
 def build_service_name(device_info: EsphomeDeviceInfo, service: UserService) -> str:
     """Build a service name for a node."""
     return f"{device_info.name.replace('-', '_')}_{service.name}"
+
+
+# Map ESPHome SupportsResponseType to Home Assistant SupportsResponse
+# STATUS (100) is ESPHome-specific: waits for success/error internally but
+# doesn't return data to HA, so it maps to NONE from HA's perspective
+_RESPONSE_TYPE_MAPPER = EsphomeEnumMapper[SupportsResponseType, SupportsResponse](
+    {
+        SupportsResponseType.NONE: SupportsResponse.NONE,
+        SupportsResponseType.OPTIONAL: SupportsResponse.OPTIONAL,
+        SupportsResponseType.ONLY: SupportsResponse.ONLY,
+        SupportsResponseType.STATUS: SupportsResponse.NONE,
+    }
+)
 
 
 @callback
@@ -1205,11 +1301,21 @@ def _async_register_service(
             "selector": metadata.selector,
         }
 
+    # Get the supports_response from the service, defaulting to NONE
+    esphome_supports_response = service.supports_response or SupportsResponseType.NONE
+    ha_supports_response = _RESPONSE_TYPE_MAPPER.from_esphome(esphome_supports_response)
+
     hass.services.async_register(
         DOMAIN,
         service_name,
-        partial(execute_service, entry_data, service),
+        partial(
+            execute_service,
+            entry_data,
+            service,
+            supports_response=esphome_supports_response,
+        ),
         vol.Schema(schema),
+        supports_response=ha_supports_response,
     )
     async_set_service_schema(
         hass,
