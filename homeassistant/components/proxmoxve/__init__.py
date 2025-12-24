@@ -169,13 +169,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             LOGGER.error("Unable to get vms/containers for node %s: %s", node_name, err)
             continue
 
-        updated_node = {
-            CONF_NODE: node_name,
-            CONF_VMS: [vm["vmid"] for vm in vms],
-            CONF_CONTAINERS: [container["vmid"] for container in containers],
-        }
-        updated_nodes.append(updated_node)
-
         for vm in vms:
             coordinator = create_coordinator_container_vm(
                 hass, entry, proxmox, host_name, node_name, vm["vmid"], TYPE_VM
