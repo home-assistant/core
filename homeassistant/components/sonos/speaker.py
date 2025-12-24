@@ -958,6 +958,22 @@ class SonosSpeaker:
                 # as those "invisible" speakers will bypass the single speaker check
                 return
 
+            # Clear coordinator on speakers that are no longer in this group
+            old_members = (
+                set(self.sonos_group[1:]) if len(self.sonos_group) > 1 else set()
+            )
+            new_members = set(sonos_group[1:]) if len(sonos_group) > 1 else set()
+            removed_members = old_members - new_members
+            for removed_speaker in removed_members:
+                if removed_speaker.coordinator == self:
+                    _LOGGER.debug(
+                        "Zone %s Cleared coordinator [%s] (removed from group)",
+                        removed_speaker.zone_name,
+                        self.zone_name,
+                    )
+                    removed_speaker.coordinator = None
+                    removed_speaker.async_write_entity_states()
+
             self.coordinator = None
             self.sonos_group = sonos_group
             self.sonos_group_entities = sonos_group_entities
@@ -1038,7 +1054,7 @@ class SonosSpeaker:
         if self.sonos_group == [self]:
             return
         self.soco.unjoin()
-        self.coordinator = None
+        # Coordinator will be cleared when the topology change is confirmed via ZGS event
 
     @staticmethod
     async def unjoin_multi(
@@ -1218,8 +1234,15 @@ class SonosSpeaker:
                     return False
 
                 # Test that joined members match
-                if set(group[1:]) != set(current_group[1:]):
-                    return False
+                # Check both the coordinator's view and each member's view
+                # to handle whichever speaker receives the ZGS event first
+                for member in group[1:]:
+                    # Check if member is in coordinator's group (coordinator got event first)
+                    if member not in current_group:
+                        return False
+                    # Check if member shows correct coordinator (member got event first)
+                    if member.coordinator != coordinator:
+                        return False
 
             return True
 
@@ -1228,14 +1251,14 @@ class SonosSpeaker:
                 while not _test_groups(groups):
                     await config_entry.runtime_data.topology_condition.wait()
         except TimeoutError:
-            group_description = [
+            group_description = "; ".join(
                 f"{group[0].zone_name}: {', '.join(speaker.zone_name for speaker in group)}"
                 for group in groups
-            ]
+            )
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="timeout_join",
-                translation_placeholders={"group_description": str(group_description)},
+                translation_placeholders={"group_description": group_description},
             ) from TimeoutError
         any_speaker = next(iter(config_entry.runtime_data.discovered.values()))
         any_speaker.soco.zone_group_state.clear_cache()
