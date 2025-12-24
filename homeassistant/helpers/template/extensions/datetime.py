@@ -181,7 +181,7 @@ class DateTimeExtension(BaseTemplateExtension):
             return default
 
     def as_datetime(self, value: Any, default: Any = _SENTINEL) -> Any:
-        """Filter and to convert a time string or UNIX timestamp to datetime object."""
+        """Filter to convert a time string or UNIX timestamp to datetime object."""
         # Return datetime.datetime object without changes
         if type(value) is datetime:
             return value
