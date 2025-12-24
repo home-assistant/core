@@ -3,8 +3,8 @@
 import json
 from unittest.mock import AsyncMock, MagicMock
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
-from syrupy.filters import props
 
 from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, AgentBackup
 from homeassistant.core import HomeAssistant
@@ -13,6 +13,10 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
+
+pytestmark = [
+    pytest.mark.freeze_time("2021-11-04 17:36:59+01:00"),
+]
 
 
 async def test_entry_diagnostics(
@@ -40,6 +44,7 @@ async def test_entry_diagnostics(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert await get_diagnostics_for_config_entry(
-        hass, hass_client, config_entry
-    ) == snapshot(exclude=props("created_at", "modified_at"))
+    assert (
+        await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
+        == snapshot
+    )
