@@ -14,7 +14,6 @@ from homeassistant.components.azure_data_explorer.const import (
     CONF_APP_REG_ID,
     CONF_APP_REG_SECRET,
     CONF_AUTHORITY_ID,
-    CONF_USE_QUEUED_CLIENT,
     DOMAIN,
 )
 from homeassistant.core import HomeAssistant
@@ -97,7 +96,6 @@ async def test_config_flow_errors(
     assert suggested_values[CONF_APP_REG_ID] == BASE_CONFIG[CONF_APP_REG_ID]
     assert suggested_values[CONF_APP_REG_SECRET] == BASE_CONFIG[CONF_APP_REG_SECRET]
     assert suggested_values[CONF_AUTHORITY_ID] == BASE_CONFIG[CONF_AUTHORITY_ID]
-    assert suggested_values[CONF_USE_QUEUED_CLIENT] is False
 
     await hass.async_block_till_done()
 
