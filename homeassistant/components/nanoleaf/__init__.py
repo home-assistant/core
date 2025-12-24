@@ -6,7 +6,7 @@ import asyncio
 from contextlib import suppress
 import logging
 
-from aionanoleaf import EffectsEvent, Nanoleaf, StateEvent, TouchEvent
+from aionanoleaf2 import EffectsEvent, Nanoleaf, StateEvent, TouchEvent
 
 from homeassistant.const import (
     CONF_DEVICE_ID,
