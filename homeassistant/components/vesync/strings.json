@@ -5,7 +5,9 @@
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     },
     "error": {
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+      "api_response_error": "API response error",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "server_error": "Server error occurred"
     },
     "step": {
       "reauth_confirm": {
