@@ -83,7 +83,7 @@ PyRMVtransport==0.3.3
 PySrDaliGateway==0.18.0
 
 # homeassistant.components.switchbot
-PySwitchbot==0.74.0
+PySwitchbot==0.75.0
 
 # homeassistant.components.switchmate
 PySwitchmate==0.5.1
@@ -706,7 +706,7 @@ brottsplatskartan==1.0.5
 brunt==1.2.0
 
 # homeassistant.components.bthome
-bthome-ble==3.15.0
+bthome-ble==3.17.0
 
 # homeassistant.components.bt_home_hub_5
 bthomehub5-devicelist==0.1.1
@@ -1349,7 +1349,7 @@ kiwiki-client==0.1.1
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2025.12.19.150946
+knx-frontend==2025.12.24.74016
 
 # homeassistant.components.konnected
 konnected==1.2.0

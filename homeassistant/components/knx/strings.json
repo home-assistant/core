@@ -347,8 +347,16 @@
           },
           "knx": {
             "knx_group_address": {
+              "add_passive_address": "+ Add passive address",
               "dpt": "Datapoint type",
-              "passive_addresses": "Passive addresses",
+              "dpt_incompatible": "DPT {dpt} is incompatible with this field's expected DPTs.",
+              "dpt_no_selection": "No DPT selected",
+              "dpt_select": "Select DPT",
+              "group_address_none_for_dpt": "No group addresses known for expected DPT",
+              "group_address_none_for_filter": "No group addresses known for current filter",
+              "group_address_search": "Search group address",
+              "group_address_unknown": "Unknown group address",
+              "passive_address": "Passive address",
               "send_address": "Send address",
               "state_address": "State address",
               "valid_dpts": "Valid DPTs"
