@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from datetime import datetime
-from typing import NamedTuple
+from typing import TYPE_CHECKING, NamedTuple
 
 import pyvera as pv
 
@@ -15,6 +15,9 @@ from homeassistant.helpers.event import call_later
 
 from .const import DOMAIN
 
+if TYPE_CHECKING:
+    from .hub import VeraHub
+
 
 class ControllerData(NamedTuple):
     """Controller data."""
@@ -23,6 +26,7 @@ class ControllerData(NamedTuple):
     devices: defaultdict[Platform, list[pv.VeraDevice]]
     scenes: list[pv.VeraScene]
     config_entry: ConfigEntry
+    hub: VeraHub | None = None
 
 
 def get_configured_platforms(controller_data: ControllerData) -> set[Platform]:
@@ -31,6 +35,13 @@ def get_configured_platforms(controller_data: ControllerData) -> set[Platform]:
 
     if controller_data.scenes:
         platforms.append(Platform.SCENE)
+
+    # Always include sensor platform if there are switches or lights
+    # They may have power/energy monitoring capabilities
+    if (
+        Platform.SWITCH in platforms or Platform.LIGHT in platforms
+    ) and Platform.SENSOR not in platforms:
+        platforms.append(Platform.SENSOR)
 
     return set(platforms)
 
