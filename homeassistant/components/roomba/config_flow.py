@@ -13,12 +13,20 @@ import voluptuous as vol
 
 from homeassistant.config_entries import (
     ConfigEntry,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_DELAY, CONF_HOST, CONF_NAME, CONF_PASSWORD
+from homeassistant.const import (
+    CONF_DELAY,
+    CONF_HOST,
+    CONF_MAC,
+    CONF_NAME,
+    CONF_PASSWORD,
+)
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
@@ -82,6 +90,7 @@ class RoombaConfigFlow(ConfigFlow, domain=DOMAIN):
     name: str | None = None
     blid: str
     host: str | None = None
+    mac: str | None = None
 
     def __init__(self) -> None:
         """Initialize the roomba flow."""
@@ -95,28 +104,83 @@ class RoombaConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return RoombaOptionsFlowHandler()
 
-    async def async_step_zeroconf(
-        self, discovery_info: ZeroconfServiceInfo
-    ) -> ConfigFlowResult:
-        """Handle zeroconf discovery."""
-        return await self._async_step_discovery(
-            discovery_info.host, discovery_info.hostname.lower().removesuffix(".local.")
-        )
-
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle dhcp discovery."""
-        return await self._async_step_discovery(
-            discovery_info.ip, discovery_info.hostname
+        self.mac = format_mac(discovery_info.macaddress)
+        self.host = discovery_info.ip
+
+        self._async_abort_entries_match({CONF_HOST: self.host, CONF_MAC: self.mac})
+
+        hostname = discovery_info.hostname
+        if not hostname.startswith(("irobot-", "roomba-")):
+            return self.async_abort(reason="not_irobot_device")
+
+        self.blid = _async_blid_from_hostname(hostname)
+        await self.async_set_unique_id(self.blid)
+        self._abort_if_unique_id_configured(
+            updates={CONF_HOST: self.host, CONF_MAC: self.mac}
         )
 
-    async def _async_step_discovery(
-        self, ip_address: str, hostname: str
+        # Because the hostname is so long some sources may
+        # truncate the hostname since it will be longer than
+        # the valid allowed length. If we already have a flow
+        # going for a longer hostname we abort so the user
+        # does not see two flows if discovery fails.
+        for progress in self._async_in_progress():
+            flow_unique_id = progress.get("context", {}).get("unique_id")
+            if not flow_unique_id:
+                continue
+            if flow_unique_id.startswith(self.blid):
+                return self.async_abort(reason="short_blid")
+            if self.blid.startswith(flow_unique_id):
+                self.hass.config_entries.flow.async_abort(progress["flow_id"])
+
+        for entry in self.hass.config_entries.async_entries(DOMAIN):
+            if (
+                CONF_MAC in entry.data
+                and entry.data.get(CONF_MAC) == discovery_info.macaddress
+            ):
+                result = self.hass.config_entries.async_update_entry(
+                    entry,
+                    data={
+                        **entry.data,
+                        CONF_HOST: discovery_info.ip,
+                    },
+                )
+
+                if result:
+                    self.hass.config_entries.async_schedule_reload(entry.entry_id)
+                return self.async_abort(reason="already_configured")
+
+            if CONF_HOST in entry.data and entry.data[CONF_HOST] == discovery_info.ip:
+                if (
+                    not entry.data.get(CONF_MAC)
+                    and entry.state is ConfigEntryState.LOADED
+                ):
+                    result = self.hass.config_entries.async_update_entry(
+                        entry,
+                        data={
+                            **entry.data,
+                            CONF_MAC: self.mac,
+                        },
+                    )
+
+                    if result:
+                        self.hass.config_entries.async_schedule_reload(entry.entry_id)
+                return self.async_abort(reason="already_configured")
+        return await self.async_step_user()
+
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
-        """Handle any discovery."""
+        """Handle zeroconf discovery."""
+
+        ip_address = discovery_info.host
         self._async_abort_entries_match({CONF_HOST: ip_address})
 
+        hostname = discovery_info.hostname.lower().removesuffix(".local.")
         if not hostname.startswith(("irobot-", "roomba-")):
             return self.async_abort(reason="not_irobot_device")
 
