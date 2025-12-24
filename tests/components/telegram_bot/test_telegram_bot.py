@@ -488,7 +488,7 @@ async def test_send_chat_action(
             SERVICE_SEND_CHAT_ACTION,
             {
                 CONF_CONFIG_ENTRY_ID: mock_broadcast_config_entry.entry_id,
-                ATTR_CHAT_ID: [123456],
+                ATTR_TARGET: [123456],
                 ATTR_CHAT_ACTION: CHAT_ACTION_TYPING,
                 ATTR_MESSAGE_THREAD_ID: 123,
             },
@@ -973,7 +973,7 @@ async def test_send_message_with_config_entry(
         {
             CONF_CONFIG_ENTRY_ID: mock_broadcast_config_entry.entry_id,
             ATTR_MESSAGE: "mock message",
-            ATTR_CHAT_ID: 123456,
+            ATTR_TARGET: 123456,
         },
         blocking=True,
         return_response=True,
@@ -1640,7 +1640,7 @@ async def test_notify_entity_send_message(
     response = await hass.services.async_call(
         DOMAIN,
         SERVICE_SEND_MESSAGE,
-        {ATTR_TARGET: "notify.mock_title_mock_chat_2", ATTR_MESSAGE: "test_message"},
+        {ATTR_ENTITY_ID: "notify.mock_title_mock_chat_2", ATTR_MESSAGE: "test_message"},
         blocking=True,
         return_response=True,
     )
@@ -1650,7 +1650,7 @@ async def test_notify_entity_send_message(
             {
                 ATTR_CHAT_ID: 654321,
                 ATTR_MESSAGEID: 12345,
-                ATTR_TARGET: "notify.mock_title_mock_chat_2",
+                ATTR_ENTITY_ID: "notify.mock_title_mock_chat_2",
             }
         ]
     }
@@ -1781,7 +1781,7 @@ async def test_notify_entity_not_found(
             DOMAIN,
             SERVICE_SEND_MESSAGE,
             {
-                ATTR_TARGET: "notify.non_existent_entity",
+                ATTR_ENTITY_ID: "notify.non_existent_entity",
                 ATTR_MESSAGE: "test_message",
             },
             blocking=True,

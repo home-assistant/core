@@ -124,6 +124,7 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 BASE_SERVICE_SCHEMA = vol.Schema(
     {
+        vol.Optional(ATTR_ENTITY_ID): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
         vol.Optional(ATTR_CHAT_ID): vol.All(cv.ensure_list, [vol.Coerce(int)]),
@@ -427,7 +428,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                         {
                             ATTR_CHAT_ID: int(chat_id),
                             ATTR_MESSAGEID: message_id,
-                            ATTR_TARGET: target_notify_entity_id,
+                            ATTR_ENTITY_ID: target_notify_entity_id,
                         }
                         if target_notify_entity_id
                         else {
@@ -604,12 +605,8 @@ def _build_targets(
 
     # build target list from notify entities using service data: `entity_id`
 
-    if ATTR_TARGET in service.data:
-        notify_entity_ids: list[str] = (
-            service.data[ATTR_TARGET]
-            if isinstance(service.data[ATTR_TARGET], list)
-            else [service.data[ATTR_TARGET]]
-        )
+    if ATTR_ENTITY_ID in service.data:
+        notify_entity_ids: list[str] = service.data[ATTR_ENTITY_ID]
         entity_registry = er.async_get(hass)
 
         # parse entity IDs
