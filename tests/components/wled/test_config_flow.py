@@ -292,12 +292,15 @@ async def test_zeroconf_unsupported_version_error(
 
 
 @pytest.mark.usefixtures("mock_wled")
+@pytest.mark.parametrize("device_mac", ["aabbccddeeff", "AABBCCDDEEFF"])
 async def test_user_device_exists_abort(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_wled: MagicMock,
+    device_mac: str,
 ) -> None:
     """Test we abort zeroconf flow if WLED device already configured."""
+    mock_wled.update.return_value.info.mac_address = device_mac
     mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -334,10 +337,12 @@ async def test_zeroconf_without_mac_device_exists_abort(
     assert result.get("reason") == "already_configured"
 
 
+@pytest.mark.parametrize("device_mac", ["aabbccddeeff", "AABBCCDDEEFF"])
 async def test_zeroconf_with_mac_device_exists_abort(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_wled: MagicMock,
+    device_mac: str,
 ) -> None:
     """Test we abort zeroconf flow if WLED device already configured."""
     mock_config_entry.add_to_hass(hass)
@@ -350,7 +355,7 @@ async def test_zeroconf_with_mac_device_exists_abort(
             hostname="example.local.",
             name="mock_name",
             port=None,
-            properties={CONF_MAC: "aabbccddeeff"},
+            properties={CONF_MAC: device_mac},
             type="mock_type",
         ),
     )
