@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for Plugwise."""
 
-from datetime import timedelta
-
 from packaging.version import Version
 from plugwise import GwEntityData, Smile
 from plugwise.exceptions import (
