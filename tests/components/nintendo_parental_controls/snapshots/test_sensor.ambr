@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensor[sensor.home_assistant_test_duration-entry]
+# name: test_sensor[sensor.home_assistant_test_extended_screen_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -14,7 +14,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.home_assistant_test_duration',
+    'entity_id': 'sensor.home_assistant_test_extended_screen_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -29,7 +29,7 @@
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
-    'original_name': 'Duration',
+    'original_name': 'Extended screen time',
     'platform': 'nintendo_parental_controls',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -39,16 +39,16 @@
     'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
-# name: test_sensor[sensor.home_assistant_test_duration-state]
+# name: test_sensor[sensor.home_assistant_test_extended_screen_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
-      'friendly_name': 'Home Assistant Test Duration',
+      'friendly_name': 'Home Assistant Test Extended screen time',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.home_assistant_test_duration',
+    'entity_id': 'sensor.home_assistant_test_extended_screen_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
