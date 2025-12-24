@@ -494,7 +494,7 @@
 # name: test_sensors[sensor.gsr_ae_follower-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'GSR Ae Follower',
+      'friendly_name': 'Home Assistant Cloud Follower',
       'unit_of_measurement': 'people',
     }),
     'context': <ANY>,
@@ -543,7 +543,7 @@
 # name: test_sensors[sensor.gsr_ae_following-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'GSR Ae Following',
+      'friendly_name': 'Home Assistant Cloud Following',
       'unit_of_measurement': 'people',
     }),
     'context': <ANY>,
@@ -592,7 +592,7 @@
 # name: test_sensors[sensor.gsr_ae_friends-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'GSR Ae Friends',
+      'friendly_name': 'Home Assistant Cloud Friends',
       'unit_of_measurement': 'people',
     }),
     'context': <ANY>,
@@ -641,7 +641,7 @@
 # name: test_sensors[sensor.gsr_ae_gamerscore-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'GSR Ae Gamerscore',
+      'friendly_name': 'Home Assistant Cloud Gamerscore',
       'unit_of_measurement': 'points',
     }),
     'context': <ANY>,
@@ -690,7 +690,7 @@
 # name: test_sensors[sensor.gsr_ae_in_party-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'GSR Ae In party',
+      'friendly_name': 'Home Assistant Cloud In party',
       'unit_of_measurement': 'people',
     }),
     'context': <ANY>,
@@ -740,7 +740,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
-      'friendly_name': 'GSR Ae Last online',
+      'friendly_name': 'Home Assistant Cloud Last online',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gsr_ae_last_online',
@@ -852,7 +852,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'GSR Ae Party join restrictions',
+      'friendly_name': 'Home Assistant Cloud Party join restrictions',
       'options': list([
         'invite_only',
         'joinable',
@@ -904,7 +904,7 @@
 # name: test_sensors[sensor.gsr_ae_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'GSR Ae Status',
+      'friendly_name': 'Home Assistant Cloud Status',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gsr_ae_status',
@@ -912,6 +912,58 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Last seen 49m ago: Xbox App',
+  })
+# ---
+# name: test_sensors[sensor.home_assistant_cloud_recently_played_games-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.home_assistant_cloud_recently_played_games',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Recently played games',
+    'platform': 'xbox',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <XboxSensor.RECENTLY_PLAYED_GAMES: 'recently_played_games'>,
+    'unique_id': '271958441785640_recently_played_games',
+    'unit_of_measurement': 'games',
+  })
+# ---
+# name: test_sensors[sensor.home_assistant_cloud_recently_played_games-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Home Assistant Cloud Recently played games',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'games',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.home_assistant_cloud_recently_played_games',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.ikken_hissatsuu_follower-entry]

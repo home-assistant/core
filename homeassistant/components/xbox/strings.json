@@ -143,6 +143,13 @@
           "short_description": { "name": "Short description" }
         }
       },
+      "recently_played_games": {
+        "name": "Recently played games",
+        "unit_of_measurement": "games",
+        "state_attributes": {
+          "games": { "name": "Games" }
+        }
+      },
       "status": {
         "name": "Status"
       },
