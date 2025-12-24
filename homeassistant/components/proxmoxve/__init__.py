@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+import logging
 from typing import Any
 
 from proxmoxer import AuthenticationError, ProxmoxAPI
@@ -32,7 +33,6 @@ from .common import (
     parse_api_container_vm,
 )
 from .const import (
-    _LOGGER,
     CONF_CONTAINERS,
     CONF_NODE,
     CONF_NODES,
@@ -87,6 +87,8 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
+
+LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -164,9 +166,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 get_vms_containers, node_config
             )
         except (ResourceException, requests.exceptions.ConnectionError) as err:
-            _LOGGER.error(
-                "Unable to get vms/containers for node %s: %s", node_name, err
-            )
+            LOGGER.error("Unable to get vms/containers for node %s: %s", node_name, err)
             continue
 
         updated_node = {
@@ -178,7 +178,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         for vm in vms:
             coordinator = create_coordinator_container_vm(
-                hass, proxmox, host_name, node_name, vm["vmid"], TYPE_VM
+                hass, entry, proxmox, host_name, node_name, vm["vmid"], TYPE_VM
             )
             await coordinator.async_refresh()
 
@@ -187,6 +187,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         for container in containers:
             coordinator = create_coordinator_container_vm(
                 hass,
+                entry,
                 proxmox,
                 host_name,
                 node_name,
@@ -204,6 +205,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 def create_coordinator_container_vm(
     hass: HomeAssistant,
+    entry: ConfigEntry,
     proxmox: ProxmoxAPI,
     host_name: str,
     node_name: str,
@@ -222,7 +224,7 @@ def create_coordinator_container_vm(
         vm_status = await hass.async_add_executor_job(poll_api)
 
         if vm_status is None:
-            _LOGGER.warning(
+            LOGGER.warning(
                 "Vm/Container %s unable to be found in node %s", vm_id, node_name
             )
             return None
@@ -231,9 +233,14 @@ def create_coordinator_container_vm(
 
     return DataUpdateCoordinator(
         hass,
-        _LOGGER,
-        config_entry=None,
+        LOGGER,
+        config_entry=entry,
         name=f"proxmox_coordinator_{host_name}_{node_name}_{vm_id}",
         update_method=async_update_data,
         update_interval=timedelta(seconds=UPDATE_INTERVAL),
     )
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
