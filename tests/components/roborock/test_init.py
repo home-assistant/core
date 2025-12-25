@@ -92,6 +92,44 @@ async def test_reauth_started(
     assert flows[0]["step_id"] == "reauth_confirm"
 
 
+async def test_mqtt_session_unauthorized_hook_called(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    device_manager: AsyncMock,
+) -> None:
+    """Test that the mqtt session unauthorized hook is called on unauthorized event."""
+    device_manager_kwargs = {}
+
+    def create_device_manager(*args: Any, **kwargs: Any) -> AsyncMock:
+        nonlocal device_manager_kwargs
+        device_manager_kwargs = kwargs
+        return device_manager
+
+    with patch(
+        "homeassistant.components.roborock.create_device_manager",
+        side_effect=create_device_manager,
+    ):
+        await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+        await hass.async_block_till_done()
+        assert mock_roborock_entry.state is ConfigEntryState.LOADED
+
+    flows = hass.config_entries.flow.async_progress()
+    assert not flows
+
+    # Simulate an unauthorized event by calling the captured hook
+    assert device_manager_kwargs
+    mqtt_session_unauthorized_hook = device_manager_kwargs.get(
+        "mqtt_session_unauthorized_hook"
+    )
+    assert mqtt_session_unauthorized_hook
+    mqtt_session_unauthorized_hook()
+
+    # Verify that reauth flow is started
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
+
+
 @pytest.mark.parametrize("platforms", [[Platform.IMAGE]])
 @pytest.mark.parametrize(
     ("exists", "is_dir", "rmtree_called"),
