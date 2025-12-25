@@ -113,6 +113,9 @@
           "run": "mdi:play"
         }
       },
+      "dishwasher_washing_course": {
+        "default": "mdi:dishwasher"
+      },
       "diverter_valve_position": {
         "state": {
           "room": "mdi:sofa",
