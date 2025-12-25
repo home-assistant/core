@@ -77,6 +77,14 @@
       "lac": {
         "default": "mdi:map-marker"
       },
+      "mode": {
+        "default": "mdi:signal",
+        "state": {
+          "2G": "mdi:signal-2g",
+          "3G": "mdi:signal-3g",
+          "4G": "mdi:signal-4g"
+        }
+      },
       "nei_cellid": {
         "default": "mdi:antenna"
       },
