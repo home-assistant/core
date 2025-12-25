@@ -15,6 +15,7 @@ from typing import TYPE_CHECKING, Any, TypedDict, cast, override
 import voluptuous as vol
 
 from homeassistant.auth.permissions.const import CAT_ENTITIES, POLICY_CONTROL
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_ACTION,
@@ -28,6 +29,7 @@ from homeassistant.const import (
     ENTITY_MATCH_NONE,
 )
 from homeassistant.core import (
+    ConfigEntryServiceCallback,
     Context,
     EntityServiceResponse,
     HassJob,
@@ -1201,3 +1203,25 @@ def async_register_platform_entity_service(
         job_type=HassJobType.Coroutinefunction,
         description_placeholders=description_placeholders,
     )
+
+
+@callback
+def async_register_entity_service_override(
+    hass: HomeAssistant,
+    domain: str,
+    service: str,
+    config_entry: ConfigEntry,
+    handler: ConfigEntryServiceCallback,
+) -> None:
+    """Register a per-ConfigEntry service override for a service.
+
+    The `handler` receives a set of entities and an optional ServiceCall.
+    The handler is responsible for consuming (removing) all entities it processes.
+    Unconsumed entities will be passed to the default service handler for processing.
+    """
+
+    service_obj = hass.services.async_services_internal().get(domain, {}).get(service)
+    if not service_obj:
+        raise HomeAssistantError(f"Service {domain}.{service} not found")
+
+    service_obj.async_register_config_entry_override(config_entry, handler)

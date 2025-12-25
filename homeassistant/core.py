@@ -128,7 +128,7 @@ BLOCK_LOG_TIMEOUT = 60
 type ServiceResponse = JsonObjectType | None
 type EntityServiceResponse = dict[str, ServiceResponse]
 type ConfigEntryServiceCallback = Callable[
-    [ConfigEntry, set[Entity], ServiceCall | None],
+    [ConfigEntry, set[Entity], ServiceCall],
     Awaitable[dict[str, EntityServiceResponse] | None],
 ]
 
@@ -2470,7 +2470,8 @@ class Service:
     ) -> None:
         """Register or update a per-ConfigEntry override for this service.
 
-        The override handler will receive a set of entities and an optional ServiceCall.
+        The override handler will receive a ConfigEntry, a set of entities
+        and a ServiceCall object.
         Entities will be accumulated for multi-entity execution.
         """
         override = self.overrides.setdefault(
@@ -2695,7 +2696,11 @@ class ServiceRegistry:
 
         The override will be stored on the Service object and scoped to
         the given ConfigEntry. The handler receives a set of entities and
-        an optional ServiceCall, allowing multi-entity execution.
+        an optional ServiceCall.
+
+        The `handler` receives a ConfigEntry, a set of entities and a ServiceCall.
+        The handler is responsible for consuming (removing) all entities it processes.
+        Unconsumed entities will be passed to the default service handler for processing.
         """
         domain = domain.lower()
         service = service.lower()

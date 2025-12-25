@@ -279,7 +279,10 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
         """Register a per-ConfigEntry override for an entity service.
 
         This allows the integration to register a handler that receives all
-        entities associated with a specific ConfigEntry.
+        entities associated with a specific ConfigEntry as well as a ServiceCall object.
+
+        The handler is responsible for consuming (removing) the entities it
+        processes. Any entities not consumed will be handled by the default service handler.
         """
         # Look up the service object in the registry
         service_obj = (
