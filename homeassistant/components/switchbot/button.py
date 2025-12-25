@@ -37,16 +37,21 @@ class SwitchBotArtFrameButtonBase(SwitchbotEntity, ButtonEntity):
 
     _device: switchbot.SwitchbotArtFrame
 
+    def __init__(
+        self, coordinator: SwitchbotDataUpdateCoordinator, translation_key: str
+    ) -> None:
+        """Initialize the button base."""
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{coordinator.base_unique_id}_{translation_key}"
+        self._attr_translation_key = translation_key
+
 
 class SwitchBotArtFrameNextButton(SwitchBotArtFrameButtonBase):
     """Representation of a next image button."""
 
-    _attr_translation_key = "next_image"
-
     def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
         """Initialize the next image button."""
-        super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.base_unique_id}_next_image"
+        super().__init__(coordinator, "next_image")
 
     @exception_handler
     async def async_press(self) -> None:
@@ -58,14 +63,12 @@ class SwitchBotArtFrameNextButton(SwitchBotArtFrameButtonBase):
 class SwitchBotArtFramePrevButton(SwitchBotArtFrameButtonBase):
     """Representation of a previous image button."""
 
-    _attr_translation_key = "previous_image"
-
     def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
         """Initialize the previous image button."""
-        super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.base_unique_id}_previous_image"
+        super().__init__(coordinator, "previous_image")
 
     @exception_handler
     async def async_press(self) -> None:
         """Handle the button press."""
+        _LOGGER.debug("Pressing previous image button %s", self._address)
         await self._device.prev_image()
