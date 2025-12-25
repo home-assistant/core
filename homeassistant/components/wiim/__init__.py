@@ -100,7 +100,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> bool
         hass.data[DOMAIN] = WiimData(
             controller=wiim_controller,
             entity_id_to_udn_map={},
-            entities_by_entity_id={},
         )
 
     wiim_domain_data = hass.data[DOMAIN]

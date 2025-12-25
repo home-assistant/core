@@ -3,15 +3,12 @@
 
 from dataclasses import dataclass, field
 import logging
-from typing import TYPE_CHECKING, Final
+from typing import Final
 
 from wiim.controller import WiimController
 
 from homeassistant.const import Platform
 from homeassistant.util.hass_dict import HassKey
-
-if TYPE_CHECKING:
-    from .media_player import WiimMediaPlayerEntity
 
 DOMAIN: Final = "wiim"
 SDK_LOGGER = logging.getLogger(__package__)
@@ -39,9 +36,6 @@ class WiimData:
 
     controller: WiimController
     entity_id_to_udn_map: dict[str, str] = field(default_factory=dict)
-    entities_by_entity_id: dict[str, "WiimMediaPlayerEntity"] = field(
-        default_factory=dict
-    )
 
 
 WIIM_SHARED_DATA_KEY: HassKey[WiimData] = HassKey(DOMAIN)

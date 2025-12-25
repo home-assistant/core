@@ -26,9 +26,6 @@ def exception_wrap[_WiimEntityT: WiimBaseEntity, **_P, _R](
             return await func(self, *args, **kwargs)
         except WiimRequestException as err:
             SDK_LOGGER.warning("HTTP API error for %s: %s", self.entity_id, err)
-            # raise HomeAssistantError(
-            #     f"Failed to send command to {self._device.name}: {err}"
-            # ) from err
             raise WiimException(
                 f"HTTP API not available for action {self.entity_description.key}"
             ) from err
@@ -36,9 +33,6 @@ def exception_wrap[_WiimEntityT: WiimBaseEntity, **_P, _R](
             SDK_LOGGER.warning(
                 "Device communication error for %s: %s", self.entity_id, err
             )
-            # raise HomeAssistantError(
-            #     f"Device communication error with {self._device.name}: {err}"
-            # ) from err
             raise WiimException(
                 f"HTTP API not available for action {self.entity_description.key}"
             ) from err
@@ -62,8 +56,8 @@ class WiimBaseEntity(Entity):
         self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, self._device.udn)},
             name=self._device.name,
-            manufacturer=self._device._manufacturer,  # noqa: SLF001
-            model=self._device._model_name,  # noqa: SLF001
+            manufacturer=self._device.manufacturer,
+            model=self._device.model,
             sw_version=self._device.firmware_version,
         )
         if self._device.upnp_device and self._device.upnp_device.presentation_url:
@@ -77,11 +71,3 @@ class WiimBaseEntity(Entity):
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._device.available
-
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass."""
-        await super().async_added_to_hass()
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Run when entity will be removed from hass."""
-        await super().async_will_remove_from_hass()

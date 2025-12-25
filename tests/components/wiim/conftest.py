@@ -112,8 +112,10 @@ def mock_wiim_device() -> WiimDevice:
     wiim_device.ip_address = "192.168.1.100"
     wiim_device.http_api_url = "http://192.168.1.100:8080"
     wiim_device.available = True
+    wiim_device.model = "WiiM Pro"
     wiim_device.volume = 50
     wiim_device.is_muted = False
+    wiim_device.supports_http_api = False
     wiim_device.playing_status = PlayingStatus.STOPPED
     wiim_device.loop_mode = LoopMode.SHUFFLE_DISABLE_REPEAT_NONE
     wiim_device.input_mode = InputMode.LINE_IN
@@ -146,6 +148,8 @@ def mock_wiim_device() -> WiimDevice:
     )
     wiim_device.init_services_and_subscribe = AsyncMock()
     wiim_device.disconnect = AsyncMock()
+    wiim_device.play_preset = AsyncMock()
+    wiim_device.play_url = AsyncMock()
     wiim_device._http_command_ok = AsyncMock(return_value=True)
 
     wiim_device.async_update = AsyncMock()

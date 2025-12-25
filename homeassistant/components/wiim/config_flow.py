@@ -101,8 +101,9 @@ async def _validate_device_and_get_info(
 class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for WiiM."""
 
-    VERSION = 1
-    _discovered_info: dict[str, Any] = {}
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+        self._discovered_info: dict[str, Any] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -179,49 +180,6 @@ class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_UPNP_LOCATION: upnp_location,
             },
         )
-
-    # async def async_step_ssdp(
-    #     self, discovery_info: ssdp.SsdpServiceInfo
-    # ) -> ConfigFlowResult:
-    #     """Handle UPnP discovery via SSDP."""
-    #     SDK_LOGGER.debug("SSDP discovery received: %s", discovery_info.upnp) # Log relevant parts
-
-    #     # Ensure it's a MediaRenderer device type, or other known WiiM types
-    #     # (UPNP_ST_MEDIA_RENDERER is already defined in const.py)
-    #     if UPNP_ST_MEDIA_RENDERER not in discovery_info.ssdp_st: # Check if ST is a set or string
-    #         SDK_LOGGER.debug("Ignoring SSDP discovery for type: %s", discovery_info.ssdp_st)
-    #         return self.async_abort(reason="not_supported_device")
-
-    #     location = discovery_info.ssdp_location
-    #     if not location:
-    #         SDK_LOGGER.warning("SSDP discovery missing location. USN: %s", discovery_info.ssdp_usn)
-    #         return self.async_abort(reason="cannot_connect") # Or "missing_location"
-
-    #     # Host for logging, UDN for unique_id
-    #     host = urlparse(location).hostname or "Unknown host"
-
-    #     try:
-    #         # _validate_device_and_get_info uses the location to create UpnpDevice
-    #         device_info = await _validate_device_and_get_info(self.hass, host, location=location)
-    #     except CannotConnect:
-    #         return self.async_abort(reason="cannot_connect")
-    #     except NotWiimDevice:
-    #         return self.async_abort(reason="not_wiim_device")
-    #     except Exception as e: # Catch any other unexpected error during validation
-    #         SDK_LOGGER.error("Unexpected error during SSDP validation for %s: %s", location, e, exc_info=True)
-    #         return self.async_abort(reason="unknown")
-
-    #     await self.async_set_unique_id(device_info[CONF_UDN])
-    #     self._abort_if_unique_id_configured(
-    #         updates={
-    #             CONF_HOST: device_info[CONF_HOST],
-    #             CONF_UPNP_LOCATION: device_info.get(CONF_UPNP_LOCATION) # Ensure location is passed for update
-    #         }
-    #     )
-
-    #     self._discovered_info = device_info # Store for confirmation step
-    #     self.context["title_placeholders"] = {"name": device_info[CONF_NAME]}
-    #     return await self.async_step_discovery_confirm()
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo

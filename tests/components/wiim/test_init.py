@@ -65,7 +65,6 @@ async def test_async_setup_entry_success(
         mock_hass.data[DOMAIN] = WiimData(
             controller=controller_inst,
             entity_id_to_udn_map={},
-            entities_by_entity_id={},
         )
 
         with patch.object(
@@ -132,7 +131,6 @@ async def test_async_unload_entry_success(
     mock_hass.data[DOMAIN] = WiimData(
         controller=mock_wiim_controller,
         entity_id_to_udn_map={"media_player.test_wiim_device": mock_wiim_device.udn},
-        entities_by_entity_id={},
     )
 
     async def mock_unload_platforms_side_effect(entry_to_unload, platforms):

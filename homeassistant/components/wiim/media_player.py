@@ -67,7 +67,6 @@ SDK_TO_HA_STATE: dict[SDKPlayingStatus, MediaPlayerState] = {
     SDKPlayingStatus.PAUSED: MediaPlayerState.PAUSED,
     SDKPlayingStatus.STOPPED: MediaPlayerState.IDLE,
     SDKPlayingStatus.LOADING: MediaPlayerState.BUFFERING,
-    # SDKPlayingStatus.UNKNOWN: MediaPlayerState.IDLE,
 }
 
 # Define supported features
@@ -85,8 +84,6 @@ SUPPORT_WIIM_BASE = (
     | MediaPlayerEntityFeature.NEXT_TRACK
     | MediaPlayerEntityFeature.PREVIOUS_TRACK
     | MediaPlayerEntityFeature.SEEK
-    # | MediaPlayerEntityFeature.REPEAT_SET
-    # | MediaPlayerEntityFeature.SHUFFLE_SET
 )
 
 SUPPORT_WIIM_SEEKABLE = (
@@ -198,42 +195,19 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         ]
 
     @callback
-    def _get_entity_for_udn(self, udn: str) -> WiimMediaPlayerEntity | None:
-        """Helper to get a WiimMediaPlayerEntity instance by UDN from shared data."""
+    def _get_entity_id_for_udn(self, udn: str) -> str | None:
+        """Helper to get a WiimMediaPlayerEntity ID by UDN from shared data."""
         wiim_data: WiimData | None = self.hass.data.get(DOMAIN)
         if not wiim_data:
             SDK_LOGGER.warning("WiimData not found in hass.data.")
             return None
 
-        found_entity_id = None
         for entity_id, stored_udn in wiim_data.entity_id_to_udn_map.items():
-            SDK_LOGGER.debug(
-                "Checking entity_id: %s with stored UDN: %s", entity_id, stored_udn
-            )
             if stored_udn == udn:
-                found_entity_id = entity_id
-                SDK_LOGGER.debug("Match found: entity_id = %s", found_entity_id)
-                break
+                return entity_id
 
-        if found_entity_id:
-            entity = wiim_data.entities_by_entity_id.get(found_entity_id)
-            SDK_LOGGER.debug(
-                "Retrieved entity object for %s: %s", found_entity_id, entity
-            )
-            return entity
-
-        SDK_LOGGER.debug("No entity found for UDN: %s", udn)
+        SDK_LOGGER.debug("No entity ID found for UDN: %s", udn)
         return None
-
-    @callback
-    def _get_entity_for_entity_id(self, entity_id: str) -> WiimMediaPlayerEntity | None:
-        """Helper to get a WiimMediaPlayerEntity instance by entity_id."""
-        wiim_data: WiimData | None = self.hass.data.get(DOMAIN)
-        if not wiim_data:
-            SDK_LOGGER.warning("WiimData not found in hass.data.")
-            return None
-        # Directly retrieve the entity object from the entities_by_entity_id map
-        return wiim_data.entities_by_entity_id.get(entity_id)
 
     @callback
     def _update_ha_state_from_sdk_cache(self) -> None:
@@ -256,13 +230,13 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, self._device.udn)},
                 name=self._device.name,
-                manufacturer=self._device._manufacturer,  # noqa: SLF001
+                manufacturer=self._device.manufacturer,
                 model=self._device.model_name,
                 sw_version=self._device.firmware_version,
             )
-            if self._device._presentation_url:  # noqa: SLF001
+            if self._device.presentation_url:
                 self._attr_device_info["configuration_url"] = (
-                    self._device._presentation_url  # noqa: SLF001
+                    self._device.presentation_url
                 )
             elif self._device.http_api_url:
                 self._attr_device_info["configuration_url"] = self._device.http_api_url
@@ -364,30 +338,49 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             # This device is a follower. It should actively pull metadata from its leader.
             leader_udn = group_info.get("leader_udn")
             if leader_udn:
-                leader_entity = self._get_entity_for_udn(leader_udn)
-                if leader_entity and leader_entity.entity_id != self.entity_id:
+                leader_entity_id = self._get_entity_id_for_udn(leader_udn)
+                leader_state = (
+                    self.hass.states.get(leader_entity_id) if leader_entity_id else None
+                )
+
+                if leader_state and leader_entity_id != self.entity_id:
                     SDK_LOGGER.debug(
-                        f"Follower {self.entity_id}: Actively pulling metadata from leader {leader_entity.entity_id}"
+                        f"Follower {self.entity_id}: Actively pulling metadata from leader {leader_entity_id}"
                     )
-                    # Construct leader_media_attrs from leader_entity's current state attributes
-                    leader_media_attrs = {
-                        "state": leader_entity.state,
-                        "media_title": leader_entity.media_title,
-                        "media_artist": leader_entity.media_artist,
-                        "media_album_name": leader_entity.media_album_name,
-                        "media_image_url": leader_entity.media_image_url,
-                        "media_content_id": leader_entity.media_content_id,
-                        "media_content_type": leader_entity.media_content_type,
-                        "media_duration": leader_entity.media_duration,
-                        "media_position": leader_entity.media_position,
-                        "media_position_updated_at": leader_entity.media_position_updated_at,
-                        "source": leader_entity.source,
-                        "shuffle": leader_entity.shuffle,
-                        "repeat": leader_entity.repeat,
-                        "supported_features": leader_entity.supported_features,
-                    }
-                    self.hass.async_create_task(
-                        self._async_apply_leader_metadata(leader_media_attrs)
+                    # Pull metadata from leader's state machine state
+                    self._attr_media_title = leader_state.attributes.get("media_title")
+                    self._attr_media_artist = leader_state.attributes.get(
+                        "media_artist"
+                    )
+                    self._attr_media_album_name = leader_state.attributes.get(
+                        "media_album_name"
+                    )
+                    # For image, use entity_picture from attributes, which might be a local proxy path
+                    self._attr_media_image_url = leader_state.attributes.get(
+                        "entity_picture"
+                    )
+                    self._attr_media_content_id = leader_state.attributes.get(
+                        "media_content_id"
+                    )
+                    self._attr_media_content_type = leader_state.attributes.get(
+                        "media_content_type"
+                    )
+                    self._attr_media_duration = leader_state.attributes.get(
+                        "media_duration"
+                    )
+                    self._attr_media_position = leader_state.attributes.get(
+                        "media_position"
+                    )
+                    self._attr_media_position_updated_at = leader_state.attributes.get(
+                        "media_position_updated_at"
+                    )
+                    self._attr_source = leader_state.attributes.get("source")
+                    self._attr_shuffle = leader_state.attributes.get("shuffle", False)
+                    self._attr_repeat = leader_state.attributes.get(
+                        "repeat", RepeatMode.OFF
+                    )
+                    self._attr_supported_features = leader_state.attributes.get(
+                        "supported_features", SUPPORT_WIIM_BASE
                     )
                 else:
                     SDK_LOGGER.debug(
@@ -427,124 +420,34 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         if self.hass and self.entity_id:
             self.async_write_ha_state()
 
-            # This is the PUSH mechanism from the leader.
-            if self._is_group_leader and self._attr_group_members:
-                SDK_LOGGER.debug(
-                    "Leader %s is propagating metadata to followers: %s",
-                    self.entity_id,
-                    self._attr_group_members,
-                )
-
-                # Capture the leader's current media state attributes
-                leader_media_attrs = {
-                    "state": self._attr_state,
-                    "media_title": self._attr_media_title,
-                    "media_artist": self._attr_media_artist,
-                    "media_album_name": self._attr_media_album_name,
-                    "media_image_url": self._attr_media_image_url,
-                    "media_content_id": self._attr_media_content_id,
-                    "media_content_type": self._attr_media_content_type,
-                    "media_duration": self._attr_media_duration,
-                    "media_position": self._attr_media_position,
-                    "media_position_updated_at": self._attr_media_position_updated_at,
-                    "source": self._attr_source,
-                    "shuffle": self._attr_shuffle,
-                    "repeat": self._attr_repeat,
-                    "supported_features": self._attr_supported_features,
-                }
-
-                for member_entity_id in self._attr_group_members:
-                    if member_entity_id == self.entity_id:
-                        continue
-
-                    # Get the follower's actual entity object using its entity_id
-                    follower_entity = self._get_entity_for_entity_id(member_entity_id)
-                    if follower_entity and follower_entity != self:
-                        SDK_LOGGER.debug(
-                            "Propagating metadata to follower %s",
-                            follower_entity.entity_id,
-                        )
-                        # Schedule an immediate update for the follower
-                        self.hass.async_create_task(
-                            follower_entity._async_apply_leader_metadata(  # noqa: SLF001
-                                leader_media_attrs
-                            )
-                        )
-                    else:
-                        SDK_LOGGER.debug(
-                            "Follower entity %s not found or is self (should have been skipped if self).",
-                            member_entity_id,
-                        )
-
-    async def _async_apply_leader_metadata(self, leader_attrs: dict[str, Any]) -> None:
-        """Callback method for followers to receive and apply metadata from the group leader.
-
-        This method will be called directly by the leader's entity.
-        """
-        SDK_LOGGER.debug(
-            "Follower %s: Applying metadata from leader: %s",
-            self.entity_id,
-            leader_attrs,
-        )
-
-        # Apply the leader's state and media attributes to this follower entity
-        if self._attr_state != leader_attrs["state"]:
-            self._attr_state = leader_attrs["state"]
-        if self._attr_media_title != leader_attrs["media_title"]:
-            self._attr_media_title = leader_attrs["media_title"]
-        if self._attr_media_artist != leader_attrs["media_artist"]:
-            self._attr_media_artist = leader_attrs["media_artist"]
-        if self._attr_media_album_name != leader_attrs["media_album_name"]:
-            self._attr_media_album_name = leader_attrs["media_album_name"]
-        if self._attr_media_image_url != leader_attrs["media_image_url"]:
-            self._attr_media_image_url = leader_attrs["media_image_url"]
-        if self._attr_media_content_id != leader_attrs["media_content_id"]:
-            self._attr_media_content_id = leader_attrs["media_content_id"]
-        if self._attr_media_content_type != leader_attrs["media_content_type"]:
-            self._attr_media_content_type = leader_attrs["media_content_type"]
-        if self._attr_media_duration != leader_attrs["media_duration"]:
-            self._attr_media_duration = leader_attrs["media_duration"]
-        if self._attr_media_position != leader_attrs["media_position"]:
-            self._attr_media_position = leader_attrs["media_position"]
-            # Position update timestamp is crucial for accurate progress bar in HA
-        # self._attr_media_position_updated_at = leader_attrs["media_position_updated_at"]
-        # self._device.current_position = leader_attrs["media_position"]
-        # self._device.current_track_duration = leader_attrs["media_duration"]
-        self._attr_media_position_updated_at = utcnow()
-        if self._attr_source != leader_attrs["source"]:
-            self._attr_source = leader_attrs["source"]
-        if self._attr_shuffle != leader_attrs["shuffle"]:
-            self._attr_shuffle = leader_attrs["shuffle"]
-        if self._attr_repeat != leader_attrs["repeat"]:
-            self._attr_repeat = leader_attrs["repeat"]
-
-        if self._attr_supported_features != leader_attrs["supported_features"]:
-            self._attr_supported_features = leader_attrs["supported_features"]
-            SDK_LOGGER.debug(
-                f"Follower {self.entity_id}: Updated supported features from leader."
-            )
-
-        SDK_LOGGER.debug(
-            "Follower %s: Applied leader metadata. State: %s, Title: '%s', Artist: '%s', Album: '%s', Image: '%s'",
-            self.entity_id,
-            self._attr_state,
-            self._attr_media_title,
-            self._attr_media_artist,
-            self._attr_media_album_name,
-            self._attr_media_image_url,
-        )
-
-        # Final HA state write for this follower
-        self.async_write_ha_state()
-
     async def _update_output_mode(self) -> None:
-        if self._device._http_api:  # noqa: SLF001
+        if self._device.supports_http_api:
             try:
-                hardware_output_mode = await self._device._http_request(  # noqa: SLF001
-                    WiimHttpCommand.AUDIO_OUTPUT_HW_MODE
-                )
-                output_mode = int(hardware_output_mode["hardware"])
-                source_mode = int(hardware_output_mode["source"])
+                response = await self._device.get_audio_output_hw_mode()
+                hardware_output_mode: dict[str, Any] = {}
+                if isinstance(response, dict):
+                    hardware_output_mode = response
+                elif isinstance(response, str):
+                    try:
+                        hardware_output_mode = json.loads(response)
+                    except ValueError:
+                        SDK_LOGGER.warning(
+                            "Device %s: Failed to parse output mode JSON: %s",
+                            self.entity_id,
+                            response,
+                        )
+                        return
+
+                hardware = hardware_output_mode.get("hardware")
+                if hardware is None:
+                    output_mode = 0
+                else:
+                    output_mode = int(hardware)
+                source = hardware_output_mode.get("source")
+                if source is None:
+                    source_mode = 0
+                else:
+                    source_mode = int(source)
                 if source_mode == 1:
                     self._attr_sound_mode = AudioOutputHwMode.OTHER_OUT.display_name  # type: ignore[attr-defined]
                 elif (
@@ -598,14 +501,10 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                 self._async_handle_critical_error(WiimException("Device offline."))
             )
         else:
-            self._device._available = True  # noqa: SLF001
+            self._device.set_available(True)
 
             async def _wrapped() -> None:
-                result = await self._device._renew_subscriptions()  # noqa: SLF001
-                if not result:
-                    self._device._available = True  # noqa: SLF001
-                    await self._device.async_init_services_and_subscribe()
-                    await self._device._renew_subscriptions()  # noqa: SLF001
+                await self._device.ensure_subscriptions()
                 await self._update_output_mode()
                 self._update_ha_state_from_sdk_cache()
 
@@ -620,9 +519,9 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             position_str = position_response.get("RelTime")
             duration_str = position_response.get("TrackDuration")
             if position_str:
-                position = self._device._parse_duration(position_str)  # noqa: SLF001
+                position = self._device.parse_duration(position_str)
                 position = max(position, 0)
-                duration = self._device._parse_duration(duration_str)  # noqa: SLF001
+                duration = self._device.parse_duration(duration_str)
                 self._device.current_position = position
                 self._device.current_track_duration = duration
                 self._attr_media_duration = duration
@@ -710,11 +609,11 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                 )
 
         if "CurrentTrackDuration" in event_data:
-            duration = self._device._parse_duration(event_data["CurrentTrackDuration"])  # noqa: SLF001
+            duration = self._device.parse_duration(event_data["CurrentTrackDuration"])
             self._device.current_track_duration = duration
 
         if "RelativeTimePosition" in event_data:
-            position = self._device._parse_duration(event_data["RelativeTimePosition"])  # noqa: SLF001
+            position = self._device.parse_duration(event_data["RelativeTimePosition"])
             position = max(position, 0)
             self._device.current_position = position
             self._attr_media_position_updated_at = utcnow()
@@ -727,7 +626,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
 
             if position_str:
                 try:
-                    position = self._device._parse_duration(position_str)  # noqa: SLF001
+                    position = self._device.parse_duration(position_str)
                     self._device.current_position = position
                     self._attr_media_position_updated_at = utcnow()
                     SDK_LOGGER.debug(
@@ -824,11 +723,11 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                     "album": meta.get("album"),
                     "uri": meta.get("res"),
                     "duration": (
-                        self._device._parse_duration(meta.get("duration"))  # noqa: SLF001
+                        self._device.parse_duration(meta.get("duration"))
                         if meta.get("duration")
                         else None
                     ),
-                    "albumArtURI": self._device._make_absolute_url(  # noqa: SLF001
+                    "albumArtURI": self._device.make_absolute_url(
                         meta.get("albumArtURI")
                     ),
                 }
@@ -1131,6 +1030,39 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             return SDKLoopMode.SHUFFLE_DISABLE_REPEAT_NONE.value
         return SDKLoopMode.SHUFFLE_DISABLE_REPEAT_NONE.value
 
+    def _update_support_features(self, features: MediaPlayerEntityFeature) -> None:
+        """Update entity supported features and write state if changed."""
+        if self._attr_supported_features != features:
+            self._attr_supported_features = features
+            if self.hass and self.entity_id:
+                self.async_write_ha_state()
+
+    async def _sync_follower_features(self, wiim_data: WiimData) -> bool:
+        """Synchronize features if this device is a follower."""
+        group_info = wiim_data.controller.get_device_group_info(self._device.udn)
+        if not group_info or group_info.get("role") != "follower":
+            return False
+
+        leader_udn = group_info.get("leader_udn")
+        if leader_udn:
+            leader_entity_id = self._get_entity_id_for_udn(leader_udn)
+            leader_state = (
+                self.hass.states.get(leader_entity_id) if leader_entity_id else None
+            )
+            if leader_state and leader_entity_id != self.entity_id:
+                leader_features = leader_state.attributes.get("supported_features")
+                if leader_features is not None:
+                    self._update_support_features(leader_features)
+                    SDK_LOGGER.debug(
+                        f"Device {self.entity_id}: Follower features synchronized from leader {leader_entity_id}."
+                    )
+                    return True
+
+        # fallback to base features
+        self._update_support_features(SUPPORT_WIIM_BASE)
+        SDK_LOGGER.debug(f"Device {self.entity_id}: Follower set to base features.")
+        return True
+
     async def _from_device_update_supported_features(self) -> None:
         """Fetches media info from the device to dynamically update supported features.
 
@@ -1145,52 +1077,11 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             )
             return
 
-        group_info = wiim_data.controller.get_device_group_info(self._device.udn)
-        if group_info and group_info.get("role") == "follower":
-            SDK_LOGGER.debug(
-                "Device %s: Is a follower. Attempting to synchronize supported features from leader.",
-                self.entity_id,
-            )
-            leader_udn = group_info.get("leader_udn")
-            if leader_udn:
-                leader_entity = self._get_entity_for_udn(leader_udn)
-                if (
-                    leader_entity
-                    and leader_entity.available
-                    and leader_entity._attr_supported_features is not None  # noqa: SLF001
-                ):
-                    if (
-                        self._attr_supported_features
-                        != leader_entity._attr_supported_features  # noqa: SLF001
-                    ):
-                        self._attr_supported_features = (
-                            leader_entity._attr_supported_features  # noqa: SLF001
-                        )
-                        SDK_LOGGER.debug(
-                            f"Device {self.entity_id}: Follower features synchronized from leader {leader_entity.entity_id}."
-                        )
-                        if self.hass and self.entity_id:
-                            self.async_write_ha_state()
-                else:
-                    SDK_LOGGER.debug(
-                        f"Device {self.entity_id}: Leader entity {leader_udn} not available or its features not yet set. Setting follower to base features for now."
-                    )
-                    if self._attr_supported_features != SUPPORT_WIIM_BASE:
-                        self._attr_supported_features = SUPPORT_WIIM_BASE
-                        if self.hass and self.entity_id:
-                            self.async_write_ha_state()
-            else:
-                SDK_LOGGER.debug(
-                    f"Device {self.entity_id}: Follower has no known leader UDN. Setting to base features."
-                )
-                if self._attr_supported_features != SUPPORT_WIIM_BASE:
-                    self._attr_supported_features = SUPPORT_WIIM_BASE
-                    if self.hass and self.entity_id:
-                        self.async_write_ha_state()
+        if await self._sync_follower_features(wiim_data):
             return
 
         try:
-            if not self._device._http_api:  # noqa: SLF001
+            if not self._device.supports_http_api:
                 SDK_LOGGER.warning(
                     "Device %s: HTTP API not available to fetch MEDIA_INFO for supported features.",
                     self.entity_id,
@@ -1272,7 +1163,6 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                 e,
                 exc_info=True,
             )
-            # self._attr_supported_features = SUPPORT_WIIM_BASE
             if self.hass and self.entity_id:
                 self.async_write_ha_state()
             raise
@@ -1319,7 +1209,6 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             wiim_data: WiimData | None = self.hass.data.get(DOMAIN)
             if wiim_data and self.entity_id:
                 wiim_data.entity_id_to_udn_map[self.entity_id] = self._device.udn
-                wiim_data.entities_by_entity_id[self.entity_id] = self
                 SDK_LOGGER.debug(
                     "Added %s (UDN: %s) to entity maps in hass.data.",
                     self.entity_id,
@@ -1361,36 +1250,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                             self.entity_id,
                         )
 
-                if self.entity_id in wiim_data.entities_by_entity_id:
-                    try:
-                        del wiim_data.entities_by_entity_id[self.entity_id]
-                        SDK_LOGGER.debug(
-                            "Removed %s from entities_by_entity_id map", self.entity_id
-                        )
-                    except KeyError:
-                        SDK_LOGGER.debug(
-                            "Entity %s not found in entities_by_entity_id map for removal.",
-                            self.entity_id,
-                        )
-
         await super().async_will_remove_from_hass()
-
-    async def _async_clear_media_metadata(self) -> None:
-        """Helper to clear media-related attributes for this entity."""
-        self._attr_media_title = None
-        self._attr_media_artist = None
-        self._attr_media_album_name = None
-        self._attr_media_image_url = None
-        self._attr_media_content_id = None
-        self._attr_media_content_type = None
-        self._attr_media_duration = None
-        self._attr_media_position = None
-        self._attr_media_position_updated_at = None
-        self._device.current_track_info = {}
-        self._attr_state = MediaPlayerState.IDLE
-        if self.hass and self.entity_id:
-            self.async_write_ha_state()
-        SDK_LOGGER.debug(f"Entity {self.entity_id}: Media metadata cleared.")
 
     async def _async_handle_critical_error(self, e: WiimException) -> None:
         """Handle critical communication errors, marking device unavailable and cleaning up."""
@@ -1407,7 +1267,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             "Device %s is now considered offline. Disconnecting UPnP subscriptions.",
             self.entity_id,
         )
-        self._device._available = False  # noqa: SLF001
+        self._device.set_available(False)
         wiim_data: WiimData | None = self.hass.data.get(DOMAIN)
         if not wiim_data or not wiim_data.controller:
             return
@@ -1422,30 +1282,8 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                     self.entity_id,
                 )
 
-                initial_group_members_entities = controller.get_group_members(
-                    self._device.udn
-                )
-                SDK_LOGGER.info(
-                    "initial_group_members_entities = %d",
-                    len(initial_group_members_entities),
-                )
-                try:
-                    for member_device in initial_group_members_entities:
-                        member_ha_entity = self._get_entity_for_udn(member_device.udn)
-                        if member_ha_entity:
-                            SDK_LOGGER.debug(
-                                f"Leader {self.entity_id} going offline: explicitly clearing media metadata for former follower {member_ha_entity.entity_id}"
-                            )
-                            await member_ha_entity._async_clear_media_metadata()  # noqa: SLF001
-                        else:
-                            SDK_LOGGER.warning(
-                                f"Could not find HA entity for follower WiimDevice {member_device.udn}. Cannot clear its metadata."
-                            )
-                except Exception as exc:
-                    SDK_LOGGER.exception(
-                        "for initial_group_members_entities fail: %s", exc
-                    )
-                    raise
+                # Cannot clear followers metadata directly anymore as we don't have access to their entities.
+                # Followers must handle leader unavailability themselves.
             elif current_role == "follower":
                 SDK_LOGGER.info(
                     "Device %s was a follower. Attempting to unjoin from its group.",
@@ -1489,17 +1327,15 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                 f"Failed to mute volume on {self.entity_id}: {e}"
             ) from e
 
-    async def _redirect_command_to_leader(
-        self, method_name: str, *args: Any, **kwargs: Any
-    ) -> None:
-        """Helper to redirect a command to the group leader."""
+    async def _call_leader_service(self, service_name: str, **kwargs: Any) -> None:
+        """Helper to call a media_player service on the group leader."""
         wiim_data: WiimData | None = self.hass.data.get(DOMAIN)
         if not wiim_data or not wiim_data.controller:
             SDK_LOGGER.warning(
                 "WiiM controller not available for redirection on %s.", self.entity_id
             )
             raise HomeAssistantError(
-                f"WiiM controller not available. Cannot redirect {method_name} command."
+                f"WiiM controller not available. Cannot redirect {service_name} command."
             )
 
         controller = wiim_data.controller
@@ -1508,49 +1344,48 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         if group_info and group_info.get("role") == "follower":
             leader_udn = group_info.get("leader_udn")
             if leader_udn:
-                leader_entity = self._get_entity_for_udn(leader_udn)
-                if leader_entity and leader_entity != self:
+                leader_entity_id = self._get_entity_id_for_udn(leader_udn)
+                if leader_entity_id and leader_entity_id != self.entity_id:
                     SDK_LOGGER.info(
                         "Redirecting %s command from follower %s to leader %s.",
-                        method_name,
+                        service_name,
                         self.entity_id,
-                        leader_entity.entity_id,
+                        leader_entity_id,
                     )
-                    leader_method = getattr(leader_entity, method_name, None)
-                    if leader_method and callable(leader_method):
-                        await leader_method(*args, **kwargs)
-                        return
-                    SDK_LOGGER.warning(
-                        f"Leader entity {leader_entity.entity_id} does not have method {method_name}."
+
+                    service_data = {"entity_id": leader_entity_id}
+                    service_data.update(kwargs)
+
+                    await self.hass.services.async_call(
+                        "media_player", service_name, service_data, blocking=True
                     )
-                    raise HomeAssistantError(
-                        f"Leader does not support {method_name} command."
-                    )
+                    return
+
                 SDK_LOGGER.warning(
-                    "Follower %s could not find a valid leader entity (%s) for redirection. Command %s will not be executed.",
+                    "Follower %s could not find a valid leader entity ID (%s) for redirection. Command %s will not be executed.",
                     self.entity_id,
                     leader_udn,
-                    method_name,
+                    service_name,
                 )
                 raise HomeAssistantError(
-                    f"Cannot redirect {method_name} command: Leader not found or invalid."
+                    f"Cannot redirect {service_name} command: Leader not found or invalid."
                 )
             SDK_LOGGER.warning(
                 "Follower %s has no leader UDN in group info. Command %s will not be executed.",
                 self.entity_id,
-                method_name,
+                service_name,
             )
             raise HomeAssistantError(
-                f"Cannot redirect {method_name} command: No leader UDN for follower."
+                f"Cannot redirect {service_name} command: No leader UDN for follower."
             )
 
         SDK_LOGGER.warning(
             "Attempted to redirect command %s for a non-follower device %s. This is an internal logic error.",
-            method_name,
+            service_name,
             self.entity_id,
         )
         raise HomeAssistantError(
-            f"Internal error: Command {method_name} redirection called on a non-follower."
+            f"Internal error: Command {service_name} redirection called on a non-follower."
         )
 
     @exception_wrap
@@ -1561,7 +1396,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             group_info = wiim_data.controller.get_device_group_info(self._device.udn)
             if group_info and group_info.get("role") == "follower":
                 try:
-                    await self._redirect_command_to_leader("async_media_play")
+                    await self._call_leader_service("media_play")
                 except HomeAssistantError:
                     if self._attr_available:
                         SDK_LOGGER.warning(
@@ -1600,7 +1435,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             group_info = wiim_data.controller.get_device_group_info(self._device.udn)
             if group_info and group_info.get("role") == "follower":
                 try:
-                    await self._redirect_command_to_leader("async_media_pause")
+                    await self._call_leader_service("media_pause")
                 except HomeAssistantError:
                     if self._attr_available:
                         SDK_LOGGER.warning(
@@ -1641,7 +1476,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             group_info = wiim_data.controller.get_device_group_info(self._device.udn)
             if group_info and group_info.get("role") == "follower":
                 try:
-                    await self._redirect_command_to_leader("async_media_stop")
+                    await self._call_leader_service("media_stop")
                 except HomeAssistantError:
                     if self._attr_available:
                         SDK_LOGGER.warning(
@@ -1680,7 +1515,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             group_info = wiim_data.controller.get_device_group_info(self._device.udn)
             if group_info and group_info.get("role") == "follower":
                 try:
-                    await self._redirect_command_to_leader("async_media_next_track")
+                    await self._call_leader_service("media_next_track")
                 except HomeAssistantError:
                     if self._attr_available:
                         SDK_LOGGER.warning(
@@ -1717,7 +1552,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             group_info = wiim_data.controller.get_device_group_info(self._device.udn)
             if group_info and group_info.get("role") == "follower":
                 try:
-                    await self._redirect_command_to_leader("async_media_previous_track")
+                    await self._call_leader_service("media_previous_track")
                 except HomeAssistantError:
                     if self._attr_available:
                         SDK_LOGGER.warning(
@@ -1756,7 +1591,9 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             group_info = wiim_data.controller.get_device_group_info(self._device.udn)
             if group_info and group_info.get("role") == "follower":
                 try:
-                    await self._redirect_command_to_leader("async_media_seek", position)
+                    await self._call_leader_service(
+                        "media_seek", seek_position=position
+                    )
                 except HomeAssistantError:
                     if self._attr_available:
                         SDK_LOGGER.warning(
@@ -1795,13 +1632,11 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         if media_type in {MediaType.MUSIC, MEDIA_TYPE_WIIM_LIBRARY}:
             try:
                 preset_number = int(media_id)
-                if not self._device._http_api:  # noqa: SLF001
+                if not self._device.supports_http_api:
                     raise HomeAssistantError(
                         f"HTTP API not available for {self._device.name} to play preset."
                     )
-                await self._device._http_command_ok(  # noqa: SLF001
-                    WiimHttpCommand.PLAY_PRESET, str(preset_number)
-                )
+                await self._device.play_preset(preset_number)
                 self._attr_media_content_id = f"wiim_preset_{preset_number}"
                 self._attr_media_content_type = MediaType.PLAYLIST
                 self._attr_state = MediaPlayerState.PLAYING
@@ -1838,13 +1673,11 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             SDK_LOGGER.warning("media_type for play_media: %s", url)
 
             try:
-                if not self._device._http_api:  # noqa: SLF001
+                if not self._device.supports_http_api:
                     raise HomeAssistantError(
                         f"HTTP API not available for {self._device.name} to play preset."
                     )
-                await self._device._http_command_ok(  # noqa: SLF001
-                    WiimHttpCommand.PLAY, url
-                )
+                await self._device.play_url(url)
                 self._attr_state = MediaPlayerState.PLAYING
             except ValueError:
                 SDK_LOGGER.error(

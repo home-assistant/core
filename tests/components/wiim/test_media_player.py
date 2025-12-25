@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from async_upnp_client.client import UpnpService, UpnpStateVariable
 import pytest
-from wiim.consts import InputMode, LoopMode, PlayingStatus, WiimHttpCommand
+from wiim.consts import InputMode, LoopMode, PlayingStatus
 from wiim.wiim_device import WiimDevice
 
 from homeassistant.components.media_player import (
@@ -42,14 +42,8 @@ async def test_media_player_setup_entry(
         DOMAIN: WiimData(
             controller=MagicMock(),
             entity_id_to_udn_map={},
-            entities_by_entity_id={},
         )
     }  # type: ignore[assignment]
-    # fake_platform = MagicMock()
-    # with patch(
-    #     "homeassistant.components.wiim.media_player.entity_platform.async_get_current_platform",
-    #     return_value=fake_platform,
-    # ):
     await async_setup_entry(mock_hass, mock_config_entry, mock_add_entities)
 
     mock_add_entities.assert_called_once()
@@ -108,7 +102,6 @@ async def test_media_player_update_ha_state_from_sdk_cache(
         DOMAIN: WiimData(
             controller=MagicMock(),
             entity_id_to_udn_map={},
-            entities_by_entity_id={},
         )
     }  # type: ignore[assignment]
 
@@ -127,17 +120,9 @@ async def test_media_player_update_ha_state_from_sdk_cache(
     follower_entity.entity_id = "media_player.follower1"
     follower_entity._async_apply_leader_metadata = AsyncMock()
 
-    def mock_get_entity_for_entity_id(entity_id):
-        if entity_id == "media_player.follower1":
-            return follower_entity
-        return entity
-
     with (
         patch.object(entity, "schedule_update_ha_state", new=MagicMock()),
         patch.object(entity, "async_write_ha_state", new=AsyncMock()),
-        patch.object(
-            entity, "_get_entity_for_entity_id", new=mock_get_entity_for_entity_id
-        ),
         patch.object(
             entity.hass.data[DOMAIN].controller,
             "get_device_group_info",
@@ -164,7 +149,6 @@ async def test_media_player_play(
         DOMAIN: WiimData(
             controller=MagicMock(),
             entity_id_to_udn_map={},
-            entities_by_entity_id={},
         )
     }  # type: ignore[assignment]
 
@@ -190,7 +174,6 @@ async def test_media_player_pause(
         DOMAIN: WiimData(
             controller=MagicMock(),
             entity_id_to_udn_map={},
-            entities_by_entity_id={},
         )
     }  # type: ignore[assignment]
 
@@ -201,7 +184,7 @@ async def test_media_player_pause(
     mock_wiim_device.async_set_AVT_cmd = AsyncMock(
         return_value={"RelTime": "00:00:10", "TrackDuration": "00:03:30"}
     )
-    mock_wiim_device._parse_duration = MagicMock(
+    mock_wiim_device.parse_duration = MagicMock(
         side_effect=lambda s: 10 if s == "00:00:10" else 210
     )
 
@@ -225,7 +208,6 @@ async def test_media_player_stop(
         DOMAIN: WiimData(
             controller=MagicMock(),
             entity_id_to_udn_map={},
-            entities_by_entity_id={},
         )
     }  # type: ignore[assignment]
 
@@ -269,14 +251,14 @@ async def test_media_player_play_media_url(
 ) -> None:
     """Test media player play media service with a URL."""
     entity = mock_wiim_media_player_entity
-    mock_wiim_device._http_api = AsyncMock()
+    mock_wiim_device.supports_http_api = True
     entity._device = mock_wiim_device
 
     with patch.object(
-        mock_wiim_device, "_http_command_ok", new_callable=AsyncMock
+        mock_wiim_device, "play_preset", new_callable=AsyncMock
     ) as mock_http_cmd_ok:
         await entity.async_play_media(MediaType.MUSIC, "1")
-        mock_http_cmd_ok.assert_awaited_once_with(WiimHttpCommand.PLAY_PRESET, "1")
+        mock_http_cmd_ok.assert_awaited_once_with(1)
 
 
 @pytest.mark.asyncio
@@ -320,7 +302,6 @@ async def test_media_player_seek(
         DOMAIN: WiimData(
             controller=MagicMock(),
             entity_id_to_udn_map={},
-            entities_by_entity_id={},
         )
     }  # type: ignore[assignment]
 
@@ -346,7 +327,6 @@ async def test_media_player_next(
         DOMAIN: WiimData(
             controller=MagicMock(),
             entity_id_to_udn_map={},
-            entities_by_entity_id={},
         )
     }  # type: ignore[assignment]
 
@@ -372,7 +352,6 @@ async def test_media_player_previous(
         DOMAIN: WiimData(
             controller=MagicMock(),
             entity_id_to_udn_map={},
-            entities_by_entity_id={},
         )
     }  # type: ignore[assignment]
 
@@ -423,7 +402,6 @@ async def test_media_player_browse_media_root(
         DOMAIN: WiimData(
             controller=mock_controller,
             entity_id_to_udn_map={"media_player.other_wiim_device": "uuid:target-456"},
-            entities_by_entity_id={},
         ),
         "media_source": {},
     }  # type: ignore[assignment]
@@ -562,9 +540,7 @@ async def test_handle_sdk_events(
     entity.hass = mock_hass_for_media_player
 
     entity.hass.data = {
-        DOMAIN: WiimData(
-            controller=MagicMock(), entity_id_to_udn_map={}, entities_by_entity_id={}
-        )
+        DOMAIN: WiimData(controller=MagicMock(), entity_id_to_udn_map={})
     }  # type: ignore[assignment]
 
     entity._device.playing_status = PlayingStatus.STOPPED
