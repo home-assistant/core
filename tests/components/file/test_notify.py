@@ -60,9 +60,11 @@ async def test_notify_file(
     m_open = mock_open()
     with (
         patch("homeassistant.components.file.notify.open", m_open, create=True),
-        patch("homeassistant.components.file.notify.os.stat") as mock_st,
+        patch("homeassistant.components.file.notify.os.path.exists") as mock_exist,
+        patch("homeassistant.components.file.notify.os.path.getsize") as mock_getsize,
     ):
-        mock_st.return_value.st_size = 0
+        mock_exist.return_value = False
+        mock_getsize.return_value = 0
         title = (
             f"{ATTR_TITLE_DEFAULT} notifications "
             f"(Log started: {dt_util.utcnow().isoformat()})\n{'-' * 80}\n"

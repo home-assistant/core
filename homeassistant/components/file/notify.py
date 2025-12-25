@@ -51,7 +51,7 @@ class FileNotifyEntity(NotifyEntity):
         filepath = self._file_path
         try:
             file_was_empty = (
-                not os.path.exists(filepath) or os.stat(filepath).st_size == 0
+                not os.path.exists(filepath) or os.path.getsize(filepath) == 0
             )
             file_mode = "w" if self._overwrite else "a"
             with open(filepath, file_mode, encoding="utf8") as file:
