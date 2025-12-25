@@ -17,7 +17,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import API_ATTR_OK, COORDINATOR_UPDATE_INTERVAL, DOMAIN, LOGGER
+from .const import COORDINATOR_UPDATE_INTERVAL, DOMAIN, LOGGER
 
 type UptimeRobotConfigEntry = ConfigEntry[UptimeRobotDataUpdateCoordinator]
 
@@ -51,11 +51,6 @@ class UptimeRobotDataUpdateCoordinator(DataUpdateCoordinator[list[UptimeRobotMon
             raise ConfigEntryAuthFailed(exception) from exception
         except UptimeRobotException as exception:
             raise UpdateFailed(exception) from exception
-
-        if response.status != API_ATTR_OK:
-            raise UpdateFailed(
-                response.error.message if response.error else "Unknown error"
-            )
 
         if TYPE_CHECKING:
             assert isinstance(response.data, list)
