@@ -445,7 +445,6 @@ async def test_shelly_wave_shutter_cover_with_tilt(
     When parameter 71 is set to 1 (Venetian mode), endpoint 2 controls the tilt.
     """
     state = hass.states.get(SHELLY_WAVE_SHUTTER_COVER_ENTITY)
-    print(SHELLY_WAVE_SHUTTER_COVER_ENTITY)
     assert state
     assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.SHUTTER
 
