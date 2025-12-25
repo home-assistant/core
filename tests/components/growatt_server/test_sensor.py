@@ -17,67 +17,60 @@ from . import setup_integration
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
-@pytest.mark.parametrize(
-    ("device_type", "device_sn"),
-    [
-        ("min", "MIN123456"),
-        ("tlx", "TLX123456"),
-        ("inverter", "INV123456"),
-        ("storage", "STO123456"),
-        ("mix", "MIX123456"),
-    ],
-    ids=["min", "tlx", "inverter", "storage", "mix"],
-)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_all_sensors(
+async def test_min_sensors_v1_api(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     mock_growatt_v1_api,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+) -> None:
+    """Test MIN device sensor entities with V1 API."""
+    # V1 API only supports MIN devices (type 7)
+    mock_growatt_v1_api.device_list.return_value = {
+        "devices": [{"device_sn": "MIN123456", "type": 7}]
+    }
+
+    with patch("homeassistant.components.growatt_server.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.parametrize(
+    ("device_type", "device_sn"),
+    [
+        ("tlx", "TLX123456"),
+        ("inverter", "INV123456"),
+        ("storage", "STO123456"),
+        ("mix", "MIX123456"),
+    ],
+    ids=["tlx", "inverter", "storage", "mix"],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensors_classic_api(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    mock_growatt_classic_api,
+    mock_config_entry_classic: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
     device_type: str,
     device_sn: str,
 ) -> None:
-    """Test all sensor entities with snapshot for each device type."""
-    # Mock device list with specific device type
-    with patch(
-        "homeassistant.components.growatt_server.get_device_list"
-    ) as mock_get_devices:
-        mock_get_devices.return_value = (
-            [{"deviceSn": device_sn, "deviceType": device_type}],
-            "12345",
-        )
+    """Test sensor entities for non-MIN device types with Classic API."""
+    # Classic API supports all device types
+    mock_growatt_classic_api.device_list.return_value = [
+        {"deviceSn": device_sn, "deviceType": device_type}
+    ]
+    # Device detail methods (inverter_detail, storage_detail, mix_detail, tlx_detail)
+    # are already configured in the default mock_growatt_classic_api fixture
 
-        # Add appropriate mock data for each device type
-        if device_type == "inverter":
-            mock_growatt_v1_api.inverter_detail.return_value = {
-                "deviceSn": device_sn,
-                "status": 1,
-            }
-        elif device_type == "storage":
-            mock_growatt_v1_api.storage_detail.return_value = {
-                "deviceSn": device_sn,
-            }
-        elif device_type == "mix":
-            # Mix requires special handling with chartData
-            mock_growatt_v1_api.mix_detail.return_value = {
-                "deviceSn": device_sn,
-                "chartData": {"06:00": {}},  # At least one time entry needed
-            }
-        elif device_type == "tlx":
-            mock_growatt_v1_api.tlx_detail.return_value = {
-                "data": {
-                    "deviceSn": device_sn,
-                }
-            }
-        # min uses default mocks from conftest.py
+    with patch("homeassistant.components.growatt_server.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry_classic)
 
-        with patch(
-            "homeassistant.components.growatt_server.PLATFORMS", [Platform.SENSOR]
-        ):
-            await setup_integration(hass, mock_config_entry)
-
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+    await snapshot_platform(
+        hass, entity_registry, snapshot, mock_config_entry_classic.entry_id
+    )
 
 
 async def test_sensor_coordinator_updates(

@@ -23,16 +23,8 @@ async def test_read_time_segments_single_device(
 ) -> None:
     """Test reading time segments for single device."""
     mock_config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.growatt_server.get_device_list"
-    ) as mock_get_devices:
-        mock_get_devices.return_value = (
-            [{"deviceSn": "MIN123456", "deviceType": "min"}],
-            "12345",
-        )
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     # Get the device registry ID
     device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
@@ -58,16 +50,8 @@ async def test_update_time_segment_charge_mode(
 ) -> None:
     """Test updating time segment with charge mode."""
     mock_config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.growatt_server.get_device_list"
-    ) as mock_get_devices:
-        mock_get_devices.return_value = (
-            [{"deviceSn": "MIN123456", "deviceType": "min"}],
-            "12345",
-        )
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     # Get the device registry ID
     device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
@@ -100,16 +84,8 @@ async def test_update_time_segment_discharge_mode(
 ) -> None:
     """Test updating time segment with discharge mode."""
     mock_config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.growatt_server.get_device_list"
-    ) as mock_get_devices:
-        mock_get_devices.return_value = (
-            [{"deviceSn": "MIN123456", "deviceType": "min"}],
-            "12345",
-        )
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     # Get the device registry ID
     device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
@@ -140,16 +116,8 @@ async def test_update_time_segment_standby_mode(
 ) -> None:
     """Test updating time segment with standby mode."""
     mock_config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.growatt_server.get_device_list"
-    ) as mock_get_devices:
-        mock_get_devices.return_value = (
-            [{"deviceSn": "MIN123456", "deviceType": "min"}],
-            "12345",
-        )
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     # Get the device registry ID
     device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
@@ -180,16 +148,8 @@ async def test_update_time_segment_disabled(
 ) -> None:
     """Test disabling a time segment."""
     mock_config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.growatt_server.get_device_list"
-    ) as mock_get_devices:
-        mock_get_devices.return_value = (
-            [{"deviceSn": "MIN123456", "deviceType": "min"}],
-            "12345",
-        )
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     # Get the device registry ID
     device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
@@ -220,16 +180,8 @@ async def test_update_time_segment_with_seconds(
 ) -> None:
     """Test updating time segment with HH:MM:SS format from UI."""
     mock_config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.growatt_server.get_device_list"
-    ) as mock_get_devices:
-        mock_get_devices.return_value = (
-            [{"deviceSn": "MIN123456", "deviceType": "min"}],
-            "12345",
-        )
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     # Get the device registry ID
     device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
@@ -261,16 +213,8 @@ async def test_update_time_segment_api_error(
 ) -> None:
     """Test handling API error when updating time segment."""
     mock_config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.growatt_server.get_device_list"
-    ) as mock_get_devices:
-        mock_get_devices.return_value = (
-            [{"deviceSn": "MIN123456", "deviceType": "min"}],
-            "12345",
-        )
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     # Get the device registry ID
     device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
@@ -301,25 +245,21 @@ async def test_update_time_segment_api_error(
         )
 
 
-@pytest.mark.usefixtures("mock_growatt_classic_api")
 async def test_no_min_devices_skips_service_registration(
     hass: HomeAssistant,
     mock_config_entry_classic: MockConfigEntry,
+    mock_growatt_classic_api,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test that services fail gracefully when no MIN devices exist."""
-    mock_config_entry_classic.add_to_hass(hass)
+    # Only non-MIN devices (TLX with classic API)
+    mock_growatt_classic_api.device_list.return_value = [
+        {"deviceSn": "TLX123456", "deviceType": "tlx"}
+    ]
 
-    with patch(
-        "homeassistant.components.growatt_server.get_device_list"
-    ) as mock_get_devices:
-        # Only non-MIN devices (TLX with classic API)
-        mock_get_devices.return_value = (
-            [{"deviceSn": "TLX123456", "deviceType": "tlx"}],
-            "12345",
-        )
-        assert await hass.config_entries.async_setup(mock_config_entry_classic.entry_id)
-        await hass.async_block_till_done()
+    mock_config_entry_classic.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry_classic.entry_id)
+    await hass.async_block_till_done()
 
     # Verify services are registered (they're always registered in async_setup)
     assert hass.services.has_service(DOMAIN, "update_time_segment")
@@ -355,20 +295,17 @@ async def test_multiple_devices_with_valid_device_id_works(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test that multiple devices work when device_id is specified."""
-    mock_config_entry.add_to_hass(hass)
+    # Configure mock to return two MIN devices
+    mock_growatt_v1_api.device_list.return_value = {
+        "devices": [
+            {"device_sn": "MIN123456", "type": 7},
+            {"device_sn": "MIN789012", "type": 7},
+        ]
+    }
 
-    with patch(
-        "homeassistant.components.growatt_server.get_device_list"
-    ) as mock_get_devices:
-        mock_get_devices.return_value = (
-            [
-                {"deviceSn": "MIN123456", "deviceType": "min"},
-                {"deviceSn": "MIN789012", "deviceType": "min"},
-            ],
-            "12345",
-        )
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     # Get the device registry ID for the first MIN device
     device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
@@ -412,16 +349,8 @@ async def test_update_time_segment_invalid_time_format(
 ) -> None:
     """Test handling invalid time format in update_time_segment."""
     mock_config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.growatt_server.get_device_list"
-    ) as mock_get_devices:
-        mock_get_devices.return_value = (
-            [{"deviceSn": "MIN123456", "deviceType": "min"}],
-            "12345",
-        )
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     # Get the device registry ID
     device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
@@ -454,16 +383,8 @@ async def test_update_time_segment_invalid_segment_id(
 ) -> None:
     """Test validation of segment_id range."""
     mock_config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.growatt_server.get_device_list"
-    ) as mock_get_devices:
-        mock_get_devices.return_value = (
-            [{"deviceSn": "MIN123456", "deviceType": "min"}],
-            "12345",
-        )
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     # Get the device registry ID
     device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
@@ -514,16 +435,8 @@ async def test_update_time_segment_invalid_batt_mode(
 ) -> None:
     """Test validation of batt_mode value."""
     mock_config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.growatt_server.get_device_list"
-    ) as mock_get_devices:
-        mock_get_devices.return_value = (
-            [{"deviceSn": "MIN123456", "deviceType": "min"}],
-            "12345",
-        )
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     # Get the device registry ID
     device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
@@ -554,16 +467,8 @@ async def test_read_time_segments_api_error(
 ) -> None:
     """Test handling API error when reading time segments."""
     mock_config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.growatt_server.get_device_list"
-    ) as mock_get_devices:
-        mock_get_devices.return_value = (
-            [{"deviceSn": "MIN123456", "deviceType": "min"}],
-            "12345",
-        )
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     # Get the device registry ID
     device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
@@ -593,16 +498,8 @@ async def test_service_with_invalid_device_id(
 ) -> None:
     """Test service with device ID that doesn't exist in registry."""
     mock_config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.growatt_server.get_device_list"
-    ) as mock_get_devices:
-        mock_get_devices.return_value = (
-            [{"deviceSn": "MIN123456", "deviceType": "min"}],
-            "12345",
-        )
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     # Test with invalid device_id (not in device registry)
     with pytest.raises(ServiceValidationError, match="Device '.*' not found"):
@@ -629,16 +526,8 @@ async def test_service_with_non_growatt_device(
 ) -> None:
     """Test service with device from another integration."""
     mock_config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.growatt_server.get_device_list"
-    ) as mock_get_devices:
-        mock_get_devices.return_value = (
-            [{"deviceSn": "MIN123456", "deviceType": "min"}],
-            "12345",
-        )
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     # Create a device from a different integration
     other_device = device_registry.async_get_or_create(
@@ -674,24 +563,16 @@ async def test_service_with_non_min_growatt_device(
 ) -> None:
     """Test service with Growatt device that is not MIN type."""
     mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    with patch(
-        "homeassistant.components.growatt_server.get_device_list"
-    ) as mock_get_devices:
-        # Setup with both MIN and TLX device
-        mock_get_devices.return_value = (
-            [
-                {"deviceSn": "MIN123456", "deviceType": "min"},
-                {"deviceSn": "TLX789012", "deviceType": "tlx"},
-            ],
-            "12345",
-        )
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    # Get the TLX device (non-MIN)
-    tlx_device = device_registry.async_get_device(identifiers={(DOMAIN, "TLX789012")})
-    assert tlx_device is not None
+    # Manually create a TLX device (V1 API only creates MIN devices)
+    # This simulates having a non-MIN Growatt device from another source
+    tlx_device = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "TLX789012")},
+        name="TLX Device",
+    )
 
     # Test with TLX device (not a MIN device)
     with pytest.raises(
@@ -727,16 +608,8 @@ async def test_update_time_segment_invalid_end_time_format(
 ) -> None:
     """Test handling invalid end_time format in update_time_segment."""
     mock_config_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.growatt_server.get_device_list"
-    ) as mock_get_devices:
-        mock_get_devices.return_value = (
-            [{"deviceSn": "MIN123456", "deviceType": "min"}],
-            "12345",
-        )
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     # Get the device registry ID
     device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
@@ -761,25 +634,21 @@ async def test_update_time_segment_invalid_end_time_format(
         )
 
 
-@pytest.mark.usefixtures("mock_growatt_classic_api")
 async def test_service_with_unloaded_config_entry(
     hass: HomeAssistant,
     mock_config_entry_classic: MockConfigEntry,
+    mock_growatt_classic_api,
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test service call when config entry is not loaded."""
-    mock_config_entry_classic.add_to_hass(hass)
+    # Setup with TLX device
+    mock_growatt_classic_api.device_list.return_value = [
+        {"deviceSn": "TLX123456", "deviceType": "tlx"}
+    ]
 
-    with patch(
-        "homeassistant.components.growatt_server.get_device_list"
-    ) as mock_get_devices:
-        # Setup with TLX device
-        mock_get_devices.return_value = (
-            [{"deviceSn": "TLX123456", "deviceType": "tlx"}],
-            "12345",
-        )
-        assert await hass.config_entries.async_setup(mock_config_entry_classic.entry_id)
-        await hass.async_block_till_done()
+    mock_config_entry_classic.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry_classic.entry_id)
+    await hass.async_block_till_done()
 
     # Get the device
     device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "TLX123456")})
