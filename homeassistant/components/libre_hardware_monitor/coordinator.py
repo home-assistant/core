@@ -65,7 +65,7 @@ class LibreHardwareMonitorCoordinator(DataUpdateCoordinator[LibreHardwareMonitor
             lhm_data = await self._api.get_data()
         except LibreHardwareMonitorConnectionError as err:
             raise UpdateFailed(
-                "LibreHardwareMonitor connection failed, will retry"
+                "LibreHardwareMonitor connection failed, will retry", retry_after=30
             ) from err
         except LibreHardwareMonitorNoDevicesError as err:
             raise UpdateFailed("No sensor data available, will retry") from err
