@@ -166,7 +166,7 @@ async def test_form_unknown_exception(
     mock_setup_entry: AsyncMock,
     mock_hikcamera: MagicMock,
 ) -> None:
-    """Test we handle unknown exception during connection."""
+    """Test we handle unknown exception during connection and can recover."""
     mock_hikcamera.side_effect = Exception("Unexpected error")
 
     result = await hass.config_entries.flow.async_init(
@@ -186,6 +186,25 @@ async def test_form_unknown_exception(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unknown"}
+
+    # Recover from error
+    mock_hikcamera.side_effect = None
+    mock_hikcamera.return_value.get_id = TEST_DEVICE_ID
+    mock_hikcamera.return_value.get_name = TEST_DEVICE_NAME
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: TEST_HOST,
+            CONF_PORT: TEST_PORT,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_SSL: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == TEST_DEVICE_ID
 
 
 async def test_form_already_configured(
