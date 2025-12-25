@@ -1,0 +1,88 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to the Rejseplanen service",
+      "invalid_auth": "Invalid authentication key"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "Api key provided by Rejseplanen.dk"
+        },
+        "data_description": {
+          "api_key": "Api key provided by Rejseplanen.dk"
+        },
+        "description": "Set up Rejseplanen data service.",
+        "title": "Rejseplanen Coordinator"
+      }
+    }
+  },
+  "config_subentries": {
+    "stop": {
+      "entry_type": "Stop",
+      "initiate_flow": {
+        "user": "Add stop"
+      },
+      "step": {
+        "user": {
+          "description": "Set up stop subentry for Rejseplanen, see the [documentation](https://www.home-assistant.io/integrations/rejseplanen/) for information on obtaining the stop id.",
+          "title": "Add Stop"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "delay": {
+        "name": "Delayed by"
+      },
+      "departure_time": {
+        "name": "Departing in"
+      },
+      "direction": {
+        "name": "Towards"
+      },
+      "is_delayed": {
+        "name": "Delayed"
+      },
+      "line": {
+        "name": "Line"
+      },
+      "no_departures": {
+        "name": "Number of departures"
+      },
+      "track": {
+        "name": "Departing from track"
+      }
+    }
+  },
+  "issues": {
+    "yaml_deprecated": {
+      "description": "You have configured Rejseplanen in configuration.yaml. This method is deprecated and will be ignored. Please use the UI to configure the integration. To solve this issue, remove the platform configuration from the configuration.yaml.",
+      "title": "YAML configuration detected"
+    }
+  },
+  "selector": {
+    "departure_type": {
+      "options": {
+        "bus": "City buses",
+        "express_bus": "Express buses",
+        "ferry": "Ferry",
+        "flexible_bus": "Flexible transport",
+        "flight": "Flight",
+        "ic": "InterCity trains (IC, IB)",
+        "icl": "InterCity Lyn trains (ICL, ICL-X, ICL+)",
+        "letbane": "Light rail",
+        "metro": "Metro",
+        "night_bus": "Night & special buses",
+        "re": "Regional trains (Re, RA, RX)",
+        "s_tog": "S-trains (Copenhagen suburban)",
+        "tog": "Long distance trains (EC, IR, ICE, SJ, etc.)"
+      }
+    }
+  }
+}
