@@ -5,6 +5,7 @@ from collections.abc import Callable, Coroutine
 from typing import TYPE_CHECKING, Any, Concatenate
 
 from eheimdigital.device import EheimDigitalDevice
+from eheimdigital.filter import EheimDigitalFilter
 from eheimdigital.types import EheimDigitalClientError
 
 from homeassistant.const import CONF_HOST
@@ -37,7 +38,7 @@ class EheimDigitalEntity[_DeviceT: EheimDigitalDevice](
             name=device.name,
             connections={(CONNECTION_NETWORK_MAC, device.mac_address)},
             manufacturer="EHEIM",
-            model=device.device_type.model_name,
+            model=self._get_model_name(device),
             identifiers={(DOMAIN, device.mac_address)},
             suggested_area=device.aquarium_name,
             sw_version=device.sw_version,
@@ -45,6 +46,14 @@ class EheimDigitalEntity[_DeviceT: EheimDigitalDevice](
         )
         self._device = device
         self._device_address = device.mac_address
+
+    @classmethod
+    def _get_model_name(cls, device: EheimDigitalDevice) -> str | None:
+        if isinstance(device, EheimDigitalFilter) and device.filter_model_name:
+            return device.filter_model_name
+        if device.device_type.model_name:
+            return device.device_type.model_name
+        return None
 
     @abstractmethod
     def _async_update_attrs(self) -> None: ...
@@ -59,9 +68,9 @@ class EheimDigitalEntity[_DeviceT: EheimDigitalDevice](
 def exception_handler[_EntityT: EheimDigitalEntity[EheimDigitalDevice], **_P](
     func: Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, Any]],
 ) -> Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, None]]:
-    """Decorate AirGradient calls to handle exceptions.
+    """Decorate eheimdigital calls to handle exceptions.
 
-    A decorator that wraps the passed in function, catches AirGradient errors.
+    A decorator that wraps the passed in function, catches eheimdigital errors.
     """
 
     async def handler(self: _EntityT, *args: _P.args, **kwargs: _P.kwargs) -> None:
