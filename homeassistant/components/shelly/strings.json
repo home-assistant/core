@@ -537,6 +537,12 @@
       "voltmeter_value": {
         "name": "Voltmeter value"
       },
+      "voltmeter_value_with_channel_name": {
+        "name": "{channel_name} voltmeter value"
+      },
+      "voltmeter_with_channel_name": {
+        "name": "{channel_name} voltmeter"
+      },
       "water_consumption": {
         "name": "Water consumption"
       },
@@ -603,6 +609,9 @@
     "auth_error": {
       "message": "Authentication failed for {device}, please update your credentials"
     },
+    "config_entry_not_found": {
+      "message": "Config entry for device ID {device_id} not found"
+    },
     "device_communication_action_error": {
       "message": "Device communication error occurred while calling action for {entity} of {device}"
     },
@@ -612,11 +621,23 @@
     "device_not_found": {
       "message": "{device} not found while configuring device automation triggers"
     },
+    "device_not_initialized": {
+      "message": "{device} not initialized"
+    },
+    "entry_not_loaded": {
+      "message": "Config entry not loaded for {device}"
+    },
     "firmware_unsupported": {
       "message": "{device} is running an unsupported firmware, please update the firmware"
     },
+    "invalid_device_id": {
+      "message": "Invalid device ID specified: {device_id}"
+    },
     "invalid_trigger": {
       "message": "Invalid device automation trigger (type, subtype): {trigger}"
+    },
+    "kvs_not_supported": {
+      "message": "{device} does not support KVS"
     },
     "ota_update_connection_error": {
       "message": "Device communication error occurred while triggering OTA update for {device}"
@@ -626,6 +647,9 @@
     },
     "rpc_call_action_error": {
       "message": "RPC call error occurred while calling action for {entity} of {device}"
+    },
+    "rpc_call_error": {
+      "message": "RPC call error occurred for {device}"
     },
     "update_error": {
       "message": "An error occurred while retrieving data from {device}"
@@ -747,6 +771,40 @@
       "options": {
         "manual": "Enter address manually"
       }
+    }
+  },
+  "services": {
+    "get_kvs_value": {
+      "description": "Get a value from the device's Key-Value Storage.",
+      "fields": {
+        "device_id": {
+          "description": "The ID of the Shelly device to get the KVS value from.",
+          "name": "Device"
+        },
+        "key": {
+          "description": "The name of the key for which the KVS value will be retrieved.",
+          "name": "Key"
+        }
+      },
+      "name": "Get KVS value"
+    },
+    "set_kvs_value": {
+      "description": "Set a value in the device's Key-Value Storage.",
+      "fields": {
+        "device_id": {
+          "description": "The ID of the Shelly device to set the KVS value.",
+          "name": "Device"
+        },
+        "key": {
+          "description": "The name of the key under which the KVS value will be stored.",
+          "name": "Key"
+        },
+        "value": {
+          "description": "Value to set.",
+          "name": "Value"
+        }
+      },
+      "name": "Set KVS value"
     }
   }
 }

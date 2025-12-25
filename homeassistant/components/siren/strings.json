@@ -1,4 +1,8 @@
 {
+  "common": {
+    "trigger_behavior_description": "The behavior of the targeted sirens to trigger on.",
+    "trigger_behavior_name": "Behavior"
+  },
   "entity_component": {
     "_": {
       "name": "[%key:component::siren::title%]",
@@ -10,6 +14,15 @@
         "available_tones": {
           "name": "Available tones"
         }
+      }
+    }
+  },
+  "selector": {
+    "trigger_behavior": {
+      "options": {
+        "any": "Any",
+        "first": "First",
+        "last": "Last"
       }
     }
   },
@@ -41,5 +54,27 @@
       "name": "[%key:common::action::turn_on%]"
     }
   },
-  "title": "Siren"
+  "title": "Siren",
+  "triggers": {
+    "turned_off": {
+      "description": "Triggers after one or more sirens turn off.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::siren::common::trigger_behavior_description%]",
+          "name": "[%key:component::siren::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Siren turned off"
+    },
+    "turned_on": {
+      "description": "Triggers after one or more sirens turn on.",
+      "fields": {
+        "behavior": {
+          "description": "[%key:component::siren::common::trigger_behavior_description%]",
+          "name": "[%key:component::siren::common::trigger_behavior_name%]"
+        }
+      },
+      "name": "Siren turned on"
+    }
+  }
 }
