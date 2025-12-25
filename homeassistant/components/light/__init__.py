@@ -1295,17 +1295,13 @@ class LightEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
                 data[ATTR_BRIGHTNESS] = None
 
         if color_temp_supported(supported_color_modes):
-            if color_mode == ColorMode.COLOR_TEMP:
-                color_temp_kelvin = self.color_temp_kelvin
-                data[ATTR_COLOR_TEMP_KELVIN] = color_temp_kelvin
-                if color_temp_kelvin:
-                    data[_DEPRECATED_ATTR_COLOR_TEMP.value] = (
-                        color_util.color_temperature_kelvin_to_mired(color_temp_kelvin)
-                    )
-                else:
-                    data[_DEPRECATED_ATTR_COLOR_TEMP.value] = None
+            color_temp_kelvin = self.color_temp_kelvin
+            data[ATTR_COLOR_TEMP_KELVIN] = color_temp_kelvin
+            if color_temp_kelvin:
+                data[_DEPRECATED_ATTR_COLOR_TEMP.value] = (
+                    color_util.color_temperature_kelvin_to_mired(color_temp_kelvin)
+                )
             else:
-                data[ATTR_COLOR_TEMP_KELVIN] = None
                 data[_DEPRECATED_ATTR_COLOR_TEMP.value] = None
         elif supported_features_value & _DEPRECATED_SUPPORT_COLOR_TEMP.value:
             # Backwards compatibility
