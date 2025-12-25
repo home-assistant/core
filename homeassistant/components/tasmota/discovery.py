@@ -39,6 +39,7 @@ ALREADY_DISCOVERED = "tasmota_discovered_components"
 DISCOVERY_DATA = "tasmota_discovery_data"
 TASMOTA_DISCOVERY_ENTITY_NEW = "tasmota_discovery_entity_new_{}"
 TASMOTA_DISCOVERY_ENTITY_UPDATED = "tasmota_discovery_entity_updated_{}_{}_{}_{}"
+TASMOTA_DISCOVERY_DEVICE_DISCOVERED = "tasmota_discovery_device_discovered"
 TASMOTA_DISCOVERY_INSTANCE = "tasmota_discovery_instance"
 
 MQTT_TOPIC_URL = "https://tasmota.github.io/docs/Home-Assistant/#tasmota-integration"
@@ -292,6 +293,8 @@ async def async_start(  # noqa: C901
             tasmota_entities = tasmota_get_entities_for_platform(payload, platform)
             for tasmota_entity_config, discovery_hash in tasmota_entities:
                 _discover_entity(tasmota_entity_config, discovery_hash, platform)
+
+        async_dispatcher_send(hass, TASMOTA_DISCOVERY_DEVICE_DISCOVERED, mac)
 
     async def async_sensors_discovered(
         sensors: list[tuple[TasmotaBaseSensorConfig, DiscoveryHashType]], mac: str
