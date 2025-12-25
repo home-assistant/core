@@ -1,0 +1,23 @@
+"""Test stubs for rotarex_api dependency."""
+import sys
+import types
+from typing import Any
+
+mod = types.ModuleType("rotarex_api")
+
+
+class InvalidAuth(Exception):
+    """Auth error placeholder for tests."""
+
+
+class RotarexApi:
+    """Minimal stub for Rotarex API used by config_flow imports."""
+    async def login(self, email: str, password: str) -> Any:  # pragma: no cover
+        return None
+
+
+mod.InvalidAuth = InvalidAuth
+mod.RotarexApi = RotarexApi
+
+# Inject stub into sys.modules so imports succeed during tests
+sys.modules["rotarex_api"] = mod
