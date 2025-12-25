@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, cast
 
-from humps import decamelize
 from pysmartthings import Attribute, Capability, ComponentStatus, SmartThings, Status
 
 from homeassistant.components.sensor import (
@@ -133,6 +132,44 @@ HEALTH_CONCERN = {
     "unhealthy": "unhealthy",
     "veryUnhealthy": "very_unhealthy",
     "hazardous": "hazardous",
+}
+
+DISHWASHER_WASHING_COURSE = {
+    "AI": "ai",
+    "auto": "auto",
+    "babyBottle": "baby_bottle",
+    "babycare": "babycare",
+    "chef": "chef",
+    "coldRinse": "cold_rinse",
+    "daily": "daily",
+    "daily_09": "daily",
+    "delicate": "delicate",
+    "drinkware": "drinkware",
+    "dryOnly": "dry_only",
+    "eco": "eco",
+    "eco_08": "eco",
+    "eco_10": "eco",
+    "express": "express",
+    "express_0C": "express",
+    "extraSilence": "extra_silence",
+    "glasses": "glasses",
+    "heavy": "heavy",
+    "intensive": "intensive",
+    "machineCare": "machine_care",
+    "night": "night",
+    "nightSilence": "night_silence",
+    "normal": "normal",
+    "plastics": "plastics",
+    "potsAndPans": "pots_and_pans",
+    "preBlast": "pre_blast",
+    "preWash": "pre_wash",
+    "quick": "quick",
+    "quick_14": "quick",
+    "rinseDry": "rinse_dry",
+    "rinseOnly": "rinse_only",
+    "selfClean": "self_clean",
+    "steamSoak": "steam_soak",
+    "upperExpress": "upper_express",
 }
 
 WASHER_OPTIONS = ["pause", "run", "stop"]
@@ -390,9 +427,8 @@ CAPABILITY_TO_SENSORS: dict[
                 key=Attribute.WASHING_COURSE,
                 translation_key="dishwasher_washing_course",
                 options_attribute=Attribute.SUPPORTED_COURSES,
-                options_fn=decamelize,
+                options_map=DISHWASHER_WASHING_COURSE,
                 device_class=SensorDeviceClass.ENUM,
-                value_fn=decamelize,
             )
         ]
     },
