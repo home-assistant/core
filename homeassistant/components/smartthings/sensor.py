@@ -134,6 +134,44 @@ HEALTH_CONCERN = {
     "hazardous": "hazardous",
 }
 
+DISHWASHER_WASHING_COURSE = {
+    "AI": "ai",
+    "auto": "auto",
+    "babyBottle": "baby_bottle",
+    "babycare": "babycare",
+    "chef": "chef",
+    "coldRinse": "cold_rinse",
+    "daily": "daily",
+    "daily_09": "daily",
+    "delicate": "delicate",
+    "drinkware": "drinkware",
+    "dryOnly": "dry_only",
+    "eco": "eco",
+    "eco_08": "eco",
+    "eco_10": "eco",
+    "express": "express",
+    "express_0C": "express",
+    "extraSilence": "extra_silence",
+    "glasses": "glasses",
+    "heavy": "heavy",
+    "intensive": "intensive",
+    "machineCare": "machine_care",
+    "night": "night",
+    "nightSilence": "night_silence",
+    "normal": "normal",
+    "plastics": "plastics",
+    "potsAndPans": "pots_and_pans",
+    "preBlast": "pre_blast",
+    "preWash": "pre_wash",
+    "quick": "quick",
+    "quick_14": "quick",
+    "rinseDry": "rinse_dry",
+    "rinseOnly": "rinse_only",
+    "selfClean": "self_clean",
+    "steamSoak": "steam_soak",
+    "upperExpress": "upper_express",
+}
+
 WASHER_OPTIONS = ["pause", "run", "stop"]
 
 
@@ -155,6 +193,7 @@ class SmartThingsSensorEntityDescription(SensorEntityDescription):
     capability_ignore_list: list[set[Capability]] | None = None
     options_attribute: Attribute | None = None
     options_map: dict[str, str] | None = None
+    options_fn: Callable[[str], str] | None = None
     translation_placeholders_fn: Callable[[str], dict[str, str]] | None = None
     component_fn: Callable[[str], bool] | None = None
     exists_fn: Callable[[Status], bool] | None = None
@@ -381,6 +420,17 @@ CAPABILITY_TO_SENSORS: dict[
                 value_fn=dt_util.parse_datetime,
             )
         ],
+    },
+    Capability.SAMSUNG_CE_DISHWASHER_WASHING_COURSE: {
+        Attribute.WASHING_COURSE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.WASHING_COURSE,
+                translation_key="dishwasher_washing_course",
+                options_attribute=Attribute.SUPPORTED_COURSES,
+                options_map=DISHWASHER_WASHING_COURSE,
+                device_class=SensorDeviceClass.ENUM,
+            )
+        ]
     },
     # part of the proposed spec, Haven't seen at devices yet
     Capability.DRYER_MODE: {
@@ -1348,5 +1398,7 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
                 return []
             if options_map := self.entity_description.options_map:
                 return [options_map[option] for option in options]
+            if options_fn := self.entity_description.options_fn:
+                return [options_fn(option) for option in options]
             return [option.lower() for option in options]
         return super().options
