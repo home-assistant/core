@@ -1,0 +1,155 @@
+# serializer version: 1
+# name: test_daily_events_calendar[New York]
+  list([
+    dict({
+      'description': 'Hebrew date: ה\' שבט ה\' תשפ"ד',
+      'end': '2024-01-16',
+      'start': '2024-01-15',
+      'summary': 'ה\' שבט ה\' תשפ"ד',
+    }),
+    dict({
+      'description': 'Halachic dawn: 05:52',
+      'end': '2024-01-15T10:52:00+00:00',
+      'start': '2024-01-15T10:52:00+00:00',
+      'summary': 'Alot Hashachar',
+    }),
+    dict({
+      'description': 'Halachic sunrise: 07:18',
+      'end': '2024-01-15T12:18:00+00:00',
+      'start': '2024-01-15T12:18:00+00:00',
+      'summary': 'Netz Hachama',
+    }),
+    dict({
+      'description': 'Latest time for Shema: 09:39',
+      'end': '2024-01-15T14:39:00+00:00',
+      'start': '2024-01-15T14:39:00+00:00',
+      'summary': 'Sof Zman Shema (Gr"A)',
+    }),
+    dict({
+      'description': 'Latest time for Tefilla: 10:26',
+      'end': '2024-01-15T15:26:00+00:00',
+      'start': '2024-01-15T15:26:00+00:00',
+      'summary': 'Sof Zman Tefilla (Gr"A)',
+    }),
+    dict({
+      'description': 'Halachic midday: 12:05',
+      'end': '2024-01-15T17:05:00+00:00',
+      'start': '2024-01-15T17:05:00+00:00',
+      'summary': 'Chatzot Hayom',
+    }),
+    dict({
+      'description': 'Earliest time for Mincha: 12:23',
+      'end': '2024-01-15T17:23:30+00:00',
+      'start': '2024-01-15T17:23:30+00:00',
+      'summary': 'Mincha Gedola',
+    }),
+    dict({
+      'description': 'Preferable time for Mincha: 14:44',
+      'end': '2024-01-15T19:44:30+00:00',
+      'start': '2024-01-15T19:44:30+00:00',
+      'summary': 'Mincha Ketana',
+    }),
+    dict({
+      'description': 'Plag Hamincha: 15:54',
+      'end': '2024-01-15T20:54:15+00:00',
+      'start': '2024-01-15T20:54:15+00:00',
+      'summary': 'Plag Hamincha',
+    }),
+    dict({
+      'description': 'Sunset: 16:53',
+      'end': '2024-01-15T21:53:00+00:00',
+      'start': '2024-01-15T21:53:00+00:00',
+      'summary': 'Shkia',
+    }),
+    dict({
+      'description': 'Nightfall: 17:26',
+      'end': '2024-01-15T22:26:00+00:00',
+      'start': '2024-01-15T22:26:00+00:00',
+      'summary': "T'set Hakochavim",
+    }),
+  ])
+# ---
+# name: test_learning_schedule_calendar[Jerusalem]
+  list([
+    dict({
+      'description': 'Daf Yomi: בבא בתרא כ',
+      'end': '2024-07-16',
+      'start': '2024-07-15',
+      'summary': 'בבא בתרא כ',
+    }),
+  ])
+# ---
+# name: test_weekly_portion[New York]
+  list([
+    dict({
+      'description': 'Parshat Hashavua: שופטים',
+      'end': '2024-09-08',
+      'start': '2024-09-07',
+      'summary': 'שופטים',
+    }),
+  ])
+# ---
+# name: test_yearly_events_calendar_friday[New York]
+  list([
+    dict({
+      'description': 'Parshat Hashavua: וארא',
+      'end': '2024-01-13',
+      'start': '2024-01-12',
+      'summary': 'וארא',
+    }),
+  ])
+# ---
+# name: test_yearly_events_calendar_holiday[Jerusalem]
+  list([
+    dict({
+      'description': '''
+        Jewish Holiday: שושן פורים
+        Holiday Type: HolidayTypes.MELACHA_PERMITTED_HOLIDAY
+      ''',
+      'end': '2024-03-26',
+      'start': '2024-03-25',
+      'summary': 'שושן פורים',
+    }),
+    dict({
+      'description': 'Parshat Hashavua: צו',
+      'end': '2024-03-26',
+      'start': '2024-03-25',
+      'summary': 'צו',
+    }),
+  ])
+# ---
+# name: test_yearly_events_calendar_omer[New York]
+  list([
+    dict({
+      'description': '''
+        Jewish Holiday: שני של פסח
+        Holiday Type: HolidayTypes.YOM_TOV
+      ''',
+      'end': '2024-04-25',
+      'start': '2024-04-24',
+      'summary': 'שני של פסח',
+    }),
+    dict({
+      'description': 'Parshat Hashavua: none',
+      'end': '2024-04-25',
+      'start': '2024-04-24',
+      'summary': 'none',
+    }),
+    dict({
+      'description': 'Sefirat HaOmer: היום יום אחד לעומר',
+      'end': '2024-04-25',
+      'start': '2024-04-24',
+      'summary': "א' לעומר",
+    }),
+  ])
+# ---
+# name: test_yearly_events_calendar_saturday[Jerusalem]
+  list([
+    dict({
+      'description': 'Parshat Hashavua: וארא',
+      'end': '2024-01-14',
+      'start': '2024-01-13',
+      'summary': 'וארא',
+    }),
+  ])
+# ---
