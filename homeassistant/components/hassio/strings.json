@@ -43,6 +43,11 @@
       }
     }
   },
+  "exceptions": {
+    "mount_reload_error": {
+      "message": "Failed to reload mount {name}: {error}"
+    }
+  },
   "issues": {
     "issue_addon_boot_fail": {
       "fix_flow": {
@@ -407,6 +412,16 @@
     "host_shutdown": {
       "description": "Powers off the host system.",
       "name": "Power off the host system"
+    },
+    "mount_reload": {
+      "description": "Reloads a network storage mount.",
+      "fields": {
+        "device_id": {
+          "description": "The device ID of the network storage mount to reload.",
+          "name": "Device ID"
+        }
+      },
+      "name": "Reload network storage mount"
     },
     "restore_full": {
       "description": "Restores from full backup.",
