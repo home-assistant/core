@@ -5,13 +5,19 @@ from typing import Any, Final
 
 from sn2.device import OnOffSetting
 
-from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.components.switch import (
+    SwitchDeviceClass,
+    SwitchEntity,
+    SwitchEntityDescription,
+)
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import SystemNexa2ConfigEntry, SystemNexa2DataUpdateCoordinator
 from .entity import SystemNexa2Entity
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -68,6 +74,7 @@ async def async_setup_entry(
 class SystemNexa2ConfigurationSwitch(SystemNexa2Entity, SwitchEntity):
     """Configuration switch entity for SystemNexa2 devices."""
 
+    _attr_device_class: SwitchDeviceClass = SwitchDeviceClass.SWITCH
     entity_description: SystemNexa2SwitchEntityDescription
 
     def __init__(
@@ -77,12 +84,12 @@ class SystemNexa2ConfigurationSwitch(SystemNexa2Entity, SwitchEntity):
         setting: OnOffSetting,
     ) -> None:
         """Initialize the configuration switch."""
-        self.entity_description = description
-        self._setting = setting
         super().__init__(
             coordinator=coordinator,
             unique_entity_id=description.key,
         )
+        self.entity_description = description
+        self._setting = setting
         self._attr_entity_category = EntityCategory.CONFIG
 
     async def async_turn_on(self, **_kwargs: Any) -> None:
@@ -103,6 +110,8 @@ class SystemNexa2ConfigurationSwitch(SystemNexa2Entity, SwitchEntity):
 
 class SystemNexa2SwitchPlug(SystemNexa2Entity, SwitchEntity):
     """Representation of a Switch."""
+
+    _attr_translation_key = "relay1"
 
     def __init__(
         self,

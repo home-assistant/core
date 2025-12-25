@@ -50,7 +50,7 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: SystemNexa2ConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    if entry.runtime_data.coordinator:
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         await entry.runtime_data.coordinator.device.disconnect()
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    return unload_ok

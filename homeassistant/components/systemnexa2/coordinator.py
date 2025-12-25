@@ -30,10 +30,18 @@ type SystemNexa2ConfigEntry = ConfigEntry[SystemNexa2RuntimeData]
 class SystemNexa2Data:
     """Data container for System Nexa 2 device information."""
 
+    __slots__ = (
+        "available",
+        "info_data",
+        "on_off_settings",
+        "state",
+        "unique_id",
+    )
+
     info_data: InformationData
     unique_id: str
     on_off_settings: dict[str, OnOffSetting]
-    state: float
+    state: float | None
     available: bool
 
     def update_settings(self, settings: list[Setting]) -> None:
@@ -68,6 +76,8 @@ class SystemNexa2DataUpdateCoordinator(DataUpdateCoordinator[SystemNexa2Data]):
             always_update=False,
         )
         self._state_received_once = False
+        self._unavailable_logged = False
+        self.data = SystemNexa2Data()
 
     async def async_setup(self) -> None:
         """Set up the coordinator and initialize the device connection."""
@@ -77,7 +87,6 @@ class SystemNexa2DataUpdateCoordinator(DataUpdateCoordinator[SystemNexa2Data]):
                 on_update=self._async_handle_update,
             )
 
-            self.data = SystemNexa2Data()
             self.data.available = False
             self.data.unique_id = self.device.info_data.unique_id
             self.data.info_data = self.device.info_data
@@ -108,6 +117,20 @@ class SystemNexa2DataUpdateCoordinator(DataUpdateCoordinator[SystemNexa2Data]):
             and self._state_received_once
             and data.state is not None
         )
+
+        if not data.available and not self._unavailable_logged:
+            _LOGGER.info(
+                "Device %s is unavailable",
+                self.config_entry.data[CONF_HOST],
+            )
+            self._unavailable_logged = True
+        elif data.available and self._unavailable_logged:
+            _LOGGER.info(
+                "Device %s is back online",
+                self.config_entry.data[CONF_HOST],
+            )
+            self._unavailable_logged = False
+
         self.async_set_updated_data(data)
 
 
