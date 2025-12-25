@@ -37,10 +37,10 @@ async def test_coordinator_setup_failure(
         await coordinator.async_setup()
 
 
+@pytest.mark.usefixtures("mock_system_nexa_2_device")
 async def test_coordinator_connection_status(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_system_nexa_2_device,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test coordinator handles connection status updates."""
@@ -64,10 +64,10 @@ async def test_coordinator_connection_status(
     assert "Device 192.168.1.100 is back online" in caplog.text
 
 
+@pytest.mark.usefixtures("mock_system_nexa_2_device")
 async def test_coordinator_state_change(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_system_nexa_2_device,
 ) -> None:
     """Test coordinator handles state change updates."""
     coordinator = SystemNexa2DataUpdateCoordinator(hass, mock_config_entry)
@@ -79,10 +79,10 @@ async def test_coordinator_state_change(
     assert coordinator._state_received_once is True
 
 
+@pytest.mark.usefixtures("mock_system_nexa_2_device")
 async def test_coordinator_settings_update(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_system_nexa_2_device,
 ) -> None:
     """Test coordinator handles settings updates."""
     coordinator = SystemNexa2DataUpdateCoordinator(hass, mock_config_entry)
