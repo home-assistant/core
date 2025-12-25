@@ -105,7 +105,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: VelbusConfigEntry) -> bo
     try:
         await controller.connect()
     except VelbusConnectionFailed as error:
-        raise ConfigEntryNotReady("Cannot connect to Velbus") from error
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="connection_failed",
+        ) from error
 
     task = hass.async_create_task(velbus_scan_task(controller, hass, entry.entry_id))
     entry.runtime_data = VelbusData(controller=controller, scan_task=task)
