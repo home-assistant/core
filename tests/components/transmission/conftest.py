@@ -87,16 +87,15 @@ def mock_torrent():
         torrent_data = {
             "id": torrent_id,
             "name": name,
-            "percentDone": percent_done,
             "status": status,
-            "rateDownload": 0,
-            "rateUpload": 0,
-            "downloadDir": download_dir,
+            "percentDone": percent_done,
+            "uploadRatio": ratio,
+            "ratio": ratio,
             "eta": eta,
             "addedDate": int(added_date.timestamp()),
-            "uploadRatio": ratio,
-            "error": 0,
-            "errorString": "",
+            "doneDate": int(added_date.timestamp()) if percent_done >= 1.0 else 0,
+            "downloadDir": download_dir,
+            "labels": [],
         }
         return Torrent(fields=torrent_data)
 
