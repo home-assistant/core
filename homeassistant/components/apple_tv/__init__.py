@@ -62,7 +62,7 @@ DEFAULT_NAME_HP = "HomePod"
 BACKOFF_TIME_LOWER_LIMIT = 15  # seconds
 BACKOFF_TIME_UPPER_LIMIT = 300  # Five minutes
 
-PLATFORMS = [Platform.MEDIA_PLAYER, Platform.REMOTE]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.MEDIA_PLAYER, Platform.REMOTE]
 
 if sys.version_info < (3, 14):
     AUTH_EXCEPTIONS = (
