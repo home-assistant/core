@@ -416,6 +416,63 @@ async def test_cloud_api_repair(
 
 
 @pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
+async def test_cloud_api_repair_cleared_on_update(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a repair is created then cleared if the device is reachable locally again."""
+
+    # Fake that the device is only reachable via cloud
+    fake_vacuum.is_connected = True
+    fake_vacuum.is_local_connected = False
+
+    # Load the integration and verify that a repair issue is created
+    await async_setup_component(hass, HA_DOMAIN, {})
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_roborock_entry.state is ConfigEntryState.LOADED
+
+    issue_registry = ir.async_get(hass)
+    assert len(issue_registry.issues) == 1
+
+    # Fake that the device is reachable locally again.
+    fake_vacuum.is_local_connected = True
+
+    # Refresh the coordinator using an arbitrary sensor, which should
+    # clear the repair issue.
+    sensor_entity_id = "sensor.roborock_s7_maxv_battery"
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: sensor_entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    # Verify that the repair issue is cleared
+    issue_registry = ir.async_get(hass)
+    assert len(issue_registry.issues) == 0
+
+    # Fake the device is cloud only again. Refreshing the coordinator
+    # should not recreate the repair issue.
+    fake_vacuum.is_local_connected = False
+
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: sensor_entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    # Verify that the repair issue still does not exist
+    issue_registry = ir.async_get(hass)
+    assert len(issue_registry.issues) == 0
+
+
+@pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
 async def test_zeo_device_fails_setup(
     hass: HomeAssistant,
     mock_roborock_entry: MockConfigEntry,
