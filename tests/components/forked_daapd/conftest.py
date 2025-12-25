@@ -24,5 +24,5 @@ def config_entry_fixture() -> MockConfigEntry:
         data=data,
         options={CONF_TTS_PAUSE_TIME: 0},
         source=SOURCE_USER,
-        entry_id=1,
+        entry_id="1",
     )
