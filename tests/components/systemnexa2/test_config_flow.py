@@ -3,6 +3,7 @@
 from ipaddress import ip_address
 from unittest.mock import MagicMock
 
+import pytest
 from sn2 import InformationData, InformationUpdate
 
 from homeassistant.components.systemnexa2 import DOMAIN
@@ -15,9 +16,9 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("mock_system_nexa_2_device")
 async def test_full_flow(
     hass: HomeAssistant,
-    mock_system_nexa_2_device: MagicMock,
 ) -> None:
     """Test full flow."""
     result = await hass.config_entries.flow.async_init(
@@ -41,10 +42,8 @@ async def test_full_flow(
     }
 
 
-async def test_already_configured(
-    hass: HomeAssistant,
-    mock_system_nexa_2_device: MagicMock,
-) -> None:
+@pytest.mark.usefixtures("mock_system_nexa_2_device")
+async def test_already_configured(hass: HomeAssistant) -> None:
     """Test we abort if the device is already configured."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -73,6 +72,7 @@ async def test_already_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_system_nexa_2_device_timeout")
 async def test_connection_timeout(
     hass: HomeAssistant, mock_system_nexa_2_device_timeout: MagicMock
 ) -> None:
@@ -132,6 +132,7 @@ async def test_invalid_hostname(
     assert result["reason"] == "invalid_host"
 
 
+@pytest.mark.usefixtures("mock_system_nexa_2_device_unsupported")
 async def test_unsupported_device(
     hass: HomeAssistant, mock_system_nexa_2_device_unsupported: MagicMock
 ) -> None:
@@ -155,9 +156,8 @@ async def test_unsupported_device(
     }
 
 
-async def test_zeroconf_discovery(
-    hass: HomeAssistant, mock_system_nexa_2_device: MagicMock
-) -> None:
+@pytest.mark.usefixtures("mock_system_nexa_2_device")
+async def test_zeroconf_discovery(hass: HomeAssistant) -> None:
     """Test zeroconf discovery."""
     discovery_info = ZeroconfServiceInfo(
         ip_address=ip_address("10.0.0.131"),
