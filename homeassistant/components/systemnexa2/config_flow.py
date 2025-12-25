@@ -9,7 +9,14 @@ from sn2.device import Device
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_MODEL, CONF_NAME
+from homeassistant.const import (
+    ATTR_MODEL,
+    ATTR_SW_VERSION,
+    CONF_DEVICE_ID,
+    CONF_HOST,
+    CONF_MODEL,
+    CONF_NAME,
+)
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util.network import is_ip_address
@@ -46,7 +53,7 @@ class _DiscoveryInfo:
     device_version: str
 
 
-class SystemNexa2ConfigFlownfigFlow(ConfigFlow, domain=DOMAIN):
+class SystemNexa2ConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for the devices."""
 
     VERSION = 1
@@ -79,8 +86,8 @@ class SystemNexa2ConfigFlownfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(
                     reason="unsupported_model",
                     description_placeholders={
-                        "model": str(device_id),
-                        "version": str(device_model),
+                        ATTR_MODEL: str(device_model),
+                        ATTR_SW_VERSION: str(device_version),
                     },
                 )
 
@@ -93,7 +100,7 @@ class SystemNexa2ConfigFlownfigFlow(ConfigFlow, domain=DOMAIN):
             )
         except Exception:  # noqa: BLE001
             return self.async_abort(
-                reason="no_connection", description_placeholders={"host": host_or_ip}
+                reason="no_connection", description_placeholders={CONF_HOST: host_or_ip}
             )
 
         await self._async_validate_discovered_device()
@@ -111,8 +118,8 @@ class SystemNexa2ConfigFlownfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(
                 reason="unsupported_model",
                 description_placeholders={
-                    "model": str(device_id),
-                    "version": str(device_model),
+                    ATTR_MODEL: str(device_model),
+                    ATTR_SW_VERSION: str(device_version),
                 },
             )
         self._discovered_device = _DiscoveryInfo(
@@ -136,8 +143,8 @@ class SystemNexa2ConfigFlownfigFlow(ConfigFlow, domain=DOMAIN):
             raise AbortFlow(
                 reason="unsupported_model",
                 description_placeholders={
-                    "model": str(self._discovered_device.model),
-                    "version": str(self._discovered_device.device_version),
+                    ATTR_MODEL: str(self._discovered_device.model),
+                    ATTR_SW_VERSION: str(self._discovered_device.device_version),
                 },
             )
 
