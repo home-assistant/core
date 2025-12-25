@@ -258,6 +258,7 @@ aioflo==2021.11.0
 aioghost==0.4.0
 
 # homeassistant.components.github
+# homeassistant.components.tasmota
 aiogithubapi==26.0.0
 
 # homeassistant.components.guardian
