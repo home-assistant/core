@@ -1,0 +1,1928 @@
+{
+  "id": 5,
+  "manufacturer": "Shelly Europe Ltd.",
+  "label": "QLSH-001P10EU",
+  "description": "Shelly Wave Shutter",
+  "fingerprint": {
+    "manufacturerId": "0x0460",
+    "productType": "0x0003",
+    "productId": "0x0083",
+    "firmwareVersion": "14.2.0",
+    "hardwareVersion": 1
+  },
+  "interviewStage": "NodeInfo",
+  "ready": false,
+  "securityClasses": {
+    "S2_AccessControl": false,
+    "S2_Authenticated": true,
+    "S2_Unauthenticated": true,
+    "S0_Legacy": false
+  },
+  "isListening": true,
+  "isFrequentListening": false,
+  "isRouting": true,
+  "supportsBeaming": true,
+  "supportsSecurity": false,
+  "protocol": "ZWave",
+  "protocolVersion": "4.5x / 6.0x",
+  "sdkVersion": "7.23.4",
+  "supportedDataRates": [
+    40000,
+    100000
+  ],
+  "deviceClass": {
+    "basic": {
+      "key": 4,
+      "label": "Routing End Node"
+    },
+    "generic": {
+      "key": 17,
+      "label": "Multilevel Switch"
+    },
+    "specific": {
+      "key": 6,
+      "label": "Motor Control Class B"
+    }
+  },
+  "commandClasses": {
+    "Z-Wave Plus Info": {
+      "isSupported": true,
+      "isControlled": false,
+      "secure": false,
+      "version": 2,
+      "values": [
+        {
+          "property": "userIcon",
+          "value": 6144,
+          "timestamp": "2025-12-25T20:48:53.087Z",
+          "internal": true
+        },
+        {
+          "property": "installerIcon",
+          "value": 6144,
+          "timestamp": "2025-12-25T20:48:53.088Z",
+          "internal": true
+        },
+        {
+          "property": "roleType",
+          "value": 5,
+          "timestamp": "2025-12-25T20:50:40.267Z",
+          "internal": true
+        },
+        {
+          "property": "nodeType",
+          "value": 0,
+          "timestamp": "2025-12-25T20:50:40.267Z",
+          "internal": true
+        },
+        {
+          "property": "zwavePlusVersion",
+          "value": 2,
+          "timestamp": "2025-12-25T20:50:40.267Z",
+          "internal": true
+        }
+      ]
+    },
+    "Security": {
+      "isSupported": true,
+      "isControlled": false,
+      "secure": true,
+      "version": 1,
+      "values": []
+    },
+    "Security 2": {
+      "isSupported": true,
+      "isControlled": false,
+      "secure": true,
+      "version": 1,
+      "values": []
+    },
+    "Transport Service": {
+      "isSupported": true,
+      "isControlled": false,
+      "secure": false,
+      "version": 2,
+      "values": []
+    },
+    "Supervision": {
+      "isSupported": true,
+      "isControlled": false,
+      "secure": false,
+      "version": 1,
+      "values": []
+    },
+    "Meter": {
+      "isSupported": true,
+      "isControlled": false,
+      "secure": true,
+      "version": 6,
+      "values": []
+    },
+    "Notification": {
+      "isSupported": true,
+      "isControlled": false,
+      "secure": true,
+      "version": 8,
+      "values": [
+        {
+          "property": "supportedNotificationTypes",
+          "value": [
+            8
+          ],
+          "timestamp": "2025-12-25T20:50:18.991Z",
+          "internal": true
+        },
+        {
+          "property": "supportsV1Alarm",
+          "value": false,
+          "timestamp": "2025-12-25T20:50:18.991Z",
+          "internal": true
+        },
+        {
+          "property": "supportedNotificationEvents",
+          "propertyKey": 8,
+          "value": [
+            2,
+            6,
+            7,
+            8
+          ],
+          "timestamp": "2025-12-25T20:50:26.865Z",
+          "internal": true
+        },
+        {
+          "property": "notificationMode",
+          "value": "push",
+          "timestamp": "2025-12-25T20:50:26.872Z",
+          "internal": true
+        }
+      ]
+    },
+    "Association": {
+      "isSupported": true,
+      "isControlled": false,
+      "secure": true,
+      "version": 2,
+      "values": [
+        {
+          "property": "groupCount",
+          "value": 5,
+          "timestamp": "2025-12-25T20:49:00.145Z",
+          "internal": true
+        },
+        {
+          "property": "nodeIds",
+          "propertyKey": 1,
+          "value": [],
+          "timestamp": "2025-12-25T20:49:01.228Z",
+          "internal": true
+        },
+        {
+          "property": "maxNodes",
+          "propertyKey": 1,
+          "value": 9,
+          "timestamp": "2025-12-25T20:49:01.228Z",
+          "internal": true
+        },
+        {
+          "property": "nodeIds",
+          "propertyKey": 2,
+          "value": [],
+          "timestamp": "2025-12-25T20:49:02.371Z",
+          "internal": true
+        },
+        {
+          "property": "maxNodes",
+          "propertyKey": 2,
+          "value": 9,
+          "timestamp": "2025-12-25T20:49:02.372Z",
+          "internal": true
+        },
+        {
+          "property": "nodeIds",
+          "propertyKey": 3,
+          "value": [],
+          "timestamp": "2025-12-25T20:49:03.119Z",
+          "internal": true
+        },
+        {
+          "property": "maxNodes",
+          "propertyKey": 3,
+          "value": 9,
+          "timestamp": "2025-12-25T20:49:03.119Z",
+          "internal": true
+        },
+        {
+          "property": "nodeIds",
+          "propertyKey": 4,
+          "value": [],
+          "timestamp": "2025-12-25T20:49:03.964Z",
+          "internal": true
+        },
+        {
+          "property": "maxNodes",
+          "propertyKey": 4,
+          "value": 9,
+          "timestamp": "2025-12-25T20:49:03.964Z",
+          "internal": true
+        },
+        {
+          "property": "nodeIds",
+          "propertyKey": 5,
+          "value": [],
+          "timestamp": "2025-12-25T20:49:04.589Z",
+          "internal": true
+        },
+        {
+          "property": "maxNodes",
+          "propertyKey": 5,
+          "value": 9,
+          "timestamp": "2025-12-25T20:49:04.589Z",
+          "internal": true
+        },
+        {
+          "property": "hasLifeline",
+          "value": true,
+          "timestamp": "2025-12-25T20:49:12.922Z",
+          "internal": true
+        }
+      ]
+    },
+    "Association Group Information": {
+      "isSupported": true,
+      "isControlled": false,
+      "secure": true,
+      "version": 3,
+      "values": [
+        {
+          "property": "name",
+          "propertyKey": 1,
+          "value": "Lifeline",
+          "timestamp": "2025-12-25T20:49:13.729Z",
+          "internal": true
+        },
+        {
+          "property": "issuedCommands",
+          "propertyKey": 1,
+          "value": {
+            "38": [
+              3
+            ],
+            "50": [
+              2
+            ],
+            "90": [
+              1
+            ],
+            "91": [
+              3,
+              6
+            ],
+            "106": [
+              4
+            ],
+            "113": [
+              5
+            ],
+            "135": [
+              3
+            ],
+            "$$type$$": "map"
+          },
+          "timestamp": "2025-12-25T20:49:14.901Z",
+          "internal": true
+        },
+        {
+          "property": "name",
+          "propertyKey": 2,
+          "value": "Start/stop quick press [SW1]",
+          "timestamp": "2025-12-25T20:49:15.891Z",
+          "internal": true
+        },
+        {
+          "property": "issuedCommands",
+          "propertyKey": 2,
+          "value": {
+            "32": [
+              1
+            ],
+            "$$type$$": "map"
+          },
+          "timestamp": "2025-12-25T20:49:16.784Z",
+          "internal": true
+        },
+        {
+          "property": "name",
+          "propertyKey": 3,
+          "value": "Long press press [SW1]",
+          "timestamp": "2025-12-25T20:49:19.321Z",
+          "internal": true
+        },
+        {
+          "property": "issuedCommands",
+          "propertyKey": 3,
+          "value": {
+            "38": [
+              4,
+              5
+            ],
+            "$$type$$": "map"
+          },
+          "timestamp": "2025-12-25T20:49:20.447Z",
+          "internal": true
+        },
+        {
+          "property": "name",
+          "propertyKey": 4,
+          "value": "Start/stop quick press [SW2]",
+          "timestamp": "2025-12-25T20:49:21.857Z",
+          "internal": true
+        },
+        {
+          "property": "issuedCommands",
+          "propertyKey": 4,
+          "value": {
+            "32": [
+              1
+            ],
+            "$$type$$": "map"
+          },
+          "timestamp": "2025-12-25T20:49:23.114Z",
+          "internal": true
+        },
+        {
+          "property": "name",
+          "propertyKey": 5,
+          "value": "Long press press [SW2]",
+          "timestamp": "2025-12-25T20:49:24.488Z",
+          "internal": true
+        },
+        {
+          "property": "issuedCommands",
+          "propertyKey": 5,
+          "value": {
+            "38": [
+              4,
+              5
+            ],
+            "$$type$$": "map"
+          },
+          "timestamp": "2025-12-25T20:49:25.841Z",
+          "internal": true
+        },
+        {
+          "property": "hasDynamicInfo",
+          "value": false,
+          "timestamp": "2025-12-25T20:49:36.534Z",
+          "internal": true
+        },
+        {
+          "property": "info",
+          "propertyKey": 1,
+          "value": {
+            "mode": 0,
+            "profile": 1,
+            "eventCode": 0
+          },
+          "timestamp": "2025-12-25T20:49:27.233Z",
+          "internal": true
+        },
+        {
+          "property": "info",
+          "propertyKey": 2,
+          "value": {
+            "mode": 0,
+            "profile": 8193,
+            "eventCode": 0
+          },
+          "timestamp": "2025-12-25T20:49:29.282Z",
+          "internal": true
+        },
+        {
+          "property": "info",
+          "propertyKey": 3,
+          "value": {
+            "mode": 0,
+            "profile": 8193,
+            "eventCode": 0
+          },
+          "timestamp": "2025-12-25T20:49:30.519Z",
+          "internal": true
+        },
+        {
+          "property": "info",
+          "propertyKey": 4,
+          "value": {
+            "mode": 0,
+            "profile": 8194,
+            "eventCode": 0
+          },
+          "timestamp": "2025-12-25T20:49:32.086Z",
+          "internal": true
+        },
+        {
+          "property": "info",
+          "propertyKey": 5,
+          "value": {
+            "mode": 0,
+            "profile": 8194,
+            "eventCode": 0
+          },
+          "timestamp": "2025-12-25T20:49:36.534Z",
+          "internal": true
+        }
+      ]
+    },
+    "Multi Channel Association": {
+      "isSupported": true,
+      "isControlled": false,
+      "secure": true,
+      "version": 3,
+      "values": [
+        {
+          "property": "groupCount",
+          "value": 5,
+          "timestamp": "2025-12-25T20:49:04.804Z",
+          "internal": true
+        },
+        {
+          "property": "endpoints",
+          "propertyKey": 1,
+          "value": [
+            {
+              "nodeId": 1,
+              "endpoint": 0
+            }
+          ],
+          "timestamp": "2025-12-25T20:49:05.491Z",
+          "internal": true
+        },
+        {
+          "property": "nodeIds",
+          "propertyKey": 1,
+          "value": [],
+          "timestamp": "2025-12-25T20:49:05.491Z",
+          "internal": true
+        },
+        {
+          "property": "maxNodes",
+          "propertyKey": 1,
+          "value": 9,
+          "timestamp": "2025-12-25T20:49:05.491Z",
+          "internal": true
+        },
+        {
+          "property": "endpoints",
+          "propertyKey": 2,
+          "value": [],
+          "timestamp": "2025-12-25T20:49:06.324Z",
+          "internal": true
+        },
+        {
+          "property": "nodeIds",
+          "propertyKey": 2,
+          "value": [],
+          "timestamp": "2025-12-25T20:49:06.324Z",
+          "internal": true
+        },
+        {
+          "property": "maxNodes",
+          "propertyKey": 2,
+          "value": 9,
+          "timestamp": "2025-12-25T20:49:06.324Z",
+          "internal": true
+        },
+        {
+          "property": "endpoints",
+          "propertyKey": 3,
+          "value": [],
+          "timestamp": "2025-12-25T20:49:08.390Z",
+          "internal": true
+        },
+        {
+          "property": "nodeIds",
+          "propertyKey": 3,
+          "value": [],
+          "timestamp": "2025-12-25T20:49:08.391Z",
+          "internal": true
+        },
+        {
+          "property": "maxNodes",
+          "propertyKey": 3,
+          "value": 9,
+          "timestamp": "2025-12-25T20:49:08.391Z",
+          "internal": true
+        },
+        {
+          "property": "endpoints",
+          "propertyKey": 4,
+          "value": [],
+          "timestamp": "2025-12-25T20:49:09.105Z",
+          "internal": true
+        },
+        {
+          "property": "nodeIds",
+          "propertyKey": 4,
+          "value": [],
+          "timestamp": "2025-12-25T20:49:09.105Z",
+          "internal": true
+        },
+        {
+          "property": "maxNodes",
+          "propertyKey": 4,
+          "value": 9,
+          "timestamp": "2025-12-25T20:49:09.105Z",
+          "internal": true
+        },
+        {
+          "property": "endpoints",
+          "propertyKey": 5,
+          "value": [],
+          "timestamp": "2025-12-25T20:49:12.915Z",
+          "internal": true
+        },
+        {
+          "property": "nodeIds",
+          "propertyKey": 5,
+          "value": [],
+          "timestamp": "2025-12-25T20:49:12.915Z",
+          "internal": true
+        },
+        {
+          "property": "maxNodes",
+          "propertyKey": 5,
+          "value": 9,
+          "timestamp": "2025-12-25T20:49:12.916Z",
+          "internal": true
+        }
+      ]
+    },
+    "Central Scene": {
+      "isSupported": true,
+      "isControlled": false,
+      "secure": true,
+      "version": 3,
+      "values": [
+        {
+          "property": "sceneCount",
+          "internal": true
+        },
+        {
+          "property": "supportsSlowRefresh",
+          "internal": true
+        },
+        {
+          "property": "supportedKeyAttributes",
+          "internal": true
+        },
+        {
+          "property": "slowRefresh"
+        }
+      ]
+    },
+    "Device Reset Locally": {
+      "isSupported": true,
+      "isControlled": false,
+      "secure": true,
+      "version": 1,
+      "values": []
+    },
+    "Firmware Update Meta Data": {
+      "isSupported": true,
+      "isControlled": false,
+      "secure": true,
+      "version": 5,
+      "values": [
+        {
+          "property": "additionalFirmwareIDs",
+          "value": [
+            1
+          ],
+          "timestamp": "2025-12-25T20:48:53.810Z",
+          "internal": true
+        },
+        {
+          "property": "firmwareUpgradable",
+          "value": true,
+          "timestamp": "2025-12-25T20:48:53.811Z",
+          "internal": true
+        },
+        {
+          "property": "supportsActivation",
+          "internal": true
+        },
+        {
+          "property": "continuesToFunction",
+          "internal": true
+        },
+        {
+          "property": "supportsResuming",
+          "internal": true
+        },
+        {
+          "property": "supportsNonSecureTransfer",
+          "internal": true
+        }
+      ]
+    },
+    "Indicator": {
+      "isSupported": true,
+      "isControlled": false,
+      "secure": true,
+      "version": 3,
+      "values": [
+        {
+          "property": "supportedPropertyIDs",
+          "propertyKey": 80,
+          "value": [
+            3,
+            4,
+            5
+          ],
+          "timestamp": "2025-12-25T20:48:54.439Z",
+          "internal": true
+        },
+        {
+          "property": "supportedIndicatorIds",
+          "value": [
+            80
+          ],
+          "timestamp": "2025-12-25T20:48:54.440Z",
+          "internal": true
+        },
+        {
+          "property": "value"
+        },
+        {
+          "property": "identify"
+        }
+      ]
+    },
+    "Multi Channel": {
+      "isSupported": true,
+      "isControlled": false,
+      "secure": true,
+      "version": 4,
+      "values": [
+        {
+          "property": "aggregatedCount",
+          "value": 0,
+          "timestamp": "2025-12-25T20:48:55.886Z",
+          "internal": true
+        },
+        {
+          "property": "individualCount",
+          "value": 2,
+          "timestamp": "2025-12-25T20:48:55.887Z",
+          "internal": true
+        },
+        {
+          "property": "identicalCapabilities",
+          "value": true,
+          "timestamp": "2025-12-25T20:48:55.887Z",
+          "internal": true
+        },
+        {
+          "property": "countIsDynamic",
+          "value": false,
+          "timestamp": "2025-12-25T20:48:55.887Z",
+          "internal": true
+        },
+        {
+          "property": "endpointIndizes",
+          "value": [
+            1,
+            2
+          ],
+          "timestamp": "2025-12-25T20:48:57.521Z",
+          "internal": true
+        },
+        {
+          "property": "commandClasses",
+          "internal": true
+        },
+        {
+          "property": "deviceClass",
+          "internal": true
+        }
+      ]
+    },
+    "Powerlevel": {
+      "isSupported": true,
+      "isControlled": false,
+      "secure": true,
+      "version": 1,
+      "values": []
+    },
+    "Version": {
+      "isSupported": true,
+      "isControlled": false,
+      "secure": true,
+      "version": 3,
+      "values": [
+        {
+          "property": "hardwareVersion",
+          "metadata": {
+            "type": "number",
+            "readable": true,
+            "writeable": false,
+            "label": "Z-Wave chip hardware version"
+          },
+          "value": 1,
+          "timestamp": "2025-12-25T20:48:30.901Z"
+        },
+        {
+          "property": "firmwareVersions",
+          "metadata": {
+            "type": "string[]",
+            "readable": true,
+            "writeable": false,
+            "label": "Z-Wave chip firmware versions"
+          },
+          "value": [
+            "14.2",
+            "3.0"
+          ],
+          "timestamp": "2025-12-25T20:48:30.903Z"
+        },
+        {
+          "property": "protocolVersion",
+          "metadata": {
+            "type": "string",
+            "readable": true,
+            "writeable": false,
+            "label": "Z-Wave protocol version"
+          },
+          "value": "7.23",
+          "timestamp": "2025-12-25T20:48:30.905Z"
+        },
+        {
+          "property": "libraryType",
+          "metadata": {
+            "type": "number",
+            "readable": true,
+            "writeable": false,
+            "label": "Library type",
+            "states": {
+              "0": "Unknown",
+              "1": "Static Controller",
+              "2": "Controller",
+              "3": "Enhanced Slave",
+              "4": "Slave",
+              "5": "Installer",
+              "6": "Routing Slave",
+              "7": "Bridge Controller",
+              "8": "Device under Test",
+              "9": "N/A",
+              "10": "AV Remote",
+              "11": "AV Device"
+            }
+          },
+          "value": 3,
+          "timestamp": "2025-12-25T20:48:30.906Z"
+        },
+        {
+          "property": "supportsZWaveSoftwareGet",
+          "value": true,
+          "timestamp": "2025-12-25T20:48:51.738Z",
+          "internal": true
+        },
+        {
+          "property": "applicationBuildNumber",
+          "metadata": {
+            "type": "string",
+            "readable": true,
+            "writeable": false,
+            "label": "Application build number"
+          },
+          "value": 43981,
+          "timestamp": "2025-12-25T20:48:52.344Z"
+        },
+        {
+          "property": "applicationVersion",
+          "metadata": {
+            "type": "string",
+            "readable": true,
+            "writeable": false,
+            "label": "Application version"
+          },
+          "value": "14.2.0",
+          "timestamp": "2025-12-25T20:48:52.347Z"
+        },
+        {
+          "property": "zWaveProtocolBuildNumber",
+          "metadata": {
+            "type": "string",
+            "readable": true,
+            "writeable": false,
+            "label": "Z-Wave protocol build number"
+          },
+          "value": 562,
+          "timestamp": "2025-12-25T20:48:52.348Z"
+        },
+        {
+          "property": "zWaveProtocolVersion",
+          "metadata": {
+            "type": "string",
+            "readable": true,
+            "writeable": false,
+            "label": "Z-Wave protocol version"
+          },
+          "value": "7.23.4",
+          "timestamp": "2025-12-25T20:48:52.349Z"
+        },
+        {
+          "property": "hostInterfaceBuildNumber",
+          "metadata": {
+            "type": "string",
+            "readable": true,
+            "writeable": false,
+            "label": "Serial API build number"
+          },
+          "value": 0,
+          "timestamp": "2025-12-25T20:48:52.351Z"
+        },
+        {
+          "property": "hostInterfaceVersion",
+          "metadata": {
+            "type": "string",
+            "readable": true,
+            "writeable": false,
+            "label": "Serial API version"
+          },
+          "value": "unused",
+          "timestamp": "2025-12-25T20:48:52.352Z"
+        },
+        {
+          "property": "applicationFrameworkBuildNumber",
+          "metadata": {
+            "type": "string",
+            "readable": true,
+            "writeable": false,
+            "label": "Z-Wave application framework API build number"
+          },
+          "value": 43981,
+          "timestamp": "2025-12-25T20:48:52.353Z"
+        },
+        {
+          "property": "applicationFrameworkAPIVersion",
+          "metadata": {
+            "type": "string",
+            "readable": true,
+            "writeable": false,
+            "label": "Z-Wave application framework API version"
+          },
+          "value": "10.23.4",
+          "timestamp": "2025-12-25T20:48:52.355Z"
+        },
+        {
+          "property": "sdkVersion",
+          "metadata": {
+            "type": "string",
+            "readable": true,
+            "writeable": false,
+            "label": "SDK version"
+          },
+          "value": "7.23.4",
+          "timestamp": "2025-12-25T20:48:52.356Z"
+        }
+      ]
+    },
+    "Configuration": {
+      "isSupported": true,
+      "isControlled": false,
+      "secure": true,
+      "version": 4,
+      "values": [
+        {
+          "property": "isParamInformationFromConfig",
+          "internal": true
+        }
+      ]
+    },
+    "Manufacturer Specific": {
+      "isSupported": true,
+      "isControlled": false,
+      "secure": true,
+      "version": 2,
+      "values": [
+        {
+          "property": "productId",
+          "metadata": {
+            "type": "number",
+            "readable": true,
+            "writeable": false,
+            "min": 0,
+            "max": 65535,
+            "label": "Product ID"
+          },
+          "value": 131,
+          "timestamp": "2025-12-25T20:48:28.155Z"
+        },
+        {
+          "property": "productType",
+          "metadata": {
+            "type": "number",
+            "readable": true,
+            "writeable": false,
+            "min": 0,
+            "max": 65535,
+            "label": "Product type"
+          },
+          "value": 3,
+          "timestamp": "2025-12-25T20:48:28.157Z"
+        },
+        {
+          "property": "manufacturerId",
+          "metadata": {
+            "type": "number",
+            "readable": true,
+            "writeable": false,
+            "min": 0,
+            "max": 65535,
+            "label": "Manufacturer ID"
+          },
+          "value": 1120,
+          "timestamp": "2025-12-25T20:48:28.159Z"
+        }
+      ]
+    },
+    "Window Covering": {
+      "isSupported": true,
+      "isControlled": false,
+      "secure": true,
+      "version": 1,
+      "values": [
+        {
+          "property": "supportedParameters",
+          "internal": true
+        }
+      ]
+    },
+    "Basic": {
+      "isSupported": false,
+      "isControlled": false,
+      "secure": false,
+      "version": 2,
+      "values": []
+    }
+  },
+  "maySupportBasicCC": false,
+  "endpoints": {
+    "1": {
+      "index": 1,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing End Node"
+        },
+        "generic": {
+          "key": 17,
+          "label": "Multilevel Switch"
+        },
+        "specific": {
+          "key": 6,
+          "label": "Motor Control Class B"
+        }
+      },
+      "commandClasses": {
+        "Z-Wave Plus Info": {
+          "isSupported": true,
+          "isControlled": false,
+          "secure": false,
+          "version": 0,
+          "values": [
+            {
+              "property": "userIcon",
+              "value": 6144,
+              "timestamp": "2025-12-25T20:49:44.534Z",
+              "internal": true
+            },
+            {
+              "property": "installerIcon",
+              "value": 6144,
+              "timestamp": "2025-12-25T20:49:44.535Z",
+              "internal": true
+            }
+          ]
+        },
+        "Security": {
+          "isSupported": true,
+          "isControlled": false,
+          "secure": true,
+          "version": 0,
+          "values": []
+        },
+        "Security 2": {
+          "isSupported": true,
+          "isControlled": false,
+          "secure": true,
+          "version": 0,
+          "values": []
+        },
+        "Supervision": {
+          "isSupported": true,
+          "isControlled": false,
+          "secure": false,
+          "version": 0,
+          "values": []
+        },
+        "Association": {
+          "isSupported": true,
+          "isControlled": false,
+          "secure": true,
+          "version": 0,
+          "values": [
+            {
+              "property": "groupCount",
+              "value": 3,
+              "timestamp": "2025-12-25T20:49:50.301Z",
+              "internal": true
+            },
+            {
+              "property": "nodeIds",
+              "propertyKey": 1,
+              "value": [],
+              "timestamp": "2025-12-25T20:49:51.367Z",
+              "internal": true
+            },
+            {
+              "property": "maxNodes",
+              "propertyKey": 1,
+              "value": 0,
+              "timestamp": "2025-12-25T20:49:51.367Z",
+              "internal": true
+            },
+            {
+              "property": "nodeIds",
+              "propertyKey": 2,
+              "value": [],
+              "timestamp": "2025-12-25T20:49:52.451Z",
+              "internal": true
+            },
+            {
+              "property": "maxNodes",
+              "propertyKey": 2,
+              "value": 9,
+              "timestamp": "2025-12-25T20:49:52.451Z",
+              "internal": true
+            },
+            {
+              "property": "nodeIds",
+              "propertyKey": 3,
+              "value": [],
+              "timestamp": "2025-12-25T20:49:54.793Z",
+              "internal": true
+            },
+            {
+              "property": "maxNodes",
+              "propertyKey": 3,
+              "value": 9,
+              "timestamp": "2025-12-25T20:49:54.794Z",
+              "internal": true
+            },
+            {
+              "property": "hasLifeline",
+              "value": true,
+              "timestamp": "2025-12-25T20:49:59.714Z",
+              "internal": true
+            }
+          ]
+        },
+        "Multi Channel Association": {
+          "isSupported": true,
+          "isControlled": false,
+          "secure": true,
+          "version": 0,
+          "values": [
+            {
+              "property": "groupCount",
+              "value": 3,
+              "timestamp": "2025-12-25T20:49:55.281Z",
+              "internal": true
+            },
+            {
+              "property": "endpoints",
+              "propertyKey": 1,
+              "value": [],
+              "timestamp": "2025-12-25T20:49:56.579Z",
+              "internal": true
+            },
+            {
+              "property": "nodeIds",
+              "propertyKey": 1,
+              "value": [],
+              "timestamp": "2025-12-25T20:49:56.580Z",
+              "internal": true
+            },
+            {
+              "property": "maxNodes",
+              "propertyKey": 1,
+              "value": 0,
+              "timestamp": "2025-12-25T20:49:56.580Z",
+              "internal": true
+            },
+            {
+              "property": "endpoints",
+              "propertyKey": 2,
+              "value": [],
+              "timestamp": "2025-12-25T20:49:58.425Z",
+              "internal": true
+            },
+            {
+              "property": "nodeIds",
+              "propertyKey": 2,
+              "value": [],
+              "timestamp": "2025-12-25T20:49:58.425Z",
+              "internal": true
+            },
+            {
+              "property": "maxNodes",
+              "propertyKey": 2,
+              "value": 9,
+              "timestamp": "2025-12-25T20:49:58.425Z",
+              "internal": true
+            },
+            {
+              "property": "endpoints",
+              "propertyKey": 3,
+              "value": [],
+              "timestamp": "2025-12-25T20:49:59.710Z",
+              "internal": true
+            },
+            {
+              "property": "nodeIds",
+              "propertyKey": 3,
+              "value": [],
+              "timestamp": "2025-12-25T20:49:59.710Z",
+              "internal": true
+            },
+            {
+              "property": "maxNodes",
+              "propertyKey": 3,
+              "value": 9,
+              "timestamp": "2025-12-25T20:49:59.710Z",
+              "internal": true
+            }
+          ]
+        },
+        "Association Group Information": {
+          "isSupported": true,
+          "isControlled": false,
+          "secure": true,
+          "version": 0,
+          "values": [
+            {
+              "property": "name",
+              "propertyKey": 1,
+              "value": "Lifeline",
+              "timestamp": "2025-12-25T20:50:00.961Z",
+              "internal": true
+            },
+            {
+              "property": "issuedCommands",
+              "propertyKey": 1,
+              "value": {
+                "38": [
+                  3
+                ],
+                "50": [
+                  2
+                ],
+                "113": [
+                  5
+                ],
+                "$$type$$": "map"
+              },
+              "timestamp": "2025-12-25T20:50:01.834Z",
+              "internal": true
+            },
+            {
+              "property": "issuedCommands",
+              "propertyKey": 2,
+              "value": {
+                "32": [
+                  1
+                ],
+                "$$type$$": "map"
+              },
+              "timestamp": "2025-12-25T20:50:05.502Z",
+              "internal": true
+            },
+            {
+              "property": "name",
+              "propertyKey": 3,
+              "value": "Long press press [SW1]",
+              "timestamp": "2025-12-25T20:50:06.720Z",
+              "internal": true
+            },
+            {
+              "property": "issuedCommands",
+              "propertyKey": 3,
+              "value": {
+                "38": [
+                  4,
+                  5
+                ],
+                "$$type$$": "map"
+              },
+              "timestamp": "2025-12-25T20:50:09.319Z",
+              "internal": true
+            },
+            {
+              "property": "hasDynamicInfo",
+              "value": false,
+              "timestamp": "2025-12-25T20:50:18.292Z",
+              "internal": true
+            },
+            {
+              "property": "info",
+              "propertyKey": 1,
+              "value": {
+                "mode": 0,
+                "profile": 1,
+                "eventCode": 0
+              },
+              "timestamp": "2025-12-25T20:50:15.531Z",
+              "internal": true
+            },
+            {
+              "property": "info",
+              "propertyKey": 2,
+              "value": {
+                "mode": 0,
+                "profile": 8193,
+                "eventCode": 0
+              },
+              "timestamp": "2025-12-25T20:50:16.964Z",
+              "internal": true
+            },
+            {
+              "property": "info",
+              "propertyKey": 3,
+              "value": {
+                "mode": 0,
+                "profile": 8193,
+                "eventCode": 0
+              },
+              "timestamp": "2025-12-25T20:50:18.293Z",
+              "internal": true
+            }
+          ]
+        },
+        "Meter": {
+          "isSupported": true,
+          "isControlled": false,
+          "secure": true,
+          "version": 0,
+          "values": [
+            {
+              "property": "supportedRateTypes",
+              "value": [
+                1
+              ],
+              "timestamp": "2025-12-25T20:49:45.272Z",
+              "internal": true
+            },
+            {
+              "property": "supportedScales",
+              "value": [
+                0,
+                2
+              ],
+              "timestamp": "2025-12-25T20:49:45.272Z",
+              "internal": true
+            },
+            {
+              "property": "supportsReset",
+              "value": true,
+              "timestamp": "2025-12-25T20:49:45.272Z",
+              "internal": true
+            },
+            {
+              "property": "type",
+              "value": 1,
+              "timestamp": "2025-12-25T20:49:45.272Z",
+              "internal": true
+            },
+            {
+              "property": "value",
+              "propertyKey": 65537,
+              "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": false,
+                "ccSpecific": {
+                  "meterType": 1,
+                  "scale": 0,
+                  "rateType": 1
+                },
+                "label": "Electric Consumption [kWh]",
+                "unit": "kWh"
+              },
+              "value": 0,
+              "timestamp": "2025-12-25T20:49:46.340Z"
+            },
+            {
+              "property": "value",
+              "propertyKey": 66049,
+              "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": false,
+                "ccSpecific": {
+                  "meterType": 1,
+                  "scale": 2,
+                  "rateType": 1
+                },
+                "label": "Electric Consumption [W]",
+                "unit": "W"
+              },
+              "value": 0,
+              "timestamp": "2025-12-25T20:49:47.126Z"
+            },
+            {
+              "property": "reset",
+              "propertyKey": 65537,
+              "metadata": {
+                "type": "boolean",
+                "readable": false,
+                "writeable": true,
+                "label": "Reset Electric Consumption [kWh]",
+                "states": {
+                  "true": "Reset"
+                },
+                "ccSpecific": {
+                  "meterType": 1,
+                  "rateType": 1,
+                  "scale": 0
+                }
+              }
+            },
+            {
+              "property": "reset"
+            }
+          ]
+        },
+        "Multilevel Switch": {
+          "isSupported": true,
+          "isControlled": false,
+          "secure": true,
+          "version": 4,
+          "values": [
+            {
+              "property": "switchType",
+              "value": 2,
+              "timestamp": "2025-12-25T20:49:48.170Z",
+              "internal": true
+            },
+            {
+              "property": "currentValue",
+              "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": false,
+                "min": 0,
+                "max": 99,
+                "label": "Current value"
+              },
+              "value": 0,
+              "timestamp": "2025-12-25T20:49:49.253Z"
+            },
+            {
+              "property": "duration",
+              "metadata": {
+                "type": "duration",
+                "readable": true,
+                "writeable": false,
+                "label": "Remaining duration"
+              },
+              "value": {
+                "value": 0,
+                "unit": "seconds",
+                "$$type$$": "duration"
+              },
+              "timestamp": "2025-12-25T20:49:49.256Z"
+            },
+            {
+              "property": "targetValue",
+              "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": true,
+                "min": 0,
+                "max": 99,
+                "label": "Target value",
+                "valueChangeOptions": [
+                  "transitionDuration"
+                ]
+              },
+              "value": 0,
+              "timestamp": "2025-12-25T20:49:49.263Z"
+            },
+            {
+              "property": "Up",
+              "metadata": {
+                "type": "boolean",
+                "readable": false,
+                "writeable": true,
+                "label": "Perform a level change (Up)",
+                "valueChangeOptions": [
+                  "transitionDuration"
+                ],
+                "states": {
+                  "true": "Start",
+                  "false": "Stop"
+                },
+                "ccSpecific": {
+                  "switchType": 2
+                }
+              }
+            },
+            {
+              "property": "Down",
+              "metadata": {
+                "type": "boolean",
+                "readable": false,
+                "writeable": true,
+                "label": "Perform a level change (Down)",
+                "valueChangeOptions": [
+                  "transitionDuration"
+                ],
+                "states": {
+                  "true": "Start",
+                  "false": "Stop"
+                },
+                "ccSpecific": {
+                  "switchType": 2
+                }
+              }
+            },
+            {
+              "property": "restorePrevious"
+            }
+          ]
+        },
+        "Notification": {
+          "isSupported": true,
+          "isControlled": false,
+          "secure": true,
+          "version": 0,
+          "values": [
+            {
+              "property": "Power Management",
+              "propertyKey": "Over-current status",
+              "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": false,
+                "min": 0,
+                "max": 255,
+                "label": "Over-current status",
+                "states": {
+                  "0": "idle",
+                  "6": "Over-current detected"
+                },
+                "ccSpecific": {
+                  "notificationType": 8
+                }
+              },
+              "value": 0,
+              "timestamp": "2025-12-25T20:50:29.248Z"
+            },
+            {
+              "property": "Power Management",
+              "propertyKey": "Over-voltage status",
+              "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": false,
+                "min": 0,
+                "max": 255,
+                "label": "Over-voltage status",
+                "states": {
+                  "0": "idle",
+                  "7": "Over-voltage detected"
+                },
+                "ccSpecific": {
+                  "notificationType": 8
+                }
+              },
+              "value": 0,
+              "timestamp": "2025-12-25T20:50:29.249Z"
+            },
+            {
+              "property": "Power Management",
+              "propertyKey": "Over-load status",
+              "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": false,
+                "min": 0,
+                "max": 255,
+                "label": "Over-load status",
+                "states": {
+                  "0": "idle",
+                  "8": "Over-load detected"
+                },
+                "ccSpecific": {
+                  "notificationType": 8
+                }
+              },
+              "value": 0,
+              "timestamp": "2025-12-25T20:50:29.249Z"
+            },
+            {
+              "property": "alarmType",
+              "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": false,
+                "min": 0,
+                "max": 255,
+                "label": "Alarm Type"
+              },
+              "value": 0,
+              "timestamp": "2025-12-25T20:50:28.453Z"
+            },
+            {
+              "property": "alarmLevel",
+              "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": false,
+                "min": 0,
+                "max": 255,
+                "label": "Alarm Level"
+              },
+              "value": 0,
+              "timestamp": "2025-12-25T20:50:28.455Z"
+            },
+            {
+              "property": "lastRefresh",
+              "value": 1766695828458,
+              "timestamp": "2025-12-25T20:50:28.458Z",
+              "internal": true
+            },
+            {
+              "property": "Power Management",
+              "propertyKey": "Mains status",
+              "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": false,
+                "min": 0,
+                "max": 255,
+                "label": "Mains status",
+                "states": {
+                  "2": "AC mains disconnected"
+                },
+                "ccSpecific": {
+                  "notificationType": 8
+                }
+              }
+            }
+          ]
+        }
+      },
+      "maySupportBasicCC": false
+    },
+    "2": {
+      "index": 2,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing End Node"
+        },
+        "generic": {
+          "key": 17,
+          "label": "Multilevel Switch"
+        },
+        "specific": {
+          "key": 6,
+          "label": "Motor Control Class B"
+        }
+      },
+      "commandClasses": {
+        "Z-Wave Plus Info": {
+          "isSupported": true,
+          "isControlled": false,
+          "secure": false,
+          "version": 0,
+          "values": [
+            {
+              "property": "userIcon",
+              "value": 6144,
+              "timestamp": "2025-12-25T20:50:40.267Z",
+              "internal": true
+            },
+            {
+              "property": "installerIcon",
+              "value": 6144,
+              "timestamp": "2025-12-25T20:50:40.267Z",
+              "internal": true
+            }
+          ]
+        },
+        "Security": {
+          "isSupported": true,
+          "isControlled": false,
+          "secure": true,
+          "version": 0,
+          "values": []
+        },
+        "Security 2": {
+          "isSupported": true,
+          "isControlled": false,
+          "secure": true,
+          "version": 0,
+          "values": []
+        },
+        "Supervision": {
+          "isSupported": true,
+          "isControlled": false,
+          "secure": false,
+          "version": 0,
+          "values": []
+        },
+        "Association": {
+          "isSupported": true,
+          "isControlled": false,
+          "secure": true,
+          "version": 0,
+          "values": [
+            {
+              "property": "groupCount",
+              "value": 3,
+              "timestamp": "2025-12-25T20:50:49.301Z",
+              "internal": true
+            },
+            {
+              "property": "nodeIds",
+              "propertyKey": 1,
+              "value": [],
+              "timestamp": "2025-12-25T20:50:49.951Z",
+              "internal": true
+            },
+            {
+              "property": "maxNodes",
+              "propertyKey": 1,
+              "value": 0,
+              "timestamp": "2025-12-25T20:50:49.951Z",
+              "internal": true
+            },
+            {
+              "property": "nodeIds",
+              "propertyKey": 2,
+              "value": [],
+              "timestamp": "2025-12-25T20:50:50.734Z",
+              "internal": true
+            },
+            {
+              "property": "maxNodes",
+              "propertyKey": 2,
+              "value": 9,
+              "timestamp": "2025-12-25T20:50:50.735Z",
+              "internal": true
+            },
+            {
+              "property": "nodeIds",
+              "propertyKey": 3,
+              "value": [],
+              "timestamp": "2025-12-25T20:50:51.405Z",
+              "internal": true
+            },
+            {
+              "property": "maxNodes",
+              "propertyKey": 3,
+              "value": 9,
+              "timestamp": "2025-12-25T20:50:51.406Z",
+              "internal": true
+            },
+            {
+              "property": "hasLifeline",
+              "value": true,
+              "timestamp": "2025-12-25T20:51:03.965Z",
+              "internal": true
+            }
+          ]
+        },
+        "Multi Channel Association": {
+          "isSupported": true,
+          "isControlled": false,
+          "secure": true,
+          "version": 0,
+          "values": [
+            {
+              "property": "groupCount",
+              "value": 3,
+              "timestamp": "2025-12-25T20:50:51.509Z",
+              "internal": true
+            },
+            {
+              "property": "endpoints",
+              "propertyKey": 1,
+              "value": [],
+              "timestamp": "2025-12-25T20:50:53.248Z",
+              "internal": true
+            },
+            {
+              "property": "nodeIds",
+              "propertyKey": 1,
+              "value": [],
+              "timestamp": "2025-12-25T20:50:53.248Z",
+              "internal": true
+            },
+            {
+              "property": "maxNodes",
+              "propertyKey": 1,
+              "value": 0,
+              "timestamp": "2025-12-25T20:50:53.248Z",
+              "internal": true
+            },
+            {
+              "property": "endpoints",
+              "propertyKey": 2,
+              "value": [],
+              "timestamp": "2025-12-25T20:50:58.283Z",
+              "internal": true
+            },
+            {
+              "property": "nodeIds",
+              "propertyKey": 2,
+              "value": [],
+              "timestamp": "2025-12-25T20:50:58.283Z",
+              "internal": true
+            },
+            {
+              "property": "maxNodes",
+              "propertyKey": 2,
+              "value": 9,
+              "timestamp": "2025-12-25T20:50:58.284Z",
+              "internal": true
+            },
+            {
+              "property": "endpoints",
+              "propertyKey": 3,
+              "value": [],
+              "timestamp": "2025-12-25T20:51:03.961Z",
+              "internal": true
+            },
+            {
+              "property": "nodeIds",
+              "propertyKey": 3,
+              "value": [],
+              "timestamp": "2025-12-25T20:51:03.961Z",
+              "internal": true
+            },
+            {
+              "property": "maxNodes",
+              "propertyKey": 3,
+              "value": 9,
+              "timestamp": "2025-12-25T20:51:03.961Z",
+              "internal": true
+            }
+          ]
+        },
+        "Association Group Information": {
+          "isSupported": true,
+          "isControlled": false,
+          "secure": true,
+          "version": 0,
+          "values": [
+            {
+              "property": "name",
+              "propertyKey": 1,
+              "value": "Lifeline",
+              "timestamp": "2025-12-25T20:51:05.176Z",
+              "internal": true
+            },
+            {
+              "property": "hasDynamicInfo",
+              "internal": true
+            }
+          ]
+        },
+        "Multilevel Switch": {
+          "isSupported": true,
+          "isControlled": false,
+          "secure": true,
+          "version": 4,
+          "values": [
+            {
+              "property": "switchType",
+              "value": 2,
+              "timestamp": "2025-12-25T20:50:45.881Z",
+              "internal": true
+            },
+            {
+              "property": "currentValue",
+              "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": false,
+                "min": 0,
+                "max": 99,
+                "label": "Current value"
+              },
+              "value": 0,
+              "timestamp": "2025-12-25T20:50:48.301Z"
+            },
+            {
+              "property": "duration",
+              "metadata": {
+                "type": "duration",
+                "readable": true,
+                "writeable": false,
+                "label": "Remaining duration"
+              },
+              "value": {
+                "value": 0,
+                "unit": "seconds",
+                "$$type$$": "duration"
+              },
+              "timestamp": "2025-12-25T20:50:48.305Z"
+            },
+            {
+              "property": "targetValue",
+              "metadata": {
+                "type": "number",
+                "readable": true,
+                "writeable": true,
+                "min": 0,
+                "max": 99,
+                "label": "Target value",
+                "valueChangeOptions": [
+                  "transitionDuration"
+                ]
+              },
+              "value": 0,
+              "timestamp": "2025-12-25T20:50:48.307Z"
+            },
+            {
+              "property": "Up",
+              "metadata": {
+                "type": "boolean",
+                "readable": false,
+                "writeable": true,
+                "label": "Perform a level change (Up)",
+                "valueChangeOptions": [
+                  "transitionDuration"
+                ],
+                "states": {
+                  "true": "Start",
+                  "false": "Stop"
+                },
+                "ccSpecific": {
+                  "switchType": 2
+                }
+              }
+            },
+            {
+              "property": "Down",
+              "metadata": {
+                "type": "boolean",
+                "readable": false,
+                "writeable": true,
+                "label": "Perform a level change (Down)",
+                "valueChangeOptions": [
+                  "transitionDuration"
+                ],
+                "states": {
+                  "true": "Start",
+                  "false": "Stop"
+                },
+                "ccSpecific": {
+                  "switchType": 2
+                }
+              }
+            },
+            {
+              "property": "restorePrevious"
+            }
+          ]
+        },
+        "Notification": {
+          "isSupported": true,
+          "isControlled": false,
+          "secure": true,
+          "version": 0,
+          "values": [
+            {
+              "property": "lastRefresh",
+              "internal": true
+            },
+            {
+              "property": "alarmType"
+            },
+            {
+              "property": "alarmLevel"
+            }
+          ]
+        }
+      },
+      "maySupportBasicCC": false
+    }
+  },
+  "configFileName": "0x0460/qlsh-001P10.json"
+}
