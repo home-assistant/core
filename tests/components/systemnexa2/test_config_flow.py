@@ -3,6 +3,8 @@
 from ipaddress import ip_address
 from unittest.mock import MagicMock
 
+from sn2 import InformationData, InformationUpdate
+
 from homeassistant.components.systemnexa2 import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_DEVICE_ID, CONF_HOST, CONF_MODEL, CONF_NAME
@@ -102,7 +104,6 @@ async def test_empty_host(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    # Test with empty string
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_HOST: ""},
@@ -122,10 +123,10 @@ async def test_invalid_hostname(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    # Test with empty string
+    # Test with hostname that cannot be resolved
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_HOST: "invalid hostname"},
+        {CONF_HOST: "this-hostname-definitely-does-not-exist.invalid"},
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_host"
@@ -150,7 +151,7 @@ async def test_unsupported_device(
     assert result["reason"] == "unsupported_model"
     assert result["description_placeholders"] == {
         "model": "Test Model",
-        "version": "Test Model Version",
+        "sw_version": "Test Model Version",
     }
 
 
@@ -193,3 +194,62 @@ async def test_zeroconf_discovery(
         CONF_DEVICE_ID: "test_device_id",
         CONF_MODEL: "Test Model",
     }
+
+
+async def test_device_with_none_values(
+    hass: HomeAssistant,
+    mock_system_nexa_2_device: MagicMock,
+) -> None:
+    """Test device with None values in info is rejected."""
+
+    device = mock_system_nexa_2_device.return_value
+    # Create new InformationData with None unique_id
+    device.info_data = InformationData(
+        name="Test Device",
+        model="Test Model",
+        unique_id=None,
+        sw_version="Test Model Version",
+        hw_version="Test HW Version",
+        wifi_dbm=-50,
+        wifi_ssid="Test WiFi SSID",
+        dimmable=False,
+    )
+    device.get_info.return_value = InformationUpdate(information=device.info_data)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "10.0.0.131"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unsupported_model"
+
+
+async def test_zeroconf_discovery_none_values(
+    hass: HomeAssistant,
+) -> None:
+    """Test zeroconf discovery with None property values is rejected."""
+    discovery_info = ZeroconfServiceInfo(
+        ip_address=ip_address("10.0.0.131"),
+        ip_addresses=[ip_address("10.0.0.131")],
+        hostname="systemnexa2_test.local.",
+        name="systemnexa2_test._systemnexa2._tcp.local.",
+        port=80,
+        type="_systemnexa2._tcp.local.",
+        properties={
+            "id": None,
+            "model": "Test Model",
+            "version": "1.0.0",
+        },
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unsupported_model"
