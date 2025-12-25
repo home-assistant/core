@@ -26,8 +26,8 @@ async def async_setup_entry(
     if isinstance(coordinator.device, switchbot.SwitchbotArtFrame):
         async_add_entities(
             [
-                SwitchBotArtFrameNextButton(coordinator),
-                SwitchBotArtFramePrevButton(coordinator),
+                SwitchBotArtFrameNextButton(coordinator, "next_image"),
+                SwitchBotArtFramePrevButton(coordinator, "previous_image"),
             ]
         )
 
@@ -49,10 +49,6 @@ class SwitchBotArtFrameButtonBase(SwitchbotEntity, ButtonEntity):
 class SwitchBotArtFrameNextButton(SwitchBotArtFrameButtonBase):
     """Representation of a next image button."""
 
-    def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
-        """Initialize the next image button."""
-        super().__init__(coordinator, "next_image")
-
     @exception_handler
     async def async_press(self) -> None:
         """Handle the button press."""
@@ -62,10 +58,6 @@ class SwitchBotArtFrameNextButton(SwitchBotArtFrameButtonBase):
 
 class SwitchBotArtFramePrevButton(SwitchBotArtFrameButtonBase):
     """Representation of a previous image button."""
-
-    def __init__(self, coordinator: SwitchbotDataUpdateCoordinator) -> None:
-        """Initialize the previous image button."""
-        super().__init__(coordinator, "previous_image")
 
     @exception_handler
     async def async_press(self) -> None:
