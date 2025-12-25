@@ -13,6 +13,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_time_change
 from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import dt as dt_util
 
 CONF_HOURS = "hours"
 CONF_MINUTES = "minutes"
@@ -32,18 +33,7 @@ class TimePattern:
     def __call__(self, value: Any) -> str | int:
         """Validate input."""
         try:
-            if value == "*":
-                return value  # type: ignore[no-any-return]
-
-            if isinstance(value, str) and value.startswith("/"):
-                number = int(value[1:])
-                if number == 0:
-                    raise vol.Invalid(f"must be a value between 1 and {self.maximum}")
-            else:
-                value = number = int(value)
-
-            if not (0 <= number <= self.maximum):
-                raise vol.Invalid(f"must be a value between 0 and {self.maximum}")
+            dt_util.parse_time_expression(value, 0, self.maximum)
         except ValueError as err:
             raise vol.Invalid("invalid time_pattern value") from err
 
