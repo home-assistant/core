@@ -36,14 +36,14 @@ from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class YoLinkBinarySensorEntityDescription(BinarySensorEntityDescription):
     """YoLink BinarySensorEntityDescription."""
 
     exists_fn: Callable[[YoLinkDevice], bool] = lambda _: True
-    should_update_entity: Callable = lambda state: True
-    value: Callable[[YoLinkDevice, dict], bool | None] = lambda device, data: None
-    is_available: Callable[[YoLinkDevice, dict], bool] = lambda device, data: True
+    should_update_entity: Callable = lambda _: True
+    value: Callable[[YoLinkDevice, dict], bool | None]
+    is_available: Callable[[YoLinkDevice, dict], bool] = lambda _, __: True
 
 
 SENSOR_DEVICE_TYPE = [
