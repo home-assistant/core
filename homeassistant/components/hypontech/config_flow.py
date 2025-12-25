@@ -63,6 +63,12 @@ class HypontechConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                # Use username as unique_id to prevent duplicate config entries
+                await self.async_set_unique_id(
+                    user_input[CONF_USERNAME].strip().lower()
+                )
+                self._abort_if_unique_id_configured()
+
                 return self.async_create_entry(
                     title=info["title"],
                     data=user_input,

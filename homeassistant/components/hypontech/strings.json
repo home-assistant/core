@@ -13,6 +13,10 @@
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "Your Hypontech Cloud account password.",
+          "username": "Your Hypontech Cloud account username."
         }
       }
     }

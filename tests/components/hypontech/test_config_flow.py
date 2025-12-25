@@ -2,12 +2,16 @@
 
 from unittest.mock import AsyncMock, patch
 
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.components.hypontech.config_flow import CannotConnect, InvalidAuth
 from homeassistant.components.hypontech.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+from tests.common import MockConfigEntry
 
 
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
@@ -19,7 +23,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.hypontech.hyponcloud.HyponCloud.connect",
+        "homeassistant.components.hypontech.config_flow.HyponCloud.connect",
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -49,7 +53,7 @@ async def test_form_invalid_auth(
     )
 
     with patch(
-        "homeassistant.components.hypontech.hyponcloud.HyponCloud.connect",
+        "homeassistant.components.hypontech.config_flow.HyponCloud.connect",
         side_effect=InvalidAuth,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -67,7 +71,7 @@ async def test_form_invalid_auth(
     # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
     # we can show the config flow is able to recover from an error.
     with patch(
-        "homeassistant.components.hypontech.hyponcloud.HyponCloud.connect",
+        "homeassistant.components.hypontech.config_flow.HyponCloud.connect",
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -97,7 +101,7 @@ async def test_form_cannot_connect(
     )
 
     with patch(
-        "homeassistant.components.hypontech.hyponcloud.HyponCloud.connect",
+        "homeassistant.components.hypontech.config_flow.HyponCloud.connect",
         side_effect=CannotConnect,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -116,7 +120,7 @@ async def test_form_cannot_connect(
     # we can show the config flow is able to recover from an error.
 
     with patch(
-        "homeassistant.components.hypontech.hyponcloud.HyponCloud.connect",
+        "homeassistant.components.hypontech.config_flow.HyponCloud.connect",
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -135,3 +139,54 @@ async def test_form_cannot_connect(
         CONF_PASSWORD: "test-password",
     }
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    ("existing_username", "new_username"),
+    [
+        ("test-username", "test-username"),
+        ("test-username", "TEST-USERNAME"),
+        ("Test-Username", "test-username"),
+        ("test-username ", "test-username"),
+        ("test-username ", "test-username  "),
+    ],
+)
+async def test_duplicate_entry(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    existing_username: str,
+    new_username: str,
+) -> None:
+    """Test that duplicate entries are prevented."""
+    # Create an existing entry
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: existing_username,
+            CONF_PASSWORD: "test-password",
+        },
+        unique_id=existing_username.strip().lower(),
+    )
+    entry.add_to_hass(hass)
+
+    # Try to add the same account again (with potentially different case)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.hypontech.config_flow.HyponCloud.connect",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: new_username,
+                CONF_PASSWORD: "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    # Should abort because entry already exists
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
