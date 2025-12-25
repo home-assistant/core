@@ -10,6 +10,7 @@ from aiomealie import (
     MealieValidationError,
     MealplanEntryType,
 )
+from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
@@ -127,6 +128,27 @@ def _async_get_entry(call: ServiceCall) -> MealieConfigEntry:
     return cast(MealieConfigEntry, entry)
 
 
+def _validate_mealplan_type(version: AwesomeVersion, entry_type: str) -> None:
+    """Validate mealplan entry type, if prior to 3.7.0."""
+
+    if (
+        version.valid
+        and version < AwesomeVersion("v3.7.0")
+        and entry_type
+        not in {
+            MealplanEntryType.BREAKFAST.value,
+            MealplanEntryType.DINNER.value,
+            MealplanEntryType.LUNCH.value,
+            MealplanEntryType.SIDE.value,
+        }
+    ):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_mealplan_entry_type",
+            translation_placeholders={"mealplan_type": entry_type},
+        )
+
+
 async def _async_get_mealplan(call: ServiceCall) -> ServiceResponse:
     """Get the mealplan for a specific range."""
     entry = _async_get_entry(call)
@@ -219,6 +241,9 @@ async def _async_set_random_mealplan(call: ServiceCall) -> ServiceResponse:
     mealplan_date = call.data[ATTR_DATE]
     entry_type = MealplanEntryType(call.data[ATTR_ENTRY_TYPE])
     client = entry.runtime_data.client
+
+    _validate_mealplan_type(entry.runtime_data.version, entry_type.value)
+
     try:
         mealplan = await client.random_mealplan(mealplan_date, entry_type)
     except MealieConnectionError as err:
@@ -237,6 +262,9 @@ async def _async_set_mealplan(call: ServiceCall) -> ServiceResponse:
     mealplan_date = call.data[ATTR_DATE]
     entry_type = MealplanEntryType(call.data[ATTR_ENTRY_TYPE])
     client = entry.runtime_data.client
+
+    _validate_mealplan_type(entry.runtime_data.version, entry_type.value)
+
     try:
         mealplan = await client.set_mealplan(
             mealplan_date,

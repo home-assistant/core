@@ -25,6 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
+from . import patch_ufp_method
 from .utils import (
     MockUFPFixture,
     adopt_devices,
@@ -116,17 +117,17 @@ async def test_media_player_set_volume(
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
     assert_entity_counts(hass, Platform.MEDIA_PLAYER, 1, 1)
 
-    doorbell.__pydantic_fields__["set_speaker_volume"] = Mock(final=False, frozen=False)
-    doorbell.set_speaker_volume = AsyncMock()
+    with patch_ufp_method(
+        doorbell, "set_speaker_volume", new_callable=AsyncMock
+    ) as mock_method:
+        await hass.services.async_call(
+            "media_player",
+            "volume_set",
+            {ATTR_ENTITY_ID: "media_player.test_camera_speaker", "volume_level": 0.5},
+            blocking=True,
+        )
 
-    await hass.services.async_call(
-        "media_player",
-        "volume_set",
-        {ATTR_ENTITY_ID: "media_player.test_camera_speaker", "volume_level": 0.5},
-        blocking=True,
-    )
-
-    doorbell.set_speaker_volume.assert_called_once_with(50)
+        mock_method.assert_called_once_with(50)
 
 
 async def test_media_player_stop(
@@ -173,30 +174,26 @@ async def test_media_player_play(
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
     assert_entity_counts(hass, Platform.MEDIA_PLAYER, 1, 1)
 
-    doorbell.__pydantic_fields__["stop_audio"] = Mock(final=False, frozen=False)
-    doorbell.__pydantic_fields__["play_audio"] = Mock(final=False, frozen=False)
-    doorbell.__pydantic_fields__["wait_until_audio_completes"] = Mock(
-        final=False, frozen=False
-    )
-    doorbell.stop_audio = AsyncMock()
-    doorbell.play_audio = AsyncMock()
-    doorbell.wait_until_audio_completes = AsyncMock()
+    with (
+        patch_ufp_method(doorbell, "stop_audio", new_callable=AsyncMock),
+        patch_ufp_method(doorbell, "play_audio", new_callable=AsyncMock) as mock_play,
+        patch_ufp_method(
+            doorbell, "wait_until_audio_completes", new_callable=AsyncMock
+        ) as mock_wait,
+    ):
+        await hass.services.async_call(
+            "media_player",
+            "play_media",
+            {
+                ATTR_ENTITY_ID: "media_player.test_camera_speaker",
+                "media_content_id": "http://example.com/test.mp3",
+                "media_content_type": "music",
+            },
+            blocking=True,
+        )
 
-    await hass.services.async_call(
-        "media_player",
-        "play_media",
-        {
-            ATTR_ENTITY_ID: "media_player.test_camera_speaker",
-            "media_content_id": "http://example.com/test.mp3",
-            "media_content_type": "music",
-        },
-        blocking=True,
-    )
-
-    doorbell.play_audio.assert_called_once_with(
-        "http://example.com/test.mp3", blocking=False
-    )
-    doorbell.wait_until_audio_completes.assert_called_once()
+        mock_play.assert_called_once_with("http://example.com/test.mp3", blocking=False)
+        mock_wait.assert_called_once()
 
 
 async def test_media_player_play_media_source(
@@ -210,18 +207,16 @@ async def test_media_player_play_media_source(
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
     assert_entity_counts(hass, Platform.MEDIA_PLAYER, 1, 1)
 
-    doorbell.__pydantic_fields__["stop_audio"] = Mock(final=False, frozen=False)
-    doorbell.__pydantic_fields__["play_audio"] = Mock(final=False, frozen=False)
-    doorbell.__pydantic_fields__["wait_until_audio_completes"] = Mock(
-        final=False, frozen=False
-    )
-    doorbell.stop_audio = AsyncMock()
-    doorbell.play_audio = AsyncMock()
-    doorbell.wait_until_audio_completes = AsyncMock()
-
-    with patch(
-        "homeassistant.components.media_source.async_resolve_media",
-        return_value=Mock(url="http://example.com/test.mp3"),
+    with (
+        patch_ufp_method(doorbell, "stop_audio", new_callable=AsyncMock),
+        patch_ufp_method(doorbell, "play_audio", new_callable=AsyncMock) as mock_play,
+        patch_ufp_method(
+            doorbell, "wait_until_audio_completes", new_callable=AsyncMock
+        ) as mock_wait,
+        patch(
+            "homeassistant.components.media_source.async_resolve_media",
+            return_value=Mock(url="http://example.com/test.mp3"),
+        ),
     ):
         await hass.services.async_call(
             "media_player",
@@ -234,10 +229,8 @@ async def test_media_player_play_media_source(
             blocking=True,
         )
 
-    doorbell.play_audio.assert_called_once_with(
-        "http://example.com/test.mp3", blocking=False
-    )
-    doorbell.wait_until_audio_completes.assert_called_once()
+        mock_play.assert_called_once_with("http://example.com/test.mp3", blocking=False)
+        mock_wait.assert_called_once()
 
 
 async def test_media_player_play_invalid(
@@ -251,22 +244,22 @@ async def test_media_player_play_invalid(
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
     assert_entity_counts(hass, Platform.MEDIA_PLAYER, 1, 1)
 
-    doorbell.__pydantic_fields__["play_audio"] = Mock(final=False, frozen=False)
-    doorbell.play_audio = AsyncMock()
+    with patch_ufp_method(
+        doorbell, "play_audio", new_callable=AsyncMock
+    ) as mock_method:
+        with pytest.raises(HomeAssistantError):
+            await hass.services.async_call(
+                "media_player",
+                "play_media",
+                {
+                    ATTR_ENTITY_ID: "media_player.test_camera_speaker",
+                    "media_content_id": "/test.png",
+                    "media_content_type": "image",
+                },
+                blocking=True,
+            )
 
-    with pytest.raises(HomeAssistantError):
-        await hass.services.async_call(
-            "media_player",
-            "play_media",
-            {
-                ATTR_ENTITY_ID: "media_player.test_camera_speaker",
-                "media_content_id": "/test.png",
-                "media_content_type": "image",
-            },
-            blocking=True,
-        )
-
-    assert not doorbell.play_audio.called
+        assert not mock_method.called
 
 
 async def test_media_player_play_error(
@@ -280,24 +273,25 @@ async def test_media_player_play_error(
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
     assert_entity_counts(hass, Platform.MEDIA_PLAYER, 1, 1)
 
-    doorbell.__pydantic_fields__["play_audio"] = Mock(final=False, frozen=False)
-    doorbell.__pydantic_fields__["wait_until_audio_completes"] = Mock(
-        final=False, frozen=False
-    )
-    doorbell.play_audio = AsyncMock(side_effect=StreamError)
-    doorbell.wait_until_audio_completes = AsyncMock()
+    with (
+        patch_ufp_method(
+            doorbell, "play_audio", new_callable=AsyncMock, side_effect=StreamError
+        ) as mock_play,
+        patch_ufp_method(
+            doorbell, "wait_until_audio_completes", new_callable=AsyncMock
+        ) as mock_wait,
+    ):
+        with pytest.raises(HomeAssistantError):
+            await hass.services.async_call(
+                "media_player",
+                "play_media",
+                {
+                    ATTR_ENTITY_ID: "media_player.test_camera_speaker",
+                    "media_content_id": "/test.mp3",
+                    "media_content_type": "music",
+                },
+                blocking=True,
+            )
 
-    with pytest.raises(HomeAssistantError):
-        await hass.services.async_call(
-            "media_player",
-            "play_media",
-            {
-                ATTR_ENTITY_ID: "media_player.test_camera_speaker",
-                "media_content_id": "/test.mp3",
-                "media_content_type": "music",
-            },
-            blocking=True,
-        )
-
-    assert doorbell.play_audio.called
-    assert not doorbell.wait_until_audio_completes.called
+        assert mock_play.called
+        assert not mock_wait.called
