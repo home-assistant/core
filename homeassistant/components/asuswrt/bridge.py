@@ -3,12 +3,18 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from collections.abc import Awaitable, Callable, Coroutine
-import functools
 import logging
 from typing import Any, NamedTuple
 
-from aioasuswrt.asuswrt import AsusWrt as AsusWrtLegacy
+from aioasuswrt import (
+    AsusWrt as AsusWrtLegacy,
+    AuthConfig,
+    ConnectionType,
+    Device,
+    Mode,
+    Settings,
+    connect_to_router as create_connection_aioasuswrt,
+)
 from aiohttp import ClientSession
 from asusrouter import AsusRouter, AsusRouterError
 from asusrouter.config import ARConfigKey
@@ -40,6 +46,7 @@ from .const import (
     DEFAULT_INTERFACE,
     KEY_METHOD,
     KEY_SENSORS,
+    MODE_ROUTER,
     PROTOCOL_HTTP,
     PROTOCOL_HTTPS,
     PROTOCOL_TELNET,
@@ -47,7 +54,6 @@ from .const import (
     SENSORS_LOAD_AVG,
     SENSORS_MEMORY,
     SENSORS_RATES,
-    SENSORS_TEMPERATURES_LEGACY,
     SENSORS_UPTIME,
 )
 from .helpers import clean_dict, translate_to_legacy
@@ -71,51 +77,6 @@ class WrtDevice(NamedTuple):
 
 
 _LOGGER = logging.getLogger(__name__)
-
-type _FuncType[_T] = Callable[
-    [_T],
-    Awaitable[
-        list[str]
-        | tuple[float | None, float | None]
-        | list[float]
-        | dict[str, float | str | None]
-        | dict[str, float]
-    ],
-]
-type _ReturnFuncType[_T] = Callable[[_T], Coroutine[Any, Any, dict[str, Any]]]
-
-
-def handle_errors_and_zip[_AsusWrtBridgeT: AsusWrtBridge](
-    exceptions: type[Exception] | tuple[type[Exception], ...], keys: list[str] | None
-) -> Callable[[_FuncType[_AsusWrtBridgeT]], _ReturnFuncType[_AsusWrtBridgeT]]:
-    """Run library methods and zip results or manage exceptions."""
-
-    def _handle_errors_and_zip(
-        func: _FuncType[_AsusWrtBridgeT],
-    ) -> _ReturnFuncType[_AsusWrtBridgeT]:
-        """Run library methods and zip results or manage exceptions."""
-
-        @functools.wraps(func)
-        async def _wrapper(
-            self: _AsusWrtBridgeT,
-        ) -> dict[str, float | str | None] | dict[str, float]:
-            try:
-                data = await func(self)
-            except exceptions as exc:
-                raise UpdateFailed(exc) from exc
-
-            if keys is None:
-                if not isinstance(data, dict):
-                    raise UpdateFailed("Received invalid data type")
-                return data
-
-            if isinstance(data, dict):
-                return dict(zip(keys, list(data.values()), strict=False))
-            return dict(zip(keys, data, strict=False))
-
-        return _wrapper
-
-    return _handle_errors_and_zip
 
 
 class AsusWrtBridge(ABC):
@@ -221,17 +182,24 @@ class AsusWrtLegacyBridge(AsusWrtBridge):
         """Get the AsusWrtLegacy API."""
         opt = options or {}
 
-        return AsusWrtLegacy(
+        return create_connection_aioasuswrt(
             conf[CONF_HOST],
-            conf.get(CONF_PORT),
-            conf[CONF_PROTOCOL] == PROTOCOL_TELNET,
-            conf[CONF_USERNAME],
-            conf.get(CONF_PASSWORD, ""),
-            conf.get(CONF_SSH_KEY, ""),
-            conf[CONF_MODE],
-            opt.get(CONF_REQUIRE_IP, True),
-            interface=opt.get(CONF_INTERFACE, DEFAULT_INTERFACE),
-            dnsmasq=opt.get(CONF_DNSMASQ, DEFAULT_DNSMASQ),
+            AuthConfig(
+                username=conf.get(CONF_USERNAME),
+                password=conf.get(CONF_PASSWORD),
+                connection_type=ConnectionType.TELNET
+                if conf[CONF_PROTOCOL] == PROTOCOL_TELNET
+                else ConnectionType.SSH,
+                ssh_key=conf.get(CONF_SSH_KEY),
+                port=conf.get(CONF_PORT),
+                passphrase=None,
+            ),
+            Settings(
+                mode=Mode.ROUTER if conf[CONF_MODE] == MODE_ROUTER else Mode.AP,
+                require_ip=opt.get(CONF_REQUIRE_IP, True),
+                wan_interface=opt.get(CONF_INTERFACE, DEFAULT_INTERFACE),
+                dnsmasq=opt.get(CONF_DNSMASQ, DEFAULT_DNSMASQ),
+            ),
         )
 
     @property
@@ -241,7 +209,11 @@ class AsusWrtLegacyBridge(AsusWrtBridge):
 
     async def async_connect(self) -> None:
         """Connect to the device."""
-        await self._api.connection.async_connect()
+        try:
+            await self._api.connect()
+        except ConnectionError as err:
+            _LOGGER.error("Unable to connect to router (%s)", err)
+            return
 
         # get main router properties
         if self._label_mac is None:
@@ -253,27 +225,25 @@ class AsusWrtLegacyBridge(AsusWrtBridge):
 
     async def async_disconnect(self) -> None:
         """Disconnect to the device."""
-        await self._api.async_disconnect()
+        await self._api.disconnect()
 
     async def async_get_connected_devices(self) -> dict[str, WrtDevice]:
         """Get list of connected devices."""
-        api_devices = await self._api.async_get_connected_devices()
+        api_devices: dict[str, Device] = await self._api.get_connected_devices(
+            reachable=True
+        )
         return {
-            format_mac(mac): WrtDevice(dev.ip, dev.name, None)
+            format_mac(mac): WrtDevice(
+                dev.device_data.get("ip"),
+                dev.device_data.get("name"),
+                dev.interface.get("name"),
+            )
             for mac, dev in api_devices.items()
         }
 
-    async def _get_nvram_info(self, info_type: str) -> dict[str, Any]:
+    async def _get_nvram_info(self, info_type: str) -> dict[str, str] | None:
         """Get AsusWrt router info from nvram."""
-        info = {}
-        try:
-            info = await self._api.async_get_nvram(info_type)
-        except OSError as exc:
-            _LOGGER.warning(
-                "Error calling method async_get_nvram(%s): %s", info_type, exc
-            )
-
-        return info
+        return await self._api.get_nvram(info_type)
 
     async def _get_label_mac(self) -> None:
         """Get label mac information."""
@@ -318,30 +288,29 @@ class AsusWrtLegacyBridge(AsusWrtBridge):
             },
         }
 
-    async def _get_available_temperature_sensors(self) -> list[str]:
+    async def _get_available_temperature_sensors(self) -> dict[str, float] | None:
         """Check which temperature information is available on the router."""
-        availability = await self._api.async_find_temperature_commands()
-        return [SENSORS_TEMPERATURES_LEGACY[i] for i in range(3) if availability[i]]
+        return await self._api.get_temperature()
 
-    @handle_errors_and_zip((IndexError, OSError, ValueError), SENSORS_BYTES)
-    async def _get_bytes(self) -> tuple[float | None, float | None]:
+    async def _get_bytes(self) -> dict[str, int]:
         """Fetch byte information from the router."""
-        return await self._api.async_get_bytes_total()
+        items = await self._api.total_transfer()
+        return {f"sensor_{key}_bytes": value for key, value in items.items()}
 
-    @handle_errors_and_zip((IndexError, OSError, ValueError), SENSORS_RATES)
-    async def _get_rates(self) -> tuple[float, float]:
+    async def _get_rates(self) -> dict[str, int] | None:
         """Fetch rates information from the router."""
-        return await self._api.async_get_current_transfer_rates()
+        items = await self._api.get_current_transfer_rates()
+        if items:
+            return {f"sensor_{key}_rates": value for key, value in items.items()}
+        return None
 
-    @handle_errors_and_zip((IndexError, OSError, ValueError), SENSORS_LOAD_AVG)
-    async def _get_load_avg(self) -> list[float]:
+    async def _get_load_avg(self) -> dict[str, float] | None:
         """Fetch load average information from the router."""
-        return await self._api.async_get_loadavg()
+        return await self._api.get_loadavg()
 
-    @handle_errors_and_zip((OSError, ValueError), None)
-    async def _get_temperatures(self) -> dict[str, float]:
+    async def _get_temperatures(self) -> dict[str, float] | None:
         """Fetch temperatures information from the router."""
-        return await self._api.async_get_temperature()
+        return await self._api.get_temperature()
 
 
 class AsusWrtHttpBridge(AsusWrtBridge):

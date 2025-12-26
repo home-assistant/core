@@ -197,7 +197,7 @@ aioaquacell==0.2.0
 aioaseko==1.0.0
 
 # homeassistant.components.asuswrt
-aioasuswrt==1.5.4
+aioasuswrt==2.0.8
 
 # homeassistant.components.husqvarna_automower
 aioautomower==2.7.1
