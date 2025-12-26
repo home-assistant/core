@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Ready to set up your weather station?"
+      },
+      "finish": {
+        "description": "Configuration finished successfully!"
+      }
+    },
+    "progress": {
+      "task_one": "Testing progress step one."
+    },
+    "create_entry": {
+      "default": "Entry created."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "ch_sensor_type": {
+        "state": {
+          "thermo-hygro": "Thermo-hygro",
+          "pool": "Pool",
+          "soil": "Soil"
+        }
+      },
+      "uvi": {
+        "name": "UV index"
+      }
+    }
+  }
+}

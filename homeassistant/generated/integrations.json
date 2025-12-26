@@ -956,6 +956,12 @@
       "iot_class": "cloud_polling",
       "single_config_entry": true
     },
+    "ccl": {
+      "name": "CCL Electronics",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "ccm15": {
       "name": "Midea ccm15 AC Controller",
       "integration_type": "hub",
