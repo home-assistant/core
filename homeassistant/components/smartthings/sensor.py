@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Generator, Iterable, Mapping
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any, cast
@@ -1184,6 +1184,28 @@ UNITS = {
 }
 
 
+def _iter_sensor_candidates(
+    devices: Iterable[FullDevice],
+) -> Generator[
+    tuple[FullDevice, str, Capability, Attribute, SmartThingsSensorEntityDescription]
+]:
+    return (
+        (device, component, capability, attribute, description)
+        # iterate over all devices for this config entry
+        for device in devices
+        # iterate over components on the device and their reported capabilities
+        for component, capabilities in device.status.items()
+        # iterate over all supported SmartThings capability -> sensor mappings
+        for capability, attributes in CAPABILITY_TO_SENSORS.items()
+        # only consider capabilities that the device actually reports for this component
+        if capability in capabilities
+        # iterate over attributes and their entity descriptions for the capability
+        for attribute, descriptions in attributes.items()
+        # iterate over all descriptions for the attribute
+        for description in descriptions
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SmartThingsConfigEntry,
@@ -1194,80 +1216,74 @@ async def async_setup_entry(
     entities = []
 
     entity_registry = er.async_get(hass)
+    for (
+        device,
+        component,
+        capability,
+        attribute,
+        description,
+    ) in _iter_sensor_candidates(entry_data.devices.values()):
+        # Skip sensors when a description defines capability ignore lists
+        # and the device's main component reports all capabilities in any list
+        if description.capability_ignore_list and any(
+            all(capability in device.status[MAIN] for capability in capability_list)
+            for capability_list in description.capability_ignore_list
+        ):
+            continue
 
-    for device in entry_data.devices.values():  # pylint: disable=too-many-nested-blocks
-        for capability, attributes in CAPABILITY_TO_SENSORS.items():
-            for component, capabilities in device.status.items():
-                if capability in capabilities:
-                    for attribute, descriptions in attributes.items():
-                        for description in descriptions:
-                            if (
-                                (
-                                    not description.capability_ignore_list
-                                    or not any(
-                                        all(
-                                            capability in device.status[MAIN]
-                                            for capability in capability_list
-                                        )
-                                        for capability_list in description.capability_ignore_list
-                                    )
-                                )
-                                and (
-                                    not description.exists_fn
-                                    or (
-                                        component == MAIN
-                                        and description.exists_fn(
-                                            device.status[MAIN][capability][attribute]
-                                        )
-                                    )
-                                )
-                                and (
-                                    component == MAIN
-                                    or (
-                                        description.component_fn is not None
-                                        and description.component_fn(component)
-                                    )
-                                )
-                            ):
-                                if (
-                                    description.deprecated
-                                    and (
-                                        deprecation_info := description.deprecated(
-                                            device.status[MAIN]
-                                        )
-                                    )
-                                    is not None
-                                ):
-                                    version, reason = deprecation_info
-                                    if deprecate_entity(
-                                        hass,
-                                        entity_registry,
-                                        SENSOR_DOMAIN,
-                                        f"{device.device.device_id}_{MAIN}_{capability}_{attribute}_{description.key}",
-                                        f"deprecated_{reason}",
-                                        version,
-                                    ):
-                                        entities.append(
-                                            SmartThingsSensor(
-                                                entry_data.client,
-                                                device,
-                                                description,
-                                                MAIN,
-                                                capability,
-                                                attribute,
-                                            )
-                                        )
-                                    continue
-                                entities.append(
-                                    SmartThingsSensor(
-                                        entry_data.client,
-                                        device,
-                                        description,
-                                        component,
-                                        capability,
-                                        attribute,
-                                    )
-                                )
+        # Only create the sensor if the description's exists_fn (when provided)
+        # confirms the attribute's value on the main component is present and allowed
+        if description.exists_fn and not (
+            component == MAIN
+            and description.exists_fn(device.status[MAIN][capability][attribute])
+        ):
+            continue
+
+        # Only create the sensor for the main component or for components
+        # explicitly allowed by the description's component_fn
+        if not (
+            component == MAIN
+            or (description.component_fn and description.component_fn(component))
+        ):
+            continue
+
+        # Handle deprecated sensors
+        if (
+            description.deprecated
+            and (deprecation_info := description.deprecated(device.status[MAIN]))
+            is not None
+        ):
+            version, reason = deprecation_info
+            if deprecate_entity(
+                hass,
+                entity_registry,
+                SENSOR_DOMAIN,
+                f"{device.device.device_id}_{MAIN}_{capability}_{attribute}_{description.key}",
+                f"deprecated_{reason}",
+                version,
+            ):
+                entities.append(
+                    SmartThingsSensor(
+                        entry_data.client,
+                        device,
+                        description,
+                        MAIN,
+                        capability,
+                        attribute,
+                    )
+                )
+            continue
+        # Finally, create the sensor entity
+        entities.append(
+            SmartThingsSensor(
+                entry_data.client,
+                device,
+                description,
+                component,
+                capability,
+                attribute,
+            )
+        )
 
     async_add_entities(entities)
 
