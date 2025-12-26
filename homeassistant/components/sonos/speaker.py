@@ -972,6 +972,15 @@ class SonosSpeaker:
                         self.zone_name,
                     )
                     removed_speaker.coordinator = None
+                    removed_speaker.sonos_group = [removed_speaker]
+                    removed_speaker_entity_id = cast(
+                        str,
+                        entity_registry.async_get_entity_id(
+                            MP_DOMAIN, DOMAIN, removed_speaker.uid
+                        ),
+                    )
+                    removed_speaker.sonos_group_entities = [removed_speaker_entity_id]
+                    sonos_group_entities.append(entity_id)
                     removed_speaker.async_write_entity_states()
 
             self.coordinator = None
@@ -1234,15 +1243,8 @@ class SonosSpeaker:
                     return False
 
                 # Test that joined members match
-                # Check both the coordinator's view and each member's view
-                # to handle whichever speaker receives the ZGS event first
-                for member in group[1:]:
-                    # Check if member is in coordinator's group (coordinator got event first)
-                    if member not in current_group:
-                        return False
-                    # Check if member shows correct coordinator (member got event first)
-                    if member.coordinator != coordinator:
-                        return False
+                if set(group[1:]) != set(current_group[1:]):
+                    return False
 
             return True
 
@@ -1251,14 +1253,14 @@ class SonosSpeaker:
                 while not _test_groups(groups):
                     await config_entry.runtime_data.topology_condition.wait()
         except TimeoutError:
-            group_description = "; ".join(
+            group_description = [
                 f"{group[0].zone_name}: {', '.join(speaker.zone_name for speaker in group)}"
                 for group in groups
-            )
+            ]
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="timeout_join",
-                translation_placeholders={"group_description": group_description},
+                translation_placeholders={"group_description": str(group_description)},
             ) from TimeoutError
         any_speaker = next(iter(config_entry.runtime_data.discovered.values()))
         any_speaker.soco.zone_group_state.clear_cache()
