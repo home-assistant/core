@@ -32,6 +32,8 @@ class IntelliClimaConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
+            self._async_abort_entries_match({CONF_USERNAME: user_input[CONF_USERNAME]})
+
             # Validate credentials
             session = async_get_clientsession(self.hass)
             api = IntelliClimaAPI(
@@ -47,18 +49,6 @@ class IntelliClimaConfigFlow(ConfigFlow, domain=DOMAIN):
                 # Get devices to ensure we can communicate with API
                 devices = await api.get_all_device_status()
 
-                if devices.num_devices == 0:
-                    errors["base"] = "no_devices"
-                else:
-                    # Create config entry
-                    await self.async_set_unique_id(user_input[CONF_USERNAME])
-                    self._abort_if_unique_id_configured()
-
-                    return self.async_create_entry(
-                        title=f"IntelliClima ({user_input[CONF_USERNAME]})",
-                        data=user_input,
-                    )
-
             except IntelliClimaAuthError:
                 errors["base"] = "invalid_auth"
             except IntelliClimaAPIError:
@@ -69,6 +59,14 @@ class IntelliClimaConfigFlow(ConfigFlow, domain=DOMAIN):
             except Exception:  # noqa: BLE001
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
+            else:
+                if devices.num_devices == 0:
+                    errors["base"] = "no_devices"
+                else:
+                    return self.async_create_entry(
+                        title=f"IntelliClima ({user_input[CONF_USERNAME]})",
+                        data=user_input,
+                    )
 
         return self.async_show_form(
             step_id="user",
