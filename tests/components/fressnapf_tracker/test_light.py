@@ -3,7 +3,13 @@
 from collections.abc import AsyncGenerator
 from unittest.mock import MagicMock, patch
 
-from fressnapftracker import Tracker, TrackerFeatures, TrackerSettings
+from fressnapftracker import (
+    FressnapfTrackerError,
+    FressnapfTrackerInvalidTokenError,
+    Tracker,
+    TrackerFeatures,
+    TrackerSettings,
+)
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -15,7 +21,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
@@ -172,3 +178,41 @@ async def test_turn_on_led_not_activatable(
         )
 
     mock_api_client.set_led_brightness.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("api_exception", "expected_exception"),
+    [
+        (FressnapfTrackerError("Something went wrong"), HomeAssistantError),
+        (
+            FressnapfTrackerInvalidTokenError("Token no longer valid"),
+            ConfigEntryAuthFailed,
+        ),
+    ],
+)
+@pytest.mark.parametrize("service", [SERVICE_TURN_ON, SERVICE_TURN_OFF])
+@pytest.mark.usefixtures("mock_auth_client")
+async def test_turn_on_off_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_api_client: MagicMock,
+    api_exception: FressnapfTrackerError,
+    expected_exception: type[HomeAssistantError],
+    service: str,
+) -> None:
+    """Test that errors during service handling are handled correctly."""
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = "light.fluffy_flashlight"
+
+    mock_api_client.set_led_brightness.side_effect = api_exception
+    with pytest.raises(expected_exception):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
