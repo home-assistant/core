@@ -83,7 +83,7 @@ PyRMVtransport==0.3.3
 PySrDaliGateway==0.18.0
 
 # homeassistant.components.switchbot
-PySwitchbot==0.74.0
+PySwitchbot==0.75.0
 
 # homeassistant.components.switchmate
 PySwitchmate==0.5.1
@@ -252,7 +252,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==43.4.0
+aioesphomeapi==43.6.0
 
 # homeassistant.components.matrix
 # homeassistant.components.slack
@@ -706,7 +706,7 @@ brottsplatskartan==1.0.5
 brunt==1.2.0
 
 # homeassistant.components.bthome
-bthome-ble==3.15.0
+bthome-ble==3.17.0
 
 # homeassistant.components.bt_home_hub_5
 bthomehub5-devicelist==0.1.1
@@ -1118,7 +1118,7 @@ gotailwind==0.3.0
 govee-ble==0.44.0
 
 # homeassistant.components.govee_light_local
-govee-local-api==2.2.0
+govee-local-api==2.3.0
 
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.6.2
@@ -1349,7 +1349,7 @@ kiwiki-client==0.1.1
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2025.12.19.150946
+knx-frontend==2025.12.24.74016
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -2575,7 +2575,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==3.20.1
+python-roborock==3.21.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.46
@@ -3050,7 +3050,7 @@ ttls==1.8.3
 ttn_client==1.2.3
 
 # homeassistant.components.tuya
-tuya-device-sharing-sdk==0.2.6
+tuya-device-sharing-sdk==0.2.7
 
 # homeassistant.components.twentemilieu
 twentemilieu==2.2.1
