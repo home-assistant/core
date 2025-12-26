@@ -59,7 +59,7 @@ class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[datetime | None]):
     async def _async_update_data(self) -> datetime | None:
         """Fetch certificate."""
         try:
-            cert = await get_cert(
+            cert, peer_certs = await get_cert(
                 self.hass,
                 self.host,
                 self.port,
@@ -83,7 +83,7 @@ class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[datetime | None]):
 
         if self.validate_cert_full:
             try:
-                verify_cert(cert)
+                verify_cert(cert, peer_certs, self.host)
                 self.is_cert_valid = True
                 self.cert_error = None
             except ValidationFailure as err:
