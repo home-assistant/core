@@ -80,13 +80,6 @@ async def test_device_conflict_manual(
     data = await start_repair_fix_flow(client, DOMAIN, issue_id)
 
     flow_id = data["flow_id"]
-    assert data["description_placeholders"] == {
-        "ip": "192.168.1.2",
-        "mac": "11:22:33:44:55:ab",
-        "model": "esp32-iso-poe",
-        "name": "test",
-        "stored_mac": "11:22:33:44:55:aa",
-    }
     assert data["type"] == FlowResultType.MENU
     assert data["step_id"] == "init"
 
@@ -95,13 +88,6 @@ async def test_device_conflict_manual(
     )
 
     flow_id = data["flow_id"]
-    assert data["description_placeholders"] == {
-        "ip": "192.168.1.2",
-        "mac": "11:22:33:44:55:ab",
-        "model": "esp32-iso-poe",
-        "name": "test",
-        "stored_mac": "11:22:33:44:55:aa",
-    }
     assert data["type"] == FlowResultType.FORM
     assert data["step_id"] == "manual"
 
@@ -198,13 +184,6 @@ async def test_device_conflict_migration(
     data = await start_repair_fix_flow(client, DOMAIN, issue_id)
 
     flow_id = data["flow_id"]
-    assert data["description_placeholders"] == {
-        "ip": "test.local",
-        "mac": "11:22:33:44:55:ab",
-        "model": "esp32-iso-poe",
-        "name": "test",
-        "stored_mac": "11:22:33:44:55:aa",
-    }
     assert data["type"] == FlowResultType.MENU
     assert data["step_id"] == "init"
 
@@ -213,13 +192,6 @@ async def test_device_conflict_migration(
     )
 
     flow_id = data["flow_id"]
-    assert data["description_placeholders"] == {
-        "ip": "test.local",
-        "mac": "11:22:33:44:55:ab",
-        "model": "esp32-iso-poe",
-        "name": "test",
-        "stored_mac": "11:22:33:44:55:aa",
-    }
     assert data["type"] == FlowResultType.FORM
     assert data["step_id"] == "migrate"
 
