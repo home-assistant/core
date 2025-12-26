@@ -24,31 +24,9 @@
     }
   },
   "entity": {
-    "binary_sensor": {
-      "filter_cleaning": {
-        "name": "Filter Cleaning Required"
-      },
-      "master_satellite": {
-        "name": "Master (on) or Satellite (off) unit"
-      },
-      "winter_summer": {
-        "name": "Winter (on) or Summer (off) mode"
-      }
-    },
     "fan": {
       "fan": {
         "name": "[%key:component::fan::title%]"
-      }
-    },
-    "sensor": {
-      "humidity": {
-        "name": "Humidity"
-      },
-      "temperature": {
-        "name": "Temperature"
-      },
-      "voc": {
-        "name": "VOC"
       }
     }
   }
