@@ -6,6 +6,9 @@
     "lost_device": {
       "service": "mdi:devices"
     },
+    "next_media": {
+      "service": "mdi:picture"
+    },
     "play_sound": {
       "service": "mdi:speaker-wireless"
     },
