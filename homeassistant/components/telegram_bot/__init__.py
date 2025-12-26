@@ -502,12 +502,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 async def _call_service(
-    service: ServiceCall, notify_service: TelegramNotificationService, target: int
+    service: ServiceCall, notify_service: TelegramNotificationService, chat_id: int
 ) -> dict[str, JsonValueType] | None:
     msgtype = service.service
 
     kwargs = dict(service.data)
-    kwargs[ATTR_TARGET] = target
+    kwargs[ATTR_TARGET] = chat_id
 
     messages: dict[str, JsonValueType] | None = None
     if msgtype == SERVICE_SEND_MESSAGE:
