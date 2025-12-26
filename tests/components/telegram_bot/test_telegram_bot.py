@@ -956,7 +956,7 @@ async def test_multiple_config_entries_error(
         )
 
     await hass.async_block_till_done()
-    assert err.value.translation_key == "no_targets_found"
+    assert err.value.translation_key == "missing_notify_entities"
 
 
 async def test_send_message_with_config_entry(

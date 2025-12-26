@@ -696,7 +696,7 @@ def _build_targets(
     # can't determine default since multiple config entries exist
     raise ServiceValidationError(
         translation_domain=DOMAIN,
-        translation_key="no_targets_found",
+        translation_key="missing_notify_entities",
     )
 
 

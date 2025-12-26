@@ -205,8 +205,8 @@
     "missing_input": {
       "message": "{field} is required."
     },
-    "no_targets_found": {
-      "message": "No targets found."
+    "missing_notify_entities": {
+      "message": "Please specify at least 1 notify entity."
     }
   },
   "issues": {
