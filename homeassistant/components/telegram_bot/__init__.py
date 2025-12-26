@@ -618,8 +618,8 @@ def _build_targets(
     entity_registry = er.async_get(hass)
     for notify_entity_id in notify_entity_ids:
         # get config entry from notify entity
-        registry_entry = entity_registry.async_get(notify_entity_id)
-        if not registry_entry:
+        entity_entry = entity_registry.async_get(notify_entity_id)
+        if not entity_entry:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="action_failed",
@@ -628,12 +628,12 @@ def _build_targets(
                 },
             )
         notify_config_entry = hass.config_entries.async_get_known_entry(
-            str(registry_entry.config_entry_id)
+            str(entity_entry.config_entry_id)
         )
 
         # get chat id from subentry
         notify_config_subentry = notify_config_entry.subentries[
-            str(registry_entry.config_subentry_id)
+            str(entity_entry.config_subentry_id)
         ]
         notify_chat_id: int = notify_config_subentry.data[ATTR_CHAT_ID]
 
