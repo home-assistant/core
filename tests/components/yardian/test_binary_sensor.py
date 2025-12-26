@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.yardian.binary_sensor import _zone_enabled_value
+from homeassistant.components.yardian.coordinator import YardianZone
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -29,6 +32,39 @@ async def test_all_entities(
         await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+def test_zone_enabled_value_handles_dataclass() -> None:
+    """_zone_enabled_value returns flag when zones are dataclasses."""
+    coordinator = SimpleNamespace(
+        data=SimpleNamespace(
+            zones=[
+                YardianZone(name="Zone 1", is_enabled=True),
+                YardianZone(name="Zone 2", is_enabled=False),
+            ]
+        )
+    )
+
+    assert _zone_enabled_value(coordinator, 0) is True
+    assert _zone_enabled_value(coordinator, 1) is False
+
+
+def test_zone_enabled_value_handles_legacy_sequence() -> None:
+    """_zone_enabled_value gracefully handles legacy tuple/list data."""
+    coordinator = SimpleNamespace(
+        data=SimpleNamespace(
+            zones=[
+                ["Zone 1", 1],
+                ["Zone 2", 0],
+                ["Zone 3"],
+            ]
+        )
+    )
+
+    assert _zone_enabled_value(coordinator, 0) is True
+    assert _zone_enabled_value(coordinator, 1) is False
+    assert _zone_enabled_value(coordinator, 2) is None
+    assert _zone_enabled_value(coordinator, 3) is None
 
 
 async def test_zone_enabled_sensors_disabled_by_default(
