@@ -238,3 +238,225 @@ async def test_subentry_exceptions(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
+
+
+async def test_reconfigure_conversation_agent(
+    hass: HomeAssistant,
+    mock_open_router_client: AsyncMock,
+    mock_openai_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguring a conversation agent."""
+    await setup_integration(hass, mock_config_entry)
+
+    # Store old subentry IDs
+    old_subentries = set(mock_config_entry.subentries)
+
+    # Create a conversation agent first
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "conversation"),
+        context={"source": SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_MODEL: "openai/gpt-3.5-turbo",
+            CONF_PROMPT: "original prompt",
+            CONF_LLM_HASS_API: ["assist"],
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    # Get the new subentry_id
+    new_subentry_id = list(set(mock_config_entry.subentries) - old_subentries)[0]
+
+    # Now reconfigure it
+    result = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, new_subentry_id
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    # Update the configuration
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_MODEL: "openai/gpt-4",
+            CONF_PROMPT: "updated prompt",
+            CONF_LLM_HASS_API: ["assist"],
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+
+async def test_reconfigure_ai_task(
+    hass: HomeAssistant,
+    mock_open_router_client: AsyncMock,
+    mock_openai_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguring an AI task."""
+    await setup_integration(hass, mock_config_entry)
+
+    # Store old subentry IDs
+    old_subentries = set(mock_config_entry.subentries)
+
+    # Create an AI task first
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "ai_task_data"),
+        context={"source": SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_MODEL: "openai/gpt-4"},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    # Get the new subentry_id
+    new_subentry_id = list(set(mock_config_entry.subentries) - old_subentries)[0]
+
+    # Now reconfigure it
+    result = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, new_subentry_id
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    # Update the configuration
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_MODEL: "openai/gpt-4"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+
+@pytest.mark.parametrize(
+    ("exception", "reason"),
+    [(OpenRouterError("exception"), "cannot_connect"), (Exception, "unknown")],
+)
+async def test_reconfigure_conversation_agent_with_error_recovery(
+    hass: HomeAssistant,
+    mock_open_router_client: AsyncMock,
+    mock_openai_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    reason: str,
+) -> None:
+    """Test reconfiguring a conversation agent with error and recovery."""
+    await setup_integration(hass, mock_config_entry)
+
+    # Store old subentry IDs
+    old_subentries = set(mock_config_entry.subentries)
+
+    # Create a conversation agent first
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "conversation"),
+        context={"source": SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_MODEL: "openai/gpt-3.5-turbo",
+            CONF_PROMPT: "original prompt",
+            CONF_LLM_HASS_API: ["assist"],
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    # Get the new subentry_id
+    new_subentry_id = list(set(mock_config_entry.subentries) - old_subentries)[0]
+
+    # Trigger an error during reconfiguration
+    mock_open_router_client.get_models.side_effect = exception
+
+    result = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, new_subentry_id
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+
+    # Recover from error
+    mock_open_router_client.get_models.side_effect = None
+
+    result = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, new_subentry_id
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    # Successfully update the configuration
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            CONF_MODEL: "openai/gpt-4",
+            CONF_PROMPT: "updated prompt",
+            CONF_LLM_HASS_API: ["assist"],
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+
+@pytest.mark.parametrize(
+    ("exception", "reason"),
+    [(OpenRouterError("exception"), "cannot_connect"), (Exception, "unknown")],
+)
+async def test_reconfigure_ai_task_with_error_recovery(
+    hass: HomeAssistant,
+    mock_open_router_client: AsyncMock,
+    mock_openai_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    exception: Exception,
+    reason: str,
+) -> None:
+    """Test reconfiguring an AI task with error and recovery."""
+    await setup_integration(hass, mock_config_entry)
+
+    # Store old subentry IDs
+    old_subentries = set(mock_config_entry.subentries)
+
+    # Create an AI task first
+    result = await hass.config_entries.subentries.async_init(
+        (mock_config_entry.entry_id, "ai_task_data"),
+        context={"source": SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_MODEL: "openai/gpt-4"},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    # Get the new subentry_id
+    new_subentry_id = list(set(mock_config_entry.subentries) - old_subentries)[0]
+
+    # Trigger an error during reconfiguration
+    mock_open_router_client.get_models.side_effect = exception
+
+    result = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, new_subentry_id
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+
+    # Recover from error
+    mock_open_router_client.get_models.side_effect = None
+
+    result = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, new_subentry_id
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    # Successfully update the configuration
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_MODEL: "openai/gpt-4"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
