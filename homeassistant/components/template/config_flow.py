@@ -11,6 +11,7 @@ import voluptuous as vol
 from homeassistant.components import websocket_api
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.button import ButtonDeviceClass
+from homeassistant.components.climate import HVACMode
 from homeassistant.components.cover import CoverDeviceClass
 from homeassistant.components.event import EventDeviceClass
 from homeassistant.components.sensor import (
@@ -58,6 +59,22 @@ from .alarm_control_panel import (
     async_create_preview_alarm_control_panel,
 )
 from .binary_sensor import async_create_preview_binary_sensor
+from .climate import (
+    CONF_CURRENT_TEMPERATURE,
+    CONF_FAN_MODE,
+    CONF_HVAC_ACTION,
+    CONF_HVAC_MODE,
+    CONF_HVAC_MODES,
+    CONF_MAX_TEMP,
+    CONF_MIN_TEMP,
+    CONF_PRECISION,
+    CONF_TARGET_TEMPERATURE,
+    CONF_TEMP_STEP,
+    SET_FAN_MODE_ACTION,
+    SET_HVAC_MODE_ACTION,
+    SET_TEMPERATURE_ACTION,
+    async_create_preview_climate,
+)
 from .const import (
     CONF_ADVANCED_OPTIONS,
     CONF_AVAILABILITY,
@@ -208,6 +225,52 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
                     ),
                 )
             }
+
+    if domain == Platform.CLIMATE:
+        schema |= {
+            # Modes & Action
+            vol.Optional(CONF_HVAC_MODE): selector.TemplateSelector(),
+            vol.Optional(CONF_HVAC_MODES): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[mode.value for mode in HVACMode],
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                    multiple=True,
+                    custom_value=True,
+                    sort=True,
+                )
+            ),
+            vol.Optional(SET_HVAC_MODE_ACTION): selector.ActionSelector(),
+            # Temperature
+            vol.Optional(CONF_CURRENT_TEMPERATURE): selector.TemplateSelector(),
+            vol.Optional(CONF_TARGET_TEMPERATURE): selector.TemplateSelector(),
+            vol.Optional(SET_TEMPERATURE_ACTION): selector.ActionSelector(),
+            # Extra features
+            vol.Optional(CONF_HVAC_ACTION): selector.TemplateSelector(),
+            vol.Optional(CONF_FAN_MODE): selector.TemplateSelector(),
+            vol.Optional(SET_FAN_MODE_ACTION): selector.ActionSelector(),
+            # Limits
+            vol.Optional(CONF_MIN_TEMP): selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    mode=selector.NumberSelectorMode.BOX, step=0.1
+                )
+            ),
+            vol.Optional(CONF_MAX_TEMP): selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    mode=selector.NumberSelectorMode.BOX, step=0.1
+                )
+            ),
+            vol.Optional(CONF_PRECISION): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=["0.1", "0.5", "1.0"],
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                )
+            ),
+            vol.Optional(CONF_TEMP_STEP): selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    mode=selector.NumberSelectorMode.BOX, step=0.1
+                )
+            ),
+        }
 
     if domain == Platform.COVER:
         schema |= _SCHEMA_STATE | {
@@ -534,6 +597,7 @@ TEMPLATE_TYPES = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.CLIMATE,
     Platform.COVER,
     Platform.EVENT,
     Platform.FAN,
@@ -564,6 +628,11 @@ CONFIG_FLOW = {
     Platform.BUTTON: SchemaFlowFormStep(
         config_schema(Platform.BUTTON),
         validate_user_input=validate_user_input(Platform.BUTTON),
+    ),
+    Platform.CLIMATE: SchemaFlowFormStep(
+        config_schema(Platform.CLIMATE),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.CLIMATE),
     ),
     Platform.COVER: SchemaFlowFormStep(
         config_schema(Platform.COVER),
@@ -650,6 +719,11 @@ OPTIONS_FLOW = {
         options_schema(Platform.BUTTON),
         validate_user_input=validate_user_input(Platform.BUTTON),
     ),
+    Platform.CLIMATE: SchemaFlowFormStep(
+        options_schema(Platform.CLIMATE),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.CLIMATE),
+    ),
     Platform.COVER: SchemaFlowFormStep(
         options_schema(Platform.COVER),
         preview="template",
@@ -724,6 +798,7 @@ CREATE_PREVIEW_ENTITY: dict[
 ] = {
     Platform.ALARM_CONTROL_PANEL: async_create_preview_alarm_control_panel,
     Platform.BINARY_SENSOR: async_create_preview_binary_sensor,
+    Platform.CLIMATE: async_create_preview_climate,
     Platform.COVER: async_create_preview_cover,
     Platform.EVENT: async_create_preview_event,
     Platform.FAN: async_create_preview_fan,
