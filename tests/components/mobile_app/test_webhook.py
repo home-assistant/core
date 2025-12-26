@@ -1104,6 +1104,229 @@ async def test_reregister_sensor(
     assert entry.original_icon is None
 
 
+async def test_register_sensors(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
+    webhook_client: TestClient,
+) -> None:
+    """Test that we can register multiple sensors at once."""
+    webhook_id = create_registrations[1]["webhook_id"]
+    webhook_url = f"/api/webhook/{webhook_id}"
+
+    reg_resp = await webhook_client.post(
+        webhook_url,
+        json={
+            "type": "register_sensors",
+            "data": [
+                {
+                    "name": "Battery State",
+                    "state": 100,
+                    "type": "sensor",
+                    "unique_id": "sensor_1",
+                },
+                {
+                    "name": "Temperature",
+                    "state": 20.5,
+                    "type": "sensor",
+                    "unique_id": "sensor_2",
+                    "device_class": "temperature",
+                    "unit_of_measurement": "°C",
+                },
+                {
+                    "name": "Motion Detected",
+                    "state": True,
+                    "type": "binary_sensor",
+                    "unique_id": "sensor_3",
+                    "device_class": "motion",
+                },
+            ],
+        },
+    )
+
+    assert reg_resp.status == HTTPStatus.OK
+    json_resp = await reg_resp.json()
+    assert json_resp == {
+        "sensor_1": {"success": True},
+        "sensor_2": {"success": True},
+        "sensor_3": {"success": True},
+    }
+
+    await hass.async_block_till_done()
+
+    # Verify all sensors were created
+    entry1 = entity_registry.async_get("sensor.test_1_battery_state")
+    assert entry1 is not None
+    assert entry1.original_name == "Test 1 Battery State"
+    assert entry1.device_class is None
+
+    entry2 = entity_registry.async_get("sensor.test_1_temperature")
+    assert entry2 is not None
+    assert entry2.original_name == "Test 1 Temperature"
+    assert entry2.original_device_class == "temperature"
+    assert entry2.unit_of_measurement == "°C"
+
+    entry3 = entity_registry.async_get("binary_sensor.test_1_motion_detected")
+    assert entry3 is not None
+    assert entry3.original_name == "Test 1 Motion Detected"
+    assert entry3.original_device_class == "motion"
+
+
+async def test_register_sensors_with_existing(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
+    webhook_client: TestClient,
+) -> None:
+    """Test that we can update existing sensors when re-registering."""
+    webhook_id = create_registrations[1]["webhook_id"]
+    webhook_url = f"/api/webhook/{webhook_id}"
+
+    # First registration
+    reg_resp = await webhook_client.post(
+        webhook_url,
+        json={
+            "type": "register_sensors",
+            "data": [
+                {
+                    "name": "Battery State",
+                    "state": 100,
+                    "type": "sensor",
+                    "unique_id": "sensor_1",
+                },
+                {
+                    "name": "Temperature",
+                    "state": 20.5,
+                    "type": "sensor",
+                    "unique_id": "sensor_2",
+                },
+            ],
+        },
+    )
+
+    assert reg_resp.status == HTTPStatus.OK
+
+    await hass.async_block_till_done()
+
+    entry1 = entity_registry.async_get("sensor.test_1_battery_state")
+    assert entry1.original_name == "Test 1 Battery State"
+    assert entry1.device_class is None
+
+    # Second registration with updates and new registration
+    reg_resp = await webhook_client.post(
+        webhook_url,
+        json={
+            "type": "register_sensors",
+            "data": [
+                {
+                    "name": "Battery Level",
+                    "state": 95,
+                    "type": "sensor",
+                    "unique_id": "sensor_1",
+                    "device_class": "battery",
+                    "unit_of_measurement": "%",
+                    "icon": "mdi:battery-90",
+                },
+                {
+                    "name": "Temperature",
+                    "state": 22.0,
+                    "type": "sensor",
+                    "unique_id": "sensor_2",
+                },
+                {
+                    "name": "New Sensor",
+                    "state": 42,
+                    "type": "sensor",
+                    "unique_id": "sensor_3",
+                },
+            ],
+        },
+    )
+
+    assert reg_resp.status == HTTPStatus.OK
+    json_resp = await reg_resp.json()
+    assert json_resp == {
+        "sensor_1": {"success": True},
+        "sensor_2": {"success": True},
+        "sensor_3": {"success": True},
+    }
+
+    await hass.async_block_till_done()
+
+    # Verify the first sensor was updated
+    entry1 = entity_registry.async_get("sensor.test_1_battery_state")
+    assert entry1.original_name == "Test 1 Battery Level"
+    assert entry1.device_class == "battery"
+    assert entry1.unit_of_measurement == "%"
+    assert entry1.original_icon == "mdi:battery-90"
+
+    # Verify second sensor is unchanged
+    entry2 = entity_registry.async_get("sensor.test_1_temperature")
+    assert entry2 is not None
+
+    # Verify new sensor was created
+    entry3 = entity_registry.async_get("sensor.test_1_new_sensor")
+    assert entry3 is not None
+
+
+async def test_register_sensors_with_disabled(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
+    webhook_client: TestClient,
+) -> None:
+    """Test that we can enable/disable sensors via register_sensors."""
+    webhook_id = create_registrations[1]["webhook_id"]
+    webhook_url = f"/api/webhook/{webhook_id}"
+
+    reg_resp = await webhook_client.post(
+        webhook_url,
+        json={
+            "type": "register_sensors",
+            "data": [
+                {
+                    "name": "Battery State",
+                    "state": 100,
+                    "type": "sensor",
+                    "unique_id": "sensor_1",
+                    "disabled": True,
+                },
+            ],
+        },
+    )
+
+    assert reg_resp.status == HTTPStatus.OK
+
+    await hass.async_block_till_done()
+
+    entry = entity_registry.async_get("sensor.test_1_battery_state")
+    assert entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
+
+    # Re-enable the sensor
+    reg_resp = await webhook_client.post(
+        webhook_url,
+        json={
+            "type": "register_sensors",
+            "data": [
+                {
+                    "name": "Battery State",
+                    "state": 100,
+                    "type": "sensor",
+                    "unique_id": "sensor_1",
+                    "disabled": False,
+                },
+            ],
+        },
+    )
+
+    assert reg_resp.status == HTTPStatus.OK
+
+    await hass.async_block_till_done()
+
+    entry = entity_registry.async_get("sensor.test_1_battery_state")
+    assert entry.disabled_by is None
+
+
 @pytest.mark.usefixtures("homeassistant")
 async def test_webhook_handle_conversation_process(
     hass: HomeAssistant,
