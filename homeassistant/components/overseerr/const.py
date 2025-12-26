@@ -12,6 +12,10 @@ REQUESTS = "requests"
 ATTR_STATUS = "status"
 ATTR_SORT_ORDER = "sort_order"
 ATTR_REQUESTED_BY = "requested_by"
+ATTR_ISSUE_ID = "issue_id"
+ATTR_ISSUE_TYPE = "issue_type"
+ATTR_MESSAGE = "message"
+ATTR_MEDIA_ID = "media_id"
 
 EVENT_KEY = f"{DOMAIN}_event"
 

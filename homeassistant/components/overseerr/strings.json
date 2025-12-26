@@ -124,6 +124,27 @@
     }
   },
   "selector": {
+    "issue_status": {
+      "options": {
+        "all": "All",
+        "open": "Open",
+        "resolved": "Resolved"
+      }
+    },
+    "issue_status_update": {
+      "options": {
+        "open": "Open",
+        "resolved": "Resolved"
+      }
+    },
+    "issue_type": {
+      "options": {
+        "audio": "Audio",
+        "other": "Other",
+        "subtitle": "Subtitle",
+        "video": "Video"
+      }
+    },
     "request_sort_order": {
       "options": {
         "added": "Added",
@@ -142,6 +163,56 @@
     }
   },
   "services": {
+    "create_issue": {
+      "description": "Creates a new issue for media in Overseerr.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Overseerr instance to create the issue in.",
+          "name": "Overseerr instance"
+        },
+        "issue_type": {
+          "description": "The type of issue being reported.",
+          "name": "Issue type"
+        },
+        "media_id": {
+          "description": "The media ID to report the issue for.",
+          "name": "Media ID"
+        },
+        "message": {
+          "description": "A description of the issue.",
+          "name": "Message"
+        }
+      },
+      "name": "Create issue"
+    },
+    "delete_issue": {
+      "description": "Deletes an issue from Overseerr.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Overseerr instance to delete the issue from.",
+          "name": "Overseerr instance"
+        },
+        "issue_id": {
+          "description": "The ID of the issue to delete.",
+          "name": "Issue ID"
+        }
+      },
+      "name": "Delete issue"
+    },
+    "get_issues": {
+      "description": "Retrieves a list of issues from Overseerr.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Overseerr instance to get issues from.",
+          "name": "Overseerr instance"
+        },
+        "status": {
+          "description": "Filter the issues by status.",
+          "name": "Issue status"
+        }
+      },
+      "name": "Get issues"
+    },
     "get_requests": {
       "description": "Retrieves a list of media requests from Overseerr.",
       "fields": {
@@ -163,6 +234,28 @@
         }
       },
       "name": "Get requests"
+    },
+    "update_issue": {
+      "description": "Updates an existing issue in Overseerr.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Overseerr instance to update the issue in.",
+          "name": "Overseerr instance"
+        },
+        "issue_id": {
+          "description": "The ID of the issue to update.",
+          "name": "Issue ID"
+        },
+        "message": {
+          "description": "Add a comment to the issue.",
+          "name": "Message"
+        },
+        "status": {
+          "description": "Update the status of the issue.",
+          "name": "Status"
+        }
+      },
+      "name": "Update issue"
     }
   }
 }
