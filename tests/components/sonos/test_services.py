@@ -13,6 +13,7 @@ from homeassistant.components.media_player import (
     SERVICE_JOIN,
     SERVICE_UNJOIN,
 )
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -131,7 +132,7 @@ async def test_media_player_join_timeout(
 
     expected = (
         "Timeout while waiting for Sonos player to join the "
-        "group ['Living Room: Living Room, Bedroom']"
+        "group Living Room: Living Room, Bedroom"
     )
     with (
         patch(
@@ -151,6 +152,37 @@ async def test_media_player_join_timeout(
     assert soco_bedroom.join.call_count == 1
     assert soco_bedroom.join.call_args[0][0] == soco_living_room
     assert soco_living_room.join.call_count == 0
+
+
+async def test_media_player_unjoin_timeout(
+    hass: HomeAssistant,
+    sonos_setup_two_speakers: list[MockSoCo],
+) -> None:
+    """Test unjoining of speaker with timeout error."""
+
+    soco_living_room = sonos_setup_two_speakers[0]
+    soco_bedroom = sonos_setup_two_speakers[1]
+
+    # First group the speakers together
+    group_speakers(soco_living_room, soco_bedroom)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    expected = (
+        "Timeout while waiting for Sonos player to unjoin the group Bedroom: Bedroom"
+    )
+    with (
+        patch(
+            "homeassistant.components.sonos.speaker.asyncio.timeout", instant_timeout
+        ),
+        pytest.raises(HomeAssistantError, match=re.escape(expected)),
+    ):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_UNJOIN,
+            {ATTR_ENTITY_ID: "media_player.bedroom"},
+            blocking=True,
+        )
+    assert soco_bedroom.unjoin.call_count == 1
 
 
 async def test_media_player_unjoin(
