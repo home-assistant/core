@@ -590,7 +590,7 @@ def _deprecate_timeout(hass: HomeAssistant, service: ServiceCall) -> None:
 def _build_targets(
     hass: HomeAssistant, service: ServiceCall
 ) -> list[tuple[TelegramBotConfigEntry, int, str | None]]:
-    """Build list of targets where each target is represented by its corresponding config entry, chat ID and notify entity id (if target is a notify entity)."""
+    """Build list of targets where each target is represented by its corresponding config entry, chat ID and notify entity id."""
 
     migrate_chat_ids = _warn_chat_id_migration(hass, service)
 
@@ -675,7 +675,20 @@ def _build_targets(
             )
             chat_ids = [default_chat_id]
 
-        targets.extend([(config_entry, chat_id, None) for chat_id in chat_ids])
+        for chat_id in chat_ids:
+            # map chat_id to notify entity ID
+
+            entity_id: str | None = None
+            if hasattr(
+                config_entry, "runtime_data"
+            ):  # this can be None due to disabled config entry, re-auth etc.
+                entity_id = entity_registry.async_get_entity_id(
+                    "notify",
+                    DOMAIN,
+                    f"{config_entry.runtime_data.bot.id}_{chat_id}",
+                )
+
+            targets.append((config_entry, chat_id, entity_id))
 
     # we're done building targets from service data
     if targets:
