@@ -646,9 +646,9 @@ def _build_targets(
 
     # parse chat IDs from service data: `chat_id`
     if config_entry is not None:
-        chat_ids: list[int] = migrate_chat_ids
+        chat_ids = migrate_chat_ids
         if ATTR_CHAT_ID in service.data:
-            chat_ids = chat_ids + (
+            chat_ids = chat_ids | set(
                 [service.data[ATTR_CHAT_ID]]
                 if isinstance(service.data[ATTR_CHAT_ID], int)
                 else service.data[ATTR_CHAT_ID]
@@ -672,7 +672,7 @@ def _build_targets(
                 default_chat_id,
                 config_entry.title,
             )
-            chat_ids = [default_chat_id]
+            chat_ids = {default_chat_id}
 
         for chat_id in chat_ids:
             # map chat_id to notify entity ID
@@ -700,11 +700,11 @@ def _build_targets(
     )
 
 
-def _warn_chat_id_migration(hass: HomeAssistant, service: ServiceCall) -> list[int]:
+def _warn_chat_id_migration(hass: HomeAssistant, service: ServiceCall) -> set[int]:
     if not service.data.get(ATTR_TARGET):
-        return []
+        return set()
 
-    chat_ids: list[int] = (
+    chat_ids: set[int] = set(
         [service.data[ATTR_TARGET]]
         if isinstance(service.data[ATTR_TARGET], int)
         else service.data[ATTR_TARGET]
