@@ -225,12 +225,12 @@
       "fix_flow": {
         "step": {
           "confirm": {
-            "description": "The `target` parameter is now used for specifying notify entities instead of chat IDs.\n\nTo fix this issue,\n1. Go to `{action_origin}`.\n1. Edit the `{action}` action and update the `target` parameter to use notify entities OR move chat IDs `{chat_ids}` in `target` to `chat_id`.\n1. Click SUBMIT to fix this issue.",
-            "title": "The `target` parameter for {integration_title} is being repurposed"
+            "description": "The new `entity_id` parameter replaces `target`, allowing you to specify notify entities instead of chat IDs.\n\nTo fix this issue,\n1. Go to `{action_origin}`.\n1. Update the `{action}` action by deleting the `target` parameter and adding `entity_id` to specify the notify entities.\n1. Click SUBMIT to fix this issue.",
+            "title": "The `target` parameter for {integration_title} is being removed"
           }
         }
       },
-      "title": "The `target` parameter for {integration_title} is being repurposed"
+      "title": "The `target` parameter for {integration_title} is being removed"
     }
   },
   "options": {
