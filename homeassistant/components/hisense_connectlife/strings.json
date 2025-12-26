@@ -1,0 +1,38 @@
+{
+    "title": "Hisense ConnectLife",
+    "config": {
+        "step": {
+            "user": {
+                "title": "Connect to Hisense AC",
+                "description": "You are about to connect your Hisense AC ({app_name}) to Home Assistant.\n\nApplication ID: {app_id}\n\nPlease make sure your Home Assistant instance is accessible via:\n{oauth_callback_url}\n\nClick SUBMIT to start the authentication process.",
+                "data": {
+                    "confirm_auth": "Yes, I want to authenticate"
+                }
+            }
+        },
+        "abort": {
+            "already_configured": "Device is already configured",
+            "single_instance_allowed": "Already configured. Only a single instance is allowed.",
+            "authorize_url_fail": "Error generating authorization URL.",
+            "missing_configuration": "The component is not configured. Please follow the documentation.",
+            "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
+            "oauth_error": "Received invalid token data."
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Hisense AC Options",
+                "description": "{message}",
+                "data": {
+                    "refresh_devices": "Refresh device list",
+                    "refresh_token": "Refresh authentication token"
+                }
+            }
+        },
+        "error": {
+            "refresh_failed": "Failed to refresh device list",
+            "token_refresh_failed": "Failed to refresh token"
+        }
+    }
+}
