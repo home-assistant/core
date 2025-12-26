@@ -13,6 +13,7 @@ from homeassistant.components.media_player import (
     SERVICE_JOIN,
     SERVICE_UNJOIN,
 )
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -156,7 +157,6 @@ async def test_media_player_join_timeout(
 async def test_media_player_unjoin_timeout(
     hass: HomeAssistant,
     sonos_setup_two_speakers: list[MockSoCo],
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test unjoining of speaker with timeout error."""
 
@@ -174,12 +174,12 @@ async def test_media_player_unjoin_timeout(
         patch(
             "homeassistant.components.sonos.speaker.asyncio.timeout", instant_timeout
         ),
-        pytest.raises(HomeAssistantError, match=re.escape(expected)),
+        pytest.raises(HomeAssistantError, match=expected),
     ):
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_UNJOIN,
-            {"entity_id": "media_player.bedroom"},
+            {ATTR_ENTITY_ID: "media_player.bedroom"},
             blocking=True,
         )
     assert soco_bedroom.unjoin.call_count == 1
