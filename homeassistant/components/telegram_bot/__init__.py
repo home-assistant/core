@@ -395,7 +395,7 @@ MODULES: dict[str, ModuleType] = {
 PLATFORMS: list[Platform] = [Platform.EVENT, Platform.NOTIFY]
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa: C901 ignore complexity caused by _call_service()
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Telegram bot component."""
 
     async def async_send_telegram_message(service: ServiceCall) -> ServiceResponse:
@@ -404,9 +404,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         _deprecate_timeout(hass, service)
 
         # this is the list of targets to send the message to
-        targets: list[tuple[TelegramBotConfigEntry, int, str | None]] = _build_targets(
-            hass, service
-        )
+        targets = _build_targets(hass, service)
 
         service_responses: JsonValueType = []
         errors: list[tuple[HomeAssistantError, str]] = []
@@ -471,67 +469,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
         return None
 
-    async def _call_service(
-        service: ServiceCall, notify_service: TelegramNotificationService, target: int
-    ) -> dict[str, JsonValueType] | None:
-        msgtype = service.service
-
-        kwargs = dict(service.data)
-        kwargs[ATTR_TARGET] = target
-
-        messages: dict[str, JsonValueType] | None = None
-        if msgtype == SERVICE_SEND_MESSAGE:
-            messages = await notify_service.send_message(
-                context=service.context, **kwargs
-            )
-        elif msgtype == SERVICE_SEND_CHAT_ACTION:
-            messages = await notify_service.send_chat_action(
-                context=service.context, **kwargs
-            )
-        elif msgtype in [
-            SERVICE_SEND_PHOTO,
-            SERVICE_SEND_ANIMATION,
-            SERVICE_SEND_VIDEO,
-            SERVICE_SEND_VOICE,
-            SERVICE_SEND_DOCUMENT,
-        ]:
-            messages = await notify_service.send_file(
-                msgtype, context=service.context, **kwargs
-            )
-        elif msgtype == SERVICE_SEND_STICKER:
-            messages = await notify_service.send_sticker(
-                context=service.context, **kwargs
-            )
-        elif msgtype == SERVICE_SEND_LOCATION:
-            messages = await notify_service.send_location(
-                context=service.context, **kwargs
-            )
-        elif msgtype == SERVICE_SEND_POLL:
-            messages = await notify_service.send_poll(context=service.context, **kwargs)
-        elif msgtype == SERVICE_ANSWER_CALLBACK_QUERY:
-            await notify_service.answer_callback_query(
-                context=service.context, **kwargs
-            )
-        elif msgtype == SERVICE_DELETE_MESSAGE:
-            await notify_service.delete_message(context=service.context, **kwargs)
-        elif msgtype == SERVICE_LEAVE_CHAT:
-            await notify_service.leave_chat(context=service.context, **kwargs)
-        elif msgtype == SERVICE_SET_MESSAGE_REACTION:
-            await notify_service.set_message_reaction(context=service.context, **kwargs)
-        elif msgtype == SERVICE_EDIT_MESSAGE_MEDIA:
-            await notify_service.edit_message_media(context=service.context, **kwargs)
-        elif msgtype == SERVICE_DOWNLOAD_FILE:
-            return await notify_service.download_file(context=service.context, **kwargs)
-        else:
-            await notify_service.edit_message(
-                msgtype, context=service.context, **kwargs
-            )
-
-        if service.return_response and messages is not None:
-            return messages
-
-        return None
-
     # Register notification services
     for service_notif, schema in SERVICE_MAP.items():
         supports_response = SupportsResponse.NONE
@@ -563,6 +500,58 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         )
 
     return True
+
+
+async def _call_service(
+    service: ServiceCall, notify_service: TelegramNotificationService, target: int
+) -> dict[str, JsonValueType] | None:
+    msgtype = service.service
+
+    kwargs = dict(service.data)
+    kwargs[ATTR_TARGET] = target
+
+    messages: dict[str, JsonValueType] | None = None
+    if msgtype == SERVICE_SEND_MESSAGE:
+        messages = await notify_service.send_message(context=service.context, **kwargs)
+    elif msgtype == SERVICE_SEND_CHAT_ACTION:
+        messages = await notify_service.send_chat_action(
+            context=service.context, **kwargs
+        )
+    elif msgtype in [
+        SERVICE_SEND_PHOTO,
+        SERVICE_SEND_ANIMATION,
+        SERVICE_SEND_VIDEO,
+        SERVICE_SEND_VOICE,
+        SERVICE_SEND_DOCUMENT,
+    ]:
+        messages = await notify_service.send_file(
+            msgtype, context=service.context, **kwargs
+        )
+    elif msgtype == SERVICE_SEND_STICKER:
+        messages = await notify_service.send_sticker(context=service.context, **kwargs)
+    elif msgtype == SERVICE_SEND_LOCATION:
+        messages = await notify_service.send_location(context=service.context, **kwargs)
+    elif msgtype == SERVICE_SEND_POLL:
+        messages = await notify_service.send_poll(context=service.context, **kwargs)
+    elif msgtype == SERVICE_ANSWER_CALLBACK_QUERY:
+        await notify_service.answer_callback_query(context=service.context, **kwargs)
+    elif msgtype == SERVICE_DELETE_MESSAGE:
+        await notify_service.delete_message(context=service.context, **kwargs)
+    elif msgtype == SERVICE_LEAVE_CHAT:
+        await notify_service.leave_chat(context=service.context, **kwargs)
+    elif msgtype == SERVICE_SET_MESSAGE_REACTION:
+        await notify_service.set_message_reaction(context=service.context, **kwargs)
+    elif msgtype == SERVICE_EDIT_MESSAGE_MEDIA:
+        await notify_service.edit_message_media(context=service.context, **kwargs)
+    elif msgtype == SERVICE_DOWNLOAD_FILE:
+        return await notify_service.download_file(context=service.context, **kwargs)
+    else:
+        await notify_service.edit_message(msgtype, context=service.context, **kwargs)
+
+    if service.return_response and messages is not None:
+        return messages
+
+    return None
 
 
 def _deprecate_timeout(hass: HomeAssistant, service: ServiceCall) -> None:
@@ -627,19 +616,19 @@ def _build_targets(
                     "error": f"Notify entity not found: {notify_entity_id}"
                 },
             )
+        assert entity_entry.config_entry_id is not None
         notify_config_entry = hass.config_entries.async_get_known_entry(
-            str(entity_entry.config_entry_id)
+            entity_entry.config_entry_id
         )
 
         # get chat id from subentry
+        assert entity_entry.config_subentry_id is not None
         notify_config_subentry = notify_config_entry.subentries[
-            str(entity_entry.config_subentry_id)
+            entity_entry.config_subentry_id
         ]
         notify_chat_id: int = notify_config_subentry.data[ATTR_CHAT_ID]
 
         targets.append((notify_config_entry, notify_chat_id, notify_entity_id))
-
-    has_notify_targets = len(targets) > 0
 
     # build target list using service data: `config_entry_id` and `chat_id`
 
@@ -666,10 +655,10 @@ def _build_targets(
                 else service.data[ATTR_CHAT_ID]
             )
 
-        if not chat_ids and not has_notify_targets:
+        if not chat_ids and not targets:
             # no targets from service data, so we default to the first allowed chat IDs of the config entry
             subentries = list(config_entry.subentries.values())
-            if len(subentries) == 0:
+            if not subentries:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="missing_allowed_chat_ids",
@@ -689,7 +678,7 @@ def _build_targets(
         targets.extend([(config_entry, chat_id, None) for chat_id in chat_ids])
 
     # we're done building targets from service data
-    if len(targets) > 0:
+    if targets:
         return targets
 
     # can't determine default since multiple config entries exist
