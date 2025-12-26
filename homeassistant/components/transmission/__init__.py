@@ -93,10 +93,14 @@ async def async_setup_entry(
 
     try:
         api = await get_api(hass, dict(config_entry.data))
-    except CannotConnect as error:
-        raise ConfigEntryNotReady from error
     except (AuthenticationError, UnknownError) as error:
         raise ConfigEntryAuthFailed from error
+    except CannotConnect:
+        _LOGGER.debug(
+            "Transmission server at %s is not available, will retry",
+            config_entry.data[CONF_HOST],
+        )
+        api = None
 
     protocol: Final = "https" if config_entry.data[CONF_SSL] else "http"
     device_registry = dr.async_get(hass)
@@ -105,16 +109,29 @@ async def async_setup_entry(
         identifiers={(DOMAIN, config_entry.entry_id)},
         manufacturer="Transmission",
         entry_type=DeviceEntryType.SERVICE,
-        sw_version=api.server_version,
+        sw_version=api.server_version if api else None,
         configuration_url=(
             f"{protocol}://{config_entry.data[CONF_HOST]}:{config_entry.data[CONF_PORT]}"
         ),
     )
 
     coordinator = TransmissionDataUpdateCoordinator(hass, config_entry, api)
-    await hass.async_add_executor_job(coordinator.init_torrent_list)
+    if api:
+        try:
+            await hass.async_add_executor_job(coordinator.init_torrent_list)
+        except transmission_rpc.TransmissionError:
+            _LOGGER.debug("Failed to initialize torrent list")
 
-    await coordinator.async_config_entry_first_refresh()
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except ConfigEntryNotReady:
+        _LOGGER.debug(
+            "Transmission server at %s is not available, entities will be unavailable",
+            config_entry.data[CONF_HOST],
+        )
+        # Continue setup even if the server is not available
+        # Entities will be marked as unavailable
+
     config_entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
