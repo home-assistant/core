@@ -53,6 +53,54 @@
       "terminate_apps": {
         "name": "Terminate apps"
       }
+    },
+    "number": {
+      "brightness": {
+        "name": "Picture brightness"
+      },
+      "color": {
+        "name": "Picture color"
+      },
+      "contrast": {
+        "name": "Picture contrast"
+      },
+      "hue": {
+        "name": "Picture hue"
+      },
+      "sharpness": {
+        "name": "Picture sharpness"
+      }
+    },
+    "select": {
+      "auto_local_dimming": {
+        "name": "Auto local dimming"
+      },
+      "auto_picture_mode": {
+        "name": "Auto picture mode"
+      },
+      "color_space": {
+        "name": "Color space"
+      },
+      "color_temperature": {
+        "name": "Color temperature"
+      },
+      "hdr_mode": {
+        "name": "HDR mode"
+      },
+      "light_sensor": {
+        "name": "Light sensor"
+      },
+      "picture_mode": {
+        "name": "Picture mode"
+      },
+      "xtended_dynamic_range": {
+        "name": "Xtended dynamic range"
+      }
+    }
+  },
+  "exceptions": {
+    "set_picture_setting_failed": {
+      "message": "Failed to set picture setting {target}: {error}"
     }
   }
 }
