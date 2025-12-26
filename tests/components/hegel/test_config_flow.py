@@ -94,7 +94,7 @@ async def test_user_flow_already_configured_via_ssdp(
     """Test user flow aborts when device discovered via SSDP is already configured."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=TEST_UNIQUE_ID,
+        unique_id=f"serial:{TEST_SERIAL}",
         data={CONF_HOST: TEST_HOST, CONF_NAME: TEST_NAME, CONF_MODEL: TEST_MODEL},
     )
     entry.add_to_hass(hass)
@@ -102,7 +102,7 @@ async def test_user_flow_already_configured_via_ssdp(
     aioclient_mock.get(
         TEST_SSDP_LOCATION,
         text=f"""<?xml version="1.0"?>
-        <root><device><MAC>{TEST_MAC}</MAC></device></root>""",
+        <root><device><serialNumber>{TEST_SERIAL}</serialNumber></device></root>""",
     )
 
     # Start via SSDP discovery which sets _discovered_data with unique_id
@@ -356,7 +356,7 @@ async def test_ssdp_discovery_already_configured(
     """Test SSDP discovery aborts when device is already configured."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=TEST_UNIQUE_ID,
+        unique_id=f"serial:{TEST_SERIAL}",
         data={CONF_HOST: TEST_HOST, CONF_NAME: TEST_NAME, CONF_MODEL: TEST_MODEL},
     )
     entry.add_to_hass(hass)
@@ -364,7 +364,7 @@ async def test_ssdp_discovery_already_configured(
     aioclient_mock.get(
         TEST_SSDP_LOCATION,
         text=f"""<?xml version="1.0"?>
-        <root><device><MAC>{TEST_MAC}</MAC></device></root>""",
+        <root><device><serialNumber>{TEST_SERIAL}</serialNumber></device></root>""",
     )
 
     result = await hass.config_entries.flow.async_init(
