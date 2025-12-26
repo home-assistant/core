@@ -1063,7 +1063,7 @@ class SonosSpeaker:
                 hass,
                 config_entry,
                 [[s] for s in speakers],
-                operation="unjoin",
+                action="unjoin",
             )
 
     @soco_error()
@@ -1207,7 +1207,7 @@ class SonosSpeaker:
         hass: HomeAssistant,
         config_entry: SonosConfigEntry,
         groups: list[list[SonosSpeaker]],
-        operation: str = "join",
+        action: str = "join",
     ) -> None:
         """Wait until all groups are present, or timeout."""
 
@@ -1241,7 +1241,7 @@ class SonosSpeaker:
                 translation_key="timeout_join",
                 translation_placeholders={
                     "group_description": group_description,
-                    "operation": operation,
+                    "action": action,
                 },
             ) from TimeoutError
         any_speaker = next(iter(config_entry.runtime_data.discovered.values()))
