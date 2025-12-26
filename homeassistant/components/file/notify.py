@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import os
-from typing import Any, TextIO
+from typing import Any, Literal, TextIO
 
 from homeassistant.components.notify import (
     ATTR_TITLE_DEFAULT,
@@ -48,12 +48,12 @@ class FileNotifyEntity(NotifyEntity):
     def send_message(self, message: str, title: str | None = None) -> None:
         """Send a message to a file."""
         file: TextIO
+        file_mode: Literal["a", "w"] = "w" if self._overwrite else "a"
         filepath = self._file_path
         try:
             file_was_empty = (
                 not os.path.exists(filepath) or os.path.getsize(filepath) == 0
             )
-            file_mode = "w" if self._overwrite else "a"
             with open(filepath, file_mode, encoding="utf8") as file:
                 if file_was_empty:
                     title = (
