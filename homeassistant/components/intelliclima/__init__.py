@@ -30,7 +30,7 @@ async def async_setup_entry(
     # Fetch initial data
     await coordinator.async_config_entry_first_refresh()
 
-    LOGGER.info(
+    LOGGER.debug(
         "Discovered %d IntelliClima VMC device(s)",
         len(coordinator.data.ecocomfort2_devices),
     )
