@@ -14,7 +14,7 @@ from . import setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
 
-FAN_ENTITY_ID = "fan.test_vmc_fan"
+FAN_ENTITY_ID = "fan.test_vmc"
 
 
 @pytest.fixture(autouse=True)
@@ -68,7 +68,7 @@ async def test_fan_initial_state(
     assert state is not None
 
     # Name and basic state come from IntelliClimaVMCFan and single_eco_device.
-    assert state.name == "Test VMC Fan"
+    assert state.name == "Test VMC"
     assert state.state == "on"
     # single_eco_device has speed_set="3" (medium) and mode_set="1" (in / forward).
     assert state.attributes["percentage"] == 75

@@ -7,7 +7,6 @@ from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceInfo,
 )
-from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -17,20 +16,17 @@ from .coordinator import IntelliClimaCoordinator
 class IntelliClimaEntity(CoordinatorEntity[IntelliClimaCoordinator]):
     """Define a generic class for IntelliClima entities."""
 
-    _attr_attribution = "Data provided by unpublished IntelliClima API"
     _attr_has_entity_name = True
 
     def __init__(
         self,
         coordinator: IntelliClimaCoordinator,
         device: IntelliClimaECO | IntelliClimaC800,
-        description: EntityDescription,
     ) -> None:
         """Class initializer."""
         super().__init__(coordinator=coordinator)
 
-        self.entity_description = description
-        self._attr_unique_id = f"{device.id}_{description.key}"
+        self._attr_unique_id = device.id
 
         # Make this HA "device" use the IntelliClima device name.
         self._attr_device_info = DeviceInfo(
@@ -51,14 +47,10 @@ class IntelliClimaECOEntity(IntelliClimaEntity):
         self,
         coordinator: IntelliClimaCoordinator,
         device: IntelliClimaECO,
-        description: EntityDescription,
     ) -> None:
         """Class initializer."""
-        super().__init__(coordinator, device, description)
+        super().__init__(coordinator, device)
 
-        self._attr_device_info = self._build_device_info(device)
-
-    def _build_device_info(self, device: IntelliClimaECO) -> DeviceInfo:
         info: DeviceInfo = self.device_info or DeviceInfo()
 
         info["model"] = "ECOCOMFORT 2.0"
@@ -68,8 +60,15 @@ class IntelliClimaECOEntity(IntelliClimaEntity):
             (CONNECTION_NETWORK_MAC, device.macwifi),
         }
 
-        return info
+        self._attr_device_info = info
 
     @property
     def _device_data(self) -> IntelliClimaECO:
         return self.coordinator.data.ecocomfort2_devices[self._device_id]
+
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        if not super().available:
+            return False
+        return self._device_id in self.coordinator.data.ecocomfort2_devices

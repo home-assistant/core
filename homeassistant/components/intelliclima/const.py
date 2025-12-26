@@ -1,6 +1,7 @@
 """Constants for the IntelliClima integration."""
 
 from datetime import timedelta
+from enum import StrEnum
 import logging
 
 LOGGER = logging.getLogger(__package__)
@@ -10,25 +11,23 @@ DOMAIN = "intelliclima"
 # Update interval
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=1)
 
-# Fan speeds - Adjust based on your Ecocomfort 2.0 capabilities
-FAN_SPEED_OFF = "0"
-FAN_SPEED_SLEEP = "1"
-FAN_SPEED_LOW = "2"
-FAN_SPEED_MEDIUM = "3"
-FAN_SPEED_HIGH = "4"
-FAN_SPEED_AUTO = "16"
 
-# Fan directions
-FAN_MODE_OFF = "0"
-FAN_MODE_IN = "1"
-FAN_MODE_OUT = "2"
-FAN_MODE_ALTERNATE = "3"
-FAN_MODE_SENSOR = "4"
+class FanSpeed(StrEnum):
+    """Fan speed options for EcoComfort VMC devices."""
 
-# Device types
-DEVICE_TYPE_VMC = "vmc"
+    off = "0"
+    sleep = "1"
+    low = "2"
+    medium = "3"
+    high = "4"
+    auto = "16"
 
-# Attributes
-ATTR_VOC = "voc"
-ATTR_AIR_QUALITY = "air_quality"
-ATTR_FILTER_STATUS = "filter_status"
+
+class FanMode(StrEnum):
+    """Fan mode/direction options for EcoComfort VMC devices."""
+
+    off = "0"
+    inward = "1"
+    outward = "2"
+    alternate = "3"
+    sensor = "4"

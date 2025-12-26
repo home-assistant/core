@@ -22,12 +22,5 @@
         "description": "Authenticate against IntelliClima cloud"
       }
     }
-  },
-  "entity": {
-    "fan": {
-      "fan": {
-        "name": "[%key:component::fan::title%]"
-      }
-    }
   }
 }

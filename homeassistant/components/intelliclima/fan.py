@@ -7,7 +7,6 @@ from pyintelliclima.intelliclima_types import IntelliClimaECO
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
@@ -15,26 +14,16 @@ from homeassistant.util.percentage import (
 )
 from homeassistant.util.scaling import int_states_in_range
 
-from .const import (
-    FAN_MODE_ALTERNATE,
-    FAN_MODE_IN,
-    FAN_MODE_OFF,
-    FAN_MODE_OUT,
-    FAN_MODE_SENSOR,
-    FAN_SPEED_AUTO,
-    FAN_SPEED_HIGH,
-    FAN_SPEED_OFF,
-    FAN_SPEED_SLEEP,
-)
+from .const import FanMode, FanSpeed
 from .coordinator import IntelliClimaConfigEntry, IntelliClimaCoordinator
 from .entity import IntelliClimaECOEntity
 
 PRESET_MODES_TO_INTELLICLIMA_MODE = {
-    "forward": FAN_MODE_IN,
-    "reverse": FAN_MODE_OUT,
-    "alternate": FAN_MODE_ALTERNATE,
-    "sensor": FAN_MODE_SENSOR,
-    "auto": FAN_MODE_SENSOR,
+    "forward": str(FanMode.inward),
+    "reverse": str(FanMode.outward),
+    "alternate": str(FanMode.alternate),
+    "sensor": str(FanMode.sensor),
+    "auto": str(FanMode.sensor),
 }
 INTELLICLIMA_MODE_TO_PRESET_MODES = {
     v: k for k, v in PRESET_MODES_TO_INTELLICLIMA_MODE.items() if k != "auto"
@@ -47,13 +36,12 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up IntelliClima VMC fans."""
-    coordinator: IntelliClimaCoordinator = entry.runtime_data
+    coordinator = entry.runtime_data
 
     entities: list[IntelliClimaVMCFan] = [
         IntelliClimaVMCFan(
             coordinator=coordinator,
             device=ecocomfort2,
-            description=EntityDescription(key="fan", translation_key="fan"),
         )
         for ecocomfort2 in coordinator.data.ecocomfort2_devices.values()
     ]
@@ -64,6 +52,7 @@ async def async_setup_entry(
 class IntelliClimaVMCFan(IntelliClimaECOEntity, FanEntity):
     """Representation of an IntelliClima VMC fan."""
 
+    _attr_name = None
     _attr_supported_features = (
         FanEntityFeature.PRESET_MODE
         | FanEntityFeature.SET_SPEED
@@ -75,31 +64,23 @@ class IntelliClimaVMCFan(IntelliClimaECOEntity, FanEntity):
         self,
         coordinator: IntelliClimaCoordinator,
         device: IntelliClimaECO,
-        description: EntityDescription,
     ) -> None:
         """Class initializer."""
-        super().__init__(coordinator, device, description)
+        super().__init__(coordinator, device)
 
-        self._speed_range = (int(FAN_SPEED_SLEEP), int(FAN_SPEED_HIGH))
-
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        if not super().available:
-            return False
-        return self._device_id in self.coordinator.data.ecocomfort2_devices
+        self._speed_range = (int(FanSpeed.sleep), int(FanSpeed.high))
 
     @property
     def is_on(self) -> bool:
         """Return true if fan is on."""
-        return self._device_data.mode_set != FAN_MODE_OFF
+        return self._device_data.mode_set != FanMode.off
 
     @property
     def percentage(self) -> int | None:
         """Return the current speed percentage."""
         device_data = self._device_data
 
-        if device_data.speed_set == FAN_SPEED_AUTO:
+        if device_data.speed_set == FanSpeed.auto:
             return None
 
         return ranged_value_to_percentage(self._speed_range, int(device_data.speed_set))
@@ -114,11 +95,11 @@ class IntelliClimaVMCFan(IntelliClimaECOEntity, FanEntity):
         """Return the current preset mode."""
         device_data = self._device_data
 
-        if device_data.mode_set == FAN_MODE_OFF:
+        if device_data.mode_set == FanMode.off:
             return None
         if (
-            device_data.speed_set == FAN_SPEED_AUTO
-            and device_data.mode_set == FAN_MODE_SENSOR
+            device_data.speed_set == FanSpeed.auto
+            and device_data.mode_set == FanMode.sensor
         ):
             return "auto"
 
@@ -192,7 +173,7 @@ class IntelliClimaVMCFan(IntelliClimaECOEntity, FanEntity):
             )
         )
 
-        speed = FAN_SPEED_SLEEP if speed == FAN_SPEED_OFF else speed
+        speed = FanSpeed.sleep if speed == FanSpeed.off else speed
         await self.coordinator.api.ecocomfort.set_mode_speed(
             self._device_sn, mode, speed
         )

@@ -38,7 +38,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_all_fan_entities[fan.test_vmc_fan-entry]
+# name: test_all_fan_entities[fan.test_vmc-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -59,7 +59,7 @@
     'disabled_by': None,
     'domain': 'fan',
     'entity_category': None,
-    'entity_id': 'fan.test_vmc_fan',
+    'entity_id': 'fan.test_vmc',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -71,21 +71,20 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Fan',
+    'original_name': None,
     'platform': 'intelliclima',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 57>,
-    'translation_key': 'fan',
-    'unique_id': '56789_fan',
+    'translation_key': None,
+    'unique_id': '56789',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_fan_entities[fan.test_vmc_fan-state]
+# name: test_all_fan_entities[fan.test_vmc-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by unpublished IntelliClima API',
-      'friendly_name': 'Test VMC Fan',
+      'friendly_name': 'Test VMC',
       'percentage': 75,
       'percentage_step': 25.0,
       'preset_mode': 'forward',
@@ -99,7 +98,7 @@
       'supported_features': <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
-    'entity_id': 'fan.test_vmc_fan',
+    'entity_id': 'fan.test_vmc',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
