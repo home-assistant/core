@@ -10,6 +10,8 @@ rules:
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
+  diagnostics-basic: todo
+  dev-docs: todo
   docs-actions:
     status: done
     comment: |
@@ -23,7 +25,18 @@ rules:
       Entities of this integration do not explicitly subscribe to events.
   entity-unique-id: done
   has-entity-name: done
+  integration-owner: todo
+  log-setup: done
+  parallel-updates:
+    status: exempt
+    comment: |
+      Integration does not use polling; entities are event-driven.
   runtime-data: done
+  script-examples: todo
+  stub-polling:
+    status: exempt
+    comment: |
+      Integration is event-driven and has no polling.
   test-before-configure: done
   test-before-setup: done
   unique-config-entry: done
@@ -31,21 +44,6 @@ rules:
     status: done
     comment: |
       Provides `async_step_discovery` in config_flow.py, which calls `searchDevices` for automatic device discovery.
-  parallel-updates:
-    status: exempt
-    comment: |
-      Integration does not use polling; entities are event-driven.
-  log-setup: done
-  stub-polling:
-    status: exempt
-    comment: |
-      Integration is event-driven and has no polling.
-
-  # Bronze: missing rules (now included)
-  diagnostics-basic: todo
-  dev-docs: todo
-  integration-owner: todo
-  script-examples: todo
 
   # Silver
   test-support: todo
@@ -63,4 +61,5 @@ rules:
   quality-assurance: todo
   test-coverage: todo
   diagnostics-extended: todo
+
 
