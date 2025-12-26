@@ -3,7 +3,7 @@
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import HOUSEHOLD_ID, MOCK_FELAQUA
+from . import HOUSEHOLD_ID, MOCK_FELAQUA, setup_integration
 
 from tests.common import MockConfigEntry
 
@@ -19,9 +19,10 @@ async def test_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     surepetcare,
-    mock_config_entry_setup: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the generation of unique ids."""
+    await setup_integration(hass, mock_config_entry, surepetcare)
     state_entity_ids = hass.states.async_entity_ids()
 
     for entity_id, unique_id in EXPECTED_ENTITY_IDS.items():
