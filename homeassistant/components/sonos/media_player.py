@@ -15,6 +15,7 @@ from soco.core import (
     PLAY_MODES,
 )
 from soco.data_structures import DidlFavorite, DidlMusicTrack
+from soco.exceptions import SoCoException
 from soco.ms_data_structures import MusicServiceItem
 from sonos_websocket.exception import SonosWebsocketError
 
@@ -853,10 +854,14 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             _LOGGER.debug(
                 "Processing unjoins for %s", [x.zone_name for x in unjoin_data.speakers]
             )
-            await SonosSpeaker.unjoin_multi(
-                self.hass, self.config_entry, unjoin_data.speakers
-            )
-            unjoin_data.event.set()
+            try:
+                await SonosSpeaker.unjoin_multi(
+                    self.hass, self.config_entry, unjoin_data.speakers
+                )
+            except (HomeAssistantError, SoCoException, OSError) as err:
+                unjoin_data.exception = err
+            finally:
+                unjoin_data.event.set()
 
         if unjoin_data := sonos_data.unjoin_data.get(household_id):
             unjoin_data.speakers.append(self.speaker)
@@ -868,3 +873,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
         _LOGGER.debug("Requesting unjoin for %s", self.speaker.zone_name)
         await unjoin_data.event.wait()
+
+        # Re-raise any exception that occurred during processing
+        if unjoin_data.exception:
+            raise unjoin_data.exception
