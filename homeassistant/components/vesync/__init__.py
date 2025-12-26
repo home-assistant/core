@@ -34,6 +34,8 @@ PLATFORMS = [
 
 _LOGGER = logging.getLogger(__name__)
 
+type VesyncConfigEntry = ConfigEntry[VeSyncDataCoordinator]
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up my integration."""
