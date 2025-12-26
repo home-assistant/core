@@ -220,8 +220,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/bizkaibus/ @UgaitzEtxebarria
 /homeassistant/components/blebox/ @bbx-a @swistakm
 /tests/components/blebox/ @bbx-a @swistakm
-/homeassistant/components/blink/ @fronzbot @mkmer
-/tests/components/blink/ @fronzbot @mkmer
+/homeassistant/components/blink/ @fronzbot
+/tests/components/blink/ @fronzbot
 /homeassistant/components/blue_current/ @gleeuwen @NickKoepr @jtodorova23
 /tests/components/blue_current/ @gleeuwen @NickKoepr @jtodorova23
 /homeassistant/components/bluemaestro/ @bdraco
@@ -308,8 +308,8 @@ build.json @home-assistant/supervisor
 /tests/components/config/ @home-assistant/core
 /homeassistant/components/configurator/ @home-assistant/core
 /tests/components/configurator/ @home-assistant/core
-/homeassistant/components/control4/ @lawtancool
-/tests/components/control4/ @lawtancool
+/homeassistant/components/control4/ @lawtancool @davidrecordon
+/tests/components/control4/ @lawtancool @davidrecordon
 /homeassistant/components/conversation/ @home-assistant/core @synesthesiam @arturpragacz
 /tests/components/conversation/ @home-assistant/core @synesthesiam @arturpragacz
 /homeassistant/components/cookidoo/ @miaucl
@@ -530,6 +530,8 @@ build.json @home-assistant/supervisor
 /tests/components/flo/ @dmulcahey
 /homeassistant/components/flume/ @ChrisMandich @bdraco @jeeftor
 /tests/components/flume/ @ChrisMandich @bdraco @jeeftor
+/homeassistant/components/fluss/ @fluss
+/tests/components/fluss/ @fluss
 /homeassistant/components/flux_led/ @icemanch
 /tests/components/flux_led/ @icemanch
 /homeassistant/components/forecast_solar/ @klaasnicolaas @frenck
@@ -666,7 +668,8 @@ build.json @home-assistant/supervisor
 /tests/components/heos/ @andrewsayre
 /homeassistant/components/here_travel_time/ @eifinger
 /tests/components/here_travel_time/ @eifinger
-/homeassistant/components/hikvision/ @mezz64
+/homeassistant/components/hikvision/ @mezz64 @ptarjan
+/tests/components/hikvision/ @mezz64 @ptarjan
 /homeassistant/components/hikvisioncam/ @fbradyirl
 /homeassistant/components/hisense_aehw4a1/ @bannhead
 /tests/components/hisense_aehw4a1/ @bannhead
@@ -795,6 +798,8 @@ build.json @home-assistant/supervisor
 /tests/components/intellifire/ @jeeftor
 /homeassistant/components/intent/ @home-assistant/core @synesthesiam @arturpragacz
 /tests/components/intent/ @home-assistant/core @synesthesiam @arturpragacz
+/homeassistant/components/intent_script/ @arturpragacz
+/tests/components/intent_script/ @arturpragacz
 /homeassistant/components/intesishome/ @jnimmo
 /homeassistant/components/iometer/ @jukrebs
 /tests/components/iometer/ @jukrebs
@@ -1196,8 +1201,8 @@ build.json @home-assistant/supervisor
 /tests/components/ourgroceries/ @OnFreund
 /homeassistant/components/overkiz/ @imicknl
 /tests/components/overkiz/ @imicknl
-/homeassistant/components/overseerr/ @joostlek
-/tests/components/overseerr/ @joostlek
+/homeassistant/components/overseerr/ @joostlek @AmGarera
+/tests/components/overseerr/ @joostlek @AmGarera
 /homeassistant/components/ovo_energy/ @timmo001
 /tests/components/ovo_energy/ @timmo001
 /homeassistant/components/p1_monitor/ @klaasnicolaas
@@ -1694,8 +1699,8 @@ build.json @home-assistant/supervisor
 /tests/components/trafikverket_train/ @gjohansson-ST
 /homeassistant/components/trafikverket_weatherstation/ @gjohansson-ST
 /tests/components/trafikverket_weatherstation/ @gjohansson-ST
-/homeassistant/components/transmission/ @engrbm87 @JPHutchins
-/tests/components/transmission/ @engrbm87 @JPHutchins
+/homeassistant/components/transmission/ @engrbm87 @JPHutchins @andrew-codechimp
+/tests/components/transmission/ @engrbm87 @JPHutchins @andrew-codechimp
 /homeassistant/components/trend/ @jpbede
 /tests/components/trend/ @jpbede
 /homeassistant/components/triggercmd/ @rvmey
@@ -1799,6 +1804,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/watergate/ @adam-the-hero
 /tests/components/watergate/ @adam-the-hero
 /homeassistant/components/watson_tts/ @rutkai
+/homeassistant/components/watts/ @theobld-ww @devender-verma-ww @ssi-spyro
+/tests/components/watts/ @theobld-ww @devender-verma-ww @ssi-spyro
 /homeassistant/components/watttime/ @bachya
 /tests/components/watttime/ @bachya
 /homeassistant/components/waze_travel_time/ @eifinger

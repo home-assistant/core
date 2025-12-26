@@ -11,7 +11,7 @@ from tuya_sharing import CustomerDevice
 from homeassistant.util.json import json_loads_object
 
 from .const import LOGGER, DPType
-from .util import parse_dptype, remap_value
+from .util import parse_dptype
 
 # Dictionary to track logged warnings to avoid spamming logs
 # Keyed by device ID
@@ -41,7 +41,7 @@ class TypeInformation[T]:
 
     _DPTYPE: ClassVar[DPType]
     dpcode: str
-    type_data: str | None = None
+    type_data: str
 
     def process_raw_value(
         self, raw_value: Any | None, device: CustomerDevice
@@ -200,21 +200,6 @@ class IntegerTypeInformation(TypeInformation[float]):
     step: int
     unit: str | None = None
 
-    @property
-    def max_scaled(self) -> float:
-        """Return the max scaled."""
-        return self.scale_value(self.max)
-
-    @property
-    def min_scaled(self) -> float:
-        """Return the min scaled."""
-        return self.scale_value(self.min)
-
-    @property
-    def step_scaled(self) -> float:
-        """Return the step scaled."""
-        return self.step / (10**self.scale)
-
     def scale_value(self, value: int) -> float:
         """Scale a value."""
         return value / (10**self.scale)
@@ -222,26 +207,6 @@ class IntegerTypeInformation(TypeInformation[float]):
     def scale_value_back(self, value: float) -> int:
         """Return raw value for scaled."""
         return round(value * (10**self.scale))
-
-    def remap_value_to(
-        self,
-        value: float,
-        to_min: float = 0,
-        to_max: float = 255,
-        reverse: bool = False,
-    ) -> float:
-        """Remap a value from this range to a new range."""
-        return remap_value(value, self.min, self.max, to_min, to_max, reverse)
-
-    def remap_value_from(
-        self,
-        value: float,
-        from_min: float = 0,
-        from_max: float = 255,
-        reverse: bool = False,
-    ) -> float:
-        """Remap a value from its current range to this range."""
-        return remap_value(value, from_min, from_max, self.min, self.max, reverse)
 
     def process_raw_value(
         self, raw_value: Any | None, device: CustomerDevice
