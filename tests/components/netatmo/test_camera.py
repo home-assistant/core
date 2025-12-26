@@ -53,8 +53,20 @@ async def test_entity(
         )
 
 
+@pytest.mark.parametrize(
+    ("camera_type", "camera_id", "camera_entity"),
+    [
+        ("NACamera", "12:34:56:00:f1:62", "camera.hall"),
+        ("NOC", "12:34:56:10:b9:0e", "camera.front"),
+    ],
+)
 async def test_setup_component_with_webhook(
-    hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    netatmo_auth: AsyncMock,
+    camera_type: str,
+    camera_id: str,
+    camera_entity: str,
 ) -> None:
     """Test setup with webhook."""
     with selected_platforms([Platform.CAMERA]):
@@ -65,104 +77,41 @@ async def test_setup_component_with_webhook(
     webhook_id = config_entry.data[CONF_WEBHOOK_ID]
     await hass.async_block_till_done()
 
-    camera_entity_indoor = "camera.hall"
-    camera_entity_outdoor = "camera.front"
-
-    # Test indoor camera events
-    assert hass.states.get(camera_entity_indoor).state == "streaming"
+    # Test on/off camera events
+    assert hass.states.get(camera_entity).state == "streaming"
     response = {
         "event_type": "off",
-        "device_id": "12:34:56:00:f1:62",
-        "camera_id": "12:34:56:00:f1:62",
+        "device_id": camera_id,
+        "camera_id": camera_id,
         "event_id": "601dce1560abca1ebad9b723",
-        "push_type": "NACamera-off",
+        "push_type": f"{camera_type}-off",
     }
     await simulate_webhook(hass, webhook_id, response)
 
-    assert hass.states.get(camera_entity_indoor).state == "idle"
+    assert hass.states.get(camera_entity).state == "idle"
 
     response = {
         "event_type": "on",
-        "device_id": "12:34:56:00:f1:62",
-        "camera_id": "12:34:56:00:f1:62",
+        "device_id": camera_id,
+        "camera_id": camera_id,
         "event_id": "646227f1dc0dfa000ec5f350",
-        "push_type": "NACamera-on",
+        "push_type": f"{camera_type}-on",
     }
     await simulate_webhook(hass, webhook_id, response)
 
-    assert hass.states.get(camera_entity_indoor).state == "streaming"
+    assert hass.states.get(camera_entity).state == "streaming"
 
-    # Test outdoor camera events
-    assert hass.states.get(camera_entity_outdoor).state == "streaming"
-    response = {
-        "event_type": "off",
-        "device_id": "12:34:56:10:b9:0e",
-        "camera_id": "12:34:56:10:b9:0e",
-        "event_id": "601dce1560abca1ebad9b723",
-        "push_type": "NOC-off",
-    }
-    await simulate_webhook(hass, webhook_id, response)
-
-    assert hass.states.get(camera_entity_outdoor).state == "idle"
-
-    response = {
-        "event_type": "on",
-        "device_id": "12:34:56:10:b9:0e",
-        "camera_id": "12:34:56:10:b9:0e",
-        "event_id": "646227f1dc0dfa000ec5f350",
-        "push_type": "NOC-on",
-    }
-    await simulate_webhook(hass, webhook_id, response)
-
-    assert hass.states.get(camera_entity_outdoor).state == "streaming"
-
-    response = {
-        "event_type": "light_mode",
-        "device_id": "12:34:56:10:b9:0e",
-        "camera_id": "12:34:56:10:b9:0e",
-        "event_id": "601dce1560abca1ebad9b723",
-        "push_type": "NOC-light_mode",
-        "sub_type": "on",
-    }
-    await simulate_webhook(hass, webhook_id, response)
-
-    assert hass.states.get(camera_entity_outdoor).state == "streaming"
-    assert hass.states.get(camera_entity_outdoor).attributes["light_state"] == "on"
-
-    response = {
-        "event_type": "light_mode",
-        "device_id": "12:34:56:10:b9:0e",
-        "camera_id": "12:34:56:10:b9:0e",
-        "event_id": "601dce1560abca1ebad9b723",
-        "push_type": "NOC-light_mode",
-        "sub_type": "auto",
-    }
-    await simulate_webhook(hass, webhook_id, response)
-
-    assert hass.states.get(camera_entity_outdoor).attributes["light_state"] == "auto"
-
-    response = {
-        "event_type": "light_mode",
-        "device_id": "12:34:56:10:b9:0e",
-        "camera_id": "12:34:56:10:b9:0e",
-        "event_id": "601dce1560abca1ebad9b723",
-        "push_type": "NOC-light_mode",
-    }
-    await simulate_webhook(hass, webhook_id, response)
-
-    assert hass.states.get(camera_entity_indoor).state == "streaming"
-    assert hass.states.get(camera_entity_outdoor).attributes["light_state"] == "auto"
-
+    # Test turn_on/turn_off services
     with patch("pyatmo.home.Home.async_set_state") as mock_set_state:
         await hass.services.async_call(
-            "camera", "turn_off", service_data={"entity_id": "camera.hall"}
+            "camera", "turn_off", service_data={"entity_id": camera_entity}
         )
         await hass.async_block_till_done()
         mock_set_state.assert_called_once_with(
             {
                 "modules": [
                     {
-                        "id": "12:34:56:00:f1:62",
+                        "id": camera_id,
                         "monitoring": "off",
                     }
                 ]
@@ -171,14 +120,14 @@ async def test_setup_component_with_webhook(
 
     with patch("pyatmo.home.Home.async_set_state") as mock_set_state:
         await hass.services.async_call(
-            "camera", "turn_on", service_data={"entity_id": "camera.hall"}
+            "camera", "turn_on", service_data={"entity_id": camera_entity}
         )
         await hass.async_block_till_done()
         mock_set_state.assert_called_once_with(
             {
                 "modules": [
                     {
-                        "id": "12:34:56:00:f1:62",
+                        "id": camera_id,
                         "monitoring": "on",
                     }
                 ]
@@ -362,6 +311,69 @@ async def test_service_set_persons_home(
         mock_set_persons_home.assert_called_once_with(
             person_ids=["91827374-7e04-5298-83ad-a0cb8372dff1"],
         )
+
+
+@pytest.mark.parametrize(
+    ("camera_type", "camera_id", "camera_entity"),
+    [
+        ("NOC", "12:34:56:10:b9:0e", "camera.front"),
+    ],
+)
+async def test_light_component_with_webhook(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    netatmo_auth: AsyncMock,
+    camera_type: str,
+    camera_id: str,
+    camera_entity: str,
+) -> None:
+    """Test setup with webhook."""
+    with selected_platforms([Platform.CAMERA]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
+    await hass.async_block_till_done()
+
+    assert hass.states.get(camera_entity).state == "streaming"
+
+    response = {
+        "event_type": "light_mode",
+        "device_id": camera_id,
+        "camera_id": camera_id,
+        "event_id": "601dce1560abca1ebad9b723",
+        "push_type": f"{camera_type}-light_mode",
+        "sub_type": "on",
+    }
+    await simulate_webhook(hass, webhook_id, response)
+
+    assert hass.states.get(camera_entity).state == "streaming"
+    assert hass.states.get(camera_entity).attributes["light_state"] == "on"
+
+    response = {
+        "event_type": "light_mode",
+        "device_id": camera_id,
+        "camera_id": camera_id,
+        "event_id": "601dce1560abca1ebad9b723",
+        "push_type": f"{camera_type}-light_mode",
+        "sub_type": "auto",
+    }
+    await simulate_webhook(hass, webhook_id, response)
+
+    assert hass.states.get(camera_entity).attributes["light_state"] == "auto"
+
+    response = {
+        "event_type": "light_mode",
+        "device_id": camera_id,
+        "camera_id": camera_id,
+        "event_id": "601dce1560abca1ebad9b723",
+        "push_type": f"{camera_type}-light_mode",
+    }
+    await simulate_webhook(hass, webhook_id, response)
+
+    assert hass.states.get(camera_entity).state == "streaming"
+    assert hass.states.get(camera_entity).attributes["light_state"] == "auto"
 
 
 async def test_service_set_camera_light(
