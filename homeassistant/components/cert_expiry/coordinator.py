@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 import logging
-import zoneinfo
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import DEFAULT_PORT
 from .errors import TemporaryFailure, ValidationFailure
@@ -69,11 +69,12 @@ class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[datetime | None]):
         except ValidationFailure as err:
             self.cert_error = err
             self.is_cert_valid = False
-            _LOGGER.error("Certificate validation error: %s [%s]", self.host, err)
+            self.is_cert_expired = False
+            _LOGGER.error("Certificate loading error: %s [%s]", self.host, err)
             return None
         timestamp: datetime = get_cert_expiry_timestamp(cert, self.host, self.port)
 
-        if timestamp < datetime.now(tz=zoneinfo.ZoneInfo("UTC")):
+        if timestamp < dt_util.utcnow():
             self.cert_error = ValidationFailure(f"Certificate expired at: {timestamp}")
             self.is_cert_expired = True
         else:
@@ -81,7 +82,14 @@ class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[datetime | None]):
             self.is_cert_expired = False
 
         if self.validate_cert_full:
-            self.is_cert_valid = verify_cert(cert)
+            try:
+                verify_cert(cert)
+                self.is_cert_valid = True
+                self.cert_error = None
+            except ValidationFailure as err:
+                self.is_cert_valid = False
+                self.cert_error = err
+                _LOGGER.error("Certificate validation error: %s [%s]", self.host, err)
         else:
             self.is_cert_valid = not self.is_cert_expired
 
