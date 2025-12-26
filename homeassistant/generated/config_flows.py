@@ -121,6 +121,7 @@ FLOWS = {
         "ccm15",
         "cert_expiry",
         "chacon_dio",
+        "cielo_home",
         "cloudflare",
         "co2signal",
         "coinbase",
