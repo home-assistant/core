@@ -196,6 +196,9 @@
     "invalid_inline_keyboard": {
       "message": "Invalid value for inline keyboard. Only strings or lists are accepted."
     },
+    "invalid_notify_entity": {
+      "message": "Invalid notify entity: {entity_id}"
+    },
     "missing_allowed_chat_ids": {
       "message": "No allowed chat IDs found. Please add allowed chat IDs for {bot_name}."
     },

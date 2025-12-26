@@ -610,10 +610,8 @@ def _build_targets(
         if not entity_entry:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="action_failed",
-                translation_placeholders={
-                    "error": f"Notify entity not found: {notify_entity_id}"
-                },
+                translation_key="invalid_notify_entity",
+                translation_placeholders={ATTR_ENTITY_ID: notify_entity_id},
             )
         assert entity_entry.config_entry_id is not None
         notify_config_entry = hass.config_entries.async_get_known_entry(

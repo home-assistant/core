@@ -1862,9 +1862,9 @@ async def test_notify_entity_not_found(
             return_response=True,
         )
 
-    assert err.value.translation_key == "action_failed"
+    assert err.value.translation_key == "invalid_notify_entity"
     assert err.value.translation_placeholders == {
-        "error": "Notify entity not found: notify.non_existent_entity"
+        ATTR_ENTITY_ID: "notify.non_existent_entity"
     }
 
 
