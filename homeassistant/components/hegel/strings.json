@@ -37,16 +37,9 @@
     }
   },
   "services": {
-    "send_command": {
-      "description": "Sends a raw command to the Hegel amplifier for advanced control.",
-      "fields": {
-        "command": {
-          "description": "Raw command to send to the amplifier (e.g., \"-p.1\" for power on, \"-v.50\" for volume 50%)",
-          "example": "-p.1",
-          "name": "Command"
-        }
-      },
-      "name": "Send Raw Command"
+    "refresh_state": {
+      "name": "Refresh state",
+      "description": "Refresh the current state from the Hegel amplifier (power, volume, mute, input). Use this to sync the amplifier state in Home Assistant."
     }
   }
 }

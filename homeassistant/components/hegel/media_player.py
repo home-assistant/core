@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 import contextlib
 from datetime import timedelta
 import logging
@@ -24,13 +25,14 @@ from homeassistant.components.media_player import (
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    async_get_current_platform,
+)
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import HegelConfigEntry
 from .const import CONF_MODEL, DOMAIN, HEARTBEAT_TIMEOUT_MINUTES, MODEL_INPUTS
-from .coordinator import HegelSlowPollCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,21 +59,13 @@ async def async_setup_entry(
     # Use the client from the config entry's runtime_data (already connected)
     client = entry.runtime_data
 
-    # initial shared state container (shared between coordinator & entity)
+    # initial state container
     state: dict[str, Any] = {
         "power": False,
         "volume": 0.0,
         "mute": False,
         "input": None,
     }
-
-    # Coordinator for slow background poll fallback
-    coordinator = HegelSlowPollCoordinator(hass, client, state)
-    # Fetch initial data (coordinator will attempt to connect and fetch)
-    try:
-        await coordinator.async_config_entry_first_refresh()
-    except (HegelConnectionError, TimeoutError, OSError) as exc:
-        _LOGGER.debug("Initial coordinator refresh failed: %s", exc)
 
     # Create entity
     media = HegelMediaPlayer(
@@ -82,14 +76,20 @@ async def async_setup_entry(
         state,
         mac,
         unique_id,
-        coordinator,
     )
 
     async_add_entities([media])
 
+    platform = async_get_current_platform()
+    platform.async_register_entity_service(
+        "refresh_state",
+        {},
+        "async_refresh_state",
+    )
 
-class HegelMediaPlayer(CoordinatorEntity[HegelSlowPollCoordinator], MediaPlayerEntity):
-    """Hegel amplifier entity using CoordinatorEntity for convenience."""
+
+class HegelMediaPlayer(MediaPlayerEntity):
+    """Hegel amplifier entity."""
 
     _attr_should_poll = False
 
@@ -102,12 +102,8 @@ class HegelMediaPlayer(CoordinatorEntity[HegelSlowPollCoordinator], MediaPlayerE
         state: dict[str, Any],
         mac: str | None,
         unique_id: str | None,
-        coordinator: HegelSlowPollCoordinator,
     ) -> None:
         """Initialize the Hegel media player entity."""
-        CoordinatorEntity.__init__(self, coordinator)
-        MediaPlayerEntity.__init__(self)
-
         self._entry = config_entry
         self._attr_name = name
         self._client = client
@@ -133,22 +129,31 @@ class HegelMediaPlayer(CoordinatorEntity[HegelSlowPollCoordinator], MediaPlayerE
         # Background tasks
         self._connected_watcher_task: asyncio.Task[None] | None = None
         self._push_task: asyncio.Task[None] | None = None
-
-        # register push handler (schedule coroutine)
-        # the client expects a synchronous callable; schedule a coroutine safely
-        def push_handler(msg: str) -> None:
-            self._push_task = asyncio.create_task(self._async_handle_push(msg))
-
-        self._client.add_push_callback(push_handler)
-
-        # start a watcher task to refresh state on reconnect
-        self._connected_watcher_task = asyncio.create_task(self._connected_watcher())
+        self._push_handler: Callable[[str], None] | None = None
 
     async def async_added_to_hass(self) -> None:
         """Handle entity added to Home Assistant."""
-        # 1. Call parent (important for CoordinatorEntity)
         await super().async_added_to_hass()
-        # 2. Schedule the heartbeat every 2 minutes while the reset timeout is 3 minutes
+
+        # Register push handler for real-time updates from the amplifier
+        # The client expects a synchronous callable; schedule a coroutine safely
+        def push_handler(msg: str) -> None:
+            self._push_task = self.hass.async_create_task(self._async_handle_push(msg))
+
+        self._push_handler = push_handler
+        self._client.add_push_callback(push_handler)
+
+        # Start a watcher task to refresh state on reconnect
+        # Use config_entry.async_create_background_task for automatic cleanup on unload
+        self._connected_watcher_task = self._entry.async_create_background_task(
+            self.hass,
+            self._connected_watcher(),
+            name=f"hegel_{self.entity_id}_connected_watcher",
+        )
+        # Note: No need for async_on_remove - entry.async_create_background_task
+        # automatically cancels the task when the config entry is unloaded
+
+        # Schedule the heartbeat every 2 minutes while the reset timeout is 3 minutes
         self.async_on_remove(
             async_track_time_interval(
                 self.hass,
@@ -156,7 +161,7 @@ class HegelMediaPlayer(CoordinatorEntity[HegelSlowPollCoordinator], MediaPlayerE
                 timedelta(minutes=HEARTBEAT_TIMEOUT_MINUTES - 1),
             )
         )
-        # 3. Send the first heartbeat immediately
+        # Send the first heartbeat immediately
         self.hass.async_create_task(self._send_heartbeat())
 
     async def _send_heartbeat(self, now=None) -> None:
@@ -225,7 +230,7 @@ class HegelMediaPlayer(CoordinatorEntity[HegelSlowPollCoordinator], MediaPlayerE
                 self.async_write_ha_state()
                 # do an immediate refresh (best-effort)
                 try:
-                    await self._refresh_state()
+                    await self.async_refresh_state(source="reconnect")
                 except (HegelConnectionError, TimeoutError, OSError) as e:
                     _LOGGER.debug("Reconnect refresh failed: %s", e)
 
@@ -242,29 +247,24 @@ class HegelMediaPlayer(CoordinatorEntity[HegelSlowPollCoordinator], MediaPlayerE
         except (HegelConnectionError, OSError):
             _LOGGER.exception("Connected watcher failed")
 
-    async def _refresh_state(self) -> None:
+    async def async_refresh_state(self, source: str = "service") -> None:
         """Query the amplifier for the main values and update state dict."""
-        try:
-            for cmd in (
-                COMMANDS["power_query"],
-                COMMANDS["volume_query"],
-                COMMANDS["mute_query"],
-                COMMANDS["input_query"],
-            ):
-                try:
-                    update = await self._client.send(
-                        cmd, expect_reply=True, timeout=3.0
+        for cmd in (
+            COMMANDS["power_query"],
+            COMMANDS["volume_query"],
+            COMMANDS["mute_query"],
+            COMMANDS["input_query"],
+        ):
+            try:
+                update = await self._client.send(cmd, expect_reply=True, timeout=3.0)
+                if update and update.has_changes():
+                    apply_state_changes(
+                        self._state, update, logger=_LOGGER, source=source
                     )
-                    if update and update.has_changes():
-                        apply_state_changes(
-                            self._state, update, logger=_LOGGER, source="reconnect"
-                        )
-                except (HegelConnectionError, TimeoutError, OSError) as err:
-                    _LOGGER.debug("Refresh command %s failed: %s", cmd, err)
-            # update entity state
-            self.async_write_ha_state()
-        except (HegelConnectionError, TimeoutError, OSError) as err:
-            _LOGGER.debug("Failed to refresh Hegel state: %s", err)
+            except (HegelConnectionError, TimeoutError, OSError) as err:
+                _LOGGER.debug("Refresh command %s failed: %s", cmd, err)
+        # update entity state
+        self.async_write_ha_state()
 
     @property
     def available(self) -> bool:
@@ -363,10 +363,21 @@ class HegelMediaPlayer(CoordinatorEntity[HegelSlowPollCoordinator], MediaPlayerE
                 _LOGGER.warning("Failed to select source %s: %s", source, err)
 
     async def async_will_remove_from_hass(self) -> None:
-        """Handle entity removal from Home Assistant."""
-        # Cancel background watcher and stop client
-        if self._connected_watcher_task:
-            self._connected_watcher_task.cancel()
-            with contextlib.suppress(asyncio.CancelledError):
-                await self._connected_watcher_task
+        """Handle entity removal from Home Assistant.
 
+        Removes the push callback from the client and cancels the push task.
+        Note: _connected_watcher_task cleanup is handled automatically by
+        entry.async_create_background_task when the config entry is unloaded.
+        """
+        if self._push_handler and hasattr(self._client, "remove_push_callback"):
+            try:
+                self._client.remove_push_callback(self._push_handler)
+            except (AttributeError, ValueError):
+                _LOGGER.debug("Could not remove push callback from client")
+        self._push_handler = None
+
+        # Cancel push task if running (short-lived task, defensive cleanup)
+        if self._push_task and not self._push_task.done():
+            self._push_task.cancel()
+            with contextlib.suppress(asyncio.CancelledError):
+                await self._push_task

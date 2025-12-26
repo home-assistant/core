@@ -1,10 +1,5 @@
-send_command:
+refresh_state:
   target:
     entity:
       integration: hegel
       domain: media_player
-  fields:
-    command:
-      required: true
-      selector:
-        text:
