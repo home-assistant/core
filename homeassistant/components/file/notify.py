@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import os
-from typing import Any, TextIO
+from typing import Any, Literal, TextIO
 
 from homeassistant.components.notify import (
     ATTR_TITLE_DEFAULT,
@@ -17,7 +17,7 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_TIMESTAMP, DEFAULT_NAME, DOMAIN, FILE_ICON
+from .const import CONF_OVERWRITE, CONF_TIMESTAMP, DEFAULT_NAME, DOMAIN, FILE_ICON
 
 
 async def async_setup_entry(
@@ -40,6 +40,7 @@ class FileNotifyEntity(NotifyEntity):
         """Initialize the service."""
         self._file_path: str = config[CONF_FILE_PATH]
         self._add_timestamp: bool = config.get(CONF_TIMESTAMP, False)
+        self._overwrite: bool = config.get(CONF_OVERWRITE, False)
         # Only import a name from an imported entity
         self._attr_name = config.get(CONF_NAME, DEFAULT_NAME)
         self._attr_unique_id = unique_id
@@ -47,10 +48,14 @@ class FileNotifyEntity(NotifyEntity):
     def send_message(self, message: str, title: str | None = None) -> None:
         """Send a message to a file."""
         file: TextIO
+        file_mode: Literal["a", "w"] = "w" if self._overwrite else "a"
         filepath = self._file_path
         try:
-            with open(filepath, "a", encoding="utf8") as file:
-                if os.stat(filepath).st_size == 0:
+            file_was_empty = (
+                not os.path.exists(filepath) or os.path.getsize(filepath) == 0
+            )
+            with open(filepath, file_mode, encoding="utf8") as file:
+                if file_was_empty:
                     title = (
                         f"{title or ATTR_TITLE_DEFAULT} notifications (Log"
                         f" started: {dt_util.utcnow().isoformat()})\n{'-' * 80}\n"

@@ -17,7 +17,7 @@ MOCK_CONFIG_NOTIFY = {
     "platform": "notify",
     "file_path": "some_file",
 }
-MOCK_OPTIONS_NOTIFY = {"timestamp": True}
+MOCK_OPTIONS_NOTIFY = {"timestamp": True, "overwrite": True}
 MOCK_CONFIG_SENSOR = {
     "platform": "sensor",
     "file_path": "some/path",
@@ -166,7 +166,12 @@ async def test_not_allowed(
             MOCK_OPTIONS_SENSOR,
             {CONF_UNIT_OF_MEASUREMENT: "mm"},
         ),
-        ("notify", MOCK_CONFIG_NOTIFY, MOCK_OPTIONS_NOTIFY, {"timestamp": False}),
+        (
+            "notify",
+            MOCK_CONFIG_NOTIFY,
+            MOCK_OPTIONS_NOTIFY,
+            {"timestamp": False, "overwrite": False},
+        ),
     ],
 )
 async def test_options_flow(
