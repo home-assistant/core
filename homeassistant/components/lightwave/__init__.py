@@ -22,6 +22,7 @@ CONF_PROXY_IP = "proxy_ip"
 CONF_PROXY_PORT = "proxy_port"
 CONF_TRV = "trv"
 CONF_TRVS = "trvs"
+CONF_UNIQUE_ID = "unique_id"
 DEFAULT_PROXY_PORT = 7878
 DOMAIN = "lightwave"
 LIGHTWAVE_LINK = f"{DOMAIN}_link"
@@ -39,10 +40,20 @@ CONFIG_SCHEMA = vol.Schema(
                 {
                     vol.Required(CONF_HOST): cv.string,
                     vol.Optional(CONF_LIGHTS, default={}): {
-                        cv.string: vol.Schema({vol.Required(CONF_NAME): cv.string})
+                        cv.string: vol.Schema(
+                            {
+                                vol.Required(CONF_NAME): cv.string,
+                                vol.Optional(CONF_UNIQUE_ID): cv.string,
+                            }
+                        )
                     },
                     vol.Optional(CONF_SWITCHES, default={}): {
-                        cv.string: vol.Schema({vol.Required(CONF_NAME): cv.string})
+                        cv.string: vol.Schema(
+                            {
+                                vol.Required(CONF_NAME): cv.string,
+                                vol.Optional(CONF_UNIQUE_ID): cv.string,
+                            }
+                        )
                     },
                     vol.Optional(CONF_TRV, default={}): {
                         vol.Optional(
