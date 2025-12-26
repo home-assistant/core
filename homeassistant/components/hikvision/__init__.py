@@ -75,7 +75,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) ->
 
         def fetch_and_inject_nvr_events() -> None:
             """Fetch and inject NVR events in a single executor job."""
-            if nvr_events := camera.get_event_triggers(None):
+            if nvr_events := camera.get_event_triggers():
                 camera.inject_events(nvr_events)
 
         await hass.async_add_executor_job(fetch_and_inject_nvr_events)
