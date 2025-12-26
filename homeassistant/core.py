@@ -19,7 +19,7 @@ from collections.abc import (
     ValuesView,
 )
 import concurrent.futures
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 import datetime
 import enum
 import functools
@@ -2412,19 +2412,6 @@ class SupportsResponse(enum.StrEnum):
     """The service is read-only and the caller must always ask for response data."""
 
 
-@dataclass(slots=True)
-class ConfigEntryServiceOverride:
-    """Per-ConfigEntry service override that can handle multiple entities.
-
-    The `entities` set accumulates all entities targeted during a service call,
-    allowing the callback to process them in a single invocation instead of
-    individual entity calls.
-    """
-
-    handler: ConfigEntryServiceCallback
-    entities: set[Entity] = field(default_factory=set)
-
-
 class Service:
     """Representation of a callable service."""
 
@@ -2460,7 +2447,7 @@ class Service:
         self.schema = schema
         self.supports_response = supports_response
         self.description_placeholders = description_placeholders
-        self.overrides: dict[ConfigEntry, ConfigEntryServiceOverride] = {}
+        self.overrides: dict[ConfigEntry, ConfigEntryServiceCallback] = {}
 
     @callback
     def async_register_config_entry_override(
@@ -2472,12 +2459,9 @@ class Service:
 
         The override handler will receive a ConfigEntry, a set of entities
         and a ServiceCall object.
-        Entities will be accumulated for multi-entity execution.
+        The handler is responsible for consuming the entities it processes.
         """
-        override = self.overrides.setdefault(
-            config_entry, ConfigEntryServiceOverride(handler)
-        )
-        override.handler = handler
+        self.overrides.setdefault(config_entry, handler)
 
 
 class ServiceCall:
