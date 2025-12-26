@@ -3,10 +3,17 @@
 from datetime import timedelta
 import logging
 
-from fressnapftracker import ApiClient, Device, FressnapfTrackerError, Tracker
+from fressnapftracker import (
+    ApiClient,
+    Device,
+    FressnapfTrackerError,
+    FressnapfTrackerInvalidDeviceTokenError,
+    Tracker,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -46,5 +53,10 @@ class FressnapfTrackerDataUpdateCoordinator(DataUpdateCoordinator[Tracker]):
     async def _async_update_data(self) -> Tracker:
         try:
             return await self.client.get_tracker()
+        except FressnapfTrackerInvalidDeviceTokenError as exception:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+            ) from exception
         except FressnapfTrackerError as exception:
             raise UpdateFailed(exception) from exception

@@ -1,5 +1,6 @@
 """Test the Fressnapf Tracker config flow."""
 
+from collections.abc import Callable
 from unittest.mock import AsyncMock, MagicMock
 
 from fressnapftracker import (
@@ -198,21 +199,41 @@ async def test_user_flow_duplicate_phone_number(
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.usefixtures("mock_api_client")
-@pytest.mark.usefixtures("mock_auth_client")
-async def test_reconfigure_flow(
+@pytest.mark.parametrize(
+    ("flow_starter", "expected_step_id", "expected_sms_step_id", "expected_reason"),
+    [
+        (
+            lambda entry, hass: entry.start_reauth_flow(hass),
+            "reauth_confirm",
+            "reauth_sms_code",
+            "reauth_successful",
+        ),
+        (
+            lambda entry, hass: entry.start_reconfigure_flow(hass),
+            "reconfigure",
+            "reconfigure_sms_code",
+            "reconfigure_successful",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_api_client", "mock_auth_client")
+async def test_reauth_reconfigure_flow(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    flow_starter: Callable,
+    expected_step_id: str,
+    expected_sms_step_id: str,
+    expected_reason: str,
 ) -> None:
-    """Test the reconfigure flow."""
+    """Test the reauth and reconfigure flows."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await flow_starter(mock_config_entry, hass)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == expected_step_id
 
     # Submit phone number
     result = await hass.config_entries.flow.async_configure(
@@ -220,7 +241,7 @@ async def test_reconfigure_flow(
         {CONF_PHONE_NUMBER: MOCK_PHONE_NUMBER},
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_sms_code"
+    assert result["step_id"] == expected_sms_step_id
 
     # Submit SMS code
     result = await hass.config_entries.flow.async_configure(
@@ -229,21 +250,42 @@ async def test_reconfigure_flow(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
+    assert result["reason"] == expected_reason
 
 
+@pytest.mark.parametrize(
+    ("flow_starter", "expected_step_id", "expected_sms_step_id", "expected_reason"),
+    [
+        (
+            lambda entry, hass: entry.start_reauth_flow(hass),
+            "reauth_confirm",
+            "reauth_sms_code",
+            "reauth_successful",
+        ),
+        (
+            lambda entry, hass: entry.start_reconfigure_flow(hass),
+            "reconfigure",
+            "reconfigure_sms_code",
+            "reconfigure_successful",
+        ),
+    ],
+)
 @pytest.mark.usefixtures("mock_api_client")
-async def test_reconfigure_flow_invalid_phone_number(
+async def test_reauth_reconfigure_flow_invalid_phone_number(
     hass: HomeAssistant,
     mock_auth_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    flow_starter: Callable,
+    expected_step_id: str,
+    expected_sms_step_id: str,
+    expected_reason: str,
 ) -> None:
-    """Test reconfigure flow with invalid phone number."""
+    """Test reauth and reconfigure flows with invalid phone number."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await flow_starter(mock_config_entry, hass)
 
     mock_auth_client.request_sms_code.side_effect = (
         FressnapfTrackerInvalidPhoneNumberError
@@ -255,7 +297,7 @@ async def test_reconfigure_flow_invalid_phone_number(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == expected_step_id
     assert result["errors"] == {"base": "invalid_phone_number"}
 
     # Recover from error
@@ -265,7 +307,7 @@ async def test_reconfigure_flow_invalid_phone_number(
         {CONF_PHONE_NUMBER: MOCK_PHONE_NUMBER},
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_sms_code"
+    assert result["step_id"] == expected_sms_step_id
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -273,21 +315,39 @@ async def test_reconfigure_flow_invalid_phone_number(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
+    assert result["reason"] == expected_reason
 
 
+@pytest.mark.parametrize(
+    ("flow_starter", "expected_sms_step_id", "expected_reason"),
+    [
+        (
+            lambda entry, hass: entry.start_reauth_flow(hass),
+            "reauth_sms_code",
+            "reauth_successful",
+        ),
+        (
+            lambda entry, hass: entry.start_reconfigure_flow(hass),
+            "reconfigure_sms_code",
+            "reconfigure_successful",
+        ),
+    ],
+)
 @pytest.mark.usefixtures("mock_api_client")
-async def test_reconfigure_flow_invalid_sms_code(
+async def test_reauth_reconfigure_flow_invalid_sms_code(
     hass: HomeAssistant,
     mock_auth_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    flow_starter: Callable,
+    expected_sms_step_id: str,
+    expected_reason: str,
 ) -> None:
-    """Test reconfigure flow with invalid SMS code."""
+    """Test reauth and reconfigure flows with invalid SMS code."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await flow_starter(mock_config_entry, hass)
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -302,7 +362,7 @@ async def test_reconfigure_flow_invalid_sms_code(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_sms_code"
+    assert result["step_id"] == expected_sms_step_id
     assert result["errors"] == {"base": "invalid_sms_code"}
 
     # Recover from error
@@ -313,21 +373,42 @@ async def test_reconfigure_flow_invalid_sms_code(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
+    assert result["reason"] == expected_reason
 
 
+@pytest.mark.parametrize(
+    ("flow_starter", "expected_step_id", "expected_sms_step_id", "expected_reason"),
+    [
+        (
+            lambda entry, hass: entry.start_reauth_flow(hass),
+            "reauth_confirm",
+            "reauth_sms_code",
+            "reauth_successful",
+        ),
+        (
+            lambda entry, hass: entry.start_reconfigure_flow(hass),
+            "reconfigure",
+            "reconfigure_sms_code",
+            "reconfigure_successful",
+        ),
+    ],
+)
 @pytest.mark.usefixtures("mock_api_client")
-async def test_reconfigure_flow_invalid_user_id(
+async def test_reauth_reconfigure_flow_invalid_user_id(
     hass: HomeAssistant,
     mock_auth_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    flow_starter: Callable,
+    expected_step_id: str,
+    expected_sms_step_id: str,
+    expected_reason: str,
 ) -> None:
-    """Test reconfigure flow does not allow to reconfigure to another account."""
+    """Test reauth and reconfigure flows do not allow changing to another account."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await flow_starter(mock_config_entry, hass)
 
     mock_auth_client.request_sms_code = AsyncMock(
         return_value=SmsCodeResponse(id=MOCK_USER_ID + 1)
@@ -339,7 +420,7 @@ async def test_reconfigure_flow_invalid_user_id(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure"
+    assert result["step_id"] == expected_step_id
     assert result["errors"] == {"base": "account_change_not_allowed"}
 
     # Recover from error
@@ -351,7 +432,7 @@ async def test_reconfigure_flow_invalid_user_id(
         {CONF_PHONE_NUMBER: MOCK_PHONE_NUMBER},
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reconfigure_sms_code"
+    assert result["step_id"] == expected_sms_step_id
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -359,4 +440,4 @@ async def test_reconfigure_flow_invalid_user_id(
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reconfigure_successful"
+    assert result["reason"] == expected_reason
