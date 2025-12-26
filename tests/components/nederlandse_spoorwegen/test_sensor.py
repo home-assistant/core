@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
+from ns_api import NoDataReceivedError
 import pytest
 from requests.exceptions import ConnectionError as RequestsConnectionError
 from syrupy.assertion import SnapshotAssertion
@@ -146,6 +147,53 @@ async def test_sensor_with_api_connection_error(
     # Sensors should not be created at all if initial API call fails
     sensor_states = hass.states.async_all("sensor")
     assert len(sensor_states) == 0
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensor_with_api_no_data_received_error(
+    hass: HomeAssistant,
+    mock_nsapi: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test sensor behavior when API returns no data."""
+    # Make API calls fail from the start
+    mock_nsapi.get_trips.side_effect = NoDataReceivedError("Connection failed")
+
+    await setup_integration(hass, mock_config_entry)
+    await hass.async_block_till_done()
+
+    # Sensors should be created but have unknown state when API fails
+    for entity_entry in er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    ):
+        state = hass.states.get(entity_entry.entity_id)
+        assert state is not None
+        assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.freeze_time("2025-09-15 14:30:00+00:00")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensor_with_invalid_status(
+    hass: HomeAssistant,
+    mock_single_trip_nsapi: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test sensor behavior with invalid status."""
+    # Modify the trip to have an invalid status
+    trips = mock_single_trip_nsapi.get_trips.return_value
+    if trips:
+        trips[0].status = "invalid_status"  # Set invalid status
+
+    await setup_integration(hass, mock_config_entry)
+
+    # Check that the status sensor has None state for invalid status
+    status_entity_id = "sensor.to_work_status"
+    status_state = hass.states.get(status_entity_id)
+    assert status_state is not None
+    assert (
+        status_state.state == "unknown"
+    )  # Since _get_enum_value returns None for invalid status
 
 
 @pytest.mark.parametrize(
