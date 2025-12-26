@@ -174,7 +174,7 @@ async def test_media_player_unjoin_timeout(
         patch(
             "homeassistant.components.sonos.speaker.asyncio.timeout", instant_timeout
         ),
-        pytest.raises(HomeAssistantError, match=expected),
+        pytest.raises(HomeAssistantError, match=re.escape(expected)),
     ):
         await hass.services.async_call(
             MP_DOMAIN,
