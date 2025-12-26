@@ -193,6 +193,27 @@ class MatterLock(MatterEntity, LockEntity):
             timed_request_timeout_ms=1000,
         )
 
+    async def async_set_usercode(self, code_slot: int, usercode: str) -> None:
+        """Set a usercode on the lock."""
+        await self.send_device_command(
+            command=clusters.DoorLock.Commands.SetPinCode(
+                userIndex=code_slot - 1,  # Matter user indexes are 0-based
+                userStatus=clusters.DoorLock.Enums.UserStatusEnum.kEnabled,
+                userType=clusters.DoorLock.Enums.UserTypeEnum.kUnrestricted,
+                pin=usercode.encode(),
+            ),
+            timed_request_timeout_ms=1000,
+        )
+
+    async def async_clear_usercode(self, code_slot: int) -> None:
+        """Clear a usercode on the lock."""
+        await self.send_device_command(
+            command=clusters.DoorLock.Commands.ClearPinCode(
+                userIndex=code_slot - 1  # Matter user indexes are 0-based
+            ),
+            timed_request_timeout_ms=1000,
+        )
+
     @callback
     def _update_from_device(self) -> None:
         """Update the entity from the device."""
