@@ -2,7 +2,7 @@
 
 from collections.abc import Generator
 from copy import deepcopy
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -32,11 +32,22 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
+def mock_client(mock_satel):
+    """Override the satel client."""
+    client = MagicMock()
+    client.zones_update_callback = None
+    client.outputs_update_callback = None
+    client.partitions_update_callback = None
+
+    return client
+
+
+@pytest.fixture
 def mock_satel() -> Generator[AsyncMock]:
     """Override the satel test."""
     with (
         patch(
-            "homeassistant.components.satel_integra.AsyncSatel",
+            "homeassistant.components.satel_integra.common.AsyncSatel",
             autospec=True,
         ) as mock_client,
         patch(
