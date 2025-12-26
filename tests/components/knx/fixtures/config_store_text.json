@@ -1,0 +1,29 @@
+{
+  "version": 2,
+  "minor_version": 2,
+  "key": "knx/config_store.json",
+  "data": {
+    "entities": {
+      "text": {
+        "knx_es_01KCXYT0WEJEQQ13SGCY1NHCYV": {
+          "entity": {
+            "name": "test",
+            "device_info": null,
+            "entity_category": null
+          },
+          "knx": {
+            "ga_text": {
+              "write": "1/1/1",
+              "dpt": "16.001",
+              "state": "2/2/2",
+              "passive": []
+            },
+            "respond_to_read": false,
+            "sync_state": true,
+            "mode": "text"
+          }
+        }
+      }
+    }
+  }
+}

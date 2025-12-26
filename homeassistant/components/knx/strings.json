@@ -837,6 +837,23 @@
             }
           }
         },
+        "text": {
+          "description": "The KNX text platform is used as an interface to text objects.",
+          "knx": {
+            "ga_text": {
+              "description": "The group address of the text object.",
+              "label": "Text"
+            },
+            "mode": {
+              "description": "Select how the entity is displayed in Home Assistant.",
+              "label": "[%common::config_flow::data::mode%]",
+              "options": {
+                "password": "[%common::config_flow::data::password%]",
+                "text": "[%key:component::text::entity_component::_::state_attributes::mode::state::text%]"
+              }
+            }
+          }
+        },
         "time": {
           "description": "The KNX time platform is used as an interface to time objects.",
           "knx": {
