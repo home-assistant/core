@@ -2,66 +2,84 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import timedelta
-import logging
-
-import pyiss
-import requests
-from requests.exceptions import HTTPError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import (
+    CONF_PEOPLE_UPDATE_HOURS,
+    CONF_POSITION_UPDATE_SECONDS,
+    DEFAULT_PEOPLE_UPDATE_HOURS,
+    DEFAULT_POSITION_UPDATE_SECONDS,
+    DOMAIN,
+)
+from .coordinator.people import IssPeopleCoordinator
+from .coordinator.position import IssPositionCoordinator
+from .coordinator.tle import IssTleCoordinator
 
 PLATFORMS = [Platform.SENSOR]
-
-
-@dataclass
-class IssData:
-    """Dataclass representation of data returned from pyiss."""
-
-    number_of_people_in_space: int
-    current_location: dict[str, str]
-
-
-def update(iss: pyiss.ISS) -> IssData:
-    """Retrieve data from the pyiss API."""
-    return IssData(
-        number_of_people_in_space=iss.number_of_people_in_space(),
-        current_location=iss.current_location(),
-    )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up this integration using UI."""
     hass.data.setdefault(DOMAIN, {})
 
-    iss = pyiss.ISS()
-
-    async def async_update() -> IssData:
-        try:
-            return await hass.async_add_executor_job(update, iss)
-        except (HTTPError, requests.exceptions.ConnectionError) as ex:
-            raise UpdateFailed("Unable to retrieve data") from ex
-
-    coordinator = DataUpdateCoordinator(
+    #
+    # TLE Coordinator - Fetches orbital data infrequently
+    #
+    tle_coordinator = IssTleCoordinator(
         hass,
-        _LOGGER,
         config_entry=entry,
-        name=DOMAIN,
-        update_method=async_update,
-        update_interval=timedelta(seconds=60),
+        # TLE updates are hardcoded to daily - no need for user configuration
+        update_interval=timedelta(hours=24),
     )
 
-    await coordinator.async_config_entry_first_refresh()
+    # First refresh
+    await tle_coordinator.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN] = coordinator
+    # Add a dummy listener to keep the coordinator alive for periodic updates
+    tle_coordinator.async_add_listener(lambda: None)
+
+    #
+    # Position Coordinator - Calculates position from TLE data
+    #
+    position_update_seconds = entry.options.get(
+        CONF_POSITION_UPDATE_SECONDS, DEFAULT_POSITION_UPDATE_SECONDS
+    )
+    position_coordinator = IssPositionCoordinator(
+        hass,
+        config_entry=entry,
+        tle_coordinator=tle_coordinator,
+        update_interval=timedelta(seconds=position_update_seconds),
+    )
+
+    await position_coordinator.async_config_entry_first_refresh()
+
+    #
+    # People-in-Space Coordinator - Fetches from open-notify API
+    #
+    people_coordinator = IssPeopleCoordinator(
+        hass,
+        config_entry=entry,
+        update_interval=timedelta(
+            hours=entry.options.get(
+                CONF_PEOPLE_UPDATE_HOURS, DEFAULT_PEOPLE_UPDATE_HOURS
+            )
+        ),
+    )
+
+    await people_coordinator.async_config_entry_first_refresh()
+
+    #
+    # Store all coordinators
+    #
+    hass.data[DOMAIN][entry.entry_id] = {
+        "tle_coordinator": tle_coordinator,
+        "position_coordinator": position_coordinator,
+        "people_coordinator": people_coordinator,
+    }
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
@@ -73,7 +91,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Handle removal of an entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        del hass.data[DOMAIN]
+        if DOMAIN in hass.data:
+            hass.data[DOMAIN].pop(entry.entry_id, None)
+            if not hass.data[DOMAIN]:
+                del hass.data[DOMAIN]
     return unload_ok
 
 

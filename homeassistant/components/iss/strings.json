@@ -9,11 +9,39 @@
       }
     }
   },
+  "entity": {
+    "sensor": {
+      "location": {
+        "name": "Location"
+      },
+      "people_on_board": {
+        "name": "On Board"
+      }
+    }
+  },
   "options": {
+    "error": {
+      "invalid_tle_data": "URL does not contain valid ISS TLE data",
+      "invalid_tle_source": "Invalid TLE source selected",
+      "invalid_url": "Please enter a valid URL",
+      "min_people_update_hours": "Value must be at least 1 hour",
+      "min_position_update_seconds": "Value must be at least 1 second",
+      "no_tle_sources": "At least one TLE source must be selected"
+    },
     "step": {
       "init": {
         "data": {
-          "show_on_map": "Show on map"
+          "people_update_hours": "People count update frequency",
+          "people_url": "People in space URL",
+          "position_update_seconds": "Position update frequency",
+          "show_on_map": "Show on map",
+          "tle_sources": "TLE data sources"
+        },
+        "data_description": {
+          "people_update_hours": "How often (in hours) to refresh the people-in-space data. Minimum 1 hour",
+          "people_url": "The URL used to fetch the current number of people in space",
+          "position_update_seconds": "How often (in seconds) to calculate the ISS position. Minimum 1 second",
+          "tle_sources": "Select which TLE data sources to use for orbital calculations"
         }
       }
     }
