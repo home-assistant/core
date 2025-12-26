@@ -15,7 +15,8 @@
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "name": "The name of the certificate",
-          "port": "[%key:common::config_flow::data::port%]"
+          "port": "[%key:common::config_flow::data::port%]",
+          "validate_cert_full": "Fully validate certificate (using system CAs)"
         },
         "title": "Define the certificate to test"
       }

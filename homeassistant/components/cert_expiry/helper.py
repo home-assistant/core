@@ -4,9 +4,18 @@ import datetime
 import logging
 import socket
 import ssl
-import zoneinfo
 
-import OpenSSL.crypto
+import certifi.core
+import cryptography.x509
+from cryptography.x509 import Certificate
+from OpenSSL.crypto import (
+    FILETYPE_ASN1,
+    X509,
+    X509Store,
+    X509StoreContext,
+    X509StoreContextError,
+    load_certificate,
+)
 
 from homeassistant.core import HomeAssistant
 from homeassistant.util.ssl import get_default_context
@@ -23,10 +32,46 @@ from .errors import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_cert(
-    host: str,
+def verify_cert(cert: Certificate) -> bool:
+    """Verifies the certificate against the system store."""
+    ssl_context = get_default_context()
+    ssl_context.check_hostname = False
+    ssl_context.verify_mode = ssl.CERT_REQUIRED
+    ssl_context.verify_flags = ssl_context.verify_flags | ssl.VERIFY_CRL_CHECK_CHAIN
+
+    trusted_store = X509Store()
+
+    system_certs_count = 0
+    for sys_cert_der in ssl_context.get_ca_certs(binary_form=True):
+        try:
+            # Load the system cert into pyOpenSSL format
+            ca_cert = load_certificate(FILETYPE_ASN1, sys_cert_der)
+            trusted_store.add_cert(ca_cert)
+            system_certs_count += 1
+        except Exception:  # noqa: BLE001
+            # Skip invalid system certificate
+            continue
+
+    # fallback: If certificates can't be found using SSLContext, use certifi
+    if system_certs_count == 0:
+        _LOGGER.warning("System store returned 0 certs. Falling back to certifi.")
+        trusted_store.load_locations(certifi.where())
+
+    cert = X509.from_cryptography(cert)
+
+    verify_context = X509StoreContext(trusted_store, cert)
+    try:
+        verify_context.verify_certificate()
+    except X509StoreContextError:
+        return False
+
+    return True
+
+
+def _get_cert_sync(
+    hostname: str,
     port: int,
-) -> OpenSSL.crypto.X509 | None:
+) -> Certificate:
     """Get the certificate for the host and port combination."""
 
     context = get_default_context()
@@ -34,25 +79,16 @@ def get_cert(
     context.verify_mode = ssl.CERT_NONE
     context.verify_flags = context.verify_flags | ssl.VERIFY_CRL_CHECK_CHAIN
 
-    conn = socket.create_connection((host, port), timeout=TIMEOUT)
-    sock = context.wrap_socket(conn, server_hostname=host)
     try:
-        der_cert = sock.getpeercert(True)
-    finally:
-        sock.close()
-    if der_cert is None:
-        return None
-    return OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_ASN1, der_cert)
-
-
-async def get_cert_expiry_timestamp(
-    hass: HomeAssistant,
-    hostname: str,
-    port: int,
-) -> datetime.datetime:
-    """Return the certificate's expiration timestamp."""
-    try:
-        cert = await hass.async_add_executor_job(get_cert, hostname, port)
+        conn = socket.create_connection((hostname, port), timeout=TIMEOUT)
+        sock = context.wrap_socket(conn, server_hostname=hostname)
+        try:
+            der_cert = sock.getpeercert(True)
+        finally:
+            sock.close()
+        if der_cert is None:
+            return None
+        cert = cryptography.x509.load_der_x509_certificate(der_cert)
     except socket.gaierror as err:
         raise ResolveFailed(f"Cannot resolve hostname: {hostname}") from err
     except TimeoutError as err:
@@ -75,11 +111,32 @@ async def get_cert_expiry_timestamp(
             f"No certificate received from server: {hostname}:{port}"
         )
 
-    not_after = cert.get_notAfter()
+    return cert
+
+
+async def get_cert(
+    hass: HomeAssistant,
+    host: str,
+    port: int,
+) -> Certificate:
+    """Get the certificate for the host and port combination."""
+
+    return await hass.async_add_executor_job(
+        _get_cert_sync,
+        host,
+        port,
+    )
+
+
+def get_cert_expiry_timestamp(
+    cert: Certificate | None,
+    hostname: str,
+    port: int,
+) -> datetime.datetime:
+    """Return the certificate's expiration timestamp."""
+    not_after = cert.not_valid_after_utc
     if not_after is None:
         raise ValidationFailure(
             f"No expiry date in certificate from server: {hostname}:{port}"
         )
-    return datetime.datetime.strptime(
-        not_after.decode(encoding="ascii"), "%Y%m%d%H%M%SZ"
-    ).replace(tzinfo=zoneinfo.ZoneInfo("UTC"))
+    return not_after
