@@ -244,7 +244,6 @@ SERVICE_SCHEMA_EDIT_MESSAGE = vol.All(
     vol.Schema(
         {
             vol.Optional(ATTR_ENTITY_ID): vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(ATTR_TARGET): vol.Coerce(int),
             vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
             vol.Optional(ATTR_TITLE): cv.string,
             vol.Required(ATTR_MESSAGE): cv.string,
@@ -264,7 +263,6 @@ SERVICE_SCHEMA_EDIT_MESSAGE_MEDIA = vol.All(
     vol.Schema(
         {
             vol.Optional(ATTR_ENTITY_ID): vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(ATTR_TARGET): vol.Coerce(int),
             vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
             vol.Required(ATTR_MESSAGEID): vol.Any(
                 cv.positive_int, vol.All(cv.string, "last")
@@ -294,7 +292,6 @@ SERVICE_SCHEMA_EDIT_MESSAGE_MEDIA = vol.All(
 SERVICE_SCHEMA_EDIT_CAPTION = vol.Schema(
     {
         vol.Optional(ATTR_ENTITY_ID): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(ATTR_TARGET): vol.Coerce(int),
         vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
         vol.Required(ATTR_MESSAGEID): vol.Any(
             cv.positive_int, vol.All(cv.string, "last")
@@ -308,7 +305,6 @@ SERVICE_SCHEMA_EDIT_CAPTION = vol.Schema(
 SERVICE_SCHEMA_EDIT_REPLYMARKUP = vol.Schema(
     {
         vol.Optional(ATTR_ENTITY_ID): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(ATTR_TARGET): vol.Coerce(int),
         vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
         vol.Required(ATTR_MESSAGEID): vol.Any(
             cv.positive_int, vol.All(cv.string, "last")
@@ -330,7 +326,6 @@ SERVICE_SCHEMA_ANSWER_CALLBACK_QUERY = vol.Schema(
 SERVICE_SCHEMA_DELETE_MESSAGE = vol.Schema(
     {
         vol.Optional(ATTR_ENTITY_ID): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(ATTR_TARGET): vol.Coerce(int),
         vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
         vol.Optional(ATTR_CHAT_ID): vol.Coerce(int),
         vol.Required(ATTR_MESSAGEID): vol.Any(
@@ -342,7 +337,6 @@ SERVICE_SCHEMA_DELETE_MESSAGE = vol.Schema(
 SERVICE_SCHEMA_LEAVE_CHAT = vol.Schema(
     {
         vol.Optional(ATTR_ENTITY_ID): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(ATTR_TARGET): vol.Coerce(int),
         vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
         vol.Optional(ATTR_CHAT_ID): vol.Coerce(int),
     }
@@ -350,7 +344,6 @@ SERVICE_SCHEMA_LEAVE_CHAT = vol.Schema(
 
 SERVICE_SCHEMA_SET_MESSAGE_REACTION = vol.Schema(
     {
-        vol.Optional(ATTR_TARGET): vol.Coerce(int),
         vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
         vol.Required(ATTR_MESSAGEID): vol.Any(
             cv.positive_int, vol.All(cv.string, "last")
