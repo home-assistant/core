@@ -3110,7 +3110,6 @@ def test_device_class_converters_are_complete() -> None:
         SensorDeviceClass.NITROGEN_DIOXIDE,
         SensorDeviceClass.NITROGEN_MONOXIDE,
         SensorDeviceClass.NITROUS_OXIDE,
-        SensorDeviceClass.OZONE,
         SensorDeviceClass.PH,
         SensorDeviceClass.PM1,
         SensorDeviceClass.PM10,

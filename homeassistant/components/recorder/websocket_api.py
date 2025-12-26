@@ -33,6 +33,7 @@ from homeassistant.util.unit_conversion import (
     InformationConverter,
     MassConverter,
     MassVolumeConcentrationConverter,
+    OzoneConcentrationConverter,
     PowerConverter,
     PressureConverter,
     ReactiveEnergyConverter,
@@ -93,6 +94,7 @@ UNIT_SCHEMA = vol.Schema(
         vol.Optional("pressure"): vol.In(PressureConverter.VALID_UNITS),
         vol.Optional("reactive_energy"): vol.In(ReactiveEnergyConverter.VALID_UNITS),
         vol.Optional("reactive_power"): vol.In(ReactivePowerConverter.VALID_UNITS),
+        vol.Optional("ozone"): vol.In(OzoneConcentrationConverter.VALID_UNITS),
         vol.Optional("speed"): vol.In(SpeedConverter.VALID_UNITS),
         vol.Optional("temperature"): vol.In(TemperatureConverter.VALID_UNITS),
         vol.Optional("temperature_delta"): vol.In(

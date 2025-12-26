@@ -103,6 +103,7 @@ _AMBIENT_IDEAL_GAS_MOLAR_VOLUME = (  # m3⋅mol⁻¹
 )
 # Molar masses in g⋅mol⁻¹
 _CARBON_MONOXIDE_MOLAR_MASS = 28.01
+_OZONE_MOLAR_MASS = 48.00
 
 
 class BaseUnitConverter:
@@ -523,6 +524,22 @@ class ReactivePowerConverter(BaseUnitConverter):
         UnitOfReactivePower.MILLIVOLT_AMPERE_REACTIVE,
         UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
         UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE,
+    }
+
+
+class OzoneConcentrationConverter(BaseUnitConverter):
+    """Convert ozone ratio to mass per volume."""
+
+    UNIT_CLASS = "ozone"
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        CONCENTRATION_PARTS_PER_BILLION: 1e9,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: (
+            _OZONE_MOLAR_MASS / _AMBIENT_IDEAL_GAS_MOLAR_VOLUME * 1e6
+        ),
+    }
+    VALID_UNITS = {
+        CONCENTRATION_PARTS_PER_BILLION,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     }
 
 
