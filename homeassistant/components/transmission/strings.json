@@ -143,6 +143,10 @@
           "description": "ID of the config entry to use.",
           "name": "Transmission entry"
         },
+        "labels": {
+          "description": "Optional comma-separated list of labels to assign to the torrent.",
+          "name": "Labels"
+        },
         "torrent": {
           "description": "URL, magnet link or Base64 encoded file.",
           "name": "Torrent"
