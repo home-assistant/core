@@ -39,9 +39,7 @@ class IntelliClimaCoordinator(DataUpdateCoordinator[IntelliClimaDevices]):
         """Fetch data from API."""
         try:
             # Poll status for all devices
-            self.data = await self.api.get_all_device_status()
+            return await self.api.get_all_device_status()
 
         except IntelliClimaAPIError as err:
             raise UpdateFailed(f"Failed to update data: {err}") from err
-
-        return self.data
