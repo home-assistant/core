@@ -723,6 +723,43 @@ def _get_permissible_entity_candidates(
     return [entities[entity_id] for entity_id in all_referenced.intersection(entities)]
 
 
+def _filter_entities(
+    entity_candidates: list[Entity],
+    entity_device_classes: Iterable[str | None] | None,
+    required_features: Iterable[int] | None,
+    referenced: target_helpers.SelectedEntities | None,
+    domain: str,
+    service: str,
+) -> list[Entity]:
+    """Return a list of entities that pass availability, device class, and features."""
+    filtered: list[Entity] = []
+
+    for entity in entity_candidates:
+        if not entity.available:
+            continue
+
+        if (
+            entity_device_classes is not None
+            and entity.device_class not in entity_device_classes
+        ):
+            if referenced and entity.entity_id in referenced.referenced:
+                raise ServiceNotSupported(domain, service, entity.entity_id)
+            continue
+
+        if required_features is not None:
+            if entity.supported_features is None or not any(
+                entity.supported_features & feature_set == feature_set
+                for feature_set in required_features
+            ):
+                if referenced and entity.entity_id in referenced.referenced:
+                    raise ServiceNotSupported(domain, service, entity.entity_id)
+                continue
+
+        filtered.append(entity)
+
+    return filtered
+
+
 @bind_hass
 async def entity_service_call(
     hass: HomeAssistant,
@@ -789,38 +826,14 @@ async def entity_service_call(
             missing.discard(entity.entity_id)
         referenced.log_missing(missing, _LOGGER)
 
-    entities: list[Entity] = []
-    for entity in entity_candidates:
-        if not entity.available:
-            continue
-
-        # Skip entities that don't have the required device class.
-        if (
-            entity_device_classes is not None
-            and entity.device_class not in entity_device_classes
-        ):
-            # If entity explicitly referenced, raise an error
-            if referenced is not None and entity.entity_id in referenced.referenced:
-                raise ServiceNotSupported(call.domain, call.service, entity.entity_id)
-
-            continue
-
-        # Skip entities that don't have the required feature.
-        if required_features is not None and (
-            entity.supported_features is None
-            or not any(
-                entity.supported_features & feature_set == feature_set
-                for feature_set in required_features
-            )
-        ):
-            # If entity explicitly referenced, raise an error
-            if referenced is not None and entity.entity_id in referenced.referenced:
-                raise ServiceNotSupported(call.domain, call.service, entity.entity_id)
-
-            continue
-
-        entities.append(entity)
-
+    entities = _filter_entities(
+        entity_candidates,
+        entity_device_classes,
+        required_features,
+        referenced,
+        call.domain,
+        call.service,
+    )
     if not entities:
         if return_response:
             raise HomeAssistantError(
