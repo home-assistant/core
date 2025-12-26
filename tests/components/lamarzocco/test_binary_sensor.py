@@ -56,7 +56,6 @@ async def test_sensor_going_unavailable(
     hass: HomeAssistant,
     mock_lamarzocco: MagicMock,
     mock_config_entry: MockConfigEntry,
-    mock_cloud_client: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test sensor is going unavailable after an unsuccessful update."""
@@ -70,7 +69,7 @@ async def test_sensor_going_unavailable(
     assert state.state != STATE_UNAVAILABLE
 
     mock_lamarzocco.websocket.connected = False
-    mock_cloud_client.async_get_access_token.side_effect = RequestNotSuccessful("")
+    mock_lamarzocco.ensure_token_valid.side_effect = RequestNotSuccessful("")
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()

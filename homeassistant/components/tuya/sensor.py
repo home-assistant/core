@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import struct
 
 from tuya_sharing import CustomerDevice, Manager
 
@@ -37,24 +36,24 @@ from .const import (
     TUYA_DISCOVERY_NEW,
     DeviceCategory,
     DPCode,
-    DPType,
 )
 from .entity import TuyaEntity
 from .models import (
-    DPCodeBase64Wrapper,
     DPCodeEnumWrapper,
     DPCodeIntegerWrapper,
     DPCodeJsonWrapper,
+    DPCodeRawWrapper,
     DPCodeTypeInformationWrapper,
     DPCodeWrapper,
-    EnumTypeData,
 )
+from .raw_data_models import ElectricityData
+from .type_information import EnumTypeInformation
 
 
-class _WindDirectionWrapper(DPCodeTypeInformationWrapper[EnumTypeData]):
+class _WindDirectionWrapper(DPCodeTypeInformationWrapper[EnumTypeInformation]):
     """Custom DPCode Wrapper for converting enum to wind direction."""
 
-    DPTYPE = DPType.ENUM
+    _DPTYPE = EnumTypeInformation
 
     _WIND_DIRECTIONS = {
         "north": 0.0,
@@ -77,9 +76,7 @@ class _WindDirectionWrapper(DPCodeTypeInformationWrapper[EnumTypeData]):
 
     def read_device_status(self, device: CustomerDevice) -> float | None:
         """Read the device value for the dpcode."""
-        if (
-            raw_value := self._read_device_status_raw(device)
-        ) in self.type_information.range:
+        if (raw_value := device.status.get(self.dpcode)) in self.type_information.range:
             return self._WIND_DIRECTIONS.get(raw_value)
         return None
 
@@ -91,9 +88,9 @@ class _JsonElectricityCurrentWrapper(DPCodeJsonWrapper):
 
     def read_device_status(self, device: CustomerDevice) -> float | None:
         """Read the device value for the dpcode."""
-        if (raw_value := super().read_json(device)) is None:
+        if (status := super().read_device_status(device)) is None:
             return None
-        return raw_value.get("electricCurrent")
+        return status.get("electricCurrent")
 
 
 class _JsonElectricityPowerWrapper(DPCodeJsonWrapper):
@@ -103,9 +100,9 @@ class _JsonElectricityPowerWrapper(DPCodeJsonWrapper):
 
     def read_device_status(self, device: CustomerDevice) -> float | None:
         """Read the device value for the dpcode."""
-        if (raw_value := super().read_json(device)) is None:
+        if (status := super().read_device_status(device)) is None:
             return None
-        return raw_value.get("power")
+        return status.get("power")
 
 
 class _JsonElectricityVoltageWrapper(DPCodeJsonWrapper):
@@ -115,47 +112,57 @@ class _JsonElectricityVoltageWrapper(DPCodeJsonWrapper):
 
     def read_device_status(self, device: CustomerDevice) -> float | None:
         """Read the device value for the dpcode."""
-        if (raw_value := super().read_json(device)) is None:
+        if (status := super().read_device_status(device)) is None:
             return None
-        return raw_value.get("voltage")
+        return status.get("voltage")
 
 
-class _RawElectricityCurrentWrapper(DPCodeBase64Wrapper):
+class _RawElectricityDataWrapper(DPCodeRawWrapper):
+    """Custom DPCode Wrapper for extracting ElectricityData from base64."""
+
+    def _convert(self, value: ElectricityData) -> float:
+        """Extract specific value from T."""
+        raise NotImplementedError
+
+    def read_device_status(self, device: CustomerDevice) -> float | None:
+        """Read the device value for the dpcode."""
+        if (raw_value := super().read_device_status(device)) is None or (
+            value := ElectricityData.from_bytes(raw_value)
+        ) is None:
+            return None
+        return self._convert(value)
+
+
+class _RawElectricityCurrentWrapper(_RawElectricityDataWrapper):
     """Custom DPCode Wrapper for extracting electricity current from base64."""
 
     native_unit = UnitOfElectricCurrent.MILLIAMPERE
     suggested_unit = UnitOfElectricCurrent.AMPERE
 
-    def read_device_status(self, device: CustomerDevice) -> float | None:
-        """Read the device value for the dpcode."""
-        if (raw_value := super().read_bytes(device)) is None:
-            return None
-        return struct.unpack(">L", b"\x00" + raw_value[2:5])[0]
+    def _convert(self, value: ElectricityData) -> float:
+        """Extract specific value from ElectricityData."""
+        return value.current
 
 
-class _RawElectricityPowerWrapper(DPCodeBase64Wrapper):
+class _RawElectricityPowerWrapper(_RawElectricityDataWrapper):
     """Custom DPCode Wrapper for extracting electricity power from base64."""
 
     native_unit = UnitOfPower.WATT
     suggested_unit = UnitOfPower.KILO_WATT
 
-    def read_device_status(self, device: CustomerDevice) -> float | None:
-        """Read the device value for the dpcode."""
-        if (raw_value := super().read_bytes(device)) is None:
-            return None
-        return struct.unpack(">L", b"\x00" + raw_value[5:8])[0]
+    def _convert(self, value: ElectricityData) -> float:
+        """Extract specific value from ElectricityData."""
+        return value.power
 
 
-class _RawElectricityVoltageWrapper(DPCodeBase64Wrapper):
+class _RawElectricityVoltageWrapper(_RawElectricityDataWrapper):
     """Custom DPCode Wrapper for extracting electricity voltage from base64."""
 
     native_unit = UnitOfElectricPotential.VOLT
 
-    def read_device_status(self, device: CustomerDevice) -> float | None:
-        """Read the device value for the dpcode."""
-        if (raw_value := super().read_bytes(device)) is None:
-            return None
-        return struct.unpack(">H", raw_value[0:2])[0] / 10.0
+    def _convert(self, value: ElectricityData) -> float:
+        """Extract specific value from ElectricityData."""
+        return value.voltage
 
 
 CURRENT_WRAPPER = (_RawElectricityCurrentWrapper, _JsonElectricityCurrentWrapper)
@@ -1841,4 +1848,4 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        return self._dpcode_wrapper.read_device_status(self.device)
+        return self._read_wrapper(self._dpcode_wrapper)

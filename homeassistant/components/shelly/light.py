@@ -44,7 +44,7 @@ from .entity import (
     RpcEntityDescription,
     ShellyBlockAttributeEntity,
     ShellyRpcAttributeEntity,
-    async_setup_entry_attribute_entities,
+    async_setup_entry_block,
     async_setup_entry_rpc,
 )
 from .utils import (
@@ -101,7 +101,7 @@ def _async_setup_block_entry(
     coordinator = config_entry.runtime_data.block
     assert coordinator
 
-    async_setup_entry_attribute_entities(
+    async_setup_entry_block(
         hass, config_entry, async_add_entities, BLOCK_LIGHTS, BlockShellyLight
     )
 

@@ -182,6 +182,16 @@ class LoggerSettings:
         self._store.async_delay_save(self._async_data_to_save, delay)
 
     @callback
+    def async_get_integration_domains(self) -> set[str]:
+        """Get domains that have integration-level log settings."""
+        stored_log_config = self._stored_config[STORAGE_LOG_KEY]
+        return {
+            domain
+            for domain, setting in stored_log_config.items()
+            if setting.type == LogSettingsType.INTEGRATION
+        }
+
+    @callback
     def _async_get_logger_logs(self) -> dict[str, int]:
         """Get the logger logs."""
         logger_logs: dict[str, int] = self._yaml_config.get(DOMAIN, {}).get(
