@@ -1,0 +1,23 @@
+{
+  "entity": {
+    "sensor": {
+      "working_mode": {
+        "default": "mdi:cog"
+      },
+      "battery_charge_discharge_state": {
+        "default": "mdi:battery",
+        "state": {
+              "Charging": "mdi:battery-arrow-up",
+              "Discharging": "mdi:battery-arrow-down"
+        }
+      },
+      "meter_connection_status": {
+        "default": "mdi:connection",
+        "state": {
+              "ON": "mdi:power-plug",
+              "OFF": "mdi:power-plug-off"
+        }
+      }
+    }
+  }
+}
