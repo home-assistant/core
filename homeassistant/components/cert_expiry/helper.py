@@ -5,7 +5,6 @@ from ipaddress import ip_address
 import logging
 import socket
 import ssl
-from typing import Tuple
 
 import certifi.core
 from cryptography.x509 import (
@@ -80,9 +79,9 @@ def _check_name(pattern: str, hostname: str) -> bool:
 
 
 def _match_hostname(cert: Certificate, hostname: str) -> bool:
-    """
-    Checks if the hostname matches the certificate's SANs or Common Name.
-    Supports basic wildcards (*.example.com) by checking whether the base is the same and it's at the same level.
+    """Checks if the hostname matches the certificate's SANs or Common Name.
+
+    Supports basic wildcards (*.example.com) by checking whether the base is the same, and it's at the same level.
     """
 
     try:
@@ -147,7 +146,7 @@ def verify_cert(cert: Certificate, peer_certs: list[Certificate], hostname: str)
 def _get_cert_sync(
     hostname: str,
     port: int,
-) -> Tuple[Certificate, list[Certificate]]:
+) -> tuple[Certificate, list[Certificate]]:
     """Get the certificate for the host and port combination."""
 
     try:
@@ -163,12 +162,10 @@ def _get_cert_sync(
         try:
             conn.connect((hostname, port))
             conn.do_handshake()
-            certs = list(conn.get_peer_cert_chain())
+            cert = conn.get_peer_certificate(as_cryptography=True)
+            peer_certs = conn.get_peer_cert_chain(as_cryptography=True)
         finally:
             conn.close()
-
-        cert = certs[0].to_cryptography()
-        peer_certs = [peer_cert.to_cryptography() for peer_cert in certs[1:]]
 
     except TimeoutError as err:
         raise ConnectionTimeout(
@@ -197,7 +194,7 @@ async def get_cert(
     hass: HomeAssistant,
     host: str,
     port: int,
-) -> Certificate:
+) -> tuple[Certificate, list[Certificate]]:
     """Get the certificate for the host and port combination."""
 
     return await hass.async_add_executor_job(
