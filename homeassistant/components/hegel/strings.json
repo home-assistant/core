@@ -45,11 +45,5 @@
         "name": "Hegel Amplifier"
       }
     }
-  },
-  "services": {
-    "refresh_state": {
-      "description": "Refresh the current state from the Hegel amplifier (power, volume, mute, input). Use this to sync the amplifier state in Home Assistant.",
-      "name": "Refresh state"
-    }
   }
 }

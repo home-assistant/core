@@ -1,5 +1,0 @@
-refresh_state:
-  target:
-    entity:
-      integration: hegel
-      domain: media_player

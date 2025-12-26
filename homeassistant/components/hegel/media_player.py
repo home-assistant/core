@@ -25,10 +25,7 @@ from homeassistant.components.media_player import (
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    async_get_current_platform,
-)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 
 from . import HegelConfigEntry
@@ -79,13 +76,6 @@ async def async_setup_entry(
     )
 
     async_add_entities([media])
-
-    platform = async_get_current_platform()
-    platform.async_register_entity_service(
-        "refresh_state",
-        {},
-        "async_refresh_state",
-    )
 
 
 class HegelMediaPlayer(MediaPlayerEntity):
@@ -230,7 +220,7 @@ class HegelMediaPlayer(MediaPlayerEntity):
                 self.async_write_ha_state()
                 # do an immediate refresh (best-effort)
                 try:
-                    await self.async_refresh_state(source="reconnect")
+                    await self.async_update()
                 except (HegelConnectionError, TimeoutError, OSError) as e:
                     _LOGGER.debug("Reconnect refresh failed: %s", e)
 
@@ -247,7 +237,7 @@ class HegelMediaPlayer(MediaPlayerEntity):
         except (HegelConnectionError, OSError):
             _LOGGER.exception("Connected watcher failed")
 
-    async def async_refresh_state(self, source: str = "service") -> None:
+    async def async_update(self) -> None:
         """Query the amplifier for the main values and update state dict."""
         for cmd in (
             COMMANDS["power_query"],
@@ -259,7 +249,7 @@ class HegelMediaPlayer(MediaPlayerEntity):
                 update = await self._client.send(cmd, expect_reply=True, timeout=3.0)
                 if update and update.has_changes():
                     apply_state_changes(
-                        self._state, update, logger=_LOGGER, source=source
+                        self._state, update, logger=_LOGGER, source="update"
                     )
             except (HegelConnectionError, TimeoutError, OSError) as err:
                 _LOGGER.debug("Refresh command %s failed: %s", cmd, err)
