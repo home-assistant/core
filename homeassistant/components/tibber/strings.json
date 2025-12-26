@@ -49,10 +49,10 @@
         "name": "Average power"
       },
       "charging_current_max": {
-        "name": "Maximum charging current"
+        "name": "Maximum allowed charge current"
       },
       "charging_current_offline_fallback": {
-        "name": "Offline fallback charging current"
+        "name": "Fallback current if charger goes offline"
       },
       "current_l1": {
         "name": "Current L1"
@@ -103,16 +103,16 @@
         "name": "Power production"
       },
       "range_remaining": {
-        "name": "Remaining range"
+        "name": "Estimated remaining driving range"
       },
       "signal_strength": {
         "name": "Signal strength"
       },
       "storage_state_of_charge": {
-        "name": "Storage state of charge"
+        "name": "State of charge"
       },
       "storage_target_state_of_charge": {
-        "name": "Storage target state of charge"
+        "name": "Target state of charge"
       },
       "voltage_phase1": {
         "name": "Voltage phase1"

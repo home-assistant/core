@@ -406,11 +406,7 @@ def _setup_data_api_sensors(
                     "Sensor %s not found in DATA_API_SENSORS, skipping", sensor
                 )
                 continue
-            entities.append(
-                TibberDataAPISensor(
-                    coordinator, device, description, sensor.description
-                )
-            )
+            entities.append(TibberDataAPISensor(coordinator, device, description))
     async_add_entities(entities)
 
 
@@ -424,14 +420,13 @@ class TibberDataAPISensor(CoordinatorEntity[TibberDataAPICoordinator], SensorEnt
         coordinator: TibberDataAPICoordinator,
         device: TibberDevice,
         entity_description: SensorEntityDescription,
-        name: str,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
 
         self._device_id: str = device.id
         self.entity_description = entity_description
-        self._attr_name = name
+        self._attr_translation_key = entity_description.translation_key
 
         self._attr_unique_id = f"{device.external_id}_{self.entity_description.key}"
 
