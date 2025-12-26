@@ -1,7 +1,7 @@
 {
   "services": {
-    "send_command": {
-      "service": "mdi:console-line"
+    "refresh_state": {
+      "service": "mdi:refresh"
     }
   }
 }

@@ -2,6 +2,8 @@
 
 from unittest.mock import MagicMock
 
+from aiohttp import ClientError
+
 from homeassistant import config_entries
 from homeassistant.components.hegel.const import CONF_MODEL, DEFAULT_PORT, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
@@ -45,17 +47,15 @@ async def test_user_flow_success(
         {
             CONF_HOST: TEST_HOST,
             CONF_PORT: TEST_PORT,
-            CONF_NAME: TEST_NAME,
             CONF_MODEL: TEST_MODEL,
         },
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == TEST_NAME
+    assert result["title"] == f"Hegel {TEST_MODEL}"
     assert result["data"] == {
         CONF_HOST: TEST_HOST,
         CONF_PORT: TEST_PORT,
-        CONF_NAME: TEST_NAME,
         CONF_MODEL: TEST_MODEL,
     }
 
@@ -77,7 +77,6 @@ async def test_user_flow_cannot_connect(
         {
             CONF_HOST: TEST_HOST,
             CONF_PORT: TEST_PORT,
-            CONF_NAME: TEST_NAME,
             CONF_MODEL: TEST_MODEL,
         },
     )
@@ -131,18 +130,18 @@ async def test_user_flow_default_name(
     mock_setup_entry: MagicMock,
     mock_connection_success: MagicMock,
 ) -> None:
-    """Test user flow uses default name when not provided."""
+    """Test user flow uses default name when model not provided."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_HOST: TEST_HOST},
+        {CONF_HOST: TEST_HOST, CONF_MODEL: TEST_MODEL},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"Hegel {TEST_HOST}"
+    assert result["title"] == f"Hegel {TEST_MODEL}"
 
 
 # Reconfigure Flow Tests
@@ -160,7 +159,6 @@ async def test_reconfigure_flow_success(
         data={
             CONF_HOST: TEST_HOST,
             CONF_PORT: TEST_PORT,
-            CONF_NAME: TEST_NAME,
             CONF_MODEL: TEST_MODEL,
         },
         title=TEST_NAME,
@@ -173,14 +171,12 @@ async def test_reconfigure_flow_success(
     assert result["step_id"] == "reconfigure"
 
     new_host = "192.168.1.200"
-    new_name = "New Hegel Name"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
             CONF_HOST: new_host,
             CONF_PORT: TEST_PORT,
-            CONF_NAME: new_name,
             CONF_MODEL: TEST_MODEL,
         },
     )
@@ -188,7 +184,6 @@ async def test_reconfigure_flow_success(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert entry.data[CONF_HOST] == new_host
-    assert entry.data[CONF_NAME] == new_name
 
 
 async def test_reconfigure_flow_cannot_connect(
@@ -202,7 +197,6 @@ async def test_reconfigure_flow_cannot_connect(
         data={
             CONF_HOST: TEST_HOST,
             CONF_PORT: TEST_PORT,
-            CONF_NAME: TEST_NAME,
             CONF_MODEL: TEST_MODEL,
         },
         title=TEST_NAME,
@@ -219,7 +213,6 @@ async def test_reconfigure_flow_cannot_connect(
         {
             CONF_HOST: "192.168.1.200",
             CONF_PORT: TEST_PORT,
-            CONF_NAME: TEST_NAME,
             CONF_MODEL: TEST_MODEL,
         },
     )
@@ -234,14 +227,13 @@ async def test_reconfigure_flow_default_name(
     mock_setup_entry: MagicMock,
     mock_connection_success: MagicMock,
 ) -> None:
-    """Test reconfigure flow uses default name when empty."""
+    """Test reconfigure flow uses model-based title."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=TEST_UNIQUE_ID,
         data={
             CONF_HOST: TEST_HOST,
             CONF_PORT: TEST_PORT,
-            CONF_NAME: TEST_NAME,
             CONF_MODEL: TEST_MODEL,
         },
         title=TEST_NAME,
@@ -254,12 +246,12 @@ async def test_reconfigure_flow_default_name(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_HOST: new_host},
+        {CONF_HOST: new_host, CONF_MODEL: TEST_MODEL},
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert entry.data[CONF_NAME] == f"Hegel {new_host}"
+    assert entry.title == TEST_NAME
 
 
 # SSDP Discovery Tests
@@ -307,7 +299,6 @@ async def test_ssdp_discovery_success(
         {
             CONF_HOST: TEST_HOST,
             CONF_PORT: TEST_PORT,
-            CONF_NAME: TEST_NAME,
             CONF_MODEL: TEST_MODEL,
         },
     )
@@ -498,7 +489,7 @@ async def test_ssdp_discovery_description_fetch_error(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test SSDP discovery proceeds when fetching description.xml fails."""
-    aioclient_mock.get(TEST_SSDP_LOCATION, exc=Exception("Network error"))
+    aioclient_mock.get(TEST_SSDP_LOCATION, exc=ClientError("Network error"))
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

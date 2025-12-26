@@ -15,6 +15,9 @@
           "model": "Model",
           "port": "Port"
         },
+        "data_description": {
+          "host": "The IP address or hostname of your Hegel amplifier"
+        },
         "description": "Update the connection settings for your Hegel amplifier.",
         "title": "Reconfigure Hegel amplifier"
       },
@@ -23,6 +26,9 @@
           "host": "Host/IP",
           "model": "Model",
           "port": "Port"
+        },
+        "data_description": {
+          "host": "The IP address or hostname of your Hegel amplifier"
         },
         "description": "Enter the host/IP of your Hegel amplifier to set it up.",
         "title": "Connect to Hegel amplifier"
