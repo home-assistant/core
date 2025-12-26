@@ -980,7 +980,6 @@ class SonosSpeaker:
                         ),
                     )
                     removed_speaker.sonos_group_entities = [removed_speaker_entity_id]
-                    sonos_group_entities.append(entity_id)
                     removed_speaker.async_write_entity_states()
 
             self.coordinator = None
