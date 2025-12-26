@@ -427,21 +427,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     return service_response
 
                 if service_response is not None:
-                    formatted_response: list[JsonValueType] = [
-                        {
-                            ATTR_CHAT_ID: int(chat_id),
-                            ATTR_MESSAGEID: message_id,
-                            ATTR_ENTITY_ID: target_notify_entity_id,
-                        }
-                        if target_notify_entity_id
-                        else {
+                    formatted_responses: list[JsonValueType] = []
+                    for chat_id, message_id in service_response.items():
+                        formatted_response = {
                             ATTR_CHAT_ID: int(chat_id),
                             ATTR_MESSAGEID: message_id,
                         }
-                        for chat_id, message_id in service_response.items()
-                    ]
+
+                        if target_notify_entity_id:
+                            formatted_response[ATTR_ENTITY_ID] = target_notify_entity_id
+
+                        formatted_responses.append(formatted_response)
+
                     assert isinstance(service_responses, list)
-                    service_responses.extend(formatted_response)
+                    service_responses.extend(formatted_responses)
             except HomeAssistantError as ex:
                 target = (
                     target_notify_entity_id
