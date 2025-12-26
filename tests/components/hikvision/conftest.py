@@ -1,10 +1,11 @@
 """Common fixtures for the Hikvision tests."""
 
-from collections.abc import Generator
+from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from homeassistant.components.hikvision import PLATFORMS
 from homeassistant.components.hikvision.const import DOMAIN
 from homeassistant.const import (
     CONF_HOST,
@@ -12,6 +13,7 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
+    Platform,
 )
 
 from tests.common import MockConfigEntry
@@ -22,6 +24,19 @@ TEST_USERNAME = "admin"
 TEST_PASSWORD = "password123"
 TEST_DEVICE_ID = "DS-2CD2142FWD-I20170101AAAA"
 TEST_DEVICE_NAME = "Front Camera"
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Platforms, which should be loaded during the test."""
+    return PLATFORMS
+
+
+@pytest.fixture(autouse=True)
+async def mock_patch_platforms(platforms: list[Platform]) -> AsyncGenerator[None]:
+    """Fixture to set up platforms for tests."""
+    with patch(f"homeassistant.components.{DOMAIN}.PLATFORMS", platforms):
+        yield
 
 
 @pytest.fixture

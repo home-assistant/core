@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
     STATE_OFF,
+    Platform,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import (
@@ -37,6 +38,12 @@ from .conftest import (
 )
 
 from tests.common import MockConfigEntry, snapshot_platform
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Platforms, which should be loaded during the test."""
+    return [Platform.BINARY_SENSOR]
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
