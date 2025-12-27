@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from homeassistant.const import CONF_HOST, CONF_PORT, Platform
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_VALIDATE_CERT_FULL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.start import async_at_started
 
@@ -15,8 +15,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: CertExpiryConfigEntry) -
     """Load the saved entities."""
     host: str = entry.data[CONF_HOST]
     port: int = entry.data[CONF_PORT]
+    # Backwards compatibility
+    validate_cert_full: bool = entry.data.get(
+        CONF_VALIDATE_CERT_FULL, True
+    )
 
-    coordinator = CertExpiryDataUpdateCoordinator(hass, entry, host, port)
+    coordinator = CertExpiryDataUpdateCoordinator(
+        hass, entry, host, port, validate_cert_full
+    )
 
     entry.runtime_data = coordinator
 
