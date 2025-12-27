@@ -6,6 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+import re
 from typing import TYPE_CHECKING, Any, Generic
 
 from aiohttp import web
@@ -43,6 +44,25 @@ FORCE_REFRESH_INTERVAL = timedelta(minutes=3)
 MOTION_DETECTION_CAPABILITY = "motion_detection"
 
 _LOGGER = logging.getLogger(__name__)
+
+# Pattern to match direction attributes in SDP (handles \r\n line endings)
+_DIRECTION_PATTERN = re.compile(
+    r"^a=(sendrecv|recvonly|sendonly|inactive)(\r?)$", re.MULTILINE
+)
+
+
+def _fix_sdp_direction(sdp: str) -> str:
+    """Fix SDP direction attributes for Ring WebRTC answers.
+
+    Ring's cloud may return SDP answers with direction attributes that are
+    incompatible with the browser's offer. Newer browsers (Chrome 143+, Firefox)
+    enforce stricter SDP validation and reject these malformed answers.
+
+    For a camera live stream, Ring sends video/audio to the client, so the
+    answer direction should be 'sendonly'. This function replaces any
+    'recvonly' or 'sendrecv' direction with 'sendonly' to ensure compatibility.
+    """
+    return _DIRECTION_PATTERN.sub(r"a=sendonly\2", sdp)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -199,7 +219,7 @@ class RingCam(RingEntity[RingDoorBell], Camera):
                 msg = ring_message.error_message or ""
                 send_message(WebRTCError(ring_message.error_code, msg))
             elif ring_message.answer:
-                send_message(WebRTCAnswer(ring_message.answer))
+                send_message(WebRTCAnswer(_fix_sdp_direction(ring_message.answer)))
             elif ring_message.candidate:
                 send_message(
                     WebRTCCandidate(
