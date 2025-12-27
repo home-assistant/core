@@ -413,6 +413,14 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "00D02D*",
     },
     {
+        "domain": "marstek",
+        "hostname": "marstek*",
+    },
+    {
+        "domain": "marstek",
+        "registered_devices": True,
+    },
+    {
         "domain": "motion_blinds",
         "registered_devices": True,
     },
