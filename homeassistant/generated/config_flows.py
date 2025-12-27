@@ -277,6 +277,7 @@ FLOWS = {
         "habitica",
         "hanna",
         "harmony",
+        "hegel",
         "heos",
         "here_travel_time",
         "hikvision",
