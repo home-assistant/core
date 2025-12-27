@@ -432,11 +432,25 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
     def update_native_value(self) -> None:
         """Set the program value."""
         event = self.appliance.events.get(cast(EventKey, self.bsh_key))
-        self._attr_current_option = (
-            PROGRAMS_TRANSLATION_KEYS_MAP.get(ProgramKey(event_value))
-            if event and isinstance(event_value := event.value, str)
-            else None
-        )
+        raw_value = None
+        if event and isinstance(event_value := event.value, str):
+            raw_value = event_value
+            try:
+                program_key = ProgramKey(event_value)
+                current_option = PROGRAMS_TRANSLATION_KEYS_MAP.get(program_key)
+                if current_option is not None:
+                    self._attr_current_option = current_option
+                else:
+                    # ProgramKey succeeded but no translation found; set to None and log raw value
+                    self._attr_current_option = None
+            except ValueError:
+                self._attr_current_option = None
+        else:
+            self._attr_current_option = None
+
+        if not hasattr(self, "_attr_extra_state_attributes"):
+            self._attr_extra_state_attributes = {}
+        self._attr_extra_state_attributes["raw_value"] = raw_value
 
     async def async_select_option(self, option: str) -> None:
         """Select new program."""
