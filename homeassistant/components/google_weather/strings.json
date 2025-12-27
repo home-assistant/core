@@ -70,6 +70,12 @@
       "cloud_coverage": {
         "name": "Cloud coverage"
       },
+      "daily_max_temperature": {
+        "name": "Daily maximum temperature"
+      },
+      "daily_min_temperature": {
+        "name": "Daily minimum temperature"
+      },
       "dew_point": {
         "name": "Dew point"
       },
