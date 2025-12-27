@@ -316,17 +316,16 @@ class TractiveClient:
         data = event.get("content", event)
 
         activity = data.get("activity", {})
-        sleep = data.get("sleep")
+        sleep = data.get("sleep", {})
 
         sleep_day = None
         sleep_night = None
         minutes_rest = None
 
-        if isinstance(sleep, dict):
-            sleep_day = sleep.get("minutesDaySleep")
-            sleep_night = sleep.get("minutesNightSleep")
-            # Calm minutes can be used as rest indicator
-            minutes_rest = sleep.get("minutesCalm")
+        sleep_day = sleep.get("minutesDaySleep")
+        sleep_night = sleep.get("minutesNightSleep")
+        # Calm minutes can be used as rest indicator
+        minutes_rest = sleep.get("minutesCalm")
 
         payload = {
             ATTR_DAILY_GOAL: activity.get("minutesGoal"),
@@ -336,7 +335,7 @@ class TractiveClient:
             ATTR_MINUTES_REST: minutes_rest,
         }
         self._dispatch_tracker_event(
-            TRACKER_WELLNESS_STATUS_UPDATED, data.get("petId"), payload
+            TRACKER_WELLNESS_STATUS_UPDATED, data["petId"], payload
         )
 
     def _send_position_update(self, event: dict[str, Any]) -> None:
