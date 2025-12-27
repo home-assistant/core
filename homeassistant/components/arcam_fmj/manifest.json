@@ -4,6 +4,7 @@
   "codeowners": ["@elupus"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/arcam_fmj",
+  "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["arcam"],
   "requirements": ["arcam-fmj==1.8.2"],
