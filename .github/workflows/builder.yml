@@ -18,6 +18,9 @@ env:
   BASE_IMAGE_VERSION: "2025.12.0"
   ARCHITECTURES: '["amd64", "aarch64"]'
 
+permissions:
+  contents: read
+
 jobs:
   init:
     name: Initialize build
