@@ -7,7 +7,7 @@ from collections.abc import AsyncIterator, Callable, Coroutine
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from bleak import BleakError
 from improv_ble_client import (
@@ -31,6 +31,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.helpers import selector
 from homeassistant.helpers.device_registry import format_mac
 
 from . import async_get_provisioning_futures
@@ -61,6 +62,10 @@ class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _authorize_task: asyncio.Task | None = None
     _can_identify: bool | None = None
+    _can_set_hostname: bool | None = None
+    _can_get_device_info: bool | None = None
+    _hostname: str | None = None
+    _new_hostname: str | None = None
     _credentials: Credentials | None = None
     _provision_result: ConfigFlowResult | None = None
     _provision_task: asyncio.Task | None = None
@@ -249,8 +254,12 @@ class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Start improv flow.
 
-        If the device supports identification, show a menu, if it does not,
-        ask for WiFi credentials.
+        Show a menu when either:
+        * The device supports identification
+        * Device information is available
+
+        Otherwise, if the device supports setting hostname we move to that step
+        and if it doesn't we ask the user for wifi details
         """
         # mypy is not aware that we can't get here without having these set already
         assert self._discovery_info is not None
@@ -258,26 +267,73 @@ class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
         if not self._device:
             self._device = ImprovBLEClient(self._discovery_info.device)
         device = self._device
-
-        if self._can_identify is None:
+        try:
+            await self._try_call(device.ensure_connected())
+        except AbortFlow as err:
+            return self.async_abort(reason=err.reason)
+        self._can_set_hostname = device.can_set_hostname
+        if self._can_set_hostname and self._hostname is None:
             try:
-                await self._try_call(device.ensure_connected())
-                self._can_identify = device.can_identify
+                self._hostname = await self._try_call(device.get_hostname())
             except AbortFlow as err:
                 return self.async_abort(reason=err.reason)
-        if self._can_identify:
+
+        self._can_identify = device.can_identify
+        self._can_get_device_info = device.can_get_device_info
+
+        if self._can_identify or self._can_get_device_info:
             return await self.async_step_main_menu()
+        if self._can_set_hostname:
+            return await self.async_step_set_hostname()
         return await self.async_step_provision()
 
     async def async_step_main_menu(self, _: None = None) -> ConfigFlowResult:
-        """Show the main menu."""
+        """Show the main menu with identify option if available or if can_get_device_info is true.
+
+        Then either set_hostname or provision menu options depending on if can_set_hostname is true.
+        If can_get_device_info is true on the device, sets the device_info as description_placeholders.
+        """
+        if TYPE_CHECKING:
+            assert self._device is not None
+
+        menu_options = []
+        if self._can_identify:
+            menu_options.append("identify")
+        if self._can_set_hostname:
+            menu_options.append("set_hostname")
+        else:
+            menu_options.append("provision")
+
+        description_placeholders = {}
+        if self._can_get_device_info:
+            try:
+                device_info = await self._try_call(self._device.get_device_info())
+                description_placeholders["firmware_name"] = str(
+                    device_info.firmware_name
+                )
+                description_placeholders["firmware_version"] = str(
+                    device_info.firmware_version
+                )
+                description_placeholders["hardware_chip"] = str(
+                    device_info.hardware_chip
+                )
+                description_placeholders["device_name"] = str(device_info.device_name)
+            except AbortFlow as err:
+                return self.async_abort(reason=err.reason)
+
         return self.async_show_menu(
-            step_id="main_menu",
-            menu_options=[
-                "identify",
-                "provision",
-            ],
+            step_id="main_menu_with_device_info"
+            if self._can_get_device_info
+            else "main_menu",
+            menu_options=menu_options,
+            description_placeholders=description_placeholders,
         )
+
+    async def async_step_main_menu_with_device_info(
+        self, _: None = None
+    ) -> ConfigFlowResult:
+        """Handle main menu step with device_info shown."""
+        return await self.async_step_main_menu()  # pragma: no cover
 
     async def async_step_identify(
         self, user_input: dict[str, Any] | None = None
@@ -293,6 +349,52 @@ class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason=err.reason)
             return self.async_show_form(step_id="identify")
         return await self.async_step_start_improv()
+
+    async def async_step_set_hostname(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle set hostname step."""
+
+        if TYPE_CHECKING:
+            assert self._device is not None
+            assert self._hostname is not None
+
+        if user_input is None:
+            return self.async_show_form(
+                step_id="set_hostname",
+                data_schema=vol.Schema(
+                    {
+                        vol.Required(
+                            "hostname", default=self._hostname
+                        ): selector.TextSelector(
+                            selector.TextSelectorConfig(
+                                multiline=False,
+                                type=selector.TextSelectorType.TEXT,
+                                multiple=False,
+                            )
+                        )
+                    }
+                ),
+            )
+
+        self._new_hostname = user_input["hostname"]
+        if self._hostname is self._new_hostname:
+            return await self.async_step_provision()
+
+        try:
+            need_authorization = await self._try_call(self._device.need_authorization())
+        except AbortFlow as err:
+            return self.async_abort(reason=err.reason)
+        _LOGGER.debug("Need authorization for set hostname: %s", need_authorization)
+        if need_authorization:
+            return await self.async_step_authorize()
+
+        try:
+            await self._try_call(self._device.set_hostname(self._new_hostname))
+        except AbortFlow as err:
+            return self.async_abort(reason=err.reason)
+
+        return await self.async_step_provision()
 
     @asynccontextmanager
     async def _async_provision_context(
@@ -502,6 +604,17 @@ class ImprovBLEConfigFlow(ConfigFlow, domain=DOMAIN):
         if self._unsub:
             self._unsub()
             self._unsub = None
+
+        if (
+            self._can_set_hostname
+            and self._new_hostname is not None
+            and self._new_hostname is not self._hostname
+        ):
+            try:
+                await self._try_call(self._device.set_hostname(self._new_hostname))
+            except AbortFlow as err:
+                return self.async_abort(reason=err.reason)
+
         return self.async_show_progress_done(next_step_id="provision")
 
     @staticmethod
