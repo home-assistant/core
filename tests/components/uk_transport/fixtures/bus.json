@@ -2,7 +2,7 @@
   "atcocode": "340000368SHE",
   "bearing": "",
   "departures": {
-    "32A": [
+    "all": [
       {
         "aimed_departure_time": "10:18",
         "best_departure_estimate": "10:18",
@@ -50,9 +50,7 @@
         "operator": "THTR",
         "operator_name": "Thames Travel",
         "source": "Traveline timetable (not a nextbuses live region)"
-      }
-    ],
-    "X32": [
+      },
       {
         "aimed_departure_time": "10:09",
         "best_departure_estimate": "10:09",
