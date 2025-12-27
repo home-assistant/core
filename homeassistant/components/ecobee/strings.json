@@ -32,6 +32,9 @@
       }
     },
     "number": {
+      "aux_max_outdoor_temp": {
+        "name": "Auxiliary maximum outdoor temperature"
+      },
       "compressor_protection_min_temp": {
         "name": "Compressor minimum temperature"
       },
