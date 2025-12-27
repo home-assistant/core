@@ -1,0 +1,35 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: >
+      This integration does not provide any service actions.
+      It only creates light entities that use standard Home Assistant
+      light services (turn_on, turn_off, brightness and color_temperature).
+  appropriate-polling: done
+  brands: done
+  common-modules:
+    status: done
+    comment: >
+      This integration does not fetch data via polling HTTP APIs and is built
+      around an MQTT-driven event model. A centralized DataUpdateCoordinator is
+      not required for MQTT event callbacks that update entities directly.
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: >
+      This integration does not provide any custom service actions.
+      It only creates light entities that use standard Home Assistant
+      light services which are already documented.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
