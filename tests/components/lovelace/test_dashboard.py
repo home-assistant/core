@@ -10,6 +10,7 @@ import pytest
 from homeassistant.components import frontend
 from homeassistant.components.lovelace import const, dashboard
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from tests.common import assert_setup_component, async_capture_events
@@ -29,111 +30,236 @@ def mock_onboarding_done() -> Generator[MagicMock]:
         yield mock_onboarding
 
 
-async def test_lovelace_from_storage(
+async def test_lovelace_from_storage_new_installation(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     hass_storage: dict[str, Any],
 ) -> None:
-    """Test we load lovelace config from storage."""
+    """Test new installation has default lovelace panel but no dashboard entry."""
     assert await async_setup_component(hass, "lovelace", {})
+
+    # Default lovelace panel is registered for frontend availability
+    assert "lovelace" in hass.data[frontend.DATA_PANELS]
     assert hass.data[frontend.DATA_PANELS]["lovelace"].config == {"mode": "storage"}
 
     client = await hass_ws_client(hass)
 
-    # Fetch data
-    await client.send_json({"id": 5, "type": "lovelace/config"})
+    # Dashboards list should be empty (no dashboard entry created)
+    await client.send_json({"id": 5, "type": "lovelace/dashboards/list"})
     response = await client.receive_json()
-    assert not response["success"]
-    assert response["error"]["code"] == "config_not_found"
+    assert response["success"]
+    assert response["result"] == []
+
+
+async def test_lovelace_from_storage_migration(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test we migrate existing lovelace config from storage to dashboard."""
+    # Pre-populate storage with existing lovelace config
+    hass_storage[dashboard.CONFIG_STORAGE_KEY_DEFAULT] = {
+        "version": 1,
+        "key": dashboard.CONFIG_STORAGE_KEY_DEFAULT,
+        "data": {"config": {"views": [{"title": "Home"}]}},
+    }
+
+    assert await async_setup_component(hass, "lovelace", {})
+
+    # After migration, lovelace panel should be registered as a dashboard
+    assert "lovelace" in hass.data[frontend.DATA_PANELS]
+    assert hass.data[frontend.DATA_PANELS]["lovelace"].config == {"mode": "storage"}
+
+    client = await hass_ws_client(hass)
+
+    # Dashboard should be in the list
+    await client.send_json({"id": 5, "type": "lovelace/dashboards/list"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert len(response["result"]) == 1
+    assert response["result"][0]["url_path"] == "lovelace"
+    assert response["result"][0]["title"] == "Overview"
+
+    # Fetch migrated config
+    await client.send_json({"id": 6, "type": "lovelace/config", "url_path": "lovelace"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"views": [{"title": "Home"}]}
+
+    # Old storage key should be gone, new one should exist
+    assert dashboard.CONFIG_STORAGE_KEY_DEFAULT not in hass_storage
+    assert dashboard.CONFIG_STORAGE_KEY.format("lovelace") in hass_storage
 
     # Store new config
     events = async_capture_events(hass, const.EVENT_LOVELACE_UPDATED)
 
     await client.send_json(
-        {"id": 6, "type": "lovelace/config/save", "config": {"yo": "hello"}}
+        {
+            "id": 7,
+            "type": "lovelace/config/save",
+            "url_path": "lovelace",
+            "config": {"yo": "hello"},
+        }
     )
     response = await client.receive_json()
     assert response["success"]
-    assert hass_storage[dashboard.CONFIG_STORAGE_KEY_DEFAULT]["data"] == {
+    assert hass_storage[dashboard.CONFIG_STORAGE_KEY.format("lovelace")]["data"] == {
         "config": {"yo": "hello"}
     }
     assert len(events) == 1
 
     # Load new config
-    await client.send_json({"id": 7, "type": "lovelace/config"})
+    await client.send_json({"id": 8, "type": "lovelace/config", "url_path": "lovelace"})
     response = await client.receive_json()
     assert response["success"]
-
     assert response["result"] == {"yo": "hello"}
 
     # Test with recovery mode
     hass.config.recovery_mode = True
-    await client.send_json({"id": 8, "type": "lovelace/config"})
+    await client.send_json({"id": 9, "type": "lovelace/config", "url_path": "lovelace"})
     response = await client.receive_json()
     assert not response["success"]
     assert response["error"]["code"] == "config_not_found"
 
     await client.send_json(
-        {"id": 9, "type": "lovelace/config/save", "config": {"yo": "hello"}}
+        {
+            "id": 10,
+            "type": "lovelace/config/save",
+            "url_path": "lovelace",
+            "config": {"yo": "hello"},
+        }
     )
     response = await client.receive_json()
     assert not response["success"]
 
-    await client.send_json({"id": 10, "type": "lovelace/config/delete"})
+    await client.send_json(
+        {"id": 11, "type": "lovelace/config/delete", "url_path": "lovelace"}
+    )
     response = await client.receive_json()
     assert not response["success"]
 
 
-async def test_lovelace_from_storage_save_before_load(
+async def test_lovelace_dashboard_deleted_re_registers_panel(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     hass_storage: dict[str, Any],
 ) -> None:
-    """Test we can load lovelace config from storage."""
+    """Test deleting the lovelace dashboard re-registers the default panel."""
+    # Pre-populate storage with existing lovelace config (triggers migration)
+    hass_storage[dashboard.CONFIG_STORAGE_KEY_DEFAULT] = {
+        "version": 1,
+        "key": dashboard.CONFIG_STORAGE_KEY_DEFAULT,
+        "data": {"config": {"views": [{"title": "Home"}]}},
+    }
+
     assert await async_setup_component(hass, "lovelace", {})
+
+    # After migration, lovelace panel should be registered as a dashboard
+    assert "lovelace" in hass.data[frontend.DATA_PANELS]
+
     client = await hass_ws_client(hass)
 
-    # Store new config
+    # Dashboard should be in the list
+    await client.send_json({"id": 5, "type": "lovelace/dashboards/list"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert len(response["result"]) == 1
+    dashboard_id = response["result"][0]["id"]
+
+    # Delete the lovelace dashboard
     await client.send_json(
-        {"id": 6, "type": "lovelace/config/save", "config": {"yo": "hello"}}
+        {"id": 6, "type": "lovelace/dashboards/delete", "dashboard_id": dashboard_id}
     )
     response = await client.receive_json()
     assert response["success"]
-    assert hass_storage[dashboard.CONFIG_STORAGE_KEY_DEFAULT]["data"] == {
-        "config": {"yo": "hello"}
-    }
+
+    # Dashboard should be gone from the list
+    await client.send_json({"id": 7, "type": "lovelace/dashboards/list"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == []
+
+    # But the lovelace panel should still be registered (re-registered as default)
+    assert "lovelace" in hass.data[frontend.DATA_PANELS]
+    assert hass.data[frontend.DATA_PANELS]["lovelace"].config == {"mode": "storage"}
 
 
-async def test_lovelace_from_storage_delete(
+async def test_lovelace_migration_skipped_when_both_files_exist(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     hass_storage: dict[str, Any],
 ) -> None:
-    """Test we delete lovelace config from storage."""
-    assert await async_setup_component(hass, "lovelace", {})
-    client = await hass_ws_client(hass)
-
-    # Store new config
-    await client.send_json(
-        {"id": 6, "type": "lovelace/config/save", "config": {"yo": "hello"}}
-    )
-    response = await client.receive_json()
-    assert response["success"]
-    assert hass_storage[dashboard.CONFIG_STORAGE_KEY_DEFAULT]["data"] == {
-        "config": {"yo": "hello"}
+    """Test migration is skipped when both old and new storage files exist."""
+    # Pre-populate both old and new storage (simulating incomplete migration)
+    hass_storage[dashboard.CONFIG_STORAGE_KEY_DEFAULT] = {
+        "version": 1,
+        "key": dashboard.CONFIG_STORAGE_KEY_DEFAULT,
+        "data": {"config": {"views": [{"title": "Old"}]}},
+    }
+    hass_storage[dashboard.CONFIG_STORAGE_KEY.format("lovelace")] = {
+        "version": 1,
+        "key": dashboard.CONFIG_STORAGE_KEY.format("lovelace"),
+        "data": {"config": {"views": [{"title": "New"}]}},
     }
 
-    # Delete config
-    await client.send_json({"id": 7, "type": "lovelace/config/delete"})
+    assert await async_setup_component(hass, "lovelace", {})
+
+    # No dashboard should be created (migration skipped)
+    client = await hass_ws_client(hass)
+    await client.send_json({"id": 5, "type": "lovelace/dashboards/list"})
     response = await client.receive_json()
     assert response["success"]
-    assert dashboard.CONFIG_STORAGE_KEY_DEFAULT not in hass_storage
+    assert response["result"] == []
 
-    # Fetch data
-    await client.send_json({"id": 8, "type": "lovelace/config"})
+
+async def test_lovelace_migration_skipped_when_already_migrated(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test migration is skipped when dashboard already exists."""
+    # Pre-populate dashboards with existing lovelace dashboard
+    hass_storage[dashboard.DASHBOARDS_STORAGE_KEY] = {
+        "version": 1,
+        "key": dashboard.DASHBOARDS_STORAGE_KEY,
+        "data": {
+            "items": [
+                {
+                    "id": "lovelace",
+                    "url_path": "lovelace",
+                    "title": "Overview",
+                    "icon": "mdi:view-dashboard",
+                    "show_in_sidebar": True,
+                    "require_admin": False,
+                    "mode": "storage",
+                }
+            ]
+        },
+    }
+    hass_storage[dashboard.CONFIG_STORAGE_KEY.format("lovelace")] = {
+        "version": 1,
+        "key": dashboard.CONFIG_STORAGE_KEY.format("lovelace"),
+        "data": {"config": {"views": [{"title": "Home"}]}},
+    }
+    # Also have old file (should be ignored since dashboard exists)
+    hass_storage[dashboard.CONFIG_STORAGE_KEY_DEFAULT] = {
+        "version": 1,
+        "key": dashboard.CONFIG_STORAGE_KEY_DEFAULT,
+        "data": {"config": {"views": [{"title": "Old"}]}},
+    }
+
+    assert await async_setup_component(hass, "lovelace", {})
+
+    client = await hass_ws_client(hass)
+    await client.send_json({"id": 5, "type": "lovelace/dashboards/list"})
     response = await client.receive_json()
-    assert not response["success"]
-    assert response["error"]["code"] == "config_not_found"
+    assert response["success"]
+    # Only the pre-existing dashboard, no duplicate
+    assert len(response["result"]) == 1
+    assert response["result"][0]["url_path"] == "lovelace"
+
+    # Old storage should still exist (not touched)
+    assert dashboard.CONFIG_STORAGE_KEY_DEFAULT in hass_storage
 
 
 async def test_lovelace_from_yaml(
@@ -224,6 +350,24 @@ async def test_lovelace_from_yaml(
     assert response["result"] == {"hello": "yo3"}
 
     assert len(events) == 2
+
+
+async def test_lovelace_from_yaml_creates_repair_issue(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test YAML mode creates a repair issue."""
+    assert await async_setup_component(hass, "lovelace", {"lovelace": {"mode": "YAML"}})
+
+    # Panel should still be registered for backwards compatibility
+    assert hass.data[frontend.DATA_PANELS]["lovelace"].config == {"mode": "yaml"}
+
+    # Repair issue should be created with 6-month deadline
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue("lovelace", "yaml_mode_deprecated")
+    assert issue is not None
+    assert issue.severity == ir.IssueSeverity.WARNING
+    assert issue.is_fixable is False
+    assert issue.breaks_in_ha_version == "2026.6.0"
 
 
 @pytest.mark.parametrize("url_path", ["test-panel", "test-panel-no-sidebar"])
@@ -364,6 +508,9 @@ async def test_storage_dashboards(
 ) -> None:
     """Test we load lovelace config from storage."""
     assert await async_setup_component(hass, "lovelace", {})
+
+    # Default lovelace panel is registered for frontend availability
+    assert "lovelace" in hass.data[frontend.DATA_PANELS]
     assert hass.data[frontend.DATA_PANELS]["lovelace"].config == {"mode": "storage"}
 
     client = await hass_ws_client(hass)
