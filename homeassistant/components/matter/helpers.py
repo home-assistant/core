@@ -6,6 +6,8 @@ import asyncio
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from chip.clusters import Objects as clusters
+
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
@@ -17,6 +19,9 @@ if TYPE_CHECKING:
     from matter_server.common.models import ServerInfoMessage
 
     from .adapter import MatterAdapter
+
+# DoorLock Feature bitmap from Matter SDK
+DoorLockFeature = clusters.DoorLock.Bitmaps.Feature
 
 
 class MissingNode(HomeAssistantError):
@@ -118,3 +123,75 @@ def get_node_from_device_entry(
         ),
         None,
     )
+
+
+@callback
+def get_lock_endpoint_from_node(node: MatterNode) -> MatterEndpoint | None:
+    """Get the DoorLock endpoint from a node.
+
+    Returns the first endpoint that has the DoorLock cluster, or None if not found.
+    """
+    for endpoint in node.endpoints.values():
+        if endpoint.has_cluster(clusters.DoorLock):
+            return endpoint
+    return None
+
+
+@callback
+def lock_supports_usr_feature(endpoint: MatterEndpoint) -> bool:
+    """Check if lock endpoint supports USR (User) feature.
+
+    The USR feature indicates the lock supports user and credential management
+    commands like SetUser, GetUser, SetCredential, etc.
+    """
+    feature_map = endpoint.get_attribute_value(
+        None, clusters.DoorLock.Attributes.FeatureMap
+    )
+    if feature_map is None:
+        return False
+    return bool(feature_map & DoorLockFeature.kUser)
+
+
+@callback
+def lock_supports_week_day_schedules(endpoint: MatterEndpoint) -> bool:
+    """Check if lock endpoint supports Week Day Schedules (WDSCH) feature.
+
+    The WDSCH feature indicates the lock supports recurring weekly schedules
+    for user access control.
+    """
+    feature_map = endpoint.get_attribute_value(
+        None, clusters.DoorLock.Attributes.FeatureMap
+    )
+    if feature_map is None:
+        return False
+    return bool(feature_map & DoorLockFeature.kWeekDayAccessSchedules)
+
+
+@callback
+def lock_supports_year_day_schedules(endpoint: MatterEndpoint) -> bool:
+    """Check if lock endpoint supports Year Day Schedules (YDSCH) feature.
+
+    The YDSCH feature indicates the lock supports date range schedules
+    for user access control (e.g., access valid from date A to date B).
+    """
+    feature_map = endpoint.get_attribute_value(
+        None, clusters.DoorLock.Attributes.FeatureMap
+    )
+    if feature_map is None:
+        return False
+    return bool(feature_map & DoorLockFeature.kYearDayAccessSchedules)
+
+
+@callback
+def lock_supports_holiday_schedules(endpoint: MatterEndpoint) -> bool:
+    """Check if lock endpoint supports Holiday Schedules (HDSCH) feature.
+
+    The HDSCH feature indicates the lock supports holiday schedules
+    that override normal operating mode during specified time periods.
+    """
+    feature_map = endpoint.get_attribute_value(
+        None, clusters.DoorLock.Attributes.FeatureMap
+    )
+    if feature_map is None:
+        return False
+    return bool(feature_map & DoorLockFeature.kHolidaySchedules)

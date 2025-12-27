@@ -13,11 +13,22 @@ from matter_server.common.helpers.util import dataclass_to_dict
 from matter_server.common.models import CommissioningParameters
 import pytest
 
-from homeassistant.components.matter.api import (
+from homeassistant.components.matter.api_base import (
     DEVICE_ID,
     ERROR_NODE_NOT_FOUND,
     ID,
     TYPE,
+)
+from homeassistant.components.matter.api_lock import (
+    ERROR_LOCK_NOT_FOUND,
+    ERROR_USR_NOT_SUPPORTED,
+)
+from homeassistant.components.matter.api_lock_schedules import (
+    ERROR_HOLIDAY_SCHEDULES_NOT_SUPPORTED,
+    ERROR_INVALID_TIME_RANGE,
+    ERROR_SCHEDULE_NOT_FOUND,
+    ERROR_WEEK_DAY_SCHEDULES_NOT_SUPPORTED,
+    ERROR_YEAR_DAY_SCHEDULES_NOT_SUPPORTED,
 )
 from homeassistant.components.matter.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -465,3 +476,1112 @@ async def test_interview_node(
 
     assert not msg["success"]
     assert msg["error"]["code"] == ERROR_NODE_NOT_FOUND
+
+
+# Lock Credential Management API Tests
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["door_lock_with_usr"])
+async def test_get_lock_info(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+) -> None:
+    """Test the get_lock_info command."""
+    entry = device_registry.async_get_device(
+        identifiers={
+            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
+        }
+    )
+    assert entry is not None
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "matter/lock/get_lock_info",
+            DEVICE_ID: entry.id,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    result = msg["result"]
+    assert result["supports_user_management"] is True
+    assert result["max_users"] == 10
+    assert result["max_pin_users"] == 10
+    assert result["max_rfid_users"] == 5
+    assert result["max_credentials_per_user"] == 5
+    assert "pin" in result["supported_credential_types"]
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["door_lock"])
+async def test_get_lock_info_no_usr_feature(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+) -> None:
+    """Test the get_lock_info command for lock without USR feature."""
+    entry = device_registry.async_get_device(
+        identifiers={
+            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
+        }
+    )
+    assert entry is not None
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "matter/lock/get_lock_info",
+            DEVICE_ID: entry.id,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    result = msg["result"]
+    # Lock without USR should still return basic info
+    assert result["supports_user_management"] is False
+    assert "max_users" not in result
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["onoff_light"])
+async def test_get_lock_info_not_a_lock(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+) -> None:
+    """Test the get_lock_info command for a non-lock device."""
+    entry = device_registry.async_get_device(
+        identifiers={
+            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
+        }
+    )
+    assert entry is not None
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "matter/lock/get_lock_info",
+            DEVICE_ID: entry.id,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERROR_LOCK_NOT_FOUND
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["door_lock_with_usr"])
+async def test_add_lock_user(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+) -> None:
+    """Test the add_lock_user command."""
+    entry = device_registry.async_get_device(
+        identifiers={
+            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
+        }
+    )
+    assert entry is not None
+
+    # Mock GetUser response (empty slot)
+    mock_get_user_response = MagicMock()
+    mock_get_user_response.userStatus = None  # Empty slot
+    matter_client.send_device_command = AsyncMock(return_value=mock_get_user_response)
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "matter/lock/add_user",
+            DEVICE_ID: entry.id,
+            "user_index": 1,
+            "user_name": "Test User",
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"]["user_index"] == 1
+    # Verify SetUser was called
+    assert matter_client.send_device_command.call_count == 2
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["door_lock_with_usr"])
+async def test_add_lock_user_slot_occupied(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+) -> None:
+    """Test the add_lock_user command when slot is already occupied."""
+    entry = device_registry.async_get_device(
+        identifiers={
+            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
+        }
+    )
+    assert entry is not None
+
+    # Mock GetUser response (occupied slot)
+    mock_get_user_response = MagicMock()
+    mock_get_user_response.userStatus = 1  # Occupied
+    matter_client.send_device_command = AsyncMock(return_value=mock_get_user_response)
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "matter/lock/add_user",
+            DEVICE_ID: entry.id,
+            "user_index": 1,
+            "user_name": "Test User",
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "user_already_exists"
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["door_lock_with_usr"])
+async def test_get_lock_user(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+) -> None:
+    """Test the get_lock_user command."""
+    entry = device_registry.async_get_device(
+        identifiers={
+            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
+        }
+    )
+    assert entry is not None
+
+    # Mock GetUser response
+    mock_get_user_response = MagicMock()
+    mock_get_user_response.userIndex = 1
+    mock_get_user_response.userName = "Test User"
+    mock_get_user_response.userUniqueID = 12345
+    mock_get_user_response.userStatus = 1  # OccupiedEnabled
+    mock_get_user_response.userType = 0  # UnrestrictedUser
+    mock_get_user_response.credentialRule = 0  # Single
+    mock_get_user_response.credentials = []
+    mock_get_user_response.nextUserIndex = 2
+    matter_client.send_device_command = AsyncMock(return_value=mock_get_user_response)
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "matter/lock/get_user",
+            DEVICE_ID: entry.id,
+            "user_index": 1,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    result = msg["result"]
+    assert result["user_index"] == 1
+    assert result["user_name"] == "Test User"
+    assert result["user_status"] == "occupied_enabled"
+    assert result["user_type"] == "unrestricted_user"
+    assert result["next_user_index"] == 2
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["door_lock_with_usr"])
+async def test_get_lock_user_not_found(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+) -> None:
+    """Test the get_lock_user command when user doesn't exist."""
+    entry = device_registry.async_get_device(
+        identifiers={
+            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
+        }
+    )
+    assert entry is not None
+
+    # Mock GetUser response (empty)
+    mock_get_user_response = MagicMock()
+    mock_get_user_response.userStatus = None
+    matter_client.send_device_command = AsyncMock(return_value=mock_get_user_response)
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "matter/lock/get_user",
+            DEVICE_ID: entry.id,
+            "user_index": 1,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "user_not_found"
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["door_lock_with_usr"])
+async def test_get_lock_users(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+) -> None:
+    """Test the get_lock_users command."""
+    entry = device_registry.async_get_device(
+        identifiers={
+            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
+        }
+    )
+    assert entry is not None
+
+    # Mock GetUser responses - user at index 1, next is 3, then no more
+    mock_user1 = MagicMock()
+    mock_user1.userIndex = 1
+    mock_user1.userName = "User 1"
+    mock_user1.userUniqueID = 1
+    mock_user1.userStatus = 1
+    mock_user1.userType = 0
+    mock_user1.credentialRule = 0
+    mock_user1.credentials = []
+    mock_user1.nextUserIndex = 3
+
+    mock_user3 = MagicMock()
+    mock_user3.userIndex = 3
+    mock_user3.userName = "User 3"
+    mock_user3.userUniqueID = 3
+    mock_user3.userStatus = 1
+    mock_user3.userType = 0
+    mock_user3.credentialRule = 0
+    mock_user3.credentials = []
+    mock_user3.nextUserIndex = None  # No more users
+
+    matter_client.send_device_command = AsyncMock(side_effect=[mock_user1, mock_user3])
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "matter/lock/get_users",
+            DEVICE_ID: entry.id,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    result = msg["result"]
+    assert result["total_users"] == 2
+    assert result["max_users"] == 10
+    assert len(result["users"]) == 2
+    assert result["users"][0]["user_name"] == "User 1"
+    assert result["users"][1]["user_name"] == "User 3"
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["door_lock_with_usr"])
+async def test_clear_lock_user(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+) -> None:
+    """Test the clear_lock_user command."""
+    entry = device_registry.async_get_device(
+        identifiers={
+            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
+        }
+    )
+    assert entry is not None
+
+    matter_client.send_device_command = AsyncMock(return_value=None)
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "matter/lock/clear_user",
+            DEVICE_ID: entry.id,
+            "user_index": 1,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    matter_client.send_device_command.assert_called_once()
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["door_lock_with_usr"])
+async def test_set_lock_credential(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+) -> None:
+    """Test the set_lock_credential command."""
+    entry = device_registry.async_get_device(
+        identifiers={
+            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
+        }
+    )
+    assert entry is not None
+
+    # Mock GetCredentialStatus (slot empty) and SetCredential response
+    mock_status_response = MagicMock()
+    mock_status_response.credentialExists = False
+
+    mock_set_response = MagicMock()
+    mock_set_response.status = 0  # Success
+    mock_set_response.userIndex = 1
+    mock_set_response.nextCredentialIndex = 2
+
+    matter_client.send_device_command = AsyncMock(
+        side_effect=[mock_status_response, mock_set_response]
+    )
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "matter/lock/set_credential",
+            DEVICE_ID: entry.id,
+            "credential_type": "pin",
+            "credential_index": 1,
+            "credential_data": "1234",
+            "user_index": 1,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    result = msg["result"]
+    assert result["status"] == "success"
+    assert result["user_index"] == 1
+    assert result["next_credential_index"] == 2
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["door_lock_with_usr"])
+async def test_get_lock_credential_status(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+) -> None:
+    """Test the get_lock_credential_status command."""
+    entry = device_registry.async_get_device(
+        identifiers={
+            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
+        }
+    )
+    assert entry is not None
+
+    mock_status_response = MagicMock()
+    mock_status_response.credentialExists = True
+    mock_status_response.userIndex = 1
+    mock_status_response.nextCredentialIndex = 2
+    matter_client.send_device_command = AsyncMock(return_value=mock_status_response)
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "matter/lock/get_credential_status",
+            DEVICE_ID: entry.id,
+            "credential_type": "pin",
+            "credential_index": 1,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    result = msg["result"]
+    assert result["credential_exists"] is True
+    assert result["user_index"] == 1
+    assert result["next_credential_index"] == 2
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["door_lock_with_usr"])
+async def test_clear_lock_credential(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+) -> None:
+    """Test the clear_lock_credential command."""
+    entry = device_registry.async_get_device(
+        identifiers={
+            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
+        }
+    )
+    assert entry is not None
+
+    matter_client.send_device_command = AsyncMock(return_value=None)
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "matter/lock/clear_credential",
+            DEVICE_ID: entry.id,
+            "credential_type": "pin",
+            "credential_index": 1,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    matter_client.send_device_command.assert_called_once()
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["door_lock"])
+async def test_lock_commands_usr_not_supported(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+) -> None:
+    """Test lock commands on a lock without USR feature."""
+    entry = device_registry.async_get_device(
+        identifiers={
+            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
+        }
+    )
+    assert entry is not None
+
+    ws_client = await hass_ws_client(hass)
+
+    # Test add_user
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "matter/lock/add_user",
+            DEVICE_ID: entry.id,
+            "user_index": 1,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERROR_USR_NOT_SUPPORTED
+
+    # Test get_user
+    await ws_client.send_json(
+        {
+            ID: 2,
+            TYPE: "matter/lock/get_user",
+            DEVICE_ID: entry.id,
+            "user_index": 1,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERROR_USR_NOT_SUPPORTED
+
+    # Test set_credential
+    await ws_client.send_json(
+        {
+            ID: 3,
+            TYPE: "matter/lock/set_credential",
+            DEVICE_ID: entry.id,
+            "credential_type": "pin",
+            "credential_index": 1,
+            "credential_data": "1234",
+            "user_index": 1,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERROR_USR_NOT_SUPPORTED
+
+
+# Lock Schedule Management API Tests
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["door_lock_with_schedules"])
+async def test_get_lock_info_with_schedules(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+) -> None:
+    """Test the get_lock_info command includes schedule info."""
+    entry = device_registry.async_get_device(
+        identifiers={
+            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
+        }
+    )
+    assert entry is not None
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "matter/lock/get_lock_info",
+            DEVICE_ID: entry.id,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    result = msg["result"]
+    # Check schedule feature support
+    assert result["supports_week_day_schedules"] is True
+    assert result["supports_year_day_schedules"] is True
+    assert result["supports_holiday_schedules"] is True
+    # Check schedule capacity
+    assert result["max_week_day_schedules_per_user"] == 10
+    assert result["max_year_day_schedules_per_user"] == 10
+    assert result["max_holiday_schedules"] == 10
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["door_lock_with_schedules"])
+async def test_set_week_day_schedule(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+) -> None:
+    """Test the set_week_day_schedule command."""
+    entry = device_registry.async_get_device(
+        identifiers={
+            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
+        }
+    )
+    assert entry is not None
+
+    matter_client.send_device_command = AsyncMock(return_value=None)
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "matter/lock/set_week_day_schedule",
+            DEVICE_ID: entry.id,
+            "week_day_index": 1,
+            "user_index": 1,
+            "days_mask": 62,  # Monday through Friday (0b111110)
+            "start_hour": 9,
+            "start_minute": 0,
+            "end_hour": 17,
+            "end_minute": 0,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    result = msg["result"]
+    assert result["week_day_index"] == 1
+    assert result["user_index"] == 1
+    matter_client.send_device_command.assert_called_once()
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["door_lock_with_schedules"])
+async def test_set_week_day_schedule_invalid_time_range(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+) -> None:
+    """Test the set_week_day_schedule command with invalid time range."""
+    entry = device_registry.async_get_device(
+        identifiers={
+            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
+        }
+    )
+    assert entry is not None
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "matter/lock/set_week_day_schedule",
+            DEVICE_ID: entry.id,
+            "week_day_index": 1,
+            "user_index": 1,
+            "days_mask": 62,
+            "start_hour": 17,
+            "start_minute": 0,
+            "end_hour": 9,  # End before start
+            "end_minute": 0,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERROR_INVALID_TIME_RANGE
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["door_lock_with_schedules"])
+async def test_get_week_day_schedule(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+) -> None:
+    """Test the get_week_day_schedule command."""
+    entry = device_registry.async_get_device(
+        identifiers={
+            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
+        }
+    )
+    assert entry is not None
+
+    # Mock response
+    mock_response = MagicMock()
+    mock_response.status = 0  # Success
+    mock_response.weekDayIndex = 1
+    mock_response.userIndex = 1
+    mock_response.daysMask = 62
+    mock_response.startHour = 9
+    mock_response.startMinute = 0
+    mock_response.endHour = 17
+    mock_response.endMinute = 0
+    matter_client.send_device_command = AsyncMock(return_value=mock_response)
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "matter/lock/get_week_day_schedule",
+            DEVICE_ID: entry.id,
+            "week_day_index": 1,
+            "user_index": 1,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    result = msg["result"]
+    assert result["week_day_index"] == 1
+    assert result["days_mask"] == 62
+    assert result["days"] == ["monday", "tuesday", "wednesday", "thursday", "friday"]
+    assert result["start_hour"] == 9
+    assert result["end_hour"] == 17
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["door_lock_with_schedules"])
+async def test_get_week_day_schedule_not_found(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+) -> None:
+    """Test the get_week_day_schedule command when schedule not found."""
+    entry = device_registry.async_get_device(
+        identifiers={
+            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
+        }
+    )
+    assert entry is not None
+
+    # Mock response - schedule not found
+    mock_response = MagicMock()
+    mock_response.status = 1  # Not found
+    matter_client.send_device_command = AsyncMock(return_value=mock_response)
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "matter/lock/get_week_day_schedule",
+            DEVICE_ID: entry.id,
+            "week_day_index": 1,
+            "user_index": 1,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERROR_SCHEDULE_NOT_FOUND
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["door_lock_with_schedules"])
+async def test_clear_week_day_schedule(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+) -> None:
+    """Test the clear_week_day_schedule command."""
+    entry = device_registry.async_get_device(
+        identifiers={
+            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
+        }
+    )
+    assert entry is not None
+
+    matter_client.send_device_command = AsyncMock(return_value=None)
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "matter/lock/clear_week_day_schedule",
+            DEVICE_ID: entry.id,
+            "week_day_index": 1,
+            "user_index": 1,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    matter_client.send_device_command.assert_called_once()
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["door_lock_with_schedules"])
+async def test_set_year_day_schedule(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+) -> None:
+    """Test the set_year_day_schedule command."""
+    entry = device_registry.async_get_device(
+        identifiers={
+            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
+        }
+    )
+    assert entry is not None
+
+    matter_client.send_device_command = AsyncMock(return_value=None)
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "matter/lock/set_year_day_schedule",
+            DEVICE_ID: entry.id,
+            "year_day_index": 1,
+            "user_index": 1,
+            "local_start_time": 1704067200,  # Jan 1, 2024
+            "local_end_time": 1735689600,  # Jan 1, 2025
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    result = msg["result"]
+    assert result["year_day_index"] == 1
+    assert result["user_index"] == 1
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["door_lock_with_schedules"])
+async def test_set_year_day_schedule_invalid_time_range(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+) -> None:
+    """Test the set_year_day_schedule command with invalid time range."""
+    entry = device_registry.async_get_device(
+        identifiers={
+            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
+        }
+    )
+    assert entry is not None
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "matter/lock/set_year_day_schedule",
+            DEVICE_ID: entry.id,
+            "year_day_index": 1,
+            "user_index": 1,
+            "local_start_time": 1735689600,  # Jan 1, 2025
+            "local_end_time": 1704067200,  # Jan 1, 2024 (before start)
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERROR_INVALID_TIME_RANGE
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["door_lock_with_schedules"])
+async def test_get_year_day_schedule(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+) -> None:
+    """Test the get_year_day_schedule command."""
+    entry = device_registry.async_get_device(
+        identifiers={
+            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
+        }
+    )
+    assert entry is not None
+
+    mock_response = MagicMock()
+    mock_response.status = 0
+    mock_response.yearDayIndex = 1
+    mock_response.userIndex = 1
+    mock_response.localStartTime = 1704067200
+    mock_response.localEndTime = 1735689600
+    matter_client.send_device_command = AsyncMock(return_value=mock_response)
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "matter/lock/get_year_day_schedule",
+            DEVICE_ID: entry.id,
+            "year_day_index": 1,
+            "user_index": 1,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    result = msg["result"]
+    assert result["year_day_index"] == 1
+    assert result["local_start_time"] == 1704067200
+    assert result["local_end_time"] == 1735689600
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["door_lock_with_schedules"])
+async def test_clear_year_day_schedule(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+) -> None:
+    """Test the clear_year_day_schedule command."""
+    entry = device_registry.async_get_device(
+        identifiers={
+            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
+        }
+    )
+    assert entry is not None
+
+    matter_client.send_device_command = AsyncMock(return_value=None)
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "matter/lock/clear_year_day_schedule",
+            DEVICE_ID: entry.id,
+            "year_day_index": 1,
+            "user_index": 1,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    matter_client.send_device_command.assert_called_once()
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["door_lock_with_schedules"])
+async def test_set_holiday_schedule(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+) -> None:
+    """Test the set_holiday_schedule command."""
+    entry = device_registry.async_get_device(
+        identifiers={
+            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
+        }
+    )
+    assert entry is not None
+
+    matter_client.send_device_command = AsyncMock(return_value=None)
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "matter/lock/set_holiday_schedule",
+            DEVICE_ID: entry.id,
+            "holiday_index": 1,
+            "local_start_time": 1703980800,  # Dec 31, 2023
+            "local_end_time": 1704153600,  # Jan 2, 2024
+            "operating_mode": "vacation",
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    result = msg["result"]
+    assert result["holiday_index"] == 1
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["door_lock_with_schedules"])
+async def test_get_holiday_schedule(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+) -> None:
+    """Test the get_holiday_schedule command."""
+    entry = device_registry.async_get_device(
+        identifiers={
+            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
+        }
+    )
+    assert entry is not None
+
+    mock_response = MagicMock()
+    mock_response.status = 0
+    mock_response.holidayIndex = 1
+    mock_response.localStartTime = 1703980800
+    mock_response.localEndTime = 1704153600
+    mock_response.operatingMode = 1  # vacation
+    matter_client.send_device_command = AsyncMock(return_value=mock_response)
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "matter/lock/get_holiday_schedule",
+            DEVICE_ID: entry.id,
+            "holiday_index": 1,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    result = msg["result"]
+    assert result["holiday_index"] == 1
+    assert result["operating_mode"] == "vacation"
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["door_lock_with_schedules"])
+async def test_clear_holiday_schedule(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+) -> None:
+    """Test the clear_holiday_schedule command."""
+    entry = device_registry.async_get_device(
+        identifiers={
+            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
+        }
+    )
+    assert entry is not None
+
+    matter_client.send_device_command = AsyncMock(return_value=None)
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "matter/lock/clear_holiday_schedule",
+            DEVICE_ID: entry.id,
+            "holiday_index": 1,
+        }
+    )
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    matter_client.send_device_command.assert_called_once()
+
+
+@pytest.mark.usefixtures("matter_node")
+@pytest.mark.parametrize("node_fixture", ["door_lock_with_usr"])
+async def test_schedule_commands_feature_not_supported(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    matter_client: MagicMock,
+) -> None:
+    """Test schedule commands on a lock without schedule features."""
+    entry = device_registry.async_get_device(
+        identifiers={
+            (DOMAIN, "deviceid_00000000000004D2-0000000000000001-MatterNodeDevice")
+        }
+    )
+    assert entry is not None
+
+    ws_client = await hass_ws_client(hass)
+
+    # Test week day schedule
+    await ws_client.send_json(
+        {
+            ID: 1,
+            TYPE: "matter/lock/set_week_day_schedule",
+            DEVICE_ID: entry.id,
+            "week_day_index": 1,
+            "user_index": 1,
+            "days_mask": 62,
+            "start_hour": 9,
+            "start_minute": 0,
+            "end_hour": 17,
+            "end_minute": 0,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERROR_WEEK_DAY_SCHEDULES_NOT_SUPPORTED
+
+    # Test year day schedule
+    await ws_client.send_json(
+        {
+            ID: 2,
+            TYPE: "matter/lock/set_year_day_schedule",
+            DEVICE_ID: entry.id,
+            "year_day_index": 1,
+            "user_index": 1,
+            "local_start_time": 1704067200,
+            "local_end_time": 1735689600,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERROR_YEAR_DAY_SCHEDULES_NOT_SUPPORTED
+
+    # Test holiday schedule
+    await ws_client.send_json(
+        {
+            ID: 3,
+            TYPE: "matter/lock/set_holiday_schedule",
+            DEVICE_ID: entry.id,
+            "holiday_index": 1,
+            "local_start_time": 1703980800,
+            "local_end_time": 1704153600,
+            "operating_mode": "vacation",
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == ERROR_HOLIDAY_SCHEDULES_NOT_SUPPORTED

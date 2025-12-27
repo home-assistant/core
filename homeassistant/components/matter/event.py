@@ -20,6 +20,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import MatterEntity, MatterEntityDescription
+from .event_lock import (
+    MatterDoorStateEventEntity,
+    MatterLockAlarmEventEntity,
+    MatterLockOperationEventEntity,
+    MatterLockUserChangeEventEntity,
+)
 from .helpers import get_matter
 from .models import MatterDiscoverySchema
 
@@ -154,5 +160,52 @@ DISCOVERY_SCHEMAS = [
             clusters.FixedLabel.Attributes.LabelList,
         ),
         allow_multi=True,  # also used for sensor (current position) entity
+    ),
+    # Lock event entities
+    MatterDiscoverySchema(
+        platform=Platform.EVENT,
+        entity_description=MatterEventEntityDescription(
+            key="DoorLockAlarm",
+            translation_key="lock_alarm",
+        ),
+        entity_class=MatterLockAlarmEventEntity,
+        required_attributes=(clusters.DoorLock.Attributes.LockState,),
+        allow_multi=True,  # also used for lock entity
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.EVENT,
+        entity_description=MatterEventEntityDescription(
+            key="DoorLockOperation",
+            translation_key="lock_operation",
+        ),
+        entity_class=MatterLockOperationEventEntity,
+        required_attributes=(clusters.DoorLock.Attributes.LockState,),
+        allow_multi=True,  # also used for lock entity
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.EVENT,
+        entity_description=MatterEventEntityDescription(
+            key="DoorStateChange",
+            translation_key="door_state",
+        ),
+        entity_class=MatterDoorStateEventEntity,
+        required_attributes=(
+            clusters.DoorLock.Attributes.LockState,
+            clusters.DoorLock.Attributes.DoorState,  # Requires DPS feature
+        ),
+        allow_multi=True,  # also used for lock entity
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.EVENT,
+        entity_description=MatterEventEntityDescription(
+            key="LockUserChange",
+            translation_key="lock_user_change",
+        ),
+        entity_class=MatterLockUserChangeEventEntity,
+        required_attributes=(
+            clusters.DoorLock.Attributes.LockState,
+            clusters.DoorLock.Attributes.NumberOfTotalUsersSupported,  # Requires USR feature
+        ),
+        allow_multi=True,  # also used for lock entity
     ),
 ]

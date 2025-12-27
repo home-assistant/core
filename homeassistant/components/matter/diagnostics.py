@@ -15,7 +15,13 @@ from homeassistant.helpers import device_registry as dr
 
 from .helpers import get_matter, get_node_from_device_entry
 
-ATTRIBUTES_TO_REDACT = {Objects.BasicInformation.Attributes.Location}
+# Attributes that may contain sensitive information
+# Note: Lock credential data (PINs, RFID codes) are never stored as Matter attributes,
+# they're only accessible via commands and kept on-device only.
+ATTRIBUTES_TO_REDACT = {
+    Objects.BasicInformation.Attributes.Location,
+    Objects.BasicInformation.Attributes.SerialNumber,
+}
 
 
 def redact_matter_attributes(node_data: dict[str, Any]) -> dict[str, Any]:
