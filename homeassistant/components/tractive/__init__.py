@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 import logging
-from typing import Any, cast
+from typing import Any
 
 import aiotractive
 
@@ -203,25 +203,6 @@ class TractiveClient:
             return False
 
         return not self._listen_task.cancelled()
-
-    async def trackable_objects(
-        self,
-    ) -> list[aiotractive.trackable_object.TrackableObject]:
-        """Get list of trackable objects."""
-        return cast(
-            list[aiotractive.trackable_object.TrackableObject],
-            await self._client.trackable_objects(),
-        )
-
-    def tracker(self, tracker_id: str) -> aiotractive.tracker.Tracker:
-        """Get tracker by id."""
-        return self._client.tracker(tracker_id)
-
-    def trackable_object(
-        self, trackable_id: str
-    ) -> aiotractive.trackable_object.TrackableObject:
-        """Get trackable object by id."""
-        return self._client.trackable_object(trackable_id)
 
     def subscribe(self) -> None:
         """Start event listener coroutine."""
