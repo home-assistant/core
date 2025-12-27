@@ -211,3 +211,138 @@ async def test_remove_config_entry_device(
     assert not device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, client_payload[1]["mac"])}
     )
+
+
+@pytest.mark.parametrize(
+    "client_payload",
+    [
+        [
+            {
+                "hostname": "supported_client",
+                "ip": "10.0.0.1",
+                "is_wired": False,
+                "mac": "00:00:00:00:00:01",
+            },
+            {
+                "hostname": "another_client",
+                "ip": "10.0.0.2",
+                "is_wired": False,
+                "mac": "00:00:00:00:00:02",
+            },
+        ]
+    ],
+)
+@pytest.mark.parametrize(
+    "config_entry_options",
+    [
+        {
+            CONF_TRACK_CLIENTS: False,  # Track clients disabled
+            "client_source": [
+                "00:00:00:00:00:01",
+                "00:00:00:00:00:02",
+            ],  # Supported clients
+        }
+    ],
+)
+async def test_remove_tracked_device_when_track_clients_disabled(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry_factory: ConfigEntryFactoryType,
+    client_payload: list[dict[str, Any]],
+    mock_websocket_message: WebsocketMessageMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Verify removing a tracked device when track_clients is disabled."""
+    config_entry = await config_entry_factory()
+
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+
+    # Verify that the client is in the supported clients list
+    assert "00:00:00:00:00:01" in config_entry.options["client_source"]
+
+    # Try to remove an active client: not allowed
+    device_entry = device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, client_payload[0]["mac"])}
+    )
+    response = await ws_client.remove_device(device_entry.id, config_entry.entry_id)
+    assert not response["success"]
+
+    # Remove client from UniFi API to simulate it being offline
+    mock_websocket_message(message=MessageKey.CLIENT_REMOVED, data=[client_payload[0]])
+    await hass.async_block_till_done()
+
+    # Now try to remove the offline client: should be allowed and remove from supported list
+    device_entry = device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, client_payload[0]["mac"])}
+    )
+    response = await ws_client.remove_device(device_entry.id, config_entry.entry_id)
+    assert response["success"]
+
+    # Verify device was removed from device registry
+    assert not device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, client_payload[0]["mac"])}
+    )
+
+    # Verify client was removed from supported clients list
+    updated_entry = hass.config_entries.async_get_entry(config_entry.entry_id)
+    assert "00:00:00:00:00:01" not in updated_entry.options["client_source"]
+    assert (
+        "00:00:00:00:00:02" in updated_entry.options["client_source"]
+    )  # Other client still there
+
+
+@pytest.mark.parametrize(
+    "client_payload",
+    [
+        [
+            {
+                "hostname": "tracked_client",
+                "ip": "10.0.0.1",
+                "is_wired": False,
+                "mac": "00:00:00:00:00:01",
+            },
+        ]
+    ],
+)
+@pytest.mark.parametrize(
+    "config_entry_options",
+    [
+        {
+            CONF_TRACK_CLIENTS: True,  # Track clients enabled
+            "client_source": [
+                "00:00:00:00:00:01"
+            ],  # Add client to supported list so device is created
+        }
+    ],
+)
+async def test_remove_device_when_track_clients_enabled(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry_factory: ConfigEntryFactoryType,
+    client_payload: list[dict[str, Any]],
+    mock_websocket_message: WebsocketMessageMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Verify removing device when track_clients is enabled works as before."""
+    config_entry = await config_entry_factory()
+
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+
+    # Remove client from UniFi API
+    mock_websocket_message(message=MessageKey.CLIENT_REMOVED, data=[client_payload[0]])
+    await hass.async_block_till_done()
+
+    # Try to remove the offline client: should be allowed (standard behavior)
+    device_entry = device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, client_payload[0]["mac"])}
+    )
+    assert device_entry is not None  # Make sure device exists
+    response = await ws_client.remove_device(device_entry.id, config_entry.entry_id)
+    assert response["success"]
+
+    # Verify device was removed from device registry
+    assert not device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, client_payload[0]["mac"])}
+    )
