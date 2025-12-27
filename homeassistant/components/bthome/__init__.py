@@ -15,7 +15,7 @@ from homeassistant.components.bluetooth import (
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceRegistry
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util.signal_type import SignalType
@@ -36,6 +36,11 @@ PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.EVENT, Platform.SE
 _LOGGER = logging.getLogger(__name__)
 
 
+def _get_encryption_issue_id(entry_id: str) -> str:
+    """Return the repair issue id for encryption removal."""
+    return f"encryption_removed_{entry_id}"
+
+
 def process_service_info(
     hass: HomeAssistant,
     entry: BTHomeConfigEntry,
@@ -45,7 +50,46 @@ def process_service_info(
     """Process a BluetoothServiceInfoBleak, running side effects and returning sensor data."""
     coordinator = entry.runtime_data
     data = coordinator.device_data
+    issue_registry = ir.async_get(hass)
+    issue_id = _get_encryption_issue_id(entry.entry_id)
     update = data.update(service_info)
+
+    # Block unencrypted payloads for devices that were previously verified as encrypted.
+    if entry.data.get(CONF_BINDKEY) and data.downgrade_detected:
+        existing_issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+        if not coordinator.encryption_downgrade_logged:
+            coordinator.encryption_downgrade_logged = True
+            if not existing_issue:
+                _LOGGER.warning(
+                    "BTHome device %s was previously encrypted but is now sending "
+                    "unencrypted data. This could be a spoofing attempt. "
+                    "Data will be ignored until resolved",
+                    entry.title,
+                )
+                ir.async_create_issue(
+                    hass,
+                    DOMAIN,
+                    issue_id,
+                    is_fixable=True,
+                    is_persistent=True,
+                    severity=ir.IssueSeverity.WARNING,
+                    translation_key="encryption_removed",
+                    translation_placeholders={"name": entry.title},
+                    data={"entry_id": entry.entry_id},
+                )
+        return SensorUpdate(title=None, devices={})
+
+    if data.bindkey_verified:
+        existing_issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+        if existing_issue or coordinator.encryption_downgrade_logged:
+            coordinator.encryption_downgrade_logged = False
+            if existing_issue:
+                ir.async_delete_issue(hass, DOMAIN, issue_id)
+                _LOGGER.info(
+                    "BTHome device %s is now sending encrypted data again. Resuming normal operation",
+                    entry.title,
+                )
+
     discovered_event_classes = coordinator.discovered_event_classes
     if entry.data.get(CONF_SLEEPY_DEVICE, False) != data.sleepy_device:
         hass.config_entries.async_update_entry(
