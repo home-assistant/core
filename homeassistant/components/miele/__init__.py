@@ -19,7 +19,12 @@ from homeassistant.helpers.typing import ConfigType
 
 from .api import AsyncConfigEntryAuth
 from .const import DOMAIN
-from .coordinator import MieleConfigEntry, MieleDataUpdateCoordinator
+from .coordinator import (
+    MieleAuxDataUpdateCoordinator,
+    MieleConfigEntry,
+    MieleDataUpdateCoordinator,
+    MieleRuntimeData,
+)
 from .services import async_setup_services
 
 PLATFORMS: list[Platform] = [
@@ -75,19 +80,25 @@ async def async_setup_entry(hass: HomeAssistant, entry: MieleConfigEntry) -> boo
         ) from err
 
     # Setup MieleAPI and coordinator for data fetch
-    api = MieleAPI(auth)
-    coordinator = MieleDataUpdateCoordinator(hass, entry, api)
+    entry.runtime_data = MieleRuntimeData  # type: ignore[assignment]
+    entry.runtime_data.api = MieleAPI(auth)
+    coordinator = MieleDataUpdateCoordinator(hass, entry, entry.runtime_data.api)
     await coordinator.async_config_entry_first_refresh()
-    entry.runtime_data = coordinator
+    entry.runtime_data.coordinator = coordinator
 
     entry.async_create_background_task(
         hass,
-        coordinator.api.listen_events(
+        entry.runtime_data.api.listen_events(
             data_callback=coordinator.callback_update_data,
             actions_callback=coordinator.callback_update_actions,
         ),
         "pymiele event listener",
     )
+
+    aux_coordinator = MieleAuxDataUpdateCoordinator(hass, entry, entry.runtime_data.api)
+    await aux_coordinator.async_config_entry_first_refresh()
+    entry.runtime_data.aux_coordinator = aux_coordinator
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -107,5 +118,5 @@ async def async_remove_config_entry_device(
         identifier
         for identifier in device_entry.identifiers
         if identifier[0] == DOMAIN
-        and identifier[1] in config_entry.runtime_data.data.devices
+        and identifier[1] in config_entry.runtime_data.coordinator.data.devices
     )
