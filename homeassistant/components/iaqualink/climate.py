@@ -52,7 +52,10 @@ class HassAqualinkThermostat(AqualinkEntity[AqualinkThermostat], ClimateEntity):
     def __init__(self, dev: AqualinkThermostat) -> None:
         """Initialize AquaLink thermostat."""
         super().__init__(dev)
-        self._attr_name = dev.label.split(" ")[0]
+
+        # Override the AqualinkEntity default name.
+        self._attr_name = dev.label.split(" ")[0] + " Thermostat"
+
         self._attr_temperature_unit = (
             UnitOfTemperature.FAHRENHEIT
             if dev.unit == "F"

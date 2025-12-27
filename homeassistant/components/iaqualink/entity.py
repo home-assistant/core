@@ -22,18 +22,16 @@ class AqualinkEntity[AqualinkDeviceT: AqualinkDevice](Entity):
     """
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(self, dev: AqualinkDeviceT) -> None:
         """Initialize the entity."""
         self.dev = dev
         self._attr_unique_id = f"{dev.system.serial}_{dev.name}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._attr_unique_id)},
-            via_device=(DOMAIN, dev.system.serial),
-            manufacturer=dev.manufacturer,
-            model=dev.model,
-            name=dev.label,
+            identifiers={(DOMAIN, dev.system.serial)},
         )
+        self._attr_name = dev.label
 
     async def async_added_to_hass(self) -> None:
         """Set up a listener when this entity is added to HA."""
