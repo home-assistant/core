@@ -59,10 +59,19 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         on_update: Callable[[Any], None] | None = None,
     ) -> None:
         """Set up a template that manages the main state of the entity."""
-        if self._config.get(option):
-            self._to_render_simple.append(CONF_STATE)
-            self._parse_result.add(CONF_STATE)
-            self.add_template(option, attribute, validator, on_update)
+        if self.add_template(option, attribute, validator, on_update):
+            self._to_render_simple.append(option)
+            self._parse_result.add(option)
+
+    def setup_template(
+        self,
+        option: str,
+        attribute: str,
+        validator: Callable[[Any], Any] | None = None,
+        on_update: Callable[[Any], None] | None = None,
+    ) -> None:
+        """Set up a template that manages any property or attribute of the entity."""
+        self.setup_state_template(option, attribute, validator, on_update)
 
     @property
     def referenced_blueprint(self) -> str | None:
@@ -103,20 +112,27 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         self._render_attributes(rendered, variables)
         self._rendered = rendered
 
-    def handle_rendered_result(self, key: str) -> bool:
+    def _handle_rendered_results(self) -> bool:
         """Get a rendered result and return the value."""
-        if (rendered := self._rendered.get(key)) is not None:
-            if (entity_template := self._templates.get(key)) is not None:
+        # Handle any templates.
+        for option, entity_template in self._templates.items():
+            if (rendered := self._rendered.get(option)) is not None:
                 value = rendered
-                if entity_template.validator:
-                    value = entity_template.validator(rendered)
 
-                if entity_template.on_update:
-                    entity_template.on_update(value)
-                else:
-                    setattr(self, entity_template.attribute, value)
+            if entity_template.validator:
+                value = entity_template.validator(rendered)
 
-                return True
+            if entity_template.on_update:
+                entity_template.on_update(value)
+            else:
+                setattr(self, entity_template.attribute, value)
+            return True
+
+        if len(self._rendered) > 0:
+            # In some cases, the entity may be state optimistic or
+            # attribute optimistic, in these scenarios the state needs
+            # to update.
+            return True
 
         return False
 
@@ -136,13 +152,35 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         else:
             self._rendered_entity_variables = coordinator_variables
         variables = self._template_variables(self._rendered_entity_variables)
+
+        self.async_set_context(self.coordinator.data["context"])
         if self._render_availability_template(variables):
             self._render_templates(variables)
 
-        self.async_set_context(self.coordinator.data["context"])
+            # While transitioning platforms to the new framework, this
+            # if-statement is necessary for backward compatability with existing
+            # trigger based platforms.
+            if self._templates:
+                # Handle any results that were rendered.
+                if self._handle_rendered_results():
+                    self.async_write_ha_state()
+        else:
+            # While transitioning platforms to the new framework, this
+            # if-statement is necessary for backward compatability with existing
+            # trigger based platforms.
+            if self._templates:
+                # Cancel anything associated with any template when unavailable.
+                for entity_template in self._templates.values():
+                    if entity_template.on_cancel:
+                        entity_template.on_cancel()
+            self.async_write_ha_state()
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+        """Handle updated data from the coordinator.
+
+        While transitioning platforms to the new framework, this
+        function is necessary for backward compatability with existing
+        trigger based platforms.
+        """
         self._process_data()
-        self.async_write_ha_state()

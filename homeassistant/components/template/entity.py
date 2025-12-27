@@ -27,6 +27,7 @@ class EntityTemplate:
     template: Template
     validator: Callable[[Any], Any] | None
     on_update: Callable[[Any], None] | None
+    on_cancel: Callable[[Any], None] | None
     none_on_template_error: bool
 
 
@@ -93,8 +94,20 @@ class AbstractTemplateEntity(Entity):
         attribute: str,
         validator: Callable[[Any], Any] | None = None,
         on_update: Callable[[Any], None] | None = None,
+        on_cancel: Callable[[], None] | None = None,
     ) -> None:
         """Set up a template that manages the main state of the entity."""
+
+    @abstractmethod
+    def setup_template(
+        self,
+        option: str,
+        attribute: str,
+        validator: Callable[[Any], Any] | None = None,
+        on_update: Callable[[Any], None] | None = None,
+        on_cancel: Callable[[], None] | None = None,
+    ) -> None:
+        """Set up a template that manages any property or attribute of the entity."""
 
     def add_template(
         self,
@@ -102,6 +115,7 @@ class AbstractTemplateEntity(Entity):
         attribute: str,
         validator: Callable[[Any], Any] | None = None,
         on_update: Callable[[Any], None] | None = None,
+        on_cancel: Callable[[], None] | None = None,
         none_on_template_error: bool = False,
         add_if_static: bool = True,
     ) -> Template | None:
@@ -109,7 +123,12 @@ class AbstractTemplateEntity(Entity):
         if (template := self._config.get(option)) and isinstance(template, Template):
             if add_if_static or (not template.is_static):
                 self._templates[option] = EntityTemplate(
-                    attribute, template, validator, on_update, none_on_template_error
+                    attribute,
+                    template,
+                    validator,
+                    on_update,
+                    on_cancel,
+                    none_on_template_error,
                 )
             return template
 

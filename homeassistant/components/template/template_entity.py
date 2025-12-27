@@ -303,6 +303,16 @@ class TemplateEntity(AbstractTemplateEntity):
 
         self.add_template(option, attribute, on_update=_update_state)
 
+    def setup_template(
+        self,
+        option: str,
+        attribute: str,
+        validator: Callable[[Any], Any] | None = None,
+        on_update: Callable[[Any], None] | None = None,
+    ):
+        """Set up a template that manages any property or attribute of the entity."""
+        self.add_template(option, attribute, validator, on_update, True)
+
     def add_template_attribute(
         self,
         attribute: str,
