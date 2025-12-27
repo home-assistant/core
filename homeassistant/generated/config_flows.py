@@ -307,6 +307,7 @@ FLOWS = {
         "hvv_departures",
         "hydrawise",
         "hyperion",
+        "hypontech",
         "ialarm",
         "iaqualink",
         "ibeacon",
