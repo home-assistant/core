@@ -1,7 +1,8 @@
 """Test the SystemNexa2 config flow."""
 
 from ipaddress import ip_address
-from unittest.mock import MagicMock
+import socket
+from unittest.mock import MagicMock, patch
 
 import pytest
 from sn2 import InformationData, InformationUpdate
@@ -124,12 +125,49 @@ async def test_invalid_hostname(
     assert result["step_id"] == "user"
 
     # Test with hostname that cannot be resolved
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_HOST: "this-hostname-definitely-does-not-exist.invalid"},
-    )
+    # Mock socket.gethostbyname to raise gaierror to cover the exception handling path
+    with patch(
+        "homeassistant.components.systemnexa2.config_flow.socket.gethostbyname",
+        side_effect=socket.gaierror(-2, "Name or service not known"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "invalid-hostname.local"},
+        )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_host"
+
+
+@pytest.mark.usefixtures("mock_system_nexa_2_device")
+@pytest.mark.usefixtures("mock_patch_get_host")
+async def test_valid_hostname(
+    hass: HomeAssistant,
+) -> None:
+    """Test invalid hostname/IP address handling."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    # Test with hostname that cannot be resolved
+    # Mock socket.gethostbyname to raise gaierror to cover the exception handling path
+    # with patch(
+    #     "homeassistant.components.systemnexa2.config_flow.socket.gethostbyname",
+    # ):
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "valid-hostname.local"},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Test Device (Test Model)"
+    assert result["data"] == {
+        CONF_HOST: "valid-hostname.local",
+        CONF_NAME: "Test Device",
+        CONF_DEVICE_ID: "test_device_id",
+        CONF_MODEL: "Test Model",
+    }
 
 
 @pytest.mark.usefixtures("mock_system_nexa_2_device_unsupported")

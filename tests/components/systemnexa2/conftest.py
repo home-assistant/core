@@ -115,3 +115,13 @@ def mock_config_entry() -> MockConfigEntry:
         data={CONF_HOST: "192.168.1.100"},
         unique_id="test_device_id",
     )
+
+
+@pytest.fixture
+def mock_patch_get_host():
+    """Mock call to socket gethostbyname function."""
+    with patch(
+        "homeassistant.components.systemnexa2.config_flow.socket.gethostbyname",
+        return_value="192.168.1.1",
+    ) as get_host_mock:
+        yield get_host_mock
