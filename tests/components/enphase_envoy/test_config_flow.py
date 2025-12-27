@@ -9,6 +9,8 @@ import pytest
 
 from homeassistant.components.enphase_envoy.const import (
     DOMAIN,
+    OPTION_DIAGNOSTICS_ADDITIONAL_ENDPOINTS,
+    OPTION_DIAGNOSTICS_ADDITIONAL_ENDPOINTS_DEFAULT_VALUE,
     OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
     OPTION_DIAGNOSTICS_INCLUDE_FIXTURES_DEFAULT_VALUE,
     OPTION_DISABLE_KEEP_ALIVE,
@@ -596,6 +598,7 @@ async def test_options_default(
     assert config_entry.options == {
         OPTION_DIAGNOSTICS_INCLUDE_FIXTURES: OPTION_DIAGNOSTICS_INCLUDE_FIXTURES_DEFAULT_VALUE,
         OPTION_DISABLE_KEEP_ALIVE: OPTION_DISABLE_KEEP_ALIVE_DEFAULT_VALUE,
+        OPTION_DIAGNOSTICS_ADDITIONAL_ENDPOINTS: OPTION_DIAGNOSTICS_ADDITIONAL_ENDPOINTS_DEFAULT_VALUE,
     }
 
 
@@ -622,6 +625,61 @@ async def test_options_set(
     assert config_entry.options == {
         OPTION_DIAGNOSTICS_INCLUDE_FIXTURES: True,
         OPTION_DISABLE_KEEP_ALIVE: True,
+        OPTION_DIAGNOSTICS_ADDITIONAL_ENDPOINTS: "",
+    }
+
+
+async def test_additional_endpoint(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+    mock_envoy: AsyncMock,
+) -> None:
+    """Test we can configure additional endpoints option."""
+    await setup_integration(hass, config_entry)
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    # test format error with trailing /
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            OPTION_DIAGNOSTICS_INCLUDE_FIXTURES: False,
+            OPTION_DISABLE_KEEP_ALIVE: False,
+            OPTION_DIAGNOSTICS_ADDITIONAL_ENDPOINTS: "/admin/lib/tariff/",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "trailing_/"}
+
+    # test format error without leading /
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            OPTION_DIAGNOSTICS_INCLUDE_FIXTURES: False,
+            OPTION_DISABLE_KEEP_ALIVE: False,
+            OPTION_DIAGNOSTICS_ADDITIONAL_ENDPOINTS: "/admin/lib/tariff,ivp/ensemble/power",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "missing_/"}
+
+    # test define 2 endpoints
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            OPTION_DIAGNOSTICS_INCLUDE_FIXTURES: False,
+            OPTION_DISABLE_KEEP_ALIVE: False,
+            OPTION_DIAGNOSTICS_ADDITIONAL_ENDPOINTS: "/admin/lib/tariff,/ivp/ensemble/power",
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {
+        OPTION_DIAGNOSTICS_INCLUDE_FIXTURES: False,
+        OPTION_DISABLE_KEEP_ALIVE: False,
+        OPTION_DIAGNOSTICS_ADDITIONAL_ENDPOINTS: "/admin/lib/tariff,/ivp/ensemble/power",
     }
 
 
