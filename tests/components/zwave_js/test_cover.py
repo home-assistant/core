@@ -459,7 +459,7 @@ async def test_shelly_wave_shutter_cover_with_tilt(
         blocking=True,
     )
 
-    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_count == 1
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 5
@@ -480,7 +480,7 @@ async def test_shelly_wave_shutter_cover_with_tilt(
         blocking=True,
     )
 
-    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_count == 1
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 5
@@ -501,7 +501,7 @@ async def test_shelly_wave_shutter_cover_with_tilt(
         blocking=True,
     )
 
-    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_count == 1
     args = client.async_send_command.call_args[0][0]
     assert args["command"] == "node.set_value"
     assert args["nodeId"] == 5
