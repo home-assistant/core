@@ -39,6 +39,9 @@
       "mute": {
         "default": "mdi:volume-mute"
       },
+      "airplay_enable": {
+        "default": "mdi:cast-variant"
+      },
       "pairing_mode": {
         "default": "mdi:lock-open"
       },
