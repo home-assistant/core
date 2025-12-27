@@ -14,14 +14,44 @@ set_temperature:
   target:
     entity:
       domain: water_heater
+      supported_features:
+        - water_heater.WaterHeaterEntityFeature.TARGET_TEMPERATURE
+        - water_heater.WaterHeaterEntityFeature.TARGET_TEMPERATURE_RANGE
   fields:
     temperature:
+      filter:
+        supported_features:
+          - water_heater.WaterHeaterEntityFeature.TARGET_TEMPERATURE
       required: true
       selector:
         number:
           min: 0
           max: 250
           step: 0.5
+          mode: box
+          unit_of_measurement: "°"
+    target_temp_high:
+      filter:
+        supported_features:
+          - water_heater.WaterHeaterEntityFeature.TARGET_TEMPERATURE_RANGE
+      advanced: true
+      selector:
+        number:
+          min: 0
+          max: 250
+          step: 0.1
+          mode: box
+          unit_of_measurement: "°"
+    target_temp_low:
+      filter:
+        supported_features:
+          - water_heater.WaterHeaterEntityFeature.TARGET_TEMPERATURE_RANGE
+      advanced: true
+      selector:
+        number:
+          min: 0
+          max: 250
+          step: 0.1
           mode: box
           unit_of_measurement: "°"
     operation_mode:

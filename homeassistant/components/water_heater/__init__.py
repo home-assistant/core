@@ -68,6 +68,7 @@ class WaterHeaterEntityFeature(IntFlag):
     OPERATION_MODE = 2
     AWAY_MODE = 4
     ON_OFF = 8
+    TARGET_TEMPERATURE_RANGE = 16
 
 
 ATTR_MAX_TEMP = "max_temp"
@@ -80,17 +81,26 @@ ATTR_TARGET_TEMP_LOW = "target_temp_low"
 ATTR_TARGET_TEMP_STEP = "target_temp_step"
 ATTR_CURRENT_TEMPERATURE = "current_temperature"
 
-CONVERTIBLE_ATTRIBUTE = [ATTR_TEMPERATURE]
+CONVERTIBLE_ATTRIBUTE = [ATTR_TEMPERATURE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW]
 
 _LOGGER = logging.getLogger(__name__)
 
 SET_AWAY_MODE_SCHEMA: VolDictType = {
     vol.Required(ATTR_AWAY_MODE): cv.boolean,
 }
-SET_TEMPERATURE_SCHEMA: VolDictType = {
-    vol.Required(ATTR_TEMPERATURE, "temperature"): vol.Coerce(float),
-    vol.Optional(ATTR_OPERATION_MODE): cv.string,
-}
+SET_TEMPERATURE_SCHEMA = vol.All(
+    cv.has_at_least_one_key(
+        ATTR_TEMPERATURE, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW
+    ),
+    cv.make_entity_service_schema(
+        {
+            vol.Exclusive(ATTR_TEMPERATURE, "temperature"): vol.Coerce(float),
+            vol.Inclusive(ATTR_TARGET_TEMP_HIGH, "temperature"): vol.Coerce(float),
+            vol.Inclusive(ATTR_TARGET_TEMP_LOW, "temperature"): vol.Coerce(float),
+            vol.Optional(ATTR_OPERATION_MODE): cv.string,
+        }
+    ),
+)
 SET_OPERATION_MODE_SCHEMA: VolDictType = {
     vol.Required(ATTR_OPERATION_MODE): cv.string,
 }
@@ -121,7 +131,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_SET_TEMPERATURE,
         SET_TEMPERATURE_SCHEMA,
         async_service_temperature_set,
-        [WaterHeaterEntityFeature.TARGET_TEMPERATURE],
+        [
+            WaterHeaterEntityFeature.TARGET_TEMPERATURE,
+            WaterHeaterEntityFeature.TARGET_TEMPERATURE_RANGE,
+        ],
     )
     component.async_register_entity_service(
         SERVICE_SET_OPERATION_MODE,
@@ -322,9 +335,18 @@ class WaterHeaterEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        await self.hass.async_add_executor_job(
-            ft.partial(self.set_temperature, **kwargs)
-        )
+        # NOTE: Executed synchronously in the event loop so that legacy sync
+        # implementations (including tests) which incorrectly call
+        # async_write_ha_state from set_temperature do not trigger thread-safety
+        # violations. This is a transitional behavior.
+        # TODO(2026.1): Enforce async implementations or restore executor usage.
+        # Integrations performing blocking I/O (network / disk) MUST override
+        # this method with a true async version or wrap their blocking calls in
+        # hass.async_add_executor_job to avoid blocking the event loop.
+        self.set_temperature(**kwargs)
+        # If the sync implementation did not schedule a state update itself,
+        # schedule one now.
+        self.async_schedule_update_ha_state()
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the water heater on."""
@@ -426,13 +448,34 @@ async def async_service_away_mode(
 
 
 async def async_service_temperature_set(
-    entity: WaterHeaterEntity, service: ServiceCall
+    entity: WaterHeaterEntity, service_call: ServiceCall
 ) -> None:
     """Handle set temperature service."""
-    hass = entity.hass
-    kwargs = {}
+    if (
+        ATTR_TEMPERATURE in service_call.data
+        and not entity.supported_features & WaterHeaterEntityFeature.TARGET_TEMPERATURE
+    ):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="missing_target_temperature_entity_feature",
+        )
+    if (
+        (
+            ATTR_TARGET_TEMP_LOW in service_call.data
+            or ATTR_TARGET_TEMP_HIGH in service_call.data
+        )
+        and not entity.supported_features
+        & WaterHeaterEntityFeature.TARGET_TEMPERATURE_RANGE
+    ):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="missing_target_temperature_range_entity_feature",
+        )
 
-    for value, temp in service.data.items():
+    hass = entity.hass
+    kwargs: dict[str, Any] = {}
+
+    for value, temp in service_call.data.items():
         if value in CONVERTIBLE_ATTRIBUTE:
             kwargs[value] = TemperatureConverter.convert(
                 temp, hass.config.units.temperature_unit, entity.temperature_unit

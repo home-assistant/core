@@ -30,11 +30,27 @@ async def async_setup_entry(
     async_add_entities(
         [
             DemoWaterHeater(
-                "Demo Water Heater", 119, UnitOfTemperature.FAHRENHEIT, False, "eco", 1
+                "Demo Water Heater",
+                119,
+                None,
+                UnitOfTemperature.FAHRENHEIT,
+                False,
+                "eco",
+                1,
             ),
             DemoWaterHeater(
                 "Demo Water Heater Celsius",
                 45,
+                None,
+                UnitOfTemperature.CELSIUS,
+                True,
+                "eco",
+                1,
+            ),
+            DemoWaterHeater(
+                "Demo Water Heater Range",
+                None,
+                (45, 60),
                 UnitOfTemperature.CELSIUS,
                 True,
                 "eco",
@@ -53,7 +69,8 @@ class DemoWaterHeater(WaterHeaterEntity):
     def __init__(
         self,
         name: str,
-        target_temperature: int,
+        target_temperature: int | None,
+        target_temperature_range: tuple[int, int] | None,
         unit_of_measurement: str,
         away: bool,
         current_operation: str,
@@ -63,11 +80,21 @@ class DemoWaterHeater(WaterHeaterEntity):
         self._attr_name = name
         if target_temperature is not None:
             self._attr_supported_features |= WaterHeaterEntityFeature.TARGET_TEMPERATURE
+        if target_temperature_range is not None:
+            self._attr_supported_features |= (
+                WaterHeaterEntityFeature.TARGET_TEMPERATURE_RANGE
+            )
         if away is not None:
             self._attr_supported_features |= WaterHeaterEntityFeature.AWAY_MODE
         if current_operation is not None:
             self._attr_supported_features |= WaterHeaterEntityFeature.OPERATION_MODE
         self._attr_target_temperature = target_temperature
+        self._attr_target_temperature_low = (
+            target_temperature_range[0] if target_temperature_range else None
+        )
+        self._attr_target_temperature_high = (
+            target_temperature_range[1] if target_temperature_range else None
+        )
         self._attr_temperature_unit = unit_of_measurement
         self._attr_is_away_mode_on = away
         self._attr_current_operation = current_operation
@@ -85,7 +112,6 @@ class DemoWaterHeater(WaterHeaterEntity):
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
         self._attr_target_temperature = kwargs.get(ATTR_TEMPERATURE)
-        self.schedule_update_ha_state()
 
     def set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
