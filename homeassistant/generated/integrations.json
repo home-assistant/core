@@ -4081,7 +4081,7 @@
     },
     "mikrotik": {
       "name": "Mikrotik",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -4116,7 +4116,7 @@
     },
     "moat": {
       "name": "Moat",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
@@ -4156,7 +4156,7 @@
     },
     "monarch_money": {
       "name": "Monarch Money",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -4173,7 +4173,7 @@
     },
     "monzo": {
       "name": "Monzo",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -4223,7 +4223,7 @@
     },
     "mpd": {
       "name": "Music Player Daemon (MPD)",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -4283,7 +4283,7 @@
     },
     "mutesync": {
       "name": "mutesync",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -4307,7 +4307,7 @@
     },
     "mystrom": {
       "name": "myStrom",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -4343,7 +4343,7 @@
     },
     "nanoleaf": {
       "name": "Nanoleaf",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },

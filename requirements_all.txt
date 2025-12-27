@@ -252,7 +252,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==43.4.0
+aioesphomeapi==43.6.0
 
 # homeassistant.components.matrix
 # homeassistant.components.slack
@@ -1121,7 +1121,7 @@ gotailwind==0.3.0
 govee-ble==0.44.0
 
 # homeassistant.components.govee_light_local
-govee-local-api==2.2.0
+govee-local-api==2.3.0
 
 # homeassistant.components.remote_rpi_gpio
 gpiozero==1.6.2
@@ -1352,7 +1352,7 @@ kiwiki-client==0.1.1
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2025.12.24.74016
+knx-frontend==2025.12.25.200238
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -1751,7 +1751,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.11.0
+plugwise==1.11.2
 
 # homeassistant.components.serial_pm
 pmsensor==0.4
@@ -2303,7 +2303,7 @@ pypaperless==4.1.1
 pypca==0.0.7
 
 # homeassistant.components.lcn
-pypck==0.9.8
+pypck==0.9.9
 
 # homeassistant.components.pglab
 pypglab==0.0.5
@@ -2578,7 +2578,7 @@ python-rabbitair==0.0.8
 python-ripple-api==0.0.3
 
 # homeassistant.components.roborock
-python-roborock==3.20.1
+python-roborock==3.21.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.46
@@ -3053,7 +3053,7 @@ ttls==1.8.3
 ttn_client==1.2.3
 
 # homeassistant.components.tuya
-tuya-device-sharing-sdk==0.2.6
+tuya-device-sharing-sdk==0.2.7
 
 # homeassistant.components.twentemilieu
 twentemilieu==2.2.1
