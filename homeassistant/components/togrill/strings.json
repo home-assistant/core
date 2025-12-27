@@ -51,6 +51,11 @@
         }
       }
     },
+    "sensor": {
+      "ambient_temperature": {
+        "name": "Ambient temperature"
+      }
+    },
     "number": {
       "alarm_interval": {
         "name": "Alarm interval"
