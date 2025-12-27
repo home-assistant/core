@@ -23,7 +23,12 @@ from homeassistant.util.percentage import (
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .models import DPCodeBooleanWrapper, DPCodeEnumWrapper, DPCodeIntegerWrapper
+from .models import (
+    DeviceWrapper,
+    DPCodeBooleanWrapper,
+    DPCodeEnumWrapper,
+    DPCodeIntegerWrapper,
+)
 from .type_information import IntegerTypeInformation
 from .util import RemapHelper, get_dpcode
 
@@ -173,11 +178,11 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
         device: CustomerDevice,
         device_manager: Manager,
         *,
-        direction_wrapper: _DirectionEnumWrapper | None,
-        mode_wrapper: DPCodeEnumWrapper | None,
-        oscillate_wrapper: DPCodeBooleanWrapper | None,
-        speed_wrapper: _FanSpeedEnumWrapper | _FanSpeedIntegerWrapper | None,
-        switch_wrapper: DPCodeBooleanWrapper | None,
+        direction_wrapper: DeviceWrapper[str] | None,
+        mode_wrapper: DeviceWrapper[str] | None,
+        oscillate_wrapper: DeviceWrapper[bool] | None,
+        speed_wrapper: DeviceWrapper[int] | None,
+        switch_wrapper: DeviceWrapper[bool] | None,
     ) -> None:
         """Init Tuya Fan Device."""
         super().__init__(device, device_manager)
