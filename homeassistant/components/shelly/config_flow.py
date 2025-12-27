@@ -217,6 +217,8 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     device_name: str = ""
     wifi_networks: list[ShellyWiFiNetwork] = []
     selected_ssid: str = ""
+    ble_scan_error: str = ""
+    provision_error: str = ""
     _provision_task: asyncio.Task | None = None
     _provision_result: ConfigFlowResult | None = None
     disable_ap_after_provision: bool = True
@@ -788,12 +790,13 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             device = await self._async_ensure_ble_connected()
             self.wifi_networks = await device.wifi_scan()
         except (DeviceConnectionError, RpcCallError) as err:
-            LOGGER.debug("Failed to scan WiFi networks via BLE: %s", err)
+            LOGGER.debug("Failed to scan WiFi networks via BLE: %r", err)
             # "Writing is not permitted" error means device rejects BLE writes
             # and BLE provisioning is disabled - user must use Shelly app
             if "not permitted" in str(err):
                 await self._async_disconnect_ble()
                 return self.async_abort(reason="ble_not_permitted")
+            self.ble_scan_error = repr(err)
             return await self.async_step_wifi_scan_failed()
         except Exception:  # noqa: BLE001
             LOGGER.exception("Unexpected exception during WiFi scan")
@@ -839,7 +842,13 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             # User wants to retry - go back to wifi_scan
             return await self.async_step_wifi_scan()
 
-        return self.async_show_form(step_id="wifi_scan_failed")
+        return self.async_show_form(
+            step_id="wifi_scan_failed",
+            description_placeholders={
+                "name": self.context["title_placeholders"]["name"],
+                "error": self.ble_scan_error,
+            },
+        )
 
     @asynccontextmanager
     async def _async_provision_context(
@@ -927,8 +936,9 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 sta_enable=True,
             )
         except (DeviceConnectionError, RpcCallError) as err:
-            LOGGER.debug("Failed to provision WiFi via BLE: %s", err)
+            LOGGER.debug("Failed to provision WiFi via BLE: %r", err)
             # BLE connection/communication failed - allow retry from network selection
+            self.provision_error = repr(err)
             return None
         except Exception:  # noqa: BLE001
             LOGGER.exception("Unexpected exception during WiFi provisioning")
@@ -977,6 +987,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 else:
                     LOGGER.debug("BLE fallback also failed - provisioning unsuccessful")
                     # Store failure info and return None - provision_done will handle redirect
+                    self.provision_error = "Device not found after provisioning"
                     return None
             else:
                 state.host, state.port = result
@@ -1092,7 +1103,11 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="provision_failed",
-            description_placeholders={"ssid": self.selected_ssid},
+            description_placeholders={
+                "name": self.context["title_placeholders"]["name"],
+                "ssid": self.selected_ssid,
+                "error": self.provision_error,
+            },
         )
 
     async def async_step_provision_done(

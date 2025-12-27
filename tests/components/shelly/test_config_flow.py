@@ -3670,7 +3670,9 @@ async def test_bluetooth_wifi_scan_failure(
 ) -> None:
     """Test WiFi scan failure via BLE."""
     # Configure mock BLE device to fail first, then succeed
-    mock_ble_rpc_device.wifi_scan.side_effect = DeviceConnectionError
+    mock_ble_rpc_device.wifi_scan.side_effect = DeviceConnectionError(
+        "Connection timed out"
+    )
 
     # Inject BLE device so it's available in the bluetooth scanner
     inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
@@ -3689,6 +3691,10 @@ async def test_bluetooth_wifi_scan_failure(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "wifi_scan_failed"
+    assert result["description_placeholders"] == {
+        "name": "ShellyPlus2PM-C049EF8873E8",
+        "error": "DeviceConnectionError('Connection timed out')",
+    }
 
     # Now configure success for retry
     mock_ble_rpc_device.wifi_scan.side_effect = None
@@ -3863,7 +3869,9 @@ async def test_bluetooth_wifi_provision_failure(
         {"ssid": "MyNetwork", "rssi": -50, "auth": 2}
     ]
     # First provisioning attempt fails
-    mock_ble_rpc_device.wifi_setconfig.side_effect = DeviceConnectionError
+    mock_ble_rpc_device.wifi_setconfig.side_effect = DeviceConnectionError(
+        "BLE connection lost"
+    )
 
     # Inject BLE device so it's available in the bluetooth scanner
     inject_bluetooth_service_info_bleak(hass, BLE_DISCOVERY_INFO)
@@ -3896,6 +3904,11 @@ async def test_bluetooth_wifi_provision_failure(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "provision_failed"
+    assert result["description_placeholders"] == {
+        "name": "ShellyPlus2PM-C049EF8873E8",
+        "ssid": "MyNetwork",
+        "error": "DeviceConnectionError('BLE connection lost')",
+    }
 
     # Reset wifi_setconfig for retry - now it succeeds
     mock_ble_rpc_device.wifi_setconfig.side_effect = None
