@@ -56,8 +56,11 @@ async def async_setup_entry(
 
 
 def async_entry_has_scopes(hass: HomeAssistant, entry: GoogleSheetsConfigEntry) -> bool:
-    """Verify that the config entry desired scope is present in the oauth token."""
-    return DEFAULT_ACCESS in entry.data.get(CONF_TOKEN, {}).get("scope", "").split(" ")
+    """Verify that the config entry desired scopes are present in the oauth token."""
+    return all(
+        scope in entry.data.get(CONF_TOKEN, {}).get("scope", "").split(" ")
+        for scope in DEFAULT_ACCESS
+    )
 
 
 async def async_unload_entry(

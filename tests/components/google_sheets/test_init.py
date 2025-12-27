@@ -16,14 +16,15 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
+from homeassistant.components.google_sheets import DEFAULT_ACCESS
 from homeassistant.components.google_sheets.const import DOMAIN
 from homeassistant.components.google_sheets.services import (
     ADD_CREATED_COLUMN,
     DATA,
-    DATA_CONFIG_ENTRY,
     ROWS,
     SERVICE_APPEND_SHEET,
     SERVICE_GET_SHEET,
+    SPREADSHEET_ID,
     WORKSHEET,
 )
 from homeassistant.config_entries import ConfigEntryState
@@ -34,7 +35,8 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-TEST_SHEET_ID = "google-sheet-it"
+TEST_DEFAULT_SPREADSHEET_ID = "google-sheet-id"
+TEST_CUSTOM_SPREADSHEET_ID = "custom-google-sheet-id"
 
 type ComponentSetup = Callable[[], Awaitable[None]]
 
@@ -42,7 +44,7 @@ type ComponentSetup = Callable[[], Awaitable[None]]
 @pytest.fixture(name="scopes")
 def mock_scopes() -> list[str]:
     """Fixture to set the scopes present in the OAuth token."""
-    return ["https://www.googleapis.com/auth/drive.file"]
+    return DEFAULT_ACCESS
 
 
 @pytest.fixture(name="expires_at")
@@ -56,7 +58,7 @@ def mock_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
     """Fixture for MockConfigEntry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        unique_id=TEST_SHEET_ID,
+        unique_id=TEST_DEFAULT_SPREADSHEET_ID,
         data={
             "auth_implementation": DOMAIN,
             "token": {
@@ -199,6 +201,98 @@ async def test_expired_token_refresh_failure(
 
 
 @pytest.mark.parametrize(
+    ("spreadsheet_id_param", "expected_spreadsheet_id"),
+    [
+        ({}, TEST_DEFAULT_SPREADSHEET_ID),
+        ({SPREADSHEET_ID: TEST_DEFAULT_SPREADSHEET_ID}, TEST_DEFAULT_SPREADSHEET_ID),
+        ({SPREADSHEET_ID: TEST_CUSTOM_SPREADSHEET_ID}, TEST_CUSTOM_SPREADSHEET_ID),
+    ],
+    ids=[
+        "automatic_default_spreadsheet",
+        "manual_default_spreadsheet",
+        "manual_custom_spreadsheet",
+    ],
+)
+async def test_append_sheet_spreadsheet_selection(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
+    spreadsheet_id_param: dict[str, str],
+    expected_spreadsheet_id: str,
+) -> None:
+    """Test service call appending to a sheet in a custom spreadsheet."""
+    await setup_integration()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state is ConfigEntryState.LOADED
+
+    with patch("homeassistant.components.google_sheets.services.Client") as mock_client:
+        await hass.services.async_call(
+            DOMAIN,
+            "append_sheet",
+            {
+                **spreadsheet_id_param,
+                "worksheet": "Sheet1",
+                "data": [{"foo": "bar"}],
+            },
+            blocking=True,
+        )
+        mock_client.return_value.open_by_key.assert_called_once_with(
+            expected_spreadsheet_id
+        )
+
+
+@pytest.mark.parametrize(
+    ("spreadsheet_id_param", "expected_spreadsheet_id"),
+    [
+        ({}, TEST_DEFAULT_SPREADSHEET_ID),
+        ({SPREADSHEET_ID: TEST_DEFAULT_SPREADSHEET_ID}, TEST_DEFAULT_SPREADSHEET_ID),
+        ({SPREADSHEET_ID: TEST_CUSTOM_SPREADSHEET_ID}, TEST_CUSTOM_SPREADSHEET_ID),
+    ],
+    ids=[
+        "automatic_default_spreadsheet",
+        "manual_default_spreadsheet",
+        "manual_custom_spreadsheet",
+    ],
+)
+async def test_get_sheet_spreadsheet_selection(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
+    spreadsheet_id_param: dict[str, str],
+    expected_spreadsheet_id: str,
+) -> None:
+    """Test service call getting data from a sheet in a custom spreadsheet."""
+    await setup_integration()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state is ConfigEntryState.LOADED
+
+    with patch("homeassistant.components.google_sheets.services.Client") as mock_client:
+        mock_client.return_value.open_by_key.return_value.worksheet.return_value.get_values.return_value = [
+            ["foo", "bar"],
+        ]
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_SHEET,
+            {
+                **spreadsheet_id_param,
+                WORKSHEET: "Sheet1",
+                ROWS: 1,
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    mock_client.return_value.open_by_key.assert_called_once_with(
+        expected_spreadsheet_id
+    )
+    assert len(mock_client.mock_calls) == 4
+
+
+@pytest.mark.parametrize(
     ("add_created_column_param", "expected_row"),
     [
         ({ADD_CREATED_COLUMN: True}, ["bar", "2024-01-15 12:30:45.123456"]),
@@ -208,7 +302,7 @@ async def test_expired_token_refresh_failure(
     ids=["created_column_true", "created_column_false", "created_column_default"],
 )
 @freeze_time("2024-01-15 12:30:45.123456")
-async def test_append_sheet(
+async def test_append_sheet_created_column(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
     config_entry: MockConfigEntry,
@@ -232,7 +326,6 @@ async def test_append_sheet(
             DOMAIN,
             SERVICE_APPEND_SHEET,
             {
-                DATA_CONFIG_ENTRY: config_entry.entry_id,
                 WORKSHEET: "Sheet1",
                 DATA: {"foo": "bar"},
                 **add_created_column_param,
@@ -268,7 +361,6 @@ async def test_get_sheet(
             DOMAIN,
             SERVICE_GET_SHEET,
             {
-                DATA_CONFIG_ENTRY: config_entry.entry_id,
                 WORKSHEET: "Sheet1",
                 ROWS: 2,
             },
@@ -296,7 +388,6 @@ async def test_append_sheet_multiple_rows(
             DOMAIN,
             "append_sheet",
             {
-                "config_entry": config_entry.entry_id,
                 "worksheet": "Sheet1",
                 "data": [{"foo": "bar"}, {"foo": "bar2"}],
             },
@@ -331,7 +422,6 @@ async def test_append_sheet_api_error(
             DOMAIN,
             "append_sheet",
             {
-                "config_entry": config_entry.entry_id,
                 "worksheet": "Sheet1",
                 "data": {"foo": "bar"},
             },
@@ -346,10 +436,12 @@ async def test_append_sheet_invalid_config_entry(
     expires_at: int,
     scopes: list[str],
 ) -> None:
-    """Test service call with invalid config entries."""
+    """Test service call append sheet with invalid config entry."""
+
+    # === Multiple Config Entries === #
     config_entry2 = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=TEST_SHEET_ID + "2",
+        unique_id=TEST_DEFAULT_SPREADSHEET_ID + "2",
         data={
             "auth_implementation": DOMAIN,
             "token": {
@@ -367,30 +459,53 @@ async def test_append_sheet_invalid_config_entry(
     assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry2.state is ConfigEntryState.LOADED
 
-    # Exercise service call on a config entry that does not exist
-    with pytest.raises(ValueError, match="Invalid config entry"):
+    with pytest.raises(
+        ServiceValidationError,
+        match="Multiple config entries found for Google Sheets service",
+    ):
         await hass.services.async_call(
             DOMAIN,
             "append_sheet",
             {
-                "config_entry": config_entry.entry_id + "XXX",
                 "worksheet": "Sheet1",
                 "data": {"foo": "bar"},
             },
             blocking=True,
         )
 
-    # Unload the config entry invoke the service on the unloaded entry id
-    await hass.config_entries.async_unload(config_entry2.entry_id)
+    await hass.config_entries.async_remove(config_entry2.entry_id)
     await hass.async_block_till_done()
-    assert config_entry2.state is ConfigEntryState.NOT_LOADED
 
-    with pytest.raises(ValueError, match="Invalid config entry"):
+    # === Unload Config Entry === #
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+    with pytest.raises(
+        ServiceValidationError,
+        match="Config entry for Google Sheets service is not loaded",
+    ):
         await hass.services.async_call(
             DOMAIN,
             "append_sheet",
             {
-                "config_entry": config_entry2.entry_id,
+                "worksheet": "Sheet1",
+                "data": {"foo": "bar"},
+            },
+            blocking=True,
+        )
+
+    # === Missing Config Entry === #
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with pytest.raises(
+        ServiceValidationError, match="No config entry found for Google Sheets service"
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "append_sheet",
+            {
                 "worksheet": "Sheet1",
                 "data": {"foo": "bar"},
             },
@@ -405,10 +520,12 @@ async def test_get_sheet_invalid_config_entry(
     expires_at: int,
     scopes: list[str],
 ) -> None:
-    """Test service call get sheet with invalid config entries."""
+    """Test service call get sheet with invalid config entry."""
+
+    # === Multiple Config Entries === #
     config_entry2 = MockConfigEntry(
         domain=DOMAIN,
-        unique_id=TEST_SHEET_ID + "2",
+        unique_id=TEST_DEFAULT_SPREADSHEET_ID + "2",
         data={
             "auth_implementation": DOMAIN,
             "token": {
@@ -426,13 +543,14 @@ async def test_get_sheet_invalid_config_entry(
     assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry2.state is ConfigEntryState.LOADED
 
-    # Exercise service call on a config entry that does not exist
-    with pytest.raises(ServiceValidationError, match="Invalid config entry"):
+    with pytest.raises(
+        ServiceValidationError,
+        match="Multiple config entries found for Google Sheets service",
+    ):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_GET_SHEET,
             {
-                DATA_CONFIG_ENTRY: config_entry.entry_id + "XXX",
                 WORKSHEET: "Sheet1",
                 ROWS: 2,
             },
@@ -440,10 +558,46 @@ async def test_get_sheet_invalid_config_entry(
             return_response=True,
         )
 
-    # Unload the config entry invoke the service on the unloaded entry id
-    await hass.config_entries.async_unload(config_entry2.entry_id)
+    await hass.config_entries.async_remove(config_entry2.entry_id)
     await hass.async_block_till_done()
-    assert config_entry2.state is ConfigEntryState.NOT_LOADED
+
+    # === Unload Config Entry === #
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+    with pytest.raises(
+        ServiceValidationError,
+        match="Config entry for Google Sheets service is not loaded",
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_SHEET,
+            {
+                WORKSHEET: "Sheet1",
+                ROWS: 2,
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    # === Missing Config Entry === #
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with pytest.raises(
+        ServiceValidationError, match="No config entry found for Google Sheets service"
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_SHEET,
+            {
+                WORKSHEET: "Sheet1",
+                ROWS: 2,
+            },
+            blocking=True,
+            return_response=True,
+        )
 
 
 async def test_get_sheet_invalid_worksheet(
@@ -454,25 +608,9 @@ async def test_get_sheet_invalid_worksheet(
     scopes: list[str],
 ) -> None:
     """Test service call get sheet with invalid config entries."""
-    config_entry2 = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=TEST_SHEET_ID + "2",
-        data={
-            "auth_implementation": DOMAIN,
-            "token": {
-                "access_token": "mock-access-token",
-                "refresh_token": "mock-refresh-token",
-                "expires_at": expires_at,
-                "scope": " ".join(scopes),
-            },
-        },
-    )
-    config_entry2.add_to_hass(hass)
-
     await setup_integration()
 
     assert config_entry.state is ConfigEntryState.LOADED
-    assert config_entry2.state is ConfigEntryState.LOADED
 
     # Exercise service call on a worksheet that does not exist
     with patch("homeassistant.components.google_sheets.services.Client") as mock_client:
@@ -484,7 +622,6 @@ async def test_get_sheet_invalid_worksheet(
                 DOMAIN,
                 SERVICE_GET_SHEET,
                 {
-                    DATA_CONFIG_ENTRY: config_entry.entry_id,
                     WORKSHEET: "DoesNotExist",
                     ROWS: 2,
                 },
