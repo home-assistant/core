@@ -209,7 +209,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "blockchain",
     "blue_current",
     "bluemaestro",
-    "bluesound",
     "bluetooth",
     "bluetooth_adapters",
     "bluetooth_le_tracker",

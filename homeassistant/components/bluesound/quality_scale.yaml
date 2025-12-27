@@ -3,7 +3,9 @@ rules:
   action-setup: done
   appropriate-polling: done
   brands: done
-  common-modules: done
+  common-modules:
+    status: todo
+    comment: No base entity
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency:
