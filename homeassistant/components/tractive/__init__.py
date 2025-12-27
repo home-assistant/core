@@ -24,12 +24,15 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
+    ATTR_ACTIVITY_LABEL,
+    ATTR_CALORIES,
     ATTR_DAILY_GOAL,
     ATTR_MINUTES_ACTIVE,
     ATTR_MINUTES_DAY_SLEEP,
     ATTR_MINUTES_NIGHT_SLEEP,
     ATTR_MINUTES_REST,
     ATTR_POWER_SAVING,
+    ATTR_SLEEP_LABEL,
     ATTR_TRACKER_STATE,
     CLIENT_ID,
     RECONNECT_INTERVAL,
@@ -150,14 +153,16 @@ async def _generate_trackables(
     trackable_obj = client.trackable_object(trackable["_id"])
 
     tracker_details, hw_info, pos_report, health_overview = await asyncio.gather(
-        tracker.details(), tracker.hw_info(), tracker.pos_report(), trackable_obj.health_overview()
+        tracker.details(),
+        tracker.hw_info(),
+        tracker.pos_report(),
+        trackable_obj.health_overview(),
     )
 
     if not tracker_details.get("_id"):
         raise ConfigEntryNotReady(
             f"Tractive API returns incomplete data for tracker {trackable['device_id']}",
         )
-
 
     return Trackables(
         tracker, trackable, tracker_details, hw_info, pos_report, health_overview
@@ -318,21 +323,16 @@ class TractiveClient:
         activity = data.get("activity", {})
         sleep = data.get("sleep", {})
 
-        sleep_day = None
-        sleep_night = None
-        minutes_rest = None
-
-        sleep_day = sleep.get("minutesDaySleep")
-        sleep_night = sleep.get("minutesNightSleep")
-        # Calm minutes can be used as rest indicator
-        minutes_rest = sleep.get("minutesCalm")
-
         payload = {
+            ATTR_ACTIVITY_LABEL: activity.get("label"),
+            ATTR_CALORIES: activity.get("caloriesBurnt"),
             ATTR_DAILY_GOAL: activity.get("minutesGoal"),
             ATTR_MINUTES_ACTIVE: activity.get("minutesActive"),
-            ATTR_MINUTES_DAY_SLEEP: sleep_day,
-            ATTR_MINUTES_NIGHT_SLEEP: sleep_night,
-            ATTR_MINUTES_REST: minutes_rest,
+            ATTR_MINUTES_DAY_SLEEP: sleep.get("minutesDaySleep"),
+            ATTR_MINUTES_NIGHT_SLEEP: sleep.get("minutesNightSleep"),
+            # Calm minutes can be used as rest indicator
+            ATTR_MINUTES_REST: sleep.get("minutesCalm"),
+            ATTR_SLEEP_LABEL: sleep.get("label"),
         }
         self._dispatch_tracker_event(
             TRACKER_WELLNESS_STATUS_UPDATED, data["petId"], payload
