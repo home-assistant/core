@@ -28,6 +28,9 @@
       "bass": {
         "name": "Bass"
       },
+      "group_volume": {
+        "name": "Group volume"
+      },
       "music_surround_level": {
         "name": "Music surround level"
       },
