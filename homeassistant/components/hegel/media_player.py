@@ -113,7 +113,6 @@ class HegelMediaPlayer(MediaPlayerEntity):
         )
 
         # Entity categorization for better organization
-        self._attr_entity_category = None  # Primary device - no category needed
         self._attr_has_entity_name = True
 
         # Background tasks
@@ -124,6 +123,7 @@ class HegelMediaPlayer(MediaPlayerEntity):
     async def async_added_to_hass(self) -> None:
         """Handle entity added to Home Assistant."""
         await super().async_added_to_hass()
+        _LOGGER.debug("Hegel media player added to hass: %s", self.entity_id)
 
         # Register push handler for real-time updates from the amplifier
         # The client expects a synchronous callable; schedule a coroutine safely
@@ -204,38 +204,35 @@ class HegelMediaPlayer(MediaPlayerEntity):
     async def _connected_watcher(self) -> None:
         """Watch the client's connected_event and refresh when it becomes set."""
         # Defensive: if client doesn't expose the event, skip watcher
-        conn_event = getattr(self._client, "_connected_event", None)
-        if not isinstance(conn_event, asyncio.Event):
-            _LOGGER.debug("No connected event on client; skipping connected watcher")
-            return
-
+        conn_event = self._client.connected_event
         _LOGGER.debug("Connected watcher started")
+
         try:
             while True:
                 # wait for connection
-                _LOGGER.debug("Watcher: waiting for connection event")
+                _LOGGER.debug("Watcher: waiting for connection")
                 await conn_event.wait()
-                _LOGGER.debug("Hegel client connected — refreshing state")
+                _LOGGER.debug("Watcher: connected, refreshing state")
                 # immediately notify HA that we're available again
                 self.async_write_ha_state()
                 # do an immediate refresh (best-effort)
                 try:
                     await self.async_update()
-                except (HegelConnectionError, TimeoutError, OSError) as e:
-                    _LOGGER.debug("Reconnect refresh failed: %s", e)
+                except (HegelConnectionError, TimeoutError, OSError) as err:
+                    _LOGGER.debug("Refresh after reconnect failed: %s", err)
 
                 # wait until disconnected before looping (to avoid spamming refresh)
                 _LOGGER.debug("Watcher: waiting for disconnection")
                 while conn_event.is_set():
                     await asyncio.sleep(0.5)
-                _LOGGER.debug("Watcher: disconnected, notifying HA")
+                _LOGGER.debug("Watcher: disconnected")
                 # when disconnected, notify HA that we're unavailable
                 self.async_write_ha_state()
 
         except asyncio.CancelledError:
             _LOGGER.debug("Connected watcher cancelled")
-        except (HegelConnectionError, OSError):
-            _LOGGER.exception("Connected watcher failed")
+        except (HegelConnectionError, OSError) as err:
+            _LOGGER.warning("Connected watcher failed: %s", err)
 
     async def async_update(self) -> None:
         """Query the amplifier for the main values and update state dict."""
@@ -259,16 +256,7 @@ class HegelMediaPlayer(MediaPlayerEntity):
     @property
     def available(self) -> bool:
         """Return True if the client is connected."""
-        conn_event = getattr(self._client, "_connected_event", None)
-        is_available = bool(
-            isinstance(conn_event, asyncio.Event) and conn_event.is_set()
-        )
-        _LOGGER.debug(
-            "Availability check: %s (event set: %s)",
-            is_available,
-            conn_event.is_set() if conn_event else "N/A",
-        )
-        return is_available
+        return self._client.is_connected()
 
     @property
     def state(self) -> MediaPlayerState | None:
@@ -359,11 +347,14 @@ class HegelMediaPlayer(MediaPlayerEntity):
         Note: _connected_watcher_task cleanup is handled automatically by
         entry.async_create_background_task when the config entry is unloaded.
         """
+        await super().async_will_remove_from_hass()
+
         if self._push_handler and hasattr(self._client, "remove_push_callback"):
             try:
                 self._client.remove_push_callback(self._push_handler)
-            except (AttributeError, ValueError):
-                _LOGGER.debug("Could not remove push callback from client")
+                _LOGGER.debug("Push callback removed")
+            except (AttributeError, ValueError) as err:
+                _LOGGER.debug("Could not remove push callback: %s", err)
         self._push_handler = None
 
         # Cancel push task if running (short-lived task, defensive cleanup)

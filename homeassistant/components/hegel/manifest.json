@@ -8,7 +8,7 @@
   "iot_class": "local_push",
   "loggers": ["homeassistant.components.hegel"],
   "quality_scale": "silver",
-  "requirements": ["hegel-ip-client==0.1.2"],
+  "requirements": ["hegel-ip-client==0.1.4"],
   "ssdp": [
     {
       "deviceType": "urn:schemas-upnp-org:device:MediaRenderer:1",
