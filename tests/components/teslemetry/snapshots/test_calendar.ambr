@@ -1,0 +1,975 @@
+# serializer version: 1
+# name: test_calendar[calendar.energy_site_buy_tariff-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'calendar',
+    'entity_category': None,
+    'entity_id': 'calendar.energy_site_buy_tariff',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Buy tariff',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tariff_content_v2',
+    'unique_id': '123456-tariff_content_v2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_calendar[calendar.energy_site_buy_tariff-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'all_day': False,
+      'description': '''
+        Season: Summer
+        Period: Off peak
+        Price: 0.20/kWh
+      ''',
+      'end_time': '2024-01-01 16:00:00',
+      'friendly_name': 'Energy Site Buy tariff',
+      'location': '',
+      'message': 'Off peak: 0.20/kWh',
+      'start_time': '2023-12-31 21:00:00',
+    }),
+    'context': <ANY>,
+    'entity_id': 'calendar.energy_site_buy_tariff',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_calendar[calendar.energy_site_sell_tariff-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'calendar',
+    'entity_category': None,
+    'entity_id': 'calendar.energy_site_sell_tariff',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sell tariff',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'tariff_content_v2_sell_tariff',
+    'unique_id': '123456-tariff_content_v2_sell_tariff',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_calendar[calendar.energy_site_sell_tariff-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'all_day': False,
+      'description': '''
+        Season: Summer
+        Period: Off peak
+        Price: 0.08/kWh
+      ''',
+      'end_time': '2024-01-01 16:00:00',
+      'friendly_name': 'Energy Site Sell tariff',
+      'location': '',
+      'message': 'Off peak: 0.08/kWh',
+      'start_time': '2023-12-31 21:00:00',
+    }),
+    'context': <ANY>,
+    'entity_id': 'calendar.energy_site_sell_tariff',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_calendar_events[time0-calendar.energy_site_buy_tariff][event]
+  ReadOnlyDict({
+    'all_day': False,
+    'description': '''
+      Season: Summer
+      Period: Off peak
+      Price: 0.20/kWh
+    ''',
+    'end_time': '2024-01-01 16:00:00',
+    'friendly_name': 'Energy Site Buy tariff',
+    'location': '',
+    'message': 'Off peak: 0.20/kWh',
+    'start_time': '2023-12-31 21:00:00',
+  })
+# ---
+# name: test_calendar_events[time0-calendar.energy_site_buy_tariff][events]
+  dict({
+    'calendar.energy_site_buy_tariff': dict({
+      'events': list([
+        dict({
+          'description': '''
+            Season: Summer
+            Period: On peak
+            Price: 0.22/kWh
+          ''',
+          'end': '2023-12-31T21:00:00-08:00',
+          'start': '2023-12-31T16:00:00-08:00',
+          'summary': 'On peak: 0.22/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: Off peak
+            Price: 0.20/kWh
+          ''',
+          'end': '2024-01-01T16:00:00-08:00',
+          'start': '2023-12-31T21:00:00-08:00',
+          'summary': 'Off peak: 0.20/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: On peak
+            Price: 0.22/kWh
+          ''',
+          'end': '2024-01-01T21:00:00-08:00',
+          'start': '2024-01-01T16:00:00-08:00',
+          'summary': 'On peak: 0.22/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: Off peak
+            Price: 0.20/kWh
+          ''',
+          'end': '2024-01-02T16:00:00-08:00',
+          'start': '2024-01-01T21:00:00-08:00',
+          'summary': 'Off peak: 0.20/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: On peak
+            Price: 0.22/kWh
+          ''',
+          'end': '2024-01-02T21:00:00-08:00',
+          'start': '2024-01-02T16:00:00-08:00',
+          'summary': 'On peak: 0.22/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: Off peak
+            Price: 0.20/kWh
+          ''',
+          'end': '2024-01-03T16:00:00-08:00',
+          'start': '2024-01-02T21:00:00-08:00',
+          'summary': 'Off peak: 0.20/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: On peak
+            Price: 0.22/kWh
+          ''',
+          'end': '2024-01-03T21:00:00-08:00',
+          'start': '2024-01-03T16:00:00-08:00',
+          'summary': 'On peak: 0.22/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: Off peak
+            Price: 0.20/kWh
+          ''',
+          'end': '2024-01-04T16:00:00-08:00',
+          'start': '2024-01-03T21:00:00-08:00',
+          'summary': 'Off peak: 0.20/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: On peak
+            Price: 0.22/kWh
+          ''',
+          'end': '2024-01-04T21:00:00-08:00',
+          'start': '2024-01-04T16:00:00-08:00',
+          'summary': 'On peak: 0.22/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: Off peak
+            Price: 0.20/kWh
+          ''',
+          'end': '2024-01-05T16:00:00-08:00',
+          'start': '2024-01-04T21:00:00-08:00',
+          'summary': 'Off peak: 0.20/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: On peak
+            Price: 0.22/kWh
+          ''',
+          'end': '2024-01-05T21:00:00-08:00',
+          'start': '2024-01-05T16:00:00-08:00',
+          'summary': 'On peak: 0.22/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: Off peak
+            Price: 0.20/kWh
+          ''',
+          'end': '2024-01-06T16:00:00-08:00',
+          'start': '2024-01-05T21:00:00-08:00',
+          'summary': 'Off peak: 0.20/kWh',
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_calendar_events[time0-calendar.energy_site_sell_tariff][event]
+  ReadOnlyDict({
+    'all_day': False,
+    'description': '''
+      Season: Summer
+      Period: Off peak
+      Price: 0.08/kWh
+    ''',
+    'end_time': '2024-01-01 16:00:00',
+    'friendly_name': 'Energy Site Sell tariff',
+    'location': '',
+    'message': 'Off peak: 0.08/kWh',
+    'start_time': '2023-12-31 21:00:00',
+  })
+# ---
+# name: test_calendar_events[time0-calendar.energy_site_sell_tariff][events]
+  dict({
+    'calendar.energy_site_sell_tariff': dict({
+      'events': list([
+        dict({
+          'description': '''
+            Season: Summer
+            Period: On peak
+            Price: 0.16/kWh
+          ''',
+          'end': '2023-12-31T21:00:00-08:00',
+          'start': '2023-12-31T16:00:00-08:00',
+          'summary': 'On peak: 0.16/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: Off peak
+            Price: 0.08/kWh
+          ''',
+          'end': '2024-01-01T16:00:00-08:00',
+          'start': '2023-12-31T21:00:00-08:00',
+          'summary': 'Off peak: 0.08/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: On peak
+            Price: 0.16/kWh
+          ''',
+          'end': '2024-01-01T21:00:00-08:00',
+          'start': '2024-01-01T16:00:00-08:00',
+          'summary': 'On peak: 0.16/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: Off peak
+            Price: 0.08/kWh
+          ''',
+          'end': '2024-01-02T16:00:00-08:00',
+          'start': '2024-01-01T21:00:00-08:00',
+          'summary': 'Off peak: 0.08/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: On peak
+            Price: 0.16/kWh
+          ''',
+          'end': '2024-01-02T21:00:00-08:00',
+          'start': '2024-01-02T16:00:00-08:00',
+          'summary': 'On peak: 0.16/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: Off peak
+            Price: 0.08/kWh
+          ''',
+          'end': '2024-01-03T16:00:00-08:00',
+          'start': '2024-01-02T21:00:00-08:00',
+          'summary': 'Off peak: 0.08/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: On peak
+            Price: 0.16/kWh
+          ''',
+          'end': '2024-01-03T21:00:00-08:00',
+          'start': '2024-01-03T16:00:00-08:00',
+          'summary': 'On peak: 0.16/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: Off peak
+            Price: 0.08/kWh
+          ''',
+          'end': '2024-01-04T16:00:00-08:00',
+          'start': '2024-01-03T21:00:00-08:00',
+          'summary': 'Off peak: 0.08/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: On peak
+            Price: 0.16/kWh
+          ''',
+          'end': '2024-01-04T21:00:00-08:00',
+          'start': '2024-01-04T16:00:00-08:00',
+          'summary': 'On peak: 0.16/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: Off peak
+            Price: 0.08/kWh
+          ''',
+          'end': '2024-01-05T16:00:00-08:00',
+          'start': '2024-01-04T21:00:00-08:00',
+          'summary': 'Off peak: 0.08/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: On peak
+            Price: 0.16/kWh
+          ''',
+          'end': '2024-01-05T21:00:00-08:00',
+          'start': '2024-01-05T16:00:00-08:00',
+          'summary': 'On peak: 0.16/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: Off peak
+            Price: 0.08/kWh
+          ''',
+          'end': '2024-01-06T16:00:00-08:00',
+          'start': '2024-01-05T21:00:00-08:00',
+          'summary': 'Off peak: 0.08/kWh',
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_calendar_events[time1-calendar.energy_site_buy_tariff][event]
+  ReadOnlyDict({
+    'all_day': False,
+    'description': '''
+      Season: Summer
+      Period: Off peak
+      Price: 0.20/kWh
+    ''',
+    'end_time': '2024-01-01 16:00:00',
+    'friendly_name': 'Energy Site Buy tariff',
+    'location': '',
+    'message': 'Off peak: 0.20/kWh',
+    'start_time': '2023-12-31 21:00:00',
+  })
+# ---
+# name: test_calendar_events[time1-calendar.energy_site_buy_tariff][events]
+  dict({
+    'calendar.energy_site_buy_tariff': dict({
+      'events': list([
+        dict({
+          'description': '''
+            Season: Summer
+            Period: On peak
+            Price: 0.22/kWh
+          ''',
+          'end': '2023-12-31T21:00:00-08:00',
+          'start': '2023-12-31T16:00:00-08:00',
+          'summary': 'On peak: 0.22/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: Off peak
+            Price: 0.20/kWh
+          ''',
+          'end': '2024-01-01T16:00:00-08:00',
+          'start': '2023-12-31T21:00:00-08:00',
+          'summary': 'Off peak: 0.20/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: On peak
+            Price: 0.22/kWh
+          ''',
+          'end': '2024-01-01T21:00:00-08:00',
+          'start': '2024-01-01T16:00:00-08:00',
+          'summary': 'On peak: 0.22/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: Off peak
+            Price: 0.20/kWh
+          ''',
+          'end': '2024-01-02T16:00:00-08:00',
+          'start': '2024-01-01T21:00:00-08:00',
+          'summary': 'Off peak: 0.20/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: On peak
+            Price: 0.22/kWh
+          ''',
+          'end': '2024-01-02T21:00:00-08:00',
+          'start': '2024-01-02T16:00:00-08:00',
+          'summary': 'On peak: 0.22/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: Off peak
+            Price: 0.20/kWh
+          ''',
+          'end': '2024-01-03T16:00:00-08:00',
+          'start': '2024-01-02T21:00:00-08:00',
+          'summary': 'Off peak: 0.20/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: On peak
+            Price: 0.22/kWh
+          ''',
+          'end': '2024-01-03T21:00:00-08:00',
+          'start': '2024-01-03T16:00:00-08:00',
+          'summary': 'On peak: 0.22/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: Off peak
+            Price: 0.20/kWh
+          ''',
+          'end': '2024-01-04T16:00:00-08:00',
+          'start': '2024-01-03T21:00:00-08:00',
+          'summary': 'Off peak: 0.20/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: On peak
+            Price: 0.22/kWh
+          ''',
+          'end': '2024-01-04T21:00:00-08:00',
+          'start': '2024-01-04T16:00:00-08:00',
+          'summary': 'On peak: 0.22/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: Off peak
+            Price: 0.20/kWh
+          ''',
+          'end': '2024-01-05T16:00:00-08:00',
+          'start': '2024-01-04T21:00:00-08:00',
+          'summary': 'Off peak: 0.20/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: On peak
+            Price: 0.22/kWh
+          ''',
+          'end': '2024-01-05T21:00:00-08:00',
+          'start': '2024-01-05T16:00:00-08:00',
+          'summary': 'On peak: 0.22/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: Off peak
+            Price: 0.20/kWh
+          ''',
+          'end': '2024-01-06T16:00:00-08:00',
+          'start': '2024-01-05T21:00:00-08:00',
+          'summary': 'Off peak: 0.20/kWh',
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_calendar_events[time1-calendar.energy_site_sell_tariff][event]
+  ReadOnlyDict({
+    'all_day': False,
+    'description': '''
+      Season: Summer
+      Period: Off peak
+      Price: 0.08/kWh
+    ''',
+    'end_time': '2024-01-01 16:00:00',
+    'friendly_name': 'Energy Site Sell tariff',
+    'location': '',
+    'message': 'Off peak: 0.08/kWh',
+    'start_time': '2023-12-31 21:00:00',
+  })
+# ---
+# name: test_calendar_events[time1-calendar.energy_site_sell_tariff][events]
+  dict({
+    'calendar.energy_site_sell_tariff': dict({
+      'events': list([
+        dict({
+          'description': '''
+            Season: Summer
+            Period: On peak
+            Price: 0.16/kWh
+          ''',
+          'end': '2023-12-31T21:00:00-08:00',
+          'start': '2023-12-31T16:00:00-08:00',
+          'summary': 'On peak: 0.16/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: Off peak
+            Price: 0.08/kWh
+          ''',
+          'end': '2024-01-01T16:00:00-08:00',
+          'start': '2023-12-31T21:00:00-08:00',
+          'summary': 'Off peak: 0.08/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: On peak
+            Price: 0.16/kWh
+          ''',
+          'end': '2024-01-01T21:00:00-08:00',
+          'start': '2024-01-01T16:00:00-08:00',
+          'summary': 'On peak: 0.16/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: Off peak
+            Price: 0.08/kWh
+          ''',
+          'end': '2024-01-02T16:00:00-08:00',
+          'start': '2024-01-01T21:00:00-08:00',
+          'summary': 'Off peak: 0.08/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: On peak
+            Price: 0.16/kWh
+          ''',
+          'end': '2024-01-02T21:00:00-08:00',
+          'start': '2024-01-02T16:00:00-08:00',
+          'summary': 'On peak: 0.16/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: Off peak
+            Price: 0.08/kWh
+          ''',
+          'end': '2024-01-03T16:00:00-08:00',
+          'start': '2024-01-02T21:00:00-08:00',
+          'summary': 'Off peak: 0.08/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: On peak
+            Price: 0.16/kWh
+          ''',
+          'end': '2024-01-03T21:00:00-08:00',
+          'start': '2024-01-03T16:00:00-08:00',
+          'summary': 'On peak: 0.16/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: Off peak
+            Price: 0.08/kWh
+          ''',
+          'end': '2024-01-04T16:00:00-08:00',
+          'start': '2024-01-03T21:00:00-08:00',
+          'summary': 'Off peak: 0.08/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: On peak
+            Price: 0.16/kWh
+          ''',
+          'end': '2024-01-04T21:00:00-08:00',
+          'start': '2024-01-04T16:00:00-08:00',
+          'summary': 'On peak: 0.16/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: Off peak
+            Price: 0.08/kWh
+          ''',
+          'end': '2024-01-05T16:00:00-08:00',
+          'start': '2024-01-04T21:00:00-08:00',
+          'summary': 'Off peak: 0.08/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: On peak
+            Price: 0.16/kWh
+          ''',
+          'end': '2024-01-05T21:00:00-08:00',
+          'start': '2024-01-05T16:00:00-08:00',
+          'summary': 'On peak: 0.16/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: Off peak
+            Price: 0.08/kWh
+          ''',
+          'end': '2024-01-06T16:00:00-08:00',
+          'start': '2024-01-05T21:00:00-08:00',
+          'summary': 'Off peak: 0.08/kWh',
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_calendar_events[time2-calendar.energy_site_buy_tariff][event]
+  ReadOnlyDict({
+    'all_day': False,
+    'description': '''
+      Season: Summer
+      Period: Off peak
+      Price: 0.20/kWh
+    ''',
+    'end_time': '2024-01-01 16:00:00',
+    'friendly_name': 'Energy Site Buy tariff',
+    'location': '',
+    'message': 'Off peak: 0.20/kWh',
+    'start_time': '2023-12-31 21:00:00',
+  })
+# ---
+# name: test_calendar_events[time2-calendar.energy_site_buy_tariff][events]
+  dict({
+    'calendar.energy_site_buy_tariff': dict({
+      'events': list([
+        dict({
+          'description': '''
+            Season: Summer
+            Period: On peak
+            Price: 0.22/kWh
+          ''',
+          'end': '2023-12-31T21:00:00-08:00',
+          'start': '2023-12-31T16:00:00-08:00',
+          'summary': 'On peak: 0.22/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: Off peak
+            Price: 0.20/kWh
+          ''',
+          'end': '2024-01-01T16:00:00-08:00',
+          'start': '2023-12-31T21:00:00-08:00',
+          'summary': 'Off peak: 0.20/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: On peak
+            Price: 0.22/kWh
+          ''',
+          'end': '2024-01-01T21:00:00-08:00',
+          'start': '2024-01-01T16:00:00-08:00',
+          'summary': 'On peak: 0.22/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: Off peak
+            Price: 0.20/kWh
+          ''',
+          'end': '2024-01-02T16:00:00-08:00',
+          'start': '2024-01-01T21:00:00-08:00',
+          'summary': 'Off peak: 0.20/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: On peak
+            Price: 0.22/kWh
+          ''',
+          'end': '2024-01-02T21:00:00-08:00',
+          'start': '2024-01-02T16:00:00-08:00',
+          'summary': 'On peak: 0.22/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: Off peak
+            Price: 0.20/kWh
+          ''',
+          'end': '2024-01-03T16:00:00-08:00',
+          'start': '2024-01-02T21:00:00-08:00',
+          'summary': 'Off peak: 0.20/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: On peak
+            Price: 0.22/kWh
+          ''',
+          'end': '2024-01-03T21:00:00-08:00',
+          'start': '2024-01-03T16:00:00-08:00',
+          'summary': 'On peak: 0.22/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: Off peak
+            Price: 0.20/kWh
+          ''',
+          'end': '2024-01-04T16:00:00-08:00',
+          'start': '2024-01-03T21:00:00-08:00',
+          'summary': 'Off peak: 0.20/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: On peak
+            Price: 0.22/kWh
+          ''',
+          'end': '2024-01-04T21:00:00-08:00',
+          'start': '2024-01-04T16:00:00-08:00',
+          'summary': 'On peak: 0.22/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: Off peak
+            Price: 0.20/kWh
+          ''',
+          'end': '2024-01-05T16:00:00-08:00',
+          'start': '2024-01-04T21:00:00-08:00',
+          'summary': 'Off peak: 0.20/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: On peak
+            Price: 0.22/kWh
+          ''',
+          'end': '2024-01-05T21:00:00-08:00',
+          'start': '2024-01-05T16:00:00-08:00',
+          'summary': 'On peak: 0.22/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: Off peak
+            Price: 0.20/kWh
+          ''',
+          'end': '2024-01-06T16:00:00-08:00',
+          'start': '2024-01-05T21:00:00-08:00',
+          'summary': 'Off peak: 0.20/kWh',
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_calendar_events[time2-calendar.energy_site_sell_tariff][event]
+  ReadOnlyDict({
+    'all_day': False,
+    'description': '''
+      Season: Summer
+      Period: Off peak
+      Price: 0.08/kWh
+    ''',
+    'end_time': '2024-01-01 16:00:00',
+    'friendly_name': 'Energy Site Sell tariff',
+    'location': '',
+    'message': 'Off peak: 0.08/kWh',
+    'start_time': '2023-12-31 21:00:00',
+  })
+# ---
+# name: test_calendar_events[time2-calendar.energy_site_sell_tariff][events]
+  dict({
+    'calendar.energy_site_sell_tariff': dict({
+      'events': list([
+        dict({
+          'description': '''
+            Season: Summer
+            Period: On peak
+            Price: 0.16/kWh
+          ''',
+          'end': '2023-12-31T21:00:00-08:00',
+          'start': '2023-12-31T16:00:00-08:00',
+          'summary': 'On peak: 0.16/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: Off peak
+            Price: 0.08/kWh
+          ''',
+          'end': '2024-01-01T16:00:00-08:00',
+          'start': '2023-12-31T21:00:00-08:00',
+          'summary': 'Off peak: 0.08/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: On peak
+            Price: 0.16/kWh
+          ''',
+          'end': '2024-01-01T21:00:00-08:00',
+          'start': '2024-01-01T16:00:00-08:00',
+          'summary': 'On peak: 0.16/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: Off peak
+            Price: 0.08/kWh
+          ''',
+          'end': '2024-01-02T16:00:00-08:00',
+          'start': '2024-01-01T21:00:00-08:00',
+          'summary': 'Off peak: 0.08/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: On peak
+            Price: 0.16/kWh
+          ''',
+          'end': '2024-01-02T21:00:00-08:00',
+          'start': '2024-01-02T16:00:00-08:00',
+          'summary': 'On peak: 0.16/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: Off peak
+            Price: 0.08/kWh
+          ''',
+          'end': '2024-01-03T16:00:00-08:00',
+          'start': '2024-01-02T21:00:00-08:00',
+          'summary': 'Off peak: 0.08/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: On peak
+            Price: 0.16/kWh
+          ''',
+          'end': '2024-01-03T21:00:00-08:00',
+          'start': '2024-01-03T16:00:00-08:00',
+          'summary': 'On peak: 0.16/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: Off peak
+            Price: 0.08/kWh
+          ''',
+          'end': '2024-01-04T16:00:00-08:00',
+          'start': '2024-01-03T21:00:00-08:00',
+          'summary': 'Off peak: 0.08/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: On peak
+            Price: 0.16/kWh
+          ''',
+          'end': '2024-01-04T21:00:00-08:00',
+          'start': '2024-01-04T16:00:00-08:00',
+          'summary': 'On peak: 0.16/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: Off peak
+            Price: 0.08/kWh
+          ''',
+          'end': '2024-01-05T16:00:00-08:00',
+          'start': '2024-01-04T21:00:00-08:00',
+          'summary': 'Off peak: 0.08/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: On peak
+            Price: 0.16/kWh
+          ''',
+          'end': '2024-01-05T21:00:00-08:00',
+          'start': '2024-01-05T16:00:00-08:00',
+          'summary': 'On peak: 0.16/kWh',
+        }),
+        dict({
+          'description': '''
+            Season: Summer
+            Period: Off peak
+            Price: 0.08/kWh
+          ''',
+          'end': '2024-01-06T16:00:00-08:00',
+          'start': '2024-01-05T21:00:00-08:00',
+          'summary': 'Off peak: 0.08/kWh',
+        }),
+      ]),
+    }),
+  })
+# ---
