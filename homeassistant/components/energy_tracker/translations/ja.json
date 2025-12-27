@@ -1,0 +1,109 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Energy Tracker をセットアップ",
+        "description": "Energy Tracker アカウントに接続するために個人アクセストークンを入力してください。",
+        "data": {
+          "api_token": "個人アクセストークン"
+        }
+      },
+      "reconfigure": {
+        "title": "Energy Tracker を再設定",
+        "description": "Energy Tracker アカウントトークンを更新します。既存のトークンを保持する場合は、トークンフィールドを空のままにしておいてください。",
+        "data": {
+          "api_token": "個人アクセストークン(既存のものを保持する場合は空のまま)"
+        }
+      }
+    },
+    "error": {
+      "empty_token": "個人アクセストークンを空にすることはできません。"
+    },
+    "abort": {
+      "already_configured": "この個人アクセストークンは既に設定されています。各トークンは一度しか使用できません。",
+      "entry_not_found": "設定エントリが見つかりません。",
+      "reconfigure_successful": "設定が正常に更新されました。"
+    }
+  },
+  "issues": {
+    "auth_error_invalid_token": {
+      "title": "Energy Tracker の認証に失敗しました",
+      "description": "設定された個人アクセストークンが無効であるか、期限切れです。Energy Tracker アカウントで新しいトークンを作成し、統合設定でトークンを更新してください。"
+    },
+    "auth_error_insufficient_permissions": {
+      "title": "Energy Tracker の権限が不足しています",
+      "description": "設定された個人アクセストークンに必要な権限がありません。Energy Tracker アカウントで必要な権限を持つ新しいトークンを作成し、この統合の設定でトークンを更新してください。"
+    }
+  },
+  "exceptions": {
+    "timeout": {
+      "message": "リクエストがタイムアウトしました。ネットワーク接続を確認して、もう一度お試しください。"
+    },
+    "network_error": {
+      "message": "リクエスト中にネットワークエラーが発生しました。インターネット接続を確認して、もう一度お試しください。"
+    },
+    "bad_request": {
+      "message": "入力が無効です。入力データを確認してください。({error})"
+    },
+    "auth_failed": {
+      "message": "認証に失敗しました。統合設定で個人アクセストークンを確認してください。"
+    },
+    "device_not_found": {
+      "message": "標準測定デバイスが見つかりません。デバイス ID を確認してください。"
+    },
+    "rate_limit": {
+      "message": "リクエストが多すぎます。{retry_after} 秒後にもう一度お試しください。"
+    },
+    "rate_limit_no_time": {
+      "message": "リクエストが多すぎます。後でもう一度お試しください。"
+    },
+    "server_error": {
+      "message": "サーバーエラーが発生しました。後でもう一度お試しください。({error})"
+    },
+    "unknown_error": {
+      "message": "予期しないエラーが発生しました。後でもう一度お試しください。({error})"
+    },
+    "device_id_empty": {
+      "message": "標準測定デバイス ID が必要です。"
+    },
+    "entity_not_found": {
+      "message": "エンティティ {entity_id} が見つかりません。"
+    },
+    "entity_unavailable": {
+      "message": "エンティティ {entity_id} は {state} です。"
+    },
+    "invalid_number": {
+      "message": "エンティティ {entity_id} の値 '{state}' は数値ではありません。"
+    },
+    "missing_timestamp": {
+      "message": "エンティティ {entity_id} にタイムスタンプがありません。"
+    },
+    "no_api_token": {
+      "message": "個人アクセストークンが設定されていません。アカウント設定を確認してください。"
+    }
+  },
+  "services": {
+    "send_meter_reading": {
+      "name": "メーター読み取り値を送信",
+      "description": "センサーの現在の値を Energy Tracker に送信します。",
+      "fields": {
+        "entry_id": {
+          "name": "アカウント",
+          "description": "あなたの Energy Tracker アカウント"
+        },
+        "device_id": {
+          "name": "標準測定デバイス ID",
+          "description": "Energy Tracker アカウントの標準測定デバイス ID"
+        },
+        "source_entity_id": {
+          "name": "センサー",
+          "description": "メーター読み取り値を提供するセンサー"
+        },
+        "allow_rounding": {
+          "name": "丸め処理を許可",
+          "description": "メーターの精度に合わせて値を丸める"
+        }
+      }
+    }
+  }
+}
