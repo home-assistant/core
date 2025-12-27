@@ -20,8 +20,6 @@ from homeassistant.util.percentage import (
 
 from .common import is_fan, is_purifier, rgetattr
 from .const import (
-    DOMAIN,
-    VS_COORDINATOR,
     VS_DEVICES,
     VS_DISCOVERY,
     VS_FAN_MODE_ADVANCED_SLEEP,
@@ -32,7 +30,6 @@ from .const import (
     VS_FAN_MODE_PRESET_LIST_HA,
     VS_FAN_MODE_SLEEP,
     VS_FAN_MODE_TURBO,
-    VS_MANAGER,
 )
 from .coordinator import VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
@@ -47,7 +44,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the VeSync fan platform."""
 
-    coordinator = hass.data[DOMAIN][VS_COORDINATOR]
+    coordinator = config_entry.runtime_data
 
     @callback
     def discover(devices: list[VeSyncBaseDevice]) -> None:
@@ -59,7 +56,7 @@ async def async_setup_entry(
     )
 
     _setup_entities(
-        hass.data[DOMAIN][VS_MANAGER].devices, async_add_entities, coordinator
+        config_entry.runtime_data.manager.devices, async_add_entities, coordinator
     )
 
 

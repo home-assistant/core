@@ -22,8 +22,6 @@ Energy history is weekly/monthly/yearly and can be updated a lot more infrequent
 in this case every 6 hours.
 """
 VS_DEVICES = "devices"
-VS_COORDINATOR = "coordinator"
-VS_MANAGER = "manager"
 VS_LISTENERS = "listeners"
 VS_NUMBERS = "numbers"
 

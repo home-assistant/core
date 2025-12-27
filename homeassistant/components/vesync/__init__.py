@@ -18,7 +18,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, VS_COORDINATOR, VS_MANAGER
+from .const import DOMAIN
 from .coordinator import VeSyncDataCoordinator
 from .services import async_setup_services
 
@@ -37,6 +37,8 @@ PLATFORMS = [
 ]
 
 _LOGGER = logging.getLogger(__name__)
+
+type VesyncConfigEntry = ConfigEntry[VeSyncDataCoordinator]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -75,15 +77,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             translation_domain=DOMAIN, translation_key="api_response_error"
         ) from err
 
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][VS_MANAGER] = manager
-
-    coordinator = VeSyncDataCoordinator(hass, config_entry, manager)
-
-    # Store coordinator at domain level since only single integration instance is permitted.
-    hass.data[DOMAIN][VS_COORDINATOR] = coordinator
     await manager.update()
     await manager.check_firmware()
+
+    config_entry.runtime_data = VeSyncDataCoordinator(hass, config_entry, manager)
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
@@ -137,7 +134,7 @@ async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
 ) -> bool:
     """Remove a config entry from a device."""
-    manager = hass.data[DOMAIN][VS_MANAGER]
+    manager = config_entry.runtime_data.manager
     await manager.get_devices()
     for dev in manager.devices:
         if isinstance(dev.sub_device_no, int):
