@@ -1,0 +1,106 @@
+{
+  "domain": "bms_ble",
+  "name": "BLE Battery Management System",
+  "bluetooth": [
+    {
+      "service_uuid": "0000af30-0000-1000-8000-00805f9b34fb"
+    },
+    {
+      "service_uuid": "0000fee7-0000-1000-8000-00805f9b34fb"
+    },
+    {
+      "service_uuid": "0000ff00-0000-1000-8000-00805f9b34fb"
+    },
+    {
+      "service_uuid": "0000ffd0-0000-1000-8000-00805f9b34fb"
+    },
+    {
+      "service_uuid": "0000ffe0-0000-1000-8000-00805f9b34fb"
+    },
+    {
+      "service_uuid": "0000ffe5-0000-1000-8000-00805f9b34fb"
+    },
+    {
+      "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb"
+    },
+    {
+      "service_uuid": "6e400001-b5a3-f393-e0a9-e50e24dcca9e"
+    },
+    {
+      "manufacturer_id": 770
+    },
+    {
+      "manufacturer_id": 771
+    },
+    {
+      "manufacturer_id": 258
+    },
+    {
+      "manufacturer_id": 260
+    },
+    {
+      "manufacturer_id": 1026
+    },
+    {
+      "local_name": "ECO-WORTHY 02_*"
+    },
+    {
+      "local_name": "TBA-*"
+    },
+    {
+      "local_name": "DXB-*"
+    },
+    {
+      "local_name": "libatt*",
+      "manufacturer_id": 21320
+    },
+    {
+      "local_name": "LT-*"
+    },
+    {
+      "local_name": "SV12V*",
+      "manufacturer_id": 33384
+    },
+    {
+      "local_name": "L-12V???AH-*"
+    },
+    {
+      "local_name": "V-12V???Ah-*"
+    },
+    {
+      "manufacturer_id": 54976
+    },
+    {
+      "local_name": "F10*"
+    },
+    {
+      "local_name": "F07*"
+    },
+    {
+      "manufacturer_id": 21330,
+      "service_uuid": "000003c1-0000-1000-8000-00805f9b34fb"
+    },
+    {
+      "local_name": "RNG*",
+      "manufacturer_id": 57676
+    },
+    {
+      "local_name": "TP_*"
+    },
+    {
+      "local_name": "Epsilon-*"
+    },
+    {
+      "local_name": "PC-????"
+    }
+  ],
+  "codeowners": ["@patman15"],
+  "config_flow": true,
+  "dependencies": ["bluetooth_adapters"],
+  "documentation": "https://www.home-assistant.io/integrations/bms_ble",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["bleak_retry_connector", "aiobmsble"],
+  "quality_scale": "silver",
+  "requirements": ["aiobmsble==0.14.2"]
+}
