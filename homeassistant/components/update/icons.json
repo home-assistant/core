@@ -17,5 +17,10 @@
     "skip": {
       "service": "mdi:package-check"
     }
+  },
+  "triggers": {
+    "update_became_available": {
+      "trigger": "mdi:package-up"
+    }
   }
 }

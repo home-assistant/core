@@ -15,6 +15,7 @@ from soco.exceptions import SoCoException, SoCoUPnPException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import dispatcher_send
 
 from .const import SONOS_SPEAKER_ACTIVITY
@@ -135,6 +136,7 @@ class UnjoinData:
 
     speakers: list[SonosSpeaker] = field(default_factory=list)
     event: asyncio.Event = field(default_factory=asyncio.Event)
+    exception: HomeAssistantError | OSError | SoCoException | None = None
 
 
 @dataclass
