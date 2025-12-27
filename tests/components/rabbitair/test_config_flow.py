@@ -17,6 +17,8 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
+from tests.common import MockConfigEntry
+
 TEST_HOST = "1.1.1.1"
 TEST_NAME = "abcdef1234_123456789012345678"
 TEST_TOKEN = "0123456789abcdef0123456789abcdef"
@@ -209,3 +211,152 @@ async def test_zeroconf_discovery(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("rabbitair_connect")
+async def test_zeroconf_updates_existing_host(hass: HomeAssistant) -> None:
+    """Rediscovery updates the stored host for an already configured device."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_UNIQUE_ID,
+        data={
+            CONF_HOST: "old.local",
+            CONF_ACCESS_TOKEN: TEST_TOKEN,
+            CONF_MAC: TEST_MAC,
+        },
+        title=TEST_TITLE,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_ZEROCONF}, data=ZEROCONF_DATA
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_HOST] == TEST_NAME + ".local"
+
+
+@pytest.mark.usefixtures("rabbitair_connect")
+async def test_reconfigure_updates_host(hass: HomeAssistant) -> None:
+    """Reconfigure to a new host for the same device."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_UNIQUE_ID,
+        data={CONF_HOST: "2.2.2.2", CONF_ACCESS_TOKEN: TEST_TOKEN, CONF_MAC: TEST_MAC},
+        title=TEST_TITLE,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": entry.entry_id,
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: TEST_HOST}
+    )
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_HOST] == TEST_HOST
+
+
+async def test_reconfigure_aborts_on_mismatch(hass: HomeAssistant) -> None:
+    """Abort reconfigure if the host points to a different device."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_UNIQUE_ID,
+        data={CONF_HOST: TEST_HOST, CONF_ACCESS_TOKEN: TEST_TOKEN, CONF_MAC: TEST_MAC},
+        title=TEST_TITLE,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": entry.entry_id,
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with patch(
+        "rabbitair.UdpClient.get_info", return_value=get_mock_info("AA:BB:CC:DD:EE:FF")
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_HOST: "2.2.2.2"}
+        )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reconfigure_device_mismatch"
+    assert entry.data[CONF_HOST] == TEST_HOST
+
+
+async def test_reconfigure_invalid_host_keeps_form(hass: HomeAssistant) -> None:
+    """Keep form on validation error and show mapped error."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_UNIQUE_ID,
+        data={CONF_HOST: TEST_HOST, CONF_ACCESS_TOKEN: TEST_TOKEN, CONF_MAC: TEST_MAC},
+        title=TEST_TITLE,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": entry.entry_id,
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with patch("rabbitair.UdpClient.get_info", side_effect=OSError):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_HOST: "2.2.2.2"}
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "reconfigure"
+    assert result2["errors"] == {"base": "invalid_host"}
+
+
+async def test_reconfigure_unknown_on_exception(hass: HomeAssistant) -> None:
+    """Keep form and show unknown if validation raises unexpected exception."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_UNIQUE_ID,
+        data={CONF_HOST: TEST_HOST, CONF_ACCESS_TOKEN: TEST_TOKEN, CONF_MAC: TEST_MAC},
+        title=TEST_TITLE,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": entry.entry_id,
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with patch(
+        "homeassistant.components.rabbitair.config_flow.validate_input",
+        side_effect=Exception,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_HOST: "2.2.2.2"}
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "reconfigure"
+    assert result2["errors"] == {"base": "unknown"}
+    assert entry.data[CONF_HOST] == TEST_HOST
