@@ -53,7 +53,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Check if device is supported by an available BMS class."""
         if not (
             bms_class := await bms_identify(
-                discovery_info.advertisement, discovery_info.address
+                discovery_info.advertisement, format_mac(discovery_info.address)
             )
         ):
             return None
@@ -71,7 +71,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by Bluetooth discovery."""
         LOGGER.debug("Bluetooth device detected: %s", discovery_info)
 
-        await self.async_set_unique_id(discovery_info.address)
+        address: Final[str] = format_mac(discovery_info.address)
+        await self.async_set_unique_id(address)
         self._abort_if_unique_id_configured()
 
         if not (bms_module := await self._async_device_supported(discovery_info)):
@@ -82,7 +83,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         self.context["title_placeholders"] = {
             CONF_NAME: self._disc_dev.name,
-            CONF_ID: self._disc_dev.discovery_info.address[8:],  # remove OUI
+            CONF_ID: address[8:],  # remove OUI
             CONF_MODEL: self._disc_dev.model(),
         }
         return await self.async_step_bluetooth_confirm()
@@ -116,7 +117,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         if user_input is not None:
-            address: str = str(user_input[CONF_ADDRESS])
+            address: str = format_mac(user_input[CONF_ADDRESS])
             await self.async_set_unique_id(address, raise_on_progress=False)
             self._abort_if_unique_id_configured()
             self._disc_dev = self._disc_devs[address]
@@ -132,7 +133,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         for discovery_info in async_discovered_service_info(
             self.hass, connectable=True
         ):
-            address = discovery_info.address
+            address = format_mac(discovery_info.address)
             if address in current_addresses or address in self._disc_devs:
                 continue
             if not (bms_module := await self._async_device_supported(discovery_info)):
