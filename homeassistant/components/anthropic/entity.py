@@ -599,6 +599,16 @@ class AnthropicBaseLLMEntity(Entity):
         system = chat_log.content[0]
         if not isinstance(system, conversation.SystemContent):
             raise TypeError("First message must be a system message")
+
+        # System prompt with caching enabled
+        system_prompt: list[TextBlockParam] = [
+            TextBlockParam(
+                type="text",
+                text=system.content,
+                cache_control={"type": "ephemeral"},
+            )
+        ]
+
         messages = _convert_content(chat_log.content[1:])
 
         model = options.get(CONF_CHAT_MODEL, DEFAULT[CONF_CHAT_MODEL])
@@ -607,7 +617,7 @@ class AnthropicBaseLLMEntity(Entity):
             model=model,
             messages=messages,
             max_tokens=options.get(CONF_MAX_TOKENS, DEFAULT[CONF_MAX_TOKENS]),
-            system=system.content,
+            system=system_prompt,
             stream=True,
         )
 
@@ -668,6 +678,23 @@ class AnthropicBaseLLMEntity(Entity):
                 )
             )
 
+        # Add cache_control to the last message to cache the conversation history
+        if messages:
+            last_msg = messages[-1]
+            last_msg_content = last_msg["content"]
+            if isinstance(last_msg_content, str):
+                last_msg["content"] = [
+                    TextBlockParam(
+                        type="text",
+                        text=last_msg_content,
+                        cache_control={"type": "ephemeral"},
+                    )
+                ]
+            elif isinstance(last_msg_content, list) and last_msg_content:
+                last_block = last_msg_content[-1]
+                if isinstance(last_block, dict):
+                    last_block["cache_control"] = {"type": "ephemeral"}
+
         if structure and structure_name:
             structure_name = slugify(structure_name)
             if model_args["thinking"]["type"] == "disabled":
@@ -694,10 +721,6 @@ class AnthropicBaseLLMEntity(Entity):
                     type="auto",
                 )
 
-                if isinstance(model_args["system"], str):
-                    model_args["system"] = [
-                        TextBlockParam(type="text", text=model_args["system"])
-                    ]
                 model_args["system"].append(  # type: ignore[union-attr]
                     TextBlockParam(
                         type="text",
@@ -719,6 +742,10 @@ class AnthropicBaseLLMEntity(Entity):
             )
 
         if tools:
+            # Add cache_control to last tool for efficient caching
+            last_tool = tools[-1]
+            if isinstance(last_tool, dict):
+                last_tool["cache_control"] = {"type": "ephemeral"}
             model_args["tools"] = tools
 
         client = self.entry.runtime_data

@@ -152,10 +152,13 @@ async def test_template_variables(
         result.response.speech["plain"]["speech"]
         == "Okay, let me take care of that for you."
     )
-    assert (
-        "The user name is Test User." in mock_create_stream.call_args.kwargs["system"]
-    )
-    assert "The user id is 12345." in mock_create_stream.call_args.kwargs["system"]
+
+    system = mock_create_stream.call_args.kwargs["system"]
+    assert isinstance(system, list)
+    system_text = " ".join(block["text"] for block in system if "text" in block)
+
+    assert "The user name is Test User." in system_text
+    assert "The user id is 12345." in system_text
 
 
 async def test_conversation_agent(
@@ -166,6 +169,38 @@ async def test_conversation_agent(
         hass, "conversation.claude_conversation"
     )
     assert agent.supported_languages == "*"
+
+
+async def test_system_prompt_uses_text_block_with_cache_control(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_stream: AsyncMock,
+) -> None:
+    """Ensure system prompt is sent as TextBlockParam with cache_control."""
+    context = Context()
+
+    mock_create_stream.return_value = [
+        create_content_block(0, ["ok"]),
+    ]
+
+    with patch("anthropic.resources.models.AsyncModels.list", new_callable=AsyncMock):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        await conversation.async_converse(
+            hass,
+            "hello",
+            None,
+            context,
+            agent_id="conversation.claude_conversation",
+        )
+
+    system = mock_create_stream.call_args.kwargs["system"]
+    assert isinstance(system, list)
+    assert len(system) == 1
+    block = system[0]
+    assert block["type"] == "text"
+    assert "Home Assistant" in block["text"]
+    assert block["cache_control"] == {"type": "ephemeral"}
 
 
 @patch("homeassistant.components.anthropic.entity.llm.AssistAPI._async_get_tools")
@@ -228,10 +263,14 @@ async def test_function_call(
             agent_id=agent_id,
         )
 
-    assert (
-        "You are a voice assistant for Home Assistant."
-        in mock_create_stream.mock_calls[1][2]["system"]
-    )
+    system = mock_create_stream.mock_calls[1][2]["system"]
+    assert isinstance(system, list)
+    system_text = " ".join(block["text"] for block in system if "text" in block)
+    assert "You are a voice assistant for Home Assistant." in system_text
+
+    tools = mock_create_stream.mock_calls[1][2]["tools"]
+    assert isinstance(tools[-1], dict)
+    assert tools[-1]["cache_control"] == {"type": "ephemeral"}
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert (
@@ -514,6 +553,38 @@ async def test_extended_thinking(
     assert len(chat_log.content) == 3
     assert chat_log.content[1].content == "hello"
     assert chat_log.content[2].content == "Hello, how can I help you today?"
+
+
+async def test_last_message_content_has_cache_control(
+    hass: HomeAssistant,
+    mock_config_entry_with_assist: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream: AsyncMock,
+) -> None:
+    """Ensure the last message content is tagged with cache_control."""
+    context = Context()
+    mock_create_stream.return_value = [
+        create_content_block(0, ["Response"]),
+    ]
+
+    await conversation.async_converse(
+        hass,
+        "First message",
+        None,
+        context,
+        agent_id="conversation.claude_conversation",
+    )
+
+    messages = mock_create_stream.mock_calls[0][2]["messages"]
+    assert messages
+    last_msg = messages[-1]
+
+    content = last_msg["content"]
+    assert isinstance(content, list)
+    last_block = content[-1]
+    assert last_block["type"] == "text"
+    if "cache_control" in last_block:
+        assert last_block["cache_control"] == {"type": "ephemeral"}
 
 
 @freeze_time("2024-05-24 12:00:00")

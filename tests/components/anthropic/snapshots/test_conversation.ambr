@@ -76,7 +76,15 @@
 # name: test_extended_thinking_tool_call.1
   list([
     dict({
-      'content': 'Please call the test function',
+      'content': list([
+        dict({
+          'cache_control': dict({
+            'type': 'ephemeral',
+          }),
+          'text': 'Please call the test function',
+          'type': 'text',
+        }),
+      ]),
       'role': 'user',
     }),
     dict({
@@ -134,7 +142,15 @@
 # name: test_history_conversion[content0]
   list([
     dict({
-      'content': 'Are you sure?',
+      'content': list([
+        dict({
+          'cache_control': dict({
+            'type': 'ephemeral',
+          }),
+          'text': 'Are you sure?',
+          'type': 'text',
+        }),
+      ]),
       'role': 'user',
     }),
     dict({
@@ -164,7 +180,15 @@
       'role': 'assistant',
     }),
     dict({
-      'content': 'Are you sure?',
+      'content': list([
+        dict({
+          'cache_control': dict({
+            'type': 'ephemeral',
+          }),
+          'text': 'Are you sure?',
+          'type': 'text',
+        }),
+      ]),
       'role': 'user',
     }),
     dict({
@@ -207,7 +231,15 @@
       'role': 'assistant',
     }),
     dict({
-      'content': 'Are you sure?',
+      'content': list([
+        dict({
+          'cache_control': dict({
+            'type': 'ephemeral',
+          }),
+          'text': 'Are you sure?',
+          'type': 'text',
+        }),
+      ]),
       'role': 'user',
     }),
     dict({
@@ -258,7 +290,15 @@
       'role': 'assistant',
     }),
     dict({
-      'content': 'Are you sure?',
+      'content': list([
+        dict({
+          'cache_control': dict({
+            'type': 'ephemeral',
+          }),
+          'text': 'Are you sure?',
+          'type': 'text',
+        }),
+      ]),
       'role': 'user',
     }),
     dict({
@@ -331,7 +371,15 @@
       'role': 'assistant',
     }),
     dict({
-      'content': 'Are you sure?',
+      'content': list([
+        dict({
+          'cache_control': dict({
+            'type': 'ephemeral',
+          }),
+          'text': 'Are you sure?',
+          'type': 'text',
+        }),
+      ]),
       'role': 'user',
     }),
     dict({
@@ -448,7 +496,15 @@
       'role': 'assistant',
     }),
     dict({
-      'content': 'Are you sure?',
+      'content': list([
+        dict({
+          'cache_control': dict({
+            'type': 'ephemeral',
+          }),
+          'text': 'Are you sure?',
+          'type': 'text',
+        }),
+      ]),
       'role': 'user',
     }),
     dict({
