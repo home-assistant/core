@@ -1349,7 +1349,7 @@ kiwiki-client==0.1.1
 knocki==0.4.2
 
 # homeassistant.components.knx
-knx-frontend==2025.12.24.74016
+knx-frontend==2025.12.25.200238
 
 # homeassistant.components.konnected
 konnected==1.2.0
@@ -1748,7 +1748,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.11.0
+plugwise==1.11.2
 
 # homeassistant.components.serial_pm
 pmsensor==0.4
@@ -2300,7 +2300,7 @@ pypaperless==4.1.1
 pypca==0.0.7
 
 # homeassistant.components.lcn
-pypck==0.9.8
+pypck==0.9.9
 
 # homeassistant.components.pglab
 pypglab==0.0.5
