@@ -278,6 +278,14 @@ def qubino_shutter_state_fixture() -> dict[str, Any]:
     return load_json_object_fixture("cover_qubino_shutter_state.json", DOMAIN)
 
 
+@pytest.fixture(name="qubino_shutter_state_firmware_14_2_0", scope="package")
+def qubino_shutter_state_firmware_14_2_0_fixture() -> dict[str, Any]:
+    """Load the Qubino Shutter node state fixture data with firmware 14.2.0."""
+    return load_json_object_fixture(
+        "cover_qubino_shutter_state_firmware_14_2_0.json", DOMAIN
+    )
+
+
 @pytest.fixture(name="aeotec_nano_shutter_state", scope="package")
 def aeotec_nano_shutter_state_fixture() -> dict[str, Any]:
     """Load the Aeotec Nano Shutter node state fixture data."""
@@ -1045,6 +1053,16 @@ def zvidar_cover_fixture(client, zvidar_state) -> Node:
 def qubino_shutter_cover_fixture(client, qubino_shutter_state) -> Node:
     """Mock a Qubino flush shutter node."""
     node = Node(client, copy.deepcopy(qubino_shutter_state))
+    client.driver.controller.nodes[node.node_id] = node
+    return node
+
+
+@pytest.fixture(name="qubino_shutter_firmware_14_2_0")
+def qubino_shutter_firmware_14_2_0_cover_fixture(
+    client, qubino_shutter_state_firmware_14_2_0
+) -> Node:
+    """Mock a Qubino flush shutter node with firmware 14.2.0."""
+    node = Node(client, copy.deepcopy(qubino_shutter_state_firmware_14_2_0))
     client.driver.controller.nodes[node.node_id] = node
     return node
 
