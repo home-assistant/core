@@ -1,0 +1,11 @@
+{
+  "domain": "hausbus",
+  "name": "Haus-Bus",
+  "codeowners": ["@hausbus"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/hausbus",
+  "iot_class": "local_push",
+  "loggers": ["pyhausbus"],
+  "quality_scale": "bronze",
+  "requirements": ["pyhausbus==1.0.43"]
+}
