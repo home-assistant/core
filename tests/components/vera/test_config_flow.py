@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
+import pyvera as pv
 from requests.exceptions import RequestException
 
 from homeassistant import config_entries
@@ -19,11 +20,78 @@ from tests.common import MockConfigEntry
 
 
 async def test_async_step_user_success(hass: HomeAssistant) -> None:
-    """Test user step success."""
+    """Test user step success with device configuration."""
     with patch("pyvera.VeraController") as vera_controller_class_mock:
         controller = MagicMock()
         controller.refresh_data = MagicMock()
         controller.serial_number = "serial_number_0"
+
+        # Mock some devices
+        device1 = MagicMock(spec=pv.VeraSwitch)
+        device1.device_id = 12
+        device1.name = "Switch 1"
+
+        device2 = MagicMock(spec=pv.VeraSwitch)
+        device2.device_id = 13
+        device2.name = "Switch 2"
+
+        device3 = MagicMock(spec=pv.VeraSensor)
+        device3.device_id = 14
+        device3.name = "Sensor 1"
+
+        controller.get_devices = MagicMock(return_value=[device1, device2, device3])
+        vera_controller_class_mock.return_value = controller
+
+        # Step 1: Enter URL
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == config_entries.SOURCE_USER
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_CONTROLLER: "http://127.0.0.1:123/",
+            },
+        )
+
+        # Step 2: Configure devices
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "devices"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_LIGHTS: ["12", "13"],
+                CONF_EXCLUDE: ["14"],
+            },
+        )
+
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["title"] == "http://127.0.0.1:123"
+        assert result["data"] == {
+            CONF_CONTROLLER: "http://127.0.0.1:123",
+            CONF_SOURCE: config_entries.SOURCE_USER,
+            CONF_LEGACY_UNIQUE_ID: False,
+        }
+        assert result["options"] == {
+            CONF_LIGHTS: [12, 13],
+            CONF_EXCLUDE: [14],
+        }
+        assert result["result"].unique_id == controller.serial_number
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert entries
+
+
+async def test_async_step_user_no_devices(hass: HomeAssistant) -> None:
+    """Test user step success with no devices."""
+    with patch("pyvera.VeraController") as vera_controller_class_mock:
+        controller = MagicMock()
+        controller.refresh_data = MagicMock()
+        controller.serial_number = "serial_number_0"
+        controller.get_devices = MagicMock(return_value=[])
         vera_controller_class_mock.return_value = controller
 
         result = await hass.config_entries.flow.async_init(
@@ -36,23 +104,16 @@ async def test_async_step_user_success(hass: HomeAssistant) -> None:
             result["flow_id"],
             user_input={
                 CONF_CONTROLLER: "http://127.0.0.1:123/",
-                CONF_LIGHTS: "12 13",
-                CONF_EXCLUDE: "14 15",
             },
         )
+
+        # Should skip device config and create entry directly
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == "http://127.0.0.1:123"
-        assert result["data"] == {
-            CONF_CONTROLLER: "http://127.0.0.1:123",
-            CONF_SOURCE: config_entries.SOURCE_USER,
-            CONF_LIGHTS: [12, 13],
-            CONF_EXCLUDE: [14, 15],
-            CONF_LEGACY_UNIQUE_ID: False,
+        assert result["options"] == {
+            CONF_LIGHTS: [],
+            CONF_EXCLUDE: [],
         }
-        assert result["result"].unique_id == controller.serial_number
-
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert entries
 
 
 async def test_async_step_import_success(hass: HomeAssistant) -> None:
@@ -110,7 +171,7 @@ async def test_async_step_import_success_with_legacy_unique_id(
 
 
 async def test_async_step_finish_error(hass: HomeAssistant) -> None:
-    """Test finish step with error."""
+    """Test user step with connection error."""
     with patch("pyvera.VeraController") as vera_controller_class_mock:
         controller = MagicMock()
         controller.refresh_data = MagicMock(side_effect=RequestException())
@@ -118,15 +179,19 @@ async def test_async_step_finish_error(hass: HomeAssistant) -> None:
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={CONF_CONTROLLER: "http://127.0.0.1:123/"},
+            context={"source": config_entries.SOURCE_USER},
         )
 
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "cannot_connect"
-        assert result["description_placeholders"] == {
-            "base_url": "http://127.0.0.1:123"
-        }
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_CONTROLLER: "http://127.0.0.1:123/",
+            },
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == config_entries.SOURCE_USER
+        assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_options(hass: HomeAssistant) -> None:

@@ -22,6 +22,12 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_EXCLUDE, CONF_LIGHTS, CONF_SOURCE
 from homeassistant.core import callback
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.selector import (
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 from homeassistant.helpers.typing import VolDictType
 
 from .const import CONF_CONTROLLER, CONF_LEGACY_UNIQUE_ID, DOMAIN
@@ -100,6 +106,15 @@ class OptionsFlowHandler(OptionsFlowWithReload):
 class VeraFlowHandler(ConfigFlow, domain=DOMAIN):
     """Vera config flow."""
 
+    VERSION = 1
+
+    def __init__(self) -> None:
+        """Initialize the Vera config flow."""
+        self._controller: pv.VeraController | None = None
+        self._devices: list[pv.VeraDevice] = []
+        self._base_url: str = ""
+        self._serial_number: str = ""
+
     @staticmethod
     @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowHandler:
@@ -109,25 +124,106 @@ class VeraFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle user initiated flow."""
+        """Handle user initiated flow - ask for controller URL."""
+        errors: dict[str, str] = {}
+
         if user_input is not None:
-            return await self.async_step_finish(
-                {
-                    **user_input,
-                    **options_data(user_input),
-                    CONF_SOURCE: SOURCE_USER,
-                    CONF_LEGACY_UNIQUE_ID: False,
-                }
-            )
+            base_url = user_input[CONF_CONTROLLER].rstrip("/")
+            controller = pv.VeraController(base_url)
+
+            try:
+                await self.hass.async_add_executor_job(controller.refresh_data)
+                devices = await self.hass.async_add_executor_job(controller.get_devices)
+            except RequestException:
+                _LOGGER.error("Failed to connect to Vera controller %s", base_url)
+                errors["base"] = "cannot_connect"
+            else:
+                # Store the controller and devices for the next step
+                self._controller = controller
+                self._devices = devices
+                self._base_url = base_url
+                self._serial_number = controller.serial_number
+
+                await self.async_set_unique_id(controller.serial_number)
+                self._abort_if_unique_id_configured()
+
+                # If there are no devices, skip device selection
+                if not devices:
+                    return self.async_create_entry(
+                        title=base_url,
+                        data={
+                            CONF_CONTROLLER: base_url,
+                            CONF_SOURCE: SOURCE_USER,
+                            CONF_LEGACY_UNIQUE_ID: False,
+                        },
+                        options=new_options([], []),
+                    )
+
+                # Proceed to device configuration
+                return await self.async_step_devices()
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_CONTROLLER): str, **options_schema()}
-            ),
+            data_schema=vol.Schema({vol.Required(CONF_CONTROLLER): str}),
+            errors=errors,
             description_placeholders={
                 "sample_ip": "http://192.168.1.161:3480",
-                "documentation_url": "https://www.home-assistant.io/integrations/vera/",
+            },
+        )
+
+    async def async_step_devices(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle device configuration step."""
+        if user_input is not None:
+            # Process the device selections - convert from selector list to int list
+            exclude_ids = [int(id_str) for id_str in user_input.get(CONF_EXCLUDE, [])]
+            light_ids = [int(id_str) for id_str in user_input.get(CONF_LIGHTS, [])]
+
+            return self.async_create_entry(
+                title=self._base_url,
+                data={
+                    CONF_CONTROLLER: self._base_url,
+                    CONF_SOURCE: SOURCE_USER,
+                    CONF_LEGACY_UNIQUE_ID: False,
+                },
+                options=new_options(light_ids, exclude_ids),
+            )
+
+        # Build device list for selection
+        device_options: list[SelectOptionDict] = [
+            SelectOptionDict(
+                value=str(device.device_id),
+                label=f"{device.name} (ID: {device.device_id})",
+            )
+            for device in self._devices
+        ]
+
+        # Build schema for device selection
+        data_schema = vol.Schema(
+            {
+                vol.Optional(CONF_EXCLUDE, default=[]): SelectSelector(
+                    SelectSelectorConfig(
+                        options=device_options,
+                        multiple=True,
+                        mode=SelectSelectorMode.DROPDOWN,
+                    )
+                ),
+                vol.Optional(CONF_LIGHTS, default=[]): SelectSelector(
+                    SelectSelectorConfig(
+                        options=device_options,
+                        multiple=True,
+                        mode=SelectSelectorMode.DROPDOWN,
+                    )
+                ),
+            }
+        )
+
+        return self.async_show_form(
+            step_id="devices",
+            data_schema=data_schema,
+            description_placeholders={
+                "device_count": str(len(self._devices)),
             },
         )
 

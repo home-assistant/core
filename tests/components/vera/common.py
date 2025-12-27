@@ -154,11 +154,18 @@ class ComponentFactory:
 
         # Setup component through config flow.
         if controller_config.config_source == ConfigSource.CONFIG_FLOW:
-            await hass.config_entries.flow.async_init(
+            # New multi-step config flow - step 1: provide URL
+            result = await hass.config_entries.flow.async_init(
                 DOMAIN,
                 context={"source": config_entries.SOURCE_USER},
-                data=component_config,
+                data={CONF_CONTROLLER: component_config.get(CONF_CONTROLLER)},
             )
+            # Step 2: configure devices (if any devices present, otherwise entry is created in step 1)
+            if result.get("type") == "form" and result.get("step_id") == "devices":
+                await hass.config_entries.flow.async_configure(
+                    result["flow_id"],
+                    user_input=controller_config.options or {},
+                )
             await hass.async_block_till_done()
 
         # Setup component directly from config entry.
