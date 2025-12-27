@@ -321,6 +321,7 @@ FLOWS = {
         "improv_ble",
         "incomfort",
         "inels",
+        "influxdb",
         "inkbird",
         "insteon",
         "intellifire",
