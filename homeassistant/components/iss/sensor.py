@@ -84,4 +84,5 @@ class IssSensor(CoordinatorEntity[DataUpdateCoordinator[IssData]], SensorEntity)
         else:
             attrs["long"] = self.coordinator.data.current_location.get("longitude")
             attrs["lat"] = self.coordinator.data.current_location.get("latitude")
+            
         return attrs
