@@ -163,7 +163,7 @@ async def test_device_setup(
     assert result.get("type") == FlowResultType.CREATE_ENTRY
     assert result.get("title") == "SmartBat-B12345"
 
-    result_detail: er.ConfigEntry[er.Any] | None = result.get("result")
+    result_detail: ConfigEntry | None = result.get("result")
     assert result_detail is not None
     assert result_detail.unique_id == "cc:cc:cc:cc:cc:cc"
 
