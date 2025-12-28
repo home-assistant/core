@@ -29,9 +29,7 @@ def test_has_location_with_states_with_valid_location() -> None:
 
 def test_has_location_with_states_with_int_location() -> None:
     """Test that integer coordinates are valid."""
-    state = State(
-        "hello.world", "invalid", {ATTR_LATITUDE: 123, ATTR_LONGITUDE: 45}
-    )
+    state = State("hello.world", "invalid", {ATTR_LATITUDE: 123, ATTR_LONGITUDE: 45})
     assert location.has_location(state)
 
 
