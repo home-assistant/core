@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components.stiebel_eltron import DOMAIN
+from homeassistant.components.stiebel_eltron.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 
 from tests.common import MockConfigEntry
