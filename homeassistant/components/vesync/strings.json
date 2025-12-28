@@ -43,6 +43,7 @@
             "state": {
               "advanced_sleep": "Advanced sleep",
               "auto": "[%key:common::state::auto%]",
+              "normal": "[%key:common::state::normal%]",
               "pet": "Pet",
               "sleep": "Sleep",
               "turbo": "Turbo"
