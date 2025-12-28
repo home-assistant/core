@@ -25,7 +25,7 @@ def _get_controller(call: ServiceCall) -> OmadaSiteController:
             call.data[ATTR_CONFIG_ENTRY_ID]
         )
         if not entry:
-            raise ServiceValidationError("Entry not found")
+            raise ServiceValidationError("Specified TP-Link Omada controller not found")
     else:
         # Assume first loaded entry if none specified (for backward compatibility/99% use case)
         entries = call.hass.config_entries.async_entries(DOMAIN)
@@ -34,7 +34,9 @@ def _get_controller(call: ServiceCall) -> OmadaSiteController:
     entry = cast(ConfigEntry[OmadaSiteController], entry)
 
     if entry.state is not ConfigEntryState.LOADED:
-        raise ServiceValidationError("Entry not loaded")
+        raise ServiceValidationError(
+            "The TP-Link Omada integration is not currently available"
+        )
     return entry.runtime_data
 
 
@@ -59,7 +61,7 @@ async def _handle_reconnect_client(call: ServiceCall) -> None:
     try:
         await controller.omada_client.reconnect_client(mac)
     except OmadaClientException as ex:
-        raise HomeAssistantError("Failed to reconnect client") from ex
+        raise HomeAssistantError(f"Failed to reconnect client with MAC {mac}") from ex
 
 
 SERVICES = [

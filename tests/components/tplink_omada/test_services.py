@@ -46,7 +46,9 @@ async def test_service_reconnect_failed_with_invalid_entry(
     await hass.async_block_till_done()
 
     mac = "AA:BB:CC:DD:EE:FF"
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(
+        ServiceValidationError, match="Specified TP-Link Omada controller not found"
+    ):
         await hass.services.async_call(
             DOMAIN,
             "reconnect_client",
@@ -76,6 +78,36 @@ async def test_service_reconnect_without_config_entry_id(
     )
 
     mock_omada_site_client.reconnect_client.assert_awaited_once_with(mac)
+
+
+async def test_service_reconnect_entry_not_loaded(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconnect service raises error when entry is not loaded."""
+    # Set up first entry so service is registered
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    unloaded_entry = MockConfigEntry(
+        title="Unloaded Omada Controller",
+        domain=DOMAIN,
+        unique_id="67890",
+    )
+    unloaded_entry.add_to_hass(hass)
+
+    mac = "AA:BB:CC:DD:EE:FF"
+    with pytest.raises(
+        ServiceValidationError,
+        match="The TP-Link Omada integration is not currently available",
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "reconnect_client",
+            {"config_entry_id": unloaded_entry.entry_id, "mac": mac},
+            blocking=True,
+        )
 
 
 async def test_service_reconnect_failed_raises_homeassistanterror(

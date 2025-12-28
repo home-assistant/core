@@ -16,6 +16,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.typing import ConfigType
 
 from .config_flow import CONF_SITE, create_omada_client
 from .const import DOMAIN
@@ -35,8 +36,8 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 type OmadaConfigEntry = ConfigEntry[OmadaSiteController]
 
 
-async def async_setup(hass: HomeAssistant, config: OmadaConfigEntry) -> bool:
-    """Set up my integration."""
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up TP-Link Omada integration."""
     async_setup_services(hass)
 
     return True
