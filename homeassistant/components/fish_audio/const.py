@@ -2,8 +2,6 @@
 
 from typing import Literal
 
-from homeassistant.helpers.selector import SelectOptionDict
-
 DOMAIN = "fish_audio"
 
 
@@ -34,11 +32,7 @@ TTS_SUPPORTED_LANGUAGES = [
 
 
 BACKEND_MODELS = ["s1", "speech-1.5", "speech-1.6"]
-SORT_BY_OPTIONS: list[SelectOptionDict] = [
-    SelectOptionDict(value="task_count", label="Uses"),
-    SelectOptionDict(value="score", label="Score"),
-    SelectOptionDict(value="created_at", label="Creation date"),
-]
+SORT_BY_OPTIONS = ["task_count", "score", "created_at"]
 LATENCY_OPTIONS = ["normal", "balanced"]
 
 SIGNUP_URL = "https://fish.audio/?fpr=homeassistant"  # codespell:ignore fpr
