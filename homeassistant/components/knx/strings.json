@@ -684,7 +684,6 @@
             }
           }
         },
-        "header": "Create new entity",
         "light": {
           "description": "The KNX light platform is used as an interface to dimming actuators, LED controllers, DALI gateways and similar.",
           "knx": {
@@ -846,11 +845,25 @@
             }
           }
         },
+        "title": "Create KNX entity",
         "type_selection": {
-          "header": "Create KNX entity",
-          "title": "Select entity type"
+          "header": "Select entity type"
         }
-      }
+      },
+      "description": "Add and manage KNX entities",
+      "title": "Entities"
+    },
+    "group_monitor": {
+      "description": "Monitor KNX group communication",
+      "title": "Group monitor"
+    },
+    "info": {
+      "description": "Version information, manage KNX project file",
+      "title": "Information"
+    },
+    "project": {
+      "description": "Inspect imported group addresses",
+      "title": "Project"
     }
   },
   "device_automation": {
