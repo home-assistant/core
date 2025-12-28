@@ -11,7 +11,8 @@ from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     ConfigFlowResult,
 )
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.components.cloud import async_is_logged_in
+from homeassistant.helpers import config_entry_oauth2_flow, network
 
 from .const import DOMAIN
 
@@ -34,6 +35,18 @@ class OAuth2FlowHandler(
     def extra_authorize_data(self) -> dict:
         """Extra data that needs to be appended to the authorize url."""
         return {"scope": "restapi offline_access"}
+
+    async def async_get_redirect_uri(self) -> str:
+        """Return correct OAuth redirect URI for cloud and self-hosted setups."""
+        use_cloud: bool = async_is_logged_in(self.hass)
+
+        base_url = network.get_url(
+            self.hass,
+            prefer_external=True,
+            allow_cloud=use_cloud,
+        )
+
+        return f"{base_url}/auth/external/callback"
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
