@@ -130,7 +130,7 @@ TwitterAPI==2.7.12
 WSDiscovery==2.1.2
 
 # homeassistant.components.accuweather
-accuweather==4.2.2
+accuweather==5.0.0
 
 # homeassistant.components.actron_air
 actron-neo-api==0.4.1
