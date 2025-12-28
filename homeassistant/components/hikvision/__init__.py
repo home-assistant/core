@@ -51,12 +51,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) ->
 
     try:
         camera = await hass.async_add_executor_job(
-            HikCamera, url, port, username, password
+            HikCamera, url, port, username, password, ssl
         )
     except requests.exceptions.RequestException as err:
         raise ConfigEntryNotReady(f"Unable to connect to {host}") from err
 
-    device_id = camera.get_id()
+    device_id = camera.get_id
     if device_id is None:
         raise ConfigEntryNotReady(f"Unable to get device ID from {host}")
 
@@ -69,6 +69,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: HikvisionConfigEntry) ->
         device_name=device_name,
         device_type=device_type,
     )
+
+    # For NVRs or devices with no detected events, try to fetch events from ISAPI
+    if device_type == "NVR" or not camera.current_event_states:
+
+        def fetch_and_inject_nvr_events() -> None:
+            """Fetch and inject NVR events in a single executor job."""
+            if nvr_events := camera.get_event_triggers():
+                camera.inject_events(nvr_events)
+
+        await hass.async_add_executor_job(fetch_and_inject_nvr_events)
 
     # Start the event stream
     await hass.async_add_executor_job(camera.start_stream)

@@ -92,7 +92,7 @@ async def test_sensors_are_updated(
     """Test sensors are updated with properly formatted values."""
     await init_integration(hass, mock_config_entry)
 
-    entity_id = "sensor.amd_ryzen_7_7800x3d_package_temperature"
+    entity_id = "sensor.gaming_pc_amd_ryzen_7_7800x3d_package_temperature"
     state = hass.states.get(entity_id)
 
     assert state
@@ -128,7 +128,7 @@ async def test_sensor_state_is_unknown_when_no_sensor_data_is_provided(
     """Test sensor state is unknown when sensor data is missing."""
     await init_integration(hass, mock_config_entry)
 
-    entity_id = "sensor.amd_ryzen_7_7800x3d_package_temperature"
+    entity_id = "sensor.gaming_pc_amd_ryzen_7_7800x3d_package_temperature"
 
     state = hass.states.get(entity_id)
 
@@ -200,6 +200,7 @@ async def _mock_orphaned_device(
     previous_data = mock_lhm_client.get_data.return_value
 
     mock_lhm_client.get_data.return_value = LibreHardwareMonitorData(
+        computer_name=mock_lhm_client.get_data.return_value.computer_name,
         main_device_ids_and_names=MappingProxyType(
             {
                 device_id: name
@@ -230,6 +231,7 @@ async def test_integration_does_not_log_new_devices_on_first_refresh(
 ) -> None:
     """Test that initial data update does not cause warning about new devices."""
     mock_lhm_client.get_data.return_value = LibreHardwareMonitorData(
+        computer_name=mock_lhm_client.get_data.return_value.computer_name,
         main_device_ids_and_names=MappingProxyType(
             {
                 **mock_lhm_client.get_data.return_value.main_device_ids_and_names,

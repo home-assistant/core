@@ -82,6 +82,30 @@
       'entity_id': 'media_player.beosound_balance_11111111',
       'state': 'playing',
     }),
+    'remote_55555555': dict({
+      'address': '',
+      'app_version': '1.0.0',
+      'battery_level': 50,
+      'connected': True,
+      'db_version': None,
+      'last_seen': None,
+      'name': 'BEORC',
+      'serial_number': '55555555',
+      'updated': None,
+    }),
+    'remote_55555555_Control/Play_event': dict({
+      'attributes': dict({
+        'device_class': 'button',
+        'event_type': None,
+        'event_types': list([
+          'key_press',
+          'key_release',
+        ]),
+        'friendly_name': 'Beoremote One-55555555-11111111 Control - Play',
+      }),
+      'entity_id': 'event.beoremote_one_55555555_11111111_control_play',
+      'state': 'unknown',
+    }),
     'websocket_connected': False,
   })
 # ---

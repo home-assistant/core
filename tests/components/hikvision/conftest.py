@@ -13,9 +13,6 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_USERNAME,
 )
-from homeassistant.core import HomeAssistant
-
-from . import setup_integration
 
 from tests.common import MockConfigEntry
 
@@ -69,7 +66,7 @@ def mock_hikcamera() -> Generator[MagicMock]:
         ),
     ):
         camera = hikcamera_mock.return_value
-        camera.get_id.return_value = TEST_DEVICE_ID
+        camera.get_id = TEST_DEVICE_ID
         camera.get_name = TEST_DEVICE_NAME
         camera.get_type = "Camera"
         camera.current_event_states = {
@@ -82,13 +79,15 @@ def mock_hikcamera() -> Generator[MagicMock]:
             None,
             "2024-01-01T00:00:00Z",
         )
+        camera.get_event_triggers.return_value = {}
         yield hikcamera_mock
 
 
 @pytest.fixture
-async def init_integration(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_hikcamera: MagicMock
-) -> MockConfigEntry:
-    """Set up the Hikvision integration for testing."""
-    await setup_integration(hass, mock_config_entry)
-    return mock_config_entry
+def mock_hik_nvr(mock_hikcamera: MagicMock) -> MagicMock:
+    """Return a mocked HikCamera configured as an NVR."""
+    camera = mock_hikcamera.return_value
+    camera.get_type = "NVR"
+    camera.current_event_states = {}
+    camera.get_event_triggers.return_value = {"Motion": [1, 2]}
+    return mock_hikcamera
