@@ -50,7 +50,7 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][VS_COORDINATOR]
 
     @callback
-    def discover(devices):
+    def discover(devices: list[VeSyncBaseDevice]) -> None:
         """Add new devices to platform."""
         _setup_entities(devices, async_add_entities, coordinator)
 
@@ -66,9 +66,9 @@ async def async_setup_entry(
 @callback
 def _setup_entities(
     devices: list[VeSyncBaseDevice],
-    async_add_entities,
+    async_add_entities: AddConfigEntryEntitiesCallback,
     coordinator: VeSyncDataCoordinator,
-):
+) -> None:
     """Check if device is fan and add entity."""
 
     async_add_entities(
@@ -198,7 +198,7 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
                     "An error occurred while turning off: "
                     + self.device.last_response.message
                 )
-            self.schedule_update_ha_state()
+            self.async_write_ha_state()
             return
 
         # If the fan is off, turn it on first
@@ -226,7 +226,7 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
                 + self.device.last_response.message
             )
 
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of device."""
@@ -254,7 +254,7 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
         if not success:
             raise HomeAssistantError(self.device.last_response.message)
 
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_turn_on(
         self,
@@ -270,7 +270,7 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
             success = await self.device.turn_on()
             if not success:
                 raise HomeAssistantError(self.device.last_response.message)
-            self.schedule_update_ha_state()
+            self.async_write_ha_state()
         else:
             await self.async_set_percentage(percentage)
 
@@ -279,11 +279,11 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
         success = await self.device.turn_off()
         if not success:
             raise HomeAssistantError(self.device.last_response.message)
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_oscillate(self, oscillating: bool) -> None:
         """Set oscillation."""
         success = await self.device.toggle_oscillation(oscillating)
         if not success:
             raise HomeAssistantError(self.device.last_response.message)
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()

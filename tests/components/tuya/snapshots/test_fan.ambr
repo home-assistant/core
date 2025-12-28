@@ -92,7 +92,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Bree',
-      'preset_mode': 'normal',
+      'preset_mode': None,
       'preset_modes': list([
         'sleep',
       ]),
@@ -112,8 +112,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': list([
-      ]),
+      'preset_modes': None,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -149,11 +148,10 @@
     'attributes': ReadOnlyDict({
       'direction': 'forward',
       'friendly_name': 'ceiling fan/Light v2',
-      'percentage': 20,
+      'percentage': 21,
       'percentage_step': 1.0,
       'preset_mode': None,
-      'preset_modes': list([
-      ]),
+      'preset_modes': None,
       'supported_features': <FanEntityFeature: 53>,
     }),
     'context': <ANY>,
@@ -234,8 +232,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': list([
-      ]),
+      'preset_modes': None,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -270,8 +267,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Dehumidifer',
-      'preset_modes': list([
-      ]),
+      'preset_modes': None,
       'supported_features': <FanEntityFeature: 49>,
     }),
     'context': <ANY>,
@@ -332,14 +328,68 @@
     'state': 'on',
   })
 # ---
+# name: test_platform_setup_and_discovery[fan.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'preset_modes': None,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'fan',
+    'entity_category': None,
+    'entity_id': 'fan.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <FanEntityFeature: 49>,
+    'translation_key': None,
+    'unique_id': 'tuya.ake0bre784zriw0usc',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[fan.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Déshumidificateur Silencieux OmniDry 20L avec Mode Linge',
+      'percentage': 50,
+      'percentage_step': 50.0,
+      'preset_mode': None,
+      'preset_modes': None,
+      'supported_features': <FanEntityFeature: 49>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'fan.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_platform_setup_and_discovery[fan.hl400-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': list([
-      ]),
+      'preset_modes': None,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -377,8 +427,7 @@
       'percentage': None,
       'percentage_step': 33.333333333333336,
       'preset_mode': None,
-      'preset_modes': list([
-      ]),
+      'preset_modes': None,
       'supported_features': <FanEntityFeature: 49>,
     }),
     'context': <ANY>,
@@ -506,8 +555,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'preset_modes': list([
-      ]),
+      'preset_modes': None,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -545,8 +593,7 @@
       'percentage': 100,
       'percentage_step': 50.0,
       'preset_mode': None,
-      'preset_modes': list([
-      ]),
+      'preset_modes': None,
       'supported_features': <FanEntityFeature: 49>,
     }),
     'context': <ANY>,

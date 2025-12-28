@@ -1,8 +1,9 @@
 """Test the Sunricher DALI light platform."""
 
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
+from PySrDaliGateway import CallbackEventType
 import pytest
 
 from homeassistant.components.light import (
@@ -15,6 +16,8 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
+from . import find_device_listener, trigger_availability_callback
+
 from tests.common import MockConfigEntry, SnapshotAssertion, snapshot_platform
 
 TEST_DIMMER_ENTITY_ID = "light.dimmer_0000_02"
@@ -24,37 +27,18 @@ TEST_HS_DEVICE_ID = "01030000046A242121110E"
 TEST_RGBW_DEVICE_ID = "01040000056A242121110E"
 
 
-def _dispatch_status(
-    gateway: MagicMock, device_id: str, status: dict[str, Any]
+def _trigger_light_status_callback(
+    device: MagicMock, device_id: str, status: dict[str, Any]
 ) -> None:
-    """Invoke the status callback registered on the gateway mock."""
-    callback = gateway.on_light_status
-    assert callable(callback)
-    callback(device_id, status)
+    """Trigger the light status callbacks registered on the device mock."""
+    callback = find_device_listener(device, CallbackEventType.LIGHT_STATUS)
+    callback(status)
 
 
 @pytest.fixture
 def platforms() -> list[Platform]:
     """Fixture to specify which platforms to test."""
     return [Platform.LIGHT]
-
-
-@pytest.fixture
-async def init_integration(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_gateway: MagicMock,
-    mock_devices: list[MagicMock],
-    platforms: list[Platform],
-) -> MockConfigEntry:
-    """Set up the integration for testing."""
-    mock_config_entry.add_to_hass(hass)
-
-    with patch("homeassistant.components.sunricher_dali._PLATFORMS", platforms):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    return mock_config_entry
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
@@ -133,26 +117,25 @@ async def test_turn_on_with_brightness(
     )
 
 
-async def test_dispatcher_connection(
+async def test_callback_registration(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_devices: list[MagicMock],
-    mock_gateway: MagicMock,
 ) -> None:
-    """Test that dispatcher signals are properly connected."""
-    entity_entry = er.async_get(hass).async_get(TEST_DIMMER_ENTITY_ID)
-    assert entity_entry is not None
-
-    state = hass.states.get(TEST_DIMMER_ENTITY_ID)
-    assert state is not None
+    """Test that callbacks are properly registered and triggered."""
+    state_before = hass.states.get(TEST_DIMMER_ENTITY_ID)
+    assert state_before is not None
 
     status_update: dict[str, Any] = {"is_on": True, "brightness": 128}
-
-    _dispatch_status(mock_gateway, TEST_DIMMER_DEVICE_ID, status_update)
+    _trigger_light_status_callback(
+        mock_devices[0], TEST_DIMMER_DEVICE_ID, status_update
+    )
     await hass.async_block_till_done()
 
     state_after = hass.states.get(TEST_DIMMER_ENTITY_ID)
     assert state_after is not None
+    assert state_after.state == "on"
+    assert state_after.attributes.get("brightness") == 128
 
 
 @pytest.mark.parametrize(
@@ -168,10 +151,28 @@ async def test_dispatcher_connection(
 async def test_status_updates(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
-    mock_gateway: MagicMock,
+    mock_devices: list[MagicMock],
     device_id: str,
     status_update: dict[str, Any],
 ) -> None:
     """Test various status updates for different device types."""
-    _dispatch_status(mock_gateway, device_id, status_update)
+    device = next(d for d in mock_devices if d.dev_id == device_id)
+    _trigger_light_status_callback(device, device_id, status_update)
     await hass.async_block_till_done()
+
+
+async def test_device_availability(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_devices: list[MagicMock],
+) -> None:
+    """Test availability changes are reflected in entity state."""
+    trigger_availability_callback(mock_devices[0], False)
+    await hass.async_block_till_done()
+    assert (state := hass.states.get(TEST_DIMMER_ENTITY_ID))
+    assert state.state == "unavailable"
+
+    trigger_availability_callback(mock_devices[0], True)
+    await hass.async_block_till_done()
+    assert (state := hass.states.get(TEST_DIMMER_ENTITY_ID))
+    assert state.state != "unavailable"

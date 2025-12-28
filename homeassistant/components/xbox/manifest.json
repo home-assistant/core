@@ -3,15 +3,16 @@
   "name": "Xbox",
   "codeowners": ["@hunterjm", "@tr4nt0r"],
   "config_flow": true,
-  "dependencies": ["auth", "application_credentials"],
+  "dependencies": ["application_credentials"],
   "dhcp": [
     {
       "hostname": "xbox*"
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/xbox",
+  "integration_type": "hub",
   "iot_class": "cloud_polling",
-  "requirements": ["python-xbox==0.1.0"],
+  "requirements": ["python-xbox==0.1.2"],
   "ssdp": [
     {
       "manufacturer": "Microsoft Corporation",

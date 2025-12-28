@@ -3,7 +3,7 @@
 from copy import deepcopy
 from unittest.mock import Mock, PropertyMock
 
-from aioshelly.const import MODEL_BLU_GATEWAY_G3
+from aioshelly.const import MODEL_BLU_GATEWAY_G3, MODEL_EM3
 from aioshelly.exceptions import NotInitialized
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -53,7 +53,7 @@ from . import (
     register_device,
     register_entity,
 )
-from .conftest import MOCK_CONFIG, MOCK_SHELLY_RPC, MOCK_STATUS_RPC
+from .conftest import MOCK_BLOCKS, MOCK_CONFIG, MOCK_SHELLY_RPC, MOCK_STATUS_RPC
 
 from tests.common import (
     async_fire_time_changed,
@@ -95,6 +95,55 @@ async def test_block_sensor(
 
     assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-relay_0-power"
+
+
+async def test_block_sensor_em3(
+    hass: HomeAssistant, mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test block sensor of EM3."""
+    monkeypatch.setitem(mock_block_device.shelly, "num_emeters", 3)
+    monkeypatch.setitem(mock_block_device.settings["device"], "type", MODEL_EM3)
+    monkeypatch.setitem(
+        mock_block_device.settings,
+        "emeters",
+        [
+            {"name": "Grid L1", "appliance_type": "General", "max_power": 0},
+            {"appliance_type": "General", "max_power": 0},
+            {"appliance_type": "General", "max_power": 0},
+        ],
+    )
+    blocks = deepcopy(MOCK_BLOCKS)
+    blocks[5] = Mock(
+        sensor_ids={"power": 20},
+        channel="0",
+        power=20,
+        description="emeter_0",
+        type="emeter",
+    )
+    blocks.append(
+        Mock(
+            sensor_ids={"power": 20},
+            channel="1",
+            power=20,
+            description="emeter_1",
+            type="emeter",
+        )
+    )
+    blocks.append(
+        Mock(
+            sensor_ids={"power": 20},
+            channel="2",
+            power=20,
+            description="emeter_2",
+            type="emeter",
+        )
+    )
+    monkeypatch.setattr(mock_block_device, "blocks", blocks)
+    await init_integration(hass, 1, model=MODEL_EM3)
+
+    assert hass.states.get(f"{SENSOR_DOMAIN}.grid_l1_power")
+    assert hass.states.get(f"{SENSOR_DOMAIN}.test_name_phase_b_power")
+    assert hass.states.get(f"{SENSOR_DOMAIN}.test_name_phase_c_power")
 
 
 async def test_energy_sensor(
@@ -580,31 +629,55 @@ async def test_rpc_polling_sensor(
 async def test_rpc_sleeping_sensor(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
-    device_registry: DeviceRegistry,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC online sleeping sensor."""
     entity_id = f"{SENSOR_DOMAIN}.test_name_temperature"
     monkeypatch.setattr(mock_rpc_device, "connected", False)
     monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
-    entry = await init_integration(hass, 2, sleep_period=1000)
+    await init_integration(hass, 2, sleep_period=1000)
 
     # Sensor should be created when device is online
     assert hass.states.get(entity_id) is None
-
-    register_entity(
-        hass,
-        SENSOR_DOMAIN,
-        "test_name_temperature",
-        "temperature:0-temperature_0",
-        entry,
-    )
 
     # Make device online
     mock_rpc_device.mock_online()
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (state := hass.states.get(entity_id))
+    assert state.state == "22.9"
+
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "temperature:0", "tC", 23.4)
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "23.4"
+
+
+async def test_rpc_sleeping_sensor_with_channel_name(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC online sleeping sensor with channel name."""
+    name = "test channel name"
+    entity_id = f"{SENSOR_DOMAIN}.test_name_test_channel_name_temperature"
+    monkeypatch.setitem(
+        mock_rpc_device.config, "temperature:0", {"id": 0, "name": name}
+    )
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
+    await init_integration(hass, 2, sleep_period=1000)
+
+    # Sensor should be created when device is online
+    assert hass.states.get(entity_id) is None
+
+    # Make device online
+    mock_rpc_device.mock_online()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes["friendly_name"] == f"Test name {name} temperature"
     assert state.state == "22.9"
 
     mutate_rpc_device_status(monkeypatch, mock_rpc_device, "temperature:0", "tC", 23.4)
@@ -1744,17 +1817,38 @@ async def test_rpc_shelly_ev_sensors(
         "meta": {"ui": {"unit": "min", "view": "label"}},
         "role": "time_charge",
     }
+    config["object:200"] = {"role": "phase_info"}
     monkeypatch.setattr(mock_rpc_device, "config", config)
 
     status = deepcopy(mock_rpc_device.status)
     status["enum:200"] = {"value": "charger_charging"}
     status["number:201"] = {"value": 5.0}
     status["number:202"] = {"value": 60}
+    status["object:200"] = {
+        "value": {
+            "phase_a": {"voltage": 231.7, "current": 8.7, "power": 2.015},
+            "phase_b": {"voltage": 8.9, "current": 1.2, "power": 2.02},
+            "phase_c": {"voltage": 5.5, "current": 1.1, "power": 3.03},
+        }
+    }
     monkeypatch.setattr(mock_rpc_device, "status", status)
 
     await init_integration(hass, 3)
 
-    for entity in ("charger_state", "session_energy", "session_duration"):
+    for entity in (
+        "charger_state",
+        "session_energy",
+        "session_duration",
+        "phase_a_current",
+        "phase_b_current",
+        "phase_c_current",
+        "phase_a_power",
+        "phase_b_power",
+        "phase_c_power",
+        "phase_a_voltage",
+        "phase_b_voltage",
+        "phase_c_voltage",
+    ):
         entity_id = f"{SENSOR_DOMAIN}.test_name_{entity}"
 
         state = hass.states.get(entity_id)
@@ -2025,7 +2119,7 @@ async def test_shelly_irrigation_weather_sensors(
 
     config_entry = await init_integration(hass, gen=3)
 
-    for entity in ("average_temperature", "rainfall_last_24h"):
+    for entity in ("average_temperature", "rainfall"):
         entity_id = f"{SENSOR_DOMAIN}.test_name_{entity}"
 
         state = hass.states.get(entity_id)
@@ -2039,6 +2133,49 @@ async def test_shelly_irrigation_weather_sensors(
     await hass.config_entries.async_reload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    for entity in ("average_temperature", "rainfall_last_24h"):
+    for entity in ("average_temperature", "rainfall"):
         entity_id = f"{SENSOR_DOMAIN}.test_name_{entity}"
         assert hass.states.get(entity_id) is None
+
+
+async def test_rpc_rgbcct_sensors(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test sensors for RGBCCT light."""
+    config = deepcopy(mock_rpc_device.config)
+    config["rgbcct:0"] = {"id": 0}
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    status = deepcopy(mock_rpc_device.status)
+    status["rgbcct:0"] = {
+        "aenergy": {"total": 45.141},
+        "apower": 12.2,
+    }
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 2)
+
+    entity_id = "sensor.test_name_power"
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "12.2"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfPower.WATT
+
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry.unique_id == "123456789ABC-rgbcct:0-power_rgbcct"
+    assert entry.name is None
+    assert entry.translation_key is None  # entity with device class and no channel name
+
+    entity_id = "sensor.test_name_energy"
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "0.045141"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
+
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry.unique_id == "123456789ABC-rgbcct:0-energy_rgbcct"
+    assert entry.name is None
+    assert entry.translation_key is None  # entity with device class and no channel name

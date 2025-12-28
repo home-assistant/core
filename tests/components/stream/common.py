@@ -114,7 +114,7 @@ def remux_with_audio(source, container_format, audio_codec):
     output = io.BytesIO()
     output.name = "test.mov" if container_format == "mov" else "test.mp4"
     container = av.open(output, mode="w", format=container_format)
-    container.add_stream(template=av_source.streams.video[0])
+    container.add_stream_from_template(av_source.streams.video[0])
 
     a_packet = None
     last_a_dts = -1

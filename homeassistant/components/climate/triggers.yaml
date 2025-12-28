@@ -1,0 +1,122 @@
+.trigger_common: &trigger_common
+  target: &trigger_climate_target
+    entity:
+      domain: climate
+  fields:
+    behavior: &trigger_behavior
+      required: true
+      default: any
+      selector:
+        select:
+          translation_key: trigger_behavior
+          options:
+            - first
+            - last
+            - any
+
+.number_or_entity: &number_or_entity
+  required: false
+  selector:
+    choose:
+      choices:
+        entity:
+          selector:
+            entity:
+              filter:
+                domain:
+                  - input_number
+                  - number
+                  - sensor
+        number:
+          selector:
+            number:
+              mode: box
+      translation_key: number_or_entity
+
+.trigger_threshold_type: &trigger_threshold_type
+  required: true
+  selector:
+    select:
+      options:
+        - above
+        - below
+        - between
+        - outside
+      translation_key: trigger_threshold_type
+
+started_cooling: *trigger_common
+started_drying: *trigger_common
+started_heating: *trigger_common
+turned_off: *trigger_common
+turned_on: *trigger_common
+
+hvac_mode_changed:
+  target: *trigger_climate_target
+  fields:
+    behavior: *trigger_behavior
+    hvac_mode:
+      context:
+        filter_target: target
+      required: true
+      selector:
+        state:
+          hide_states:
+            - unavailable
+            - unknown
+          multiple: true
+
+current_humidity_changed:
+  target: *trigger_climate_target
+  fields:
+    above: *number_or_entity
+    below: *number_or_entity
+
+current_humidity_crossed_threshold:
+  target: *trigger_climate_target
+  fields:
+    behavior: *trigger_behavior
+    threshold_type: *trigger_threshold_type
+    lower_limit: *number_or_entity
+    upper_limit: *number_or_entity
+
+target_humidity_changed:
+  target: *trigger_climate_target
+  fields:
+    above: *number_or_entity
+    below: *number_or_entity
+
+target_humidity_crossed_threshold:
+  target: *trigger_climate_target
+  fields:
+    behavior: *trigger_behavior
+    threshold_type: *trigger_threshold_type
+    lower_limit: *number_or_entity
+    upper_limit: *number_or_entity
+
+current_temperature_changed:
+  target: *trigger_climate_target
+  fields:
+    above: *number_or_entity
+    below: *number_or_entity
+
+current_temperature_crossed_threshold:
+  target: *trigger_climate_target
+  fields:
+    behavior: *trigger_behavior
+    threshold_type: *trigger_threshold_type
+    lower_limit: *number_or_entity
+    upper_limit: *number_or_entity
+
+target_temperature_changed:
+  target: *trigger_climate_target
+  fields:
+    above: *number_or_entity
+    below: *number_or_entity
+
+target_temperature_crossed_threshold:
+  target: *trigger_climate_target
+  fields:
+    behavior: *trigger_behavior
+    threshold_type: *trigger_threshold_type
+    lower_limit: *number_or_entity
+    upper_limit: *number_or_entity

@@ -231,10 +231,6 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
 
         tilt_optimistic = config.get(CONF_TILT_OPTIMISTIC)
         self._tilt_optimistic = tilt_optimistic or not self._tilt_template
-        self._position: int | None = None
-        self._is_opening = False
-        self._is_closing = False
-        self._tilt_value: int | None = None
 
         # The config requires (open and close scripts) or a set position script,
         # therefore the base supported features will always include them.
@@ -258,82 +254,54 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
     @property
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
-        if self._position is None:
+        if self._attr_current_cover_position is None:
             return None
 
-        return self._position == 0
-
-    @property
-    def is_opening(self) -> bool:
-        """Return if the cover is currently opening."""
-        return self._is_opening
-
-    @property
-    def is_closing(self) -> bool:
-        """Return if the cover is currently closing."""
-        return self._is_closing
-
-    @property
-    def current_cover_position(self) -> int | None:
-        """Return current position of cover.
-
-        None is unknown, 0 is closed, 100 is fully open.
-        """
-        if self._position_template or POSITION_ACTION in self._action_scripts:
-            return self._position
-        return None
-
-    @property
-    def current_cover_tilt_position(self) -> int | None:
-        """Return current position of cover tilt.
-
-        None is unknown, 0 is closed, 100 is fully open.
-        """
-        return self._tilt_value
+        return self._attr_current_cover_position == 0
 
     @callback
     def _update_position(self, result):
         if result is None:
-            self._position = None
+            self._attr_current_cover_position = None
             return
 
         try:
             state = float(result)
         except ValueError as err:
             _LOGGER.error(err)
-            self._position = None
+            self._attr_current_cover_position = None
             return
 
         if state < 0 or state > 100:
-            self._position = None
+            self._attr_current_cover_position = None
             _LOGGER.error(
                 "Cover position value must be between 0 and 100. Value was: %.2f",
                 state,
             )
         else:
-            self._position = state
+            self._attr_current_cover_position = state
 
     @callback
     def _update_tilt(self, result):
         if result is None:
-            self._tilt_value = None
+            self._attr_current_cover_tilt_position = None
             return
 
         try:
             state = float(result)
         except ValueError as err:
             _LOGGER.error(err)
-            self._tilt_value = None
+            self._attr_current_cover_tilt_position = None
             return
 
         if state < 0 or state > 100:
-            self._tilt_value = None
+            self._attr_current_cover_tilt_position = None
             _LOGGER.error(
                 "Tilt value must be between 0 and 100. Value was: %.2f",
                 state,
             )
         else:
-            self._tilt_value = state
+            self._attr_current_cover_tilt_position = state
 
     def _update_opening_and_closing(self, result: Any) -> None:
         state = str(result).lower()
@@ -341,12 +309,12 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
         if state in _VALID_STATES:
             if not self._position_template:
                 if state in ("true", OPEN_STATE):
-                    self._position = 100
+                    self._attr_current_cover_position = 100
                 else:
-                    self._position = 0
+                    self._attr_current_cover_position = 0
 
-            self._is_opening = state == OPENING_STATE
-            self._is_closing = state == CLOSING_STATE
+            self._attr_is_opening = state == OPENING_STATE
+            self._attr_is_closing = state == CLOSING_STATE
         else:
             _LOGGER.error(
                 "Received invalid cover is_on state: %s for entity %s. Expected: %s",
@@ -355,10 +323,10 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
                 ", ".join(_VALID_STATES),
             )
             if not self._position_template:
-                self._position = None
+                self._attr_current_cover_position = None
 
-            self._is_opening = False
-            self._is_closing = False
+            self._attr_is_opening = False
+            self._attr_is_closing = False
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Move the cover up."""
@@ -371,7 +339,7 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
                 context=self._context,
             )
         if self._attr_assumed_state:
-            self._position = 100
+            self._attr_current_cover_position = 100
             self.async_write_ha_state()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
@@ -385,7 +353,7 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
                 context=self._context,
             )
         if self._attr_assumed_state:
-            self._position = 0
+            self._attr_current_cover_position = 0
             self.async_write_ha_state()
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
@@ -395,10 +363,10 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Set cover position."""
-        self._position = kwargs[ATTR_POSITION]
+        self._attr_current_cover_position = kwargs[ATTR_POSITION]
         await self.async_run_script(
             self._action_scripts[POSITION_ACTION],
-            run_variables={"position": self._position},
+            run_variables={"position": self._attr_current_cover_position},
             context=self._context,
         )
         if self._attr_assumed_state:
@@ -406,10 +374,10 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Tilt the cover open."""
-        self._tilt_value = 100
+        self._attr_current_cover_tilt_position = 100
         await self.async_run_script(
             self._action_scripts[TILT_ACTION],
-            run_variables={"tilt": self._tilt_value},
+            run_variables={"tilt": self._attr_current_cover_tilt_position},
             context=self._context,
         )
         if self._tilt_optimistic:
@@ -417,10 +385,10 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Tilt the cover closed."""
-        self._tilt_value = 0
+        self._attr_current_cover_tilt_position = 0
         await self.async_run_script(
             self._action_scripts[TILT_ACTION],
-            run_variables={"tilt": self._tilt_value},
+            run_variables={"tilt": self._attr_current_cover_tilt_position},
             context=self._context,
         )
         if self._tilt_optimistic:
@@ -428,10 +396,10 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
-        self._tilt_value = kwargs[ATTR_TILT_POSITION]
+        self._attr_current_cover_tilt_position = kwargs[ATTR_TILT_POSITION]
         await self.async_run_script(
             self._action_scripts[TILT_ACTION],
-            run_variables={"tilt": self._tilt_value},
+            run_variables={"tilt": self._attr_current_cover_tilt_position},
             context=self._context,
         )
         if self._tilt_optimistic:
@@ -467,11 +435,11 @@ class StateCoverEntity(TemplateEntity, AbstractTemplateCover):
         """Set up templates."""
         if self._template:
             self.add_template_attribute(
-                "_position", self._template, None, self._update_state
+                "_attr_current_cover_position", self._template, None, self._update_state
             )
         if self._position_template:
             self.add_template_attribute(
-                "_position",
+                "_attr_current_cover_position",
                 self._position_template,
                 None,
                 self._update_position,
@@ -479,7 +447,7 @@ class StateCoverEntity(TemplateEntity, AbstractTemplateCover):
             )
         if self._tilt_template:
             self.add_template_attribute(
-                "_tilt_value",
+                "_attr_current_cover_tilt_position",
                 self._tilt_template,
                 None,
                 self._update_tilt,
@@ -491,7 +459,7 @@ class StateCoverEntity(TemplateEntity, AbstractTemplateCover):
     def _update_state(self, result):
         super()._update_state(result)
         if isinstance(result, TemplateError):
-            self._position = None
+            self._attr_current_cover_position = None
             return
 
         self._update_opening_and_closing(result)

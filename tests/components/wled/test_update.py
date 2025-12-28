@@ -54,7 +54,7 @@ async def test_update_available(
     assert state.attributes[ATTR_RELEASE_SUMMARY] is None
     assert (
         state.attributes[ATTR_RELEASE_URL]
-        == "https://github.com/Aircoookie/WLED/releases/tag/v0.99.0"
+        == "https://github.com/wled/WLED/releases/tag/v0.99.0"
     )
     assert (
         state.attributes[ATTR_SUPPORTED_FEATURES]
@@ -118,7 +118,7 @@ async def test_no_update_available(
     assert state.attributes[ATTR_RELEASE_SUMMARY] is None
     assert (
         state.attributes[ATTR_RELEASE_URL]
-        == "https://github.com/Aircoookie/WLED/releases/tag/v0.99.0"
+        == "https://github.com/wled/WLED/releases/tag/v0.99.0"
     )
     assert (
         state.attributes[ATTR_SUPPORTED_FEATURES]
