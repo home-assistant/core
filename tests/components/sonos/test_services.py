@@ -286,7 +286,7 @@ async def test_unjoin_completes_when_coordinator_receives_event_first(
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_UNJOIN,
-            {"entity_id": "media_player.bedroom"},
+            {ATTR_ENTITY_ID: "media_player.bedroom"},
             blocking=False,
         )
         await unjoin_complete_event.wait()
