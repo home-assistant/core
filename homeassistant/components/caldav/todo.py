@@ -77,6 +77,13 @@ def _todo_item(resource: caldav.CalendarObjectResource) -> TodoItem | None:
             due = dt_util.as_local(due_value)
         elif isinstance(due_value, date):
             due = due_value
+    priority: int | None = None
+    if priority_value := get_attr_value(todo, "priority"):
+        priority_int = (
+            int(priority_value) if isinstance(priority_value, str) else priority_value
+        )
+        if priority_int != 0:
+            priority = priority_int
     return TodoItem(
         uid=uid,
         summary=summary,
@@ -86,6 +93,7 @@ def _todo_item(resource: caldav.CalendarObjectResource) -> TodoItem | None:
         ),
         due=due,
         description=get_attr_value(todo, "description"),
+        priority=priority,
     )
 
 
@@ -100,6 +108,7 @@ class WebDavTodoListEntity(TodoListEntity):
         | TodoListEntityFeature.SET_DUE_DATE_ON_ITEM
         | TodoListEntityFeature.SET_DUE_DATETIME_ON_ITEM
         | TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
+        | TodoListEntityFeature.SET_PRIORITY_ON_ITEM
     )
 
     def __init__(self, calendar: caldav.Calendar, config_entry_id: str) -> None:
@@ -117,11 +126,14 @@ class WebDavTodoListEntity(TodoListEntity):
                 include_completed=True,
             )
         )
-        self._attr_todo_items = [
-            todo_item
-            for resource in results
-            if (todo_item := _todo_item(resource)) is not None
-        ]
+        self._attr_todo_items = sorted(
+            [
+                todo_item
+                for resource in results
+                if (todo_item := _todo_item(resource)) is not None
+            ],
+            key=lambda item: (item.priority if item.priority is not None else 999),
+        )
 
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the To-do list."""
@@ -134,6 +146,8 @@ class WebDavTodoListEntity(TodoListEntity):
             item_data["due"] = due
         if description := item.description:
             item_data["description"] = description
+        if priority := item.priority:
+            item_data["priority"] = priority
         try:
             await self.hass.async_add_executor_job(
                 partial(self._calendar.save_todo, **item_data),
@@ -166,6 +180,10 @@ class WebDavTodoListEntity(TodoListEntity):
             vtodo["DESCRIPTION"] = description
         else:
             vtodo.pop("DESCRIPTION", None)
+        if priority := item.priority:
+            vtodo["PRIORITY"] = priority
+        else:
+            vtodo.pop("PRIORITY", None)
         try:
             await self.hass.async_add_executor_job(
                 partial(

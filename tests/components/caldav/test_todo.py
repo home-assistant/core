@@ -28,7 +28,7 @@ from tests.typing import WebSocketGenerator
 CALENDAR_NAME = "My Tasks"
 ENTITY_NAME = "My tasks"
 TEST_ENTITY = "todo.my_tasks"
-SUPPORTED_FEATURES = 119
+SUPPORTED_FEATURES = 247
 
 TODO_NO_STATUS = """BEGIN:VCALENDAR
 VERSION:2.0
@@ -632,7 +632,7 @@ async def test_remove_item(
     assert state
     assert state.state == "1"
 
-    def lookup(uid: str) -> Mock:
+    def lookup(uid: str) -> Todo:
         assert uid in ("2", "3")
         if uid == "2":
             return item1
@@ -697,7 +697,7 @@ async def test_remove_item_failure(
 
     await hass.config_entries.async_setup(config_entry.entry_id)
 
-    def lookup(uid: str) -> Mock:
+    def lookup(uid: str) -> Todo:
         return item
 
     calendar.todo_by_uid = Mock(side_effect=lookup)
@@ -726,7 +726,7 @@ async def test_remove_item_not_found(
 
     await hass.config_entries.async_setup(config_entry.entry_id)
 
-    def lookup(uid: str) -> Mock:
+    def lookup(uid: str) -> Todo:
         return item
 
     calendar.todo_by_uid.side_effect = NotFoundError()
