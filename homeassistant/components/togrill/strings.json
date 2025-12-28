@@ -51,11 +51,6 @@
         }
       }
     },
-    "sensor": {
-      "ambient_temperature": {
-        "name": "Ambient temperature"
-      }
-    },
     "number": {
       "alarm_interval": {
         "name": "Alarm interval"
@@ -102,6 +97,11 @@
           "rare": "Rare",
           "well_done": "Well done"
         }
+      }
+    },
+    "sensor": {
+      "ambient_temperature": {
+        "name": "Ambient temperature"
       }
     }
   },
