@@ -5055,7 +5055,7 @@
     },
     "pi_hole": {
       "name": "Pi-hole",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
