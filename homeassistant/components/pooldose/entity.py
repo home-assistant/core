@@ -93,6 +93,7 @@ class PooldoseEntity(CoordinatorEntity[PooldoseCoordinator]):
             placeholders = {
                 "entity": self.entity_description.key,
                 "value": str(value),
+                "error": "",  # PoolDose returns only False on failure, so `error` is empty
             }
 
             if not self.coordinator.client.is_connected:
