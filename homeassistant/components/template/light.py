@@ -16,6 +16,8 @@ from homeassistant.components.light import (
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
     ATTR_TRANSITION,
+    DEFAULT_MAX_KELVIN,
+    DEFAULT_MIN_KELVIN,
     DOMAIN as LIGHT_DOMAIN,
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
@@ -69,6 +71,7 @@ _LOGGER = logging.getLogger(__name__)
 _VALID_STATES = [STATE_ON, STATE_OFF, "true", "false"]
 
 # Legacy
+# TODO(2026.1): Remove legacy ATTR_COLOR_TEMP support
 ATTR_COLOR_TEMP = "color_temp"
 CONF_COLOR_ACTION = "set_color"
 CONF_COLOR_TEMPLATE = "color_template"
@@ -91,8 +94,12 @@ CONF_EFFECT_TEMPLATE = "effect_template"
 CONF_LEVEL = "level"
 CONF_LEVEL_ACTION = "set_level"
 CONF_LEVEL_TEMPLATE = "level_template"
+CONF_MAX_KELVIN = "max_kelvin"
+# TODO(2026.1): Remove deprecated mired configuration options
 CONF_MAX_MIREDS = "max_mireds"
 CONF_MAX_MIREDS_TEMPLATE = "max_mireds_template"
+CONF_MIN_KELVIN = "min_kelvin"
+# TODO(2026.1): Remove deprecated mired configuration options
 CONF_MIN_MIREDS = "min_mireds"
 CONF_MIN_MIREDS_TEMPLATE = "min_mireds_template"
 CONF_OFF_ACTION = "turn_off"
@@ -105,9 +112,6 @@ CONF_TEMPERATURE_TEMPLATE = "temperature_template"
 CONF_WHITE_VALUE_ACTION = "set_white_value"
 CONF_WHITE_VALUE = "white_value"
 CONF_WHITE_VALUE_TEMPLATE = "white_value_template"
-
-DEFAULT_MIN_MIREDS = 153
-DEFAULT_MAX_MIREDS = 500
 
 LEGACY_FIELDS = {
     CONF_COLOR_ACTION: CONF_HS_ACTION,
@@ -138,7 +142,11 @@ LIGHT_COMMON_SCHEMA = vol.Schema(
         vol.Optional(CONF_HS): cv.template,
         vol.Optional(CONF_LEVEL_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_LEVEL): cv.template,
+        vol.Optional(CONF_MAX_KELVIN): cv.template,
+        # TODO(2026.1): Remove deprecated mired configuration options
         vol.Optional(CONF_MAX_MIREDS): cv.template,
+        vol.Optional(CONF_MIN_KELVIN): cv.template,
+        # TODO(2026.1): Remove deprecated mired configuration options
         vol.Optional(CONF_MIN_MIREDS): cv.template,
         vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
         vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
@@ -282,7 +290,11 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
         self._rgbww_template = config.get(CONF_RGBWW)
         self._effect_list_template = config.get(CONF_EFFECT_LIST)
         self._effect_template = config.get(CONF_EFFECT)
+        self._max_kelvin_template = config.get(CONF_MAX_KELVIN)
+        # TODO(2026.1): Remove deprecated mired template support
         self._max_mireds_template = config.get(CONF_MAX_MIREDS)
+        self._min_kelvin_template = config.get(CONF_MIN_KELVIN)
+        # TODO(2026.1): Remove deprecated mired template support
         self._min_mireds_template = config.get(CONF_MIN_MIREDS)
         self._supports_transition_template = config.get(CONF_SUPPORTS_TRANSITION)
 
@@ -290,6 +302,9 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
         self._attr_is_on = initial_state
         self._supports_transition = False
         self._attr_color_mode: ColorMode | None = None
+
+        # Track if deprecation warning has been shown
+        self._mireds_deprecation_warned = False
 
     def _setup_light_features(self, config: ConfigType, name: str) -> None:
         """Setup light scripts, supported color modes, and supported features."""
@@ -358,6 +373,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
                 self._attr_rgbww_color = None
             optimistic_set = True
 
+        # TODO(2026.1): Remove legacy ATTR_COLOR_TEMP support
         if self._temperature_template is None and ATTR_COLOR_TEMP in kwargs:
             color_temp = kwargs[ATTR_COLOR_TEMP]
             _LOGGER.debug(
@@ -464,6 +480,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
         ):
             kelvin = kwargs[ATTR_COLOR_TEMP_KELVIN]
             common_params[ATTR_COLOR_TEMP_KELVIN] = kelvin
+            # TODO(2026.1): Remove legacy ATTR_COLOR_TEMP support
             common_params[ATTR_COLOR_TEMP] = (
                 color_util.color_temperature_kelvin_to_mired(kelvin)
             )
@@ -627,34 +644,57 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
 
     @callback
     def _update_temperature(self, render):
-        """Update the temperature from the template."""
+        """Update the temperature from the template.
+
+        Supports both Kelvin and legacy mireds for backward compatibility.
+        """
         try:
             if render in (None, "None", ""):
                 self._attr_color_temp_kelvin = None
                 return
-            # Support legacy mireds in template light.
-            temperature = int(render)
-            if (min_kelvin := self._attr_min_color_temp_kelvin) is not None:
-                max_mireds = color_util.color_temperature_kelvin_to_mired(min_kelvin)
-            else:
-                max_mireds = DEFAULT_MAX_MIREDS
 
-            if (max_kelvin := self._attr_max_color_temp_kelvin) is not None:
-                min_mireds = color_util.color_temperature_kelvin_to_mired(max_kelvin)
-            else:
-                min_mireds = DEFAULT_MIN_MIREDS
-            if min_mireds <= temperature <= max_mireds:
+            # TODO(2026.1): Remove support for legacy mireds in template
+            temperature = int(render)
+
+            # Calculate valid range in both Kelvin and mireds
+            min_kelvin = self.min_color_temp_kelvin
+            max_kelvin = self.max_color_temp_kelvin
+            max_mireds = color_util.color_temperature_kelvin_to_mired(min_kelvin)
+            min_mireds = color_util.color_temperature_kelvin_to_mired(max_kelvin)
+
+            # Check if value is in Kelvin range or mired range
+            if min_kelvin <= temperature <= max_kelvin:
+                # Value is in Kelvin range - use directly
+                self._attr_color_temp_kelvin = temperature
+            elif min_mireds <= temperature <= max_mireds:
+                # Value is in mired range - convert to Kelvin with deprecation warning
+                if not self._mireds_deprecation_warned:
+                    kelvin_value = color_util.color_temperature_mired_to_kelvin(
+                        temperature
+                    )
+                    _LOGGER.warning(
+                        "Template light %s is using deprecated mired values in 'temperature' template. "
+                        "Please update template to return Kelvin instead. "
+                        "Support for mired values will be removed in Home Assistant 2026.1. "
+                        "Automatically converting %s mireds to %s K",
+                        self.entity_id,
+                        temperature,
+                        kelvin_value,
+                    )
+                    self._mireds_deprecation_warned = True
                 self._attr_color_temp_kelvin = (
                     color_util.color_temperature_mired_to_kelvin(temperature)
                 )
             else:
                 _LOGGER.error(
                     (
-                        "Received invalid color temperature : %s for entity %s."
-                        " Expected: %s-%s"
+                        "Received invalid color temperature: %s for entity %s. "
+                        "Expected: %s-%s K or %s-%s mireds (deprecated)"
                     ),
                     temperature,
                     self.entity_id,
+                    min_kelvin,
+                    max_kelvin,
                     min_mireds,
                     max_mireds,
                 )
@@ -851,14 +891,55 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
         self._attr_color_mode = ColorMode.RGBWW
 
     @callback
+    def _update_max_kelvin(self, render):
+        """Update the max kelvin from the template."""
+        try:
+            if render in (None, "None", ""):
+                self._attr_max_color_temp_kelvin = None
+                return
+            self._attr_max_color_temp_kelvin = int(render)
+        except ValueError:
+            _LOGGER.exception(
+                "Template must supply an integer temperature in Kelvin for"
+                " this light, or 'None'"
+            )
+            self._attr_max_color_temp_kelvin = None
+
+    @callback
+    def _update_min_kelvin(self, render):
+        """Update the min kelvin from the template."""
+        try:
+            if render in (None, "None", ""):
+                self._attr_min_color_temp_kelvin = None
+                return
+            self._attr_min_color_temp_kelvin = int(render)
+        except ValueError:
+            _LOGGER.exception(
+                "Template must supply an integer temperature in Kelvin for"
+                " this light, or 'None'"
+            )
+            self._attr_min_color_temp_kelvin = None
+
+    # TODO(2026.1): Remove this deprecated method
+    @callback
     def _update_max_mireds(self, render):
-        """Update the max mireds from the template."""
+        """Update the max mireds from the template.
+
+        Deprecated: Use max_kelvin instead. This will be removed in 2026.1.
+        """
+        if not self._mireds_deprecation_warned:
+            _LOGGER.warning(
+                "Template light %s is using deprecated 'max_mireds' configuration. "
+                "Please update to use 'max_kelvin' instead. Support for 'max_mireds' "
+                "will be removed in Home Assistant 2026.1",
+                self.entity_id,
+            )
+            self._mireds_deprecation_warned = True
 
         try:
             if render in (None, "None", ""):
                 self._attr_min_color_temp_kelvin = None
                 return
-
             self._attr_min_color_temp_kelvin = (
                 color_util.color_temperature_mired_to_kelvin(int(render))
             )
@@ -869,14 +950,26 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
             )
             self._attr_min_color_temp_kelvin = None
 
+    # TODO(2026.1): Remove this deprecated method
     @callback
     def _update_min_mireds(self, render):
-        """Update the min mireds from the template."""
+        """Update the min mireds from the template.
+
+        Deprecated: Use min_kelvin instead. This will be removed in 2026.1.
+        """
+        if not self._mireds_deprecation_warned:
+            _LOGGER.warning(
+                "Template light %s is using deprecated 'min_mireds' configuration. "
+                "Please update to use 'min_kelvin' instead. Support for 'min_mireds' "
+                "will be removed in Home Assistant 2026.1",
+                self.entity_id,
+            )
+            self._mireds_deprecation_warned = True
+
         try:
             if render in (None, "None", ""):
                 self._attr_max_color_temp_kelvin = None
                 return
-
             self._attr_max_color_temp_kelvin = (
                 color_util.color_temperature_mired_to_kelvin(int(render))
             )
@@ -897,6 +990,20 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
         self._supports_transition = bool(render)
         if self._supports_transition:
             self._attr_supported_features |= LightEntityFeature.TRANSITION
+
+    @property
+    def min_color_temp_kelvin(self) -> int:
+        """Return the warmest color_temp_kelvin that this light supports."""
+        if self._attr_min_color_temp_kelvin is not None:
+            return self._attr_min_color_temp_kelvin
+        return DEFAULT_MIN_KELVIN
+
+    @property
+    def max_color_temp_kelvin(self) -> int:
+        """Return the coldest color_temp_kelvin that this light supports."""
+        if self._attr_max_color_temp_kelvin is not None:
+            return self._attr_max_color_temp_kelvin
+        return DEFAULT_MAX_KELVIN
 
 
 class StateLightEntity(TemplateEntity, AbstractTemplateLight):
@@ -934,7 +1041,16 @@ class StateLightEntity(TemplateEntity, AbstractTemplateLight):
                 self._update_brightness,
                 none_on_template_error=True,
             )
-        if self._max_mireds_template:
+        if self._max_kelvin_template:
+            self.add_template_attribute(
+                "_attr_max_color_temp_kelvin",
+                self._max_kelvin_template,
+                None,
+                self._update_max_kelvin,
+                none_on_template_error=True,
+            )
+        # TODO(2026.1): Remove deprecated mired template support
+        elif self._max_mireds_template:
             self.add_template_attribute(
                 "_attr_max_color_temp_kelvin",
                 self._max_mireds_template,
@@ -942,7 +1058,16 @@ class StateLightEntity(TemplateEntity, AbstractTemplateLight):
                 self._update_max_mireds,
                 none_on_template_error=True,
             )
-        if self._min_mireds_template:
+        if self._min_kelvin_template:
+            self.add_template_attribute(
+                "_attr_min_color_temp_kelvin",
+                self._min_kelvin_template,
+                None,
+                self._update_min_kelvin,
+                none_on_template_error=True,
+            )
+        # TODO(2026.1): Remove deprecated mired template support
+        elif self._min_mireds_template:
             self.add_template_attribute(
                 "_attr_min_color_temp_kelvin",
                 self._min_mireds_template,
@@ -1100,7 +1225,9 @@ class TriggerLightEntity(TriggerEntity, AbstractTemplateLight):
             CONF_RGBW,
             CONF_RGBWW,
             CONF_EFFECT,
+            CONF_MAX_KELVIN,
             CONF_MAX_MIREDS,
+            CONF_MIN_KELVIN,
             CONF_MIN_MIREDS,
             CONF_SUPPORTS_TRANSITION,
         ):
@@ -1136,7 +1263,9 @@ class TriggerLightEntity(TriggerEntity, AbstractTemplateLight):
             (CONF_RGB, self._update_rgb),
             (CONF_RGBW, self._update_rgbw),
             (CONF_RGBWW, self._update_rgbww),
+            (CONF_MAX_KELVIN, self._update_max_kelvin),
             (CONF_MAX_MIREDS, self._update_max_mireds),
+            (CONF_MIN_KELVIN, self._update_min_kelvin),
             (CONF_MIN_MIREDS, self._update_min_mireds),
         ):
             if (rendered := self._rendered.get(key)) is not None:
