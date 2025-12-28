@@ -80,7 +80,9 @@ def get_filter_schema(options: dict[str, Any]) -> vol.Schema:
                 CONF_SORT_BY, default=options.get(CONF_SORT_BY, "task_count")
             ): SelectSelector(
                 SelectSelectorConfig(
-                    options=SORT_BY_OPTIONS, mode=SelectSelectorMode.DROPDOWN
+                    options=SORT_BY_OPTIONS,
+                    mode=SelectSelectorMode.DROPDOWN,
+                    translation_key="sort_by",
                 )
             ),
             vol.Optional(
