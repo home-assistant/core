@@ -90,15 +90,17 @@ class PooldoseEntity(CoordinatorEntity[PooldoseCoordinator]):
           returns False.
         """
         if not await api_call(key, value):
-            # If client is not connected, surface a cannot_connect error
+            placeholders = {
+                "entity": self.entity_description.key,
+                "value": str(value),
+            }
+
             if not self.coordinator.client.is_connected:
                 raise ServiceValidationError(
-                    translation_domain=DOMAIN, translation_key="cannot_connect"
+                    translation_domain=DOMAIN,
+                    translation_key="cannot_connect",
+                    translation_placeholders=placeholders,
                 )
-
-            placeholders = {"entity": self.entity_description.key}
-            if value is not None:
-                placeholders["value"] = str(value)
 
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
