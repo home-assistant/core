@@ -6,10 +6,30 @@ import pytest
 from tplink_omada_client.exceptions import OmadaClientException
 
 from homeassistant.components.tplink_omada.const import DOMAIN
+from homeassistant.components.tplink_omada.services import async_setup_services
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from tests.common import MockConfigEntry
+
+
+async def test_service_reconnect_no_config_entries(
+    hass: HomeAssistant,
+) -> None:
+    """Test reconnect service raises error when no config entries exist."""
+    # Register services directly without any config entries
+    async_setup_services(hass)
+
+    mac = "AA:BB:CC:DD:EE:FF"
+    with pytest.raises(
+        ServiceValidationError, match="No active TP-Link Omada controllers found"
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "reconnect_client",
+            {"mac": mac},
+            blocking=True,
+        )
 
 
 async def test_service_reconnect_client(
