@@ -256,13 +256,8 @@ async def test_actions_cannot_connect_select(
     before = hass.states.get(entity_id)
     assert before is not None
 
-    err = ServiceValidationError(
-        translation_domain="pooldose",
-        translation_key="cannot_connect",
-        translation_placeholders={"error": "mocked error"},
-    )
-
-    client.set_select = AsyncMock(side_effect=err)
+    client.is_connected = False
+    client.set_select = AsyncMock(return_value=False)
 
     with pytest.raises(ServiceValidationError) as excinfo:
         await hass.services.async_call(
