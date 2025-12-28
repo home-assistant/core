@@ -21,7 +21,6 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers.entity_component import DATA_INSTANCES
 
 from tests.common import MockConfigEntry, async_mock_service
 from tests.components.tts.common import retrieve_media
@@ -53,7 +52,7 @@ async def test_tts_service_success(
     await hass.async_block_till_done()
 
     # Get the TTS entity
-    entity = hass.data[DATA_INSTANCES]["tts"].get_entity("tts.test_voice_test_voice")
+    entity = hass.data[tts.DOMAIN].get_entity("tts.test_voice_test_voice")
     assert entity is not None
 
     # Test the TTS audio generation
@@ -82,7 +81,7 @@ async def test_tts_rate_limited(
     await hass.async_block_till_done()
 
     # Get the TTS entity
-    entity = hass.data[DATA_INSTANCES]["tts"].get_entity("tts.test_voice_test_voice")
+    entity = hass.data[tts.DOMAIN].get_entity("tts.test_voice_test_voice")
     assert entity is not None
 
     # Make tts.convert() fail with rate limit error
@@ -128,7 +127,7 @@ async def test_tts_missing_voice_id(
     await hass.async_block_till_done()
 
     # Get the TTS entity
-    entity = hass.data[DATA_INSTANCES]["tts"].get_entity("tts.test_voice_test_voice")
+    entity = hass.data[tts.DOMAIN].get_entity("tts.test_voice_test_voice")
     assert entity is not None
 
     # Test that the error is raised
@@ -151,7 +150,7 @@ async def test_tts_supported_languages(
     await hass.async_block_till_done()
 
     # Get the TTS entity
-    entity = hass.data[DATA_INSTANCES]["tts"].get_entity("tts.test_voice_test_voice")
+    entity = hass.data[tts.DOMAIN].get_entity("tts.test_voice_test_voice")
     assert entity is not None
 
     # Verify supported languages
