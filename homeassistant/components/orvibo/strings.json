@@ -1,0 +1,70 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]"
+    },
+    "error": {
+      "cannot_connect": "Unable to connect to the S20 switch",
+      "invalid_mac": "Invalid MAC address format"
+    },
+    "flow_title": "{host}",
+    "progress": {
+      "start_discovery": "Attempting to discover new S20 switches\n\nThis will take about 5-10 seconds",
+      "title": "Orvibo S20"
+    },
+    "step": {
+      "choose_switch": {
+        "data": {
+          "switches": "Choose discovered switch to configure"
+        },
+        "title": "Discovered Switches"
+      },
+      "discovery_failed": {
+        "description": "No S20 switches were discovered on the network.",
+        "menu_options": {
+          "edit": "Enter configuration manually"
+        },
+        "title": "Discovery failed"
+      },
+      "edit": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "mac": "MAC Address"
+        },
+        "title": "Edit Orvibo S20 Configuration"
+      },
+      "user": {
+        "menu_options": {
+          "edit": "Enter configuration manually",
+          "start_discovery": "Discover new S20 Switches"
+        },
+        "title": "Orvibo S20 Configuration"
+      }
+    }
+  },
+  "exceptions": {
+    "init_error": {
+      "message": "Error while initializing S20 {host}."
+    },
+    "turn_off_error": {
+      "message": "Error while turning off S20 {name}."
+    },
+    "turn_on_error": {
+      "message": "Error while turning on S20 {name}."
+    },
+    "update_error": {
+      "message": "Error while fetching state for S20 {name}."
+    }
+  },
+  "issues": {
+    "yaml_deprecation": {
+      "description": "The device (MAC: {mac}, Host: {host}) is configured in configuration.yaml. The Orvibo integration now supports UI-based configuration and this device has been migrated to the new UI. Please remove the YAML block from configuration.yaml to avoid future issues.",
+      "title": "Legacy YAML configuration detected {host}."
+    },
+    "yaml_deprecation_import_issue": {
+      "description": "Attempting to import this device (MAC: {mac}, Host: {host}) from YAML has an issue. Please try reloading the integration, or removing the YAML block from configuration.yaml and creating the entry using the UI.",
+      "title": "Legacy YAML configuration import issue for {host}"
+    }
+  }
+}
