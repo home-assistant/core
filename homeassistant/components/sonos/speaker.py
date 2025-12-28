@@ -971,16 +971,7 @@ class SonosSpeaker:
                         removed_speaker.zone_name,
                         self.zone_name,
                     )
-                    removed_speaker.coordinator = None
-                    removed_speaker.sonos_group = [removed_speaker]
-                    removed_speaker_entity_id = cast(
-                        str,
-                        entity_registry.async_get_entity_id(
-                            MP_DOMAIN, DOMAIN, removed_speaker.uid
-                        ),
-                    )
-                    removed_speaker.sonos_group_entities = [removed_speaker_entity_id]
-                    removed_speaker.async_write_entity_states()
+                    removed_speaker.clear_coordinator()
 
             self.coordinator = None
             self.sonos_group = sonos_group
@@ -1013,6 +1004,19 @@ class SonosSpeaker:
                     self.data.topology_condition.notify_all()
 
         return _async_handle_group_event(event)
+
+    @callback
+    def clear_coordinator(self) -> None:
+        """Clear coordinator without updating group members."""
+        entity_registry = er.async_get(self.hass)
+        self.coordinator = None
+        self.sonos_group = [self]
+        speaker_entity_id = cast(
+            str,
+            entity_registry.async_get_entity_id(MP_DOMAIN, DOMAIN, self.uid),
+        )
+        self.sonos_group_entities = [speaker_entity_id]
+        self.async_write_entity_states()
 
     @soco_error()
     def join(self, speakers: list[SonosSpeaker]) -> list[SonosSpeaker]:

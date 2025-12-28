@@ -296,6 +296,10 @@ async def test_unjoin_completes_when_coordinator_receives_event_first(
     # Should complete without warnings or timeout errors
     assert len(caplog.records) == 0
     assert soco_bedroom.unjoin.call_count == 1
+    state = hass.states.get("media_player.living_room")
+    assert state.attributes["group_members"] == ["media_player.living_room"]
+    state = hass.states.get("media_player.bedroom")
+    assert state.attributes["group_members"] == ["media_player.bedroom"]
 
 
 async def test_unjoin_completes_when_speaker_receives_event_first(
@@ -342,3 +346,8 @@ async def test_unjoin_completes_when_speaker_receives_event_first(
     # Should complete without warnings or timeout errors
     assert len(caplog.records) == 0
     assert soco_bedroom.unjoin.call_count == 1
+
+    state = hass.states.get("media_player.living_room")
+    assert state.attributes["group_members"] == ["media_player.living_room"]
+    state = hass.states.get("media_player.bedroom")
+    assert state.attributes["group_members"] == ["media_player.bedroom"]
