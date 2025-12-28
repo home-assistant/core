@@ -5250,7 +5250,7 @@
     },
     "prusalink": {
       "name": "PrusaLink",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -5266,7 +5266,7 @@
     },
     "pterodactyl": {
       "name": "Pterodactyl",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
     },
@@ -5278,13 +5278,13 @@
     },
     "pure_energie": {
       "name": "Pure Energie",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "local_polling"
     },
     "purpleair": {
       "name": "PurpleAir",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -5296,13 +5296,13 @@
     },
     "pushbullet": {
       "name": "Pushbullet",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
     "pushover": {
       "name": "Pushover",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_push"
     },
@@ -5320,7 +5320,7 @@
     },
     "pvpc_hourly_pricing": {
       "name": "Spain electricity hourly pricing (PVPC)",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
@@ -5349,7 +5349,7 @@
     },
     "qingping": {
       "name": "Qingping",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },
