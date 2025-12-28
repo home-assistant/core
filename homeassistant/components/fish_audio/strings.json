@@ -78,5 +78,14 @@
         }
       }
     }
+  },
+  "selector": {
+    "sort_by": {
+      "options": {
+        "created_at": "Newest",
+        "score": "Highest score",
+        "task_count": "Most uses"
+      }
+    }
   }
 }
