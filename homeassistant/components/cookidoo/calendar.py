@@ -41,11 +41,25 @@ class CookidooCalendarEntity(CookidooBaseEntity, CalendarEntity):
         """Initialize the entity."""
         super().__init__(coordinator)
         assert coordinator.config_entry.unique_id
-        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_meal_plan"
+        self._attr_unique_id = coordinator.config_entry.unique_id
 
     @property
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
+        if not self.coordinator.data or not self.coordinator.data.week_plan:
+            return None
+
+        today = date.today()
+        for day_data in self.coordinator.data.week_plan:
+            day_date = date.fromisoformat(day_data.id)
+            if day_date >= today and day_data.recipes:
+                recipe = day_data.recipes[0]
+                return CalendarEvent(
+                    start=day_date,
+                    end=day_date + timedelta(days=1),  # All-day event
+                    summary=recipe.name,
+                    description=f"Total Time: {recipe.total_time}",
+                )
         return None
 
     async def _fetch_week_plan(self, week_day: date) -> list:
