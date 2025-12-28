@@ -121,7 +121,7 @@ Tami4EdgeAPI==3.0
 WSDiscovery==2.1.2
 
 # homeassistant.components.accuweather
-accuweather==4.2.2
+accuweather==5.0.0
 
 # homeassistant.components.actron_air
 actron-neo-api==0.4.1
@@ -941,7 +941,7 @@ georss-qld-bushfire-alert-client==0.8
 getmac==0.9.5
 
 # homeassistant.components.gios
-gios==6.1.2
+gios==7.0.0
 
 # homeassistant.components.glances
 glances-api==0.8.0
@@ -1941,7 +1941,7 @@ pypalazzetti==0.1.20
 pypaperless==4.1.1
 
 # homeassistant.components.lcn
-pypck==0.9.8
+pypck==0.9.9
 
 # homeassistant.components.pglab
 pypglab==0.0.5
@@ -1956,7 +1956,7 @@ pyplaato==0.0.19
 pypoint==3.0.0
 
 # homeassistant.components.portainer
-pyportainer==1.0.14
+pyportainer==1.0.16
 
 # homeassistant.components.probe_plus
 pyprobeplus==1.1.2
