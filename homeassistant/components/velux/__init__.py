@@ -12,7 +12,12 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import ConfigEntryNotReady, ServiceValidationError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+    ServiceValidationError,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -48,8 +53,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         # (this is no change to the previous behavior, the alternative would be to reboot all)
         for entry in hass.config_entries.async_entries(DOMAIN):
             if entry.state is ConfigEntryState.LOADED:
-                await entry.runtime_data.reboot_gateway()
-                return
+                try:
+                    await entry.runtime_data.reboot_gateway()
+                except (OSError, PyVLXException) as err:
+                    raise HomeAssistantError(
+                        translation_domain=DOMAIN,
+                        translation_key="reboot_failed",
+                    ) from err
+                else:
+                    return
 
         raise ServiceValidationError(
             translation_domain=DOMAIN,
@@ -74,6 +86,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: VeluxConfigEntry) -> boo
         LOGGER.debug("Retrieving nodes from %s", host)
         await pyvlx.load_nodes()
     except (OSError, PyVLXException) as ex:
+        # Since pyvlx raises the same exception for auth and connection errors,
+        # we need to check the exception message to distinguish them.
+        # Ultimately this should be fixed in pyvlx to raise specialized exceptions,
+        # right now it's been a while since the last pyvlx release, so we do this workaround here.
+        if (
+            isinstance(ex, PyVLXException)
+            and ex.description == "Login to KLF 200 failed, check credentials"
+        ):
+            raise ConfigEntryAuthFailed(
+                f"Invalid authentication for Velux gateway at {host}"
+            ) from ex
+
         # Defer setup and retry later as the bridge is not ready/available
         raise ConfigEntryNotReady(
             f"Unable to connect to Velux gateway at {host}. "
