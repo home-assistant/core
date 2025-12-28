@@ -261,10 +261,22 @@ class NotifyAuthModule(MultiFactorAuthModule):
     ) -> None:
         """Send code by notify service."""
         data = {"message": self._message_template.format(code)}
-        if target:
-            data["target"] = [target]
 
-        await self.hass.services.async_call("notify", notify_service, data)
+        target_dict: dict[str, Any] | None = None
+        if target:
+            if notify_service == "send_message":
+                # notify entity
+                target_dict = {"entity_id": [target]}
+            else:
+                # legacy notify
+                data["target"] = [target]
+
+        await self.hass.services.async_call(
+            "notify",
+            notify_service,
+            data,
+            target=target_dict,
+        )
 
 
 class NotifySetupFlow(SetupFlow[NotifyAuthModule]):
