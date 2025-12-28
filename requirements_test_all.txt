@@ -121,7 +121,7 @@ Tami4EdgeAPI==3.0
 WSDiscovery==2.1.2
 
 # homeassistant.components.accuweather
-accuweather==4.2.2
+accuweather==5.0.0
 
 # homeassistant.components.actron_air
 actron-neo-api==0.4.1
@@ -944,7 +944,7 @@ georss-qld-bushfire-alert-client==0.8
 getmac==0.9.5
 
 # homeassistant.components.gios
-gios==6.1.2
+gios==7.0.0
 
 # homeassistant.components.glances
 glances-api==0.8.0
