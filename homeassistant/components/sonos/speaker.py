@@ -1070,7 +1070,6 @@ class SonosSpeaker:
         if self.sonos_group == [self]:
             return
         self.soco.unjoin()
-        # Coordinator will be cleared when the topology change is confirmed via ZGS event
 
     @staticmethod
     async def unjoin_multi(

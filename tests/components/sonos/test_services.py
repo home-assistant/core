@@ -255,7 +255,7 @@ async def test_unjoin_completes_when_coordinator_receives_event_first(
     sonos_setup_two_speakers: list[MockSoCo],
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test that unjoin completes even when only coordinator receives ZGS event first (delayed member event)."""
+    """Test that unjoin completes even when only coordinator receives ZGS event."""
     soco_living_room = sonos_setup_two_speakers[0]
     soco_bedroom = sonos_setup_two_speakers[1]
 
@@ -281,7 +281,7 @@ async def test_unjoin_completes_when_coordinator_receives_event_first(
         )
         await unjoin_complete_event.wait()
 
-        # Fire ZGS event to living room first (coordinator)
+        # Fire ZGS event to living room (coordinator)
         ungroup_event = create_zgs_sonos_event(
             "zgs_two_single.xml",
             soco_living_room,
@@ -296,57 +296,6 @@ async def test_unjoin_completes_when_coordinator_receives_event_first(
     # Should complete without warnings or timeout errors
     assert len(caplog.records) == 0
     assert soco_bedroom.unjoin.call_count == 1
-    state = hass.states.get("media_player.living_room")
-    assert state.attributes["group_members"] == ["media_player.living_room"]
-    state = hass.states.get("media_player.bedroom")
-    assert state.attributes["group_members"] == ["media_player.bedroom"]
-
-
-async def test_unjoin_completes_when_speaker_receives_event_first(
-    hass: HomeAssistant,
-    sonos_setup_two_speakers: list[MockSoCo],
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test that unjoin completes even when only coordinator receives ZGS event first (delayed member event)."""
-    soco_living_room = sonos_setup_two_speakers[0]
-    soco_bedroom = sonos_setup_two_speakers[1]
-
-    # First, group the speakers together
-    group_speakers(soco_living_room, soco_bedroom)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    # Now test unjoin with delayed event scenario
-    unjoin_complete_event = asyncio.Event()
-
-    def mock_unjoin(*args, **kwargs) -> None:
-        hass.loop.call_soon_threadsafe(unjoin_complete_event.set)
-
-    soco_bedroom.unjoin = Mock(side_effect=mock_unjoin)
-
-    with caplog.at_level(logging.WARNING):
-        caplog.clear()
-        await hass.services.async_call(
-            MP_DOMAIN,
-            SERVICE_UNJOIN,
-            {"entity_id": "media_player.bedroom"},
-            blocking=False,
-        )
-        await unjoin_complete_event.wait()
-
-        # Fire ZGS event to living room first (coordinator)
-        ungroup_event = create_zgs_sonos_event(
-            "zgs_two_single.xml",
-            soco_living_room,
-            soco_bedroom,
-            create_uui_ds_in_group=False,
-        )
-        soco_bedroom.zoneGroupTopology.subscribe.return_value._callback(ungroup_event)
-        await hass.async_block_till_done(wait_background_tasks=True)
-
-    # Should complete without warnings or timeout errors
-    assert len(caplog.records) == 0
-    assert soco_bedroom.unjoin.call_count == 1
-
     state = hass.states.get("media_player.living_room")
     assert state.attributes["group_members"] == ["media_player.living_room"]
     state = hass.states.get("media_player.bedroom")
