@@ -125,7 +125,10 @@
       "message": "{entity_id} is not a known Sonos speaker."
     },
     "timeout_join": {
-      "message": "Timeout while waiting for Sonos player to {action} the group {group_description}"
+      "message": "Timeout while waiting for Sonos player to join the group {group_description}"
+    },
+    "timeout_unjoin": {
+      "message": "Timeout while waiting for Sonos player to unjoin the group {group_description}"
     }
   },
   "issues": {

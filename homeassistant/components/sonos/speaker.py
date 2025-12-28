@@ -1238,10 +1238,9 @@ class SonosSpeaker:
             )
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="timeout_join",
+                translation_key=f"timeout_{action}",
                 translation_placeholders={
                     "group_description": group_description,
-                    "action": action,
                 },
             ) from TimeoutError
         any_speaker = next(iter(config_entry.runtime_data.discovered.values()))
