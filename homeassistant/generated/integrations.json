@@ -4494,7 +4494,7 @@
     },
     "nintendo_parental_controls": {
       "name": "Nintendo Switch parental controls",
-      "integration_type": "hub",
+      "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
