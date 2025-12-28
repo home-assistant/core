@@ -262,16 +262,17 @@ async def test_unjoin_completes_when_coordinator_receives_event_first(
     # First, group the speakers together
     group_speakers(soco_living_room, soco_bedroom)
     await hass.async_block_till_done(wait_background_tasks=True)
-    state = hass.states.get("media_player.living_room")
-    assert state.attributes["group_members"] == [
-        "media_player.living_room",
-        "media_player.bedroom",
-    ]
-    state = hass.states.get("media_player.bedroom")
-    assert state.attributes["group_members"] == [
-        "media_player.living_room",
-        "media_player.bedroom",
-    ]
+
+    # Verify initial grouped state
+    expected_group = ["media_player.living_room", "media_player.bedroom"]
+    assert (
+        hass.states.get("media_player.living_room").attributes["group_members"]
+        == expected_group
+    )
+    assert (
+        hass.states.get("media_player.bedroom").attributes["group_members"]
+        == expected_group
+    )
 
     unjoin_complete_event = asyncio.Event()
 
@@ -290,7 +291,7 @@ async def test_unjoin_completes_when_coordinator_receives_event_first(
         )
         await unjoin_complete_event.wait()
 
-        # Fire ZGS event to living room (coordinator) after unjoin is called
+        # Fire ZGS event only to coordinator to test clearing of bedroom speaker
         ungroup_event = create_zgs_sonos_event(
             "zgs_two_single.xml",
             soco_living_room,

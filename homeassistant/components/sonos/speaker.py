@@ -959,10 +959,8 @@ class SonosSpeaker:
                 return
 
             # Clear coordinator on speakers that are no longer in this group
-            old_members = (
-                set(self.sonos_group[1:]) if len(self.sonos_group) > 1 else set()
-            )
-            new_members = set(sonos_group[1:]) if len(sonos_group) > 1 else set()
+            old_members = set(self.sonos_group[1:])
+            new_members = set(sonos_group[1:])
             removed_members = old_members - new_members
             for removed_speaker in removed_members:
                 # Only clear if this speaker was coordinated by self and in the same group
