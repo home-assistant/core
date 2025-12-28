@@ -965,7 +965,11 @@ class SonosSpeaker:
             new_members = set(sonos_group[1:]) if len(sonos_group) > 1 else set()
             removed_members = old_members - new_members
             for removed_speaker in removed_members:
-                if removed_speaker.coordinator == self:
+                # Only clear if this speaker was coordinated by self and in the same group
+                if (
+                    removed_speaker.coordinator == self
+                    and removed_speaker.sonos_group is self.sonos_group
+                ):
                     _LOGGER.debug(
                         "Zone %s Cleared coordinator [%s] (removed from group)",
                         removed_speaker.zone_name,
@@ -1007,10 +1011,10 @@ class SonosSpeaker:
 
     @callback
     def clear_coordinator(self) -> None:
-        """Clear coordinator without updating group members."""
-        entity_registry = er.async_get(self.hass)
+        """Clear coordinator from speaker."""
         self.coordinator = None
         self.sonos_group = [self]
+        entity_registry = er.async_get(self.hass)
         speaker_entity_id = cast(
             str,
             entity_registry.async_get_entity_id(MP_DOMAIN, DOMAIN, self.uid),
