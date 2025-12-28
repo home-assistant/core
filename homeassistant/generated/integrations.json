@@ -6338,7 +6338,7 @@
           "name": "Sony Bravia TV"
         },
         "ps4": {
-          "integration_type": "hub",
+          "integration_type": "device",
           "config_flow": true,
           "iot_class": "local_polling",
           "name": "Sony PlayStation 4"
