@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock
 
+from fishaudio import AuthenticationError, FishAudioError
 import pytest
 
 from homeassistant.components.fish_audio.const import (
@@ -49,25 +50,28 @@ async def test_user_flow_happy_path(
 
 
 @pytest.mark.parametrize(
-    ("fixture", "error_base"),
+    ("side_effect", "error_base"),
     [
-        ("mock_fishaudio_client_connection_error", "cannot_connect"),
-        ("mock_fishaudio_client_auth_error", "invalid_auth"),
-        ("mock_fishaudio_client_unknown_error", "unknown"),
+        (FishAudioError("Connection error"), "cannot_connect"),
+        (AuthenticationError(401, "Invalid API key"), "invalid_auth"),
+        (Exception("Unexpected error"), "unknown"),
     ],
 )
 async def test_user_flow_api_error(
     hass: HomeAssistant,
-    request: pytest.FixtureRequest,
-    fixture: str,
+    mock_fishaudio_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    side_effect: Exception,
     error_base: str,
 ) -> None:
-    """Test user flow with API errors during validation."""
-    request.getfixturevalue(fixture)
-
+    """Test user flow with API errors during validation and recovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
+
+    # Simulate the error
+    mock_fishaudio_client.account.get_credits.side_effect = side_effect
+
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={CONF_API_KEY: "bad-key"}
     )
@@ -75,6 +79,22 @@ async def test_user_flow_api_error(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": error_base}
+
+    mock_setup_entry.assert_not_called()
+
+    # Clear the error and retry successfully
+    mock_fishaudio_client.account.get_credits.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_KEY: "test-key"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Fish Audio"
+    assert result["data"] == {CONF_API_KEY: "test-key", CONF_USER_ID: "test_user"}
+    assert result["result"].unique_id == "test_user"
+
+    mock_setup_entry.assert_called_once()
 
 
 async def test_user_flow_already_configured(
@@ -123,6 +143,10 @@ async def test_subflow_happy_path(
         },
     )
 
+    # Debug: check what we got
+    if result["type"] is FlowResultType.ABORT:
+        raise AssertionError(f"Flow aborted with reason: {result.get('reason')}")
+
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "model"
 
@@ -150,10 +174,12 @@ async def test_subflow_happy_path(
 
 async def test_subflow_cannot_connect(
     hass: HomeAssistant,
-    mock_fishaudio_client_voices_error: AsyncMock,
+    mock_fishaudio_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the subflow when fetching models fails."""
+    mock_fishaudio_client.voices.list.side_effect = FishAudioError("API Error")
+
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
@@ -173,10 +199,12 @@ async def test_subflow_cannot_connect(
 
 async def test_subflow_no_models_found(
     hass: HomeAssistant,
-    mock_fishaudio_client_no_voices: AsyncMock,
+    mock_fishaudio_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the subflow when no voices are found."""
+    mock_fishaudio_client.voices.list.return_value = AsyncMock(items=[])
+
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
