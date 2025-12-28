@@ -143,7 +143,7 @@ async def test_turn_on_off_raises_error(
     [
         ("normal", "pyvesync.devices.vesyncfan.VeSyncTowerFan.set_normal_mode"),
         (
-            "advancedSleep",
+            "advanced_sleep",
             "pyvesync.devices.vesyncfan.VeSyncTowerFan.set_advanced_sleep_mode",
         ),
         ("turbo", "pyvesync.devices.vesyncfan.VeSyncTowerFan.set_turbo_mode"),

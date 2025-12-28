@@ -4,6 +4,7 @@
   "codeowners": ["@klaasnicolaas"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/powerfox",
+  "integration_type": "hub",
   "iot_class": "cloud_polling",
   "quality_scale": "silver",
   "requirements": ["powerfox==2.0.0"],
