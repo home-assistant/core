@@ -1,7 +1,7 @@
 """Test the satel integra config flow."""
 
 from typing import Any
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -230,6 +230,7 @@ async def test_options_flow(
 async def test_subentry_creation(
     hass: HomeAssistant,
     mock_satel: AsyncMock,
+    mock_reload_after_entry_update: MagicMock,
     mock_config_entry: MockConfigEntry,
     user_input: dict[str, Any],
     subentry: ConfigSubentry,
@@ -262,6 +263,9 @@ async def test_subentry_creation(
     assert mock_config_entry.subentries.get(subentry_id) == ConfigSubentry(
         **subentry_result
     )
+
+    # Assert the entry is reloaded to set up the entity
+    assert mock_reload_after_entry_update.call_count == 1
 
 
 @pytest.mark.parametrize(
