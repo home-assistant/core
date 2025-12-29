@@ -51,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = PortainerCoordinator(hass, entry, client)
     await coordinator.async_config_entry_first_refresh()
 
-    beacon_coordinator = PortainerBeaconCoordinator(hass, entry, client)
+    beacon_coordinator = PortainerBeaconCoordinator(hass, entry, client, coordinator)
     await beacon_coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = PortainerRuntimeData(

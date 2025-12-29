@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import timedelta
+import logging
 from typing import Any
 
 from pyportainer import Portainer
@@ -12,7 +13,7 @@ from pyportainer.exceptions import (
     PortainerAuthenticationError,
     PortainerConnectionError,
 )
-from pyportainer.models.docker import DockerContainer, ImageInformation
+from pyportainer.models.docker import DockerContainer, LocalImageInformation
 
 from homeassistant.components.update import (
     UpdateDeviceClass,
@@ -34,12 +35,14 @@ from .coordinator import (
 )
 from .entity import PortainerContainerUpdateEntity
 
+_LOGGER = logging.getLogger(__name__)
+
 
 @dataclass(frozen=True, kw_only=True)
 class PortainerContainerUpdateEntityDescription(UpdateEntityDescription):
     """Describes Portainer container update entity."""
 
-    latest_version: Callable[[ImageInformation], str | None]
+    latest_version: Callable[[LocalImageInformation], str | None]
     update_func: Callable[
         [Portainer, int, str],
         Awaitable[DockerContainer],
@@ -47,6 +50,8 @@ class PortainerContainerUpdateEntityDescription(UpdateEntityDescription):
     display_precision: int = 0
 
 
+# Don't overload Portainer API with too many parallel updates
+PARALLEL_UPDATES = 3
 DEFAULT_RECREATE_TIMEOUT = timedelta(minutes=10)
 
 
@@ -57,14 +62,13 @@ CONTAINER_IMAGE: tuple[PortainerContainerUpdateEntityDescription] = (
         device_class=UpdateDeviceClass.FIRMWARE,  # @TODO: find a better device class. Let's await the review.
         entity_category=EntityCategory.CONFIG,
         latest_version=lambda data: (
-            data.descriptor.digest
-            if (data.descriptor and data.descriptor.digest)
-            else None
+            data.repo_digests[0].split("@")[1] if data.repo_digests else None
         ),
         update_func=(
             lambda portainer, endpoint_id, container_id: portainer.container_recreate(
-                endpoint_id,
-                container_id,
+                endpoint_id=endpoint_id,
+                container_id=container_id,
+                timeout=DEFAULT_RECREATE_TIMEOUT,
                 pull_image=True,
             )
         ),
@@ -79,17 +83,31 @@ async def async_setup_entry(
 ) -> None:
     """Set up Portainer update entities based on a config entry."""
     beacon = entry.runtime_data.beacon
+    coordinator = entry.runtime_data.coordinator
 
-    async_add_entities(
-        PortainerContainerImageUpdateEntity(
-            beacon,
-            endpoint,
-            container,
-            entity_description,
+    def _async_add_new_containers(
+        containers: list[tuple[PortainerBeaconData, ContainerBeaconData]],
+    ) -> None:
+        """Add new container update sensors."""
+
+        async_add_entities(
+            PortainerContainerImageUpdateEntity(
+                beacon,
+                endpoint,
+                container,
+                entity_description,
+            )
+            for (endpoint, container) in containers
+            for entity_description in CONTAINER_IMAGE
         )
-        for endpoint in beacon.data.values()
-        for container in endpoint.containers.values()
-        for entity_description in CONTAINER_IMAGE
+
+    coordinator.new_containers_callbacks.append(_async_add_new_containers)
+    _async_add_new_containers(
+        [
+            (endpoint, container)
+            for endpoint in beacon.data.values()
+            for container in endpoint.containers.values()
+        ]
     )
 
 
@@ -117,19 +135,25 @@ class PortainerContainerImageUpdateEntity(PortainerContainerUpdateEntity, Update
         self._in_progress_old_version: str | None = None
 
     @property
-    def installed_version(self) -> str | None:
-        """Return installed version."""
-        return (
+    def title(self) -> str | None:
+        """Return title."""
+        name = (
             self.coordinator.data[self.endpoint.id]
             .containers[self.device_name]
-            .container_inspect.image
+            .container_inspect.name
         )
+        assert name
+        return name.strip("/")
+
+    @property
+    def installed_version(self) -> str | None:
+        """Return installed version."""
+        return self.container.new_digest
 
     @property
     def latest_version(self) -> str | None:
         """Return latest version."""
-        container = self.coordinator.data[self.endpoint.id].containers[self.device_name]
-        return self.entity_description.latest_version(container.image_info)
+        return self.entity_description.latest_version(self.container.local_image)
 
     @property
     def in_progress(self) -> bool:
@@ -142,6 +166,11 @@ class PortainerContainerImageUpdateEntity(PortainerContainerUpdateEntity, Update
         """Install update."""
         self._in_progress_old_version = self.installed_version
         try:
+            _LOGGER.debug(
+                "Starting update for container %s on endpoint %s",
+                self.device_name,
+                self.endpoint.name,
+            )
             await self.entity_description.update_func(
                 self.coordinator.portainer,
                 self.endpoint.id,
@@ -160,3 +189,11 @@ class PortainerContainerImageUpdateEntity(PortainerContainerUpdateEntity, Update
                 translation_key="cannot_connect",
                 translation_placeholders={"title": self.coordinator.config_entry.title},
             ) from ex
+        else:
+            _LOGGER.debug(
+                "Successfully updated container %s on endpoint %s",
+                self.device_name,
+                self.endpoint.name,
+            )
+            self._in_progress_old_version = None
+            await self.coordinator.async_request_refresh()

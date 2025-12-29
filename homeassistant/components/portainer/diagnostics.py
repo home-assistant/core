@@ -51,5 +51,5 @@ async def async_get_config_entry_diagnostics(
 
     return {
         "config_entry": async_redact_data(config_entry.as_dict(), TO_REDACT),
-        "coordinator": _serialize_coordinator(config_entry.runtime_data),
+        "coordinator": _serialize_coordinator(config_entry.runtime_data.coordinator),
     }

@@ -7,6 +7,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import Any
 
 from pyportainer import (
     Portainer,
@@ -18,14 +19,13 @@ from pyportainer.models.docker import (
     DockerContainer,
     DockerContainerStats,
     ImageInformation,
-    ImageManifestDescriptor,
     LocalImageInformation,
 )
 from pyportainer.models.docker_inspect import DockerInfo, DockerInspect, DockerVersion
 from pyportainer.models.portainer import Endpoint
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_URL
+from homeassistant.const import CONF_URL, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -267,7 +267,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
 
 
 class PortainerBeaconCoordinator(DataUpdateCoordinator[dict[int, PortainerBeaconData]]):
-    """Data Update Coordinator for Portainer periodic background tasks."""
+    """Data Update Coordinator for Portainer periodic background tasks. It inherits from the main coordinator."""
 
     config_entry: PortainerConfigEntry
 
@@ -276,97 +276,81 @@ class PortainerBeaconCoordinator(DataUpdateCoordinator[dict[int, PortainerBeacon
         hass: HomeAssistant,
         config_entry: PortainerConfigEntry,
         portainer: Portainer,
+        base: PortainerCoordinator,
     ) -> None:
         """Initialize the Portainer Beacon Data Update Coordinator."""
         super().__init__(
             hass,
             _LOGGER,
             config_entry=config_entry,
-            name=f"{DOMAIN}",
+            name=f"{DOMAIN}_beacon",
             update_interval=BEACON_SCAN_INTERVAL,
         )
         self.portainer = portainer
+        self.base = base
+        self._allow_registry_io: bool = False
 
-    async def _async_setup(self) -> None:
-        _LOGGER.debug("Setting up Portainer Beacon Coordinator")
-        try:
-            await self.portainer.get_endpoints()
-        except PortainerAuthenticationError as err:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="invalid_auth",
-                translation_placeholders={"error": repr(err)},
-            ) from err
-        except PortainerConnectionError as err:
-            raise ConfigEntryNotReady(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect",
-                translation_placeholders={"error": repr(err)},
-            ) from err
-        except PortainerTimeoutError as err:
-            raise ConfigEntryNotReady(
-                translation_domain=DOMAIN,
-                translation_key="timeout_connect",
-                translation_placeholders={"error": repr(err)},
-            ) from err
+        if not self._allow_registry_io:
+            _LOGGER.debug(
+                "Portainer Beacon Coordinator registry I/O is not running at startup"
+            )
+            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, self._ha_started)
+
+    async def _ha_started(self, event: Any) -> None:
+        """Enable registry I/O after Home Assistant has started."""
+        self._allow_registry_io = True
+        _LOGGER.debug(
+            "Portainer Beacon Coordinator registry I/O is now enabled after Home Assistant started"
+        )
+        await self.async_request_refresh()
 
     async def _async_update_data(self) -> dict[int, PortainerBeaconData]:
         """Perform periodic background tasks."""
         _LOGGER.debug("Performing Portainer Beacon Coordinator background tasks")
 
-        # Check for container image updates
-        try:
-            endpoints = await self.portainer.get_endpoints()
-        except PortainerAuthenticationError as err:
-            _LOGGER.error("Authentication error: %s", repr(err))
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="invalid_auth",
-                translation_placeholders={"error": repr(err)},
-            ) from err
-        except PortainerConnectionError as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect",
-                translation_placeholders={"error": repr(err)},
-            ) from err
-
         mapped_endpoints: dict[int, PortainerBeaconData] = {}
-        for endpoint in endpoints:
-            if endpoint.status == ENDPOINT_STATUS_DOWN:
+        for endpoint_data in self.base.data.values():
+            if endpoint_data.endpoint.status == ENDPOINT_STATUS_DOWN:
                 _LOGGER.debug(
                     "Skipping offline endpoint: %s (ID: %d)",
-                    endpoint.name,
-                    endpoint.id,
+                    endpoint_data.endpoint.name,
+                    endpoint_data.endpoint.id,
                 )
                 continue
 
             try:
                 containers = await self.portainer.get_containers(
-                    endpoint_id=endpoint.id
+                    endpoint_id=endpoint_data.endpoint.id
                 )
 
                 container_data: dict[str, ContainerBeaconData] = {}
                 for container in containers:
                     # @ERWIN: Silly local stub data
-                    image_info = ImageInformation(
-                        descriptor=ImageManifestDescriptor(
-                            digest=f"sha256:stub-{container.id[:8]}"
-                        )
-                    )
+                    # image_info = ImageInformation(
+                    #     descriptor=ImageManifestDescriptor(
+                    #         digest=f"sha256:stub-{container.id[:8]}"
+                    #     )
+                    # )
                     container_inspect = await self.portainer.inspect_container(
-                        endpoint_id=endpoint.id, container_id=container.id
+                        endpoint_id=endpoint_data.endpoint.id, container_id=container.id
                     )
                     local_image = await self.portainer.get_image(
-                        endpoint_id=endpoint.id, image_id=str(container_inspect.image)
+                        endpoint_id=endpoint_data.endpoint.id,
+                        image_id=str(container_inspect.image),
                     )
-                    # image_info = await self.portainer.get_image_information(
-                    #     endpoint_id=endpoint.id, image_id=str(container.image)
-                    # )
-                    # Format: 'portainer/portainer-ce@sha256:d38a6876b61df32e4da13c0ca61cf2aa0f27afc103abb4ca7ad4e1cf000e17c3'
+
+                    image_info = ImageInformation(descriptor=None)
+                    if self._allow_registry_io:
+                        update_available = False
+                        image_info = await self.portainer.get_image_information(
+                            endpoint_id=endpoint_data.endpoint.id,
+                            image_id=str(container.image),
+                        )
+
                     image_sha = (
                         local_image.repo_digests[0].split("@")[1]
                         if local_image.repo_digests
+                        and isinstance(local_image.repo_digests[0], str)
                         else None
                     )
 
@@ -374,13 +358,13 @@ class PortainerBeaconCoordinator(DataUpdateCoordinator[dict[int, PortainerBeacon
                         image_info.descriptor.digest if image_info.descriptor else None
                     )
                     if update_available := image_info_digest != image_sha:
-                        # TODO: works perfect for debugging. Can be refactored later on.
+                        #  Works perfect for debugging. Can be refactored later on.
                         _LOGGER.debug(
                             "Container %s (ID: %s) on Endpoint %s (ID: %d) has an update available",
                             container.names[0],
                             container.id,
-                            endpoint.name,
-                            endpoint.id,
+                            endpoint_data.endpoint.name,
+                            endpoint_data.endpoint.id,
                         )
 
                     container_data[container.names[0].replace("/", " ").strip()] = (
@@ -401,7 +385,6 @@ class PortainerBeaconCoordinator(DataUpdateCoordinator[dict[int, PortainerBeacon
                     translation_placeholders={"error": repr(err)},
                 ) from err
             except PortainerAuthenticationError as err:
-                _LOGGER.exception("Authentication error")
                 raise ConfigEntryAuthFailed(
                     translation_domain=DOMAIN,
                     translation_key="invalid_auth",
@@ -409,10 +392,10 @@ class PortainerBeaconCoordinator(DataUpdateCoordinator[dict[int, PortainerBeacon
                 ) from err
             _LOGGER.debug("Completed Portainer Beacon Coordinator background tasks")
 
-            mapped_endpoints[endpoint.id] = PortainerBeaconData(
-                id=endpoint.id,
-                name=endpoint.name,
-                endpoint=endpoint,
+            mapped_endpoints[endpoint_data.endpoint.id] = PortainerBeaconData(
+                id=endpoint_data.endpoint.id,
+                name=endpoint_data.endpoint.name,
+                endpoint=endpoint_data.endpoint,
                 containers=container_data,
             )
 
