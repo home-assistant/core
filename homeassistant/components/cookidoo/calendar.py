@@ -6,6 +6,7 @@ from datetime import date, datetime, timedelta
 import logging
 
 from cookidoo_api import CookidooAuthException, CookidooException
+from cookidoo_api.types import CookidooCalendarDayRecipe
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.core import HomeAssistant
@@ -32,6 +33,16 @@ async def async_setup_entry(
     async_add_entities([CookidooCalendarEntity(coordinator)])
 
 
+def recipe_to_event(day_date: date, recipe: CookidooCalendarDayRecipe) -> CalendarEvent:
+    """Convert a Cookidoo recipe to a CalendarEvent."""
+    return CalendarEvent(
+        start=day_date,
+        end=day_date + timedelta(days=1),  # All-day event
+        summary=recipe.name,
+        description=f"Total Time: {recipe.total_time}",
+    )
+
+
 class CookidooCalendarEntity(CookidooBaseEntity, CalendarEntity):
     """A calendar entity."""
 
@@ -46,7 +57,7 @@ class CookidooCalendarEntity(CookidooBaseEntity, CalendarEntity):
     @property
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
-        if not self.coordinator.data or not self.coordinator.data.week_plan:
+        if not self.coordinator.data.week_plan:
             return None
 
         today = date.today()
@@ -54,12 +65,7 @@ class CookidooCalendarEntity(CookidooBaseEntity, CalendarEntity):
             day_date = date.fromisoformat(day_data.id)
             if day_date >= today and day_data.recipes:
                 recipe = day_data.recipes[0]
-                return CalendarEvent(
-                    start=day_date,
-                    end=day_date + timedelta(days=1),  # All-day event
-                    summary=recipe.name,
-                    description=f"Total Time: {recipe.total_time}",
-                )
+                return recipe_to_event(day_date, recipe)
         return None
 
     async def _fetch_week_plan(self, week_day: date) -> list:
@@ -91,13 +97,7 @@ class CookidooCalendarEntity(CookidooBaseEntity, CalendarEntity):
                 day_date = date.fromisoformat(day_data.id)
                 if start_date.date() <= day_date <= end_date.date():
                     events.extend(
-                        CalendarEvent(
-                            start=day_date,
-                            end=day_date + timedelta(days=1),  # All-day event
-                            summary=recipe.name,
-                            description=f"Total Time: {recipe.total_time}",
-                        )
-                        for recipe in day_data.recipes
+                        recipe_to_event(day_date, recipe) for recipe in day_data.recipes
                     )
             current_day += timedelta(days=7)  # Move to the next week
         return events

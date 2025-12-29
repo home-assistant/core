@@ -30,7 +30,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'meal_plan',
-    'unique_id': 'sub_uuid_meal_plan',
+    'unique_id': 'sub_uuid',
     'unit_of_measurement': None,
   })
 # ---
