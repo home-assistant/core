@@ -9,6 +9,7 @@ from homeassistant.components.growatt_server.const import (
     AUTH_PASSWORD,
     CONF_AUTH_TYPE,
     CONF_PLANT_ID,
+    DEFAULT_PLANT_ID,
     DEFAULT_URL,
     DOMAIN,
 )
@@ -161,8 +162,11 @@ def mock_growatt_classic_api():
     Methods mocked for total coordinator refresh:
     - plant_info: Provides plant totals (energy, power, money) for Classic API
 
-    Methods mocked for device-specific tests:
-    - tlx_detail: Provides TLX device data (kept for potential future tests)
+    Methods mocked for device coordinators (individual device data):
+    - inverter_detail: Provides inverter device data
+    - storage_detail: Provides storage device data
+    - mix_detail: Provides mix device data
+    - tlx_detail: Provides TLX device data
     """
     with patch(
         "homeassistant.components.growatt_server.config_flow.growattServer.GrowattApi",
@@ -191,7 +195,21 @@ def mock_growatt_classic_api():
             "plantMoneyText": "123.45/USD",
         }
 
-        # Called for TLX device coordinator (kept for potential future tests)
+        # Called by device coordinators during refresh for various device types
+        mock_classic_api.inverter_detail.return_value = {
+            "deviceSn": "INV123456",
+            "status": 1,
+        }
+
+        mock_classic_api.storage_detail.return_value = {
+            "deviceSn": "STO123456",
+        }
+
+        mock_classic_api.mix_detail.return_value = {
+            "deviceSn": "MIX123456",
+            "chartData": {"06:00": {}},  # At least one time entry needed
+        }
+
         mock_classic_api.tlx_detail.return_value = {
             "data": {
                 "deviceSn": "TLX123456",
@@ -240,6 +258,27 @@ def mock_config_entry_classic() -> MockConfigEntry:
             "name": "Test Plant",
         },
         unique_id="123456",
+    )
+
+
+@pytest.fixture
+def mock_config_entry_classic_default_plant() -> MockConfigEntry:
+    """Return a mocked config entry for Classic API with DEFAULT_PLANT_ID.
+
+    This config entry uses plant_id="0" which triggers auto-plant-selection logic
+    in the Classic API path. This is legacy support for old config entries that
+    didn't have a specific plant_id set during initial configuration.
+    """
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_AUTH_TYPE: AUTH_PASSWORD,
+            CONF_USERNAME: "test_user",
+            CONF_PASSWORD: "test_password",
+            CONF_URL: "https://server.growatt.com/",
+            CONF_PLANT_ID: DEFAULT_PLANT_ID,  # "0" triggers auto-selection
+        },
+        unique_id="plant_default",
     )
 
 
