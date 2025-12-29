@@ -1,6 +1,5 @@
 """Common fixtures for the Anglian Water tests."""
 
-
 from collections.abc import AsyncGenerator, Generator
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock, patch
