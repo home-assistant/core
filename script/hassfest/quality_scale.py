@@ -2073,6 +2073,7 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "versasense",
     "version",
     "vicare",
+    "vesync",
     "viaggiatreno",
     "vilfo",
     "vivotek",

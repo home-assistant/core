@@ -13,13 +13,15 @@ rules:
   docs-removal-instructions: done
   entity-event-setup:
     status: exempt
-    comment: No events used.
+    comment: Not explicitly subscribed to events.
   entity-unique-id: done
   has-entity-name: done
-  runtime-data: todo
+  runtime-data: done
   test-before-configure: done
   test-before-setup: done
-  unique-config-entry: done
+  unique-config-entry:
+    status: todo
+    comment: Can be migrated to accept multiple config entries now
 
   # Silver
   action-exceptions: todo
