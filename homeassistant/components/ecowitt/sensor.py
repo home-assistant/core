@@ -302,7 +302,7 @@ async def async_setup_entry(
             name=sensor.name,
         )
 
-        # Only total rain needs state class for long-term statistics
+        # Rain sensors with cumulative values need state class for long-term statistics
         if sensor.key in RAIN_TOTAL_INCREASING_SENSOR_KEYS:
             description = dataclasses.replace(
                 description,
