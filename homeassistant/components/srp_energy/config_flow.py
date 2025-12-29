@@ -83,9 +83,11 @@ class SRPEnergyConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=self.add_suggested_values_to_schema(
                 data_schema=vol.Schema(
                     {
-                        vol.Required(CONF_ID): str
-                        if self.source == SOURCE_USER
-                        else self._get_reconfigure_entry().data[CONF_ID],
+                        vol.Required(CONF_ID): (
+                            str
+                            if self.source == SOURCE_USER
+                            else self._get_reconfigure_entry().data[CONF_ID]
+                        ),
                         vol.Required(
                             CONF_NAME, default=self.hass.config.location_name
                         ): str,
@@ -94,9 +96,11 @@ class SRPEnergyConfigFlow(ConfigFlow, domain=DOMAIN):
                         vol.Optional(CONF_IS_TOU, default=False): bool,
                     }
                 ),
-                suggested_values=user_input or self._get_reconfigure_entry().data
-                if self.source == SOURCE_RECONFIGURE
-                else None,
+                suggested_values=(
+                    user_input or self._get_reconfigure_entry().data
+                    if self.source == SOURCE_RECONFIGURE
+                    else None
+                ),
             ),
             errors=errors,
         )
