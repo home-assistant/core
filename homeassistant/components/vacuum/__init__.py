@@ -555,6 +555,7 @@ class StateVacuumEntity(
 class Segment:
     id: str
     name: str
+    group: str | None = None
 
 
 # As we import deprecated constants from the const module, we need to add these two functions
