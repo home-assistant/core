@@ -5158,7 +5158,7 @@
     },
     "poolsense": {
       "name": "PoolSense",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
