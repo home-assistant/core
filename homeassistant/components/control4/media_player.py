@@ -110,6 +110,7 @@ async def async_setup_entry(
         name="room",
         update_method=async_update_data,
         update_interval=timedelta(seconds=scan_interval),
+        config_entry=entry,
     )
 
     # Fetch initial data so we have data when entities subscribe

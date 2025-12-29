@@ -66,6 +66,7 @@ async def async_setup_entry(
         name="light",
         update_method=async_update_data_non_dimmer,
         update_interval=timedelta(seconds=runtime_data.scan_interval),
+        config_entry=entry,
     )
     dimmer_coordinator = DataUpdateCoordinator[dict[int, dict[str, Any]]](
         hass,
@@ -73,6 +74,7 @@ async def async_setup_entry(
         name="light",
         update_method=async_update_data_dimmer,
         update_interval=timedelta(seconds=runtime_data.scan_interval),
+        config_entry=entry,
     )
 
     # Fetch initial data so we have data when entities subscribe
