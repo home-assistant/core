@@ -2,17 +2,15 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import ATTR_CATEGORY, ATTR_TRACCAR_ID, ATTR_TRACKER, DOMAIN
+from .coordinator import TraccarServerConfigEntry
 from .entity import TraccarServerEntity
-
-if TYPE_CHECKING:
-    from . import TraccarServerConfigEntry
 
 
 async def async_setup_entry(

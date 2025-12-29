@@ -24,9 +24,7 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import CONF_EVENTS, DOMAIN
-from .coordinator import TraccarServerCoordinator
-
-type TraccarServerConfigEntry = ConfigEntry[TraccarServerCoordinator]
+from .coordinator import TraccarServerConfigEntry, TraccarServerCoordinator
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Literal
+from typing import Any, Literal
 
 from pytraccar import DeviceModel, GeofenceModel, PositionModel
 
@@ -19,11 +19,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .coordinator import TraccarServerCoordinator
+from .coordinator import TraccarServerConfigEntry, TraccarServerCoordinator
 from .entity import TraccarServerEntity
-
-if TYPE_CHECKING:
-    from . import TraccarServerConfigEntry
 
 
 @dataclass(frozen=True, kw_only=True)

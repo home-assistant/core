@@ -2,17 +2,14 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from homeassistant.components.diagnostics import REDACTED, async_redact_data
 from homeassistant.const import CONF_ADDRESS, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .coordinator import TraccarServerCoordinator
-
-if TYPE_CHECKING:
-    from . import TraccarServerConfigEntry
+from .coordinator import TraccarServerConfigEntry, TraccarServerCoordinator
 
 KEYS_TO_REDACT = {
     "area",  # This is the polygon area of a geofence
@@ -84,6 +81,8 @@ async def async_get_device_diagnostics(
         device_id=device.id,
         include_disabled_entities=True,
     )
+
+    await hass.config_entries.async_reload(entry.entry_id)
 
     return async_redact_data(
         {
