@@ -24,7 +24,7 @@ from .coordinator import HypontechConfigEntry, HypontechDataCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)
-class HypontechSensorDescription(SensorEntityDescription):
+class HypontechSensorDescription(SensorEntityDescription):  # type: ignore[override]
     """Describes Hypontech Inverter sensor entity."""
 
     value_fn: Callable[[OverviewData], float | None]
@@ -33,23 +33,23 @@ class HypontechSensorDescription(SensorEntityDescription):
 SENSORS: tuple[HypontechSensorDescription, ...] = (
     HypontechSensorDescription(
         key="pv_power",
-        translation_key="total_power",
+        translation_key="pv_power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda c: c.power,
     ),
     HypontechSensorDescription(
-        key="lifetime_production",
-        translation_key="lifetime_production",
+        key="lifetime_energy",
+        translation_key="lifetime_energy",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda c: c.e_total,
     ),
     HypontechSensorDescription(
-        key="today_production",
-        translation_key="today_production",
+        key="today_energy",
+        translation_key="today_energy",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,

@@ -23,13 +23,13 @@
   },
   "entity": {
     "sensor": {
-      "lifetime_production": {
+      "lifetime_energy": {
         "name": "Lifetime energy"
       },
       "pv_power": {
         "name": "Power"
       },
-      "today_production": {
+      "today_energy": {
         "name": "Today energy"
       }
     }
