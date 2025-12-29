@@ -27,6 +27,30 @@
         'subscription_source': 'COMMERCE',
         'type': 'REGULAR',
       }),
+      'week_plan': list([
+        dict({
+          'id': '2025-03-04',
+          'recipes': list([
+            dict({
+              'id': 'r1',
+              'name': 'Waffles',
+              'total_time': 1500,
+            }),
+          ]),
+          'title': '2025-03-04',
+        }),
+        dict({
+          'id': '2025-03-05',
+          'recipes': list([
+            dict({
+              'id': 'r2',
+              'name': 'Mint Tea',
+              'total_time': 1500,
+            }),
+          ]),
+          'title': '2025-03-05',
+        }),
+      ]),
     }),
     'entry_data': dict({
       'country': 'CH',
