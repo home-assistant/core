@@ -908,12 +908,21 @@ class StartStopTrait(_Trait):
             }
 
         if domain in COVER_VALVE_DOMAINS:
+            assumed_state_or_set_position = bool(
+                (
+                    self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+                    & COVER_VALVE_SET_POSITION_FEATURE[domain]
+                )
+                or self.state.attributes.get(ATTR_ASSUMED_STATE)
+            )
+
             return {
                 "isRunning": state
                 in (
                     COVER_VALVE_STATES[domain]["closing"],
                     COVER_VALVE_STATES[domain]["opening"],
                 )
+                or assumed_state_or_set_position
             }
 
         raise NotImplementedError(f"Unsupported domain {domain}")
@@ -975,11 +984,23 @@ class StartStopTrait(_Trait):
         """Execute a StartStop command."""
         domain = self.state.domain
         if command == COMMAND_START_STOP:
+            assumed_state_or_set_position = bool(
+                (
+                    self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+                    & COVER_VALVE_SET_POSITION_FEATURE[domain]
+                )
+                or self.state.attributes.get(ATTR_ASSUMED_STATE)
+            )
+
             if params["start"] is False:
-                if self.state.state in (
-                    COVER_VALVE_STATES[domain]["closing"],
-                    COVER_VALVE_STATES[domain]["opening"],
-                ) or self.state.attributes.get(ATTR_ASSUMED_STATE):
+                if (
+                    self.state.state
+                    in (
+                        COVER_VALVE_STATES[domain]["closing"],
+                        COVER_VALVE_STATES[domain]["opening"],
+                    )
+                    or assumed_state_or_set_position
+                ):
                     await self.hass.services.async_call(
                         domain,
                         SERVICE_STOP_COVER_VALVE[domain],
@@ -992,7 +1013,14 @@ class StartStopTrait(_Trait):
                         ERR_ALREADY_STOPPED,
                         f"{FRIENDLY_DOMAIN[domain]} is already stopped",
                     )
-            else:
+            elif (
+                self.state.state
+                in (
+                    COVER_VALVE_STATES[domain]["open"],
+                    COVER_VALVE_STATES[domain]["closed"],
+                )
+                or assumed_state_or_set_position
+            ):
                 await self.hass.services.async_call(
                     domain,
                     SERVICE_TOGGLE_COVER_VALVE[domain],

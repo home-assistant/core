@@ -17,7 +17,6 @@ from uiprotect.data import (
     ProtectAdoptableDeviceModel,
     ProtectDeviceModel,
     Sensor,
-    SmartDetectObjectType,
 )
 
 from homeassistant.components.sensor import (
@@ -56,6 +55,7 @@ from .utils import async_get_light_motion_current
 
 _LOGGER = logging.getLogger(__name__)
 OBJECT_TYPE_NONE = "none"
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -126,7 +126,6 @@ ALL_DEVICES_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ProtectSensorEntityDescription(
         key="uptime",
         translation_key="uptime",
-        icon="mdi:clock",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -215,7 +214,6 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         key="doorbell_last_trip_time",
         translation_key="last_doorbell_ring",
         device_class=SensorDeviceClass.TIMESTAMP,
-        icon="mdi:doorbell-video",
         ufp_required_field="feature_flags.is_doorbell",
         ufp_value="last_ring",
         entity_registry_enabled_default=False,
@@ -224,14 +222,12 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         key="lens_type",
         translation_key="lens_type",
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:camera-iris",
         ufp_required_field="has_removable_lens",
         ufp_value="feature_flags.lens_type",
     ),
     ProtectSensorEntityDescription(
         key="mic_level",
         translation_key="microphone_level",
-        icon="mdi:microphone",
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_required_field="has_mic",
@@ -242,7 +238,6 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ProtectSensorEntityDescription(
         key="recording_mode",
         translation_key="recording_mode",
-        icon="mdi:video-outline",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value="recording_settings.mode.value",
         ufp_perm=PermRequired.NO_WRITE,
@@ -250,7 +245,6 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ProtectSensorEntityDescription(
         key="infrared",
         translation_key="infrared_mode",
-        icon="mdi:circle-opacity",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_required_field="feature_flags.has_led_ir",
         ufp_value="isp_settings.ir_led_mode.value",
@@ -259,7 +253,6 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ProtectSensorEntityDescription(
         key="doorbell_text",
         translation_key="doorbell_text",
-        icon="mdi:card-text",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_required_field="feature_flags.has_lcd_screen",
         ufp_value="lcd_message.text",
@@ -268,7 +261,6 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ProtectSensorEntityDescription(
         key="chime_type",
         translation_key="chime_type",
-        icon="mdi:bell",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         ufp_required_field="feature_flags.has_chime",
@@ -366,7 +358,6 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ProtectSensorEntityDescription(
         key="sensitivity",
         translation_key="sensitivity",
-        icon="mdi:walk",
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value="motion_settings.sensitivity",
@@ -375,7 +366,6 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ProtectSensorEntityDescription(
         key="mount_type",
         translation_key="mount_type",
-        icon="mdi:screwdriver",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value="mount_type",
         ufp_perm=PermRequired.NO_WRITE,
@@ -383,7 +373,6 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ProtectSensorEntityDescription(
         key="paired_camera",
         translation_key="paired_camera",
-        icon="mdi:cctv",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value="camera.display_name",
         ufp_perm=PermRequired.NO_WRITE,
@@ -402,7 +391,6 @@ DOORLOCK_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ProtectSensorEntityDescription(
         key="paired_camera",
         translation_key="paired_camera",
-        icon="mdi:cctv",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value="camera.display_name",
         ufp_perm=PermRequired.NO_WRITE,
@@ -413,7 +401,6 @@ NVR_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ProtectSensorEntityDescription(
         key="uptime",
         translation_key="uptime",
-        icon="mdi:clock",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value_fn=_get_uptime,
@@ -422,7 +409,6 @@ NVR_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         key="storage_utilization",
         translation_key="storage_utilization",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:harddisk",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         ufp_value="storage_stats.utilization",
@@ -432,7 +418,6 @@ NVR_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         key="record_rotating",
         translation_key="type_timelapse_video",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:server",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         ufp_value="storage_stats.storage_distribution.timelapse_recordings.percentage",
@@ -442,7 +427,6 @@ NVR_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         key="record_timelapse",
         translation_key="type_continuous_video",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:server",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         ufp_value="storage_stats.storage_distribution.continuous_recordings.percentage",
@@ -452,7 +436,6 @@ NVR_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         key="record_detections",
         translation_key="type_detections_video",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:server",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         ufp_value="storage_stats.storage_distribution.detections_recordings.percentage",
@@ -462,7 +445,6 @@ NVR_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         key="resolution_HD",
         translation_key="resolution_hd_video",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:cctv",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         ufp_value="storage_stats.storage_distribution.hd_usage.percentage",
@@ -472,7 +454,6 @@ NVR_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         key="resolution_4K",
         translation_key="resolution_4k_video",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:cctv",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         ufp_value="storage_stats.storage_distribution.uhd_usage.percentage",
@@ -482,7 +463,6 @@ NVR_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         key="resolution_free",
         translation_key="resolution_free_space",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:cctv",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         ufp_value="storage_stats.storage_distribution.free.percentage",
@@ -492,7 +472,6 @@ NVR_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         key="record_capacity",
         translation_key="recording_capacity",
         native_unit_of_measurement=UnitOfTime.SECONDS,
-        icon="mdi:record-rec",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         ufp_value_fn=_get_nvr_recording_capacity,
@@ -504,7 +483,6 @@ NVR_DISABLED_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         key="cpu_utilization",
         translation_key="cpu_utilization",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:speedometer",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
@@ -524,7 +502,6 @@ NVR_DISABLED_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         key="memory_utilization",
         translation_key="memory_utilization",
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:memory",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
@@ -532,18 +509,6 @@ NVR_DISABLED_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         precision=2,
     ),
 )
-
-LICENSE_PLATE_EVENT_SENSORS: tuple[ProtectSensorEventEntityDescription, ...] = (
-    ProtectSensorEventEntityDescription(
-        key="smart_obj_licenseplate",
-        icon="mdi:car",
-        translation_key="license_plate_detected",
-        ufp_obj_type=SmartDetectObjectType.LICENSE_PLATE,
-        ufp_required_field="can_detect_license_plate",
-        ufp_event_obj="last_license_plate_detect_event",
-    ),
-)
-
 
 LIGHT_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ProtectSensorEntityDescription(
@@ -556,7 +521,6 @@ LIGHT_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ProtectSensorEntityDescription(
         key="sensitivity",
         translation_key="motion_sensitivity",
-        icon="mdi:walk",
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value="light_device_settings.pir_sensitivity",
@@ -565,7 +529,6 @@ LIGHT_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ProtectSensorEntityDescription[Light](
         key="light_motion",
         translation_key="light_mode",
-        icon="mdi:spotlight",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value_fn=async_get_light_motion_current,
         ufp_perm=PermRequired.NO_WRITE,
@@ -573,7 +536,6 @@ LIGHT_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ProtectSensorEntityDescription(
         key="paired_camera",
         translation_key="paired_camera",
-        icon="mdi:cctv",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value="camera.display_name",
         ufp_perm=PermRequired.NO_WRITE,
@@ -595,13 +557,11 @@ CHIME_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         key="last_ring",
         translation_key="last_ring",
         device_class=SensorDeviceClass.TIMESTAMP,
-        icon="mdi:bell",
         ufp_value="last_ring",
     ),
     ProtectSensorEntityDescription(
         key="volume",
         translation_key="volume",
-        icon="mdi:speaker",
         native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value="volume",
@@ -613,7 +573,6 @@ VIEWER_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ProtectSensorEntityDescription(
         key="viewer",
         translation_key="liveview",
-        icon="mdi:view-dashboard",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value="liveview.name",
         ufp_perm=PermRequired.NO_WRITE,
@@ -680,20 +639,6 @@ def _async_event_entities(
                 camera.display_name,
             )
 
-        if not camera.feature_flags.has_smart_detect:
-            continue
-
-        for event_desc in LICENSE_PLATE_EVENT_SENSORS:
-            if not event_desc.has_required(camera):
-                continue
-
-            entities.append(ProtectLicensePlateEventSensor(data, camera, event_desc))
-            _LOGGER.debug(
-                "Adding sensor entity %s for %s",
-                description.name,
-                camera.display_name,
-            )
-
     return entities
 
 
@@ -738,40 +683,3 @@ class ProtectEventSensor(EventEntityMixin, SensorEntity):
         "_attr_native_value",
         "_attr_extra_state_attributes",
     )
-
-
-class ProtectLicensePlateEventSensor(ProtectEventSensor):
-    """A UniFi Protect license plate sensor."""
-
-    device: Camera
-
-    @callback
-    def _set_event_done(self) -> None:
-        self._attr_native_value = OBJECT_TYPE_NONE
-        self._attr_extra_state_attributes = {}
-
-    @callback
-    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
-        description = self.entity_description
-
-        prev_event = self._event
-        prev_event_end = self._event_end
-        super()._async_update_device_from_protect(device)
-        if event := description.get_event_obj(device):
-            self._event = event
-            self._event_end = event.end
-
-        if not (
-            event
-            and (metadata := event.metadata)
-            and (license_plate := metadata.license_plate)
-            and description.has_matching_smart(event)
-            and not self._event_already_ended(prev_event, prev_event_end)
-        ):
-            self._set_event_done()
-            return
-
-        self._attr_native_value = license_plate.name
-        self._set_event_attrs(event)
-        if event.end:
-            self._async_event_with_immediate_end()

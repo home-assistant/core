@@ -23,6 +23,8 @@ from homeassistant.components.homeassistant_hardware.util import (
     FirmwareInfo,
     OwningAddon,
     OwningIntegration,
+    ResetTarget,
+    async_firmware_flashing_context,
     async_flash_silabs_firmware,
     get_otbr_addon_firmware_info,
     guess_firmware_info,
@@ -502,7 +504,14 @@ async def test_probe_silabs_firmware_info(
         "homeassistant.components.homeassistant_hardware.util.Flasher",
         return_value=mock_flasher,
     ):
-        result = await probe_silabs_firmware_info("/dev/ttyUSB0")
+        result = await probe_silabs_firmware_info(
+            "/dev/ttyUSB0",
+            bootloader_reset_methods=[ResetTarget.RTS_DTR],
+            application_probe_methods=[
+                (ApplicationType.EZSP, 460800),
+                (ApplicationType.SPINEL, 460800),
+            ],
+        )
         assert result == expected_fw_info
 
 
@@ -531,7 +540,14 @@ async def test_probe_silabs_firmware_type(
         autospec=True,
         return_value=probe_result,
     ):
-        result = await probe_silabs_firmware_type("/dev/ttyUSB0")
+        result = await probe_silabs_firmware_type(
+            "/dev/ttyUSB0",
+            bootloader_reset_methods=[ResetTarget.RTS_DTR],
+            application_probe_methods=[
+                (ApplicationType.EZSP, 460800),
+                (ApplicationType.SPINEL, 460800),
+            ],
+        )
         assert result == expected
 
 
@@ -591,21 +607,30 @@ async def test_async_flash_silabs_firmware(hass: HomeAssistant) -> None:
             return_value=expected_firmware_info,
         ),
     ):
-        after_flash_info = await async_flash_silabs_firmware(
-            hass=hass,
-            device="/dev/ttyUSB0",
-            fw_data=b"firmware contents",
-            expected_installed_firmware_type=ApplicationType.SPINEL,
-            bootloader_reset_methods=(),
-            progress_callback=progress_callback,
-        )
+        async with async_firmware_flashing_context(
+            hass, "/dev/ttyUSB0", "homeassistant_hardware"
+        ):
+            after_flash_info = await async_flash_silabs_firmware(
+                hass=hass,
+                device="/dev/ttyUSB0",
+                fw_data=b"firmware contents",
+                expected_installed_firmware_type=ApplicationType.SPINEL,
+                bootloader_reset_methods=[ResetTarget.RTS_DTR],
+                application_probe_methods=[
+                    (ApplicationType.EZSP, 460800),
+                    (ApplicationType.SPINEL, 460800),
+                ],
+                progress_callback=progress_callback,
+            )
 
     assert progress_callback.mock_calls == [call(0, 100), call(50, 100), call(100, 100)]
     assert after_flash_info == expected_firmware_info
 
     # Verify Flasher was called with correct bootloader_reset parameter
     assert flasher_mock.call_count == 1
-    assert flasher_mock.mock_calls[0].kwargs["bootloader_reset"] == ()
+    assert flasher_mock.mock_calls[0].kwargs["bootloader_reset"] == (
+        ResetTarget.RTS_DTR.as_flasher_reset_target(),
+    )
 
     # Both owning integrations/addons are stopped and restarted
     assert owner1.temporarily_stop.mock_calls == [
@@ -623,7 +648,44 @@ async def test_async_flash_silabs_firmware(hass: HomeAssistant) -> None:
     ]
 
 
-async def test_async_flash_silabs_firmware_flash_failure(hass: HomeAssistant) -> None:
+async def test_async_flash_silabs_firmware_expected_type_not_probed(
+    hass: HomeAssistant,
+) -> None:
+    """Test firmware flashing requires probing config to exist for firmware type."""
+    with pytest.raises(
+        ValueError,
+        match=(
+            r"Expected installed firmware type .*? not in application probe methods .*?"
+        ),
+    ):
+        await async_flash_silabs_firmware(
+            hass=hass,
+            device="/dev/ttyUSB0",
+            fw_data=b"firmware contents",
+            expected_installed_firmware_type=ApplicationType.SPINEL,
+            bootloader_reset_methods=[ResetTarget.RTS_DTR],
+            application_probe_methods=[
+                (ApplicationType.EZSP, 460800),
+            ],
+        )
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error_msg"),
+    [
+        (
+            RuntimeError("Failure!"),
+            "Failed to flash firmware",
+        ),
+        (
+            PermissionError("The serial port is locked by another application"),
+            "Failed to flash firmware: Device is used by another application",
+        ),
+    ],
+)
+async def test_async_flash_silabs_firmware_flash_failure(
+    hass: HomeAssistant, side_effect: Exception, expected_error_msg: str
+) -> None:
     """Test async_flash_silabs_firmware flash failure."""
     await async_setup_component(hass, "homeassistant_hardware", {})
 
@@ -632,7 +694,7 @@ async def test_async_flash_silabs_firmware_flash_failure(hass: HomeAssistant) ->
 
     mock_flasher = Mock()
     mock_flasher.enter_bootloader = AsyncMock()
-    mock_flasher.flash_firmware = AsyncMock(side_effect=RuntimeError("Failure!"))
+    mock_flasher.flash_firmware = AsyncMock(side_effect=side_effect)
 
     with (
         patch(
@@ -652,15 +714,22 @@ async def test_async_flash_silabs_firmware_flash_failure(hass: HomeAssistant) ->
         patch(
             "homeassistant.components.homeassistant_hardware.util.parse_firmware_image"
         ),
-        pytest.raises(HomeAssistantError, match="Failed to flash firmware") as exc,
+        pytest.raises(HomeAssistantError, match=expected_error_msg) as exc,
     ):
-        await async_flash_silabs_firmware(
-            hass=hass,
-            device="/dev/ttyUSB0",
-            fw_data=b"firmware contents",
-            expected_installed_firmware_type=ApplicationType.SPINEL,
-            bootloader_reset_methods=(),
-        )
+        async with async_firmware_flashing_context(
+            hass, "/dev/ttyUSB0", "homeassistant_hardware"
+        ):
+            await async_flash_silabs_firmware(
+                hass=hass,
+                device="/dev/ttyUSB0",
+                fw_data=b"firmware contents",
+                expected_installed_firmware_type=ApplicationType.SPINEL,
+                bootloader_reset_methods=[ResetTarget.RTS_DTR],
+                application_probe_methods=[
+                    (ApplicationType.EZSP, 460800),
+                    (ApplicationType.SPINEL, 460800),
+                ],
+            )
 
     # Both owning integrations/addons are stopped and restarted
     assert owner1.temporarily_stop.mock_calls == [
@@ -712,26 +781,33 @@ async def test_async_flash_silabs_firmware_probe_failure(hass: HomeAssistant) ->
         ),
         pytest.raises(
             HomeAssistantError, match="Failed to probe the firmware after flashing"
-        ),
+        ) as exc,
     ):
-        await async_flash_silabs_firmware(
-            hass=hass,
-            device="/dev/ttyUSB0",
-            fw_data=b"firmware contents",
-            expected_installed_firmware_type=ApplicationType.SPINEL,
-            bootloader_reset_methods=(),
-        )
+        async with async_firmware_flashing_context(
+            hass, "/dev/ttyUSB0", "homeassistant_hardware"
+        ):
+            await async_flash_silabs_firmware(
+                hass=hass,
+                device="/dev/ttyUSB0",
+                fw_data=b"firmware contents",
+                expected_installed_firmware_type=ApplicationType.SPINEL,
+                bootloader_reset_methods=[ResetTarget.RTS_DTR],
+                application_probe_methods=[
+                    (ApplicationType.EZSP, 460800),
+                    (ApplicationType.SPINEL, 460800),
+                ],
+            )
 
     # Both owning integrations/addons are stopped and restarted
     assert owner1.temporarily_stop.mock_calls == [
         call(hass),
         # pylint: disable-next=unnecessary-dunder-call
         call().__aenter__(ANY),
-        call().__aexit__(ANY, None, None, None),
+        call().__aexit__(ANY, HomeAssistantError, exc.value, ANY),
     ]
     assert owner2.temporarily_stop.mock_calls == [
         call(hass),
         # pylint: disable-next=unnecessary-dunder-call
         call().__aenter__(ANY),
-        call().__aexit__(ANY, None, None, None),
+        call().__aexit__(ANY, HomeAssistantError, exc.value, ANY),
     ]

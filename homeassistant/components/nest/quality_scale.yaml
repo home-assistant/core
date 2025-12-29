@@ -1,8 +1,6 @@
 rules:
   # Bronze
-  config-flow:
-    status: todo
-    comment: Some fields are missing a data_description
+  config-flow: done
   brands: done
   dependency-transparency: done
   common-modules:
@@ -25,20 +23,9 @@ rules:
   entity-unique-id: done
   docs-installation-instructions: done
   docs-removal-instructions: todo
-  test-before-setup:
-    status: todo
-    comment: |
-      The integration does tests on setup, however the most common issues
-      observed are related to ipv6 misconfigurations and the error messages
-      are not self explanatory and can be improved.
+  test-before-setup: done
   docs-high-level-description: done
-  config-flow-test-coverage:
-    status: todo
-    comment: |
-      The integration has full test coverage however it does not yet assert the specific contents of the
-      unique id of the created entry. Additional tests coverage for combinations of features like
-      `test_dhcp_discovery_with_creds` would also be useful.
-      Tests can be improved so that all end in either CREATE_ENTRY or ABORT.
+  config-flow-test-coverage: done
   docs-actions: done
   runtime-data: done
 
@@ -66,16 +53,16 @@ rules:
   entity-disabled-by-default: todo
   discovery: todo
   exception-translations: todo
-  devices: todo
+  devices: done
   docs-supported-devices: todo
   icon-translations: todo
   docs-known-limitations: todo
-  stale-devices: todo
+  stale-devices: done
   docs-supported-functions: todo
   repair-issues: todo
   reconfiguration-flow: todo
   entity-category: todo
-  dynamic-devices: todo
+  dynamic-devices: done
   docs-troubleshooting: todo
   diagnostics: todo
   docs-use-cases: todo

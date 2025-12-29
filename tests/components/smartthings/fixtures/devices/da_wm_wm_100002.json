@@ -1,0 +1,122 @@
+{
+  "items": [
+    {
+      "deviceId": "C097276D-C8D4-0000-0000-000000000000",
+      "name": "Washer",
+      "label": "Washer",
+      "manufacturerName": "Samsung Electronics",
+      "presentationId": "DA-WM-WM-100002",
+      "deviceManufacturerCode": "Samsung Electronics",
+      "locationId": "600f7b9a-81f4-469a-bd36-b516160bc114",
+      "ownerId": "506a8ee1-c1cb-d9f2-77fa-e50b13541832",
+      "roomId": "7af56bf7-532c-45c5-8c51-2ed1cd7ac267",
+      "deviceTypeName": "Samsung OCF Washer",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "ocf",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            },
+            {
+              "id": "switch",
+              "version": 1
+            },
+            {
+              "id": "remoteControlStatus",
+              "version": 1
+            },
+            {
+              "id": "washerOperatingState",
+              "version": 1
+            },
+            {
+              "id": "samsungce.driverVersion",
+              "version": 1
+            },
+            {
+              "id": "samsungce.washerOperatingState",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Washer",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        },
+        {
+          "id": "sub",
+          "label": "sub",
+          "capabilities": [
+            {
+              "id": "ocf",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            },
+            {
+              "id": "switch",
+              "version": 1
+            },
+            {
+              "id": "remoteControlStatus",
+              "version": 1
+            },
+            {
+              "id": "washerOperatingState",
+              "version": 1
+            },
+            {
+              "id": "samsungce.driverVersion",
+              "version": 1
+            },
+            {
+              "id": "samsungce.washerOperatingState",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Other",
+              "categoryType": "manufacturer"
+            }
+          ],
+          "optional": false
+        }
+      ],
+      "createTime": "2025-11-14T02:27:38.701Z",
+      "profile": {
+        "id": "b238b509-7dac-3117-b872-5e30b1efdd34"
+      },
+      "ocf": {
+        "ocfDeviceType": "oic.d.washer",
+        "name": "Washer",
+        "specVersion": "core.1.1.0",
+        "verticalDomainSpecVersion": "res.1.1.0,sh.1.1.0",
+        "manufacturerName": "Samsung Electronics",
+        "modelNumber": "TP6X_WV60M9900AV|20198041|20020001001111060100000000000000",
+        "vendorId": "DA-WM-WM-100002",
+        "lastSignupTime": "2025-11-14T02:27:38.459592109Z",
+        "transferCandidate": false,
+        "additionalAuthCodeRequired": false
+      },
+      "type": "OCF",
+      "restrictionTier": 0,
+      "allowed": null,
+      "executionContext": "CLOUD",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}
