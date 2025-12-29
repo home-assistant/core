@@ -374,9 +374,6 @@ aiorussound==4.9.0
 # homeassistant.components.ruuvi_gateway
 aioruuvigateway==0.1.0
 
-# homeassistant.components.senz
-aiosenz==1.0.0
-
 # homeassistant.components.shelly
 aioshelly==13.22.0
 
@@ -540,7 +537,7 @@ automower-ble==0.2.8
 av==16.0.1
 
 # homeassistant.components.axis
-axis==65
+axis==66
 
 # homeassistant.components.fujitsu_fglair
 ayla-iot-unofficial==1.4.7
@@ -1122,7 +1119,7 @@ influxdb==5.3.1
 inkbird-ble==1.1.1
 
 # homeassistant.components.insteon
-insteon-frontend-home-assistant==0.5.0
+insteon-frontend-home-assistant==0.6.0
 
 # homeassistant.components.intellifire
 intellifire4py==4.2.1
@@ -1538,7 +1535,7 @@ py-improv-ble-client==1.0.3
 py-madvr2==1.6.40
 
 # homeassistant.components.melissa
-py-melissa-climate==3.0.2
+py-melissa-climate==3.0.3
 
 # homeassistant.components.nextbus
 py-nextbusnext==2.3.0
@@ -1991,6 +1988,9 @@ pyschlage==2025.9.0
 # homeassistant.components.sensibo
 pysensibo==1.2.1
 
+# homeassistant.components.senz
+pysenz==1.0.2
+
 # homeassistant.components.acer_projector
 # homeassistant.components.crownstone
 # homeassistant.components.route_b_smart_meter
@@ -2138,7 +2138,7 @@ python-pooldose==0.7.8
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==3.19.0
+python-roborock==3.21.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.45
@@ -2538,7 +2538,7 @@ typedmonarchmoney==0.4.4
 uasiren==0.0.1
 
 # homeassistant.components.unifiprotect
-uiprotect==7.33.2
+uiprotect==7.33.3
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.5.7
@@ -2576,7 +2576,7 @@ vegehub==0.1.26
 vehicle==2.2.2
 
 # homeassistant.components.velbus
-velbus-aio==2025.11.0
+velbus-aio==2025.12.0
 
 # homeassistant.components.venstar
 venstarcolortouch==0.21
@@ -2670,7 +2670,7 @@ yalesmartalarmclient==0.4.3
 # homeassistant.components.august
 # homeassistant.components.yale
 # homeassistant.components.yalexs_ble
-yalexs-ble==3.2.1
+yalexs-ble==3.2.4
 
 # homeassistant.components.august
 # homeassistant.components.yale
