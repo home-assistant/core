@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock
 
+from fishaudio import FishAudioError, ServerError
 import pytest
 
 from homeassistant.config_entries import ConfigEntryState
@@ -32,20 +33,20 @@ async def test_setup(
 
 
 @pytest.mark.parametrize(
-    "fixture",
+    "exception",
     [
-        "mock_fishaudio_client_connection_error",
-        "mock_fishaudio_client_server_error",
+        FishAudioError("Connection error"),
+        ServerError(500, "Connection error"),
     ],
 )
 async def test_setup_retry_on_error(
     hass: HomeAssistant,
-    request: pytest.FixtureRequest,
+    mock_fishaudio_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    fixture: str,
+    exception: Exception,
 ) -> None:
     """Test entry setup with API errors that should trigger retry."""
-    request.getfixturevalue(fixture)
+    mock_fishaudio_client.account.get_credits.side_effect = exception
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()

@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
+from fishaudio.resources import AsyncAccountClient, AsyncTTSClient, AsyncVoicesClient
 import pytest
 
 from homeassistant.components.fish_audio.const import (
@@ -76,25 +77,21 @@ def mock_config_entry(
 @pytest.fixture
 def mock_fishaudio_client() -> Generator[AsyncMock]:
     """Mock AsyncFishAudio client."""
-    client_mock = AsyncMock()
-
-    # Mock account.get_credits()
-    client_mock.account.get_credits.return_value = MOCK_CREDITS
-
-    # Mock voices.list()
-    client_mock.voices.list.return_value = AsyncMock(items=MOCK_VOICES)
-
-    # Mock tts.convert()
-    client_mock.tts.convert.return_value = b"fake_audio_data"
-
     with (
         patch(
             "homeassistant.components.fish_audio.AsyncFishAudio",
-            return_value=client_mock,
-        ),
+            autospec=True,
+        ) as client_mock,
         patch(
             "homeassistant.components.fish_audio.config_flow.AsyncFishAudio",
-            return_value=client_mock,
+            new=client_mock,
         ),
     ):
-        yield client_mock
+        client = client_mock.return_value
+        client.account = AsyncMock(spec=AsyncAccountClient)
+        client.account.get_credits.return_value = MOCK_CREDITS
+        client.voices = AsyncMock(spec=AsyncVoicesClient)
+        client.voices.list.return_value = AsyncMock(items=MOCK_VOICES)
+        client.tts = AsyncMock(spec=AsyncTTSClient)
+        client.tts.convert.return_value = b"fake_audio_data"
+        yield client

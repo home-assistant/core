@@ -132,7 +132,6 @@ async def test_subflow_happy_path(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
-    # Step 1: Filter
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         user_input={
@@ -143,14 +142,9 @@ async def test_subflow_happy_path(
         },
     )
 
-    # Debug: check what we got
-    if result["type"] is FlowResultType.ABORT:
-        raise AssertionError(f"Flow aborted with reason: {result.get('reason')}")
-
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "model"
 
-    # Step 2: Model selection
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         user_input={
@@ -231,9 +225,7 @@ async def test_subflow_reconfigure(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    # Get the existing subentry from the config entry
-    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
-    subentry = list(entry.subentries.values())[0]
+    subentry = list(mock_config_entry.subentries.values())[0]
 
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, "tts"),
@@ -281,10 +273,9 @@ async def test_subflow_reconfigure_already_configured(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     # Try to reconfigure the first subentry to match the second one (which already exists)
-    entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
-    first_subentry = [s for s in entry.subentries.values() if s.title == "Test Voice"][
-        0
-    ]
+    first_subentry = [
+        s for s in mock_config_entry.subentries.values() if s.title == "Test Voice"
+    ][0]
 
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, "tts"),
