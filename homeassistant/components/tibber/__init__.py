@@ -81,7 +81,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TibberConfigEntry) -> bo
     """Set up a config entry."""
 
     # Added in 2026.1 to migrate existing users to OAuth2 (Tibber Data API).
-    # Can be removed after 2026.5
+    # Can be removed after 2026.7
     if AUTH_IMPLEMENTATION not in entry.data:
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
