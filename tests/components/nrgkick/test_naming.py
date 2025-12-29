@@ -139,8 +139,6 @@ async def test_entity_id_uses_english_key(
         ("sensor", f"{serial}_total_active_power", "total_active_power"),
         ("sensor", f"{serial}_housing_temperature", "housing_temperature"),
         ("sensor", f"{serial}_status", "status"),
-        ("number", f"{serial}_current_set", "current_set"),
-        ("switch", f"{serial}_charge_pause", "charge_pause"),
     ]
 
     for domain, unique_id, expected_key in test_cases:

@@ -67,28 +67,6 @@
     }
   },
   "entity": {
-    "binary_sensor": {
-      "charge_pause": {
-        "name": "Charge pause"
-      },
-      "charge_permitted": {
-        "name": "Charge permitted"
-      },
-      "charging": {
-        "name": "Charging"
-      }
-    },
-    "number": {
-      "current_set": {
-        "name": "Charging current"
-      },
-      "energy_limit": {
-        "name": "Energy limit"
-      },
-      "phase_count": {
-        "name": "Phase count"
-      }
-    },
     "sensor": {
       "cellular_mode": {
         "name": "Cellular mode",

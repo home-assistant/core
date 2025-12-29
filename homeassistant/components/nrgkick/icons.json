@@ -1,27 +1,5 @@
 {
   "entity": {
-    "binary_sensor": {
-      "charge_pause": {
-        "default": "mdi:pause-circle"
-      },
-      "charge_permitted": {
-        "default": "mdi:check-circle"
-      },
-      "charging": {
-        "default": "mdi:battery-charging"
-      }
-    },
-    "number": {
-      "current_set": {
-        "default": "mdi:current-ac"
-      },
-      "energy_limit": {
-        "default": "mdi:battery-charging-100"
-      },
-      "phase_count": {
-        "default": "mdi:sine-wave"
-      }
-    },
     "sensor": {
       "charge_count": {
         "default": "mdi:counter"
@@ -136,11 +114,6 @@
       },
       "warning_code": {
         "default": "mdi:alert"
-      }
-    },
-    "switch": {
-      "charge_pause": {
-        "default": "mdi:pause"
       }
     }
   }
