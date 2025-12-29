@@ -4,6 +4,7 @@ import asyncio
 from collections.abc import Iterable
 from datetime import timedelta
 import logging
+import types
 from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
@@ -40,6 +41,7 @@ from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
+from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
@@ -1610,6 +1612,32 @@ async def test_platform_with_no_setup(
     }
 
 
+async def test_platform_with_no_setup_custom_component_hint(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test setting up a custom integration platform without setup logs extra warning."""
+    platform_mod = types.ModuleType("custom_components.mock_integration.mock_platform")
+    platform_mod.__file__ = (
+        "/config/custom_components/mock_integration/mock_platform.py"
+    )
+
+    entity_platform = MockEntityPlatform(
+        hass,
+        domain="mock-integration",
+        platform_name="mock-platform",
+        platform=platform_mod,
+    )
+
+    await entity_platform.async_setup(None)
+
+    assert (
+        "The mock-platform platform module for the mock-integration custom integration "
+        "does not implement async_setup_platform or setup_platform." in caplog.text
+    )
+
+
 async def test_platforms_sharing_services(hass: HomeAssistant) -> None:
     """Test platforms share services."""
     entity_platform1 = MockEntityPlatform(
@@ -1639,10 +1667,20 @@ async def test_platforms_sharing_services(hass: HomeAssistant) -> None:
     def handle_service(entity, data):
         entities.append(entity)
 
-    entity_platform1.async_register_entity_service("hello", {}, handle_service)
-    entity_platform2.async_register_entity_service(
-        "hello", {}, Mock(side_effect=AssertionError("Should not be called"))
+    entity_platform1.async_register_entity_service(
+        "hello", {}, handle_service, description_placeholders={"drink": "beer"}
     )
+    entity_platform2.async_register_entity_service(
+        "hello",
+        {},
+        Mock(side_effect=AssertionError("Should not be called")),
+        description_placeholders={"drink": "milk"},
+    )
+
+    descriptions = await async_get_all_descriptions(hass)
+    assert descriptions["mock_platform"]["hello"]["description_placeholders"] == {
+        "drink": "beer"
+    }
 
     await hass.services.async_call(
         "mock_platform", "hello", {"entity_id": "all"}, blocking=True
@@ -1878,13 +1916,12 @@ async def test_register_entity_service_none_schema(
 
 
 async def test_register_entity_service_non_entity_service_schema(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
 ) -> None:
     """Test attempting to register a service with a non entity service schema."""
     entity_platform = MockEntityPlatform(
         hass, domain="mock_integration", platform_name="mock_platform", platform=None
     )
-    expected_message = "registers an entity service with a non entity service schema"
 
     for idx, schema in enumerate(
         (
@@ -1893,9 +1930,14 @@ async def test_register_entity_service_non_entity_service_schema(
             vol.Any(vol.Schema({"some": str})),
         )
     ):
-        entity_platform.async_register_entity_service(f"hello_{idx}", schema, Mock())
-        assert expected_message in caplog.text
-        caplog.clear()
+        expected_message = (
+            f"The mock_platform.hello_{idx} service registers "
+            "an entity service with a non entity service schema"
+        )
+        with pytest.raises(HomeAssistantError, match=expected_message):
+            entity_platform.async_register_entity_service(
+                f"hello_{idx}", schema, Mock()
+            )
 
     for idx, schema in enumerate(
         (
@@ -1907,7 +1949,6 @@ async def test_register_entity_service_non_entity_service_schema(
         entity_platform.async_register_entity_service(
             f"test_service_{idx}", schema, Mock()
         )
-        assert expected_message not in caplog.text
 
 
 @pytest.mark.parametrize("update_before_add", [True, False])
@@ -2447,3 +2488,56 @@ async def test_add_entity_unknown_subentry(
         "Can't add entities to unknown subentry unknown-subentry "
         "of config entry super-mock-id"
     ) in caplog.text
+
+
+@pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])
+@pytest.mark.usefixtures("mock_integration_frame")
+@pytest.mark.parametrize(
+    "deprecated_attribute",
+    [
+        "component_translations",
+        "platform_translations",
+        "object_id_component_translations",
+        "object_id_platform_translations",
+        "default_language_platform_translations",
+    ],
+)
+async def test_deprecated_attributes(
+    hass: HomeAssistant,
+    deprecated_attribute: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test setting the device name based on input info."""
+
+    platform = MockPlatform()
+    entity_platform = MockEntityPlatform(hass, platform_name="test", platform=platform)
+
+    assert getattr(entity_platform, deprecated_attribute) is getattr(
+        entity_platform.platform_data, deprecated_attribute
+    )
+    assert (
+        f"The deprecated function {deprecated_attribute} was called from "
+        "my_integration. It will be removed in HA Core 2026.8. Use platform_data."
+        f"{deprecated_attribute} instead, please report it to the author of the "
+        "'my_integration' custom integration" in caplog.text
+    )
+
+
+@pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_deprecated_async_load_translations(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test setting the device name based on input info."""
+
+    platform = MockPlatform()
+    entity_platform = MockEntityPlatform(hass, platform_name="test", platform=platform)
+
+    await entity_platform.async_load_translations()
+    assert (
+        "The deprecated function async_load_translations was called from "
+        "my_integration. It will be removed in HA Core 2026.8. Use platform_data."
+        "async_load_translations instead, please report it to the author of the "
+        "'my_integration' custom integration" in caplog.text
+    )

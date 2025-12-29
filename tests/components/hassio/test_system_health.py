@@ -55,6 +55,10 @@ async def test_hassio_system_health(
     hass.data["hassio_network_info"] = {
         "host_internet": True,
         "supervisor_internet": True,
+        "interfaces": [
+            {"primary": False, "ipv4": {"nameservers": ["9.9.9.9"]}},
+            {"primary": True, "ipv4": {"nameservers": ["1.1.1.1"]}},
+        ],
     }
 
     with patch.dict(os.environ, MOCK_ENVIRON):
@@ -76,6 +80,7 @@ async def test_hassio_system_health(
         "host_os": "Home Assistant OS 5.9",
         "installed_addons": "Awesome Addon (1.0.0)",
         "ntp_synchronized": True,
+        "nameservers": "1.1.1.1",
         "supervisor_api": "ok",
         "supervisor_version": "supervisor-2020.11.1",
         "supported": True,

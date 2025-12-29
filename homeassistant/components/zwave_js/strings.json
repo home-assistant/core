@@ -4,7 +4,7 @@
       "addon_get_discovery_info_failed": "Failed to get Z-Wave add-on discovery info.",
       "addon_info_failed": "Failed to get Z-Wave add-on info.",
       "addon_install_failed": "Failed to install the Z-Wave add-on.",
-      "addon_required": "The Z-Wave migration flow requires the integration to be configured using the Z-Wave Supervisor add-on. You can still use the Backup and Restore buttons to migrate your network manually.",
+      "addon_required": "The Z-Wave migration flow requires the integration to be configured using the Z-Wave Supervisor add-on. If you are using Z-Wave JS UI, please follow our [migration instructions]({zwave_js_ui_migration}).",
       "addon_set_config_failed": "Failed to set Z-Wave configuration.",
       "addon_start_failed": "Failed to start the Z-Wave add-on.",
       "addon_stop_failed": "Failed to stop the Z-Wave add-on.",
@@ -14,13 +14,14 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "config_entry_not_loaded": "The Z-Wave configuration entry is not loaded. Please try again when the configuration entry is loaded.",
       "different_device": "The connected USB device is not the same as previously configured for this config entry. Please instead create a new config entry for the new device.",
-      "discovery_requires_supervisor": "Discovery requires the supervisor.",
-      "migration_low_sdk_version": "The SDK version of the old controller is lower than {ok_sdk_version}. This means it's not possible to migrate the Non Volatile Memory (NVM) of the old controller to another controller.\n\nCheck the documentation on the manufacturer support pages of the old controller, if it's possible to upgrade the firmware of the old controller to a version that is build with SDK version {ok_sdk_version} or higher.",
+      "discovery_requires_supervisor": "Discovery requires the Home Assistant Supervisor.",
+      "migration_low_sdk_version": "The SDK version of the old adapter is lower than {ok_sdk_version}. This means it's not possible to migrate the non-volatile memory (NVM) of the old adapter to another adapter.\n\nCheck the documentation on the manufacturer support pages of the old adapter, if it's possible to upgrade the firmware of the old adapter to a version that is built with SDK version {ok_sdk_version} or higher.",
       "migration_successful": "Migration successful.",
+      "not_hassio": "ESPHome discovery requires Home Assistant to configure the Z-Wave add-on.",
       "not_zwave_device": "Discovered device is not a Z-Wave device.",
       "not_zwave_js_addon": "Discovered add-on is not the official Z-Wave add-on.",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
-      "reset_failed": "Failed to reset controller.",
+      "reset_failed": "Failed to reset adapter.",
       "usb_ports_failed": "Failed to get USB devices."
     },
     "error": {
@@ -31,39 +32,56 @@
     },
     "flow_title": "{name}",
     "progress": {
-      "install_addon": "Installation can take several minutes.",
-      "start_addon": "Starting add-on.",
-      "backup_nvm": "Please wait while the network backup completes.",
-      "restore_nvm": "Please wait while the network restore completes."
+      "backup_nvm": "Please wait while the network backup completes",
+      "install_addon": "Installation can take several minutes",
+      "restore_nvm": "Please wait while the network restore completes",
+      "start_addon": "Starting add-on"
     },
     "step": {
+      "choose_serial_port": {
+        "data": {
+          "socket_path": "[%key:component::zwave_js::config::step::configure_addon_user::data::socket_path%]",
+          "usb_path": "[%key:common::config_flow::data::usb_path%]"
+        },
+        "title": "Select your Z-Wave device"
+      },
+      "configure_addon_reconfigure": {
+        "data": {
+          "lr_s2_access_control_key": "[%key:component::zwave_js::config::step::configure_security_keys::data::lr_s2_access_control_key%]",
+          "lr_s2_authenticated_key": "[%key:component::zwave_js::config::step::configure_security_keys::data::lr_s2_authenticated_key%]",
+          "s0_legacy_key": "[%key:component::zwave_js::config::step::configure_security_keys::data::s0_legacy_key%]",
+          "s2_access_control_key": "[%key:component::zwave_js::config::step::configure_security_keys::data::s2_access_control_key%]",
+          "s2_authenticated_key": "[%key:component::zwave_js::config::step::configure_security_keys::data::s2_authenticated_key%]",
+          "s2_unauthenticated_key": "[%key:component::zwave_js::config::step::configure_security_keys::data::s2_unauthenticated_key%]",
+          "socket_path": "[%key:component::zwave_js::config::step::configure_addon_user::data::socket_path%]",
+          "usb_path": "[%key:common::config_flow::data::usb_path%]"
+        },
+        "description": "[%key:component::zwave_js::config::step::configure_addon_user::description%]",
+        "title": "[%key:component::zwave_js::config::step::configure_addon_user::title%]"
+      },
       "configure_addon_user": {
+        "data": {
+          "socket_path": "Socket device path",
+          "usb_path": "[%key:common::config_flow::data::usb_path%]"
+        },
+        "description": "Select your Z-Wave adapter",
+        "title": "Enter the Z-Wave add-on configuration"
+      },
+      "configure_security_keys": {
         "data": {
           "lr_s2_access_control_key": "Long Range S2 Access Control Key",
           "lr_s2_authenticated_key": "Long Range S2 Authenticated Key",
           "s0_legacy_key": "S0 Key (Legacy)",
           "s2_access_control_key": "S2 Access Control Key",
           "s2_authenticated_key": "S2 Authenticated Key",
-          "s2_unauthenticated_key": "S2 Unauthenticated Key",
-          "usb_path": "[%key:common::config_flow::data::usb_path%]"
+          "s2_unauthenticated_key": "S2 Unauthenticated Key"
         },
-        "description": "The add-on will generate security keys if those fields are left empty.",
-        "title": "Enter the Z-Wave add-on configuration"
+        "description": "Enter the security keys for your existing Z-Wave network",
+        "title": "Security keys"
       },
-      "configure_addon_reconfigure": {
-        "data": {
-          "emulate_hardware": "Emulate Hardware",
-          "log_level": "Log level",
-          "lr_s2_access_control_key": "[%key:component::zwave_js::config::step::configure_addon_user::data::lr_s2_access_control_key%]",
-          "lr_s2_authenticated_key": "[%key:component::zwave_js::config::step::configure_addon_user::data::lr_s2_authenticated_key%]",
-          "s0_legacy_key": "[%key:component::zwave_js::config::step::configure_addon_user::data::s0_legacy_key%]",
-          "s2_access_control_key": "[%key:component::zwave_js::config::step::configure_addon_user::data::s2_access_control_key%]",
-          "s2_authenticated_key": "[%key:component::zwave_js::config::step::configure_addon_user::data::s2_authenticated_key%]",
-          "s2_unauthenticated_key": "[%key:component::zwave_js::config::step::configure_addon_user::data::s2_unauthenticated_key%]",
-          "usb_path": "[%key:common::config_flow::data::usb_path%]"
-        },
-        "description": "[%key:component::zwave_js::config::step::configure_addon_user::description%]",
-        "title": "[%key:component::zwave_js::config::step::configure_addon_user::title%]"
+      "confirm_usb_migration": {
+        "description": "You are about to migrate your Z-Wave network from the old adapter to the new adapter {usb_title}. This will take a backup of the network from the old adapter and restore the network to the new adapter.\n\nPress Submit to continue with the migration.",
+        "title": "Migrate to a new adapter"
       },
       "hassio_confirm": {
         "description": "Do you want to set up the Z-Wave integration with the Z-Wave add-on?"
@@ -71,15 +89,41 @@
       "install_addon": {
         "title": "Installing add-on"
       },
+      "installation_type": {
+        "description": "In a few steps, we're going to set up your adapter. Home Assistant can automatically install and configure the recommended Z-Wave setup, or you can customize it.",
+        "menu_options": {
+          "intent_custom": "Custom installation",
+          "intent_recommended": "Recommended installation"
+        },
+        "title": "Set up Z-Wave"
+      },
+      "instruct_unplug": {
+        "description": "Backup saved to \"{file_path}\"\n\nYour old adapter has not been reset. You should now unplug it to prevent it from interfering with the new adapter.\n\nPlease make sure your new adapter is plugged in before continuing.",
+        "title": "Unplug your old adapter"
+      },
       "manual": {
         "data": {
           "url": "[%key:common::config_flow::data::url%]"
-        }
+        },
+        "data_description": {
+          "url": "The URL of the Z-Wave Server WebSocket API, e.g. {example_server_url}"
+        },
+        "description": "The Z-Wave integration requires a running Z-Wave Server. If you don't already have that set up, please read the [instructions]({server_instructions}) in our documentation.\n\nWhen you have a Z-Wave Server running, enter its URL below to allow the integration to connect."
       },
       "manual_reconfigure": {
         "data": {
           "url": "[%key:common::config_flow::data::url%]"
-        }
+        },
+        "data_description": {
+          "url": "[%key:component::zwave_js::config::step::manual::data_description::url%]"
+        },
+        "description": "[%key:component::zwave_js::config::step::manual::description%]"
+      },
+      "network_type": {
+        "data": {
+          "network_type": "Is your network new or does it already exist?"
+        },
+        "title": "Z-Wave network"
       },
       "on_supervisor": {
         "data": {
@@ -95,47 +139,39 @@
         "description": "[%key:component::zwave_js::config::step::on_supervisor::description%]",
         "title": "[%key:component::zwave_js::config::step::on_supervisor::title%]"
       },
+      "reconfigure": {
+        "description": "Are you migrating to a new adapter or re-configuring the current adapter?",
+        "menu_option_descriptions": {
+          "intent_migrate": "This will move your Z-Wave network to a new adapter.",
+          "intent_reconfigure": "This will let you change the adapter configuration."
+        },
+        "menu_options": {
+          "intent_migrate": "Migrate to a new adapter",
+          "intent_reconfigure": "Re-configure the current adapter"
+        },
+        "title": "Migrate or re-configure"
+      },
+      "restore_failed": {
+        "description": "Your Z-Wave network could not be restored to the new adapter. This means that your Z-Wave devices are not connected to Home Assistant.\n\nThe backup is saved to ”{file_path}”\n\n'<'a href=\"{file_url}\" download=\"{file_name}\"'>'Download backup file'<'/a'>'",
+        "submit": "Try again",
+        "title": "Restoring unsuccessful"
+      },
+      "rf_region": {
+        "data": {
+          "rf_region": "RF region"
+        },
+        "data_description": {
+          "rf_region": "The radio frequency region for your Z-Wave network. This must match the region of your Z-Wave devices."
+        },
+        "description": "Select the RF region for your Z-Wave network.",
+        "title": "Z-Wave region"
+      },
       "start_addon": {
         "title": "Configuring add-on"
       },
       "zeroconf_confirm": {
         "description": "Do you want to add the Z-Wave Server with home ID {home_id} found at {url} to Home Assistant?",
         "title": "Discovered Z-Wave Server"
-      },
-      "reconfigure": {
-        "title": "Migrate or re-configure",
-        "description": "Are you migrating to a new controller or re-configuring the current controller?",
-        "menu_options": {
-          "intent_migrate": "Migrate to a new controller",
-          "intent_reconfigure": "Re-configure the current controller"
-        }
-      },
-      "intent_migrate": {
-        "title": "[%key:component::zwave_js::config::step::reconfigure::menu_options::intent_migrate%]",
-        "description": "Before setting up your new controller, your old controller needs to be reset. A backup will be performed first.\n\nDo you wish to continue?"
-      },
-      "instruct_unplug": {
-        "title": "Unplug your old controller",
-        "description": "Backup saved to \"{file_path}\"\n\nYour old controller has been reset. If the hardware is no longer needed, you can now unplug it.\n\nPlease make sure your new controller is plugged in before continuing."
-      },
-      "restore_failed": {
-        "title": "Restoring unsuccessful",
-        "description": "Your Z-Wave network could not be restored to the new controller. This means that your Z-Wave devices are not connected to Home Assistant.\n\nThe backup is saved to ”{file_path}”\n\n'<'a href=\"{file_url}\" download=\"{file_name}\"'>'Download backup file'<'/a'>'",
-        "submit": "Try again"
-      },
-      "choose_serial_port": {
-        "data": {
-          "usb_path": "[%key:common::config_flow::data::usb_path%]"
-        },
-        "title": "Select your Z-Wave device"
-      },
-      "installation_type": {
-        "title": "Set up Z-Wave",
-        "description": "In a few steps, we’re going to set up your Home Assistant Connect ZWA-2. Home Assistant can automatically install and configure the recommended Z-Wave setup, or you can customize it.",
-        "menu_options": {
-          "intent_recommended": "Recommended installation",
-          "intent_custom": "Custom installation"
-        }
       }
     }
   },
@@ -153,16 +189,6 @@
       "config_parameter": "Config parameter {subtype} value",
       "node_status": "Node status",
       "value": "Current value of a Z-Wave Value"
-    },
-    "trigger_type": {
-      "event.notification.entry_control": "Sent an Entry Control notification",
-      "event.notification.notification": "Sent a notification",
-      "event.value_notification.basic": "Basic CC event on {subtype}",
-      "event.value_notification.central_scene": "Central Scene action on {subtype}",
-      "event.value_notification.scene_activation": "Scene Activation on {subtype}",
-      "state.node_status": "Node status changed",
-      "zwave_js.value_updated.config_parameter": "Value change on config parameter {subtype}",
-      "zwave_js.value_updated.value": "Value change on a Z-Wave Value"
     },
     "extra_fields": {
       "code_slot": "Code slot",
@@ -184,6 +210,16 @@
       "usercode": "Usercode",
       "value": "Value",
       "wait_for_result": "Wait for result"
+    },
+    "trigger_type": {
+      "event.notification.entry_control": "Sent an Entry Control notification",
+      "event.notification.notification": "Sent a notification",
+      "event.value_notification.basic": "Basic CC event on {subtype}",
+      "event.value_notification.central_scene": "Central Scene action on {subtype}",
+      "event.value_notification.scene_activation": "Scene Activation on {subtype}",
+      "state.node_status": "Node status changed",
+      "zwave_js.value_updated.config_parameter": "Value change on config parameter {subtype}",
+      "zwave_js.value_updated.value": "Value change on a Z-Wave Value"
     }
   },
   "entity": {
@@ -193,8 +229,8 @@
       }
     },
     "sensor": {
-      "average_background_rssi": {
-        "name": "Average background RSSI (channel {channel})"
+      "avg_signal_noise": {
+        "name": "Avg. signal noise (channel {channel})"
       },
       "can": {
         "name": "Collisions"
@@ -209,9 +245,6 @@
           "ready": "Ready",
           "unresponsive": "Unresponsive"
         }
-      },
-      "current_background_rssi": {
-        "name": "Current background RSSI (channel {channel})"
       },
       "last_seen": {
         "name": "Last seen"
@@ -232,11 +265,14 @@
           "unknown": "Unknown"
         }
       },
-      "rssi": {
-        "name": "RSSI"
-      },
       "rtt": {
         "name": "Round trip time"
+      },
+      "signal_noise": {
+        "name": "Signal noise (channel {channel})"
+      },
+      "signal_strength": {
+        "name": "Signal strength"
       },
       "successful_commands": {
         "name": "Successful commands ({direction})"
@@ -264,7 +300,7 @@
         },
         "step": {
           "init": {
-            "description": "The device configuration file for {device_name} has changed.\n\nZ-Wave discovers a lot of device metadata by interviewing the device. However, some of the information has to be loaded from a configuration file. Some of this information is only evaluated once, during the device interview.\n\nWhen a device config file is updated, this information may be stale and and the device must be re-interviewed to pick up the changes.\n\n This is not a required operation and device functionality will be impacted during the re-interview process, but you may see improvements for your device once it is complete.\n\nIf you decide to proceed with the re-interview, it will take place in the background.",
+            "description": "The device configuration file for {device_name} has changed.\n\nZ-Wave discovers a lot of device metadata by interviewing the device. However, some of the information has to be loaded from a configuration file. Some of this information is only evaluated once, during the device interview.\n\nWhen a device config file is updated, this information may be stale and the device must be re-interviewed to pick up the changes.\n\nThis is not a required operation and device functionality will be impacted during the re-interview process, but you may see improvements for your device once it is complete.\n\nIf you decide to proceed with the re-interview, it will take place in the background.\n\nNote: Battery-powered sleeping devices need to be woken up during re-interview for it to work. How to wake up the device is device-specific and is normally explained in the device manual.",
             "menu_options": {
               "confirm": "Re-interview device",
               "ignore": "Ignore device config update"
@@ -283,12 +319,20 @@
       "fix_flow": {
         "step": {
           "confirm": {
-            "description": "A Z-Wave controller of model {controller_model} with a different ID ({new_unique_id}) than the previously connected controller ({old_unique_id}) was connected to the {config_entry_title} configuration entry.\n\nReasons for a different controller ID could be:\n\n1. The controller was factory reset, with a 3rd party application.\n2. A controller Non Volatile Memory (NVM) backup was restored to the controller, with a 3rd party application.\n3. A different controller was connected to this configuration entry.\n\nIf a different controller was connected, you should instead set up a new configuration entry for the new controller.\n\nIf you are sure that the current controller is the correct controller you can confirm this by pressing Submit, and the configuration entry will remember the new controller ID.",
-            "title": "An unknown controller was detected"
+            "description": "A Z-Wave adapter of model {controller_model} was connected to the {config_entry_title} configuration entry. This adapter has a different ID ({new_unique_id}) than the previously connected adapter ({old_unique_id}).\n\nReasons for a different adapter ID could be:\n\n1. The adapter was factory reset using a 3rd party application.\n2. A backup of the adapter's non-volatile memory was restored to the adapter using a 3rd party application.\n3. A different adapter was connected to this configuration entry.\n\nIf a different adapter was connected, you should instead set up a new configuration entry for the new adapter.\n\nIf you are sure that the current adapter is the correct adapter, confirm by pressing Submit. The configuration entry will remember the new adapter ID.",
+            "title": "An unknown adapter was detected"
           }
         }
       },
-      "title": "An unknown controller was detected"
+      "title": "An unknown adapter was detected"
+    }
+  },
+  "selector": {
+    "network_type": {
+      "options": {
+        "existing": "It already exists",
+        "new": "It's new"
+      }
     }
   },
   "services": {
@@ -356,11 +400,11 @@
           "name": "Entity ID(s)"
         },
         "method_name": {
-          "description": "The name of the API method to call. Refer to the Z-Wave Command Class API documentation (https://zwave-js.github.io/node-zwave-js/#/api/CCs/index) for available methods.",
+          "description": "The name of the API method to call. Refer to the Z-Wave Command Class API documentation ({api_docs_url}) for available methods.",
           "name": "Method name"
         },
         "parameters": {
-          "description": "A list of parameters to pass to the API method. Refer to the Z-Wave Command Class API documentation (https://zwave-js.github.io/node-zwave-js/#/api/CCs/index) for parameters.",
+          "description": "A list of parameters to pass to the API method. Refer to the Z-Wave Command Class API documentation ({api_docs_url}) for parameters.",
           "name": "Parameters"
         }
       },
@@ -542,8 +586,8 @@
       "description": "Sets the configuration for a lock.",
       "fields": {
         "auto_relock_time": {
-          "description": "Duration in seconds until lock returns to secure state. Only enforced when operation type is `constant`.",
-          "name": "Auto relock time"
+          "description": "Duration in seconds until lock returns to locked state. Only enforced when operation type is `constant`.",
+          "name": "Autorelock time"
         },
         "block_to_block": {
           "description": "Whether the lock should run the motor until it hits resistance.",

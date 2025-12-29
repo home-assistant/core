@@ -1,9 +1,11 @@
 """The tests for the Prometheus exporter."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 import datetime
 from http import HTTPStatus
-from typing import Any, Self
+from typing import Any
 from unittest import mock
 
 from freezegun import freeze_time
@@ -30,6 +32,7 @@ from homeassistant.components import (
     sensor,
     switch,
     update,
+    water_heater,
 )
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.components.climate import (
@@ -54,6 +57,18 @@ from homeassistant.components.fan import (
 from homeassistant.components.humidifier import ATTR_AVAILABLE_MODES
 from homeassistant.components.lock import LockState
 from homeassistant.components.sensor import SensorDeviceClass
+
+# Alias water_heater constants to avoid name clashes with similarly named climate constants
+from homeassistant.components.water_heater import (
+    ATTR_AWAY_MODE as WATER_HEATER_ATTR_AWAY_MODE,
+    ATTR_CURRENT_TEMPERATURE as WATER_HEATER_ATTR_CURRENT_TEMPERATURE,
+    ATTR_MAX_TEMP as WATER_HEATER_ATTR_MAX_TEMP,
+    ATTR_MIN_TEMP as WATER_HEATER_ATTR_MIN_TEMP,
+    ATTR_OPERATION_LIST as WATER_HEATER_ATTR_OPERATION_LIST,
+    ATTR_OPERATION_MODE as WATER_HEATER_ATTR_OPERATION_MODE,
+    ATTR_TARGET_TEMP_HIGH as WATER_HEATER_ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW as WATER_HEATER_ATTR_TARGET_TEMP_LOW,
+)
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_CLASS,
@@ -79,10 +94,16 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+    floor_registry as fr,
+)
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
+from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator
 
 PROMETHEUS_PATH = "homeassistant.components.prometheus"
@@ -113,7 +134,7 @@ class EntityMetric:
             assert labelname in self.labels
             assert self.labels[labelname] != ""
 
-    def withValue(self, value: float) -> Self:
+    def withValue(self, value: float) -> EntityMetricWithValue:
         """Return a metric with value."""
         return EntityMetricWithValue(self, value)
 
@@ -828,6 +849,44 @@ async def test_climate(
 
 
 @pytest.mark.parametrize("namespace", [""])
+async def test_climate_mode(
+    hass: HomeAssistant,
+    client: ClientSessionGenerator,
+    climate_entities: dict[str, er.RegistryEntry | dict[str, Any]],
+) -> None:
+    """Test prometheus metrics for climate mode enum."""
+    data: dict[str, Any] = {**climate_entities}
+
+    # Set climate_2 to a specific HVAC mode from its available modes
+    set_state_with_entry(
+        hass,
+        data["climate_2"],
+        "heat",
+        data["climate_2_attributes"],
+    )
+
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+
+    # Current mode should be 1 for heat and 0 for others (e.g., cool)
+    EntityMetric(
+        metric_name="climate_mode",
+        domain="climate",
+        friendly_name="Ecobee",
+        entity="climate.ecobee",
+        mode="heat",
+    ).withValue(1).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="climate_mode",
+        domain="climate",
+        friendly_name="Ecobee",
+        entity="climate.ecobee",
+        mode="cool",
+    ).withValue(0.0).assert_in_metrics(body)
+
+
+@pytest.mark.parametrize("namespace", [""])
 async def test_humidifier(
     client: ClientSessionGenerator,
     humidifier_entities: dict[str, er.RegistryEntry | dict[str, Any]],
@@ -864,6 +923,75 @@ async def test_humidifier(
         entity="humidifier.hygrostat",
         mode="eco",
     ).withValue(0.0).assert_in_metrics(body)
+
+
+@pytest.mark.parametrize("namespace", [""])
+async def test_water_heater(
+    client: ClientSessionGenerator,
+    water_heater_entities: dict[str, er.RegistryEntry | dict[str, Any]],
+) -> None:
+    """Test prometheus metrics for water_heater entities."""
+    body = await generate_latest_metrics(client)
+
+    # Temperatures
+    EntityMetric(
+        metric_name="water_heater_current_temperature_celsius",
+        domain="water_heater",
+        friendly_name="Geyser",
+        entity="water_heater.geyser",
+    ).withValue(55.0).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="water_heater_temperature_celsius",
+        domain="water_heater",
+        friendly_name="Geyser",
+        entity="water_heater.geyser",
+    ).withValue(60.0).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="water_heater_target_temperature_low_celsius",
+        domain="water_heater",
+        friendly_name="Geyser",
+        entity="water_heater.geyser",
+    ).withValue(50.0).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="water_heater_target_temperature_high_celsius",
+        domain="water_heater",
+        friendly_name="Geyser",
+        entity="water_heater.geyser",
+    ).withValue(65.0).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="water_heater_min_temperature_celsius",
+        domain="water_heater",
+        friendly_name="Geyser",
+        entity="water_heater.geyser",
+    ).withValue(40.0).assert_in_metrics(body)
+
+    EntityMetric(
+        metric_name="water_heater_max_temperature_celsius",
+        domain="water_heater",
+        friendly_name="Geyser",
+        entity="water_heater.geyser",
+    ).withValue(70.0).assert_in_metrics(body)
+
+    # Operation mode enum
+    EntityMetric(
+        metric_name="water_heater_operation_mode",
+        domain="water_heater",
+        friendly_name="Geyser",
+        entity="water_heater.geyser",
+        mode="eco",
+    ).withValue(1).assert_in_metrics(body)
+
+    # Away mode
+    EntityMetric(
+        metric_name="water_heater_away_mode",
+        domain="water_heater",
+        friendly_name="Geyser",
+        entity="water_heater.geyser",
+    ).withValue(1).assert_in_metrics(body)
 
 
 @pytest.mark.parametrize("namespace", [""])
@@ -2110,6 +2238,38 @@ async def humidifier_fixture(
     return data
 
 
+@pytest.fixture(name="water_heater_entities")
+async def water_heater_fixture(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> dict[str, er.RegistryEntry | dict[str, Any]]:
+    """Simulate water_heater entities."""
+    data = {}
+    wh_1 = entity_registry.async_get_or_create(
+        domain=water_heater.DOMAIN,
+        platform="test",
+        unique_id="water_heater_1",
+        suggested_object_id="geyser",
+        original_name="Geyser",
+    )
+    wh_attributes = {
+        WATER_HEATER_ATTR_CURRENT_TEMPERATURE: 55,
+        ATTR_TEMPERATURE: 60,
+        WATER_HEATER_ATTR_TARGET_TEMP_LOW: 50,
+        WATER_HEATER_ATTR_TARGET_TEMP_HIGH: 65,
+        WATER_HEATER_ATTR_MIN_TEMP: 40,
+        WATER_HEATER_ATTR_MAX_TEMP: 70,
+        WATER_HEATER_ATTR_OPERATION_MODE: "eco",
+        WATER_HEATER_ATTR_OPERATION_LIST: ["eco", "performance"],
+        WATER_HEATER_ATTR_AWAY_MODE: "on",
+    }
+    set_state_with_entry(hass, wh_1, "eco", wh_attributes)
+    data["water_heater_1"] = wh_1
+    data["water_heater_1_attributes"] = wh_attributes
+
+    await hass.async_block_till_done()
+    return data
+
+
 @pytest.fixture(name="lock_entities")
 async def lock_fixture(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
@@ -2809,3 +2969,295 @@ async def test_filtered_denylist(
         was_called = mock_client.labels.call_count == 1
         assert test.should_pass == was_called
         mock_client.labels.reset_mock()
+
+
+class InfoMetric(EntityMetric):
+    """Represents a Prometheus info metric."""
+
+    @classmethod
+    def required_labels(cls) -> list[str]:
+        """No required labels for info metrics."""
+        return []
+
+
+@pytest.mark.parametrize("namespace", [""])
+async def test_floor_metric(
+    hass: HomeAssistant,
+    floor_registry: fr.FloorRegistry,
+    client: ClientSessionGenerator,
+) -> None:
+    """Test floor metric."""
+
+    # create a floor
+    floor = floor_registry.async_create("Floor", level=1)
+    floor_metric = InfoMetric(
+        metric_name="floor_info",
+        floor="floor",
+        floor_level="1",
+        floor_name="Floor",
+    )
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    floor_metric.assert_in_metrics(body)
+
+    # update floor
+    floor_registry.async_update(floor.floor_id, level=99, name="Updated")
+    updated_metric = InfoMetric(
+        metric_name="floor_info",
+        floor="floor",
+        floor_level="99",
+        floor_name="Updated",
+    )
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    floor_metric.assert_not_in_metrics(body)
+    updated_metric.assert_in_metrics(body)
+
+    # delete floor
+    floor_registry.async_delete(floor.floor_id)
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    floor_metric.assert_not_in_metrics(body)
+    updated_metric.assert_not_in_metrics(body)
+
+
+@pytest.mark.parametrize("namespace", [""])
+async def test_area_metric(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    client: ClientSessionGenerator,
+) -> None:
+    """Test area metric."""
+    # create an area
+    area = area_registry.async_create("Area")
+    area_metric = InfoMetric(
+        metric_name="area_info",
+        area="area",
+        area_name="Area",
+        floor="",
+    )
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    area_metric.assert_in_metrics(body)
+
+    # update area
+    area_registry.async_update(area.id, name="Updated")
+    updated_metric = InfoMetric(
+        metric_name="area_info",
+        area="area",
+        area_name="Updated",
+        floor="",
+    )
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    area_metric.assert_not_in_metrics(body)
+    updated_metric.assert_in_metrics(body)
+
+    # delete area
+    area_registry.async_delete(area.id)
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    area_metric.assert_not_in_metrics(body)
+    updated_metric.assert_not_in_metrics(body)
+
+
+@pytest.mark.parametrize("namespace", [""])
+async def test_delete_floor_of_area(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    floor_registry: fr.FloorRegistry,
+    client: ClientSessionGenerator,
+) -> None:
+    """Test entity/area correlation."""
+
+    # create floor and area
+    floor = floor_registry.async_create("Floor", level=1)
+    area = area_registry.async_create("Area", floor_id=floor.floor_id)
+    metric = InfoMetric(
+        metric_name="area_info",
+        area="area",
+        area_name="Area",
+        floor="floor",
+    )
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    metric.assert_in_metrics(body)
+
+    # delete floor
+    floor_registry.async_delete(floor.floor_id)
+    updated = area_registry.async_get_area(area.id)
+    assert updated is not None
+    updated_metric = InfoMetric(
+        metric_name="area_info",
+        area="area",
+        area_name="Area",
+        floor="",
+    )
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    metric.assert_not_in_metrics(body)
+    updated_metric.assert_in_metrics(body)
+
+
+@pytest.mark.parametrize("namespace", [""])
+async def test_area_in_entity(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+    client: ClientSessionGenerator,
+    sensor_entities: dict[str, er.RegistryEntry],
+) -> None:
+    """Test entity/area correlation."""
+
+    # link an entity to an area
+    sensor = sensor_entities["sensor_1"]
+    area_1 = area_registry.async_create("Area 1")
+    metric_1 = InfoMetric(
+        metric_name="entity_info", entity="sensor.outside_temperature", area="area_1"
+    )
+    entity_registry.async_update_entity(sensor.entity_id, area_id=area_1.id)
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    metric_1.assert_in_metrics(body)
+
+    # link entity to another area
+    area_2 = area_registry.async_create("Area 2")
+    metric_2 = InfoMetric(
+        metric_name="entity_info", entity="sensor.outside_temperature", area="area_2"
+    )
+    entity_registry.async_update_entity(sensor.entity_id, area_id=area_2.id)
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    metric_1.assert_not_in_metrics(body)
+    metric_2.assert_in_metrics(body)
+
+    # delete current area
+    area_registry.async_delete(area_2.id)
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    metric_1.assert_not_in_metrics(body)
+    metric_2.assert_not_in_metrics(body)
+
+
+@pytest.mark.parametrize("namespace", [""])
+async def test_area_in_device(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    client: ClientSessionGenerator,
+    sensor_entities: dict[str, er.RegistryEntry],
+) -> None:
+    """Test entity/device/area correlation."""
+
+    # create a device
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("prometheus", "test-device")},
+    )
+
+    # link entity to device
+    sensor = sensor_entities["sensor_1"]
+    entity_registry.async_update_entity(sensor.entity_id, device_id=device.id)
+
+    # create areas
+    entity_area = area_registry.async_create("Entity Area")
+    entity_area_metric = InfoMetric(
+        metric_name="entity_info",
+        entity="sensor.outside_temperature",
+        area="entity_area",
+    )
+    device_area = area_registry.async_create("Device Area")
+    device_area_metric = InfoMetric(
+        metric_name="entity_info",
+        entity="sensor.outside_temperature",
+        area="device_area",
+    )
+
+    # no area yet
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    entity_area_metric.assert_not_in_metrics(body)
+    device_area_metric.assert_not_in_metrics(body)
+
+    # set device area
+    device_registry.async_update_device(device.id, area_id=device_area.id)
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    entity_area_metric.assert_not_in_metrics(body)
+    device_area_metric.assert_in_metrics(body)
+
+    # set entity area
+    entity_registry.async_update_entity(sensor.entity_id, area_id=entity_area.id)
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    entity_area_metric.assert_in_metrics(body)
+    device_area_metric.assert_not_in_metrics(body)
+
+    # unset entity area
+    entity_registry.async_update_entity(sensor.entity_id, area_id=None)
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    entity_area_metric.assert_not_in_metrics(body)
+    device_area_metric.assert_in_metrics(body)
+
+    # remove device
+    device_registry.async_remove_device(device.id)
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    entity_area_metric.assert_not_in_metrics(body)
+    device_area_metric.assert_not_in_metrics(body)
+
+
+@pytest.mark.parametrize("namespace", [""])
+async def test_area_in_entity_on_entity_id_update(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+    client: ClientSessionGenerator,
+    sensor_entities: dict[str, er.RegistryEntry],
+) -> None:
+    """Test simultaneous update of entity_id and area_id."""
+
+    # link an entity to an area
+    sensor = sensor_entities["sensor_1"]
+    area_1 = area_registry.async_create("Area 1")
+    original_metric = InfoMetric(
+        metric_name="entity_info", entity="sensor.outside_temperature", area="area_1"
+    )
+    entity_registry.async_update_entity(sensor.entity_id, area_id=area_1.id)
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    original_metric.assert_in_metrics(body)
+
+    # link entity to another area and update entity_id
+    area_2 = area_registry.async_create("Area 2")
+    updated_metric_with_old_entity_id = InfoMetric(
+        metric_name="entity_info",
+        entity="sensor.outside_temperature",
+        area="area_2",
+    )
+    updated_metric_with_new_entity_id = InfoMetric(
+        metric_name="entity_info",
+        entity="sensor.outside_temperature_updated",
+        area="area_2",
+    )
+    updated_sensor = entity_registry.async_update_entity(
+        sensor.entity_id,
+        area_id=area_2.id,
+        new_entity_id="sensor.outside_temperature_updated",
+    )
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    original_metric.assert_not_in_metrics(body)
+    updated_metric_with_old_entity_id.assert_not_in_metrics(body)
+    updated_metric_with_new_entity_id.assert_not_in_metrics(body)
+
+    set_state_with_entry(hass, updated_sensor, 10)
+    await hass.async_block_till_done()
+    body = await generate_latest_metrics(client)
+    original_metric.assert_not_in_metrics(body)
+    updated_metric_with_old_entity_id.assert_not_in_metrics(body)
+    updated_metric_with_new_entity_id.assert_in_metrics(body)

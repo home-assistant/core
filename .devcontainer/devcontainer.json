@@ -8,6 +8,9 @@
     "PYTHONASYNCIODEBUG": "1"
   },
   "features": {
+    // Node feature required for Claude Code until fixed https://github.com/anthropics/devcontainer-features/issues/28
+    "ghcr.io/devcontainers/features/node:1": {},
+    "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {},
     "ghcr.io/devcontainers/features/github-cli:1": {}
   },
   // Port 5683 udp is used by Shelly integration
@@ -24,13 +27,12 @@
         "charliermarsh.ruff",
         "ms-python.pylint",
         "ms-python.vscode-pylance",
-        "visualstudioexptteam.vscodeintellicode",
         "redhat.vscode-yaml",
         "esbenp.prettier-vscode",
         "GitHub.vscode-pull-request-github",
         "GitHub.copilot"
       ],
-      // Please keep this file in sync with settings in home-assistant/.vscode/settings.default.json
+      // Please keep this file in sync with settings in home-assistant/.vscode/settings.default.jsonc
       "settings": {
         "python.experiments.optOutFrom": ["pythonTestAdapter"],
         "python.defaultInterpreterPath": "/home/vscode/.local/ha-venv/bin/python",
@@ -38,6 +40,7 @@
         "python.terminal.activateEnvInCurrentTerminal": true,
         "python.testing.pytestArgs": ["--no-cov"],
         "pylint.importStrategy": "fromEnvironment",
+        "python.analysis.typeCheckingMode": "basic",
         "editor.formatOnPaste": false,
         "editor.formatOnSave": true,
         "editor.formatOnType": true,
@@ -58,6 +61,9 @@
         ],
         "[python]": {
           "editor.defaultFormatter": "charliermarsh.ruff"
+        },
+        "[json][jsonc][yaml]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
         },
         "json.schemas": [
           {

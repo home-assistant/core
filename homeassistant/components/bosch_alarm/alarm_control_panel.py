@@ -50,7 +50,7 @@ class AreaAlarmControlPanel(BoschAlarmAreaEntity, AlarmControlPanelEntity):
 
     def __init__(self, panel: Panel, area_id: int, unique_id: str) -> None:
         """Initialise a Bosch Alarm control panel entity."""
-        super().__init__(panel, area_id, unique_id, False, False, True)
+        super().__init__(panel, area_id, unique_id, True, False, True)
         self._attr_unique_id = self._area_unique_id
 
     @property

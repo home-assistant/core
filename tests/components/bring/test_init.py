@@ -12,16 +12,18 @@ from bring_api import (
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.bring import async_setup_entry
 from homeassistant.components.bring.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    ConfigEntryDisabler,
+    ConfigEntryState,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .conftest import UUID
 
-from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
+from tests.common import MockConfigEntry, async_fire_time_changed, async_load_fixture
 
 
 async def setup_integration(
@@ -52,11 +54,11 @@ async def test_load_unload(
 
 
 @pytest.mark.parametrize(
-    ("exception", "status"),
+    ("exception", "status", "reauth_triggered"),
     [
-        (BringRequestException, ConfigEntryState.SETUP_RETRY),
-        (BringAuthException, ConfigEntryState.SETUP_ERROR),
-        (BringParseException, ConfigEntryState.SETUP_RETRY),
+        (BringRequestException, ConfigEntryState.SETUP_RETRY, False),
+        (BringAuthException, ConfigEntryState.SETUP_ERROR, True),
+        (BringParseException, ConfigEntryState.SETUP_RETRY, False),
     ],
 )
 async def test_init_failure(
@@ -64,6 +66,7 @@ async def test_init_failure(
     mock_bring_client: AsyncMock,
     status: ConfigEntryState,
     exception: Exception,
+    reauth_triggered: bool,
     bring_config_entry: MockConfigEntry,
 ) -> None:
     """Test an initialization error on integration load."""
@@ -71,28 +74,14 @@ async def test_init_failure(
     await setup_integration(hass, bring_config_entry)
     assert bring_config_entry.state == status
 
-
-@pytest.mark.parametrize(
-    ("exception", "expected"),
-    [
-        (BringRequestException, ConfigEntryNotReady),
-        (BringAuthException, ConfigEntryAuthFailed),
-        (BringParseException, ConfigEntryNotReady),
-    ],
-)
-async def test_init_exceptions(
-    hass: HomeAssistant,
-    mock_bring_client: AsyncMock,
-    exception: Exception,
-    expected: Exception,
-    bring_config_entry: MockConfigEntry,
-) -> None:
-    """Test an initialization error on integration load."""
-    bring_config_entry.add_to_hass(hass)
-    mock_bring_client.login.side_effect = exception
-
-    with pytest.raises(expected):
-        await async_setup_entry(hass, bring_config_entry)
+    assert (
+        any(
+            flow
+            for flow in hass.config_entries.flow.async_progress()
+            if flow["context"]["source"] == SOURCE_REAUTH
+        )
+        is reauth_triggered
+    )
 
 
 @pytest.mark.parametrize("exception", [BringRequestException, BringParseException])
@@ -240,7 +229,7 @@ async def test_purge_devices(
     )
 
     mock_bring_client.load_lists.return_value = BringListResponse.from_json(
-        load_fixture("lists2.json", DOMAIN)
+        await async_load_fixture(hass, "lists2.json", DOMAIN)
     )
 
     freezer.tick(timedelta(seconds=90))
@@ -265,7 +254,7 @@ async def test_create_devices(
     """Test create device entry for new lists."""
     list_uuid = "b4776778-7f6c-496e-951b-92a35d3db0dd"
     mock_bring_client.load_lists.return_value = BringListResponse.from_json(
-        load_fixture("lists2.json", DOMAIN)
+        await async_load_fixture(hass, "lists2.json", DOMAIN)
     )
     await setup_integration(hass, bring_config_entry)
 
@@ -279,7 +268,7 @@ async def test_create_devices(
     )
 
     mock_bring_client.load_lists.return_value = BringListResponse.from_json(
-        load_fixture("lists.json", DOMAIN)
+        await async_load_fixture(hass, "lists.json", DOMAIN)
     )
     freezer.tick(timedelta(seconds=90))
     async_fire_time_changed(hass)
@@ -310,7 +299,7 @@ async def test_coordinator_update_intervals(
     mock_bring_client.get_activity.reset_mock()
 
     mock_bring_client.load_lists.return_value = BringListResponse.from_json(
-        load_fixture("lists2.json", DOMAIN)
+        await async_load_fixture(hass, "lists2.json", DOMAIN)
     )
     freezer.tick(timedelta(seconds=90))
     async_fire_time_changed(hass)

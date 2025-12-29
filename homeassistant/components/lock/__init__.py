@@ -13,28 +13,16 @@ from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (  # noqa: F401
-    _DEPRECATED_STATE_JAMMED,
-    _DEPRECATED_STATE_LOCKED,
-    _DEPRECATED_STATE_LOCKING,
-    _DEPRECATED_STATE_UNLOCKED,
-    _DEPRECATED_STATE_UNLOCKING,
+from homeassistant.const import (
     ATTR_CODE,
     ATTR_CODE_FORMAT,
     SERVICE_LOCK,
     SERVICE_OPEN,
     SERVICE_UNLOCK,
-    STATE_OPEN,
-    STATE_OPENING,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.deprecation import (
-    all_with_deprecated_constants,
-    check_if_deprecated_constant,
-    dir_with_deprecated_constants,
-)
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType, StateType
@@ -317,11 +305,3 @@ class LockEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return
 
         self._lock_option_default_code = ""
-
-
-# These can be removed if no deprecated constant are in this module anymore
-__getattr__ = ft.partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = ft.partial(
-    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
-)
-__all__ = all_with_deprecated_constants(globals())

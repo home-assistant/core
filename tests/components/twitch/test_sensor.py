@@ -29,6 +29,7 @@ async def test_offline(
     sensor_state = hass.states.get(ENTITY_ID)
     assert sensor_state.state == "offline"
     assert sensor_state.attributes["entity_picture"] == "logo.png"
+    assert sensor_state.attributes["channel_picture"] == "logo.png"
 
 
 async def test_streaming(
@@ -40,6 +41,7 @@ async def test_streaming(
     sensor_state = hass.states.get(ENTITY_ID)
     assert sensor_state.state == "streaming"
     assert sensor_state.attributes["entity_picture"] == "stream-medium.png"
+    assert sensor_state.attributes["channel_picture"] == "logo.png"
     assert sensor_state.attributes["game"] == "Good game"
     assert sensor_state.attributes["title"] == "Title"
     assert sensor_state.attributes["started_at"] == datetime(
@@ -53,7 +55,7 @@ async def test_oauth_without_sub_and_follow(
 ) -> None:
     """Test state with oauth."""
     twitch_mock.return_value.get_followed_channels.return_value = TwitchIterObject(
-        "empty_response.json", FollowedChannel
+        hass, "empty_response.json", FollowedChannel
     )
     twitch_mock.return_value.check_user_subscription.side_effect = (
         TwitchResourceNotFound
@@ -70,7 +72,7 @@ async def test_oauth_with_sub(
 ) -> None:
     """Test state with oauth and sub."""
     twitch_mock.return_value.get_followed_channels.return_value = TwitchIterObject(
-        "empty_response.json", FollowedChannel
+        hass, "empty_response.json", FollowedChannel
     )
     subscription = await async_load_json_object_fixture(
         hass, "check_user_subscription_2.json", DOMAIN

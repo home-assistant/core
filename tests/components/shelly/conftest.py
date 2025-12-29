@@ -36,10 +36,28 @@ MOCK_SETTINGS = {
         "mac": MOCK_MAC,
         "hostname": "test-host",
         "type": MODEL_25,
+        "num_inputs": 3,
         "num_outputs": 2,
     },
     "coiot": {"update_period": 15},
     "fw": "20201124-092159/v1.9.0@57ac4ad8",
+    "inputs": [
+        {
+            "name": "TV LEDs",
+            "btn_type": "momentary",
+            "btn_reverse": 0,
+        },
+        {
+            "name": "TV Spots",
+            "btn_type": "momentary",
+            "btn_reverse": 0,
+        },
+        {
+            "name": None,
+            "btn_type": "momentary",
+            "btn_reverse": 0,
+        },
+    ],
     "relays": [{"btn_type": "momentary"}, {"btn_type": "toggle"}],
     "rollers": [{"positioning": True}],
     "external_power": 0,
@@ -127,7 +145,11 @@ MOCK_BLOCKS = [
         ),
     ),
     Mock(
-        sensor_ids={"mode": "color", "effect": 0},
+        sensor_ids={
+            "output": mock_light_set_state()["ison"],
+            "mode": "color",
+            "effect": 0,
+        },
         channel="0",
         output=mock_light_set_state()["ison"],
         colorTemp=mock_light_set_state()["temp"],
@@ -225,6 +247,7 @@ MOCK_CONFIG = {
     "wifi": {"sta": {"enable": True}, "sta1": {"enable": False}},
     "ws": {"enable": False, "server": None},
     "voltmeter:100": {"xvoltage": {"unit": "ppm"}},
+    "smoke:0": {"id": 0, "name": "test channel name"},
     "script:1": {"id": 1, "name": "test_script.js", "enable": True},
     "script:2": {"id": 2, "name": "test_script_2.js", "enable": False},
     "script:3": {"id": 3, "name": BLE_SCRIPT_NAME, "enable": False},
@@ -260,6 +283,33 @@ MOCK_BLU_TRV_REMOTE_CONFIG = {
                 "meta": {},
             },
         },
+        {
+            "key": "blutrv:201",
+            "status": {
+                "id": 201,
+                "target_C": 17.1,
+                "current_C": 17.1,
+                "pos": 0,
+                "rssi": -60,
+                "battery": 100,
+                "packet_id": 58,
+                "last_updated_ts": 1734967725,
+                "paired": True,
+                "rpc": True,
+                "rsv": 61,
+            },
+            "config": {
+                "id": 201,
+                "addr": "f8:44:77:25:f0:de",
+                "name": "TRV-201",
+                "key": None,
+                "trv": "bthomedevice:201",
+                "temp_sensors": [],
+                "dw_sensors": [],
+                "override_delay": 30,
+                "meta": {},
+            },
+        },
     ],
     "blutrv:200": {
         "id": 0,
@@ -272,11 +322,34 @@ MOCK_BLU_TRV_REMOTE_CONFIG = {
         "name": "TRV-Name",
         "local_name": "SBTR-001AEU",
     },
+    "blutrv:201": {
+        "id": 1,
+        "enable": True,
+        "min_valve_position": 0,
+        "default_boost_duration": 1800,
+        "default_override_duration": 2147483647,
+        "default_override_target_C": 8,
+        "addr": "f8:44:77:25:f0:de",
+        "name": "TRV-201",
+        "local_name": "SBTR-001AEU",
+    },
 }
 
 
 MOCK_BLU_TRV_REMOTE_STATUS = {
     "blutrv:200": {
+        "id": 0,
+        "pos": 0,
+        "steps": 0,
+        "current_C": 15.2,
+        "target_C": 17.1,
+        "schedule_rev": 0,
+        "rssi": -60,
+        "battery": 100,
+        "errors": [],
+        "fw_ver": "v1.2.10",
+    },
+    "blutrv:201": {
         "id": 0,
         "pos": 0,
         "steps": 0,
@@ -294,6 +367,7 @@ MOCK_SHELLY_COAP = {
     "mac": MOCK_MAC,
     "auth": False,
     "fw": "20210715-092854/v1.11.0@57ac4ad8",
+    "num_inputs": 3,
     "num_outputs": 2,
 }
 
@@ -366,6 +440,7 @@ MOCK_STATUS_RPC = {
         "current_C": 12.3,
         "output": True,
     },
+    "smoke:0": {"id": 0, "alarm": False, "mute": False},
     "script:1": {
         "id": 1,
         "running": True,
@@ -499,7 +574,11 @@ def _mock_rpc_device(version: str | None = None):
         ),
         xmod_info={},
         zigbee_enabled=False,
+        zigbee_firmware=False,
         ip_address="10.10.10.10",
+        wifi_setconfig=AsyncMock(return_value={"restart_required": True}),
+        ble_setconfig=AsyncMock(return_value={"restart_required": False}),
+        shutdown=AsyncMock(),
     )
     type(device).name = PropertyMock(return_value="Test name")
     return device
@@ -524,6 +603,8 @@ def _mock_blu_rtv_device(version: str | None = None):
             }
         ),
         xmod_info={},
+        wifi_setconfig=AsyncMock(return_value={}),
+        ble_setconfig=AsyncMock(return_value={}),
     )
     type(device).name = PropertyMock(return_value="Test name")
     return device
@@ -562,6 +643,13 @@ async def mock_rpc_device():
                 {}, RpcUpdateType.INITIALIZED
             )
 
+        current_pos = iter(range(50, -1, -10))  # from 50 to 0 in steps of 10
+
+        async def update_cover_status(cover_id: int):
+            device.status[f"cover:{cover_id}"]["current_pos"] = next(
+                current_pos, device.status[f"cover:{cover_id}"]["current_pos"]
+            )
+
         device = _mock_rpc_device()
         rpc_device_mock.return_value = device
         rpc_device_mock.return_value.mock_disconnected = Mock(side_effect=disconnected)
@@ -569,6 +657,9 @@ async def mock_rpc_device():
         rpc_device_mock.return_value.mock_event = Mock(side_effect=event)
         rpc_device_mock.return_value.mock_online = Mock(side_effect=online)
         rpc_device_mock.return_value.mock_initialized = Mock(side_effect=initialized)
+        rpc_device_mock.return_value.update_cover_status = AsyncMock(
+            side_effect=update_cover_status
+        )
 
         yield rpc_device_mock.return_value
 
@@ -711,3 +802,16 @@ def mock_setup() -> Generator[AsyncMock]:
         "homeassistant.components.shelly.async_setup", return_value=True
     ) as mock_setup:
         yield mock_setup
+
+
+@pytest.fixture
+def disable_async_remove_shelly_rpc_entities() -> Generator[None]:
+    """Patch out async_remove_shelly_rpc_entities.
+
+    This is used by virtual components tests that should not create entities,
+    without it async_remove_shelly_rpc_entities will clean up the entities.
+    """
+    with patch(
+        "homeassistant.components.shelly.utils.async_remove_shelly_rpc_entities"
+    ):
+        yield

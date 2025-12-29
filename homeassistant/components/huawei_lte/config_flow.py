@@ -51,6 +51,7 @@ from .const import (
     CONF_MANUFACTURER,
     CONF_TRACK_WIRED_CLIENTS,
     CONF_UNAUTHENTICATED_MODE,
+    CONF_UPNP_UDN,
     CONNECTION_TIMEOUT,
     DEFAULT_DEVICE_NAME,
     DEFAULT_NOTIFY_SERVICE_NAME,
@@ -63,21 +64,22 @@ from .utils import get_device_macs, non_verifying_requests_session
 _LOGGER = logging.getLogger(__name__)
 
 
-class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
-    """Handle Huawei LTE config flow."""
+class HuaweiLteConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Huawei LTE config flow."""
 
     VERSION = 3
 
     manufacturer: str | None = None
+    upnp_udn: str | None = None
     url: str | None = None
 
     @staticmethod
     @callback
     def async_get_options_flow(
         config_entry: ConfigEntry,
-    ) -> OptionsFlowHandler:
+    ) -> HuaweiLteOptionsFlow:
         """Get options flow."""
-        return OptionsFlowHandler()
+        return HuaweiLteOptionsFlow()
 
     async def _async_show_user_form(
         self,
@@ -110,6 +112,9 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors or {},
+            description_placeholders={
+                "sample_ip": "http://192.168.X.1",
+            },
         )
 
     async def _async_show_reauth_form(
@@ -130,6 +135,9 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors or {},
+            description_placeholders={
+                "sample_ip": "http://192.168.X.1",
+            },
         )
 
     async def _connect(
@@ -250,6 +258,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             {
                 CONF_MAC: get_device_macs(info, wlan_settings),
                 CONF_MANUFACTURER: self.manufacturer,
+                CONF_UPNP_UDN: self.upnp_udn,
             }
         )
 
@@ -284,11 +293,12 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             # url_normalize only returns None if passed None, and we don't do that
             assert url is not None
 
-        unique_id = discovery_info.upnp.get(
-            ATTR_UPNP_SERIAL, discovery_info.upnp[ATTR_UPNP_UDN]
-        )
+        upnp_udn = discovery_info.upnp.get(ATTR_UPNP_UDN)
+        unique_id = discovery_info.upnp.get(ATTR_UPNP_SERIAL, upnp_udn)
         await self.async_set_unique_id(unique_id)
-        self._abort_if_unique_id_configured(updates={CONF_URL: url})
+        self._abort_if_unique_id_configured(
+            updates={CONF_UPNP_UDN: upnp_udn, CONF_URL: url}
+        )
 
         def _is_supported_device() -> bool:
             """See if we are looking at a possibly supported device.
@@ -319,6 +329,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             }
         )
         self.manufacturer = discovery_info.upnp.get(ATTR_UPNP_MANUFACTURER)
+        self.upnp_udn = upnp_udn
         self.url = url
         return await self._async_show_user_form()
 
@@ -354,7 +365,7 @@ class ConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_update_reload_and_abort(entry, data=new_data)
 
 
-class OptionsFlowHandler(OptionsFlow):
+class HuaweiLteOptionsFlow(OptionsFlow):
     """Huawei LTE options flow."""
 
     async def async_step_init(
@@ -401,4 +412,10 @@ class OptionsFlowHandler(OptionsFlow):
                 ): bool,
             }
         )
-        return self.async_show_form(step_id="init", data_schema=data_schema)
+        return self.async_show_form(
+            step_id="init",
+            data_schema=data_schema,
+            description_placeholders={
+                "sample_ip": "http://192.168.X.1",
+            },
+        )

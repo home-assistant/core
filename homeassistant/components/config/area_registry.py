@@ -18,6 +18,7 @@ def async_setup(hass: HomeAssistant) -> bool:
     websocket_api.async_register_command(hass, websocket_create_area)
     websocket_api.async_register_command(hass, websocket_delete_area)
     websocket_api.async_register_command(hass, websocket_update_area)
+    websocket_api.async_register_command(hass, websocket_reorder_areas)
     return True
 
 
@@ -64,8 +65,10 @@ def websocket_create_area(
     data.pop("id")
 
     if "aliases" in data:
-        # Convert aliases to a set
-        data["aliases"] = set(data["aliases"])
+        # Create a set for the aliases without:
+        #   - Empty strings
+        #   - Trailing and leading whitespace characters in the individual aliases
+        data["aliases"] = {s_strip for s in data["aliases"] if (s_strip := s.strip())}
 
     if "labels" in data:
         # Convert labels to a set
@@ -132,8 +135,10 @@ def websocket_update_area(
     data.pop("id")
 
     if "aliases" in data:
-        # Convert aliases to a set
-        data["aliases"] = set(data["aliases"])
+        # Create a set for the aliases without:
+        #   - Empty strings
+        #   - Trailing and leading whitespace characters in the individual aliases
+        data["aliases"] = {s_strip for s in data["aliases"] if (s_strip := s.strip())}
 
     if "labels" in data:
         # Convert labels to a set
@@ -145,3 +150,27 @@ def websocket_update_area(
         connection.send_error(msg["id"], "invalid_info", str(err))
     else:
         connection.send_result(msg["id"], entry.json_fragment)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "config/area_registry/reorder",
+        vol.Required("area_ids"): [str],
+    }
+)
+@websocket_api.require_admin
+@callback
+def websocket_reorder_areas(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Handle reorder areas websocket command."""
+    registry = ar.async_get(hass)
+
+    try:
+        registry.async_reorder(msg["area_ids"])
+    except ValueError as err:
+        connection.send_error(msg["id"], websocket_api.ERR_INVALID_FORMAT, str(err))
+    else:
+        connection.send_result(msg["id"])

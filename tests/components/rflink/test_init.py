@@ -11,7 +11,7 @@ from homeassistant.components.rflink import (
     CONF_RECONNECT_INTERVAL,
     DATA_ENTITY_LOOKUP,
     DEFAULT_TCP_KEEPALIVE_IDLE_TIMER,
-    DOMAIN as RFLINK_DOMAIN,
+    DOMAIN,
     EVENT_KEY_COMMAND,
     EVENT_KEY_SENSOR,
     SERVICE_SEND_COMMAND,
@@ -425,9 +425,9 @@ async def test_keepalive(
 ) -> None:
     """Validate negative keepalive values."""
     keepalive_value = -3
-    domain = RFLINK_DOMAIN
+    domain = DOMAIN
     config = {
-        RFLINK_DOMAIN: {
+        DOMAIN: {
             CONF_HOST: "10.10.0.1",
             CONF_PORT: 1234,
             CONF_KEEPALIVE_IDLE: keepalive_value,
@@ -455,9 +455,9 @@ async def test_keepalive_2(
 ) -> None:
     """Validate very short keepalive values."""
     keepalive_value = 30
-    domain = RFLINK_DOMAIN
+    domain = DOMAIN
     config = {
-        RFLINK_DOMAIN: {
+        DOMAIN: {
             CONF_HOST: "10.10.0.1",
             CONF_PORT: 1234,
             CONF_KEEPALIVE_IDLE: keepalive_value,
@@ -484,10 +484,8 @@ async def test_keepalive_3(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Validate keepalive=0 value."""
-    domain = RFLINK_DOMAIN
-    config = {
-        RFLINK_DOMAIN: {CONF_HOST: "10.10.0.1", CONF_PORT: 1234, CONF_KEEPALIVE_IDLE: 0}
-    }
+    domain = DOMAIN
+    config = {DOMAIN: {CONF_HOST: "10.10.0.1", CONF_PORT: 1234, CONF_KEEPALIVE_IDLE: 0}}
 
     # setup mocking rflink module
     _, mock_create, _, _ = await mock_rflink(hass, config, domain, monkeypatch)
@@ -506,8 +504,8 @@ async def test_default_keepalive(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Validate keepalive=0 value."""
-    domain = RFLINK_DOMAIN
-    config = {RFLINK_DOMAIN: {CONF_HOST: "10.10.0.1", CONF_PORT: 1234}}
+    domain = DOMAIN
+    config = {DOMAIN: {CONF_HOST: "10.10.0.1", CONF_PORT: 1234}}
 
     # setup mocking rflink module
     _, mock_create, _, _ = await mock_rflink(hass, config, domain, monkeypatch)
@@ -549,7 +547,7 @@ async def test_unique_id(
     }
 
     # setup mocking rflink module
-    event_callback, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch)
+    _event_callback, _, _, _ = await mock_rflink(hass, config, DOMAIN, monkeypatch)
 
     humidity_entry = entity_registry.async_get("sensor.humidity_device")
     assert humidity_entry
@@ -567,11 +565,11 @@ async def test_enable_debug_logs(
 ) -> None:
     """Test that changing debug level enables RFDEBUG."""
 
-    domain = RFLINK_DOMAIN
-    config = {RFLINK_DOMAIN: {CONF_HOST: "10.10.0.1", CONF_PORT: 1234}}
+    domain = DOMAIN
+    config = {DOMAIN: {CONF_HOST: "10.10.0.1", CONF_PORT: 1234}}
 
     # setup mocking rflink module
-    _, mock_create, _, _ = await mock_rflink(hass, config, domain, monkeypatch)
+    _, _mock_create, _, _ = await mock_rflink(hass, config, domain, monkeypatch)
 
     logging.getLogger("rflink").setLevel(logging.DEBUG)
     hass.bus.async_fire(EVENT_LOGGING_CHANGED)

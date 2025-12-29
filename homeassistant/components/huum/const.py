@@ -4,4 +4,11 @@ from homeassistant.const import Platform
 
 DOMAIN = "huum"
 
-PLATFORMS = [Platform.CLIMATE]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.CLIMATE, Platform.LIGHT, Platform.NUMBER]
+
+CONFIG_STEAMER = 1
+CONFIG_LIGHT = 2
+CONFIG_STEAMER_AND_LIGHT = 3
+
+CONFIG_DEFAULT_MIN_TEMP = 40
+CONFIG_DEFAULT_MAX_TEMP = 110

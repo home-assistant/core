@@ -54,7 +54,7 @@ class IslamicPrayerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, datetim
     @property
     def calc_method(self) -> str:
         """Return the calculation method."""
-        return self.config_entry.options.get(CONF_CALC_METHOD, DEFAULT_CALC_METHOD)
+        return self.config_entry.options.get(CONF_CALC_METHOD, DEFAULT_CALC_METHOD)  # type: ignore[no-any-return]
 
     @property
     def lat_adj_method(self) -> str:
@@ -68,12 +68,12 @@ class IslamicPrayerDataUpdateCoordinator(DataUpdateCoordinator[dict[str, datetim
     @property
     def midnight_mode(self) -> str:
         """Return the midnight mode."""
-        return self.config_entry.options.get(CONF_MIDNIGHT_MODE, DEFAULT_MIDNIGHT_MODE)
+        return self.config_entry.options.get(CONF_MIDNIGHT_MODE, DEFAULT_MIDNIGHT_MODE)  # type: ignore[no-any-return]
 
     @property
     def school(self) -> str:
         """Return the school."""
-        return self.config_entry.options.get(CONF_SCHOOL, DEFAULT_SCHOOL)
+        return self.config_entry.options.get(CONF_SCHOOL, DEFAULT_SCHOOL)  # type: ignore[no-any-return]
 
     def get_new_prayer_times(self, for_date: date) -> dict[str, Any]:
         """Fetch prayer times for the specified date."""

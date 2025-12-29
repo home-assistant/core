@@ -8,7 +8,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from tplink_omada_client.definitions import DeviceStatus, DeviceStatusCategory
-from tplink_omada_client.devices import OmadaGatewayPortStatus, OmadaListDevice
+from tplink_omada_client.devices import OmadaListDevice
 
 from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.components.tplink_omada.coordinator import POLL_DEVICES
@@ -74,7 +74,7 @@ async def test_device_specific_status(
     await hass.async_block_till_done()
 
     entity = hass.states.get(entity_id)
-    assert entity.state == "adopt_failed"
+    assert entity and entity.state == "adopt_failed"
 
 
 async def test_device_category_status(
@@ -100,14 +100,14 @@ async def test_device_category_status(
     await hass.async_block_till_done()
 
     entity = hass.states.get(entity_id)
-    assert entity.state == "pending"
+    assert entity and entity.state == "pending"
 
 
 def _set_test_device_status(
     mock_omada_site_client: MagicMock,
     status: int,
     status_category: int,
-) -> OmadaGatewayPortStatus:
+) -> None:
     devices_data = json.loads(load_fixture("devices.json", DOMAIN))
     devices_data[1]["status"] = status
     devices_data[1]["statusCategory"] = status_category

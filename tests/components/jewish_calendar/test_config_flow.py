@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.jewish_calendar.const import (
     CONF_CANDLE_LIGHT_MINUTES,
     CONF_DIASPORA,
@@ -28,19 +28,18 @@ from tests.common import MockConfigEntry
 
 async def test_step_user(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test user config."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_DIASPORA: DEFAULT_DIASPORA, CONF_LANGUAGE: DEFAULT_LANGUAGE},
     )
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
     await hass.async_block_till_done()
     assert len(mock_setup_entry.mock_calls) == 1
@@ -111,7 +110,6 @@ async def test_options_reconfigure(
             CONF_CANDLE_LIGHT_MINUTES: DEFAULT_CANDLE_LIGHT + 1,
         },
     )
-    assert result["result"]
 
     # The value of the "upcoming_shabbat_candle_lighting" sensor should be the new value
     assert config_entry.options[CONF_CANDLE_LIGHT_MINUTES] == DEFAULT_CANDLE_LIGHT + 1

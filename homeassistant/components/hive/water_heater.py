@@ -73,7 +73,9 @@ async def async_setup_entry(
 class HiveWaterHeater(HiveEntity, WaterHeaterEntity):
     """Hive Water Heater Device."""
 
-    _attr_supported_features = WaterHeaterEntityFeature.OPERATION_MODE
+    _attr_supported_features = (
+        WaterHeaterEntityFeature.ON_OFF | WaterHeaterEntityFeature.OPERATION_MODE
+    )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_operation_list = SUPPORT_WATER_HEATER
 

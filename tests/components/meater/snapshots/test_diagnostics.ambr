@@ -1,0 +1,20 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    '40a72384fa80349314dfd97c84b73a5c1c9da57b59e26d67b573d618fe0d6e58': dict({
+      'ambient_temperature': 28.0,
+      'cook': dict({
+        'id': '123123',
+        'name': 'Whole chicken',
+        'peak_temperature': 27.0,
+        'state': 'Started',
+        'target_temperature': 25.0,
+        'time_elapsed': 32,
+        'time_remaining': 32,
+      }),
+      'id': '40a72384fa80349314dfd97c84b73a5c1c9da57b59e26d67b573d618fe0d6e58',
+      'internal_temperature': 26.0,
+      'time_updated': '2025-06-16T13:53:51+00:00',
+    }),
+  })
+# ---

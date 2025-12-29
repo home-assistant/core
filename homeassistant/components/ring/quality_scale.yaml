@@ -1,0 +1,71 @@
+rules:
+  # Bronze
+  config-flow: done
+  test-before-configure: done
+  unique-config-entry: done
+  config-flow-test-coverage: done
+  runtime-data: done
+  test-before-setup: done
+  appropriate-polling: done
+  entity-unique-id: done
+  has-entity-name: done
+  entity-event-setup: done
+  dependency-transparency: done
+  action-setup:
+    status: exempt
+    comment: The integration does not register services
+  common-modules: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-actions:
+    status: exempt
+    comment: The integration does not register custom service actions
+  brands: done
+
+  # Silver
+  config-entry-unloading: done
+  log-when-unavailable: done
+  entity-unavailable: done
+  action-exceptions: todo
+  reauthentication-flow: done
+  parallel-updates: done
+  test-coverage: done
+  integration-owner: done
+  docs-installation-parameters: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: The integration does not have any options configuration parameters
+
+  # Gold
+  entity-translations:
+    status: todo
+    comment: Use device class translations for volume sensor and number
+  entity-device-class: done
+  devices: done
+  entity-category: done
+  entity-disabled-by-default: done
+  discovery: done
+  stale-devices: todo
+  diagnostics: done
+  exception-translations: todo
+  icon-translations: done
+  reconfiguration-flow: done
+  dynamic-devices: todo
+  discovery-update-info:
+    status: exempt
+    comment: The integration uses ring cloud api to identify devices and \
+      does not use network identifiers
+  repair-issues: done
+  docs-use-cases: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-data-update: done
+  docs-known-limitations: done
+  docs-troubleshooting: done
+  docs-examples: done
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done

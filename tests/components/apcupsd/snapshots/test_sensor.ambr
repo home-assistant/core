@@ -1,4 +1,244 @@
 # serializer version: 1
+# name: test_deprecated_sensor_issue[apc-apc_deprecated]
+  IssueRegistryItemSnapshot({
+    'active': True,
+    'breaks_in_ha_version': '2026.6.0',
+    'created': <ANY>,
+    'data': None,
+    'dismissed_version': None,
+    'domain': 'apcupsd',
+    'is_fixable': False,
+    'is_persistent': False,
+    'issue_domain': None,
+    'issue_id': 'apc_deprecated_sensor.myups_status_data',
+    'learn_more_url': None,
+    'severity': <IssueSeverity.WARNING: 'warning'>,
+    'translation_key': 'apc_deprecated',
+    'translation_placeholders': dict({
+      'device_id': '<ANY>',
+      'entity_id': 'sensor.myups_status_data',
+      'entity_name': 'Status data',
+      'items': '''
+        - [APC UPS automation (apc)](/config/automation/edit/apcupsd_auto_apc)
+        - [APC UPS script (apc)](/config/script/edit/apcupsd_script_apc)
+      ''',
+    }),
+  })
+# ---
+# name: test_deprecated_sensor_issue[apcmodel-available_via_device_info]
+  IssueRegistryItemSnapshot({
+    'active': True,
+    'breaks_in_ha_version': '2026.6.0',
+    'created': <ANY>,
+    'data': None,
+    'dismissed_version': None,
+    'domain': 'apcupsd',
+    'is_fixable': False,
+    'is_persistent': False,
+    'issue_domain': None,
+    'issue_id': 'available_via_device_info_sensor.myups_model',
+    'learn_more_url': None,
+    'severity': <IssueSeverity.WARNING: 'warning'>,
+    'translation_key': 'available_via_device_info',
+    'translation_placeholders': dict({
+      'available_via_device_attr': 'model',
+      'device_id': '<ANY>',
+      'entity_id': 'sensor.myups_model',
+      'entity_name': 'Model',
+      'items': '''
+        - [APC UPS automation (apcmodel)](/config/automation/edit/apcupsd_auto_apcmodel)
+        - [APC UPS script (apcmodel)](/config/script/edit/apcupsd_script_apcmodel)
+      ''',
+    }),
+  })
+# ---
+# name: test_deprecated_sensor_issue[date-date_deprecated]
+  IssueRegistryItemSnapshot({
+    'active': True,
+    'breaks_in_ha_version': '2026.6.0',
+    'created': <ANY>,
+    'data': None,
+    'dismissed_version': None,
+    'domain': 'apcupsd',
+    'is_fixable': False,
+    'is_persistent': False,
+    'issue_domain': None,
+    'issue_id': 'date_deprecated_sensor.myups_status_date',
+    'learn_more_url': None,
+    'severity': <IssueSeverity.WARNING: 'warning'>,
+    'translation_key': 'date_deprecated',
+    'translation_placeholders': dict({
+      'device_id': '<ANY>',
+      'entity_id': 'sensor.myups_status_date',
+      'entity_name': 'Status date',
+      'items': '''
+        - [APC UPS automation (date)](/config/automation/edit/apcupsd_auto_date)
+        - [APC UPS script (date)](/config/script/edit/apcupsd_script_date)
+      ''',
+    }),
+  })
+# ---
+# name: test_deprecated_sensor_issue[end apc-date_deprecated]
+  IssueRegistryItemSnapshot({
+    'active': True,
+    'breaks_in_ha_version': '2026.6.0',
+    'created': <ANY>,
+    'data': None,
+    'dismissed_version': None,
+    'domain': 'apcupsd',
+    'is_fixable': False,
+    'is_persistent': False,
+    'issue_domain': None,
+    'issue_id': 'date_deprecated_sensor.myups_date_and_time',
+    'learn_more_url': None,
+    'severity': <IssueSeverity.WARNING: 'warning'>,
+    'translation_key': 'date_deprecated',
+    'translation_placeholders': dict({
+      'device_id': '<ANY>',
+      'entity_id': 'sensor.myups_date_and_time',
+      'entity_name': 'Date and time',
+      'items': '''
+        - [APC UPS automation (end apc)](/config/automation/edit/apcupsd_auto_end_apc)
+        - [APC UPS script (end apc)](/config/script/edit/apcupsd_script_end_apc)
+      ''',
+    }),
+  })
+# ---
+# name: test_deprecated_sensor_issue[firmware-available_via_device_info]
+  IssueRegistryItemSnapshot({
+    'active': True,
+    'breaks_in_ha_version': '2026.6.0',
+    'created': <ANY>,
+    'data': None,
+    'dismissed_version': None,
+    'domain': 'apcupsd',
+    'is_fixable': False,
+    'is_persistent': False,
+    'issue_domain': None,
+    'issue_id': 'available_via_device_info_sensor.myups_firmware_version',
+    'learn_more_url': None,
+    'severity': <IssueSeverity.WARNING: 'warning'>,
+    'translation_key': 'available_via_device_info',
+    'translation_placeholders': dict({
+      'available_via_device_attr': 'hw_version',
+      'device_id': '<ANY>',
+      'entity_id': 'sensor.myups_firmware_version',
+      'entity_name': 'Firmware version',
+      'items': '''
+        - [APC UPS automation (firmware)](/config/automation/edit/apcupsd_auto_firmware)
+        - [APC UPS script (firmware)](/config/script/edit/apcupsd_script_firmware)
+      ''',
+    }),
+  })
+# ---
+# name: test_deprecated_sensor_issue[model-available_via_device_info]
+  IssueRegistryItemSnapshot({
+    'active': True,
+    'breaks_in_ha_version': '2026.6.0',
+    'created': <ANY>,
+    'data': None,
+    'dismissed_version': None,
+    'domain': 'apcupsd',
+    'is_fixable': False,
+    'is_persistent': False,
+    'issue_domain': None,
+    'issue_id': 'available_via_device_info_sensor.myups_model_2',
+    'learn_more_url': None,
+    'severity': <IssueSeverity.WARNING: 'warning'>,
+    'translation_key': 'available_via_device_info',
+    'translation_placeholders': dict({
+      'available_via_device_attr': 'model',
+      'device_id': '<ANY>',
+      'entity_id': 'sensor.myups_model_2',
+      'entity_name': 'Model',
+      'items': '''
+        - [APC UPS automation (model)](/config/automation/edit/apcupsd_auto_model)
+        - [APC UPS script (model)](/config/script/edit/apcupsd_script_model)
+      ''',
+    }),
+  })
+# ---
+# name: test_deprecated_sensor_issue[serialno-available_via_device_info]
+  IssueRegistryItemSnapshot({
+    'active': True,
+    'breaks_in_ha_version': '2026.6.0',
+    'created': <ANY>,
+    'data': None,
+    'dismissed_version': None,
+    'domain': 'apcupsd',
+    'is_fixable': False,
+    'is_persistent': False,
+    'issue_domain': None,
+    'issue_id': 'available_via_device_info_sensor.myups_serial_number',
+    'learn_more_url': None,
+    'severity': <IssueSeverity.WARNING: 'warning'>,
+    'translation_key': 'available_via_device_info',
+    'translation_placeholders': dict({
+      'available_via_device_attr': 'serial_number',
+      'device_id': '<ANY>',
+      'entity_id': 'sensor.myups_serial_number',
+      'entity_name': 'Serial number',
+      'items': '''
+        - [APC UPS automation (serialno)](/config/automation/edit/apcupsd_auto_serialno)
+        - [APC UPS script (serialno)](/config/script/edit/apcupsd_script_serialno)
+      ''',
+    }),
+  })
+# ---
+# name: test_deprecated_sensor_issue[upsname-available_via_device_info]
+  IssueRegistryItemSnapshot({
+    'active': True,
+    'breaks_in_ha_version': '2026.6.0',
+    'created': <ANY>,
+    'data': None,
+    'dismissed_version': None,
+    'domain': 'apcupsd',
+    'is_fixable': False,
+    'is_persistent': False,
+    'issue_domain': None,
+    'issue_id': 'available_via_device_info_sensor.myups_name',
+    'learn_more_url': None,
+    'severity': <IssueSeverity.WARNING: 'warning'>,
+    'translation_key': 'available_via_device_info',
+    'translation_placeholders': dict({
+      'available_via_device_attr': 'name',
+      'device_id': '<ANY>',
+      'entity_id': 'sensor.myups_name',
+      'entity_name': 'Name',
+      'items': '''
+        - [APC UPS automation (upsname)](/config/automation/edit/apcupsd_auto_upsname)
+        - [APC UPS script (upsname)](/config/script/edit/apcupsd_script_upsname)
+      ''',
+    }),
+  })
+# ---
+# name: test_deprecated_sensor_issue[version-available_via_device_info]
+  IssueRegistryItemSnapshot({
+    'active': True,
+    'breaks_in_ha_version': '2026.6.0',
+    'created': <ANY>,
+    'data': None,
+    'dismissed_version': None,
+    'domain': 'apcupsd',
+    'is_fixable': False,
+    'is_persistent': False,
+    'issue_domain': None,
+    'issue_id': 'available_via_device_info_sensor.myups_daemon_version',
+    'learn_more_url': None,
+    'severity': <IssueSeverity.WARNING: 'warning'>,
+    'translation_key': 'available_via_device_info',
+    'translation_placeholders': dict({
+      'available_via_device_attr': 'sw_version',
+      'device_id': '<ANY>',
+      'entity_id': 'sensor.myups_daemon_version',
+      'entity_name': 'Daemon version',
+      'items': '''
+        - [APC UPS automation (version)](/config/automation/edit/apcupsd_auto_version)
+        - [APC UPS script (version)](/config/script/edit/apcupsd_script_version)
+      ''',
+    }),
+  })
+# ---
 # name: test_sensor[sensor.myups_alarm_delay-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -11,7 +251,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.myups_alarm_delay',
     'has_entity_name': True,
     'hidden_by': None,
@@ -113,7 +353,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.myups_battery_nominal_voltage',
     'has_entity_name': True,
     'hidden_by': None,
@@ -214,7 +454,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.myups_battery_shutdown',
     'has_entity_name': True,
     'hidden_by': None,
@@ -263,7 +503,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.myups_battery_timeout',
     'has_entity_name': True,
     'hidden_by': None,
@@ -368,7 +608,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.myups_cable_type',
     'has_entity_name': True,
     'hidden_by': None,
@@ -416,7 +656,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.myups_daemon_version',
     'has_entity_name': True,
     'hidden_by': None,
@@ -464,7 +704,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.myups_date_and_time',
     'has_entity_name': True,
     'hidden_by': None,
@@ -512,7 +752,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.myups_driver',
     'has_entity_name': True,
     'hidden_by': None,
@@ -560,7 +800,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.myups_firmware_version',
     'has_entity_name': True,
     'hidden_by': None,
@@ -768,7 +1008,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.myups_last_transfer',
     'has_entity_name': True,
     'hidden_by': None,
@@ -868,7 +1108,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.myups_mode',
     'has_entity_name': True,
     'hidden_by': None,
@@ -916,8 +1156,56 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.myups_model',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Model',
+    'platform': 'apcupsd',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'apc_model',
+    'unique_id': 'XXXXXXXXXXXX_apcmodel',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[sensor.myups_model-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'MyUPS Model',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.myups_model',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Back-UPS ES 600',
+  })
+# ---
+# name: test_sensor[sensor.myups_model_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.myups_model_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -939,13 +1227,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.myups_model-state]
+# name: test_sensor[sensor.myups_model_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'MyUPS Model',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.myups_model',
+    'entity_id': 'sensor.myups_model_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -964,7 +1252,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.myups_name',
     'has_entity_name': True,
     'hidden_by': None,
@@ -1012,7 +1300,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.myups_nominal_apparent_power',
     'has_entity_name': True,
     'hidden_by': None,
@@ -1065,7 +1353,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.myups_nominal_input_voltage',
     'has_entity_name': True,
     'hidden_by': None,
@@ -1118,7 +1406,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.myups_nominal_output_power',
     'has_entity_name': True,
     'hidden_by': None,
@@ -1227,7 +1515,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.myups_self_test_interval',
     'has_entity_name': True,
     'hidden_by': None,
@@ -1324,7 +1612,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.myups_sensitivity',
     'has_entity_name': True,
     'hidden_by': None,
@@ -1372,7 +1660,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.myups_serial_number',
     'has_entity_name': True,
     'hidden_by': None,
@@ -1420,7 +1708,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.myups_shutdown_time',
     'has_entity_name': True,
     'hidden_by': None,
@@ -1517,7 +1805,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.myups_status_data',
     'has_entity_name': True,
     'hidden_by': None,
@@ -1565,7 +1853,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.myups_status_date',
     'has_entity_name': True,
     'hidden_by': None,
@@ -1613,7 +1901,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.myups_status_flag',
     'has_entity_name': True,
     'hidden_by': None,
@@ -1880,7 +2168,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.myups_transfer_from_battery',
     'has_entity_name': True,
     'hidden_by': None,
@@ -1928,7 +2216,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.myups_transfer_high',
     'has_entity_name': True,
     'hidden_by': None,
@@ -1981,7 +2269,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.myups_transfer_low',
     'has_entity_name': True,
     'hidden_by': None,
@@ -2034,7 +2322,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.myups_transfer_to_battery',
     'has_entity_name': True,
     'hidden_by': None,

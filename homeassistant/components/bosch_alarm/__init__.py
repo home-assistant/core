@@ -14,7 +14,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_INSTALLER_CODE, CONF_USER_CODE, DOMAIN
-from .services import setup_services
+from .services import async_setup_services
 from .types import BoschAlarmConfigEntry
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -29,7 +29,7 @@ PLATFORMS: list[Platform] = [
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up bosch alarm services."""
-    setup_services(hass)
+    async_setup_services(hass)
     return True
 
 
@@ -68,9 +68,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: BoschAlarmConfigEntry) -
         config_entry_id=entry.entry_id,
         connections={(CONNECTION_NETWORK_MAC, mac)} if mac else set(),
         identifiers={(DOMAIN, entry.unique_id or entry.entry_id)},
-        name=f"Bosch {panel.model}",
+        name=f"Bosch {panel.model.name}",
         manufacturer="Bosch Security Systems",
-        model=panel.model,
+        model=panel.model.name,
         sw_version=panel.firmware_version,
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

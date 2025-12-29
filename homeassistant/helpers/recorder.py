@@ -35,8 +35,7 @@ class RecorderData:
 @callback
 def async_migration_in_progress(hass: HomeAssistant) -> bool:
     """Check to see if a recorder migration is in progress."""
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components import recorder
+    from homeassistant.components import recorder  # noqa: PLC0415
 
     return recorder.util.async_migration_in_progress(hass)
 
@@ -44,8 +43,7 @@ def async_migration_in_progress(hass: HomeAssistant) -> bool:
 @callback
 def async_migration_is_live(hass: HomeAssistant) -> bool:
     """Check to see if a recorder migration is live."""
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components import recorder
+    from homeassistant.components import recorder  # noqa: PLC0415
 
     return recorder.util.async_migration_is_live(hass)
 
@@ -58,8 +56,9 @@ def async_initialize_recorder(hass: HomeAssistant) -> None:
     registers the basic recorder websocket API which is used by frontend to determine
     if the recorder is migrating the database.
     """
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.components.recorder.basic_websocket_api import async_setup
+    from homeassistant.components.recorder.basic_websocket_api import (  # noqa: PLC0415
+        async_setup,
+    )
 
     hass.data[DATA_RECORDER] = RecorderData()
     async_setup(hass)

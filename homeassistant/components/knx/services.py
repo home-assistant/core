@@ -35,19 +35,24 @@ from .expose import create_knx_exposure
 from .schema import ExposeSchema, dpt_base_type_validator, ga_validator
 
 if TYPE_CHECKING:
-    from . import KNXModule
+    from .knx_module import KNXModule
 
 _LOGGER = logging.getLogger(__name__)
 
+_DESCRIPTION_PLACEHOLDERS = {
+    "sensor_value_types_url": "https://www.home-assistant.io/integrations/knx/#value-types"
+}
+
 
 @callback
-def register_knx_services(hass: HomeAssistant) -> None:
+def async_setup_services(hass: HomeAssistant) -> None:
     """Register KNX integration services."""
     hass.services.async_register(
         DOMAIN,
         SERVICE_KNX_SEND,
         service_send_to_knx_bus,
         schema=SERVICE_KNX_SEND_SCHEMA,
+        description_placeholders=_DESCRIPTION_PLACEHOLDERS,
     )
 
     hass.services.async_register(
@@ -63,6 +68,7 @@ def register_knx_services(hass: HomeAssistant) -> None:
         SERVICE_KNX_EVENT_REGISTER,
         service_event_register_modify,
         schema=SERVICE_KNX_EVENT_REGISTER_SCHEMA,
+        description_placeholders=_DESCRIPTION_PLACEHOLDERS,
     )
 
     async_register_admin_service(
@@ -71,6 +77,7 @@ def register_knx_services(hass: HomeAssistant) -> None:
         SERVICE_KNX_EXPOSURE_REGISTER,
         service_exposure_register_modify,
         schema=SERVICE_KNX_EXPOSURE_REGISTER_SCHEMA,
+        description_placeholders=_DESCRIPTION_PLACEHOLDERS,
     )
 
     async_register_admin_service(
@@ -87,7 +94,9 @@ def get_knx_module(hass: HomeAssistant) -> KNXModule:
     try:
         return hass.data[KNX_MODULE_KEY]
     except KeyError as err:
-        raise HomeAssistantError("KNX entry not loaded") from err
+        raise HomeAssistantError(
+            translation_domain=DOMAIN, translation_key="integration_not_loaded"
+        ) from err
 
 
 SERVICE_KNX_EVENT_REGISTER_SCHEMA = vol.Schema(
@@ -166,7 +175,11 @@ async def service_exposure_register_modify(call: ServiceCall) -> None:
             removed_exposure = knx_module.service_exposures.pop(group_address)
         except KeyError as err:
             raise ServiceValidationError(
-                f"Could not find exposure for '{group_address}' to remove."
+                translation_domain=DOMAIN,
+                translation_key="service_exposure_remove_not_found",
+                translation_placeholders={
+                    "group_address": group_address,
+                },
             ) from err
 
         removed_exposure.async_remove()
@@ -234,13 +247,17 @@ async def service_send_to_knx_bus(call: ServiceCall) -> None:
         transcoder = DPTBase.parse_transcoder(attr_type)
         if transcoder is None:
             raise ServiceValidationError(
-                f"Invalid type for knx.send service: {attr_type}"
+                translation_domain=DOMAIN,
+                translation_key="service_send_invalid_type",
+                translation_placeholders={"type": attr_type},
             )
         try:
             payload = transcoder.to_knx(attr_payload)
         except ConversionError as err:
             raise ServiceValidationError(
-                f"Invalid payload for knx.send service: {err}"
+                translation_domain=DOMAIN,
+                translation_key="service_send_invalid_payload",
+                translation_placeholders={"error": str(err)},
             ) from err
     elif isinstance(attr_payload, int):
         payload = DPTBinary(attr_payload)

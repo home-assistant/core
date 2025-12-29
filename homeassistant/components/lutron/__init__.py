@@ -29,6 +29,8 @@ ATTR_ACTION = "action"
 ATTR_FULL_ID = "full_id"
 ATTR_UUID = "uuid"
 
+type LutronConfigEntry = ConfigEntry[LutronData]
+
 
 @dataclass(slots=True, kw_only=True)
 class LutronData:
@@ -44,7 +46,9 @@ class LutronData:
     switches: list[tuple[str, Output]]
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: LutronConfigEntry
+) -> bool:
     """Set up the Lutron integration."""
 
     host = config_entry.data[CONF_HOST]
@@ -113,6 +117,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                     "Toggle",
                     "SingleSceneRaiseLower",
                     "MasterRaiseLower",
+                    "AdvancedToggle",
                 ):
                     # Associate an LED with a button if there is one
                     led = next(
@@ -168,7 +173,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         name="Main repeater",
     )
 
-    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = entry_data
+    config_entry.runtime_data = entry_data
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
@@ -221,6 +226,6 @@ def _async_check_device_identifiers(
         )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LutronConfigEntry) -> bool:
     """Clean up resources and entities associated with the integration."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

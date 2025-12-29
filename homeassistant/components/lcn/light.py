@@ -1,6 +1,7 @@
 """Support for LCN lights."""
 
 from collections.abc import Iterable
+from datetime import timedelta
 from functools import partial
 from typing import Any
 
@@ -14,29 +15,30 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DOMAIN, CONF_ENTITIES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.color import brightness_to_value, value_to_brightness
 
 from .const import (
-    ADD_ENTITIES_CALLBACKS,
     CONF_DIMMABLE,
     CONF_DOMAIN_DATA,
     CONF_OUTPUT,
     CONF_TRANSITION,
-    DOMAIN,
     OUTPUT_PORTS,
 )
 from .entity import LcnEntity
-from .helpers import InputType
+from .helpers import InputType, LcnConfigEntry
 
-PARALLEL_UPDATES = 0
+BRIGHTNESS_SCALE = (1, 100)
+
+PARALLEL_UPDATES = 2
+SCAN_INTERVAL = timedelta(minutes=10)
 
 
 def add_lcn_entities(
-    config_entry: ConfigEntry,
+    config_entry: LcnConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
     entity_configs: Iterable[ConfigType],
 ) -> None:
@@ -53,7 +55,7 @@ def add_lcn_entities(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: LcnConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up LCN light entities from a config entry."""
@@ -63,7 +65,7 @@ async def async_setup_entry(
         async_add_entities,
     )
 
-    hass.data[DOMAIN][config_entry.entry_id][ADD_ENTITIES_CALLBACKS].update(
+    config_entry.runtime_data.add_entities_callbacks.update(
         {DOMAIN_LIGHT: add_entities}
     )
 
@@ -83,7 +85,7 @@ class LcnOutputLight(LcnEntity, LightEntity):
     _attr_is_on = False
     _attr_brightness = 255
 
-    def __init__(self, config: ConfigType, config_entry: ConfigEntry) -> None:
+    def __init__(self, config: ConfigType, config_entry: LcnConfigEntry) -> None:
         """Initialize the LCN light."""
         super().__init__(config, config_entry)
 
@@ -94,32 +96,14 @@ class LcnOutputLight(LcnEntity, LightEntity):
         )
         self.dimmable = config[CONF_DOMAIN_DATA][CONF_DIMMABLE]
 
-        self._is_dimming_to_zero = False
-
         if self.dimmable:
             self._attr_color_mode = ColorMode.BRIGHTNESS
         else:
             self._attr_color_mode = ColorMode.ONOFF
         self._attr_supported_color_modes = {self._attr_color_mode}
 
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass."""
-        await super().async_added_to_hass()
-        if not self.device_connection.is_group:
-            await self.device_connection.activate_status_request_handler(self.output)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Run when entity will be removed from hass."""
-        await super().async_will_remove_from_hass()
-        if not self.device_connection.is_group:
-            await self.device_connection.cancel_status_request_handler(self.output)
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        if ATTR_BRIGHTNESS in kwargs:
-            percent = int(kwargs[ATTR_BRIGHTNESS] / 255.0 * 100)
-        else:
-            percent = 100
         if ATTR_TRANSITION in kwargs:
             transition = pypck.lcn_defs.time_to_ramp_value(
                 kwargs[ATTR_TRANSITION] * 1000
@@ -127,12 +111,23 @@ class LcnOutputLight(LcnEntity, LightEntity):
         else:
             transition = self._transition
 
-        if not await self.device_connection.dim_output(
-            self.output.value, percent, transition
-        ):
+        if ATTR_BRIGHTNESS in kwargs:
+            percent = int(
+                brightness_to_value(BRIGHTNESS_SCALE, kwargs[ATTR_BRIGHTNESS])
+            )
+            if not await self.device_connection.dim_output(
+                self.output.value, percent, transition
+            ):
+                return
+        elif not self.is_on:
+            if not await self.device_connection.toggle_output(
+                self.output.value, transition, to_memory=True
+            ):
+                return
+        else:
             return
+
         self._attr_is_on = True
-        self._is_dimming_to_zero = False
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -144,13 +139,22 @@ class LcnOutputLight(LcnEntity, LightEntity):
         else:
             transition = self._transition
 
-        if not await self.device_connection.dim_output(
-            self.output.value, 0, transition
-        ):
-            return
-        self._is_dimming_to_zero = bool(transition)
-        self._attr_is_on = False
-        self.async_write_ha_state()
+        if self.is_on:
+            if not await self.device_connection.toggle_output(
+                self.output.value, transition, to_memory=True
+            ):
+                return
+            self._attr_is_on = False
+            self.async_write_ha_state()
+
+    async def async_update(self) -> None:
+        """Update the state of the entity."""
+        self._attr_available = (
+            await self.device_connection.request_status_output(
+                self.output, SCAN_INTERVAL.seconds
+            )
+            is not None
+        )
 
     def input_received(self, input_obj: InputType) -> None:
         """Set light state when LCN input object (command) is received."""
@@ -159,12 +163,10 @@ class LcnOutputLight(LcnEntity, LightEntity):
             or input_obj.get_output_id() != self.output.value
         ):
             return
-
-        self._attr_brightness = int(input_obj.get_percent() / 100.0 * 255)
-        if self._attr_brightness == 0:
-            self._is_dimming_to_zero = False
-        if not self._is_dimming_to_zero and self._attr_brightness is not None:
-            self._attr_is_on = self._attr_brightness > 0
+        self._attr_available = True
+        percent = input_obj.get_percent()
+        self._attr_brightness = value_to_brightness(BRIGHTNESS_SCALE, percent)
+        self._attr_is_on = bool(percent)
         self.async_write_ha_state()
 
 
@@ -175,23 +177,11 @@ class LcnRelayLight(LcnEntity, LightEntity):
     _attr_supported_color_modes = {ColorMode.ONOFF}
     _attr_is_on = False
 
-    def __init__(self, config: ConfigType, config_entry: ConfigEntry) -> None:
+    def __init__(self, config: ConfigType, config_entry: LcnConfigEntry) -> None:
         """Initialize the LCN light."""
         super().__init__(config, config_entry)
 
         self.output = pypck.lcn_defs.RelayPort[config[CONF_DOMAIN_DATA][CONF_OUTPUT]]
-
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass."""
-        await super().async_added_to_hass()
-        if not self.device_connection.is_group:
-            await self.device_connection.activate_status_request_handler(self.output)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Run when entity will be removed from hass."""
-        await super().async_will_remove_from_hass()
-        if not self.device_connection.is_group:
-            await self.device_connection.cancel_status_request_handler(self.output)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
@@ -211,10 +201,17 @@ class LcnRelayLight(LcnEntity, LightEntity):
         self._attr_is_on = False
         self.async_write_ha_state()
 
+    async def async_update(self) -> None:
+        """Update the state of the entity."""
+        self._attr_available = (
+            await self.device_connection.request_status_relays(SCAN_INTERVAL.seconds)
+            is not None
+        )
+
     def input_received(self, input_obj: InputType) -> None:
         """Set light state when LCN input object (command) is received."""
         if not isinstance(input_obj, pypck.inputs.ModStatusRelays):
             return
-
+        self._attr_available = True
         self._attr_is_on = input_obj.get_state(self.output.value)
         self.async_write_ha_state()

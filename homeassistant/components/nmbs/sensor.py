@@ -8,30 +8,19 @@ from typing import Any
 
 from pyrail import iRail
 from pyrail.models import ConnectionDetails, LiveboardDeparture, StationDetails
-import voluptuous as vol
 
-from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
-    SensorEntity,
-)
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     CONF_NAME,
-    CONF_PLATFORM,
     CONF_SHOW_ON_MAP,
     UnitOfTime,
 )
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity_platform import (
-    AddConfigEntryEntitiesCallback,
-    AddEntitiesCallback,
-)
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import (  # noqa: F401
@@ -47,21 +36,8 @@ from .const import (  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "NMBS"
-
 DEFAULT_ICON = "mdi:train"
 DEFAULT_ICON_ALERT = "mdi:alert-octagon"
-
-PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_STATION_FROM): cv.string,
-        vol.Required(CONF_STATION_TO): cv.string,
-        vol.Optional(CONF_STATION_LIVE): cv.string,
-        vol.Optional(CONF_EXCLUDE_VIAS, default=False): cv.boolean,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_SHOW_ON_MAP, default=False): cv.boolean,
-    }
-)
 
 
 def get_time_until(departure_time: datetime | None = None):
@@ -83,71 +59,6 @@ def get_ride_duration(departure_time: datetime, arrival_time: datetime, delay=0)
     duration = arrival_time - departure_time
     duration_time = int(round(duration.total_seconds() / 60))
     return duration_time + get_delay_in_minutes(delay)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the NMBS sensor with iRail API."""
-
-    if config[CONF_PLATFORM] == DOMAIN:
-        if CONF_SHOW_ON_MAP not in config:
-            config[CONF_SHOW_ON_MAP] = False
-        if CONF_EXCLUDE_VIAS not in config:
-            config[CONF_EXCLUDE_VIAS] = False
-
-        station_types = [CONF_STATION_FROM, CONF_STATION_TO, CONF_STATION_LIVE]
-
-        for station_type in station_types:
-            station = (
-                find_station_by_name(hass, config[station_type])
-                if station_type in config
-                else None
-            )
-            if station is None and station_type in config:
-                async_create_issue(
-                    hass,
-                    DOMAIN,
-                    "deprecated_yaml_import_issue_station_not_found",
-                    breaks_in_ha_version="2025.7.0",
-                    is_fixable=False,
-                    issue_domain=DOMAIN,
-                    severity=IssueSeverity.WARNING,
-                    translation_key="deprecated_yaml_import_issue_station_not_found",
-                    translation_placeholders={
-                        "domain": DOMAIN,
-                        "integration_title": "NMBS",
-                        "station_name": config[station_type],
-                        "url": "/config/integrations/dashboard/add?domain=nmbs",
-                    },
-                )
-                return
-
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data=config,
-            )
-        )
-
-    async_create_issue(
-        hass,
-        HOMEASSISTANT_DOMAIN,
-        f"deprecated_yaml_{DOMAIN}",
-        breaks_in_ha_version="2025.7.0",
-        is_fixable=False,
-        issue_domain=DOMAIN,
-        severity=IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-        translation_placeholders={
-            "domain": DOMAIN,
-            "integration_title": "NMBS",
-        },
-    )
 
 
 async def async_setup_entry(
@@ -336,7 +247,6 @@ class NMBSSensor(SensorEntity):
 
         delay = get_delay_in_minutes(self._attrs.departure.delay)
         departure = get_time_until(self._attrs.departure.time)
-        canceled = self._attrs.departure.canceled
 
         attrs = {
             "destination": self._attrs.departure.station,
@@ -346,14 +256,13 @@ class NMBSSensor(SensorEntity):
             "vehicle_id": self._attrs.departure.vehicle,
         }
 
-        if not canceled:
-            attrs["departure"] = f"In {departure} minutes"
-            attrs["departure_minutes"] = departure
-            attrs["canceled"] = False
-        else:
+        attrs["canceled"] = self._attrs.departure.canceled
+        if attrs["canceled"]:
             attrs["departure"] = None
             attrs["departure_minutes"] = None
-            attrs["canceled"] = True
+        else:
+            attrs["departure"] = f"In {departure} minutes"
+            attrs["departure_minutes"] = departure
 
         if self._show_on_map and self.station_coordinates:
             attrs[ATTR_LATITUDE] = self.station_coordinates[0]
@@ -369,9 +278,8 @@ class NMBSSensor(SensorEntity):
                 via.timebetween
             ) + get_delay_in_minutes(via.departure.delay)
 
-        if delay > 0:
-            attrs["delay"] = f"{delay} minutes"
-            attrs["delay_minutes"] = delay
+        attrs["delay"] = f"{delay} minutes"
+        attrs["delay_minutes"] = delay
 
         return attrs
 

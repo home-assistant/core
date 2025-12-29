@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
 from collections.abc import AsyncGenerator
 from typing import Any, Final, Literal
 
@@ -20,11 +19,11 @@ from xknx.io.util import validate_ip as xknx_validate_ip
 from xknx.secure.keyring import Keyring, XMLInterface
 
 from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
     ConfigEntry,
-    ConfigEntryBaseFlow,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import callback
@@ -103,12 +102,14 @@ _PORT_SELECTOR = vol.All(
 )
 
 
-class KNXCommonFlow(ABC, ConfigEntryBaseFlow):
-    """Base class for KNX flows."""
+class KNXConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a KNX config flow."""
 
-    def __init__(self, initial_data: KNXConfigEntryData) -> None:
-        """Initialize KNXCommonFlow."""
-        self.initial_data = initial_data
+    VERSION = 1
+
+    def __init__(self) -> None:
+        """Initialize KNX config flow."""
+        self.initial_data = DEFAULT_ENTRY_DATA
         self.new_entry_data = KNXConfigEntryData()
         self.new_title: str | None = None
 
@@ -121,18 +122,20 @@ class KNXCommonFlow(ABC, ConfigEntryBaseFlow):
         self._gatewayscanner: GatewayScanner | None = None
         self._async_scan_gen: AsyncGenerator[GatewayDescriptor] | None = None
 
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> KNXOptionsFlow:
+        """Get the options flow for this handler."""
+        return KNXOptionsFlow(config_entry)
+
     @property
     def _xknx(self) -> XKNX:
         """Return XKNX instance."""
-        if isinstance(self, OptionsFlow) and (
+        if (self.source == SOURCE_RECONFIGURE) and (
             knx_module := self.hass.data.get(KNX_MODULE_KEY)
         ):
             return knx_module.xknx
         return XKNX()
-
-    @abstractmethod
-    def finish_flow(self) -> ConfigFlowResult:
-        """Finish the flow."""
 
     @property
     def connection_type(self) -> str:
@@ -148,6 +151,61 @@ class KNXCommonFlow(ABC, ConfigEntryBaseFlow):
         return self.new_entry_data.get(
             CONF_KNX_TUNNEL_ENDPOINT_IA,
             self.initial_data.get(CONF_KNX_TUNNEL_ENDPOINT_IA),
+        )
+
+    @callback
+    def finish_flow(self) -> ConfigFlowResult:
+        """Create or update the ConfigEntry."""
+        if self.source == SOURCE_RECONFIGURE:
+            entry = self._get_reconfigure_entry()
+            _tunnel_endpoint_str = self.initial_data.get(
+                CONF_KNX_TUNNEL_ENDPOINT_IA, "Tunneling"
+            )
+            if self.new_title and not entry.title.startswith(
+                # Overwrite standard titles, but not user defined ones
+                (
+                    f"KNX {self.initial_data[CONF_KNX_CONNECTION_TYPE]}",
+                    CONF_KNX_AUTOMATIC.capitalize(),
+                    "Tunneling @ ",
+                    f"{_tunnel_endpoint_str} @",
+                    "Tunneling UDP @ ",
+                    "Tunneling TCP @ ",
+                    "Secure Tunneling",
+                    "Routing as ",
+                    "Secure Routing as ",
+                )
+            ):
+                self.new_title = None
+            return self.async_update_reload_and_abort(
+                self._get_reconfigure_entry(),
+                data_updates=self.new_entry_data,
+                title=self.new_title or UNDEFINED,
+            )
+
+        title = self.new_title or f"KNX {self.new_entry_data[CONF_KNX_CONNECTION_TYPE]}"
+        return self.async_create_entry(
+            title=title,
+            data=DEFAULT_ENTRY_DATA | self.new_entry_data,
+        )
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a flow initialized by the user."""
+        return await self.async_step_connection_type()
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of existing entry."""
+        entry = self._get_reconfigure_entry()
+        self.initial_data = dict(entry.data)  # type: ignore[assignment]
+        return self.async_show_menu(
+            step_id="reconfigure",
+            menu_options=[
+                "connection_type",
+                "secure_knxkeys",
+            ],
         )
 
     async def async_step_connection_type(
@@ -441,7 +499,7 @@ class KNXCommonFlow(ABC, ConfigEntryBaseFlow):
         )
         ip_address: str | None
         if (  # initial attempt on ConfigFlow or coming from automatic / routing
-            (isinstance(self, ConfigFlow) or not _reconfiguring_existing_tunnel)
+            not _reconfiguring_existing_tunnel
             and not user_input
             and self._selected_tunnel is not None
         ):  # default to first found tunnel
@@ -841,52 +899,20 @@ class KNXCommonFlow(ABC, ConfigEntryBaseFlow):
         )
 
 
-class KNXConfigFlow(KNXCommonFlow, ConfigFlow, domain=DOMAIN):
-    """Handle a KNX config flow."""
-
-    VERSION = 1
-
-    def __init__(self) -> None:
-        """Initialize KNX options flow."""
-        super().__init__(initial_data=DEFAULT_ENTRY_DATA)
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> KNXOptionsFlow:
-        """Get the options flow for this handler."""
-        return KNXOptionsFlow(config_entry)
-
-    @callback
-    def finish_flow(self) -> ConfigFlowResult:
-        """Create the ConfigEntry."""
-        title = self.new_title or f"KNX {self.new_entry_data[CONF_KNX_CONNECTION_TYPE]}"
-        return self.async_create_entry(
-            title=title,
-            data=DEFAULT_ENTRY_DATA | self.new_entry_data,
-        )
-
-    async def async_step_user(self, user_input: dict | None = None) -> ConfigFlowResult:
-        """Handle a flow initialized by the user."""
-        return await self.async_step_connection_type()
-
-
-class KNXOptionsFlow(KNXCommonFlow, OptionsFlow):
+class KNXOptionsFlow(OptionsFlowWithReload):
     """Handle KNX options."""
-
-    general_settings: dict
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize KNX options flow."""
-        super().__init__(initial_data=config_entry.data)  # type: ignore[arg-type]
+        self.initial_data = dict(config_entry.data)
 
     @callback
-    def finish_flow(self) -> ConfigFlowResult:
+    def finish_flow(self, new_entry_data: KNXConfigEntryData) -> ConfigFlowResult:
         """Update the ConfigEntry and finish the flow."""
-        new_data = DEFAULT_ENTRY_DATA | self.initial_data | self.new_entry_data
+        new_data = self.initial_data | new_entry_data
         self.hass.config_entries.async_update_entry(
             self.config_entry,
             data=new_data,
-            title=self.new_title or UNDEFINED,
         )
         return self.async_create_entry(title="", data={})
 
@@ -894,26 +920,20 @@ class KNXOptionsFlow(KNXCommonFlow, OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage KNX options."""
-        return self.async_show_menu(
-            step_id="init",
-            menu_options=[
-                "connection_type",
-                "communication_settings",
-                "secure_knxkeys",
-            ],
-        )
+        return await self.async_step_communication_settings()
 
     async def async_step_communication_settings(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage KNX communication settings."""
         if user_input is not None:
-            self.new_entry_data = KNXConfigEntryData(
-                state_updater=user_input[CONF_KNX_STATE_UPDATER],
-                rate_limit=user_input[CONF_KNX_RATE_LIMIT],
-                telegram_log_size=user_input[CONF_KNX_TELEGRAM_LOG_SIZE],
+            return self.finish_flow(
+                KNXConfigEntryData(
+                    state_updater=user_input[CONF_KNX_STATE_UPDATER],
+                    rate_limit=user_input[CONF_KNX_RATE_LIMIT],
+                    telegram_log_size=user_input[CONF_KNX_TELEGRAM_LOG_SIZE],
+                )
             )
-            return self.finish_flow()
 
         data_schema = {
             vol.Required(

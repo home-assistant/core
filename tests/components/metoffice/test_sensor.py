@@ -24,10 +24,11 @@ from .const import (
     WAVERTREE_SENSOR_RESULTS,
 )
 
-from tests.common import MockConfigEntry, get_sensor_display_state, load_fixture
+from tests.common import MockConfigEntry, async_load_fixture, get_sensor_display_state
 
 
 @pytest.mark.freeze_time(datetime.datetime(2024, 11, 23, 12, tzinfo=datetime.UTC))
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_one_sensor_site_running(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -36,7 +37,7 @@ async def test_one_sensor_site_running(
 ) -> None:
     """Test the Met Office sensor platform."""
     # all metoffice test data encapsulated in here
-    mock_json = json.loads(load_fixture("metoffice.json", "metoffice"))
+    mock_json = json.loads(await async_load_fixture(hass, "metoffice.json", DOMAIN))
     wavertree_hourly = json.dumps(mock_json["wavertree_hourly"])
     wavertree_daily = json.dumps(mock_json["wavertree_daily"])
 
@@ -78,6 +79,7 @@ async def test_one_sensor_site_running(
 
 
 @pytest.mark.freeze_time(datetime.datetime(2024, 11, 23, 12, tzinfo=datetime.UTC))
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_two_sensor_sites_running(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -87,7 +89,7 @@ async def test_two_sensor_sites_running(
     """Test we handle two sets of sensors running for two different sites."""
 
     # all metoffice test data encapsulated in here
-    mock_json = json.loads(load_fixture("metoffice.json", "metoffice"))
+    mock_json = json.loads(await async_load_fixture(hass, "metoffice.json", DOMAIN))
     wavertree_hourly = json.dumps(mock_json["wavertree_hourly"])
     wavertree_daily = json.dumps(mock_json["wavertree_daily"])
     kingslynn_hourly = json.dumps(mock_json["kingslynn_hourly"])
@@ -180,7 +182,7 @@ async def test_legacy_entities_are_removed(
     old_unique_id: str,
 ) -> None:
     """Test the expected entities are deleted."""
-    mock_json = json.loads(load_fixture("metoffice.json", "metoffice"))
+    mock_json = json.loads(await async_load_fixture(hass, "metoffice.json", DOMAIN))
     wavertree_hourly = json.dumps(mock_json["wavertree_hourly"])
     wavertree_daily = json.dumps(mock_json["wavertree_daily"])
 

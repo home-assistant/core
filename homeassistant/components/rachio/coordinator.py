@@ -44,7 +44,6 @@ class RachioUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         base_count: int,
     ) -> None:
         """Initialize the Rachio Update Coordinator."""
-        self.hass = hass
         self.rachio = rachio
         self.base_station = base_station
         super().__init__(
@@ -83,7 +82,6 @@ class RachioScheduleUpdateCoordinator(DataUpdateCoordinator[list[dict[str, Any]]
         base_station,
     ) -> None:
         """Initialize a Rachio schedule coordinator."""
-        self.hass = hass
         self.rachio = rachio
         self.base_station = base_station
         super().__init__(
