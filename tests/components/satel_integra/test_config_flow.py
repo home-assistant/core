@@ -217,7 +217,7 @@ async def test_options_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert mock_config_entry.options == entry_options
 
-    # Assert the entry is reloaded to set up the entity
+    # Assert the entry is reloaded to use the updated code
     assert mock_reload_after_entry_update.call_count == 1
 
 
