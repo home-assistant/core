@@ -276,8 +276,8 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
             # Text-to-speech text
             if event.data:
                 # Save Text-to-speech and asking satellite
-                self.hass.states.async_set("wyoming.response_text", event.data["tts_input"])
-                self.hass.states.async_set("wyoming.satellite", self.device.device_id)
+                self.hass.states.async_set("wyoming.response_text", event.data["tts_input"], force_update=True)
+                self.hass.states.async_set("wyoming.satellite", self.device.device_id,force_update=True)
                 
                 # Inform client of text
                 self.config_entry.async_create_background_task(
