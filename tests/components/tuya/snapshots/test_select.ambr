@@ -2060,6 +2060,242 @@
     'state': 'cancel',
   })
 # ---
+# name: test_platform_setup_and_discovery[select.dehumidifier_indicator_light_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'relay',
+        'pos',
+        'none',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.dehumidifier_indicator_light_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Indicator light mode',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'light_mode',
+    'unique_id': 'tuya.jgsopsvzh2ec3itjzclight_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.dehumidifier_indicator_light_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dehumidifier  Indicator light mode',
+      'options': list([
+        'relay',
+        'pos',
+        'none',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.dehumidifier_indicator_light_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'relay',
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.dehumidifier_power_on_behavior-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'power_off',
+        'power_on',
+        'last',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.dehumidifier_power_on_behavior',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power on behavior',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'relay_status',
+    'unique_id': 'tuya.jgsopsvzh2ec3itjzcrelay_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.dehumidifier_power_on_behavior-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dehumidifier  Power on behavior',
+      'options': list([
+        'power_off',
+        'power_on',
+        'last',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.dehumidifier_power_on_behavior',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'last',
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_countdown-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'cancel',
+        '1h',
+        '2h',
+        '3h',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_countdown',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Countdown',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'countdown',
+    'unique_id': 'tuya.ake0bre784zriw0usccountdown_set',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_countdown-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Déshumidificateur Silencieux OmniDry 20L avec Mode Linge Countdown',
+      'options': list([
+        'cancel',
+        '1h',
+        '2h',
+        '3h',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.deshumidificateur_silencieux_omnidry_20l_avec_mode_linge_countdown',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cancel',
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.dining_1_motor_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'forward',
+        'back',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.dining_1_motor_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Motor mode',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'curtain_motor_mode',
+    'unique_id': 'tuya.slkkzcxa7yjqmetqlccontrol_back_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.dining_1_motor_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dining 1 Motor mode',
+      'options': list([
+        'forward',
+        'back',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.dining_1_motor_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'forward',
+  })
+# ---
 # name: test_platform_setup_and_discovery[select.elivco_kitchen_socket_indicator_light_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2770,6 +3006,65 @@
     'state': 'last',
   })
 # ---
+# name: test_platform_setup_and_discovery[select.intercom_motion_detection_sensitivity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        '0',
+        '1',
+        '2',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.intercom_motion_detection_sensitivity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Motion detection sensitivity',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'motion_sensitivity',
+    'unique_id': 'tuya.qt0o5jlatiqf2rscpsmotion_sensitivity',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.intercom_motion_detection_sensitivity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Intercom Motion detection sensitivity',
+      'options': list([
+        '0',
+        '1',
+        '2',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.intercom_motion_detection_sensitivity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_platform_setup_and_discovery[select.ion1000pro_countdown-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -2810,7 +3105,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'countdown',
-    'unique_id': 'tuya.owozxdzgbibizu4sjkcountdown_set',
+    'unique_id': 'tuya.owozxdzgbibizu4sjkcountdown',
     'unit_of_measurement': None,
   })
 # ---
@@ -2829,6 +3124,71 @@
     }),
     'context': <ANY>,
     'entity_id': 'select.ion1000pro_countdown',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.ion1000pro_countdown_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        '1',
+        '2',
+        '3',
+        '4',
+        '5',
+        '6',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.ion1000pro_countdown_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Countdown',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'countdown',
+    'unique_id': 'tuya.owozxdzgbibizu4sjkcountdown_set',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.ion1000pro_countdown_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'ION1000PRO Countdown',
+      'options': list([
+        '1',
+        '2',
+        '3',
+        '4',
+        '5',
+        '6',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.ion1000pro_countdown_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -3970,6 +4330,65 @@
     'state': 'power_on',
   })
 # ---
+# name: test_platform_setup_and_discovery[select.seating_side_6_ch_smart_switch_power_on_behavior-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        '0',
+        '1',
+        '2',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.seating_side_6_ch_smart_switch_power_on_behavior',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power on behavior',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'relay_status',
+    'unique_id': 'tuya.kxxrbv93k2vvkconqdtrelay_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.seating_side_6_ch_smart_switch_power_on_behavior-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Seating side 6-ch Smart Switch  Power on behavior',
+      'options': list([
+        '0',
+        '1',
+        '2',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.seating_side_6_ch_smart_switch_power_on_behavior',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_platform_setup_and_discovery[select.security_light_indicator_light_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -4086,6 +4505,67 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'power_on',
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.siren_siren_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'alarm_sound',
+        'alarm_light',
+        'alarm_sound_light',
+        'normal',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.siren_siren_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Siren mode',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'siren_mode',
+    'unique_id': 'tuya.okwwus27jhqqe2mijbgsalarm_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[select.siren_siren_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Siren Siren mode',
+      'options': list([
+        'alarm_sound',
+        'alarm_light',
+        'alarm_sound_light',
+        'normal',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.siren_siren_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'normal',
   })
 # ---
 # name: test_platform_setup_and_discovery[select.siren_veranda_volume-entry]

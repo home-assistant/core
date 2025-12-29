@@ -85,7 +85,6 @@ _ENTITY_COMPONENTS: set[str] = {platform.value for platform in Platform}.union(
         "alert",
         "automation",
         "counter",
-        "dominos",
         "input_boolean",
         "input_button",
         "input_datetime",

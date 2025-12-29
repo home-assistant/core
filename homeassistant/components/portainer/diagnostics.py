@@ -30,11 +30,11 @@ def _serialize_coordinator(coordinator: PortainerCoordinator) -> dict[str, Any]:
                 },
                 "containers": [
                     {
-                        "id": container.id,
-                        "names": list(container.names or []),
-                        "image": container.image,
-                        "state": container.state,
-                        "status": container.status,
+                        "id": container.container.id,
+                        "names": list(container.container.names or []),
+                        "image": container.container.image,
+                        "state": container.container.state,
+                        "status": container.container.status,
                     }
                     for container in endpoint_data.containers.values()
                 ],

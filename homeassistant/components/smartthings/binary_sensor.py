@@ -8,20 +8,17 @@ from dataclasses import dataclass
 from pysmartthings import Attribute, Capability, Category, SmartThings, Status
 
 from homeassistant.components.binary_sensor import (
-    DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FullDevice, SmartThingsConfigEntry
 from .const import INVALID_SWITCH_CATEGORIES, MAIN
 from .entity import SmartThingsEntity
-from .util import deprecate_entity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -31,11 +28,14 @@ class SmartThingsBinarySensorEntityDescription(BinarySensorEntityDescription):
     is_on_key: str
     category_device_class: dict[Category | str, BinarySensorDeviceClass] | None = None
     category: set[Category] | None = None
-    exists_fn: Callable[[str], bool] | None = None
+    exists_fn: (
+        Callable[
+            [str, dict[str, dict[Capability | str, dict[Attribute | str, Status]]]],
+            bool,
+        ]
+        | None
+    ) = None
     component_translation_key: dict[str, str] | None = None
-    deprecated_fn: Callable[
-        [dict[str, dict[Capability | str, dict[Attribute | str, Status]]]], str | None
-    ] = lambda _: None
 
 
 CAPABILITY_TO_SENSORS: dict[
@@ -59,17 +59,16 @@ CAPABILITY_TO_SENSORS: dict[
                 Category.DOOR: BinarySensorDeviceClass.DOOR,
                 Category.WINDOW: BinarySensorDeviceClass.WINDOW,
             },
-            exists_fn=lambda key: key in {"freezer", "cooler", "cvroom"},
+            exists_fn=lambda component, status: (
+                not ("freezer" in status and "cooler" in status)
+                if component == MAIN
+                else True
+            ),
             component_translation_key={
                 "freezer": "freezer_door",
                 "cooler": "cooler_door",
                 "cvroom": "cool_select_plus_door",
             },
-            deprecated_fn=(
-                lambda status: "fridge_door"
-                if "freezer" in status and "cooler" in status
-                else None
-            ),
         )
     },
     Capability.CUSTOM_DRYER_WRINKLE_PREVENT: {
@@ -130,6 +129,9 @@ CAPABILITY_TO_SENSORS: dict[
             key=Attribute.REMOTE_CONTROL_ENABLED,
             translation_key="remote_control",
             is_on_key="true",
+            component_translation_key={
+                "sub": "sub_remote_control",
+            },
         )
     },
     Capability.SOUND_SENSOR: {
@@ -153,15 +155,6 @@ CAPABILITY_TO_SENSORS: dict[
             device_class=BinarySensorDeviceClass.TAMPER,
             is_on_key="detected",
             entity_category=EntityCategory.DIAGNOSTIC,
-        )
-    },
-    Capability.VALVE: {
-        Attribute.VALVE: SmartThingsBinarySensorEntityDescription(
-            key=Attribute.VALVE,
-            translation_key="valve",
-            device_class=BinarySensorDeviceClass.OPENING,
-            is_on_key="open",
-            deprecated_fn=lambda _: "valve",
         )
     },
     Capability.WATER_SENSOR: {
@@ -204,64 +197,39 @@ async def async_setup_entry(
 ) -> None:
     """Add binary sensors for a config entry."""
     entry_data = entry.runtime_data
-    entities = []
 
-    entity_registry = er.async_get(hass)
-
-    for device in entry_data.devices.values():  # pylint: disable=too-many-nested-blocks
-        for capability, attribute_map in CAPABILITY_TO_SENSORS.items():
-            for attribute, description in attribute_map.items():
-                for component in device.status:
-                    if (
-                        capability in device.status[component]
-                        and (
-                            component == MAIN
-                            or (
-                                description.exists_fn is not None
-                                and description.exists_fn(component)
-                            )
-                        )
-                        and (
-                            not description.category
-                            or get_main_component_category(device)
-                            in description.category
-                        )
-                    ):
-                        if (
-                            component == MAIN
-                            and (issue := description.deprecated_fn(device.status))
-                            is not None
-                        ):
-                            if deprecate_entity(
-                                hass,
-                                entity_registry,
-                                BINARY_SENSOR_DOMAIN,
-                                f"{device.device.device_id}_{component}_{capability}_{attribute}_{attribute}",
-                                f"deprecated_binary_{issue}",
-                            ):
-                                entities.append(
-                                    SmartThingsBinarySensor(
-                                        entry_data.client,
-                                        device,
-                                        description,
-                                        capability,
-                                        attribute,
-                                        component,
-                                    )
-                                )
-                            continue
-                        entities.append(
-                            SmartThingsBinarySensor(
-                                entry_data.client,
-                                device,
-                                description,
-                                capability,
-                                attribute,
-                                component,
-                            )
-                        )
-
-    async_add_entities(entities)
+    async_add_entities(
+        SmartThingsBinarySensor(
+            entry_data.client,
+            device,
+            description,
+            capability,
+            attribute,
+            component,
+        )
+        for device in entry_data.devices.values()
+        for capability, attribute_map in CAPABILITY_TO_SENSORS.items()
+        for attribute, description in attribute_map.items()
+        for component in device.status
+        if (
+            capability in device.status[component]
+            and (
+                component == MAIN
+                or (
+                    description.component_translation_key is not None
+                    and component in description.component_translation_key
+                )
+            )
+            and (
+                description.exists_fn is None
+                or description.exists_fn(component, device.status)
+            )
+            and (
+                not description.category
+                or get_main_component_category(device) in description.category
+            )
+        )
+    )
 
 
 class SmartThingsBinarySensor(SmartThingsEntity, BinarySensorEntity):

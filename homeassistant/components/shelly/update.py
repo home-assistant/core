@@ -68,7 +68,6 @@ class RestUpdateDescription(RestEntityDescription, UpdateEntityDescription):
 
 REST_UPDATES: Final = {
     "fwupdate": RestUpdateDescription(
-        name="Firmware",
         key="fwupdate",
         latest_version=lambda status: status["update"]["new_version"],
         beta=False,
@@ -77,8 +76,8 @@ REST_UPDATES: Final = {
         entity_registry_enabled_default=False,
     ),
     "fwupdate_beta": RestUpdateDescription(
-        name="Beta firmware",
         key="fwupdate",
+        translation_key="beta_firmware",
         latest_version=lambda status: status["update"].get("beta_version"),
         beta=True,
         device_class=UpdateDeviceClass.FIRMWARE,
@@ -89,7 +88,6 @@ REST_UPDATES: Final = {
 
 RPC_UPDATES: Final = {
     "fwupdate": RpcUpdateDescription(
-        name="Firmware",
         key="sys",
         sub_key="available_updates",
         latest_version=lambda status: status.get("stable", {"version": ""})["version"],
@@ -98,9 +96,9 @@ RPC_UPDATES: Final = {
         entity_category=EntityCategory.CONFIG,
     ),
     "fwupdate_beta": RpcUpdateDescription(
-        name="Beta firmware",
         key="sys",
         sub_key="available_updates",
+        translation_key="beta_firmware",
         latest_version=lambda status: status.get("beta", {"version": ""})["version"],
         beta=True,
         device_class=UpdateDeviceClass.FIRMWARE,

@@ -100,6 +100,27 @@
         "name": "Unlocked alarm"
       }
     },
+    "button": {
+      "next_image": {
+        "name": "Next image"
+      },
+      "previous_image": {
+        "name": "Previous image"
+      }
+    },
+    "climate": {
+      "climate": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "manual": "[%key:common::state::manual%]",
+              "off": "[%key:common::state::off%]",
+              "schedule": "Schedule"
+            }
+          }
+        }
+      }
+    },
     "cover": {
       "cover": {
         "state_attributes": {
