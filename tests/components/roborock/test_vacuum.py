@@ -37,6 +37,8 @@ from tests.common import MockConfigEntry
 
 ENTITY_ID = "vacuum.roborock_s7_maxv"
 DEVICE_ID = "abc123"
+Q7_ENTITY_ID = "vacuum.roborock_q7"
+Q7_DEVICE_ID = "q7_duid"
 
 
 @pytest.fixture
@@ -269,4 +271,124 @@ async def test_get_current_position_no_robot_position(
             {ATTR_ENTITY_ID: ENTITY_ID},
             blocking=True,
             return_response=True,
+        )
+
+
+# Tests for RoborockQ7Vacuum
+
+
+@pytest.fixture
+def fake_q7_vacuum(fake_devices: list[FakeDevice]) -> FakeDevice:
+    """Get the fake Q7 vacuum device."""
+    # The Q7 is the fourth device in the list (index 3) based on HOME_DATA
+    return fake_devices[3]
+
+
+@pytest.fixture(name="q7_vacuum_api", autouse=False)
+def fake_q7_vacuum_api_fixture(
+    fake_q7_vacuum: FakeDevice,
+    send_message_exception: Exception | None,
+) -> Mock:
+    """Get the fake Q7 vacuum device API for asserting that commands happened."""
+    assert fake_q7_vacuum.b01_q7_properties is not None
+    api = fake_q7_vacuum.b01_q7_properties
+    if send_message_exception is not None:
+        api.start_clean.side_effect = send_message_exception
+        api.pause_clean.side_effect = send_message_exception
+        api.stop_clean.side_effect = send_message_exception
+        api.return_to_dock.side_effect = send_message_exception
+        api.find_me.side_effect = send_message_exception
+        api.set_fan_speed.side_effect = send_message_exception
+        api.send.side_effect = send_message_exception
+    return api
+
+
+async def test_q7_registry_entries(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    setup_entry: MockConfigEntry,
+) -> None:
+    """Tests Q7 devices are registered in the entity registry."""
+    entity_entry = entity_registry.async_get(Q7_ENTITY_ID)
+    assert entity_entry.unique_id == Q7_DEVICE_ID
+
+    device_entry = device_registry.async_get(entity_entry.device_id)
+    assert device_entry is not None
+
+
+@pytest.mark.parametrize(
+    ("service", "api_method", "service_params", "called_params"),
+    [
+        (SERVICE_START, "start_clean", None, None),
+        (SERVICE_PAUSE, "pause_clean", None, None),
+        (SERVICE_STOP, "stop_clean", None, None),
+        (SERVICE_RETURN_TO_BASE, "return_to_dock", None, None),
+        (SERVICE_LOCATE, "find_me", None, None),
+        (SERVICE_SET_FAN_SPEED, "set_fan_speed", {"fan_speed": "quiet"}, None),
+        (SERVICE_SEND_COMMAND, "send", {"command": "test_command"}, None),
+    ],
+)
+async def test_q7_commands(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    service: str,
+    api_method: str,
+    service_params: dict[str, Any] | None,
+    called_params: list | None,
+    q7_vacuum_api: Mock,
+) -> None:
+    """Test sending commands to the Q7 vacuum."""
+    vacuum = hass.states.get(Q7_ENTITY_ID)
+    assert vacuum
+
+    data = {ATTR_ENTITY_ID: Q7_ENTITY_ID, **(service_params or {})}
+    await hass.services.async_call(
+        Platform.VACUUM,
+        service,
+        data,
+        blocking=True,
+    )
+    api_call = getattr(q7_vacuum_api, api_method)
+    assert api_call.call_count == 1
+    if called_params is not None:
+        assert api_call.call_args[0] == tuple(called_params)
+
+
+@pytest.mark.parametrize(
+    ("service", "api_method", "service_params"),
+    [
+        (SERVICE_START, "start_clean", None),
+        (SERVICE_PAUSE, "pause_clean", None),
+        (SERVICE_STOP, "stop_clean", None),
+        (SERVICE_RETURN_TO_BASE, "return_to_dock", None),
+        (SERVICE_LOCATE, "find_me", None),
+        (SERVICE_SET_FAN_SPEED, "set_fan_speed", {"fan_speed": "quiet"}),
+        (SERVICE_SEND_COMMAND, "send", {"command": "test_command"}),
+    ],
+)
+@pytest.mark.parametrize("send_message_exception", [RoborockException()])
+async def test_q7_failed_commands(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    service: str,
+    api_method: str,
+    service_params: dict[str, Any] | None,
+    q7_vacuum_api: Mock,
+) -> None:
+    """Test that when Q7 commands fail, we raise HomeAssistantError."""
+    vacuum = hass.states.get(Q7_ENTITY_ID)
+    assert vacuum
+
+    data = {ATTR_ENTITY_ID: Q7_ENTITY_ID, **(service_params or {})}
+    command_name = (
+        service_params.get("command", api_method) if service_params else api_method
+    )
+
+    with pytest.raises(HomeAssistantError, match=f"Error while calling {command_name}"):
+        await hass.services.async_call(
+            Platform.VACUUM,
+            service,
+            data,
+            blocking=True,
         )

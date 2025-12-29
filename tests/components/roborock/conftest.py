@@ -111,6 +111,14 @@ def create_b01_q7_trait() -> Mock:
     """Create B01 Q7 trait for B01 devices."""
     b01_trait = AsyncMock()
     b01_trait.query_values.return_value = Q7_B01_PROPS
+    # Add API methods used by RoborockQ7Vacuum
+    b01_trait.start_clean = AsyncMock()
+    b01_trait.pause_clean = AsyncMock()
+    b01_trait.stop_clean = AsyncMock()
+    b01_trait.return_to_dock = AsyncMock()
+    b01_trait.find_me = AsyncMock()
+    b01_trait.set_fan_speed = AsyncMock()
+    b01_trait.send = AsyncMock()
     return b01_trait
 
 
