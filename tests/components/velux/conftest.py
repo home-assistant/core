@@ -67,6 +67,7 @@ def mock_window() -> AsyncMock:
     window.is_opening = False
     window.is_closing = False
     window.position = MagicMock(position_percent=30, closed=False)
+    window.pyvlx = MagicMock()
     return window
 
 
@@ -87,6 +88,7 @@ def mock_blind() -> AsyncMock:
     blind.close_orientation = AsyncMock()
     blind.stop_orientation = AsyncMock()
     blind.set_orientation = AsyncMock()
+    blind.pyvlx = MagicMock()
     return blind
 
 
@@ -98,6 +100,7 @@ def mock_light() -> AsyncMock:
     light.name = "Test Light"
     light.serial_number = "0815"
     light.intensity = MagicMock()
+    light.pyvlx = MagicMock()
     return light
 
 
@@ -111,6 +114,7 @@ def mock_cover_type(request: pytest.FixtureRequest) -> AsyncMock:
     cover.is_opening = False
     cover.is_closing = False
     cover.position = MagicMock(position_percent=30, closed=False)
+    cover.pyvlx = MagicMock()
     return cover
 
 
