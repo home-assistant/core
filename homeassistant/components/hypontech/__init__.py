@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from hyponcloud import HyponCloud
+from hyponcloud import AuthenticationError, HyponCloud
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -29,7 +29,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: HypontechConfigEntry) ->
     )
     try:
         if not await hypontech_cloud.connect():
-            raise ConfigEntryNotReady
+            raise ConfigEntryNotReady(
+                "Cannot connect to Hypontech Cloud. You may retry later."
+            )
+    except AuthenticationError as ex:
+        raise ConfigEntryAuthFailed("Authentication failed for Hypontech Cloud") from ex
     except TimeoutError as ex:
         raise ConfigEntryNotReady("Timeout connecting to Hypontech Cloud") from ex
 
@@ -57,6 +61,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: HypontechConfigEntry) ->
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HypontechConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
