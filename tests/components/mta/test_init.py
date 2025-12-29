@@ -12,7 +12,7 @@ from tests.common import MockConfigEntry
 async def test_setup_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_gtfs_realtime_feed: MagicMock,
+    mock_subway_feed: tuple[MagicMock, MagicMock],
 ) -> None:
     """Test setting up an entry."""
     mock_config_entry.add_to_hass(hass)
@@ -27,7 +27,7 @@ async def test_setup_entry(
 async def test_unload_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_gtfs_realtime_feed: MagicMock,
+    mock_subway_feed: tuple[MagicMock, MagicMock],
 ) -> None:
     """Test unloading an entry."""
     mock_config_entry.add_to_hass(hass)

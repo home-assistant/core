@@ -77,6 +77,7 @@ class MTAConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(unique_id)
             self._abort_if_unique_id_configured()
 
+            # Test connection to real-time GTFS-RT feed (different from static GTFS used by get_stops)
             try:
                 await self._async_test_connection()
             except Exception:  # noqa: BLE001
