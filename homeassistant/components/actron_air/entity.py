@@ -9,7 +9,7 @@ from .const import DOMAIN
 from .coordinator import ActronAirSystemCoordinator
 
 
-class ActronAirAcEntity(CoordinatorEntity[ActronAirSystemCoordinator]):
+class ActronAirEntity(CoordinatorEntity[ActronAirSystemCoordinator]):
     """Base class for Actron Air entities."""
 
     _attr_has_entity_name = True
@@ -19,6 +19,18 @@ class ActronAirAcEntity(CoordinatorEntity[ActronAirSystemCoordinator]):
         super().__init__(coordinator)
         self._serial_number = coordinator.serial_number
 
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return not self.coordinator.is_device_stale()
+
+
+class ActronAirAcEntity(ActronAirEntity):
+    """Base class for Actron Air entities."""
+
+    def __init__(self, coordinator: ActronAirSystemCoordinator) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator)
         self._attr_device_info: DeviceInfo = DeviceInfo(
             identifiers={(DOMAIN, self._serial_number)},
             name=coordinator.data.ac_system.system_name,
@@ -28,13 +40,8 @@ class ActronAirAcEntity(CoordinatorEntity[ActronAirSystemCoordinator]):
             serial_number=self._serial_number,
         )
 
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return not self.coordinator.is_device_stale()
 
-
-class ActronAirZoneEntity(ActronAirAcEntity):
+class ActronAirZoneEntity(ActronAirEntity):
     """Base class for Actron Air zone entities."""
 
     def __init__(
