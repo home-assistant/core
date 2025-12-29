@@ -14,8 +14,14 @@ from pyportainer import (
     PortainerConnectionError,
     PortainerTimeoutError,
 )
-from pyportainer.models.docker import DockerContainer, DockerContainerStats
-from pyportainer.models.docker_inspect import DockerInfo, DockerVersion
+from pyportainer.models.docker import (
+    DockerContainer,
+    DockerContainerStats,
+    ImageInformation,
+    ImageManifestDescriptor,
+    LocalImageInformation,
+)
+from pyportainer.models.docker_inspect import DockerInfo, DockerInspect, DockerVersion
 from pyportainer.models.portainer import Endpoint
 
 from homeassistant.config_entries import ConfigEntry
@@ -44,6 +50,15 @@ class PortainerCoordinatorData:
     containers: dict[str, PortainerContainerData]
     docker_version: DockerVersion
     docker_info: DockerInfo
+
+
+@dataclass(slots=True)
+class PortainerContainerData:
+    """Container data held by the Portainer coordinator."""
+
+    container: DockerContainer
+    stats: DockerContainerStats
+    stats_pre: DockerContainerStats | None
 
 
 @dataclass(slots=True, kw_only=True)

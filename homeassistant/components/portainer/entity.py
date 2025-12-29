@@ -11,6 +11,7 @@ from .coordinator import (
     ContainerBeaconData,
     PortainerBeaconCoordinator,
     PortainerBeaconData,
+    PortainerContainerData,
     PortainerCoordinator,
     PortainerCoordinatorData,
 )
@@ -89,6 +90,11 @@ class PortainerContainerEntity(
             ),
             translation_key=None if self.device_name else "unknown_container",
         )
+
+    @property
+    def container_data(self) -> PortainerContainerData:
+        """Return the coordinator data for this container."""
+        return self.coordinator.data[self.endpoint_id].containers[self.device_name]
 
 
 class PortainerContainerUpdateEntity(
