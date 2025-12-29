@@ -49,19 +49,21 @@ ECONET_FAN_SPEED_TO_HA = {
     ThermostatFanSpeed.HIGH: FAN_HIGH,
     ThermostatFanSpeed.MAX: FAN_TOP,
 }
-HA_FAN_STATE_TO_ECONET_FAN_SPEED = {value: key for key, value in ECONET_FAN_SPEED_TO_HA.items()}
+HA_FAN_STATE_TO_ECONET_FAN_SPEED = {
+    value: key for key, value in ECONET_FAN_SPEED_TO_HA.items()
+}
 
 SUPPORT_FLAGS_THERMOSTAT = (
-        ClimateEntityFeature.TARGET_TEMPERATURE
-        | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-        | ClimateEntityFeature.FAN_MODE
+    ClimateEntityFeature.TARGET_TEMPERATURE
+    | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+    | ClimateEntityFeature.FAN_MODE
 )
 
 
 async def async_setup_entry(
-        hass: HomeAssistant,
-        entry: EconetConfigEntry,
-        async_add_entities: AddConfigEntryEntitiesCallback,
+    hass: HomeAssistant,
+    entry: EconetConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up EcoNet thermostat based on a config entry."""
     equipment = entry.runtime_data
@@ -96,7 +98,7 @@ class EcoNetThermostat(EcoNetEntity[Thermostat], ClimateEntity):
             self._attr_supported_features |= ClimateEntityFeature.TARGET_HUMIDITY
         if len(self.hvac_modes) > 1 and HVACMode.OFF in self.hvac_modes:
             self._attr_supported_features |= (
-                    ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
+                ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
             )
 
     @property
@@ -191,11 +193,16 @@ class EcoNetThermostat(EcoNetEntity[Thermostat], ClimateEntity):
     def fan_modes(self) -> list[str]:
         """Return the fan modes."""
         # Remove the MEDLO MEDHI once we figure out how to handle it
-        supported_fan_modes = [mode for mode in self._econet.fan_speeds if mode not in [ThermostatFanSpeed.UNKNOWN,
-                                                                                        ThermostatFanSpeed.MEDLO,
-                                                                                        ThermostatFanSpeed.MEDHI,
-                                                                                        ]]
-        return supported_fan_modes
+        return [
+            mode
+            for mode in self._econet.fan_speeds
+            if mode
+            not in [
+                ThermostatFanSpeed.UNKNOWN,
+                ThermostatFanSpeed.MEDLO,
+                ThermostatFanSpeed.MEDHI,
+            ]
+        ]
 
     def set_fan_mode(self, fan_mode: str) -> None:
         """Set the fan mode."""
