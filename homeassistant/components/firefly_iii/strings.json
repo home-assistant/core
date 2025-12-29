@@ -1,0 +1,96 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "The new API access token for authenticating with Firefly III"
+        },
+        "description": "The access token for your Firefly III instance is invalid and needs to be updated. Go to **Options > Profile** and select the **OAuth** tab. Create a new personal access token and copy it (it will only display once)."
+      },
+      "reconfigure": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "url": "[%key:common::config_flow::data::url%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::firefly_iii::config::step::user::data_description::api_key%]",
+          "url": "[%key:common::config_flow::data::url%]",
+          "verify_ssl": "[%key:component::firefly_iii::config::step::user::data_description::verify_ssl%]"
+        },
+        "description": "Use the following form to reconfigure your Firefly III instance.",
+        "title": "Reconfigure Firefly III Integration"
+      },
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "url": "[%key:common::config_flow::data::url%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "api_key": "The API key for authenticating with Firefly III",
+          "url": "[%key:common::config_flow::data::url%]",
+          "verify_ssl": "Verify the SSL certificate of the Firefly III instance"
+        },
+        "description": "You can create an API key in the Firefly III UI. Go to **Options > Profile** and select the **OAuth** tab. Create a new personal access token and copy it (it will only display once)."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "account_balance": {
+        "name": "Account Balance"
+      },
+      "account_role": {
+        "name": "Account Role",
+        "state": {
+          "cash_wallet_asset": "Cash wallet asset",
+          "cc_asset": "Credit card asset",
+          "default_asset": "Default asset",
+          "saving_asset": "Saving asset",
+          "shared_asset": "Shared asset"
+        }
+      },
+      "account_type": {
+        "name": "Account Type",
+        "state": {
+          "asset": "Asset",
+          "expense": "Expense",
+          "liability": "Liability",
+          "revenue": "Revenue"
+        }
+      },
+      "budget": {
+        "name": "Budget"
+      },
+      "category": {
+        "name": "Earned/Spent"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "An error occurred while trying to connect to the Firefly III instance: {error}"
+    },
+    "invalid_auth": {
+      "message": "An error occurred while trying to authenticate: {error}"
+    },
+    "timeout_connect": {
+      "message": "A timeout occurred while trying to connect to the Firefly III instance: {error}"
+    }
+  }
+}

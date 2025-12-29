@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
+from freezegun import freeze_time
 import httpx
 from openai import AuthenticationError, RateLimitError
 from openai.types.responses import (
@@ -21,6 +22,7 @@ from homeassistant.components.openai_conversation.const import (
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_CONTEXT_SIZE,
     CONF_WEB_SEARCH_COUNTRY,
+    CONF_WEB_SEARCH_INLINE_CITATIONS,
     CONF_WEB_SEARCH_REGION,
     CONF_WEB_SEARCH_TIMEZONE,
     CONF_WEB_SEARCH_USER_LOCATION,
@@ -239,6 +241,7 @@ async def test_conversation_agent(
     assert agent.supported_languages == "*"
 
 
+@freeze_time("2025-10-31 12:00:00")
 async def test_function_call(
     hass: HomeAssistant,
     mock_config_entry_with_reasoning_model: MockConfigEntry,
@@ -252,7 +255,11 @@ async def test_function_call(
         # Initial conversation
         (
             # Wait for the model to think
-            *create_reasoning_item(id="rs_A", output_index=0),
+            *create_reasoning_item(
+                id="rs_A",
+                output_index=0,
+                reasoning_summary=[["Thinking"], ["Thinking ", "more"]],
+            ),
             # First tool call
             *create_function_tool_call_item(
                 id="fc_1",
@@ -288,18 +295,13 @@ async def test_function_call(
         agent_id="conversation.openai_conversation",
     )
 
-    assert mock_create_stream.call_args.kwargs["input"][2] == {
-        "content": None,
-        "id": "rs_A",
-        "summary": [],
-        "type": "reasoning",
-        "encrypted_content": "AAABBB",
-    }
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     # Don't test the prompt, as it's not deterministic
     assert mock_chat_log.content[1:] == snapshot
+    assert mock_create_stream.call_args.kwargs["input"][1:] == snapshot
 
 
+@freeze_time("2025-10-31 18:00:00")
 async def test_function_call_without_reasoning(
     hass: HomeAssistant,
     mock_config_entry_with_assist: MockConfigEntry,
@@ -431,12 +433,15 @@ async def test_assist_api_tools_conversion(
     assert tools
 
 
+@pytest.mark.parametrize("inline_citations", [True, False])
 async def test_web_search(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_init_component,
     mock_create_stream,
     mock_chat_log: MockChatLog,  # noqa: F811
+    snapshot: SnapshotAssertion,
+    inline_citations: bool,
 ) -> None:
     """Test web_search_tool."""
     subentry = next(iter(mock_config_entry.subentries.values()))
@@ -452,11 +457,17 @@ async def test_web_search(
             CONF_WEB_SEARCH_COUNTRY: "US",
             CONF_WEB_SEARCH_REGION: "California",
             CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
+            CONF_WEB_SEARCH_INLINE_CITATIONS: inline_citations,
         },
     )
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
 
-    message = "Home Assistant now supports ChatGPT Search in Assist"
+    message = [
+        "Home Assistant now supports ",
+        "ChatGPT Search in Assist",
+        " ([release notes](https://www.home-assistant.io/blog/categories/release-notes/)",
+        ").",
+    ]
     mock_create_stream.return_value = [
         # Initial conversation
         (
@@ -475,7 +486,7 @@ async def test_web_search(
 
     assert mock_create_stream.mock_calls[0][2]["tools"] == [
         {
-            "type": "web_search_preview",
+            "type": "web_search",
             "search_context_size": "low",
             "user_location": {
                 "type": "approximate",
@@ -487,7 +498,26 @@ async def test_web_search(
         }
     ]
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
-    assert result.response.speech["plain"]["speech"] == message, result.response.speech
+
+    # Test follow-up message in multi-turn conversation
+    mock_create_stream.return_value = [
+        (*create_message_item(id="msg_B", text="You are welcome!", output_index=1),)
+    ]
+
+    result = await conversation.async_converse(
+        hass,
+        "Thank you!",
+        mock_chat_log.conversation_id,
+        Context(),
+        agent_id="conversation.openai_conversation",
+    )
+
+    assert (
+        isinstance(mock_create_stream.mock_calls[0][2]["input"][0]["content"], list)
+        and "do not include source citations"
+        in mock_create_stream.mock_calls[0][2]["input"][0]["content"][1]["text"]
+    ) is not inline_citations
+    assert mock_create_stream.mock_calls[1][2]["input"][1:] == snapshot
 
 
 async def test_code_interpreter(
@@ -496,6 +526,7 @@ async def test_code_interpreter(
     mock_init_component,
     mock_create_stream,
     mock_chat_log: MockChatLog,  # noqa: F811
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test code_interpreter tool."""
     subentry = next(iter(mock_config_entry.subentries.values()))
@@ -515,6 +546,7 @@ async def test_code_interpreter(
             *create_code_interpreter_item(
                 id="ci_A",
                 code=["import", " math", "\n", "math", ".sqrt", "(", "555", "55", ")"],
+                logs="235.70108188126758\n",
                 output_index=0,
             ),
             *create_message_item(id="msg_A", text=message, output_index=1),
@@ -534,3 +566,18 @@ async def test_code_interpreter(
     ]
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert result.response.speech["plain"]["speech"] == message, result.response.speech
+
+    # Test follow-up message in multi-turn conversation
+    mock_create_stream.return_value = [
+        (*create_message_item(id="msg_B", text="You are welcome!", output_index=1),)
+    ]
+
+    result = await conversation.async_converse(
+        hass,
+        "Thank you!",
+        mock_chat_log.conversation_id,
+        Context(),
+        agent_id="conversation.openai_conversation",
+    )
+
+    assert mock_create_stream.mock_calls[1][2]["input"][1:] == snapshot

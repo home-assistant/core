@@ -214,6 +214,9 @@ async def test_entities_removed_after_reload(
     mock_device.client.list_entities_services = AsyncMock(
         return_value=(entity_info, [])
     )
+    mock_device.client.device_info_and_list_entities = AsyncMock(
+        return_value=(mock_device.device_info, entity_info, [])
+    )
 
     assert await hass.config_entries.async_setup(entry.entry_id)
     on_future = hass.loop.create_future()
@@ -486,7 +489,7 @@ async def test_entity_without_name_device_with_friendly_name(
         states=states,
         device_info={"friendly_name": "The Best Mixer", "name": "mixer"},
     )
-    state = hass.states.get("binary_sensor.mixer")
+    state = hass.states.get("binary_sensor.the_best_mixer")
     assert state is not None
     assert state.state == STATE_ON
     # Make sure we have set the name to `None` as otherwise
@@ -598,7 +601,7 @@ async def test_entity_id_preserved_on_upgrade_when_in_storage(
         states=states,
         device_info={"friendly_name": "The Best Mixer", "name": "mixer"},
     )
-    state = hass.states.get("binary_sensor.mixer_my")
+    state = hass.states.get("binary_sensor.the_best_mixer_my")
     assert state is not None
     # now rename the entity
     ent_reg_entry = entity_registry.async_get_or_create(
@@ -677,6 +680,13 @@ async def test_deep_sleep_added_after_setup(
         **{**asdict(mock_device.device_info), "has_deep_sleep": True}
     )
     mock_device.client.device_info = AsyncMock(return_value=new_device_info)
+    mock_device.client.device_info_and_list_entities = AsyncMock(
+        return_value=(
+            new_device_info,
+            mock_device.client.list_entities_services.return_value[0],
+            mock_device.client.list_entities_services.return_value[1],
+        )
+    )
     mock_device.device_info = new_device_info
 
     await mock_device.mock_connect()
@@ -864,8 +874,8 @@ async def test_entity_friendly_names_with_empty_device_names(
     )
 
     # Check entity friendly name on sub-device with empty name
-    # Since sub device has empty name, it falls back to main device name "test"
-    state_1 = hass.states.get("binary_sensor.test_motion_detected")
+    # Since sub device has empty name, it falls back to main device name "Main device"
+    state_1 = hass.states.get("binary_sensor.main_device_motion_detected")
     assert state_1 is not None
     # With has_entity_name, friendly name is "{device_name} {entity_name}"
     # Since sub-device falls back to main device name: "Main Device Motion Detected"
@@ -884,7 +894,7 @@ async def test_entity_friendly_names_with_empty_device_names(
     assert state_3.attributes[ATTR_FRIENDLY_NAME] == "Kitchen Light"
 
     # Test entity on main device
-    state_4 = hass.states.get("binary_sensor.test_main_status")
+    state_4 = hass.states.get("binary_sensor.main_device_main_status")
     assert state_4 is not None
     assert state_4.attributes[ATTR_FRIENDLY_NAME] == "Main Device Main Status"
 
@@ -952,6 +962,9 @@ async def test_entity_switches_between_devices(
     mock_client.list_entities_services = AsyncMock(
         return_value=(updated_entity_info, [])
     )
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device.device_info, updated_entity_info, [])
+    )
     # Trigger a reconnect to simulate the entity info update
     await device.mock_disconnect(expected_disconnect=False)
     await device.mock_connect()
@@ -979,6 +992,9 @@ async def test_entity_switches_between_devices(
     mock_client.list_entities_services = AsyncMock(
         return_value=(updated_entity_info, [])
     )
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device.device_info, updated_entity_info, [])
+    )
     await device.mock_disconnect(expected_disconnect=False)
     await device.mock_connect()
 
@@ -1004,6 +1020,9 @@ async def test_entity_switches_between_devices(
 
     mock_client.list_entities_services = AsyncMock(
         return_value=(updated_entity_info, [])
+    )
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device.device_info, updated_entity_info, [])
     )
     await device.mock_disconnect(expected_disconnect=False)
     await device.mock_connect()
@@ -1031,6 +1050,7 @@ async def test_entity_id_uses_sub_device_name(
     device_info = {
         "devices": sub_devices,
         "name": "main_device",
+        "friendly_name": "Main Device",
     }
 
     # Create entities that belong to different devices
@@ -1112,6 +1132,7 @@ async def test_entity_id_with_empty_sub_device_name(
     device_info = {
         "devices": sub_devices,
         "name": "main_device",
+        "friendly_name": "Main Device",
     }
 
     # Create entity on sub device with empty name
@@ -1228,6 +1249,9 @@ async def test_unique_id_migration_when_entity_moves_between_devices(
 
     # Update the entity info by changing what the mock returns
     mock_client.list_entities_services = AsyncMock(return_value=(new_entity_info, []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device.device_info, new_entity_info, [])
+    )
 
     # Trigger a reconnect to simulate the entity info update
     await device.mock_disconnect(expected_disconnect=False)
@@ -1322,6 +1346,9 @@ async def test_unique_id_migration_sub_device_to_main_device(
 
     # Update the entity info
     mock_client.list_entities_services = AsyncMock(return_value=(new_entity_info, []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device.device_info, new_entity_info, [])
+    )
 
     # Trigger a reconnect
     await device.mock_disconnect(expected_disconnect=False)
@@ -1415,6 +1442,9 @@ async def test_unique_id_migration_between_sub_devices(
 
     # Update the entity info
     mock_client.list_entities_services = AsyncMock(return_value=(new_entity_info, []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device.device_info, new_entity_info, [])
+    )
 
     # Trigger a reconnect
     await device.mock_disconnect(expected_disconnect=False)
@@ -1534,6 +1564,9 @@ async def test_entity_device_id_rename_in_yaml(
 
     # Update the entity info
     mock_client.list_entities_services = AsyncMock(return_value=(new_entity_info, []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(new_device_info, new_entity_info, [])
+    )
 
     # Trigger a reconnect to simulate the YAML config change
     await device.mock_disconnect(expected_disconnect=False)

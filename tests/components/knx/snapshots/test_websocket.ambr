@@ -1,0 +1,2135 @@
+# serializer version: 1
+# name: test_knx_get_schema[binary_sensor]
+  dict({
+    'id': 1,
+    'result': list([
+      dict({
+        'name': 'ga_sensor',
+        'options': dict({
+          'passive': True,
+          'state': dict({
+            'required': True,
+          }),
+          'validDPTs': list([
+            dict({
+              'main': 1,
+              'sub': None,
+            }),
+          ]),
+          'write': False,
+        }),
+        'required': True,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'name': 'invert',
+        'optional': True,
+        'required': False,
+        'selector': dict({
+          'boolean': dict({
+          }),
+        }),
+        'type': 'ha_selector',
+      }),
+      dict({
+        'collapsible': True,
+        'name': 'section_advanced_options',
+        'required': False,
+        'type': 'knx_section_flat',
+      }),
+      dict({
+        'name': 'ignore_internal_state',
+        'optional': True,
+        'required': False,
+        'selector': dict({
+          'boolean': dict({
+          }),
+        }),
+        'type': 'ha_selector',
+      }),
+      dict({
+        'name': 'context_timeout',
+        'optional': True,
+        'required': False,
+        'selector': dict({
+          'number': dict({
+            'max': 10.0,
+            'min': 0.0,
+            'mode': 'slider',
+            'step': 0.1,
+            'unit_of_measurement': 's',
+          }),
+        }),
+        'type': 'ha_selector',
+      }),
+      dict({
+        'name': 'reset_after',
+        'optional': True,
+        'required': False,
+        'selector': dict({
+          'number': dict({
+            'max': 600.0,
+            'min': 0.0,
+            'mode': 'slider',
+            'step': 0.1,
+            'unit_of_measurement': 's',
+          }),
+        }),
+        'type': 'ha_selector',
+      }),
+      dict({
+        'allow_false': True,
+        'default': True,
+        'name': 'sync_state',
+        'required': True,
+        'type': 'knx_sync_state',
+      }),
+    ]),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_knx_get_schema[climate]
+  dict({
+    'id': 1,
+    'result': list([
+      dict({
+        'name': 'ga_temperature_current',
+        'options': dict({
+          'passive': True,
+          'state': dict({
+            'required': True,
+          }),
+          'validDPTs': list([
+            dict({
+              'main': 9,
+              'sub': 1,
+            }),
+          ]),
+          'write': False,
+        }),
+        'required': True,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'name': 'ga_humidity_current',
+        'optional': True,
+        'options': dict({
+          'passive': True,
+          'state': dict({
+            'required': False,
+          }),
+          'validDPTs': list([
+            dict({
+              'main': 9,
+              'sub': 7,
+            }),
+          ]),
+          'write': False,
+        }),
+        'required': False,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'collapsible': False,
+        'name': 'target_temperature',
+        'required': True,
+        'schema': list([
+          dict({
+            'schema': list([
+              dict({
+                'name': 'ga_temperature_target',
+                'options': dict({
+                  'passive': True,
+                  'state': dict({
+                    'required': False,
+                  }),
+                  'validDPTs': list([
+                    dict({
+                      'main': 9,
+                      'sub': 1,
+                    }),
+                  ]),
+                  'write': dict({
+                    'required': True,
+                  }),
+                }),
+                'required': True,
+                'type': 'knx_group_address',
+              }),
+              dict({
+                'default': 7,
+                'name': 'min_temp',
+                'required': True,
+                'selector': dict({
+                  'number': dict({
+                    'max': 80.0,
+                    'min': -20.0,
+                    'mode': 'slider',
+                    'step': 1.0,
+                    'unit_of_measurement': '°C',
+                  }),
+                }),
+                'type': 'ha_selector',
+              }),
+              dict({
+                'default': 28,
+                'name': 'max_temp',
+                'required': True,
+                'selector': dict({
+                  'number': dict({
+                    'max': 100.0,
+                    'min': 0.0,
+                    'mode': 'slider',
+                    'step': 1.0,
+                    'unit_of_measurement': '°C',
+                  }),
+                }),
+                'type': 'ha_selector',
+              }),
+              dict({
+                'default': 0.1,
+                'name': 'temperature_step',
+                'required': True,
+                'selector': dict({
+                  'number': dict({
+                    'max': 2.0,
+                    'min': 0.1,
+                    'mode': 'slider',
+                    'step': 0.1,
+                    'unit_of_measurement': 'K',
+                  }),
+                }),
+                'type': 'ha_selector',
+              }),
+            ]),
+            'translation_key': 'group_direct_temp',
+            'type': 'knx_group_select_option',
+          }),
+          dict({
+            'schema': list([
+              dict({
+                'name': 'ga_temperature_target',
+                'options': dict({
+                  'passive': True,
+                  'state': dict({
+                    'required': True,
+                  }),
+                  'validDPTs': list([
+                    dict({
+                      'main': 9,
+                      'sub': 1,
+                    }),
+                  ]),
+                  'write': False,
+                }),
+                'required': True,
+                'type': 'knx_group_address',
+              }),
+              dict({
+                'name': 'ga_setpoint_shift',
+                'options': dict({
+                  'dptSelect': list([
+                    dict({
+                      'dpt': dict({
+                        'main': 6,
+                        'sub': 10,
+                      }),
+                      'translation_key': '6_010',
+                      'value': '6.010',
+                    }),
+                    dict({
+                      'dpt': dict({
+                        'main': 9,
+                        'sub': 2,
+                      }),
+                      'translation_key': '9_002',
+                      'value': '9.002',
+                    }),
+                  ]),
+                  'passive': True,
+                  'state': dict({
+                    'required': True,
+                  }),
+                  'write': dict({
+                    'required': True,
+                  }),
+                }),
+                'required': True,
+                'type': 'knx_group_address',
+              }),
+              dict({
+                'default': -6,
+                'name': 'setpoint_shift_min',
+                'required': True,
+                'selector': dict({
+                  'number': dict({
+                    'max': 0.0,
+                    'min': -32.0,
+                    'mode': 'slider',
+                    'step': 1.0,
+                    'unit_of_measurement': 'K',
+                  }),
+                }),
+                'type': 'ha_selector',
+              }),
+              dict({
+                'default': 6,
+                'name': 'setpoint_shift_max',
+                'required': True,
+                'selector': dict({
+                  'number': dict({
+                    'max': 32.0,
+                    'min': 0.0,
+                    'mode': 'slider',
+                    'step': 1.0,
+                    'unit_of_measurement': 'K',
+                  }),
+                }),
+                'type': 'ha_selector',
+              }),
+              dict({
+                'default': 0.1,
+                'name': 'temperature_step',
+                'required': True,
+                'selector': dict({
+                  'number': dict({
+                    'max': 2.0,
+                    'min': 0.1,
+                    'mode': 'slider',
+                    'step': 0.1,
+                    'unit_of_measurement': 'K',
+                  }),
+                }),
+                'type': 'ha_selector',
+              }),
+            ]),
+            'translation_key': 'group_setpoint_shift',
+            'type': 'knx_group_select_option',
+          }),
+        ]),
+        'type': 'knx_group_select',
+      }),
+      dict({
+        'collapsible': True,
+        'name': 'section_activity',
+        'required': False,
+        'type': 'knx_section_flat',
+      }),
+      dict({
+        'name': 'ga_active',
+        'optional': True,
+        'options': dict({
+          'passive': True,
+          'state': dict({
+            'required': False,
+          }),
+          'validDPTs': list([
+            dict({
+              'main': 1,
+              'sub': None,
+            }),
+          ]),
+          'write': False,
+        }),
+        'required': False,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'name': 'ga_valve',
+        'optional': True,
+        'options': dict({
+          'passive': True,
+          'state': dict({
+            'required': False,
+          }),
+          'validDPTs': list([
+            dict({
+              'main': 5,
+              'sub': 1,
+            }),
+          ]),
+          'write': False,
+        }),
+        'required': False,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'collapsible': True,
+        'name': 'section_operation_mode',
+        'required': False,
+        'type': 'knx_section_flat',
+      }),
+      dict({
+        'name': 'ga_operation_mode',
+        'optional': True,
+        'options': dict({
+          'passive': True,
+          'state': dict({
+            'required': False,
+          }),
+          'validDPTs': list([
+            dict({
+              'main': 20,
+              'sub': 102,
+            }),
+          ]),
+          'write': dict({
+            'required': False,
+          }),
+        }),
+        'required': False,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'name': 'ignore_auto_mode',
+        'optional': True,
+        'required': False,
+        'selector': dict({
+          'boolean': dict({
+          }),
+        }),
+        'type': 'ha_selector',
+      }),
+      dict({
+        'collapsible': True,
+        'name': 'section_operation_mode_individual',
+        'required': False,
+        'type': 'knx_section_flat',
+      }),
+      dict({
+        'name': 'ga_operation_mode_comfort',
+        'optional': True,
+        'options': dict({
+          'passive': True,
+          'state': False,
+          'validDPTs': list([
+            dict({
+              'main': 1,
+              'sub': None,
+            }),
+          ]),
+          'write': dict({
+            'required': False,
+          }),
+        }),
+        'required': False,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'name': 'ga_operation_mode_economy',
+        'optional': True,
+        'options': dict({
+          'passive': True,
+          'state': False,
+          'validDPTs': list([
+            dict({
+              'main': 1,
+              'sub': None,
+            }),
+          ]),
+          'write': dict({
+            'required': False,
+          }),
+        }),
+        'required': False,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'name': 'ga_operation_mode_standby',
+        'optional': True,
+        'options': dict({
+          'passive': True,
+          'state': False,
+          'validDPTs': list([
+            dict({
+              'main': 1,
+              'sub': None,
+            }),
+          ]),
+          'write': dict({
+            'required': False,
+          }),
+        }),
+        'required': False,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'name': 'ga_operation_mode_protection',
+        'optional': True,
+        'options': dict({
+          'passive': True,
+          'state': False,
+          'validDPTs': list([
+            dict({
+              'main': 1,
+              'sub': None,
+            }),
+          ]),
+          'write': dict({
+            'required': False,
+          }),
+        }),
+        'required': False,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'collapsible': True,
+        'name': 'section_heat_cool',
+        'required': False,
+        'type': 'knx_section_flat',
+      }),
+      dict({
+        'name': 'ga_heat_cool',
+        'optional': True,
+        'options': dict({
+          'passive': True,
+          'state': dict({
+            'required': False,
+          }),
+          'validDPTs': list([
+            dict({
+              'main': 1,
+              'sub': 100,
+            }),
+          ]),
+          'write': dict({
+            'required': False,
+          }),
+        }),
+        'required': False,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'collapsible': True,
+        'name': 'section_on_off',
+        'required': False,
+        'type': 'knx_section_flat',
+      }),
+      dict({
+        'name': 'ga_on_off',
+        'optional': True,
+        'options': dict({
+          'passive': True,
+          'state': dict({
+            'required': False,
+          }),
+          'validDPTs': list([
+            dict({
+              'main': 1,
+              'sub': None,
+            }),
+          ]),
+          'write': dict({
+            'required': False,
+          }),
+        }),
+        'required': False,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'name': 'on_off_invert',
+        'optional': True,
+        'required': False,
+        'selector': dict({
+          'boolean': dict({
+          }),
+        }),
+        'type': 'ha_selector',
+      }),
+      dict({
+        'collapsible': True,
+        'name': 'section_controller_mode',
+        'required': False,
+        'type': 'knx_section_flat',
+      }),
+      dict({
+        'name': 'ga_controller_mode',
+        'optional': True,
+        'options': dict({
+          'passive': True,
+          'state': dict({
+            'required': False,
+          }),
+          'validDPTs': list([
+            dict({
+              'main': 20,
+              'sub': 105,
+            }),
+          ]),
+          'write': dict({
+            'required': False,
+          }),
+        }),
+        'required': False,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'name': 'ga_controller_status',
+        'optional': True,
+        'options': dict({
+          'passive': True,
+          'state': dict({
+            'required': False,
+          }),
+          'write': False,
+        }),
+        'required': False,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'default': 'heat',
+        'name': 'default_controller_mode',
+        'required': True,
+        'selector': dict({
+          'select': dict({
+            'custom_value': False,
+            'multiple': False,
+            'options': list([
+              'off',
+              'heat',
+              'cool',
+              'heat_cool',
+              'auto',
+              'dry',
+              'fan_only',
+            ]),
+            'sort': False,
+            'translation_key': 'component.climate.selector.hvac_mode',
+          }),
+        }),
+        'type': 'ha_selector',
+      }),
+      dict({
+        'collapsible': True,
+        'name': 'section_fan',
+        'required': False,
+        'type': 'knx_section_flat',
+      }),
+      dict({
+        'name': 'ga_fan_speed',
+        'optional': True,
+        'options': dict({
+          'dptSelect': list([
+            dict({
+              'dpt': dict({
+                'main': 5,
+                'sub': 1,
+              }),
+              'translation_key': '5_001',
+              'value': '5.001',
+            }),
+            dict({
+              'dpt': dict({
+                'main': 5,
+                'sub': 10,
+              }),
+              'translation_key': '5_010',
+              'value': '5.010',
+            }),
+          ]),
+          'passive': True,
+          'state': dict({
+            'required': False,
+          }),
+          'write': dict({
+            'required': False,
+          }),
+        }),
+        'required': False,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'default': 3,
+        'name': 'fan_max_step',
+        'required': True,
+        'selector': dict({
+          'number': dict({
+            'max': 100.0,
+            'min': 1.0,
+            'mode': 'slider',
+            'step': 1.0,
+          }),
+        }),
+        'type': 'ha_selector',
+      }),
+      dict({
+        'default': 'off',
+        'name': 'fan_zero_mode',
+        'required': True,
+        'selector': dict({
+          'select': dict({
+            'custom_value': False,
+            'multiple': False,
+            'options': list([
+              'off',
+              'auto',
+            ]),
+            'sort': False,
+            'translation_key': 'component.knx.config_panel.entities.create.climate.knx.fan_zero_mode',
+          }),
+        }),
+        'type': 'ha_selector',
+      }),
+      dict({
+        'name': 'ga_fan_swing',
+        'optional': True,
+        'options': dict({
+          'passive': True,
+          'state': dict({
+            'required': False,
+          }),
+          'validDPTs': list([
+            dict({
+              'main': 1,
+              'sub': None,
+            }),
+          ]),
+          'write': dict({
+            'required': False,
+          }),
+        }),
+        'required': False,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'name': 'ga_fan_swing_horizontal',
+        'optional': True,
+        'options': dict({
+          'passive': True,
+          'state': dict({
+            'required': False,
+          }),
+          'validDPTs': list([
+            dict({
+              'main': 1,
+              'sub': None,
+            }),
+          ]),
+          'write': dict({
+            'required': False,
+          }),
+        }),
+        'required': False,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'allow_false': False,
+        'default': True,
+        'name': 'sync_state',
+        'optional': True,
+        'required': False,
+        'type': 'knx_sync_state',
+      }),
+    ]),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_knx_get_schema[cover]
+  dict({
+    'id': 1,
+    'result': list([
+      dict({
+        'name': 'ga_up_down',
+        'optional': True,
+        'options': dict({
+          'passive': True,
+          'state': False,
+          'validDPTs': list([
+            dict({
+              'main': 1,
+              'sub': None,
+            }),
+          ]),
+          'write': dict({
+            'required': False,
+          }),
+        }),
+        'required': False,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'name': 'invert_updown',
+        'optional': True,
+        'required': False,
+        'selector': dict({
+          'boolean': dict({
+          }),
+        }),
+        'type': 'ha_selector',
+      }),
+      dict({
+        'name': 'ga_stop',
+        'optional': True,
+        'options': dict({
+          'passive': True,
+          'state': False,
+          'validDPTs': list([
+            dict({
+              'main': 1,
+              'sub': None,
+            }),
+          ]),
+          'write': dict({
+            'required': False,
+          }),
+        }),
+        'required': False,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'name': 'ga_step',
+        'optional': True,
+        'options': dict({
+          'passive': True,
+          'state': False,
+          'validDPTs': list([
+            dict({
+              'main': 1,
+              'sub': None,
+            }),
+          ]),
+          'write': dict({
+            'required': False,
+          }),
+        }),
+        'required': False,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'collapsible': True,
+        'name': 'section_position_control',
+        'required': False,
+        'type': 'knx_section_flat',
+      }),
+      dict({
+        'name': 'ga_position_set',
+        'optional': True,
+        'options': dict({
+          'passive': True,
+          'state': False,
+          'validDPTs': list([
+            dict({
+              'main': 5,
+              'sub': 1,
+            }),
+          ]),
+          'write': dict({
+            'required': False,
+          }),
+        }),
+        'required': False,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'name': 'ga_position_state',
+        'optional': True,
+        'options': dict({
+          'passive': True,
+          'state': dict({
+            'required': False,
+          }),
+          'validDPTs': list([
+            dict({
+              'main': 5,
+              'sub': 1,
+            }),
+          ]),
+          'write': False,
+        }),
+        'required': False,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'name': 'invert_position',
+        'optional': True,
+        'required': False,
+        'selector': dict({
+          'boolean': dict({
+          }),
+        }),
+        'type': 'ha_selector',
+      }),
+      dict({
+        'collapsible': True,
+        'name': 'section_tilt_control',
+        'required': False,
+        'type': 'knx_section_flat',
+      }),
+      dict({
+        'name': 'ga_angle',
+        'optional': True,
+        'options': dict({
+          'passive': True,
+          'state': dict({
+            'required': False,
+          }),
+          'validDPTs': list([
+            dict({
+              'main': 5,
+              'sub': 1,
+            }),
+          ]),
+          'write': dict({
+            'required': False,
+          }),
+        }),
+        'required': False,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'name': 'invert_angle',
+        'optional': True,
+        'required': False,
+        'selector': dict({
+          'boolean': dict({
+          }),
+        }),
+        'type': 'ha_selector',
+      }),
+      dict({
+        'collapsible': False,
+        'name': 'section_travel_time',
+        'required': False,
+        'type': 'knx_section_flat',
+      }),
+      dict({
+        'default': 25,
+        'name': 'travelling_time_up',
+        'required': True,
+        'selector': dict({
+          'number': dict({
+            'max': 1000.0,
+            'min': 0.0,
+            'mode': 'slider',
+            'step': 0.1,
+            'unit_of_measurement': 's',
+          }),
+        }),
+        'type': 'ha_selector',
+      }),
+      dict({
+        'default': 25,
+        'name': 'travelling_time_down',
+        'required': True,
+        'selector': dict({
+          'number': dict({
+            'max': 1000.0,
+            'min': 0.0,
+            'mode': 'slider',
+            'step': 0.1,
+            'unit_of_measurement': 's',
+          }),
+        }),
+        'type': 'ha_selector',
+      }),
+      dict({
+        'allow_false': False,
+        'default': True,
+        'name': 'sync_state',
+        'optional': True,
+        'required': False,
+        'type': 'knx_sync_state',
+      }),
+    ]),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_knx_get_schema[date]
+  dict({
+    'id': 1,
+    'result': list([
+      dict({
+        'name': 'ga_date',
+        'options': dict({
+          'passive': True,
+          'state': dict({
+            'required': False,
+          }),
+          'validDPTs': list([
+            dict({
+              'main': 11,
+              'sub': 1,
+            }),
+          ]),
+          'write': dict({
+            'required': True,
+          }),
+        }),
+        'required': True,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'default': False,
+        'name': 'respond_to_read',
+        'optional': True,
+        'required': False,
+        'selector': dict({
+          'boolean': dict({
+          }),
+        }),
+        'type': 'ha_selector',
+      }),
+      dict({
+        'allow_false': False,
+        'default': True,
+        'name': 'sync_state',
+        'optional': True,
+        'required': False,
+        'type': 'knx_sync_state',
+      }),
+    ]),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_knx_get_schema[datetime]
+  dict({
+    'id': 1,
+    'result': list([
+      dict({
+        'name': 'ga_datetime',
+        'options': dict({
+          'passive': True,
+          'state': dict({
+            'required': False,
+          }),
+          'validDPTs': list([
+            dict({
+              'main': 19,
+              'sub': 1,
+            }),
+          ]),
+          'write': dict({
+            'required': True,
+          }),
+        }),
+        'required': True,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'default': False,
+        'name': 'respond_to_read',
+        'optional': True,
+        'required': False,
+        'selector': dict({
+          'boolean': dict({
+          }),
+        }),
+        'type': 'ha_selector',
+      }),
+      dict({
+        'allow_false': False,
+        'default': True,
+        'name': 'sync_state',
+        'optional': True,
+        'required': False,
+        'type': 'knx_sync_state',
+      }),
+    ]),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_knx_get_schema[fan]
+  dict({
+    'id': 1,
+    'result': list([
+      dict({
+        'name': 'ga_switch',
+        'optional': True,
+        'options': dict({
+          'passive': True,
+          'state': dict({
+            'required': False,
+          }),
+          'validDPTs': list([
+            dict({
+              'main': 1,
+              'sub': None,
+            }),
+          ]),
+          'write': dict({
+            'required': True,
+          }),
+        }),
+        'required': False,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'collapsible': False,
+        'name': 'speed',
+        'optional': True,
+        'required': False,
+        'schema': list([
+          dict({
+            'schema': list([
+              dict({
+                'name': 'ga_speed',
+                'options': dict({
+                  'passive': True,
+                  'state': dict({
+                    'required': False,
+                  }),
+                  'validDPTs': list([
+                    dict({
+                      'main': 5,
+                      'sub': 1,
+                    }),
+                  ]),
+                  'write': dict({
+                    'required': True,
+                  }),
+                }),
+                'required': True,
+                'type': 'knx_group_address',
+              }),
+            ]),
+            'translation_key': 'percentage_mode',
+            'type': 'knx_group_select_option',
+          }),
+          dict({
+            'schema': list([
+              dict({
+                'name': 'ga_step',
+                'options': dict({
+                  'passive': True,
+                  'state': dict({
+                    'required': False,
+                  }),
+                  'validDPTs': list([
+                    dict({
+                      'main': 5,
+                      'sub': 10,
+                    }),
+                  ]),
+                  'write': dict({
+                    'required': True,
+                  }),
+                }),
+                'required': True,
+                'type': 'knx_group_address',
+              }),
+              dict({
+                'default': 3,
+                'name': 'max_step',
+                'required': True,
+                'selector': dict({
+                  'number': dict({
+                    'max': 100.0,
+                    'min': 1.0,
+                    'mode': 'box',
+                    'step': 1.0,
+                  }),
+                }),
+                'type': 'ha_selector',
+              }),
+            ]),
+            'translation_key': 'step_mode',
+            'type': 'knx_group_select_option',
+          }),
+        ]),
+        'type': 'knx_group_select',
+      }),
+      dict({
+        'name': 'ga_oscillation',
+        'optional': True,
+        'options': dict({
+          'passive': True,
+          'state': dict({
+            'required': False,
+          }),
+          'validDPTs': list([
+            dict({
+              'main': 1,
+              'sub': None,
+            }),
+          ]),
+          'write': dict({
+            'required': True,
+          }),
+        }),
+        'required': False,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'allow_false': False,
+        'default': True,
+        'name': 'sync_state',
+        'optional': True,
+        'required': False,
+        'type': 'knx_sync_state',
+      }),
+    ]),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_knx_get_schema[light]
+  dict({
+    'id': 1,
+    'result': list([
+      dict({
+        'name': 'ga_switch',
+        'optional': True,
+        'options': dict({
+          'passive': True,
+          'state': dict({
+            'required': False,
+          }),
+          'validDPTs': list([
+            dict({
+              'main': 1,
+              'sub': None,
+            }),
+          ]),
+          'write': dict({
+            'required': True,
+          }),
+        }),
+        'required': False,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'name': 'ga_brightness',
+        'optional': True,
+        'options': dict({
+          'passive': True,
+          'state': dict({
+            'required': False,
+          }),
+          'validDPTs': list([
+            dict({
+              'main': 5,
+              'sub': 1,
+            }),
+          ]),
+          'write': dict({
+            'required': True,
+          }),
+        }),
+        'required': False,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'collapsible': True,
+        'name': 'section_color_temp',
+        'required': False,
+        'type': 'knx_section_flat',
+      }),
+      dict({
+        'name': 'ga_color_temp',
+        'optional': True,
+        'options': dict({
+          'dptSelect': list([
+            dict({
+              'dpt': dict({
+                'main': 7,
+                'sub': 600,
+              }),
+              'translation_key': '7_600',
+              'value': '7.600',
+            }),
+            dict({
+              'dpt': dict({
+                'main': 9,
+                'sub': None,
+              }),
+              'translation_key': '9',
+              'value': '9',
+            }),
+            dict({
+              'dpt': dict({
+                'main': 5,
+                'sub': 1,
+              }),
+              'translation_key': '5_001',
+              'value': '5.001',
+            }),
+          ]),
+          'passive': True,
+          'state': dict({
+            'required': False,
+          }),
+          'write': dict({
+            'required': True,
+          }),
+        }),
+        'required': False,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'default': 2700,
+        'name': 'color_temp_min',
+        'required': True,
+        'selector': dict({
+          'number': dict({
+            'max': 10000.0,
+            'min': 1.0,
+            'mode': 'slider',
+            'step': 1.0,
+            'unit_of_measurement': 'K',
+          }),
+        }),
+        'type': 'ha_selector',
+      }),
+      dict({
+        'default': 6000,
+        'name': 'color_temp_max',
+        'required': True,
+        'selector': dict({
+          'number': dict({
+            'max': 10000.0,
+            'min': 1.0,
+            'mode': 'slider',
+            'step': 1.0,
+            'unit_of_measurement': 'K',
+          }),
+        }),
+        'type': 'ha_selector',
+      }),
+      dict({
+        'collapsible': True,
+        'name': 'color',
+        'optional': True,
+        'required': False,
+        'schema': list([
+          dict({
+            'schema': list([
+              dict({
+                'name': 'ga_color',
+                'optional': True,
+                'options': dict({
+                  'dptSelect': list([
+                    dict({
+                      'dpt': dict({
+                        'main': 232,
+                        'sub': 600,
+                      }),
+                      'translation_key': '232_600',
+                      'value': '232.600',
+                    }),
+                    dict({
+                      'dpt': dict({
+                        'main': 251,
+                        'sub': 600,
+                      }),
+                      'translation_key': '251_600',
+                      'value': '251.600',
+                    }),
+                    dict({
+                      'dpt': dict({
+                        'main': 242,
+                        'sub': 600,
+                      }),
+                      'translation_key': '242_600',
+                      'value': '242.600',
+                    }),
+                  ]),
+                  'passive': True,
+                  'state': dict({
+                    'required': False,
+                  }),
+                  'write': dict({
+                    'required': True,
+                  }),
+                }),
+                'required': False,
+                'type': 'knx_group_address',
+              }),
+            ]),
+            'translation_key': 'single_address',
+            'type': 'knx_group_select_option',
+          }),
+          dict({
+            'schema': list([
+              dict({
+                'name': 'ga_red_switch',
+                'optional': True,
+                'options': dict({
+                  'passive': True,
+                  'state': dict({
+                    'required': False,
+                  }),
+                  'validDPTs': list([
+                    dict({
+                      'main': 1,
+                      'sub': None,
+                    }),
+                  ]),
+                  'write': dict({
+                    'required': False,
+                  }),
+                }),
+                'required': False,
+                'type': 'knx_group_address',
+              }),
+              dict({
+                'name': 'ga_red_brightness',
+                'options': dict({
+                  'passive': True,
+                  'state': dict({
+                    'required': False,
+                  }),
+                  'validDPTs': list([
+                    dict({
+                      'main': 5,
+                      'sub': 1,
+                    }),
+                  ]),
+                  'write': dict({
+                    'required': True,
+                  }),
+                }),
+                'required': True,
+                'type': 'knx_group_address',
+              }),
+              dict({
+                'name': 'ga_green_switch',
+                'optional': True,
+                'options': dict({
+                  'passive': True,
+                  'state': dict({
+                    'required': False,
+                  }),
+                  'validDPTs': list([
+                    dict({
+                      'main': 1,
+                      'sub': None,
+                    }),
+                  ]),
+                  'write': dict({
+                    'required': False,
+                  }),
+                }),
+                'required': False,
+                'type': 'knx_group_address',
+              }),
+              dict({
+                'name': 'ga_green_brightness',
+                'options': dict({
+                  'passive': True,
+                  'state': dict({
+                    'required': False,
+                  }),
+                  'validDPTs': list([
+                    dict({
+                      'main': 5,
+                      'sub': 1,
+                    }),
+                  ]),
+                  'write': dict({
+                    'required': True,
+                  }),
+                }),
+                'required': True,
+                'type': 'knx_group_address',
+              }),
+              dict({
+                'name': 'ga_blue_switch',
+                'optional': True,
+                'options': dict({
+                  'passive': True,
+                  'state': dict({
+                    'required': False,
+                  }),
+                  'validDPTs': list([
+                    dict({
+                      'main': 1,
+                      'sub': None,
+                    }),
+                  ]),
+                  'write': dict({
+                    'required': False,
+                  }),
+                }),
+                'required': False,
+                'type': 'knx_group_address',
+              }),
+              dict({
+                'name': 'ga_blue_brightness',
+                'options': dict({
+                  'passive': True,
+                  'state': dict({
+                    'required': False,
+                  }),
+                  'validDPTs': list([
+                    dict({
+                      'main': 5,
+                      'sub': 1,
+                    }),
+                  ]),
+                  'write': dict({
+                    'required': True,
+                  }),
+                }),
+                'required': True,
+                'type': 'knx_group_address',
+              }),
+              dict({
+                'name': 'ga_white_switch',
+                'optional': True,
+                'options': dict({
+                  'passive': True,
+                  'state': dict({
+                    'required': False,
+                  }),
+                  'validDPTs': list([
+                    dict({
+                      'main': 1,
+                      'sub': None,
+                    }),
+                  ]),
+                  'write': dict({
+                    'required': False,
+                  }),
+                }),
+                'required': False,
+                'type': 'knx_group_address',
+              }),
+              dict({
+                'name': 'ga_white_brightness',
+                'optional': True,
+                'options': dict({
+                  'passive': True,
+                  'state': dict({
+                    'required': False,
+                  }),
+                  'validDPTs': list([
+                    dict({
+                      'main': 5,
+                      'sub': 1,
+                    }),
+                  ]),
+                  'write': dict({
+                    'required': True,
+                  }),
+                }),
+                'required': False,
+                'type': 'knx_group_address',
+              }),
+            ]),
+            'translation_key': 'individual_addresses',
+            'type': 'knx_group_select_option',
+          }),
+          dict({
+            'schema': list([
+              dict({
+                'name': 'ga_hue',
+                'options': dict({
+                  'passive': True,
+                  'state': dict({
+                    'required': False,
+                  }),
+                  'validDPTs': list([
+                    dict({
+                      'main': 5,
+                      'sub': 3,
+                    }),
+                  ]),
+                  'write': dict({
+                    'required': True,
+                  }),
+                }),
+                'required': True,
+                'type': 'knx_group_address',
+              }),
+              dict({
+                'name': 'ga_saturation',
+                'options': dict({
+                  'passive': True,
+                  'state': dict({
+                    'required': False,
+                  }),
+                  'validDPTs': list([
+                    dict({
+                      'main': 5,
+                      'sub': 1,
+                    }),
+                  ]),
+                  'write': dict({
+                    'required': True,
+                  }),
+                }),
+                'required': True,
+                'type': 'knx_group_address',
+              }),
+            ]),
+            'translation_key': 'hsv_addresses',
+            'type': 'knx_group_select_option',
+          }),
+        ]),
+        'type': 'knx_group_select',
+      }),
+      dict({
+        'allow_false': False,
+        'default': True,
+        'name': 'sync_state',
+        'optional': True,
+        'required': False,
+        'type': 'knx_sync_state',
+      }),
+    ]),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_knx_get_schema[scene]
+  dict({
+    'id': 1,
+    'result': list([
+      dict({
+        'name': 'ga_scene',
+        'options': dict({
+          'passive': False,
+          'state': False,
+          'validDPTs': list([
+            dict({
+              'main': 17,
+              'sub': 1,
+            }),
+            dict({
+              'main': 18,
+              'sub': 1,
+            }),
+          ]),
+          'write': dict({
+            'required': True,
+          }),
+        }),
+        'required': True,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'name': 'scene_number',
+        'required': True,
+        'selector': dict({
+          'number': dict({
+            'max': 64.0,
+            'min': 1.0,
+            'mode': 'box',
+            'step': 1.0,
+          }),
+        }),
+        'type': 'ha_selector',
+      }),
+    ]),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_knx_get_schema[sensor]
+  dict({
+    'id': 1,
+    'result': list([
+      dict({
+        'name': 'ga_sensor',
+        'options': dict({
+          'dptClasses': list([
+            'numeric',
+            'string',
+          ]),
+          'passive': True,
+          'state': dict({
+            'required': True,
+          }),
+          'write': False,
+        }),
+        'required': True,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'collapsible': True,
+        'name': 'section_advanced_options',
+        'required': False,
+        'type': 'knx_section_flat',
+      }),
+      dict({
+        'name': 'unit_of_measurement',
+        'optional': True,
+        'required': False,
+        'selector': dict({
+          'select': dict({
+            'custom_value': True,
+            'mode': 'dropdown',
+            'multiple': False,
+            'options': list([
+              '%',
+              'A',
+              'B',
+              'B/s',
+              'BTU/(h⋅ft²)',
+              'Beaufort',
+              'CCF',
+              'EB',
+              'EiB',
+              'GB',
+              'GB/s',
+              'GHz',
+              'GJ',
+              'GW',
+              'GWh',
+              'Gbit',
+              'Gbit/s',
+              'Gcal',
+              'GiB',
+              'GiB/s',
+              'Hz',
+              'J',
+              'K',
+              'KiB',
+              'KiB/s',
+              'L',
+              'L/h',
+              'L/min',
+              'L/s',
+              'MB',
+              'MB/s',
+              'MCF',
+              'MHz',
+              'MJ',
+              'MV',
+              'MW',
+              'MWh',
+              'Mbit',
+              'Mbit/s',
+              'Mcal',
+              'MiB',
+              'MiB/s',
+              'PB',
+              'Pa',
+              'PiB',
+              'S/cm',
+              'TB',
+              'TW',
+              'TWh',
+              'TiB',
+              'V',
+              'VA',
+              'W',
+              'W/m²',
+              'Wh',
+              'Wh/km',
+              'YB',
+              'YiB',
+              'ZB',
+              'ZiB',
+              'ac',
+              'bar',
+              'bit',
+              'bit/s',
+              'cal',
+              'cbar',
+              'cm',
+              'cm²',
+              'd',
+              'dB',
+              'dBA',
+              'dBm',
+              'fl. oz.',
+              'ft',
+              'ft/s',
+              'ft²',
+              'ft³',
+              'ft³/min',
+              'g',
+              'g/m³',
+              'gal',
+              'gal/d',
+              'gal/h',
+              'gal/min',
+              'h',
+              'hPa',
+              'ha',
+              'in',
+              'in/d',
+              'in/h',
+              'in/s',
+              'inHg',
+              'inH₂O',
+              'in²',
+              'kB',
+              'kB/s',
+              'kHz',
+              'kJ',
+              'kPa',
+              'kV',
+              'kVA',
+              'kW',
+              'kWh',
+              'kWh/100km',
+              'kbit',
+              'kbit/s',
+              'kcal',
+              'kg',
+              'km',
+              'km/h',
+              'km/kWh',
+              'km²',
+              'kn',
+              'kvar',
+              'kvarh',
+              'lb',
+              'lx',
+              'm',
+              'm/min',
+              'm/s',
+              'mA',
+              'mL',
+              'mL/s',
+              'mPa',
+              'mS/cm',
+              'mV',
+              'mVA',
+              'mW',
+              'mWh',
+              'mbar',
+              'mg',
+              'mg/dL',
+              'mg/m³',
+              'mi',
+              'mi/kWh',
+              'min',
+              'mi²',
+              'mm',
+              'mm/d',
+              'mm/h',
+              'mm/s',
+              'mmHg',
+              'mmol/L',
+              'mm²',
+              'mph',
+              'ms',
+              'mvar',
+              'm²',
+              'm³',
+              'm³/h',
+              'm³/min',
+              'm³/s',
+              'nmi',
+              'oz',
+              'ppb',
+              'ppm',
+              'psi',
+              's',
+              'st',
+              'var',
+              'varh',
+              'yd',
+              'yd²',
+              '°',
+              '°C',
+              '°F',
+              'μS/cm',
+              'μV',
+              'μg',
+              'μg/m³',
+              'μs',
+            ]),
+            'sort': False,
+            'translation_key': 'component.knx.selector.sensor_unit_of_measurement',
+          }),
+        }),
+        'type': 'ha_selector',
+      }),
+      dict({
+        'name': 'device_class',
+        'optional': True,
+        'required': False,
+        'selector': dict({
+          'select': dict({
+            'custom_value': False,
+            'multiple': False,
+            'options': list([
+              'date',
+              'timestamp',
+              'absolute_humidity',
+              'apparent_power',
+              'aqi',
+              'area',
+              'atmospheric_pressure',
+              'battery',
+              'blood_glucose_concentration',
+              'carbon_monoxide',
+              'carbon_dioxide',
+              'conductivity',
+              'current',
+              'data_rate',
+              'data_size',
+              'distance',
+              'duration',
+              'energy',
+              'energy_distance',
+              'energy_storage',
+              'frequency',
+              'gas',
+              'humidity',
+              'illuminance',
+              'irradiance',
+              'moisture',
+              'monetary',
+              'nitrogen_dioxide',
+              'nitrogen_monoxide',
+              'nitrous_oxide',
+              'ozone',
+              'ph',
+              'pm1',
+              'pm10',
+              'pm25',
+              'pm4',
+              'power_factor',
+              'power',
+              'precipitation',
+              'precipitation_intensity',
+              'pressure',
+              'reactive_energy',
+              'reactive_power',
+              'signal_strength',
+              'sound_pressure',
+              'speed',
+              'sulphur_dioxide',
+              'temperature',
+              'temperature_delta',
+              'volatile_organic_compounds',
+              'volatile_organic_compounds_parts',
+              'voltage',
+              'volume',
+              'volume_storage',
+              'volume_flow_rate',
+              'water',
+              'weight',
+              'wind_direction',
+              'wind_speed',
+            ]),
+            'sort': True,
+            'translation_key': 'component.knx.selector.sensor_device_class',
+          }),
+        }),
+        'type': 'ha_selector',
+      }),
+      dict({
+        'name': 'state_class',
+        'optional': True,
+        'required': False,
+        'selector': dict({
+          'select': dict({
+            'custom_value': False,
+            'mode': 'dropdown',
+            'multiple': False,
+            'options': list([
+              'measurement',
+              'measurement_angle',
+              'total',
+              'total_increasing',
+            ]),
+            'sort': False,
+            'translation_key': 'component.knx.selector.sensor_state_class',
+          }),
+        }),
+        'type': 'ha_selector',
+      }),
+      dict({
+        'name': 'always_callback',
+        'optional': True,
+        'required': False,
+        'selector': dict({
+          'boolean': dict({
+          }),
+        }),
+        'type': 'ha_selector',
+      }),
+      dict({
+        'allow_false': True,
+        'default': True,
+        'name': 'sync_state',
+        'required': True,
+        'type': 'knx_sync_state',
+      }),
+    ]),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_knx_get_schema[switch]
+  dict({
+    'id': 1,
+    'result': list([
+      dict({
+        'name': 'ga_switch',
+        'options': dict({
+          'passive': True,
+          'state': dict({
+            'required': False,
+          }),
+          'validDPTs': list([
+            dict({
+              'main': 1,
+              'sub': None,
+            }),
+          ]),
+          'write': dict({
+            'required': True,
+          }),
+        }),
+        'required': True,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'default': False,
+        'name': 'invert',
+        'optional': True,
+        'required': False,
+        'selector': dict({
+          'boolean': dict({
+          }),
+        }),
+        'type': 'ha_selector',
+      }),
+      dict({
+        'default': False,
+        'name': 'respond_to_read',
+        'optional': True,
+        'required': False,
+        'selector': dict({
+          'boolean': dict({
+          }),
+        }),
+        'type': 'ha_selector',
+      }),
+      dict({
+        'allow_false': False,
+        'default': True,
+        'name': 'sync_state',
+        'optional': True,
+        'required': False,
+        'type': 'knx_sync_state',
+      }),
+    ]),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_knx_get_schema[text]
+  dict({
+    'id': 1,
+    'result': list([
+      dict({
+        'name': 'ga_text',
+        'options': dict({
+          'dptClasses': list([
+            'string',
+          ]),
+          'passive': True,
+          'state': dict({
+            'required': False,
+          }),
+          'write': dict({
+            'required': True,
+          }),
+        }),
+        'required': True,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'default': 'text',
+        'name': 'mode',
+        'required': True,
+        'selector': dict({
+          'select': dict({
+            'custom_value': False,
+            'multiple': False,
+            'options': list([
+              'password',
+              'text',
+            ]),
+            'sort': False,
+            'translation_key': 'component.knx.config_panel.entities.create.text.knx.mode',
+          }),
+        }),
+        'type': 'ha_selector',
+      }),
+      dict({
+        'default': False,
+        'name': 'respond_to_read',
+        'optional': True,
+        'required': False,
+        'selector': dict({
+          'boolean': dict({
+          }),
+        }),
+        'type': 'ha_selector',
+      }),
+      dict({
+        'allow_false': False,
+        'default': True,
+        'name': 'sync_state',
+        'optional': True,
+        'required': False,
+        'type': 'knx_sync_state',
+      }),
+    ]),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_knx_get_schema[time]
+  dict({
+    'id': 1,
+    'result': list([
+      dict({
+        'name': 'ga_time',
+        'options': dict({
+          'passive': True,
+          'state': dict({
+            'required': False,
+          }),
+          'validDPTs': list([
+            dict({
+              'main': 10,
+              'sub': 1,
+            }),
+          ]),
+          'write': dict({
+            'required': True,
+          }),
+        }),
+        'required': True,
+        'type': 'knx_group_address',
+      }),
+      dict({
+        'default': False,
+        'name': 'respond_to_read',
+        'optional': True,
+        'required': False,
+        'selector': dict({
+          'boolean': dict({
+          }),
+        }),
+        'type': 'ha_selector',
+      }),
+      dict({
+        'allow_false': False,
+        'default': True,
+        'name': 'sync_state',
+        'optional': True,
+        'required': False,
+        'type': 'knx_sync_state',
+      }),
+    ]),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_knx_get_schema[tts]
+  dict({
+    'error': dict({
+      'code': 'home_assistant_error',
+      'message': 'Unknown platform',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---

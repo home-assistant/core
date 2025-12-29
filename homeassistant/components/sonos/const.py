@@ -15,9 +15,13 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.MEDIA_PLAYER,
     Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
 ]
+
+UPNP_ISSUE_ID = "upnp_disabled"
+UPNP_DOCUMENTATION_URL = "https://www.home-assistant.io/integrations/sonos/#403-error-when-setting-up-the-integration"
 
 SUB_FAIL_ISSUE_ID = "subscriptions_failed"
 SUB_FAIL_URL = "https://www.home-assistant.io/integrations/sonos/#network-requirements"
@@ -154,6 +158,7 @@ SONOS_CREATE_AUDIO_FORMAT_SENSOR = "sonos_create_audio_format_sensor"
 SONOS_CREATE_BATTERY = "sonos_create_battery"
 SONOS_CREATE_FAVORITES_SENSOR = "sonos_create_favorites_sensor"
 SONOS_CREATE_MIC_SENSOR = "sonos_create_mic_sensor"
+SONOS_CREATE_SELECTS = "sonos_create_selects"
 SONOS_CREATE_SWITCHES = "sonos_create_switches"
 SONOS_CREATE_LEVELS = "sonos_create_levels"
 SONOS_CREATE_MEDIA_PLAYER = "sonos_create_media_player"
@@ -186,6 +191,13 @@ MODELS_TV_ONLY = (
     "ULTRA",
 )
 MODELS_LINEIN_AND_TV = ("AMP",)
+MODEL_SONOS_ARC_ULTRA = "SONOS ARC ULTRA"
+
+ATTR_SPEECH_ENHANCEMENT_ENABLED = "speech_enhance_enabled"
+SPEECH_DIALOG_LEVEL = "speech_dialog_level"
+ATTR_DIALOG_LEVEL = "dialog_level"
+ATTR_DIALOG_LEVEL_ENUM = "dialog_level_enum"
+ATTR_QUEUE_POSITION = "queue_position"
 
 AVAILABILITY_CHECK_INTERVAL = datetime.timedelta(minutes=1)
 AVAILABILITY_TIMEOUT = AVAILABILITY_CHECK_INTERVAL.total_seconds() * 4.5

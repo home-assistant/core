@@ -110,6 +110,7 @@ async def async_setup_entry(
         name="room",
         update_method=async_update_data,
         update_interval=timedelta(seconds=scan_interval),
+        config_entry=entry,
     )
 
     # Fetch initial data so we have data when entities subscribe
@@ -147,6 +148,15 @@ async def async_setup_entry(
                         sources[dev_id] = _RoomSource(
                             source_type={dev_type}, idx=dev_id, name=name
                         )
+
+        # Skip rooms with no audio/video sources
+        if not sources:
+            _LOGGER.debug(
+                "Skipping room '%s' (ID: %s) - no audio/video sources found",
+                room.get("name"),
+                room_id,
+            )
+            continue
 
         try:
             hidden = room["roomHidden"]

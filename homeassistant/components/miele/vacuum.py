@@ -64,7 +64,7 @@ PROGRAM_TO_SPEED: dict[int, str] = {
 }
 
 
-class MieleVacuumStateCode(MieleEnum):
+class MieleVacuumStateCode(MieleEnum, missing_to_none=True):
     """Define vacuum state codes."""
 
     idle = 0
@@ -82,7 +82,6 @@ class MieleVacuumStateCode(MieleEnum):
     blocked_front_wheel = 5900
     docked = 5903, 5904
     remote_controlled = 5910
-    missing2none = -9999
 
 
 SUPPORTED_FEATURES = (
@@ -190,14 +189,15 @@ class MieleVacuum(MieleEntity, StateVacuumEntity):
         """Send action to the device."""
         try:
             await self.api.send_action(device_id, action)
-        except ClientResponseError as ex:
+        except ClientResponseError as err:
+            _LOGGER.debug("Error setting vacuum state for %s: %s", self.entity_id, err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="set_state_error",
                 translation_placeholders={
                     "entity": self.entity_id,
                 },
-            ) from ex
+            ) from err
 
     async def async_clean_spot(self, **kwargs: Any) -> None:
         """Clean spot."""

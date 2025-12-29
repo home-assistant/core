@@ -1,0 +1,102 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "cannot_connect": "Unable to connect to the Google Weather API:\n\n{error_message}",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "location": "[%key:common::config_flow::data::location%]",
+          "name": "[%key:common::config_flow::data::name%]"
+        },
+        "data_description": {
+          "api_key": "A unique alphanumeric string that associates your Google billing account with Google Weather API",
+          "location": "Location coordinates",
+          "name": "Location name"
+        },
+        "description": "Get your API key from [here]({api_key_url}).",
+        "sections": {
+          "api_key_options": {
+            "data": {
+              "referrer": "HTTP referrer"
+            },
+            "data_description": {
+              "referrer": "Specify this only if the API key has a [website application restriction]({restricting_api_keys_url})"
+            },
+            "name": "Optional API key options"
+          }
+        }
+      }
+    }
+  },
+  "config_subentries": {
+    "location": {
+      "abort": {
+        "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
+        "entry_not_loaded": "Cannot add things while the configuration is disabled."
+      },
+      "entry_type": "Location",
+      "error": {
+        "cannot_connect": "[%key:component::google_weather::config::error::cannot_connect%]",
+        "unknown": "[%key:common::config_flow::error::unknown%]"
+      },
+      "initiate_flow": {
+        "user": "Add location"
+      },
+      "step": {
+        "location": {
+          "data": {
+            "location": "[%key:common::config_flow::data::location%]",
+            "name": "[%key:common::config_flow::data::name%]"
+          },
+          "data_description": {
+            "location": "[%key:component::google_weather::config::step::user::data_description::location%]",
+            "name": "[%key:component::google_weather::config::step::user::data_description::name%]"
+          }
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "apparent_temperature": {
+        "name": "Apparent temperature"
+      },
+      "cloud_coverage": {
+        "name": "Cloud coverage"
+      },
+      "dew_point": {
+        "name": "Dew point"
+      },
+      "heat_index": {
+        "name": "Heat index temperature"
+      },
+      "precipitation_probability": {
+        "name": "Precipitation probability"
+      },
+      "thunderstorm_probability": {
+        "name": "Thunderstorm probability"
+      },
+      "uv_index": {
+        "name": "UV index"
+      },
+      "visibility": {
+        "name": "Visibility"
+      },
+      "weather_condition": {
+        "name": "Weather condition"
+      },
+      "wind_chill": {
+        "name": "Wind chill temperature"
+      },
+      "wind_gust_speed": {
+        "name": "Wind gust speed"
+      }
+    }
+  }
+}

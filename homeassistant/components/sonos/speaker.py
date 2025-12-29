@@ -35,6 +35,8 @@ from homeassistant.util import dt as dt_util
 
 from .alarms import SonosAlarms
 from .const import (
+    ATTR_DIALOG_LEVEL,
+    ATTR_SPEECH_ENHANCEMENT_ENABLED,
     AVAILABILITY_TIMEOUT,
     BATTERY_SCAN_INTERVAL,
     DOMAIN,
@@ -46,6 +48,7 @@ from .const import (
     SONOS_CREATE_LEVELS,
     SONOS_CREATE_MEDIA_PLAYER,
     SONOS_CREATE_MIC_SENSOR,
+    SONOS_CREATE_SELECTS,
     SONOS_CREATE_SWITCHES,
     SONOS_FALLBACK_POLL,
     SONOS_REBOOTED,
@@ -69,6 +72,7 @@ if TYPE_CHECKING:
 
 NEVER_TIME = -1200.0
 RESUB_COOLDOWN_SECONDS = 10.0
+WAIT_FOR_GROUPS_TIMEOUT = 30.0
 EVENT_CHARGING = {
     "CHARGING": True,
     "NOT_CHARGING": False,
@@ -157,6 +161,8 @@ class SonosSpeaker:
         # Home theater
         self.audio_delay: int | None = None
         self.dialog_level: bool | None = None
+        self.dialog_level_enum: int | None = None
+        self.speech_enhance_enabled: bool | None = None
         self.night_mode: bool | None = None
         self.sub_enabled: bool | None = None
         self.sub_crossover: int | None = None
@@ -251,6 +257,7 @@ class SonosSpeaker:
         ]:
             dispatches.append((SONOS_CREATE_ALARM, self, new_alarms))
 
+        dispatches.append((SONOS_CREATE_SELECTS, self))
         dispatches.append((SONOS_CREATE_SWITCHES, self))
         dispatches.append((SONOS_CREATE_MEDIA_PLAYER, self))
         dispatches.append((SONOS_SPEAKER_ADDED, self.soco.uid))
@@ -268,6 +275,29 @@ class SonosSpeaker:
     def async_write_entity_states(self) -> None:
         """Write states for associated SonosEntity instances."""
         async_dispatcher_send(self.hass, f"{SONOS_STATE_UPDATED}-{self.soco.uid}")
+
+    def update_soco_int_attribute(
+        self, soco_attribute: str, speaker_attribute: str
+    ) -> int | None:
+        """Update an integer attribute from SoCo and set it on the speaker.
+
+        Returns the integer value if successful, otherwise None. Do not call from
+        async context as it is a blocking function.
+        """
+        value: int | None = None
+        if (state := getattr(self.soco, soco_attribute, None)) is None:
+            _LOGGER.error("Missing value for %s", speaker_attribute)
+        else:
+            try:
+                value = int(state)
+            except (TypeError, ValueError):
+                _LOGGER.error(
+                    "Invalid value for %s %s",
+                    speaker_attribute,
+                    state,
+                )
+        setattr(self, speaker_attribute, value)
+        return value
 
     #
     # Properties
@@ -548,6 +578,11 @@ class SonosSpeaker:
     @callback
     def async_update_volume(self, event: SonosEvent) -> None:
         """Update information about currently volume settings."""
+        _LOGGER.debug(
+            "Updating volume for %s with event variables: %s",
+            self.zone_name,
+            event.variables,
+        )
         self.event_stats.process(event)
         variables = event.variables
 
@@ -565,6 +600,7 @@ class SonosSpeaker:
 
         for bool_var in (
             "dialog_level",
+            ATTR_SPEECH_ENHANCEMENT_ENABLED,
             "night_mode",
             "sub_enabled",
             "surround_enabled",
@@ -584,6 +620,15 @@ class SonosSpeaker:
         ):
             if int_var in variables:
                 setattr(self, int_var, variables[int_var])
+
+        for enum_var in (ATTR_DIALOG_LEVEL,):
+            if enum_var in variables:
+                try:
+                    setattr(self, f"{enum_var}_enum", int(variables[enum_var]))
+                except ValueError:
+                    _LOGGER.error(
+                        "Invalid value for %s %s", enum_var, variables[enum_var]
+                    )
 
         self.async_write_entity_states()
 
@@ -646,7 +691,8 @@ class SonosSpeaker:
 
     async def async_offline(self) -> None:
         """Handle removal of speaker when unavailable."""
-        assert self._subscription_lock is not None
+        if not self._subscription_lock:
+            self._subscription_lock = asyncio.Lock()
         async with self._subscription_lock:
             await self._async_offline()
 
@@ -970,11 +1016,21 @@ class SonosSpeaker:
         speakers: list[SonosSpeaker],
     ) -> None:
         """Form a group with other players."""
+        # When joining multiple speakers, build the group incrementally and
+        # wait for the grouping to complete after each join. This avoids race
+        # conditions in zone topology updates.
         async with config_entry.runtime_data.topology_condition:
-            group: list[SonosSpeaker] = await hass.async_add_executor_job(
-                master.join, speakers
-            )
-            await SonosSpeaker.wait_for_groups(hass, config_entry, [group])
+            join_list: list[SonosSpeaker] = []
+            for speaker in speakers:
+                _LOGGER.debug("Join %s to %s", speaker.zone_name, master.zone_name)
+                join_list.append(speaker)
+                group: list[SonosSpeaker] = await hass.async_add_executor_job(
+                    master.join, join_list
+                )
+                await SonosSpeaker.wait_for_groups(hass, config_entry, [group])
+                _LOGGER.debug(
+                    "Join Complete %s to %s", speaker.zone_name, master.zone_name
+                )
 
     @soco_error()
     def unjoin(self) -> None:
@@ -1004,7 +1060,10 @@ class SonosSpeaker:
         async with config_entry.runtime_data.topology_condition:
             await hass.async_add_executor_job(_unjoin_all, speakers)
             await SonosSpeaker.wait_for_groups(
-                hass, config_entry, [[s] for s in speakers]
+                hass,
+                config_entry,
+                [[s] for s in speakers],
+                action="unjoin",
             )
 
     @soco_error()
@@ -1148,6 +1207,7 @@ class SonosSpeaker:
         hass: HomeAssistant,
         config_entry: SonosConfigEntry,
         groups: list[list[SonosSpeaker]],
+        action: str = "join",
     ) -> None:
         """Wait until all groups are present, or timeout."""
 
@@ -1168,18 +1228,20 @@ class SonosSpeaker:
             return True
 
         try:
-            async with asyncio.timeout(5):
+            async with asyncio.timeout(WAIT_FOR_GROUPS_TIMEOUT):
                 while not _test_groups(groups):
                     await config_entry.runtime_data.topology_condition.wait()
         except TimeoutError:
-            group_description = [
+            group_description = "; ".join(
                 f"{group[0].zone_name}: {', '.join(speaker.zone_name for speaker in group)}"
                 for group in groups
-            ]
+            )
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="timeout_join",
-                translation_placeholders={"group_description": str(group_description)},
+                translation_key=f"timeout_{action}",
+                translation_placeholders={
+                    "group_description": group_description,
+                },
             ) from TimeoutError
         any_speaker = next(iter(config_entry.runtime_data.discovered.values()))
         any_speaker.soco.zone_group_state.clear_cache()

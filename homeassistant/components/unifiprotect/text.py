@@ -22,14 +22,17 @@ from .entity import (
     PermRequired,
     ProtectDeviceEntity,
     ProtectEntityDescription,
-    ProtectSetableKeysMixin,
+    ProtectSettableKeysMixin,
     T,
     async_all_device_entities,
 )
+from .utils import async_ufp_instance_command
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
-class ProtectTextEntityDescription(ProtectSetableKeysMixin[T], TextEntityDescription):
+class ProtectTextEntityDescription(ProtectSettableKeysMixin[T], TextEntityDescription):
     """Describes UniFi Protect Text entity."""
 
 
@@ -98,6 +101,7 @@ class ProtectDeviceText(ProtectDeviceEntity, TextEntity):
         super()._async_update_device_from_protect(device)
         self._attr_native_value = self.entity_description.get_ufp_value(self.device)
 
+    @async_ufp_instance_command
     async def async_set_value(self, value: str) -> None:
         """Change the value."""
         await self.entity_description.ufp_set(self.device, value)

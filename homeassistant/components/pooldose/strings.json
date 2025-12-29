@@ -1,0 +1,273 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_device_info": "Unable to retrieve device information",
+      "no_serial_number": "No serial number found on the device"
+    },
+    "error": {
+      "api_not_set": "API version not found in device response. Device firmware may not be compatible with this integration.",
+      "api_not_supported": "Unsupported API version {api_version_is} (expected: {api_version_should}). Device firmware may not be compatible with this integration.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_device_info": "Unable to retrieve device information. Device may not be properly initialized or may be an unsupported model.",
+      "no_serial_number": "No serial number found on the device. Device may not be properly configured or may be an unsupported model.",
+      "params_fetch_failed": "Unable to fetch core parameters from device. Device firmware may not be compatible with this integration.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "dhcp_confirm": {
+        "description": "A PoolDose device was found on your network at {ip} with MAC address {mac}.\n\nDo you want to add {name} to Home Assistant?",
+        "title": "Confirm DHCP discovered PoolDose device"
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "IP address or hostname of your device"
+        },
+        "description": "Login handling not supported by API. Device password must be deactivated, i.e., set to default value (0000).",
+        "title": "Set up SEKO PoolDose device"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "alarm_ofa_cl": {
+        "name": "Chlorine tank level"
+      },
+      "alarm_ofa_orp": {
+        "name": "ORP overfeed"
+      },
+      "alarm_ofa_ph": {
+        "name": "pH overfeed"
+      },
+      "flow_rate_alarm": {
+        "name": "Flow rate"
+      },
+      "orp_level_alarm": {
+        "name": "ORP tank level"
+      },
+      "ph_level_alarm": {
+        "name": "pH tank level"
+      },
+      "pump_alarm": {
+        "name": "Recirculation"
+      },
+      "relay_alarm": {
+        "name": "Alarm relay status"
+      },
+      "relay_aux1": {
+        "name": "Auxiliary relay 1 status"
+      },
+      "relay_aux2": {
+        "name": "Auxiliary relay 2 status"
+      },
+      "relay_aux3": {
+        "name": "Auxiliary relay 3 status"
+      }
+    },
+    "number": {
+      "cl_target": {
+        "name": "Chlorine target"
+      },
+      "ofa_cl_lower": {
+        "name": "Chlorine overfeed alarm lower limit"
+      },
+      "ofa_cl_upper": {
+        "name": "Chlorine overfeed alarm upper limit"
+      },
+      "ofa_orp_lower": {
+        "name": "ORP overfeed alarm lower limit"
+      },
+      "ofa_orp_upper": {
+        "name": "ORP overfeed alarm upper limit"
+      },
+      "ofa_ph_lower": {
+        "name": "pH overfeed alarm lower limit"
+      },
+      "ofa_ph_upper": {
+        "name": "pH overfeed alarm upper limit"
+      },
+      "orp_target": {
+        "name": "ORP target"
+      },
+      "ph_target": {
+        "name": "pH target"
+      }
+    },
+    "select": {
+      "cl_type_dosing_method": {
+        "name": "Chlorine dosing method",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on_off": "[%key:component::pooldose::entity::sensor::peristaltic_ph_dosing::state::on_off%]",
+          "proportional": "[%key:component::pooldose::entity::sensor::peristaltic_ph_dosing::state::proportional%]",
+          "timed": "[%key:component::pooldose::entity::sensor::peristaltic_ph_dosing::state::timed%]"
+        }
+      },
+      "cl_type_dosing_set": {
+        "name": "Chlorine dosing set",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]"
+        }
+      },
+      "flow_rate_unit": {
+        "name": "Flow rate unit"
+      },
+      "orp_type_dosing_method": {
+        "name": "ORP dosing method",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on_off": "[%key:component::pooldose::entity::sensor::peristaltic_ph_dosing::state::on_off%]",
+          "proportional": "[%key:component::pooldose::entity::sensor::peristaltic_ph_dosing::state::proportional%]",
+          "timed": "[%key:component::pooldose::entity::sensor::peristaltic_ph_dosing::state::timed%]"
+        }
+      },
+      "orp_type_dosing_set": {
+        "name": "ORP dosing set",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]"
+        }
+      },
+      "ph_type_dosing_method": {
+        "name": "pH dosing method",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on_off": "[%key:component::pooldose::entity::sensor::peristaltic_ph_dosing::state::on_off%]",
+          "proportional": "[%key:component::pooldose::entity::sensor::peristaltic_ph_dosing::state::proportional%]",
+          "timed": "[%key:component::pooldose::entity::sensor::peristaltic_ph_dosing::state::timed%]"
+        }
+      },
+      "ph_type_dosing_set": {
+        "name": "pH dosing set",
+        "state": {
+          "acid": "Acid (pH-)",
+          "alcalyne": "Alkaline (pH+)"
+        }
+      },
+      "water_meter_unit": {
+        "name": "Water meter unit"
+      }
+    },
+    "sensor": {
+      "cl": {
+        "name": "Chlorine"
+      },
+      "cl_type_dosing": {
+        "name": "Chlorine dosing type",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]"
+        }
+      },
+      "flow_rate": {
+        "name": "Flow rate"
+      },
+      "ofa_orp_time": {
+        "name": "ORP overfeed alert time"
+      },
+      "ofa_ph_time": {
+        "name": "pH overfeed alert time"
+      },
+      "orp": {
+        "name": "ORP"
+      },
+      "orp_calibration_offset": {
+        "name": "ORP calibration offset"
+      },
+      "orp_calibration_slope": {
+        "name": "ORP calibration slope"
+      },
+      "orp_calibration_type": {
+        "name": "ORP calibration type",
+        "state": {
+          "1_point": "[%key:component::pooldose::entity::sensor::ph_calibration_type::state::1_point%]",
+          "off": "[%key:common::state::off%]",
+          "reference": "[%key:component::pooldose::entity::sensor::ph_calibration_type::state::reference%]"
+        }
+      },
+      "orp_type_dosing": {
+        "name": "ORP dosing type",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]"
+        }
+      },
+      "peristaltic_cl_dosing": {
+        "name": "Chlorine peristaltic dosing",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on_off": "[%key:component::pooldose::entity::sensor::peristaltic_ph_dosing::state::on_off%]",
+          "proportional": "[%key:component::pooldose::entity::sensor::peristaltic_ph_dosing::state::proportional%]",
+          "timed": "[%key:component::pooldose::entity::sensor::peristaltic_ph_dosing::state::timed%]"
+        }
+      },
+      "peristaltic_orp_dosing": {
+        "name": "ORP peristaltic dosing",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on_off": "[%key:component::pooldose::entity::sensor::peristaltic_ph_dosing::state::on_off%]",
+          "proportional": "[%key:component::pooldose::entity::sensor::peristaltic_ph_dosing::state::proportional%]",
+          "timed": "[%key:component::pooldose::entity::sensor::peristaltic_ph_dosing::state::timed%]"
+        }
+      },
+      "peristaltic_ph_dosing": {
+        "name": "pH peristaltic dosing",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on_off": "On/Off",
+          "proportional": "Proportional",
+          "timed": "Timed"
+        }
+      },
+      "ph_calibration_offset": {
+        "name": "pH calibration offset"
+      },
+      "ph_calibration_slope": {
+        "name": "pH calibration slope"
+      },
+      "ph_calibration_type": {
+        "name": "pH calibration type",
+        "state": {
+          "1_point": "1 point",
+          "2_points": "2 points",
+          "off": "[%key:common::state::off%]",
+          "reference": "Reference"
+        }
+      },
+      "ph_type_dosing": {
+        "name": "pH dosing type",
+        "state": {
+          "acid": "pH-",
+          "alcalyne": "pH+"
+        }
+      },
+      "water_meter_total_permanent": {
+        "name": "Totalizer"
+      }
+    },
+    "switch": {
+      "frequency_input": {
+        "name": "Frequency input"
+      },
+      "pause_dosing": {
+        "name": "Pause dosing"
+      },
+      "pump_monitoring": {
+        "name": "Pump monitoring"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Value can not be set because the device is not connected"
+    },
+    "write_rejected": {
+      "message": "The device rejected the value for {entity}: {value}"
+    }
+  }
+}

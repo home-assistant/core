@@ -51,6 +51,9 @@ rules:
 - **Missing imports** - We use static analysis tooling to catch that
 - **Code formatting** - We have ruff as a formatting tool that will catch those if needed (unless specifically instructed otherwise in these instructions)
 
+**Git commit practices during review:**
+- **Do NOT amend, squash, or rebase commits after review has started** - Reviewers need to see what changed since their last review
+
 ## Python Requirements
 
 - **Compatibility**: Python 3.13+
@@ -74,6 +77,7 @@ rules:
 - **Formatting**: Ruff
 - **Linting**: PyLint and Ruff
 - **Type Checking**: MyPy
+- **Lint/Type/Format Fixes**: Always prefer addressing the underlying issue (e.g., import the typed source, update shared stubs, align with Ruff expectations, or correct formatting at the source) before disabling a rule, adding `# type: ignore`, or skipping a formatter. Treat suppressions and `noqa` comments as a last resort once no compliant fix exists
 - **Testing**: pytest with plain functions and fixtures
 - **Language**: American English for all code, comments, and documentation (use sentence case, including titles)
 
@@ -1073,7 +1077,11 @@ async def test_flow_connection_error(hass, mock_api_error):
 
 ### Entity Testing Patterns
 ```python
-@pytest.mark.parametrize("init_integration", [Platform.SENSOR], indirect=True)
+@pytest.fixture 
+def platforms() -> list[Platform]: 
+    """Overridden fixture to specify platforms to test.""" 
+    return [Platform.SENSOR]  # Or another specific platform as needed.
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_entities(
     hass: HomeAssistant,
@@ -1120,16 +1128,25 @@ def mock_device_api() -> Generator[MagicMock]:
         )
         yield api
 
+@pytest.fixture 
+def platforms() -> list[Platform]: 
+    """Fixture to specify platforms to test.""" 
+    return PLATFORMS
+
 @pytest.fixture
 async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_device_api: MagicMock,
+    platforms: list[Platform],
 ) -> MockConfigEntry:
     """Set up the integration for testing."""
     mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    
+    with patch("homeassistant.components.my_integration.PLATFORMS", platforms):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
     return mock_config_entry
 ```
 
