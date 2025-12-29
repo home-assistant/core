@@ -19,7 +19,7 @@ from .api import (
     NRGkickApiClientCommunicationError,
     NRGkickApiClientError,
 )
-from .const import CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,14 +39,11 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.api = api
         self.entry = entry
 
-        # Get scan interval from options or use default.
-        scan_interval = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(seconds=scan_interval),
+            update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
             config_entry=entry,
             # Data is a dict that supports __eq__ comparison.
             # Avoid unnecessary entity updates when data hasn't changed.

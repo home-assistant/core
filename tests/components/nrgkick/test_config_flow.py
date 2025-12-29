@@ -10,7 +10,6 @@ from homeassistant.components.nrgkick.api import (
     NRGkickApiClientAuthenticationError,
     NRGkickApiClientCommunicationError,
 )
-from homeassistant.components.nrgkick.const import CONF_SCAN_INTERVAL
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -262,67 +261,6 @@ async def test_reauth_flow_cannot_connect(
 
     assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
-
-
-async def test_options_flow_success(hass: HomeAssistant, mock_nrgkick_api) -> None:
-    """Test a successful options flow."""
-    entry = create_mock_config_entry(
-        domain="nrgkick",
-        title="NRGkick Test",
-        data={
-            CONF_HOST: "192.168.1.100",
-            CONF_USERNAME: "old_user",
-            CONF_PASSWORD: "old_pass",
-        },
-        options={CONF_SCAN_INTERVAL: 30},
-        entry_id="test_entry",
-        unique_id="TEST123456",
-    )
-    entry.add_to_hass(hass)
-
-    # Set up the entry to register the update listener
-    with (
-        patch(
-            "homeassistant.components.nrgkick.NRGkickAPI",
-            return_value=mock_nrgkick_api,
-        ),
-        patch("homeassistant.config_entries.ConfigEntries.async_reload"),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
-    assert result["step_id"] == "init"
-
-    with (
-        patch(
-            "homeassistant.components.nrgkick.config_flow.validate_input",
-            return_value={"title": "NRGkick Test", "serial": "TEST123456"},
-        ),
-        patch("homeassistant.config_entries.ConfigEntries.async_reload") as mock_reload,
-    ):
-        result2 = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_SCAN_INTERVAL: 60,
-            },
-        )
-        await hass.async_block_till_done()
-
-        assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-        assert result2["data"] == {CONF_SCAN_INTERVAL: 60}
-
-        # Wait for config entry to be updated
-        await hass.async_block_till_done()
-
-        # Re-fetch the entry from hass to get updated values
-        updated_entry = hass.config_entries.async_get_entry(entry.entry_id)
-        assert updated_entry is not None
-        assert updated_entry.options.get(CONF_SCAN_INTERVAL) == 60
-        # The update listener triggers reload automatically (may be called 1-2 times)
-        assert len(mock_reload.mock_calls) >= 1
-        mock_reload.assert_called_with(entry.entry_id)
 
 
 async def test_reconfigure_flow(hass: HomeAssistant, mock_nrgkick_api) -> None:

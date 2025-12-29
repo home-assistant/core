@@ -388,11 +388,6 @@
           "unsupported_charging_mode": "Unsupported charging mode"
         }
       }
-    },
-    "switch": {
-      "charge_pause": {
-        "name": "Charge pause"
-      }
     }
   },
   "exceptions": {
@@ -428,18 +423,6 @@
     },
     "unknown_error": {
       "message": "An unknown error occurred."
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "scan_interval": "Update interval (seconds)"
-        },
-        "data_description": {
-          "scan_interval": "How often to poll the device for updates (in seconds)."
-        }
-      }
     }
   }
 }

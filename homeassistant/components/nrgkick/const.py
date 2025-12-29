@@ -4,13 +4,8 @@ from typing import Final
 
 DOMAIN: Final = "nrgkick"
 
-# Configuration.
-CONF_SCAN_INTERVAL: Final = "scan_interval"
-
-# Default values.
+# Default polling interval (seconds).
 DEFAULT_SCAN_INTERVAL: Final = 30
-MIN_SCAN_INTERVAL: Final = 10
-MAX_SCAN_INTERVAL: Final = 300
 
 # Note: API Endpoints are in the nrgkick-api library.
 # Import from nrgkick_api if needed: from nrgkick_api import ENDPOINT_INFO, ...

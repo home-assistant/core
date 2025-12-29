@@ -8,7 +8,6 @@ rules:
     status: done
     comment: |
       Coordinator sets update interval in homeassistant/components/nrgkick/coordinator.py
-      Note: polling interval is currently configurable via options flow in homeassistant/components/nrgkick/config_flow.py
   brands:
     status: done
     comment: |
