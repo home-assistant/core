@@ -1,9 +1,11 @@
 """Tests for the WLED light platform."""
 
-from unittest.mock import MagicMock
+from collections.abc import Generator
+from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from syrupy.assertion import SnapshotAssertion
 from wled import Device as WLEDDevice, WLEDConnectionError, WLEDError
 
 from homeassistant.components.light import (
@@ -11,7 +13,6 @@ from homeassistant.components.light import (
     ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
-    ATTR_HS_COLOR,
     ATTR_MAX_COLOR_TEMP_KELVIN,
     ATTR_MIN_COLOR_TEMP_KELVIN,
     ATTR_RGB_COLOR,
@@ -28,12 +29,12 @@ from homeassistant.components.wled.const import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_ICON,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -43,44 +44,30 @@ from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
     async_load_json_object_fixture,
+    snapshot_platform,
 )
 
 pytestmark = pytest.mark.usefixtures("init_integration")
 
 
-async def test_rgb_light_state(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
+@pytest.fixture(autouse=True)
+def override_platforms() -> Generator[None]:
+    """Override PLATFORMS."""
+    with patch("homeassistant.components.wled.PLATFORMS", [Platform.LIGHT]):
+        yield
+
+
+@pytest.mark.parametrize(
+    "device_fixture", ["cct", "rgb_single_segment", "rgb", "rgb_websocket", "rgbw"]
+)
+async def test_snapshots(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the creation and values of the WLED lights."""
-    # First segment of the strip
-    assert (state := hass.states.get("light.wled_rgb_light"))
-    assert state.attributes.get(ATTR_BRIGHTNESS) == 255
-    assert state.attributes.get(ATTR_EFFECT) == "Solid"
-    assert state.attributes.get(ATTR_HS_COLOR) == (218.906, 50.196)
-    assert state.attributes.get(ATTR_ICON) is None
-    assert state.state == STATE_ON
-
-    assert (entry := entity_registry.async_get("light.wled_rgb_light"))
-    assert entry.unique_id == "aabbccddeeff_0"
-
-    # Second segment of the strip
-    assert (state := hass.states.get("light.wled_rgb_light_segment_1"))
-    assert state.attributes.get(ATTR_BRIGHTNESS) == 255
-    assert state.attributes.get(ATTR_EFFECT) == "Wipe"
-    assert state.attributes.get(ATTR_HS_COLOR) == (40.0, 100.0)
-    assert state.attributes.get(ATTR_ICON) is None
-    assert state.state == STATE_ON
-
-    assert (entry := entity_registry.async_get("light.wled_rgb_light_segment_1"))
-    assert entry.unique_id == "aabbccddeeff_1"
-
-    # Test main control of the lightstrip
-    assert (state := hass.states.get("light.wled_rgb_light_main"))
-    assert state.attributes.get(ATTR_BRIGHTNESS) == 128
-    assert state.state == STATE_ON
-
-    assert (entry := entity_registry.async_get("light.wled_rgb_light_main"))
-    assert entry.unique_id == "aabbccddeeff"
+    """Test snapshots of the platform."""
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 async def test_segment_change_state(
@@ -293,14 +280,24 @@ async def test_single_segment_behavior(
     mock_wled.master.assert_called_with(on=True, transition=50, brightness=42)
 
 
-async def test_light_error(
+@pytest.mark.parametrize(
+    ("side_effect", "expected_state", "expected_translation_key"),
+    [
+        (WLEDError, STATE_ON, "invalid_response_wled_error"),
+        (WLEDConnectionError, STATE_UNAVAILABLE, "connection_error"),
+    ],
+)
+async def test_light_errors(
     hass: HomeAssistant,
     mock_wled: MagicMock,
+    side_effect: Exception,
+    expected_state: str,
+    expected_translation_key: str,
 ) -> None:
     """Test error handling of the WLED lights."""
-    mock_wled.segment.side_effect = WLEDError
+    mock_wled.segment.side_effect = side_effect
 
-    with pytest.raises(HomeAssistantError, match="Invalid response from WLED API"):
+    with pytest.raises(HomeAssistantError) as ex:
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_OFF,
@@ -308,29 +305,11 @@ async def test_light_error(
             blocking=True,
         )
 
-    assert (state := hass.states.get("light.wled_rgb_light"))
-    assert state.state == STATE_ON
-    assert mock_wled.segment.call_count == 1
-    mock_wled.segment.assert_called_with(on=False, segment_id=0, transition=None)
-
-
-async def test_light_connection_error(
-    hass: HomeAssistant,
-    mock_wled: MagicMock,
-) -> None:
-    """Test error handling of the WLED switches."""
-    mock_wled.segment.side_effect = WLEDConnectionError
-
-    with pytest.raises(HomeAssistantError, match="Error communicating with WLED API"):
-        await hass.services.async_call(
-            LIGHT_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: "light.wled_rgb_light"},
-            blocking=True,
-        )
+    assert ex.value.translation_domain == DOMAIN
+    assert ex.value.translation_key == expected_translation_key
 
     assert (state := hass.states.get("light.wled_rgb_light"))
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == expected_state
     assert mock_wled.segment.call_count == 1
     mock_wled.segment.assert_called_with(on=False, segment_id=0, transition=None)
 
