@@ -54,16 +54,6 @@ def mock_config_flow_client() -> Generator[MagicMock]:
         yield client
 
 
-@pytest.fixture
-def mock_setup_entry() -> Generator[MagicMock]:
-    """Mock async_setup_entry."""
-    with patch(
-        "homeassistant.components.tplink_omada.async_setup_entry",
-        return_value=True,
-    ) as mock_setup:
-        yield mock_setup
-
-
 async def test_form_single_site(
     hass: HomeAssistant,
     mock_config_flow_client: MagicMock,
@@ -200,7 +190,7 @@ async def test_form_errors_and_recovery(
 async def test_form_no_sites(
     hass: HomeAssistant, mock_config_flow_client: MagicMock
 ) -> None:
-    """Test we handle invalid auth."""
+    """Test we handle the case when no sites are found."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
