@@ -13,6 +13,8 @@ from homeassistant.components.growatt_server.const import (
     AUTH_API_TOKEN,
     AUTH_PASSWORD,
     CONF_AUTH_TYPE,
+    CONF_PLANT_ID,
+    DEFAULT_PLANT_ID,
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
@@ -393,3 +395,42 @@ async def test_v1_api_unsupported_device_type(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     # Verify warning was logged for unsupported device
     assert "Device TLX789012 with type 5 not supported in Open API V1" in caplog.text
+
+
+async def test_migrate_default_plant_id(
+    hass: HomeAssistant,
+    mock_growatt_classic_api,
+    mock_config_entry_classic_default_plant: MockConfigEntry,
+) -> None:
+    """Test migration of config entry with DEFAULT_PLANT_ID to actual plant_id."""
+    # Initially has DEFAULT_PLANT_ID
+    assert (
+        mock_config_entry_classic_default_plant.data[CONF_PLANT_ID] == DEFAULT_PLANT_ID
+    )
+
+    # Mock successful login and plant list with specific plant ID
+    mock_growatt_classic_api.login.return_value = {
+        "success": True,
+        "user": {"id": 123456},
+    }
+    mock_growatt_classic_api.plant_list.return_value = {
+        "data": [{"plantId": "MIGRATED_PLANT_123", "plantName": "My Plant"}]
+    }
+    mock_growatt_classic_api.device_list.return_value = [
+        {"deviceSn": "TLX123456", "deviceType": "tlx"}
+    ]
+
+    await setup_integration(hass, mock_config_entry_classic_default_plant)
+
+    # Verify integration loaded successfully
+    assert mock_config_entry_classic_default_plant.state is ConfigEntryState.LOADED
+
+    # Verify config entry was migrated to use the actual plant_id
+    assert (
+        mock_config_entry_classic_default_plant.data[CONF_PLANT_ID]
+        == "MIGRATED_PLANT_123"
+    )
+
+    # Verify other config data remains unchanged
+    assert mock_config_entry_classic_default_plant.data[CONF_AUTH_TYPE] == AUTH_PASSWORD
+    assert mock_config_entry_classic_default_plant.data[CONF_USERNAME] == "test_user"

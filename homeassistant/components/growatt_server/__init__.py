@@ -41,15 +41,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-def get_device_list_classic(
-    api: growattServer.GrowattApi, config: Mapping[str, str]
-) -> tuple[list[dict[str, str]], str]:
-    """Retrieve the device list for the selected plant."""
-    plant_id = config[CONF_PLANT_ID]
-
-    # Log in to api and fetch first plant if no plant id is defined.
+def _login_classic_api(
+    api: growattServer.GrowattApi, username: str, password: str
+) -> dict:
+    """Log in to Classic API and return user info."""
     try:
-        login_response = api.login(config[CONF_USERNAME], config[CONF_PASSWORD])
+        login_response = api.login(username, password)
     except (RequestException, JSONDecodeError) as ex:
         raise ConfigEntryError(
             f"Error communicating with Growatt API during login: {ex}"
@@ -62,21 +59,39 @@ def get_device_list_classic(
             raise ConfigEntryAuthFailed("Username, Password or URL may be incorrect!")
         raise ConfigEntryError(f"Growatt login failed: {msg}")
 
+    return login_response
+
+
+def _resolve_plant_id(
+    api: growattServer.GrowattApi, username: str, password: str
+) -> str:
+    """Resolve DEFAULT_PLANT_ID to actual plant_id for Classic API."""
+    login_response = _login_classic_api(api, username, password)
     user_id = login_response["user"]["id"]
 
-    # Legacy support: DEFAULT_PLANT_ID ("0") triggers auto-selection of first plant.
-    # Modern config flow always sets a specific plant_id, but old config entries
-    # from earlier versions may still have plant_id="0".
-    if plant_id == DEFAULT_PLANT_ID:
-        try:
-            plant_info = api.plant_list(user_id)
-        except (RequestException, JSONDecodeError) as ex:
-            raise ConfigEntryError(
-                f"Error communicating with Growatt API during plant list: {ex}"
-            ) from ex
-        if not plant_info or "data" not in plant_info or not plant_info["data"]:
-            raise ConfigEntryError("No plants found for this account.")
-        plant_id = plant_info["data"][0]["plantId"]
+    try:
+        plant_info = api.plant_list(user_id)
+    except (RequestException, JSONDecodeError) as ex:
+        raise ConfigEntryError(
+            f"Error communicating with Growatt API during plant list: {ex}"
+        ) from ex
+
+    if not plant_info or "data" not in plant_info or not plant_info["data"]:
+        raise ConfigEntryError("No plants found for this account.")
+
+    return plant_info["data"][0]["plantId"]
+
+
+def get_device_list_classic(
+    api: growattServer.GrowattApi, config: Mapping[str, str]
+) -> tuple[list[dict[str, str]], str]:
+    """Retrieve the device list for the selected plant."""
+    plant_id = config[CONF_PLANT_ID]
+    username = config[CONF_USERNAME]
+    password = config[CONF_PASSWORD]
+
+    # Login to Classic API
+    _login_classic_api(api, username, password)
 
     # Get a list of devices for specified plant to add sensors for.
     try:
@@ -183,6 +198,35 @@ async def async_setup_entry(
         api.server_url = url
     else:
         raise ConfigEntryError("Unknown authentication type in config entry.")
+
+    # Handle migration for entries with DEFAULT_PLANT_ID
+    if config.get(CONF_PLANT_ID) == DEFAULT_PLANT_ID:
+        # Resolve DEFAULT_PLANT_ID to actual plant_id for Classic API
+        if api_version == "classic":
+            try:
+                resolved_plant_id = await hass.async_add_executor_job(
+                    _resolve_plant_id, api, config[CONF_USERNAME], config[CONF_PASSWORD]
+                )
+            except (RequestException, JSONDecodeError) as ex:
+                raise ConfigEntryError(
+                    f"Error resolving plant_id during migration: {ex}"
+                ) from ex
+
+            # Update config with resolved plant_id
+            new_data = dict(config_entry.data)
+            new_data[CONF_PLANT_ID] = resolved_plant_id
+            hass.config_entries.async_update_entry(config_entry, data=new_data)
+            config = config_entry.data  # Refresh config with updated data
+
+            _LOGGER.info(
+                "Migrated config entry to use specific plant_id '%s' instead of default plant selection",
+                resolved_plant_id,
+            )
+        else:
+            # V1 API should not have DEFAULT_PLANT_ID, but log and continue
+            _LOGGER.warning(
+                "V1 API config entry unexpectedly has DEFAULT_PLANT_ID, this may cause API errors"
+            )
 
     devices, plant_id = await hass.async_add_executor_job(
         get_device_list, api, config, api_version
