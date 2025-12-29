@@ -27,7 +27,6 @@ class HypontechData:
     """Store runtime data."""
 
     coordinator: HypontechDataCoordinator
-    device_id: str
 
 
 type HypontechConfigEntry = ConfigEntry[HypontechData]
