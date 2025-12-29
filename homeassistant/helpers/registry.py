@@ -77,7 +77,6 @@ class BaseRegistry[_StoreDataT: Mapping[str, Any] | Sequence[Any]](ABC):
         delay = SAVE_DELAY if self.hass.state is CoreState.running else SAVE_DELAY_LONG
         self._store.async_delay_save(self._data_to_save, delay)
 
-    @callback
     @abstractmethod
     def _data_to_save(self) -> _StoreDataT:
         """Return data of registry to store in a file."""

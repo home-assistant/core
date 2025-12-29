@@ -2,23 +2,22 @@
 
 from __future__ import annotations
 
-from ipaddress import IPv4Network, ip_network
 import logging
 from types import ModuleType
-from typing import Any
 
 from telegram import Bot
+from telegram.constants import InputMediaType
 from telegram.error import InvalidToken, TelegramError
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
 from homeassistant.const import (
+    ATTR_DOMAIN,
+    ATTR_ENTITY_ID,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
-    CONF_API_KEY,
+    ATTR_SERVICE,
     CONF_PLATFORM,
-    CONF_SOURCE,
-    CONF_URL,
     Platform,
 )
 from homeassistant.core import (
@@ -33,8 +32,8 @@ from homeassistant.exceptions import (
     HomeAssistantError,
     ServiceValidationError,
 )
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.typing import ConfigType, VolSchemaType
 
 from . import broadcast, polling, webhooks
 from .bot import TelegramBotConfigEntry, TelegramNotificationService, initialize_bot
@@ -45,13 +44,17 @@ from .const import (
     ATTR_CAPTION,
     ATTR_CHAT_ACTION,
     ATTR_CHAT_ID,
+    ATTR_DIRECTORY_PATH,
     ATTR_DISABLE_NOTIF,
     ATTR_DISABLE_WEB_PREV,
     ATTR_FILE,
+    ATTR_FILE_ID,
+    ATTR_FILE_NAME,
     ATTR_IS_ANONYMOUS,
     ATTR_IS_BIG,
     ATTR_KEYBOARD,
     ATTR_KEYBOARD_INLINE,
+    ATTR_MEDIA_TYPE,
     ATTR_MESSAGE,
     ATTR_MESSAGE_TAG,
     ATTR_MESSAGE_THREAD_ID,
@@ -63,6 +66,7 @@ from .const import (
     ATTR_PASSWORD,
     ATTR_QUESTION,
     ATTR_REACTION,
+    ATTR_REPLY_TO_MSGID,
     ATTR_RESIZE_KEYBOARD,
     ATTR_SHOW_ALERT,
     ATTR_STICKER_ID,
@@ -83,21 +87,17 @@ from .const import (
     CHAT_ACTION_UPLOAD_VIDEO,
     CHAT_ACTION_UPLOAD_VIDEO_NOTE,
     CHAT_ACTION_UPLOAD_VOICE,
-    CONF_ALLOWED_CHAT_IDS,
-    CONF_BOT_COUNT,
     CONF_CONFIG_ENTRY_ID,
-    CONF_PROXY_URL,
-    CONF_TRUSTED_NETWORKS,
-    DEFAULT_TRUSTED_NETWORKS,
     DOMAIN,
-    PARSER_MD,
     PLATFORM_BROADCAST,
     PLATFORM_POLLING,
     PLATFORM_WEBHOOKS,
     SERVICE_ANSWER_CALLBACK_QUERY,
     SERVICE_DELETE_MESSAGE,
+    SERVICE_DOWNLOAD_FILE,
     SERVICE_EDIT_CAPTION,
     SERVICE_EDIT_MESSAGE,
+    SERVICE_EDIT_MESSAGE_MEDIA,
     SERVICE_EDIT_REPLYMARKUP,
     SERVICE_LEAVE_CHAT,
     SERVICE_SEND_ANIMATION,
@@ -115,34 +115,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.All(
-            cv.ensure_list,
-            [
-                vol.Schema(
-                    {
-                        vol.Required(CONF_PLATFORM): vol.In(
-                            (PLATFORM_BROADCAST, PLATFORM_POLLING, PLATFORM_WEBHOOKS)
-                        ),
-                        vol.Required(CONF_API_KEY): cv.string,
-                        vol.Required(CONF_ALLOWED_CHAT_IDS): vol.All(
-                            cv.ensure_list, [vol.Coerce(int)]
-                        ),
-                        vol.Optional(ATTR_PARSER, default=PARSER_MD): cv.string,
-                        vol.Optional(CONF_PROXY_URL): cv.string,
-                        # webhooks
-                        vol.Optional(CONF_URL): cv.url,
-                        vol.Optional(
-                            CONF_TRUSTED_NETWORKS, default=DEFAULT_TRUSTED_NETWORKS
-                        ): vol.All(cv.ensure_list, [ip_network]),
-                    }
-                )
-            ],
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 BASE_SERVICE_SCHEMA = vol.Schema(
     {
@@ -158,35 +131,47 @@ BASE_SERVICE_SCHEMA = vol.Schema(
         vol.Optional(ATTR_TIMEOUT): cv.positive_int,
         vol.Optional(ATTR_MESSAGE_TAG): cv.string,
         vol.Optional(ATTR_MESSAGE_THREAD_ID): vol.Coerce(int),
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
-SERVICE_SCHEMA_SEND_MESSAGE = BASE_SERVICE_SCHEMA.extend(
-    {vol.Required(ATTR_MESSAGE): cv.string, vol.Optional(ATTR_TITLE): cv.string}
-)
-
-SERVICE_SCHEMA_SEND_CHAT_ACTION = BASE_SERVICE_SCHEMA.extend(
-    {
-        vol.Required(ATTR_CHAT_ACTION): vol.In(
-            (
-                CHAT_ACTION_TYPING,
-                CHAT_ACTION_UPLOAD_PHOTO,
-                CHAT_ACTION_RECORD_VIDEO,
-                CHAT_ACTION_UPLOAD_VIDEO,
-                CHAT_ACTION_RECORD_VOICE,
-                CHAT_ACTION_UPLOAD_VOICE,
-                CHAT_ACTION_UPLOAD_DOCUMENT,
-                CHAT_ACTION_CHOOSE_STICKER,
-                CHAT_ACTION_FIND_LOCATION,
-                CHAT_ACTION_RECORD_VIDEO_NOTE,
-                CHAT_ACTION_UPLOAD_VIDEO_NOTE,
-            )
-        ),
     }
 )
 
-SERVICE_SCHEMA_SEND_FILE = BASE_SERVICE_SCHEMA.extend(
+SERVICE_SCHEMA_SEND_MESSAGE = vol.All(
+    cv.deprecated(ATTR_TIMEOUT),
+    BASE_SERVICE_SCHEMA.extend(
+        {
+            vol.Required(ATTR_MESSAGE): cv.string,
+            vol.Optional(ATTR_TITLE): cv.string,
+            vol.Optional(ATTR_REPLY_TO_MSGID): vol.Coerce(int),
+        }
+    ),
+)
+
+SERVICE_SCHEMA_SEND_CHAT_ACTION = vol.All(
+    cv.deprecated(ATTR_TIMEOUT),
+    vol.Schema(
+        {
+            vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
+            vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [vol.Coerce(int)]),
+            vol.Required(ATTR_CHAT_ACTION): vol.In(
+                (
+                    CHAT_ACTION_TYPING,
+                    CHAT_ACTION_UPLOAD_PHOTO,
+                    CHAT_ACTION_RECORD_VIDEO,
+                    CHAT_ACTION_UPLOAD_VIDEO,
+                    CHAT_ACTION_RECORD_VOICE,
+                    CHAT_ACTION_UPLOAD_VOICE,
+                    CHAT_ACTION_UPLOAD_DOCUMENT,
+                    CHAT_ACTION_CHOOSE_STICKER,
+                    CHAT_ACTION_FIND_LOCATION,
+                    CHAT_ACTION_RECORD_VIDEO_NOTE,
+                    CHAT_ACTION_UPLOAD_VIDEO_NOTE,
+                )
+            ),
+            vol.Optional(ATTR_MESSAGE_THREAD_ID): vol.Coerce(int),
+        }
+    ),
+)
+
+SERVICE_SCHEMA_BASE_SEND_FILE = BASE_SERVICE_SCHEMA.extend(
     {
         vol.Optional(ATTR_URL): cv.string,
         vol.Optional(ATTR_FILE): cv.string,
@@ -195,42 +180,95 @@ SERVICE_SCHEMA_SEND_FILE = BASE_SERVICE_SCHEMA.extend(
         vol.Optional(ATTR_PASSWORD): cv.string,
         vol.Optional(ATTR_AUTHENTICATION): cv.string,
         vol.Optional(ATTR_VERIFY_SSL): cv.boolean,
+        vol.Optional(ATTR_REPLY_TO_MSGID): vol.Coerce(int),
     }
 )
 
-SERVICE_SCHEMA_SEND_STICKER = SERVICE_SCHEMA_SEND_FILE.extend(
-    {vol.Optional(ATTR_STICKER_ID): cv.string}
+SERVICE_SCHEMA_SEND_FILE = vol.All(
+    cv.deprecated(ATTR_TIMEOUT), SERVICE_SCHEMA_BASE_SEND_FILE
 )
 
-SERVICE_SCHEMA_SEND_LOCATION = BASE_SERVICE_SCHEMA.extend(
-    {
-        vol.Required(ATTR_LONGITUDE): cv.string,
-        vol.Required(ATTR_LATITUDE): cv.string,
-    }
+
+SERVICE_SCHEMA_SEND_STICKER = vol.All(
+    cv.deprecated(ATTR_TIMEOUT),
+    SERVICE_SCHEMA_BASE_SEND_FILE.extend({vol.Optional(ATTR_STICKER_ID): cv.string}),
 )
 
-SERVICE_SCHEMA_SEND_POLL = vol.Schema(
-    {
-        vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
-        vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [vol.Coerce(int)]),
-        vol.Required(ATTR_QUESTION): cv.string,
-        vol.Required(ATTR_OPTIONS): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(ATTR_OPEN_PERIOD): cv.positive_int,
-        vol.Optional(ATTR_IS_ANONYMOUS, default=True): cv.boolean,
-        vol.Optional(ATTR_ALLOWS_MULTIPLE_ANSWERS, default=False): cv.boolean,
-        vol.Optional(ATTR_DISABLE_NOTIF): cv.boolean,
-        vol.Optional(ATTR_TIMEOUT): cv.positive_int,
-        vol.Optional(ATTR_MESSAGE_THREAD_ID): vol.Coerce(int),
-    }
+SERVICE_SCHEMA_SEND_LOCATION = vol.All(
+    cv.deprecated(ATTR_TIMEOUT),
+    BASE_SERVICE_SCHEMA.extend(
+        {
+            vol.Required(ATTR_LONGITUDE): cv.string,
+            vol.Required(ATTR_LATITUDE): cv.string,
+            vol.Optional(ATTR_REPLY_TO_MSGID): vol.Coerce(int),
+        }
+    ),
 )
 
-SERVICE_SCHEMA_EDIT_MESSAGE = SERVICE_SCHEMA_SEND_MESSAGE.extend(
-    {
-        vol.Required(ATTR_MESSAGEID): vol.Any(
-            cv.positive_int, vol.All(cv.string, "last")
-        ),
-        vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
-    }
+SERVICE_SCHEMA_SEND_POLL = vol.All(
+    cv.deprecated(ATTR_TIMEOUT),
+    vol.Schema(
+        {
+            vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
+            vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [vol.Coerce(int)]),
+            vol.Required(ATTR_QUESTION): cv.string,
+            vol.Required(ATTR_OPTIONS): vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional(ATTR_OPEN_PERIOD): cv.positive_int,
+            vol.Optional(ATTR_IS_ANONYMOUS, default=True): cv.boolean,
+            vol.Optional(ATTR_ALLOWS_MULTIPLE_ANSWERS, default=False): cv.boolean,
+            vol.Optional(ATTR_DISABLE_NOTIF): cv.boolean,
+            vol.Optional(ATTR_MESSAGE_THREAD_ID): vol.Coerce(int),
+            vol.Optional(ATTR_REPLY_TO_MSGID): vol.Coerce(int),
+        }
+    ),
+)
+
+SERVICE_SCHEMA_EDIT_MESSAGE = vol.All(
+    cv.deprecated(ATTR_TIMEOUT),
+    vol.Schema(
+        {
+            vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
+            vol.Optional(ATTR_TITLE): cv.string,
+            vol.Required(ATTR_MESSAGE): cv.string,
+            vol.Required(ATTR_MESSAGEID): vol.Any(
+                cv.positive_int, vol.All(cv.string, "last")
+            ),
+            vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
+            vol.Optional(ATTR_PARSER): cv.string,
+            vol.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
+            vol.Optional(ATTR_DISABLE_WEB_PREV): cv.boolean,
+        }
+    ),
+)
+
+SERVICE_SCHEMA_EDIT_MESSAGE_MEDIA = vol.All(
+    cv.deprecated(ATTR_TIMEOUT),
+    vol.Schema(
+        {
+            vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
+            vol.Required(ATTR_MESSAGEID): vol.Any(
+                cv.positive_int, vol.All(cv.string, "last")
+            ),
+            vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
+            vol.Optional(ATTR_CAPTION): cv.string,
+            vol.Required(ATTR_MEDIA_TYPE): vol.In(
+                (
+                    str(InputMediaType.ANIMATION),
+                    str(InputMediaType.AUDIO),
+                    str(InputMediaType.VIDEO),
+                    str(InputMediaType.DOCUMENT),
+                    str(InputMediaType.PHOTO),
+                )
+            ),
+            vol.Optional(ATTR_URL): cv.string,
+            vol.Optional(ATTR_FILE): cv.string,
+            vol.Optional(ATTR_USERNAME): cv.string,
+            vol.Optional(ATTR_PASSWORD): cv.string,
+            vol.Optional(ATTR_AUTHENTICATION): cv.string,
+            vol.Optional(ATTR_VERIFY_SSL): cv.boolean,
+            vol.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
+        }
+    ),
 )
 
 SERVICE_SCHEMA_EDIT_CAPTION = vol.Schema(
@@ -242,8 +280,7 @@ SERVICE_SCHEMA_EDIT_CAPTION = vol.Schema(
         vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
         vol.Required(ATTR_CAPTION): cv.string,
         vol.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
-    },
-    extra=vol.ALLOW_EXTRA,
+    }
 )
 
 SERVICE_SCHEMA_EDIT_REPLYMARKUP = vol.Schema(
@@ -254,8 +291,7 @@ SERVICE_SCHEMA_EDIT_REPLYMARKUP = vol.Schema(
         ),
         vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
         vol.Required(ATTR_KEYBOARD_INLINE): cv.ensure_list,
-    },
-    extra=vol.ALLOW_EXTRA,
+    }
 )
 
 SERVICE_SCHEMA_ANSWER_CALLBACK_QUERY = vol.Schema(
@@ -264,8 +300,7 @@ SERVICE_SCHEMA_ANSWER_CALLBACK_QUERY = vol.Schema(
         vol.Required(ATTR_MESSAGE): cv.string,
         vol.Required(ATTR_CALLBACK_QUERY_ID): vol.Coerce(int),
         vol.Optional(ATTR_SHOW_ALERT): cv.boolean,
-    },
-    extra=vol.ALLOW_EXTRA,
+    }
 )
 
 SERVICE_SCHEMA_DELETE_MESSAGE = vol.Schema(
@@ -275,8 +310,7 @@ SERVICE_SCHEMA_DELETE_MESSAGE = vol.Schema(
         vol.Required(ATTR_MESSAGEID): vol.Any(
             cv.positive_int, vol.All(cv.string, "last")
         ),
-    },
-    extra=vol.ALLOW_EXTRA,
+    }
 )
 
 SERVICE_SCHEMA_LEAVE_CHAT = vol.Schema(
@@ -295,11 +329,19 @@ SERVICE_SCHEMA_SET_MESSAGE_REACTION = vol.Schema(
         vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
         vol.Required(ATTR_REACTION): cv.string,
         vol.Optional(ATTR_IS_BIG, default=False): cv.boolean,
-    },
-    extra=vol.ALLOW_EXTRA,
+    }
 )
 
-SERVICE_MAP = {
+SERVICE_SCHEMA_DOWNLOAD_FILE = vol.Schema(
+    {
+        vol.Optional(CONF_CONFIG_ENTRY_ID): cv.string,
+        vol.Required(ATTR_FILE_ID): cv.string,
+        vol.Optional(ATTR_DIRECTORY_PATH): cv.string,
+        vol.Optional(ATTR_FILE_NAME): cv.string,
+    }
+)
+
+SERVICE_MAP: dict[str, VolSchemaType] = {
     SERVICE_SEND_MESSAGE: SERVICE_SCHEMA_SEND_MESSAGE,
     SERVICE_SEND_CHAT_ACTION: SERVICE_SCHEMA_SEND_CHAT_ACTION,
     SERVICE_SEND_PHOTO: SERVICE_SCHEMA_SEND_FILE,
@@ -311,12 +353,14 @@ SERVICE_MAP = {
     SERVICE_SEND_LOCATION: SERVICE_SCHEMA_SEND_LOCATION,
     SERVICE_SEND_POLL: SERVICE_SCHEMA_SEND_POLL,
     SERVICE_EDIT_MESSAGE: SERVICE_SCHEMA_EDIT_MESSAGE,
+    SERVICE_EDIT_MESSAGE_MEDIA: SERVICE_SCHEMA_EDIT_MESSAGE_MEDIA,
     SERVICE_EDIT_CAPTION: SERVICE_SCHEMA_EDIT_CAPTION,
     SERVICE_EDIT_REPLYMARKUP: SERVICE_SCHEMA_EDIT_REPLYMARKUP,
     SERVICE_ANSWER_CALLBACK_QUERY: SERVICE_SCHEMA_ANSWER_CALLBACK_QUERY,
     SERVICE_DELETE_MESSAGE: SERVICE_SCHEMA_DELETE_MESSAGE,
     SERVICE_LEAVE_CHAT: SERVICE_SCHEMA_LEAVE_CHAT,
     SERVICE_SET_MESSAGE_REACTION: SERVICE_SCHEMA_SET_MESSAGE_REACTION,
+    SERVICE_DOWNLOAD_FILE: SERVICE_SCHEMA_DOWNLOAD_FILE,
 }
 
 
@@ -326,39 +370,11 @@ MODULES: dict[str, ModuleType] = {
     PLATFORM_WEBHOOKS: webhooks,
 }
 
-PLATFORMS: list[Platform] = [Platform.NOTIFY]
+PLATFORMS: list[Platform] = [Platform.EVENT, Platform.NOTIFY]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Telegram bot component."""
-
-    # import the last YAML config since existing behavior only works with the last config
-    domain_config: list[dict[str, Any]] | None = config.get(DOMAIN)
-    if domain_config:
-        trusted_networks: list[IPv4Network] = domain_config[-1].get(
-            CONF_TRUSTED_NETWORKS, []
-        )
-        trusted_networks_str: list[str] = (
-            [str(trusted_network) for trusted_network in trusted_networks]
-            if trusted_networks
-            else []
-        )
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={CONF_SOURCE: SOURCE_IMPORT},
-                data={
-                    CONF_PLATFORM: domain_config[-1][CONF_PLATFORM],
-                    CONF_API_KEY: domain_config[-1][CONF_API_KEY],
-                    CONF_ALLOWED_CHAT_IDS: domain_config[-1][CONF_ALLOWED_CHAT_IDS],
-                    ATTR_PARSER: domain_config[-1][ATTR_PARSER],
-                    CONF_PROXY_URL: domain_config[-1].get(CONF_PROXY_URL),
-                    CONF_URL: domain_config[-1].get(CONF_URL),
-                    CONF_TRUSTED_NETWORKS: trusted_networks_str,
-                    CONF_BOT_COUNT: len(domain_config),
-                },
-            )
-        )
 
     async def async_send_telegram_message(service: ServiceCall) -> ServiceResponse:
         """Handle sending Telegram Bot message service calls."""
@@ -366,6 +382,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         msgtype = service.service
         kwargs = dict(service.data)
         _LOGGER.debug("New telegram message %s: %s", msgtype, kwargs)
+
+        if ATTR_TIMEOUT in service.data:
+            _deprecate_timeout(hass, service)
 
         config_entry_id: str | None = service.data.get(CONF_CONFIG_ENTRY_ID)
         config_entry: TelegramBotConfigEntry | None = None
@@ -435,6 +454,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             await notify_service.leave_chat(context=service.context, **kwargs)
         elif msgtype == SERVICE_SET_MESSAGE_REACTION:
             await notify_service.set_message_reaction(context=service.context, **kwargs)
+        elif msgtype == SERVICE_EDIT_MESSAGE_MEDIA:
+            await notify_service.edit_message_media(context=service.context, **kwargs)
+        elif msgtype == SERVICE_DOWNLOAD_FILE:
+            return await notify_service.download_file(context=service.context, **kwargs)
         else:
             await notify_service.edit_message(
                 msgtype, context=service.context, **kwargs
@@ -480,6 +503,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             SERVICE_SEND_STICKER,
             SERVICE_SEND_LOCATION,
             SERVICE_SEND_POLL,
+            SERVICE_DOWNLOAD_FILE,
         ]:
             supports_response = SupportsResponse.OPTIONAL
 
@@ -489,9 +513,42 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             async_send_telegram_message,
             schema=schema,
             supports_response=supports_response,
+            description_placeholders={
+                "formatting_options_url": "https://core.telegram.org/bots/api#formatting-options"
+            },
         )
 
     return True
+
+
+def _deprecate_timeout(hass: HomeAssistant, service: ServiceCall) -> None:
+    # default: service was called using frontend such as developer tools or automation editor
+    service_call_origin = "call_service"
+
+    origin = service.context.origin_event
+    if origin and ATTR_ENTITY_ID in origin.data:
+        # automation
+        service_call_origin = origin.data[ATTR_ENTITY_ID]
+    elif origin and origin.data.get(ATTR_DOMAIN) == SCRIPT_DOMAIN:
+        # script
+        service_call_origin = f"{origin.data[ATTR_DOMAIN]}.{origin.data[ATTR_SERVICE]}"
+
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_timeout_parameter",
+        breaks_in_ha_version="2026.7.0",
+        is_fixable=True,
+        is_persistent=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_timeout_parameter",
+        translation_placeholders={
+            "integration_title": "Telegram Bot",
+            "action": f"{DOMAIN}.{service.service}",
+            "action_origin": service_call_origin,
+        },
+        learn_more_url="https://github.com/home-assistant/core/pull/155198",
+    )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TelegramBotConfigEntry) -> bool:
