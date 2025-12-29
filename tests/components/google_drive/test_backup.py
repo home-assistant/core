@@ -68,11 +68,11 @@ async def setup_integration(
     """Set up Google Drive integration."""
     config_entry.add_to_hass(hass)
     assert await async_setup_component(hass, BACKUP_DOMAIN, {BACKUP_DOMAIN: {}})
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
     mock_api.list_files = AsyncMock(
         return_value={"files": [{"id": "HA folder ID", "name": "HA folder name"}]}
     )
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
 
 
 async def test_agents_info(
@@ -363,6 +363,13 @@ async def test_agents_upload_fail(
     """Test agent upload backup fails."""
     mock_api.resumable_upload_file = AsyncMock(
         side_effect=GoogleDriveApiError("some error")
+    )
+    mock_api.list_files = AsyncMock(
+        side_effect=[
+            {"files": [{"id": "HA folder ID", "name": "HA folder name"}]},
+            {"files": []},
+            {"files": [{"id": "HA folder ID", "name": "HA folder name"}]},
+        ]
     )
 
     client = await hass_client()
