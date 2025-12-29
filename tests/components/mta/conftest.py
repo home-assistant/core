@@ -29,67 +29,69 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_gtfs_realtime_feed() -> Generator[MagicMock]:
-    """Create a mock GTFS-RT feed response."""
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Mock setting up a config entry."""
     with patch(
-        "homeassistant.components.mta.coordinator.SubwayFeed"
-    ) as mock_feed_class:
-        mock_feed_instance = MagicMock()
-        mock_feed_class.return_value = mock_feed_instance
-        mock_feed_class.get_feed_id_for_route.return_value = "1"
-
-        # Fixed arrival times: 5, 10, and 15 minutes after test frozen time (2023-10-21 00:00:00 UTC)
-        mock_arrivals = [
-            Arrival(
-                arrival_time=datetime(2023, 10, 21, 0, 5, 0, tzinfo=UTC),
-                route_id="1",
-                stop_id="127N",
-                destination="Van Cortlandt Park - 242 St",
-            ),
-            Arrival(
-                arrival_time=datetime(2023, 10, 21, 0, 10, 0, tzinfo=UTC),
-                route_id="1",
-                stop_id="127N",
-                destination="Van Cortlandt Park - 242 St",
-            ),
-            Arrival(
-                arrival_time=datetime(2023, 10, 21, 0, 15, 0, tzinfo=UTC),
-                route_id="1",
-                stop_id="127N",
-                destination="Van Cortlandt Park - 242 St",
-            ),
-        ]
-
-        mock_feed_instance.get_arrivals = AsyncMock(return_value=mock_arrivals)
-
-        yield mock_feed_class
+        "homeassistant.components.mta.async_setup_entry", return_value=True
+    ) as mock_setup:
+        yield mock_setup
 
 
 @pytest.fixture
-def mock_nyct_feed_config_flow() -> Generator[MagicMock]:
-    """Create a mock config flow that uses get_stops()."""
-    with patch(
-        "homeassistant.components.mta.config_flow.SubwayFeed"
-    ) as mock_feed_class:
-        mock_feed_class.get_feed_id_for_route.return_value = "1"
-        mock_feed_instance = MagicMock()
-        mock_feed_instance.get_arrivals = AsyncMock(return_value=[])
+def mock_subway_feed() -> Generator[tuple[MagicMock, MagicMock]]:
+    """Create a mock SubwayFeed for both coordinator and config flow."""
+    # Fixed arrival times: 5, 10, and 15 minutes after test frozen time (2023-10-21 00:00:00 UTC)
+    mock_arrivals = [
+        Arrival(
+            arrival_time=datetime(2023, 10, 21, 0, 5, 0, tzinfo=UTC),
+            route_id="1",
+            stop_id="127N",
+            destination="Van Cortlandt Park - 242 St",
+        ),
+        Arrival(
+            arrival_time=datetime(2023, 10, 21, 0, 10, 0, tzinfo=UTC),
+            route_id="1",
+            stop_id="127N",
+            destination="Van Cortlandt Park - 242 St",
+        ),
+        Arrival(
+            arrival_time=datetime(2023, 10, 21, 0, 15, 0, tzinfo=UTC),
+            route_id="1",
+            stop_id="127N",
+            destination="Van Cortlandt Park - 242 St",
+        ),
+    ]
 
-        mock_feed_instance.get_stops = AsyncMock(
-            return_value=[
-                {
-                    "stop_id": "127N",
-                    "stop_name": "Times Sq - 42 St",
-                    "stop_sequence": 1,
-                },
-                {
-                    "stop_id": "127S",
-                    "stop_name": "Times Sq - 42 St",
-                    "stop_sequence": 2,
-                },
-            ]
-        )
+    mock_stops = [
+        {
+            "stop_id": "127N",
+            "stop_name": "Times Sq - 42 St",
+            "stop_sequence": 1,
+        },
+        {
+            "stop_id": "127S",
+            "stop_name": "Times Sq - 42 St",
+            "stop_sequence": 2,
+        },
+    ]
 
-        mock_feed_class.return_value = mock_feed_instance
+    with (
+        patch(
+            "homeassistant.components.mta.coordinator.SubwayFeed", autospec=True
+        ) as mock_coord_feed,
+        patch(
+            "homeassistant.components.mta.config_flow.SubwayFeed", autospec=True
+        ) as mock_config_feed,
+    ):
+        # Setup coordinator mock
+        mock_coord_instance = mock_coord_feed.return_value
+        mock_coord_feed.get_feed_id_for_route.return_value = "1"
+        mock_coord_instance.get_arrivals.return_value = mock_arrivals
 
-        yield mock_feed_class
+        # Setup config flow mock
+        mock_config_instance = mock_config_feed.return_value
+        mock_config_feed.get_feed_id_for_route.return_value = "1"
+        mock_config_instance.get_arrivals.return_value = []
+        mock_config_instance.get_stops.return_value = mock_stops
+
+        yield (mock_coord_feed, mock_config_feed)

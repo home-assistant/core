@@ -41,9 +41,6 @@
           },
           "route": {
             "name": "Route"
-          },
-          "stop_id": {
-            "name": "Stop ID"
           }
         }
       },
@@ -55,11 +52,11 @@
           },
           "route": {
             "name": "Route"
-          },
-          "stop_id": {
-            "name": "Stop ID"
           }
         }
+      },
+      "stop_id": {
+        "name": "Stop ID"
       },
       "third_arrival": {
         "name": "Third arrival",
@@ -69,9 +66,6 @@
           },
           "route": {
             "name": "Route"
-          },
-          "stop_id": {
-            "name": "Stop ID"
           }
         }
       }

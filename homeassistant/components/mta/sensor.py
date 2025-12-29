@@ -7,7 +7,10 @@ from datetime import datetime
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    EntityCategory,
+)
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_LINE, CONF_STOP_ID, CONF_STOP_NAME, DOMAIN
@@ -27,6 +30,7 @@ async def async_setup_entry(
             MTAArrivalSensor(coordinator, entry, 0, "next_arrival"),
             MTAArrivalSensor(coordinator, entry, 1, "second_arrival"),
             MTAArrivalSensor(coordinator, entry, 2, "third_arrival"),
+            MTAStopIDSensor(coordinator, entry),
         ]
     )
 
@@ -50,16 +54,9 @@ class MTAArrivalSensor(CoordinatorEntity[MTADataUpdateCoordinator], SensorEntity
 
         self._arrival_index = arrival_index
         line = entry.data[CONF_LINE]
-        stop_id = entry.data[CONF_STOP_ID]
-        stop_name = entry.data.get(CONF_STOP_NAME, stop_id)
-        self._stop_id = stop_id
+        stop_name = entry.data.get(CONF_STOP_NAME, entry.data[CONF_STOP_ID])
 
-        # Use entry unique_id with dash separator
-        if entry.unique_id:
-            self._attr_unique_id = f"{entry.unique_id}-{translation_key}"
-        else:
-            self._attr_unique_id = f"{entry.entry_id}-{translation_key}"
-
+        self._attr_unique_id = f"{entry.unique_id}-{translation_key}"
         self._attr_translation_key = translation_key
 
         self._attr_device_info = DeviceInfo(
@@ -80,15 +77,51 @@ class MTAArrivalSensor(CoordinatorEntity[MTADataUpdateCoordinator], SensorEntity
         return arrivals[self._arrival_index].arrival_time
 
     @property
-    def extra_state_attributes(self) -> dict[str, str]:
+    def extra_state_attributes(self) -> dict[str, str] | None:
         """Return additional attributes."""
         arrivals = self.coordinator.data.arrivals
         if len(arrivals) <= self._arrival_index:
-            return {"stop_id": self._stop_id}
+            return None
 
         arrival = arrivals[self._arrival_index]
         return {
-            "stop_id": self._stop_id,
             "route": arrival.route_id,
             "destination": arrival.destination,
         }
+
+
+class MTAStopIDSensor(CoordinatorEntity[MTADataUpdateCoordinator], SensorEntity):
+    """Diagnostic sensor that displays the MTA stop ID."""
+
+    _attr_has_entity_name = True
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_icon = "mdi:identifier"
+
+    def __init__(
+        self,
+        coordinator: MTADataUpdateCoordinator,
+        entry: MTAConfigEntry,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+
+        line = entry.data[CONF_LINE]
+        stop_name = entry.data.get(CONF_STOP_NAME, entry.data[CONF_STOP_ID])
+
+        self._attr_unique_id = f"{entry.unique_id}-stop_id"
+        self._attr_translation_key = "stop_id"
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry.entry_id)},
+            name=f"{line} Line - {stop_name}",
+            manufacturer="MTA",
+            model="Subway",
+            entry_type=DeviceEntryType.SERVICE,
+        )
+
+        self._stop_id = entry.data[CONF_STOP_ID]
+
+    @property
+    def native_value(self) -> str:
+        """Return the stop ID."""
+        return self._stop_id

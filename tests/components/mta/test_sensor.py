@@ -17,7 +17,7 @@ from tests.common import MockConfigEntry, snapshot_platform
 async def test_sensor(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_gtfs_realtime_feed: MagicMock,
+    mock_subway_feed: tuple[MagicMock, MagicMock],
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     freezer: FrozenDateTimeFactory,

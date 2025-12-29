@@ -17,7 +17,7 @@ rules:
   docs-removal-instructions: done
   entity-event-setup:
     status: exempt
-    comment: Integration does not subscribe to events in async_added_to_hass.
+    comment: Integration does not explicitly subscribe to events in async_added_to_hass.
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
@@ -37,9 +37,7 @@ rules:
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
-  parallel-updates:
-    status: exempt
-    comment: Coordinator-based integration.
+  parallel-updates: done
   reauthentication-flow:
     status: exempt
     comment: No authentication required.
@@ -65,8 +63,8 @@ rules:
   docs-use-cases: todo
   dynamic-devices:
     status: exempt
-    comment: N/A
-  entity-category: todo
+    comment: Integration tracks a single configured stop, not dynamically discovered devices.
+  entity-category: done
   entity-device-class: done
   entity-disabled-by-default:
     status: exempt
@@ -80,9 +78,9 @@ rules:
     comment: No repairs needed currently.
   stale-devices:
     status: exempt
-    comment: N/A
+    comment: Integration tracks a single configured stop per entry, devices cannot become stale.
 
   # Platinum
   async-dependency: todo
-  inject-websession: todo
+  inject-websession: done
   strict-typing: todo
