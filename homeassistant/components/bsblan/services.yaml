@@ -1,0 +1,113 @@
+set_hot_water_schedule:
+  fields:
+    device_id:
+      required: true
+      example: "abc123device456"
+      selector:
+        device:
+          integration: bsblan
+    monday_slots:
+      selector:
+        object:
+          multiple: true
+          label_field: start_time
+          description_field: end_time
+          fields:
+            start_time:
+              required: true
+              selector:
+                time:
+            end_time:
+              required: true
+              selector:
+                time:
+    tuesday_slots:
+      selector:
+        object:
+          multiple: true
+          label_field: start_time
+          description_field: end_time
+          fields:
+            start_time:
+              required: true
+              selector:
+                time:
+            end_time:
+              required: true
+              selector:
+                time:
+    wednesday_slots:
+      selector:
+        object:
+          multiple: true
+          label_field: start_time
+          description_field: end_time
+          fields:
+            start_time:
+              required: true
+              selector:
+                time:
+            end_time:
+              required: true
+              selector:
+                time:
+    thursday_slots:
+      selector:
+        object:
+          multiple: true
+          label_field: start_time
+          description_field: end_time
+          fields:
+            start_time:
+              required: true
+              selector:
+                time:
+            end_time:
+              required: true
+              selector:
+                time:
+    friday_slots:
+      selector:
+        object:
+          multiple: true
+          label_field: start_time
+          description_field: end_time
+          fields:
+            start_time:
+              required: true
+              selector:
+                time:
+            end_time:
+              required: true
+              selector:
+                time:
+    saturday_slots:
+      selector:
+        object:
+          multiple: true
+          label_field: start_time
+          description_field: end_time
+          fields:
+            start_time:
+              required: true
+              selector:
+                time:
+            end_time:
+              required: true
+              selector:
+                time:
+    sunday_slots:
+      selector:
+        object:
+          multiple: true
+          label_field: start_time
+          description_field: end_time
+          fields:
+            start_time:
+              required: true
+              selector:
+                time:
+            end_time:
+              required: true
+              selector:
+                time:
