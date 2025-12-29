@@ -1,0 +1,81 @@
+{
+  "entity": {
+    "sensor": {
+      "celery_status": {
+        "default": "mdi:check-circle",
+        "state": {
+          "error": "mdi:alert-circle",
+          "ok": "mdi:check-circle",
+          "unknown": "mdi:help-circle",
+          "warning": "mdi:alert"
+        }
+      },
+      "characters_count": {
+        "default": "mdi:alphabet-latin"
+      },
+      "classifier_status": {
+        "default": "mdi:check-circle",
+        "state": {
+          "error": "mdi:alert-circle",
+          "ok": "mdi:check-circle",
+          "unknown": "mdi:help-circle",
+          "warning": "mdi:alert"
+        }
+      },
+      "correspondent_count": {
+        "default": "mdi:account-group"
+      },
+      "database_status": {
+        "default": "mdi:check-circle",
+        "state": {
+          "error": "mdi:alert-circle",
+          "ok": "mdi:check-circle",
+          "unknown": "mdi:help-circle",
+          "warning": "mdi:alert"
+        }
+      },
+      "documents_inbox": {
+        "default": "mdi:tray-full"
+      },
+      "documents_total": {
+        "default": "mdi:file-document-multiple"
+      },
+      "index_status": {
+        "default": "mdi:check-circle",
+        "state": {
+          "error": "mdi:alert-circle",
+          "ok": "mdi:check-circle",
+          "unknown": "mdi:help-circle",
+          "warning": "mdi:alert"
+        }
+      },
+      "redis_status": {
+        "default": "mdi:check-circle",
+        "state": {
+          "error": "mdi:alert-circle",
+          "ok": "mdi:check-circle",
+          "unknown": "mdi:help-circle",
+          "warning": "mdi:alert"
+        }
+      },
+      "sanity_check_status": {
+        "default": "mdi:check-circle",
+        "state": {
+          "error": "mdi:alert-circle",
+          "ok": "mdi:check-circle",
+          "unknown": "mdi:help-circle",
+          "warning": "mdi:alert"
+        }
+      },
+      "storage_available": {
+        "default": "mdi:harddisk"
+      },
+      "storage_total": {
+        "default": "mdi:harddisk"
+      },
+      "tag_count": {
+        "default": "mdi:tag"
+      }
+    }
+  }
+}

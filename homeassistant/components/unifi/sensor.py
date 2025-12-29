@@ -13,13 +13,13 @@ from decimal import Decimal
 from functools import partial
 from typing import TYPE_CHECKING, Literal
 
-from aiounifi.interfaces.api_handlers import ItemEvent
+from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
 from aiounifi.interfaces.clients import Clients
 from aiounifi.interfaces.devices import Devices
 from aiounifi.interfaces.outlets import Outlets
 from aiounifi.interfaces.ports import Ports
 from aiounifi.interfaces.wlans import Wlans
-from aiounifi.models.api import ApiItemT
+from aiounifi.models.api import ApiItem
 from aiounifi.models.client import Client
 from aiounifi.models.device import (
     Device,
@@ -53,7 +53,6 @@ from homeassistant.util import dt as dt_util, slugify
 from . import UnifiConfigEntry
 from .const import DEVICE_STATES
 from .entity import (
-    HandlerT,
     UnifiEntity,
     UnifiEntityDescription,
     async_client_device_info_fn,
@@ -103,6 +102,15 @@ def async_client_uptime_value_fn(hub: UnifiHub, client: Client) -> datetime:
     if client.uptime < 1000000000:
         return dt_util.now() - timedelta(seconds=client.uptime)
     return dt_util.utc_from_timestamp(float(client.uptime))
+
+
+@callback
+def async_wired_client_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
+    """Check if client is wired and allowed."""
+    client = hub.api.clients[obj_id]
+    if not client.is_wired or client.wired_rate_mbps <= 0:
+        return False
+    return True
 
 
 @callback
@@ -356,7 +364,7 @@ def make_device_temperatur_sensors() -> tuple[UnifiSensorEntityDescription, ...]
 
 
 @dataclass(frozen=True, kw_only=True)
-class UnifiSensorEntityDescription(
+class UnifiSensorEntityDescription[HandlerT: APIHandler, ApiItemT: ApiItem](
     SensorEntityDescription, UnifiEntityDescription[HandlerT, ApiItemT]
 ):
     """Class describing UniFi sensor entity."""
@@ -407,6 +415,23 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSensorEntityDescription, ...] = (
         supported_fn=lambda hub, _: hub.config.option_allow_bandwidth_sensors,
         unique_id_fn=lambda hub, obj_id: f"tx-{obj_id}",
         value_fn=async_client_tx_value_fn,
+    ),
+    UnifiSensorEntityDescription[Clients, Client](
+        key="Wired client speed",
+        translation_key="wired_client_link_speed",
+        device_class=SensorDeviceClass.DATA_RATE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfDataRate.MEGABITS_PER_SECOND,
+        entity_registry_enabled_default=False,
+        allowed_fn=async_wired_client_allowed_fn,
+        api_handler_fn=lambda api: api.clients,
+        device_info_fn=async_client_device_info_fn,
+        is_connected_fn=async_client_is_connected_fn,
+        name_fn=lambda _: "Link speed",
+        object_fn=lambda api, obj_id: api.clients[obj_id],
+        unique_id_fn=lambda hub, obj_id: f"wired_speed-{obj_id}",
+        value_fn=lambda hub, client: client.wired_rate_mbps,
     ),
     UnifiSensorEntityDescription[Ports, Port](
         key="PoE port power sensor",
@@ -652,7 +677,9 @@ async def async_setup_entry(
     )
 
 
-class UnifiSensorEntity(UnifiEntity[HandlerT, ApiItemT], SensorEntity):
+class UnifiSensorEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
+    UnifiEntity[HandlerT, ApiItemT], SensorEntity
+):
     """Base representation of a UniFi sensor."""
 
     entity_description: UnifiSensorEntityDescription[HandlerT, ApiItemT]

@@ -29,6 +29,7 @@ def mock_tractive_client() -> Generator[AsyncMock]:
                 "tracker_id": "device_id_123",
                 "hardware": {"battery_level": 88},
                 "tracker_state": "operational",
+                "tracker_state_reason": "POWER_SAVING",
                 "charging_state": "CHARGING",
             }
         entry.runtime_data.client._send_hardware_update(event)

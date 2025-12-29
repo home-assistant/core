@@ -53,9 +53,9 @@ from homeassistant.helpers.issue_registry import (
     async_create_issue,
     async_delete_issue,
 )
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_IGNORE_NON_NUMERIC, DOMAIN as GROUP_DOMAIN
+from .const import CONF_IGNORE_NON_NUMERIC, DOMAIN
 from .entity import GroupEntity
 
 DEFAULT_NAME = "Sensor Group"
@@ -374,7 +374,7 @@ class SensorGroup(GroupEntity, SensorEntity):
     def async_update_group_state(self) -> None:
         """Query all members and determine the sensor group state."""
         self.calculate_state_attributes(self._get_valid_entities())
-        states: list[StateType] = []
+        states: list[str] = []
         valid_units = self._valid_units
         valid_states: list[bool] = []
         sensor_values: list[tuple[str, float, State]] = []
@@ -509,7 +509,7 @@ class SensorGroup(GroupEntity, SensorEntity):
             return state_classes[0]
         async_create_issue(
             self.hass,
-            GROUP_DOMAIN,
+            DOMAIN,
             f"{self.entity_id}_state_classes_not_matching",
             is_fixable=False,
             is_persistent=False,
@@ -566,7 +566,7 @@ class SensorGroup(GroupEntity, SensorEntity):
             return device_classes[0]
         async_create_issue(
             self.hass,
-            GROUP_DOMAIN,
+            DOMAIN,
             f"{self.entity_id}_device_classes_not_matching",
             is_fixable=False,
             is_persistent=False,
@@ -654,7 +654,7 @@ class SensorGroup(GroupEntity, SensorEntity):
         if device_class:
             async_create_issue(
                 self.hass,
-                GROUP_DOMAIN,
+                DOMAIN,
                 f"{self.entity_id}_uoms_not_matching_device_class",
                 is_fixable=False,
                 is_persistent=False,
@@ -670,7 +670,7 @@ class SensorGroup(GroupEntity, SensorEntity):
         else:
             async_create_issue(
                 self.hass,
-                GROUP_DOMAIN,
+                DOMAIN,
                 f"{self.entity_id}_uoms_not_matching_no_device_class",
                 is_fixable=False,
                 is_persistent=False,

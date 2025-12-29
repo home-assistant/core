@@ -15,7 +15,7 @@ from homematicip.device import Device
 from homematicip.group import Group
 from homematicip.home import Home
 
-from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
+from homeassistant.components.homematicip_cloud import DOMAIN
 from homeassistant.components.homematicip_cloud.entity import (
     ATTR_IS_GROUP,
     ATTR_MODEL_TYPE,
@@ -63,12 +63,25 @@ async def async_manipulate_test_data(
     new_value: Any,
     channel: int = 1,
     fire_device: HomeMaticIPObject | None = None,
+    channel_real_index: int | None = None,
 ):
     """Set new value on hmip device."""
     if channel == 1:
         setattr(hmip_device, attribute, new_value)
-    if hasattr(hmip_device, "functionalChannels"):
-        functional_channel = hmip_device.functionalChannels[channel]
+
+    channels = getattr(hmip_device, "functionalChannels", None)
+    if channels:
+        if channel_real_index is not None:
+            functional_channel = next(
+                (ch for ch in channels if ch.index == channel_real_index),
+                None,
+            )
+            assert functional_channel is not None, (
+                f"No functional channel with index {channel_real_index} found in hmip_device.functionalChannels"
+            )
+        else:
+            functional_channel = channels[channel]
+
         setattr(functional_channel, attribute, new_value)
 
     fire_target = hmip_device if fire_device is None else fire_device
@@ -116,11 +129,11 @@ class HomeFactory:
             "homeassistant.components.homematicip_cloud.hap.HomematicipHAP.get_hap",
             return_value=mock_home,
         ):
-            assert await async_setup_component(self.hass, HMIPC_DOMAIN, {})
+            assert await async_setup_component(self.hass, DOMAIN, {})
 
         await self.hass.async_block_till_done()
 
-        hap = self.hass.data[HMIPC_DOMAIN][HAPID]
+        hap = self.hmip_config_entry.runtime_data
         mock_home.on_update(hap.async_update)
         mock_home.on_create(hap.async_create_entity)
         return hap

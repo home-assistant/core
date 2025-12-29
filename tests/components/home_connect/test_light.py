@@ -53,33 +53,19 @@ def platforms() -> list[str]:
     return [Platform.LIGHT]
 
 
-async def test_light(
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client: MagicMock,
-) -> None:
-    """Test switch entities."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
-    assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
-
-
 @pytest.mark.parametrize("appliance", ["Hood"], indirect=True)
 async def test_paired_depaired_devices_flow(
-    appliance: HomeAppliance,
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client: MagicMock,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
 ) -> None:
     """Test that removed devices are correctly removed from and added to hass on API events."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
     assert device
@@ -119,16 +105,25 @@ async def test_paired_depaired_devices_flow(
         assert entity_registry.async_get(entity_entry.entity_id)
 
 
-@pytest.mark.parametrize("appliance", ["Hood"], indirect=True)
+@pytest.mark.parametrize(
+    ("appliance", "keys_to_check"),
+    [
+        (
+            "Hood",
+            (SettingKey.COOKING_COMMON_LIGHTING,),
+        )
+    ],
+    indirect=["appliance"],
+)
 async def test_connected_devices(
-    appliance: HomeAppliance,
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client: MagicMock,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    keys_to_check: tuple,
 ) -> None:
     """Test that devices reconnected.
 
@@ -136,7 +131,6 @@ async def test_connected_devices(
     not be obtained while disconnected and once connected, the entities are added.
     """
     get_settings_original_mock = client.get_settings
-    get_available_programs_mock = client.get_available_programs
 
     async def get_settings_side_effect(ha_id: str):
         if ha_id == appliance.ha_id:
@@ -145,26 +139,19 @@ async def test_connected_devices(
             )
         return await get_settings_original_mock.side_effect(ha_id)
 
-    async def get_available_programs_side_effect(ha_id: str):
-        if ha_id == appliance.ha_id:
-            raise HomeConnectApiError(
-                "SDK.Error.HomeAppliance.Connection.Initialization.Failed"
-            )
-        return await get_available_programs_mock.side_effect(ha_id)
-
     client.get_settings = AsyncMock(side_effect=get_settings_side_effect)
-    client.get_available_programs = AsyncMock(
-        side_effect=get_available_programs_side_effect
-    )
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     client.get_settings = get_settings_original_mock
-    client.get_available_programs = get_available_programs_mock
 
     device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
     assert device
-    entity_entries = entity_registry.entities.get_entries_for_device_id(device.id)
+    for key in keys_to_check:
+        assert not entity_registry.async_get_entity_id(
+            Platform.LIGHT,
+            DOMAIN,
+            f"{appliance.ha_id}-{key}",
+        )
 
     await client.add_events(
         [
@@ -177,28 +164,28 @@ async def test_connected_devices(
     )
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance.ha_id)})
-    assert device
-    new_entity_entries = entity_registry.entities.get_entries_for_device_id(device.id)
-    assert len(new_entity_entries) > len(entity_entries)
+    for key in keys_to_check:
+        assert entity_registry.async_get_entity_id(
+            Platform.LIGHT,
+            DOMAIN,
+            f"{appliance.ha_id}-{key}",
+        )
 
 
 @pytest.mark.parametrize("appliance", ["Hood"], indirect=True)
 async def test_light_availability(
     hass: HomeAssistant,
+    client: MagicMock,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client: MagicMock,
     appliance: HomeAppliance,
 ) -> None:
     """Test if light entities availability are based on the appliance connection state."""
     entity_ids = [
         "light.hood_functional_light",
     ]
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     for entity_id in entity_ids:
         state = hass.states.get(entity_id)
@@ -351,22 +338,20 @@ async def test_light_availability(
     indirect=["appliance"],
 )
 async def test_light_functionality(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
     entity_id: str,
     set_settings_args: dict[SettingKey, Any],
     service: str,
     exprected_attributes: dict[str, Any],
     state: str,
     appliance: HomeAppliance,
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client: MagicMock,
 ) -> None:
     """Test light functionality."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     service_data = exprected_attributes.copy()
     service_data[ATTR_ENTITY_ID] = entity_id
@@ -407,19 +392,17 @@ async def test_light_functionality(
     indirect=["appliance"],
 )
 async def test_light_color_different_than_custom(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
     entity_id: str,
     events: dict[EventKey, Any],
     appliance: HomeAppliance,
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    setup_credentials: None,
-    client: MagicMock,
 ) -> None:
     """Test that light color attributes are not set if color is different than custom."""
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
@@ -572,17 +555,16 @@ async def test_light_color_different_than_custom(
     ],
 )
 async def test_light_exception_handling(
+    hass: HomeAssistant,
+    client_with_exception: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
     entity_id: str,
     setting: dict[SettingKey, dict[str, Any]],
     service: str,
     service_data: dict,
     attr_side_effect: list[type[HomeConnectError] | None],
     exception_match: str,
-    hass: HomeAssistant,
-    integration_setup: Callable[[MagicMock], Awaitable[bool]],
-    config_entry: MockConfigEntry,
-    setup_credentials: None,
-    client_with_exception: MagicMock,
 ) -> None:
     """Test light exception handling."""
     client_with_exception.get_settings.side_effect = None
@@ -599,9 +581,8 @@ async def test_light_exception_handling(
     client_with_exception.set_setting.side_effect = [
         exception() if exception else None for exception in attr_side_effect
     ]
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client_with_exception)
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
     # Assert that an exception is called.
     with pytest.raises(HomeConnectError):

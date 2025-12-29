@@ -1,0 +1,64 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Bouton tempo ext\u00e9rieur",
+  "category": "wxkg",
+  "product_id": "ja5osu5g",
+  "product_name": "ZC-YED-\u4e00\u952e\u65e0\u7ebf\u5f00\u5173",
+  "online": true,
+  "sub": true,
+  "time_zone": "+02:00",
+  "active_time": "2025-07-25T15:49:27+00:00",
+  "create_time": "2025-07-25T15:49:27+00:00",
+  "update_time": "2025-07-25T15:49:27+00:00",
+  "function": {
+    "mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["remote_control", "wireless_switch"]
+      }
+    },
+    "scene_preset": {
+      "type": "String",
+      "value": {}
+    }
+  },
+  "status_range": {
+    "switch_mode1": {
+      "type": "Enum",
+      "value": {
+        "range": ["click", "double_click", "press"]
+      }
+    },
+    "battery_percentage": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["remote_control", "wireless_switch"]
+      }
+    },
+    "scene_preset": {
+      "type": "String",
+      "value": {}
+    }
+  },
+  "status": {
+    "switch_mode1": "press",
+    "battery_percentage": 100,
+    "mode": "wireless_switch",
+    "scene_preset": "800003e80384005a03e803e8810003e8006400b403e803e8820001900320010e03e803e883010190000000f000fa00fa"
+  },
+  "set_up": true,
+  "support_local": true
+}

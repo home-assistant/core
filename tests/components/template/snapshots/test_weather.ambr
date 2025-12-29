@@ -46,10 +46,34 @@
     'last_ozone': None,
     'last_pressure': None,
     'last_temperature': '15.0',
+    'last_uv_index': None,
     'last_visibility': None,
     'last_wind_bearing': None,
     'last_wind_gust_speed': None,
     'last_wind_speed': None,
+  })
+# ---
+# name: test_setup_config_entry
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'assumed_state': True,
+      'attribution': 'Powered by Home Assistant',
+      'friendly_name': 'My template',
+      'humidity': 50,
+      'precipitation_unit': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+      'pressure_unit': <UnitOfPressure.HPA: 'hPa'>,
+      'supported_features': 0,
+      'temperature': 20.0,
+      'temperature_unit': <UnitOfTemperature.CELSIUS: '°C'>,
+      'visibility_unit': <UnitOfLength.KILOMETERS: 'km'>,
+      'wind_speed_unit': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'weather.my_template',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_trigger_weather_services[config0-1-template-get_forecasts]

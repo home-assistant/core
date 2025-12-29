@@ -3,7 +3,7 @@
 from copy import copy
 from html import escape
 from json import dumps
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from onedrive_personal_sdk.const import DriveState
 from onedrive_personal_sdk.exceptions import (
@@ -13,7 +13,7 @@ from onedrive_personal_sdk.exceptions import (
 )
 from onedrive_personal_sdk.models.items import AppRoot, Drive, File, Folder, ItemUpdate
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.onedrive.const import (
     CONF_FOLDER_ID,
@@ -23,6 +23,9 @@ from homeassistant.components.onedrive.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
+)
 
 from . import setup_integration
 from .const import BACKUP_METADATA, INSTANCE_ID
@@ -298,3 +301,20 @@ async def test_migration_guard_against_major_downgrade(
 
     await setup_integration(hass, old_config_entry)
     assert old_config_entry.state is ConfigEntryState.MIGRATION_ERROR
+
+
+async def test_oauth_implementation_not_available(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that unavailable OAuth implementation raises ConfigEntryNotReady."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.onedrive.async_get_config_entry_implementation",
+        side_effect=ImplementationUnavailableError,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY

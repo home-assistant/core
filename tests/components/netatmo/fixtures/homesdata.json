@@ -630,7 +630,7 @@
             "name": "Default",
             "selected": true,
             "id": "591b54a2764ff4d50d8b5795",
-            "type": "therm"
+            "type": "cooling"
           },
           {
             "zones": [
@@ -778,6 +778,8 @@
           }
         ],
         "therm_setpoint_default_duration": 120,
+        "temperature_control_mode": "cooling",
+        "cooling_mode": "schedule",
         "persons": [
           {
             "id": "91827374-7e04-5298-83ad-a0cb8372dff1",

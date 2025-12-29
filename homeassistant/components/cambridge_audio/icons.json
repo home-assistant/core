@@ -1,6 +1,16 @@
 {
   "entity": {
     "select": {
+      "audio_output": {
+        "default": "mdi:audio-input-stereo-minijack"
+      },
+      "control_bus_mode": {
+        "default": "mdi:audio-video-off",
+        "state": {
+          "amplifier": "mdi:speaker",
+          "receiver": "mdi:audio-video"
+        }
+      },
       "display_brightness": {
         "default": "mdi:brightness-7",
         "state": {
@@ -8,20 +18,17 @@
           "dim": "mdi:brightness-6",
           "off": "mdi:brightness-3"
         }
-      },
-      "audio_output": {
-        "default": "mdi:audio-input-stereo-minijack"
       }
     },
     "switch": {
+      "early_update": {
+        "default": "mdi:update"
+      },
       "pre_amp": {
         "default": "mdi:volume-high",
         "state": {
           "off": "mdi:volume-low"
         }
-      },
-      "early_update": {
-        "default": "mdi:update"
       }
     }
   }

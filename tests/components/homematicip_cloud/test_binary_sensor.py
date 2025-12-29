@@ -2,8 +2,6 @@
 
 from homematicip.base.enums import SmokeDetectorAlarmType, WindowState
 
-from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
 from homeassistant.components.homematicip_cloud.binary_sensor import (
     ATTR_ACCELERATION_SENSOR_MODE,
     ATTR_ACCELERATION_SENSOR_NEUTRAL_POSITION,
@@ -25,19 +23,8 @@ from homeassistant.components.homematicip_cloud.entity import (
 )
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from .helper import HomeFactory, async_manipulate_test_data, get_and_check_entity_basics
-
-
-async def test_manually_configured_platform(hass: HomeAssistant) -> None:
-    """Test that we do not set up an access point."""
-    assert await async_setup_component(
-        hass,
-        BINARY_SENSOR_DOMAIN,
-        {BINARY_SENSOR_DOMAIN: {"platform": HMIPC_DOMAIN}},
-    )
-    assert not hass.data.get(HMIPC_DOMAIN)
 
 
 async def test_hmip_home_cloud_connection_sensor(
@@ -51,7 +38,7 @@ async def test_hmip_home_cloud_connection_sensor(
         test_devices=[entity_name]
     )
 
-    ha_state, hmip_device = get_and_check_entity_basics(
+    ha_state, _hmip_device = get_and_check_entity_basics(
         hass, mock_hap, entity_id, entity_name, device_model
     )
 
@@ -578,8 +565,8 @@ async def test_hmip_multi_contact_interface(
     hass: HomeAssistant, default_mock_hap_factory: HomeFactory
 ) -> None:
     """Test HomematicipMultiContactInterface."""
-    entity_id = "binary_sensor.wired_eingangsmodul_32_fach_channel5"
-    entity_name = "Wired Eingangsmodul – 32-fach Channel5"
+    entity_id = "binary_sensor.wired_eingangsmodul_32_fach_channel10"
+    entity_name = "Wired Eingangsmodul – 32-fach Channel10"
     device_model = "HmIPW-DRI32"
     mock_hap = await default_mock_hap_factory.async_get_mock_hap(
         test_devices=["Wired Eingangsmodul – 32-fach", "Licht Flur"]
@@ -591,14 +578,24 @@ async def test_hmip_multi_contact_interface(
 
     assert ha_state.state == STATE_OFF
     await async_manipulate_test_data(
-        hass, hmip_device, "windowState", WindowState.OPEN, channel=5
+        hass, hmip_device, "windowState", WindowState.OPEN, channel_real_index=10
     )
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_ON
 
-    await async_manipulate_test_data(hass, hmip_device, "windowState", None, channel=5)
+    await async_manipulate_test_data(
+        hass, hmip_device, "windowState", None, channel_real_index=10
+    )
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_UNKNOWN
+
+    # Test channel 32 of device
+    entity_id = "binary_sensor.wired_eingangsmodul_32_fach_channel32"
+    entity_name = "Wired Eingangsmodul – 32-fach Channel32"
+    ha_state, hmip_device = get_and_check_entity_basics(
+        hass, mock_hap, entity_id, entity_name, device_model
+    )
+    assert ha_state.state == STATE_OFF
 
     ha_state, hmip_device = get_and_check_entity_basics(
         hass,

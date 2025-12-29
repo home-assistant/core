@@ -24,15 +24,18 @@ from .entity import (
     PermRequired,
     ProtectDeviceEntity,
     ProtectEntityDescription,
-    ProtectSetableKeysMixin,
+    ProtectSettableKeysMixin,
     T,
     async_all_device_entities,
 )
+from .utils import async_ufp_instance_command
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
 class ProtectNumberEntityDescription(
-    ProtectSetableKeysMixin[T], NumberEntityDescription
+    ProtectSettableKeysMixin[T], NumberEntityDescription
 ):
     """Describes UniFi Protect Number entity."""
 
@@ -64,8 +67,7 @@ def _get_chime_duration(obj: Camera) -> int:
 CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
     ProtectNumberEntityDescription(
         key="wdr_value",
-        name="Wide dynamic range",
-        icon="mdi:state-machine",
+        translation_key="wide_dynamic_range",
         entity_category=EntityCategory.CONFIG,
         ufp_min=0,
         ufp_max=3,
@@ -77,8 +79,7 @@ CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
     ),
     ProtectNumberEntityDescription(
         key="mic_level",
-        name="Microphone level",
-        icon="mdi:microphone",
+        translation_key="microphone_level",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=PERCENTAGE,
         ufp_min=0,
@@ -91,9 +92,36 @@ CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_perm=PermRequired.WRITE,
     ),
     ProtectNumberEntityDescription(
+        key="system_sounds_volume",
+        translation_key="system_sounds_volume",
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=PERCENTAGE,
+        ufp_min=0,
+        ufp_max=100,
+        ufp_step=1,
+        ufp_required_field="feature_flags.has_speaker",
+        ufp_value="speaker_settings.volume",
+        ufp_enabled="feature_flags.has_speaker",
+        ufp_set_method="set_volume",
+        ufp_perm=PermRequired.WRITE,
+    ),
+    ProtectNumberEntityDescription(
+        key="doorbell_ring_volume",
+        translation_key="doorbell_ring_volume",
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=PERCENTAGE,
+        ufp_min=0,
+        ufp_max=100,
+        ufp_step=1,
+        ufp_required_field="feature_flags.is_doorbell",
+        ufp_value="speaker_settings.ring_volume",
+        ufp_enabled="feature_flags.is_doorbell",
+        ufp_set_method="set_ring_volume",
+        ufp_perm=PermRequired.WRITE,
+    ),
+    ProtectNumberEntityDescription(
         key="zoom_position",
-        name="Zoom level",
-        icon="mdi:magnify-plus-outline",
+        translation_key="zoom_level",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=PERCENTAGE,
         ufp_min=0,
@@ -106,8 +134,7 @@ CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
     ),
     ProtectNumberEntityDescription(
         key="chime_duration",
-        name="Chime duration",
-        icon="mdi:bell",
+        translation_key="chime_duration",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         ufp_min=1,
@@ -121,8 +148,7 @@ CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
     ),
     ProtectNumberEntityDescription(
         key="icr_lux",
-        name="Infrared custom lux trigger",
-        icon="mdi:white-balance-sunny",
+        translation_key="infrared_custom_lux_trigger",
         entity_category=EntityCategory.CONFIG,
         ufp_min=0,
         ufp_max=30,
@@ -138,8 +164,7 @@ CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
 LIGHT_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
     ProtectNumberEntityDescription(
         key="sensitivity",
-        name="Motion sensitivity",
-        icon="mdi:walk",
+        translation_key="motion_sensitivity",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=PERCENTAGE,
         ufp_min=0,
@@ -152,8 +177,7 @@ LIGHT_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
     ),
     ProtectNumberEntityDescription[Light](
         key="duration",
-        name="Auto-shutoff duration",
-        icon="mdi:camera-timer",
+        translation_key="auto_shutoff_duration",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         ufp_min=15,
@@ -169,8 +193,7 @@ LIGHT_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
 SENSE_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
     ProtectNumberEntityDescription(
         key="sensitivity",
-        name="Motion sensitivity",
-        icon="mdi:walk",
+        translation_key="motion_sensitivity",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=PERCENTAGE,
         ufp_min=0,
@@ -186,8 +209,7 @@ SENSE_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
 DOORLOCK_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
     ProtectNumberEntityDescription[Doorlock](
         key="auto_lock_time",
-        name="Auto-lock timeout",
-        icon="mdi:walk",
+        translation_key="auto_lock_timeout",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         ufp_min=0,
@@ -203,8 +225,7 @@ DOORLOCK_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
 CHIME_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
     ProtectNumberEntityDescription(
         key="volume",
-        name="Volume",
-        icon="mdi:speaker",
+        translation_key="volume",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=PERCENTAGE,
         ufp_min=0,
@@ -277,6 +298,7 @@ class ProtectNumbers(ProtectDeviceEntity, NumberEntity):
         super()._async_update_device_from_protect(device)
         self._attr_native_value = self.entity_description.get_ufp_value(self.device)
 
+    @async_ufp_instance_command
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         await self.entity_description.ufp_set(self.device, value)

@@ -15,7 +15,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MockConfigEntry, MockModuleConnection, init_integration
+from .conftest import MockConfigEntry, MockDeviceConnection, init_integration
 
 from tests.common import snapshot_platform
 
@@ -39,15 +39,15 @@ async def test_scene_activate(
 ) -> None:
     """Test the scene is activated."""
     await init_integration(hass, entry)
-    with patch.object(MockModuleConnection, "activate_scene") as activate_scene:
+    with patch.object(MockDeviceConnection, "activate_scene") as activate_scene:
         await hass.services.async_call(
             DOMAIN_SCENE,
             SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: "scene.romantic"},
+            {ATTR_ENTITY_ID: "scene.testmodule_romantic"},
             blocking=True,
         )
 
-    state = hass.states.get("scene.romantic")
+    state = hass.states.get("scene.testmodule_romantic")
     assert state is not None
 
     activate_scene.assert_awaited_with(
@@ -60,5 +60,5 @@ async def test_unload_config_entry(hass: HomeAssistant, entry: MockConfigEntry) 
     await init_integration(hass, entry)
 
     await hass.config_entries.async_unload(entry.entry_id)
-    state = hass.states.get("scene.romantic")
+    state = hass.states.get("scene.testmodule_romantic")
     assert state.state == STATE_UNAVAILABLE

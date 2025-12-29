@@ -1,0 +1,125 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "mobile_start": {
+        "default": "mdi:cellphone-wireless"
+      },
+      "notification_active": {
+        "default": "mdi:information"
+      },
+      "remote_control": {
+        "default": "mdi:remote"
+      },
+      "smart_grid": {
+        "default": "mdi:view-grid-plus-outline"
+      }
+    },
+    "button": {
+      "pause": {
+        "default": "mdi:pause"
+      },
+      "start": {
+        "default": "mdi:play"
+      },
+      "stop": {
+        "default": "mdi:stop"
+      }
+    },
+    "sensor": {
+      "core_target_temperature": {
+        "default": "mdi:thermometer-probe"
+      },
+      "core_temperature": {
+        "default": "mdi:thermometer-probe"
+      },
+      "drying_step": {
+        "default": "mdi:water-outline"
+      },
+      "elapsed_time": {
+        "default": "mdi:timer-outline"
+      },
+      "energy_forecast": {
+        "default": "mdi:lightning-bolt-outline"
+      },
+      "finish": {
+        "default": "mdi:clock-end"
+      },
+      "plate": {
+        "default": "mdi:circle-outline",
+        "state": {
+          "plate_step_0": "mdi:circle-outline",
+          "plate_step_1": "mdi:circle-slice-1",
+          "plate_step_10": "mdi:circle-slice-5",
+          "plate_step_11": "mdi:circle-slice-5",
+          "plate_step_12": "mdi:circle-slice-6",
+          "plate_step_13": "mdi:circle-slice-6",
+          "plate_step_14": "mdi:circle-slice-6",
+          "plate_step_15": "mdi:circle-slice-7",
+          "plate_step_16": "mdi:circle-slice-7",
+          "plate_step_17": "mdi:circle-slice-8",
+          "plate_step_18": "mdi:circle-slice-8",
+          "plate_step_2": "mdi:circle-slice-1",
+          "plate_step_3": "mdi:circle-slice-2",
+          "plate_step_4": "mdi:circle-slice-2",
+          "plate_step_5": "mdi:circle-slice-3",
+          "plate_step_6": "mdi:circle-slice-3",
+          "plate_step_7": "mdi:circle-slice-4",
+          "plate_step_8": "mdi:circle-slice-4",
+          "plate_step_9": "mdi:circle-slice-5",
+          "plate_step_boost": "mdi:alpha-b-circle-outline",
+          "plate_step_boost_2": "mdi:alpha-b-circle",
+          "plate_step_warming": "mdi:alpha-w-circle-outline"
+        }
+      },
+      "program_id": {
+        "default": "mdi:selection-ellipse-arrow-inside"
+      },
+      "program_phase": {
+        "default": "mdi:tray-full"
+      },
+      "program_type": {
+        "default": "mdi:state-machine"
+      },
+      "remaining_time": {
+        "default": "mdi:clock-end"
+      },
+      "spin_speed": {
+        "default": "mdi:sync"
+      },
+      "start": {
+        "default": "mdi:clock-start"
+      },
+      "start_time": {
+        "default": "mdi:clock-start"
+      },
+      "target_temperature": {
+        "default": "mdi:thermometer-check"
+      },
+      "water_forecast": {
+        "default": "mdi:water-outline"
+      }
+    },
+    "switch": {
+      "power": {
+        "default": "mdi:power"
+      },
+      "supercooling": {
+        "default": "mdi:snowflake-variant"
+      },
+      "superfreezing": {
+        "default": "mdi:snowflake"
+      }
+    }
+  },
+  "services": {
+    "get_programs": {
+      "service": "mdi:stack-overflow"
+    },
+    "set_program": {
+      "service": "mdi:arrow-right-circle-outline"
+    },
+    "set_program_oven": {
+      "service": "mdi:arrow-right-circle-outline"
+    }
+  }
+}

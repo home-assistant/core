@@ -11,7 +11,6 @@ from weheat.exceptions import (
     ForbiddenException,
     NotFoundException,
     ServiceException,
-    TooManyRequestsException,
     UnauthorizedException,
 )
 
@@ -33,7 +32,6 @@ EXCEPTIONS = (
     ForbiddenException,
     BadRequestException,
     ApiException,
-    TooManyRequestsException,
 )
 
 

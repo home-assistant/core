@@ -5,9 +5,12 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import jwt
+import multidict
 from pyenphase import (
     EnvoyACBPower,
     EnvoyBatteryAggregate,
+    EnvoyC6CC,
+    EnvoyCollar,
     EnvoyData,
     EnvoyEncharge,
     EnvoyEnchargeAggregate,
@@ -20,6 +23,7 @@ from pyenphase import (
 )
 from pyenphase.const import SupportedFeatures
 from pyenphase.models.dry_contacts import EnvoyDryContactSettings, EnvoyDryContactStatus
+from pyenphase.models.home import EnvoyInterfaceInformation
 from pyenphase.models.meters import EnvoyMeterData
 from pyenphase.models.tariff import EnvoyStorageSettings, EnvoyTariff
 import pytest
@@ -100,9 +104,11 @@ async def mock_envoy(
         mock_envoy.auth = EnvoyTokenAuth("127.0.0.1", token=token, envoy_serial="1234")
         mock_envoy.serial_number = "1234"
         mock = Mock()
-        mock.status_code = 200
-        mock.text = "Testing request \nreplies."
-        mock.headers = {"Hello": "World"}
+        mock.status = 200
+        aiohttp_text = AsyncMock()
+        aiohttp_text.return_value = "Testing request \nreplies."
+        mock.text = aiohttp_text
+        mock.headers = multidict.MultiDict([("Hello", "World")])
         mock_envoy.request.return_value = mock
 
         # determine fixture file name, default envoy if no request passed
@@ -145,6 +151,11 @@ def load_envoy_fixture(mock_envoy: AsyncMock, fixture_name: str) -> None:
     _load_json_2_encharge_enpower_data(mock_envoy.data, json_fixture)
     _load_json_2_raw_data(mock_envoy.data, json_fixture)
 
+    if item := json_fixture.get("interface_information"):
+        mock_envoy.interface_settings.return_value = EnvoyInterfaceInformation(**item)
+    else:
+        mock_envoy.interface_settings.return_value = None
+
 
 def _load_json_2_production_data(
     mocked_data: EnvoyData, json_fixture: dict[str, Any]
@@ -182,6 +193,22 @@ def _load_json_2_meter_data(
     mocked_data: EnvoyData, json_fixture: dict[str, Any]
 ) -> None:
     """Fill envoy meter data from fixture."""
+    if meters := json_fixture["data"].get("ctmeters"):
+        mocked_data.ctmeters = {}
+        [
+            mocked_data.ctmeters.update({meter: EnvoyMeterData(**meter_data)})
+            for meter, meter_data in meters.items()
+        ]
+    if meters := json_fixture["data"].get("ctmeters_phases"):
+        mocked_data.ctmeters_phases = {}
+        for meter, meter_data in meters.items():
+            meter_phase_data: dict[str, EnvoyMeterData] = {}
+            [
+                meter_phase_data.update({phase: EnvoyMeterData(**phase_data)})
+                for phase, phase_data in meter_data.items()
+            ]
+            mocked_data.ctmeters_phases.update({meter: meter_phase_data})
+
     if item := json_fixture["data"].get("ctmeter_production"):
         mocked_data.ctmeter_production = EnvoyMeterData(**item)
     if item := json_fixture["data"].get("ctmeter_consumption"):
@@ -251,6 +278,10 @@ def _load_json_2_encharge_enpower_data(
             )
     if item := json_fixture["data"].get("battery_aggregate"):
         mocked_data.battery_aggregate = EnvoyBatteryAggregate(**item)
+    if item := json_fixture["data"].get("collar"):
+        mocked_data.collar = EnvoyCollar(**item)
+    if item := json_fixture["data"].get("c6cc"):
+        mocked_data.c6cc = EnvoyC6CC(**item)
 
 
 def _load_json_2_raw_data(mocked_data: EnvoyData, json_fixture: dict[str, Any]) -> None:

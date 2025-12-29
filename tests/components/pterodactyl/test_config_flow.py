@@ -1,6 +1,8 @@
 """Test the Pterodactyl config flow."""
 
-from pydactyl import PterodactylClient
+from collections.abc import Generator
+from unittest.mock import AsyncMock
+
 from pydactyl.exceptions import BadRequestError, PterodactylApiError
 import pytest
 from requests.exceptions import HTTPError
@@ -12,7 +14,7 @@ from homeassistant.const import CONF_API_KEY, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import TEST_API_KEY, TEST_URL, TEST_USER_INPUT
+from .const import TEST_API_KEY, TEST_URL, TEST_USER_INPUT
 
 from tests.common import MockConfigEntry
 
@@ -59,7 +61,7 @@ async def test_recovery_after_error(
     hass: HomeAssistant,
     exception_type: Exception,
     expected_error: str,
-    mock_pterodactyl: PterodactylClient,
+    mock_pterodactyl: Generator[AsyncMock],
 ) -> None:
     """Test recovery after an error."""
     result = await hass.config_entries.flow.async_init(
@@ -143,7 +145,7 @@ async def test_reauth_recovery_after_error(
     exception_type: Exception,
     expected_error: str,
     mock_config_entry: MockConfigEntry,
-    mock_pterodactyl: PterodactylClient,
+    mock_pterodactyl: Generator[AsyncMock],
 ) -> None:
     """Test recovery after an error during re-authentication."""
     mock_config_entry.add_to_hass(hass)

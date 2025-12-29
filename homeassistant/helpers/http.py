@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Awaitable, Callable
 from contextvars import ContextVar
 from http import HTTPStatus
+import inspect
 import logging
 from typing import Any, Final
 
@@ -45,7 +45,7 @@ def request_handler_factory(
     hass: HomeAssistant, view: HomeAssistantView, handler: Callable
 ) -> Callable[[web.Request], Awaitable[web.StreamResponse]]:
     """Wrap the handler classes."""
-    is_coroutinefunction = asyncio.iscoroutinefunction(handler)
+    is_coroutinefunction = inspect.iscoroutinefunction(handler)
     assert is_coroutinefunction or is_callback(handler), (
         "Handler should be a coroutine or a callback."
     )

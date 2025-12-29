@@ -4,11 +4,13 @@ import asyncio
 from collections.abc import AsyncIterator
 from io import BytesIO, StringIO
 import json
+import re
 import tarfile
 from typing import Any
 from unittest.mock import patch
 
 from aiohttp import web
+from aiohttp.hdrs import CONTENT_DISPOSITION, CONTENT_TYPE
 import pytest
 
 from homeassistant.components.backup import (
@@ -166,10 +168,19 @@ async def _test_downloading_encrypted_backup(
     agent_id: str,
 ) -> None:
     """Test downloading an encrypted backup file."""
+
+    def assert_tar_download_response(resp: web.Response) -> None:
+        assert resp.status == 200
+        assert resp.headers.get(CONTENT_TYPE, "") == "application/x-tar"
+        assert re.match(
+            r"attachment; filename=.*\.tar", resp.headers.get(CONTENT_DISPOSITION, "")
+        )
+
     # Try downloading without supplying a password
     client = await hass_client()
     resp = await client.get(f"/api/backup/download/c0cb53bd?agent_id={agent_id}")
-    assert resp.status == 200
+    assert_tar_download_response(resp)
+
     backup = await resp.read()
     # We expect a valid outer tar file, but the inner tar file is encrypted and
     # can't be read
@@ -177,7 +188,7 @@ async def _test_downloading_encrypted_backup(
         enc_metadata = json.loads(outer_tar.extractfile("./backup.json").read())
         assert enc_metadata["protected"] is True
         with (
-            outer_tar.extractfile("core.tar.gz") as inner_tar_file,
+            outer_tar.extractfile("homeassistant.tar.gz") as inner_tar_file,
             pytest.raises(tarfile.ReadError, match="file could not be opened"),
         ):
             # pylint: disable-next=consider-using-with
@@ -187,7 +198,7 @@ async def _test_downloading_encrypted_backup(
     resp = await client.get(
         f"/api/backup/download/c0cb53bd?agent_id={agent_id}&password=wrong"
     )
-    assert resp.status == 200
+    assert_tar_download_response(resp)
     backup = await resp.read()
     # We expect a truncated outer tar file
     with (
@@ -200,7 +211,7 @@ async def _test_downloading_encrypted_backup(
     resp = await client.get(
         f"/api/backup/download/c0cb53bd?agent_id={agent_id}&password=hunter2"
     )
-    assert resp.status == 200
+    assert_tar_download_response(resp)
     backup = await resp.read()
     # We expect a valid outer tar file, the inner tar file is decrypted and can be read
     with (
@@ -209,7 +220,7 @@ async def _test_downloading_encrypted_backup(
         dec_metadata = json.loads(outer_tar.extractfile("./backup.json").read())
         assert dec_metadata == enc_metadata | {"protected": False}
         with (
-            outer_tar.extractfile("core.tar.gz") as inner_tar_file,
+            outer_tar.extractfile("homeassistant.tar.gz") as inner_tar_file,
             tarfile.open(fileobj=inner_tar_file, mode="r") as inner_tar,
         ):
             assert inner_tar.getnames() == [

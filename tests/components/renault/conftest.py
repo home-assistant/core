@@ -6,7 +6,7 @@ from types import MappingProxyType
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from renault_api.kamereon import exceptions, schemas
+from renault_api.kamereon import exceptions, models, schemas
 from renault_api.renault_account import RenaultAccount
 
 from homeassistant.components.renault.const import DOMAIN
@@ -69,13 +69,25 @@ async def patch_renault_account(hass: HomeAssistant) -> AsyncGenerator[RenaultAc
 @pytest.fixture(name="patch_get_vehicles")
 def patch_get_vehicles(vehicle_type: str) -> Generator[None]:
     """Mock fixtures."""
+    fixture_code = vehicle_type if vehicle_type in MOCK_VEHICLES else "zoe_40"
+    return_value: models.KamereonVehiclesResponse = (
+        schemas.KamereonVehiclesResponseSchema.loads(
+            load_fixture(f"renault/vehicle_{fixture_code}.json")
+        )
+    )
+
+    if vehicle_type == "missing_details":
+        return_value.vehicleLinks[0].vehicleDetails = None
+    elif vehicle_type == "multi":
+        return_value.vehicleLinks.extend(
+            schemas.KamereonVehiclesResponseSchema.loads(
+                load_fixture("renault/vehicle_captur_fuel.json")
+            ).vehicleLinks
+        )
+
     with patch(
         "renault_api.renault_account.RenaultAccount.get_vehicles",
-        return_value=(
-            schemas.KamereonVehiclesResponseSchema.loads(
-                load_fixture(f"renault/vehicle_{vehicle_type}.json")
-            )
-        ),
+        return_value=return_value,
     ):
         yield
 
@@ -119,6 +131,11 @@ def _get_fixtures(vehicle_type: str) -> MappingProxyType:
             if "res_state" in mock_vehicle["endpoints"]
             else load_fixture("renault/no_data.json")
         ).get_attributes(schemas.KamereonVehicleResStateDataSchema),
+        "pressure": schemas.KamereonVehicleDataResponseSchema.loads(
+            load_fixture(f"renault/{mock_vehicle['endpoints']['pressure']}")
+            if "pressure" in mock_vehicle["endpoints"]
+            else load_fixture("renault/no_data.json")
+        ).get_attributes(schemas.KamereonVehicleTyrePressureDataSchema),
     }
 
 
@@ -145,6 +162,9 @@ def patch_get_vehicle_data() -> Generator[dict[str, AsyncMock]]:
         patch(
             "renault_api.renault_vehicle.RenaultVehicle.get_res_state"
         ) as get_res_state,
+        patch(
+            "renault_api.renault_vehicle.RenaultVehicle.get_tyre_pressure"
+        ) as get_tyre_pressure,
     ):
         yield {
             "battery_status": get_battery_status,
@@ -154,6 +174,7 @@ def patch_get_vehicle_data() -> Generator[dict[str, AsyncMock]]:
             "location": get_location,
             "lock_status": get_lock_status,
             "res_state": get_res_state,
+            "pressure": get_tyre_pressure,
         }
 
 

@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from homeassistant.components.nut.const import INTEGRATION_SUPPORTED_COMMANDS
+from homeassistant.components.nut.const import DOMAIN, INTEGRATION_SUPPORTED_COMMANDS
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -19,7 +19,7 @@ from homeassistant.helpers import entity_registry as er
 
 from .util import async_init_integration
 
-from tests.common import load_fixture
+from tests.common import async_load_fixture
 
 
 @pytest.mark.parametrize(
@@ -82,8 +82,8 @@ async def test_switch_pdu_dynamic_outlets(
         command = f"outlet.{num!s}.load.off"
         list_commands_return_value[command] = command
 
-    ups_fixture = f"nut/{model}.json"
-    list_vars = json.loads(load_fixture(ups_fixture))
+    ups_fixture = f"{model}.json"
+    list_vars = json.loads(await async_load_fixture(hass, ups_fixture, DOMAIN))
 
     run_command = AsyncMock()
 

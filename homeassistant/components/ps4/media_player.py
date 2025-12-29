@@ -34,7 +34,7 @@ from . import format_unique_id, load_games, save_games
 from .const import (
     ATTR_MEDIA_IMAGE_URL,
     DEFAULT_ALIAS,
-    DOMAIN as PS4_DOMAIN,
+    DOMAIN,
     PS4_DATA,
     REGIONS as deprecated_regions,
 )
@@ -191,7 +191,7 @@ class PS4Device(MediaPlayerEntity):
                         )
                 elif self.state != MediaPlayerState.IDLE:
                     self.idle()
-            elif self.state != MediaPlayerState.STANDBY:
+            elif self.state != MediaPlayerState.OFF:
                 self.state_standby()
 
         elif self._retry > DEFAULT_RETRIES:
@@ -223,7 +223,7 @@ class PS4Device(MediaPlayerEntity):
     def state_standby(self) -> None:
         """Set states for state standby."""
         self.reset_title()
-        self._attr_state = MediaPlayerState.STANDBY
+        self._attr_state = MediaPlayerState.OFF
 
     def state_unknown(self) -> None:
         """Set states for state unknown."""
@@ -366,7 +366,7 @@ class PS4Device(MediaPlayerEntity):
             _sw_version = _sw_version[1:4]
             sw_version = f"{_sw_version[0]}.{_sw_version[1:]}"
             self._attr_device_info = DeviceInfo(
-                identifiers={(PS4_DOMAIN, status["host-id"])},
+                identifiers={(DOMAIN, status["host-id"])},
                 manufacturer="Sony Interactive Entertainment Inc.",
                 model="PlayStation 4",
                 name=status["host-name"],

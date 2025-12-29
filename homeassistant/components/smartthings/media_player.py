@@ -23,7 +23,6 @@ from .entity import SmartThingsEntity
 MEDIA_PLAYER_CAPABILITIES = (
     Capability.AUDIO_MUTE,
     Capability.AUDIO_VOLUME,
-    Capability.MEDIA_PLAYBACK,
 )
 
 CONTROLLABLE_SOURCES = ["bluetooth", "wifi"]
@@ -100,27 +99,25 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
         )
 
     def _determine_features(self) -> MediaPlayerEntityFeature:
-        flags = MediaPlayerEntityFeature(0)
-        playback_commands = self.get_attribute_value(
-            Capability.MEDIA_PLAYBACK, Attribute.SUPPORTED_PLAYBACK_COMMANDS
+        flags = (
+            MediaPlayerEntityFeature.VOLUME_SET
+            | MediaPlayerEntityFeature.VOLUME_STEP
+            | MediaPlayerEntityFeature.VOLUME_MUTE
         )
-        if "play" in playback_commands:
-            flags |= MediaPlayerEntityFeature.PLAY
-        if "pause" in playback_commands:
-            flags |= MediaPlayerEntityFeature.PAUSE
-        if "stop" in playback_commands:
-            flags |= MediaPlayerEntityFeature.STOP
-        if "rewind" in playback_commands:
-            flags |= MediaPlayerEntityFeature.PREVIOUS_TRACK
-        if "fastForward" in playback_commands:
-            flags |= MediaPlayerEntityFeature.NEXT_TRACK
-        if self.supports_capability(Capability.AUDIO_VOLUME):
-            flags |= (
-                MediaPlayerEntityFeature.VOLUME_SET
-                | MediaPlayerEntityFeature.VOLUME_STEP
+        if self.supports_capability(Capability.MEDIA_PLAYBACK):
+            playback_commands = self.get_attribute_value(
+                Capability.MEDIA_PLAYBACK, Attribute.SUPPORTED_PLAYBACK_COMMANDS
             )
-        if self.supports_capability(Capability.AUDIO_MUTE):
-            flags |= MediaPlayerEntityFeature.VOLUME_MUTE
+            if "play" in playback_commands:
+                flags |= MediaPlayerEntityFeature.PLAY
+            if "pause" in playback_commands:
+                flags |= MediaPlayerEntityFeature.PAUSE
+            if "stop" in playback_commands:
+                flags |= MediaPlayerEntityFeature.STOP
+            if "rewind" in playback_commands:
+                flags |= MediaPlayerEntityFeature.PREVIOUS_TRACK
+            if "fastForward" in playback_commands:
+                flags |= MediaPlayerEntityFeature.NEXT_TRACK
         if self.supports_capability(Capability.SWITCH):
             flags |= (
                 MediaPlayerEntityFeature.TURN_ON | MediaPlayerEntityFeature.TURN_OFF
@@ -270,6 +267,13 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
     def state(self) -> MediaPlayerState | None:
         """State of the media player."""
         if self.supports_capability(Capability.SWITCH):
+            if not self.supports_capability(Capability.MEDIA_PLAYBACK):
+                if (
+                    self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH)
+                    == "on"
+                ):
+                    return MediaPlayerState.ON
+                return MediaPlayerState.OFF
             if self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH) == "on":
                 if (
                     self.source is not None

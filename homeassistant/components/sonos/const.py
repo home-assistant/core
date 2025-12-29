@@ -10,15 +10,18 @@ from homeassistant.const import Platform
 UPNP_ST = "urn:schemas-upnp-org:device:ZonePlayer:1"
 
 DOMAIN = "sonos"
-DATA_SONOS = "sonos_media_player"
 DATA_SONOS_DISCOVERY_MANAGER = "sonos_discovery_manager"
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.MEDIA_PLAYER,
     Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
 ]
+
+UPNP_ISSUE_ID = "upnp_disabled"
+UPNP_DOCUMENTATION_URL = "https://www.home-assistant.io/integrations/sonos/#403-error-when-setting-up-the-integration"
 
 SUB_FAIL_ISSUE_ID = "subscriptions_failed"
 SUB_FAIL_URL = "https://www.home-assistant.io/integrations/sonos/#network-requirements"
@@ -31,8 +34,11 @@ SONOS_ALBUM_ARTIST = "album_artists"
 SONOS_TRACKS = "tracks"
 SONOS_COMPOSER = "composers"
 SONOS_RADIO = "radio"
+SONOS_SHARE = "share"
 SONOS_OTHER_ITEM = "other items"
 SONOS_AUDIO_BOOK = "audio book"
+
+MEDIA_TYPE_DIRECTORY = MediaClass.DIRECTORY
 
 SONOS_STATE_PLAYING = "PLAYING"
 SONOS_STATE_TRANSITIONING = "TRANSITIONING"
@@ -43,12 +49,14 @@ EXPANDABLE_MEDIA_TYPES = [
     MediaType.COMPOSER,
     MediaType.GENRE,
     MediaType.PLAYLIST,
+    MEDIA_TYPE_DIRECTORY,
     SONOS_ALBUM,
     SONOS_ALBUM_ARTIST,
     SONOS_ARTIST,
     SONOS_GENRE,
     SONOS_COMPOSER,
     SONOS_PLAYLISTS,
+    SONOS_SHARE,
 ]
 
 SONOS_TO_MEDIA_CLASSES = {
@@ -59,6 +67,8 @@ SONOS_TO_MEDIA_CLASSES = {
     SONOS_GENRE: MediaClass.GENRE,
     SONOS_PLAYLISTS: MediaClass.PLAYLIST,
     SONOS_TRACKS: MediaClass.TRACK,
+    SONOS_SHARE: MediaClass.DIRECTORY,
+    "object.container": MediaClass.DIRECTORY,
     "object.container.album.musicAlbum": MediaClass.ALBUM,
     "object.container.genre.musicGenre": MediaClass.PLAYLIST,
     "object.container.person.composer": MediaClass.PLAYLIST,
@@ -79,6 +89,7 @@ SONOS_TO_MEDIA_TYPES = {
     SONOS_GENRE: MediaType.GENRE,
     SONOS_PLAYLISTS: MediaType.PLAYLIST,
     SONOS_TRACKS: MediaType.TRACK,
+    "object.container": MEDIA_TYPE_DIRECTORY,
     "object.container.album.musicAlbum": MediaType.ALBUM,
     "object.container.genre.musicGenre": MediaType.PLAYLIST,
     "object.container.person.composer": MediaType.PLAYLIST,
@@ -97,6 +108,7 @@ MEDIA_TYPES_TO_SONOS: dict[MediaType | str, str] = {
     MediaType.GENRE: SONOS_GENRE,
     MediaType.PLAYLIST: SONOS_PLAYLISTS,
     MediaType.TRACK: SONOS_TRACKS,
+    MEDIA_TYPE_DIRECTORY: SONOS_SHARE,
 }
 
 SONOS_TYPES_MAPPING = {
@@ -127,6 +139,7 @@ LIBRARY_TITLES_MAPPING = {
     "A:GENRE": "Genres",
     "A:PLAYLISTS": "Playlists",
     "A:TRACKS": "Tracks",
+    "S:": "Folders",
 }
 
 PLAYABLE_MEDIA_TYPES = [
@@ -145,6 +158,7 @@ SONOS_CREATE_AUDIO_FORMAT_SENSOR = "sonos_create_audio_format_sensor"
 SONOS_CREATE_BATTERY = "sonos_create_battery"
 SONOS_CREATE_FAVORITES_SENSOR = "sonos_create_favorites_sensor"
 SONOS_CREATE_MIC_SENSOR = "sonos_create_mic_sensor"
+SONOS_CREATE_SELECTS = "sonos_create_selects"
 SONOS_CREATE_SWITCHES = "sonos_create_switches"
 SONOS_CREATE_LEVELS = "sonos_create_levels"
 SONOS_CREATE_MEDIA_PLAYER = "sonos_create_media_player"
@@ -177,6 +191,13 @@ MODELS_TV_ONLY = (
     "ULTRA",
 )
 MODELS_LINEIN_AND_TV = ("AMP",)
+MODEL_SONOS_ARC_ULTRA = "SONOS ARC ULTRA"
+
+ATTR_SPEECH_ENHANCEMENT_ENABLED = "speech_enhance_enabled"
+SPEECH_DIALOG_LEVEL = "speech_dialog_level"
+ATTR_DIALOG_LEVEL = "dialog_level"
+ATTR_DIALOG_LEVEL_ENUM = "dialog_level_enum"
+ATTR_QUEUE_POSITION = "queue_position"
 
 AVAILABILITY_CHECK_INTERVAL = datetime.timedelta(minutes=1)
 AVAILABILITY_TIMEOUT = AVAILABILITY_CHECK_INTERVAL.total_seconds() * 4.5

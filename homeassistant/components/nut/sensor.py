@@ -13,7 +13,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     PERCENTAGE,
-    STATE_UNKNOWN,
     EntityCategory,
     UnitOfApparentPower,
     UnitOfElectricCurrent,
@@ -611,6 +610,33 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
+    "outlet.current": SensorEntityDescription(
+        key="outlet.current",
+        translation_key="outlet_current",
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    "outlet.power": SensorEntityDescription(
+        key="outlet.power",
+        translation_key="outlet_power",
+        native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
+        device_class=SensorDeviceClass.APPARENT_POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    "outlet.realpower": SensorEntityDescription(
+        key="outlet.realpower",
+        translation_key="outlet_realpower",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
     "outlet.voltage": SensorEntityDescription(
         key="outlet.voltage",
         translation_key="outlet_voltage",
@@ -1120,9 +1146,9 @@ class NUTSensor(NUTBaseEntity, SensorEntity):
         return status.get(self.entity_description.key)
 
 
-def _format_display_state(status: dict[str, str]) -> str:
+def _format_display_state(status: dict[str, str]) -> str | None:
     """Return UPS display state."""
     try:
         return ", ".join(STATE_TYPES[state] for state in status[KEY_STATUS].split())
     except KeyError:
-        return STATE_UNKNOWN
+        return None

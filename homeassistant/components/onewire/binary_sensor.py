@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import timedelta
 import os
 
@@ -16,8 +15,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DEVICE_KEYS_0_3, DEVICE_KEYS_0_7, DEVICE_KEYS_A_B, READ_MODE_BOOL
-from .entity import OneWireEntity, OneWireEntityDescription
+from .const import DEVICE_KEYS_0_3, DEVICE_KEYS_0_7, DEVICE_KEYS_A_B
+from .entity import OneWireEntity
 from .onewirehub import (
     SIGNAL_NEW_DEVICE_CONNECTED,
     OneWireConfigEntry,
@@ -31,39 +30,36 @@ PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=30)
 
 
-@dataclass(frozen=True)
-class OneWireBinarySensorEntityDescription(
-    OneWireEntityDescription, BinarySensorEntityDescription
-):
-    """Class describing OneWire binary sensor entities."""
-
-
-DEVICE_BINARY_SENSORS: dict[str, tuple[OneWireBinarySensorEntityDescription, ...]] = {
+DEVICE_BINARY_SENSORS: dict[str, tuple[BinarySensorEntityDescription, ...]] = {
+    "05": (
+        BinarySensorEntityDescription(
+            key="sensed",
+            entity_registry_enabled_default=False,
+            translation_key="sensed",
+        ),
+    ),
     "12": tuple(
-        OneWireBinarySensorEntityDescription(
+        BinarySensorEntityDescription(
             key=f"sensed.{device_key}",
             entity_registry_enabled_default=False,
-            read_mode=READ_MODE_BOOL,
             translation_key="sensed_id",
             translation_placeholders={"id": str(device_key)},
         )
         for device_key in DEVICE_KEYS_A_B
     ),
     "29": tuple(
-        OneWireBinarySensorEntityDescription(
+        BinarySensorEntityDescription(
             key=f"sensed.{device_key}",
             entity_registry_enabled_default=False,
-            read_mode=READ_MODE_BOOL,
             translation_key="sensed_id",
             translation_placeholders={"id": str(device_key)},
         )
         for device_key in DEVICE_KEYS_0_7
     ),
     "3A": tuple(
-        OneWireBinarySensorEntityDescription(
+        BinarySensorEntityDescription(
             key=f"sensed.{device_key}",
             entity_registry_enabled_default=False,
-            read_mode=READ_MODE_BOOL,
             translation_key="sensed_id",
             translation_placeholders={"id": str(device_key)},
         )
@@ -73,12 +69,11 @@ DEVICE_BINARY_SENSORS: dict[str, tuple[OneWireBinarySensorEntityDescription, ...
 }
 
 # EF sensors are usually hobbyboards specialized sensors.
-HOBBYBOARD_EF: dict[str, tuple[OneWireBinarySensorEntityDescription, ...]] = {
+HOBBYBOARD_EF: dict[str, tuple[BinarySensorEntityDescription, ...]] = {
     "HB_HUB": tuple(
-        OneWireBinarySensorEntityDescription(
+        BinarySensorEntityDescription(
             key=f"hub/short.{device_key}",
             entity_registry_enabled_default=False,
-            read_mode=READ_MODE_BOOL,
             entity_category=EntityCategory.DIAGNOSTIC,
             device_class=BinarySensorDeviceClass.PROBLEM,
             translation_key="hub_short_id",
@@ -91,7 +86,7 @@ HOBBYBOARD_EF: dict[str, tuple[OneWireBinarySensorEntityDescription, ...]] = {
 
 def get_sensor_types(
     device_sub_type: str,
-) -> dict[str, tuple[OneWireBinarySensorEntityDescription, ...]]:
+) -> dict[str, tuple[BinarySensorEntityDescription, ...]]:
     """Return the proper info array for the device type."""
     if "HobbyBoard" in device_sub_type:
         return HOBBYBOARD_EF
@@ -155,11 +150,9 @@ def get_entities(
 class OneWireBinarySensorEntity(OneWireEntity, BinarySensorEntity):
     """Implementation of a 1-Wire binary sensor."""
 
-    entity_description: OneWireBinarySensorEntityDescription
-
     @property
     def is_on(self) -> bool | None:
         """Return true if sensor is on."""
-        if self._state is None:
+        if (state := self._state) is None:
             return None
-        return bool(self._state)
+        return state == "1"

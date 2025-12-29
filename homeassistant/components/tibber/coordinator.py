@@ -24,8 +24,9 @@ from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_conversion import EnergyConverter
 
-from .const import DOMAIN as TIBBER_DOMAIN
+from .const import DOMAIN
 
 FIVE_YEARS = 5 * 365 * 24
 
@@ -70,17 +71,31 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):
     async def _insert_statistics(self) -> None:
         """Insert Tibber statistics."""
         for home in self._tibber_connection.get_homes():
-            sensors: list[tuple[str, bool, str]] = []
+            sensors: list[tuple[str, bool, str | None, str]] = []
             if home.hourly_consumption_data:
-                sensors.append(("consumption", False, UnitOfEnergy.KILO_WATT_HOUR))
-                sensors.append(("totalCost", False, home.currency))
+                sensors.append(
+                    (
+                        "consumption",
+                        False,
+                        EnergyConverter.UNIT_CLASS,
+                        UnitOfEnergy.KILO_WATT_HOUR,
+                    )
+                )
+                sensors.append(("totalCost", False, None, home.currency))
             if home.hourly_production_data:
-                sensors.append(("production", True, UnitOfEnergy.KILO_WATT_HOUR))
-                sensors.append(("profit", True, home.currency))
+                sensors.append(
+                    (
+                        "production",
+                        True,
+                        EnergyConverter.UNIT_CLASS,
+                        UnitOfEnergy.KILO_WATT_HOUR,
+                    )
+                )
+                sensors.append(("profit", True, None, home.currency))
 
-            for sensor_type, is_production, unit in sensors:
+            for sensor_type, is_production, unit_class, unit in sensors:
                 statistic_id = (
-                    f"{TIBBER_DOMAIN}:energy_"
+                    f"{DOMAIN}:energy_"
                     f"{sensor_type.lower()}_"
                     f"{home.home_id.replace('-', '')}"
                 )
@@ -166,8 +181,9 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):
                     mean_type=StatisticMeanType.NONE,
                     has_sum=True,
                     name=f"{home.name} {sensor_type}",
-                    source=TIBBER_DOMAIN,
+                    source=DOMAIN,
                     statistic_id=statistic_id,
+                    unit_class=unit_class,
                     unit_of_measurement=unit,
                 )
                 async_add_external_statistics(self.hass, metadata, statistics)

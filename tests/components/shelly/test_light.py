@@ -9,6 +9,7 @@ from aioshelly.const import (
     MODEL_DIMMER,
     MODEL_DIMMER_2,
     MODEL_DUO,
+    MODEL_MULTICOLOR_BULB_G3,
     MODEL_RGBW2,
     MODEL_VINTAGE_V2,
 )
@@ -38,6 +39,7 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     STATE_OFF,
     STATE_ON,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
@@ -47,6 +49,7 @@ from . import (
     get_entity,
     init_integration,
     mutate_rpc_device_status,
+    patch_platforms,
     register_device,
     register_entity,
 )
@@ -57,11 +60,22 @@ LIGHT_BLOCK_ID = 2
 SHELLY_PLUS_RGBW_CHANNELS = 4
 
 
+@pytest.fixture(autouse=True)
+def fixture_platforms():
+    """Limit platforms under test."""
+    with patch_platforms([Platform.LIGHT]):
+        yield
+
+
 async def test_block_device_rgbw_bulb(
-    hass: HomeAssistant, mock_block_device: Mock, entity_registry: EntityRegistry
+    hass: HomeAssistant,
+    mock_block_device: Mock,
+    entity_registry: EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block device RGBW bulb."""
-    entity_id = "light.test_name_channel_1"
+    monkeypatch.setitem(mock_block_device.shelly, "num_outputs", 1)
+    entity_id = "light.test_name"
     await init_integration(hass, 1, model=MODEL_BULB)
 
     # Test initial
@@ -142,7 +156,8 @@ async def test_block_device_rgb_bulb(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test block device RGB bulb."""
-    entity_id = "light.test_name_channel_1"
+    monkeypatch.setitem(mock_block_device.shelly, "num_outputs", 1)
+    entity_id = "light.test_name"
     monkeypatch.delattr(mock_block_device.blocks[LIGHT_BLOCK_ID], "mode")
     monkeypatch.setattr(
         mock_block_device.blocks[LIGHT_BLOCK_ID], "description", "light_1"
@@ -246,7 +261,8 @@ async def test_block_device_white_bulb(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block device white bulb."""
-    entity_id = "light.test_name_channel_1"
+    monkeypatch.setitem(mock_block_device.shelly, "num_outputs", 1)
+    entity_id = "light.test_name"
     monkeypatch.delattr(mock_block_device.blocks[LIGHT_BLOCK_ID], "red")
     monkeypatch.delattr(mock_block_device.blocks[LIGHT_BLOCK_ID], "green")
     monkeypatch.delattr(mock_block_device.blocks[LIGHT_BLOCK_ID], "blue")
@@ -322,6 +338,7 @@ async def test_block_device_support_transition(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test block device supports transition."""
+    # num_outputs is 2, device name and channel name is used
     entity_id = "light.test_name_channel_1"
     monkeypatch.setitem(
         mock_block_device.settings, "fw", "20220809-122808/v1.12-g99f7e0b"
@@ -448,10 +465,11 @@ async def test_rpc_device_switch_type_lights_mode(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC device with switch in consumption type lights mode."""
-    entity_id = "light.test_switch_0"
+    entity_id = "light.test_name_test_switch_0"
     monkeypatch.setitem(
         mock_rpc_device.config["sys"]["ui_data"], "consumption_types", ["lights"]
     )
+    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
     await init_integration(hass, 2)
 
     await hass.services.async_call(
@@ -595,7 +613,7 @@ async def test_rpc_device_rgb_profile(
     for i in range(SHELLY_PLUS_RGBW_CHANNELS):
         monkeypatch.delitem(mock_rpc_device.status, f"light:{i}")
     monkeypatch.delitem(mock_rpc_device.status, "rgbw:0")
-    entity_id = "light.test_rgb_0"
+    entity_id = "light.test_name_test_rgb_0"
     await init_integration(hass, 2)
 
     # Test initial
@@ -639,7 +657,7 @@ async def test_rpc_device_rgbw_profile(
     for i in range(SHELLY_PLUS_RGBW_CHANNELS):
         monkeypatch.delitem(mock_rpc_device.status, f"light:{i}")
     monkeypatch.delitem(mock_rpc_device.status, "rgb:0")
-    entity_id = "light.test_rgbw_0"
+    entity_id = "light.test_name_test_rgbw_0"
     await init_integration(hass, 2)
 
     # Test initial
@@ -753,7 +771,7 @@ async def test_rpc_rgbw_device_rgb_w_modes_remove_others(
     # register lights
     for i in range(SHELLY_PLUS_RGBW_CHANNELS):
         monkeypatch.delitem(mock_rpc_device.status, f"light:{i}")
-        entity_id = f"light.test_light_{i}"
+        entity_id = f"light.test_name_test_light_{i}"
         register_entity(
             hass,
             LIGHT_DOMAIN,
@@ -781,7 +799,7 @@ async def test_rpc_rgbw_device_rgb_w_modes_remove_others(
     await hass.async_block_till_done()
 
     # verify we have RGB/w light
-    entity_id = f"light.test_{active_mode}_0"
+    entity_id = f"light.test_name_test_{active_mode}_0"
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_ON
@@ -919,3 +937,161 @@ async def test_rpc_remove_cct_light(
 
     # there is no cct:0 in the status, so the CCT light entity should be removed
     assert get_entity(hass, LIGHT_DOMAIN, "cct:0") is None
+
+
+async def test_rpc_cct_light_without_ct_range(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC CCT light without ct_range in the light config."""
+    entity_id = f"{LIGHT_DOMAIN}.living_room_lamp"
+
+    config = deepcopy(mock_rpc_device.config)
+    config["cct:0"] = {"id": 0, "name": "Living room lamp"}
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    status = deepcopy(mock_rpc_device.status)
+    status["cct:0"] = {"id": 0, "output": False, "brightness": 77, "ct": 3666}
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 3)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
+
+    # default values from constants are 2700 and 6500
+    assert state.attributes[ATTR_MIN_COLOR_TEMP_KELVIN] == 2700
+    assert state.attributes[ATTR_MAX_COLOR_TEMP_KELVIN] == 6500
+
+
+async def test_rpc_rgbcct_light(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC RGBCCT light."""
+    entity_id = f"{LIGHT_DOMAIN}.test_name"
+
+    config = deepcopy(mock_rpc_device.config)
+    config["rgbcct:0"] = {"id": 0, "name": None}
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    status = deepcopy(mock_rpc_device.status)
+    status["rgbcct:0"] = {
+        "id": 0,
+        "output": False,
+        "brightness": 44,
+        "ct": 3349,
+        "rgb": [76, 140, 255],
+        "mode": "cct",
+    }
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 3, MODEL_MULTICOLOR_BULB_G3)
+
+    assert (entry := entity_registry.async_get(entity_id))
+    assert entry.unique_id == "123456789ABC-rgbcct:0"
+
+    # Turn off
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    mock_rpc_device.call_rpc.assert_called_once_with(
+        "RGBCCT.Set", {"id": 0, "on": False}
+    )
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
+
+    # Turn on
+    mock_rpc_device.call_rpc.reset_mock()
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "rgbcct:0", "output", True)
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    mock_rpc_device.call_rpc.assert_called_once_with(
+        "RGBCCT.Set", {"id": 0, "on": True}
+    )
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
+    assert state.attributes[ATTR_BRIGHTNESS] == 112
+    assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == 3349
+    assert state.attributes[ATTR_MIN_COLOR_TEMP_KELVIN] == 2700
+    assert state.attributes[ATTR_MAX_COLOR_TEMP_KELVIN] == 6500
+
+    # Turn on, brightness = 88
+    mock_rpc_device.call_rpc.reset_mock()
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS_PCT: 88},
+        blocking=True,
+    )
+
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "rgbcct:0", "brightness", 88)
+    mock_rpc_device.mock_update()
+
+    mock_rpc_device.call_rpc.assert_called_once_with(
+        "RGBCCT.Set", {"id": 0, "on": True, "brightness": 88}
+    )
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_BRIGHTNESS] == 224  # 88% of 255
+
+    # Turn on, color temp = 4444 K
+    mock_rpc_device.call_rpc.reset_mock()
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP_KELVIN: 4444},
+        blocking=True,
+    )
+
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "rgbcct:0", "ct", 4444)
+    mock_rpc_device.mock_update()
+
+    mock_rpc_device.call_rpc.assert_called_once_with(
+        "RGBCCT.Set", {"id": 0, "on": True, "ct": 4444, "mode": "cct"}
+    )
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == 4444
+
+    # Turn on, color 100, 150, 200
+    mock_rpc_device.call_rpc.reset_mock()
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id, ATTR_RGB_COLOR: [100, 150, 200]},
+        blocking=True,
+    )
+
+    mutate_rpc_device_status(
+        monkeypatch, mock_rpc_device, "rgbcct:0", "rgb", [100, 150, 200]
+    )
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "rgbcct:0", "mode", "rgb")
+    mock_rpc_device.mock_update()
+
+    mock_rpc_device.call_rpc.assert_called_once_with(
+        "RGBCCT.Set", {"id": 0, "on": True, "rgb": [100, 150, 200], "mode": "rgb"}
+    )
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.RGB
+    assert state.attributes[ATTR_RGB_COLOR] == (100, 150, 200)

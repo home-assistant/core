@@ -9,7 +9,7 @@ from python_homeassistant_analytics import (
     HomeassistantAnalyticsConnectionError,
     HomeassistantAnalyticsNotModifiedError,
 )
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant

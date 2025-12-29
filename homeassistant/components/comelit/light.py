@@ -10,8 +10,10 @@ from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import ObjectClassType
 from .coordinator import ComelitConfigEntry, ComelitSerialBridge
 from .entity import ComelitBridgeBaseEntity
+from .utils import bridge_api_call, new_device_listener
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -26,9 +28,18 @@ async def async_setup_entry(
 
     coordinator = cast(ComelitSerialBridge, config_entry.runtime_data)
 
-    async_add_entities(
-        ComelitLightEntity(coordinator, device, config_entry.entry_id)
-        for device in coordinator.data[LIGHT].values()
+    def _add_new_entities(new_devices: list[ObjectClassType], dev_type: str) -> None:
+        """Add entities for new monitors."""
+        entities = [
+            ComelitLightEntity(coordinator, device, config_entry.entry_id)
+            for device in coordinator.data[dev_type].values()
+            if device in new_devices
+        ]
+        if entities:
+            async_add_entities(entities)
+
+    config_entry.async_on_unload(
+        new_device_listener(coordinator, _add_new_entities, LIGHT)
     )
 
 
@@ -39,6 +50,7 @@ class ComelitLightEntity(ComelitBridgeBaseEntity, LightEntity):
     _attr_name = None
     _attr_supported_color_modes = {ColorMode.ONOFF}
 
+    @bridge_api_call
     async def _light_set_state(self, state: int) -> None:
         """Set desired light state."""
         await self.coordinator.api.set_device_status(LIGHT, self._device.index, state)
@@ -56,4 +68,4 @@ class ComelitLightEntity(ComelitBridgeBaseEntity, LightEntity):
     @property
     def is_on(self) -> bool:
         """Return True if light is on."""
-        return self.coordinator.data[LIGHT][self._device.index].status == STATE_ON
+        return bool(self.coordinator.data[LIGHT][self._device.index].status == STATE_ON)

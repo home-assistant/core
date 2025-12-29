@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Generic, TypeVar, override
+from typing import Any, override
 
 from eheimdigital.classic_vario import EheimDigitalClassicVario
 from eheimdigital.device import EheimDigitalDevice
@@ -26,20 +26,20 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import EheimDigitalConfigEntry, EheimDigitalUpdateCoordinator
-from .entity import EheimDigitalEntity
+from .entity import EheimDigitalEntity, exception_handler
 
 PARALLEL_UPDATES = 0
 
-_DeviceT_co = TypeVar("_DeviceT_co", bound=EheimDigitalDevice, covariant=True)
-
 
 @dataclass(frozen=True, kw_only=True)
-class EheimDigitalNumberDescription(NumberEntityDescription, Generic[_DeviceT_co]):
+class EheimDigitalNumberDescription[_DeviceT: EheimDigitalDevice](
+    NumberEntityDescription
+):
     """Class describing EHEIM Digital sensor entities."""
 
-    value_fn: Callable[[_DeviceT_co], float | None]
-    set_value_fn: Callable[[_DeviceT_co, float], Awaitable[None]]
-    uom_fn: Callable[[_DeviceT_co], str] | None = None
+    value_fn: Callable[[_DeviceT], float | None]
+    set_value_fn: Callable[[_DeviceT, float], Awaitable[None]]
+    uom_fn: Callable[[_DeviceT], str] | None = None
 
 
 CLASSICVARIO_DESCRIPTIONS: tuple[
@@ -109,6 +109,20 @@ HEATER_DESCRIPTIONS: tuple[EheimDigitalNumberDescription[EheimDigitalHeater], ..
     ),
 )
 
+GENERAL_DESCRIPTIONS: tuple[EheimDigitalNumberDescription[EheimDigitalDevice], ...] = (
+    EheimDigitalNumberDescription[EheimDigitalDevice](
+        key="system_led",
+        translation_key="system_led",
+        entity_category=EntityCategory.CONFIG,
+        native_min_value=0,
+        native_max_value=100,
+        native_step=PRECISION_WHOLE,
+        native_unit_of_measurement=PERCENTAGE,
+        value_fn=lambda device: device.sys_led,
+        set_value_fn=lambda device, value: device.set_sys_led(int(value)),
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -122,7 +136,7 @@ async def async_setup_entry(
         device_address: dict[str, EheimDigitalDevice],
     ) -> None:
         """Set up the number entities for one or multiple devices."""
-        entities: list[EheimDigitalNumber[EheimDigitalDevice]] = []
+        entities: list[EheimDigitalNumber[Any]] = []
         for device in device_address.values():
             if isinstance(device, EheimDigitalClassicVario):
                 entities.extend(
@@ -138,6 +152,10 @@ async def async_setup_entry(
                     )
                     for description in HEATER_DESCRIPTIONS
                 )
+            entities.extend(
+                EheimDigitalNumber[EheimDigitalDevice](coordinator, device, description)
+                for description in GENERAL_DESCRIPTIONS
+            )
 
         async_add_entities(entities)
 
@@ -145,18 +163,18 @@ async def async_setup_entry(
     async_setup_device_entities(coordinator.hub.devices)
 
 
-class EheimDigitalNumber(
-    EheimDigitalEntity[_DeviceT_co], NumberEntity, Generic[_DeviceT_co]
+class EheimDigitalNumber[_DeviceT: EheimDigitalDevice](
+    EheimDigitalEntity[_DeviceT], NumberEntity
 ):
     """Represent a EHEIM Digital number entity."""
 
-    entity_description: EheimDigitalNumberDescription[_DeviceT_co]
+    entity_description: EheimDigitalNumberDescription[_DeviceT]
 
     def __init__(
         self,
         coordinator: EheimDigitalUpdateCoordinator,
-        device: _DeviceT_co,
-        description: EheimDigitalNumberDescription[_DeviceT_co],
+        device: _DeviceT,
+        description: EheimDigitalNumberDescription[_DeviceT],
     ) -> None:
         """Initialize an EHEIM Digital number entity."""
         super().__init__(coordinator, device)
@@ -164,6 +182,7 @@ class EheimDigitalNumber(
         self._attr_unique_id = f"{self._device_address}_{description.key}"
 
     @override
+    @exception_handler
     async def async_set_native_value(self, value: float) -> None:
         return await self.entity_description.set_value_fn(self._device, value)
 

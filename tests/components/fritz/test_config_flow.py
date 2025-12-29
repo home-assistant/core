@@ -16,6 +16,7 @@ from homeassistant.components.device_tracker import (
     DEFAULT_CONSIDER_HOME,
 )
 from homeassistant.components.fritz.const import (
+    CONF_FEATURE_DEVICE_TRACKING,
     CONF_OLD_DISCOVERY,
     DOMAIN,
     ERROR_AUTH_INVALID,
@@ -744,6 +745,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     assert result["data"] == {
         CONF_OLD_DISCOVERY: False,
         CONF_CONSIDER_HOME: 37,
+        CONF_FEATURE_DEVICE_TRACKING: True,
     }
 
 

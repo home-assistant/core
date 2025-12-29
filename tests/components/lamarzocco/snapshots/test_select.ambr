@@ -1,4 +1,63 @@
 # serializer version: 1
+# name: test_bbw_dose_mode[Linea Mini]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'LM012345 Brew by weight dose mode',
+      'options': list([
+        'continuous',
+        'dose1',
+        'dose2',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.lm012345_brew_by_weight_dose_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'continuous',
+  })
+# ---
+# name: test_bbw_dose_mode[Linea Mini].1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'continuous',
+        'dose1',
+        'dose2',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.lm012345_brew_by_weight_dose_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Brew by weight dose mode',
+    'platform': 'lamarzocco',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'bbw_dose_mode',
+    'unique_id': 'LM012345_bbw_dose_mode',
+    'unit_of_measurement': None,
+  })
+# ---
 # name: test_pre_brew_infusion_select[GS3 AV]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -51,6 +110,7 @@
     'original_name': 'Prebrew/-infusion mode',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'prebrew_infusion_select',
     'unique_id': 'GS012345_prebrew_infusion_select',
@@ -109,6 +169,7 @@
     'original_name': 'Prebrew/-infusion mode',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'prebrew_infusion_select',
     'unique_id': 'MR012345_prebrew_infusion_select',
@@ -167,6 +228,7 @@
     'original_name': 'Prebrew/-infusion mode',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'prebrew_infusion_select',
     'unique_id': 'LM012345_prebrew_infusion_select',
@@ -223,6 +285,7 @@
     'original_name': 'Smart standby mode',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'smart_standby_mode',
     'unique_id': 'GS012345_smart_standby_mode',
@@ -281,6 +344,7 @@
     'original_name': 'Steam level',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'steam_temp_select',
     'unique_id': 'MR012345_steam_temp_select',

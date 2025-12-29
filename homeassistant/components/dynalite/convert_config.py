@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from types import MappingProxyType
+from collections.abc import Mapping
 from typing import Any
 
 from dynalite_devices_lib import const as dyn_const
@@ -138,9 +138,7 @@ def convert_template(config: dict[str, Any]) -> dict[str, Any]:
     return convert_with_map(config, my_map)
 
 
-def convert_config(
-    config: dict[str, Any] | MappingProxyType[str, Any],
-) -> dict[str, Any]:
+def convert_config(config: Mapping[str, Any]) -> dict[str, Any]:
     """Convert a config dict by replacing component consts with library consts."""
     my_map = {
         CONF_NAME: dyn_const.CONF_NAME,

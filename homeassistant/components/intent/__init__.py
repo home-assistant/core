@@ -10,6 +10,11 @@ from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.components import http, sensor
+from homeassistant.components.button import (
+    DOMAIN as BUTTON_DOMAIN,
+    SERVICE_PRESS as SERVICE_PRESS_BUTTON,
+    ButtonDeviceClass,
+)
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -17,9 +22,11 @@ from homeassistant.components.cover import (
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_SET_COVER_POSITION,
+    SERVICE_STOP_COVER,
     CoverDeviceClass,
 )
 from homeassistant.components.http.data_validator import RequestDataValidator
+from homeassistant.components.input_button import DOMAIN as INPUT_BUTTON_DOMAIN
 from homeassistant.components.lock import (
     DOMAIN as LOCK_DOMAIN,
     SERVICE_LOCK,
@@ -32,6 +39,7 @@ from homeassistant.components.valve import (
     SERVICE_CLOSE_VALVE,
     SERVICE_OPEN_VALVE,
     SERVICE_SET_VALVE_POSITION,
+    SERVICE_STOP_VALVE,
     ValveDeviceClass,
 )
 from homeassistant.const import (
@@ -80,6 +88,7 @@ __all__ = [
 ]
 
 ONOFF_DEVICE_CLASSES = {
+    ButtonDeviceClass,
     CoverDeviceClass,
     ValveDeviceClass,
     SwitchDeviceClass,
@@ -103,7 +112,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             intent.INTENT_TURN_ON,
             HOMEASSISTANT_DOMAIN,
             SERVICE_TURN_ON,
-            description="Turns on/opens a device or entity",
+            description="Turns on/opens/presses a device or entity. For locks, this performs a 'lock' action. Use for requests like 'turn on', 'activate', 'enable', or 'lock'.",
             device_classes=ONOFF_DEVICE_CLASSES,
         ),
     )
@@ -113,7 +122,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             intent.INTENT_TURN_OFF,
             HOMEASSISTANT_DOMAIN,
             SERVICE_TURN_OFF,
-            description="Turns off/closes a device or entity",
+            description="Turns off/closes a device or entity. For locks, this performs an 'unlock' action. Use for requests like 'turn off', 'deactivate', 'disable', or 'unlock'.",
             device_classes=ONOFF_DEVICE_CLASSES,
         ),
     )
@@ -136,6 +145,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         NevermindIntentHandler(),
     )
     intent.async_register(hass, SetPositionIntentHandler())
+    intent.async_register(hass, StopMovingIntentHandler())
     intent.async_register(hass, StartTimerIntentHandler())
     intent.async_register(hass, CancelTimerIntentHandler())
     intent.async_register(hass, CancelAllTimersIntentHandler())
@@ -167,6 +177,25 @@ class OnOffIntentHandler(intent.ServiceIntentHandler):
     ) -> None:
         """Call service on entity with handling for special cases."""
         hass = intent_obj.hass
+
+        if state.domain in (BUTTON_DOMAIN, INPUT_BUTTON_DOMAIN):
+            if service != SERVICE_TURN_ON:
+                raise intent.IntentHandleError(
+                    f"Entity {state.entity_id} cannot be turned off"
+                )
+
+            await self._run_then_background(
+                hass.async_create_task(
+                    hass.services.async_call(
+                        state.domain,
+                        SERVICE_PRESS_BUTTON,
+                        {ATTR_ENTITY_ID: state.entity_id},
+                        context=intent_obj.context,
+                        blocking=True,
+                    )
+                )
+            )
+            return
 
         if state.domain == COVER_DOMAIN:
             # on = open
@@ -407,6 +436,31 @@ class SetPositionIntentHandler(intent.DynamicServiceIntentHandler):
         raise intent.IntentHandleError(f"Domain not supported: {state.domain}")
 
 
+class StopMovingIntentHandler(intent.DynamicServiceIntentHandler):
+    """Intent handler for stopping covers and valves."""
+
+    def __init__(self) -> None:
+        """Create stop moving handler."""
+        super().__init__(
+            intent.INTENT_STOP_MOVING,
+            description="Stops a moving device or entity",
+            platforms={COVER_DOMAIN, VALVE_DOMAIN},
+            device_classes={CoverDeviceClass, ValveDeviceClass},
+        )
+
+    def get_domain_and_service(
+        self, intent_obj: intent.Intent, state: State
+    ) -> tuple[str, str]:
+        """Get the domain and service name to call."""
+        if state.domain == COVER_DOMAIN:
+            return (COVER_DOMAIN, SERVICE_STOP_COVER)
+
+        if state.domain == VALVE_DOMAIN:
+            return (VALVE_DOMAIN, SERVICE_STOP_VALVE)
+
+        raise intent.IntentHandleError(f"Domain not supported: {state.domain}")
+
+
 class GetCurrentDateIntentHandler(intent.IntentHandler):
     """Gets the current date."""
 
@@ -589,7 +643,7 @@ class IntentHandleView(http.HomeAssistantView):
             intent_result = await intent.async_handle(
                 hass, DOMAIN, intent_name, slots, "", self.context(request)
             )
-        except intent.IntentHandleError as err:
+        except (intent.IntentHandleError, intent.MatchFailedError) as err:
             intent_result = intent.IntentResponse(language=language)
             intent_result.async_set_speech(str(err))
 

@@ -5,11 +5,10 @@ from __future__ import annotations
 import asyncio
 import logging
 import re
-from types import MappingProxyType
 from typing import Any
 
 from elkm1_lib.elements import Element
-from elkm1_lib.elk import Elk, Panel
+from elkm1_lib.elk import Elk
 from elkm1_lib.util import parse_url
 import voluptuous as vol
 
@@ -27,12 +26,11 @@ from homeassistant.const import (
     Platform,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import dt as dt_util
 from homeassistant.util.network import is_ip_address
 
 from .const import (
@@ -63,6 +61,7 @@ from .discovery import (
     async_update_entry_from_discovery,
 )
 from .models import ELKM1Data
+from .services import async_setup_services
 
 type ElkM1ConfigEntry = ConfigEntry[ELKM1Data]
 
@@ -79,19 +78,6 @@ PLATFORMS = [
     Platform.SENSOR,
     Platform.SWITCH,
 ]
-
-SPEAK_SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Required("number"): vol.All(vol.Coerce(int), vol.Range(min=0, max=999)),
-        vol.Optional("prefix", default=""): cv.string,
-    }
-)
-
-SET_TIME_SERVICE_SCHEMA = vol.Schema(
-    {
-        vol.Optional("prefix", default=""): cv.string,
-    }
-)
 
 
 def hostname_from_url(url: str) -> str:
@@ -180,7 +166,7 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     """Set up the Elk M1 platform."""
-    _create_elk_services(hass)
+    async_setup_services(hass)
 
     async def _async_discovery(*_: Any) -> None:
         async_trigger_discovery(
@@ -235,7 +221,7 @@ def _async_find_matching_config_entry(
 
 async def async_setup_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> bool:
     """Set up Elk-M1 Control from a config entry."""
-    conf: MappingProxyType[str, Any] = entry.data
+    conf = entry.data
 
     host = hostname_from_url(entry.data[CONF_HOST])
 
@@ -292,11 +278,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> boo
     for keypad in elk.keypads:
         keypad.add_callback(_keypad_changed)
 
+    sync_success = False
     try:
-        if not await async_wait_for_elk_to_sync(elk, LOGIN_TIMEOUT, SYNC_TIMEOUT):
-            return False
+        await ElkSyncWaiter(elk, LOGIN_TIMEOUT, SYNC_TIMEOUT).async_wait()
+        sync_success = True
+    except LoginFailed:
+        _LOGGER.error("ElkM1 login failed for %s", conf[CONF_HOST])
+        return False
     except TimeoutError as exc:
         raise ConfigEntryNotReady(f"Timed out connecting to {conf[CONF_HOST]}") from exc
+    finally:
+        if not sync_success:
+            elk.disconnect()
 
     elk_temp_unit = elk.panel.temperature_units
     if elk_temp_unit == "C":
@@ -327,17 +320,6 @@ def _included(ranges: list[tuple[int, int]], set_to: bool, values: list[bool]) -
         values[rng[0] - 1 : rng[1]] = [set_to] * (rng[1] - rng[0] + 1)
 
 
-def _find_elk_by_prefix(hass: HomeAssistant, prefix: str) -> Elk | None:
-    """Search all config entries for a given prefix."""
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        if not entry.runtime_data:
-            continue
-        elk_data: ELKM1Data = entry.runtime_data
-        if elk_data.prefix == prefix:
-            return elk_data.elk
-    return None
-
-
 async def async_unload_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
@@ -346,84 +328,75 @@ async def async_unload_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> bo
     return unload_ok
 
 
-async def async_wait_for_elk_to_sync(
-    elk: Elk,
-    login_timeout: int,
-    sync_timeout: int,
-) -> bool:
-    """Wait until the elk has finished sync. Can fail login or timeout."""
+class LoginFailed(Exception):
+    """Raised when login to ElkM1 fails."""
 
-    sync_event = asyncio.Event()
-    login_event = asyncio.Event()
 
-    success = True
+class ElkSyncWaiter:
+    """Wait for ElkM1 to sync."""
 
-    def login_status(succeeded: bool) -> None:
-        nonlocal success
+    def __init__(self, elk: Elk, login_timeout: int, sync_timeout: int) -> None:
+        """Initialize the sync waiter."""
+        self._elk = elk
+        self._login_timeout = login_timeout
+        self._sync_timeout = sync_timeout
+        self._loop = asyncio.get_running_loop()
+        self._sync_future: asyncio.Future[None] = self._loop.create_future()
+        self._login_future: asyncio.Future[None] = self._loop.create_future()
 
-        success = succeeded
+    @callback
+    def _async_set_future_if_not_done(self, future: asyncio.Future[None]) -> None:
+        """Set the future result if not already done."""
+        if not future.done():
+            future.set_result(None)
+
+    @callback
+    def _async_login_status(self, succeeded: bool) -> None:
+        """Handle login status callback."""
         if succeeded:
             _LOGGER.debug("ElkM1 login succeeded")
-            login_event.set()
+            self._async_set_future_if_not_done(self._login_future)
         else:
-            elk.disconnect()
             _LOGGER.error("ElkM1 login failed; invalid username or password")
-            login_event.set()
-            sync_event.set()
+            self._async_set_exception_if_not_done(self._login_future, LoginFailed)
 
-    def sync_complete() -> None:
-        sync_event.set()
+    @callback
+    def _async_set_exception_if_not_done(
+        self, future: asyncio.Future[None], exception: type[Exception]
+    ) -> None:
+        """Set an exception on the future if not already done."""
+        if not future.done():
+            future.set_exception(exception())
 
-    elk.add_handler("login", login_status)
-    elk.add_handler("sync_complete", sync_complete)
-    for name, event, timeout in (
-        ("login", login_event, login_timeout),
-        ("sync_complete", sync_event, sync_timeout),
-    ):
-        _LOGGER.debug("Waiting for %s event for %s seconds", name, timeout)
+    @callback
+    def _async_sync_complete(self) -> None:
+        """Handle sync complete callback."""
+        self._async_set_future_if_not_done(self._sync_future)
+
+    async def async_wait(self) -> None:
+        """Wait for login and sync to complete.
+
+        Raises LoginFailed if login fails.
+        Raises TimeoutError if login or sync times out.
+        """
+        self._elk.add_handler("login", self._async_login_status)
+        self._elk.add_handler("sync_complete", self._async_sync_complete)
+
         try:
-            async with asyncio.timeout(timeout):
-                await event.wait()
-        except TimeoutError:
-            _LOGGER.debug("Timed out waiting for %s event", name)
-            elk.disconnect()
-            raise
-        _LOGGER.debug("Received %s event", name)
+            for name, future, timeout in (
+                ("login", self._login_future, self._login_timeout),
+                ("sync_complete", self._sync_future, self._sync_timeout),
+            ):
+                _LOGGER.debug("Waiting for %s event for %s seconds", name, timeout)
+                handle = self._loop.call_later(
+                    timeout, self._async_set_exception_if_not_done, future, TimeoutError
+                )
+                try:
+                    await future
+                finally:
+                    handle.cancel()
 
-    return success
-
-
-@callback
-def _async_get_elk_panel(hass: HomeAssistant, service: ServiceCall) -> Panel:
-    """Get the ElkM1 panel from a service call."""
-    prefix = service.data["prefix"]
-    elk = _find_elk_by_prefix(hass, prefix)
-    if elk is None:
-        raise HomeAssistantError(f"No ElkM1 with prefix '{prefix}' found")
-    return elk.panel
-
-
-def _create_elk_services(hass: HomeAssistant) -> None:
-    """Create ElkM1 services."""
-
-    @callback
-    def _speak_word_service(service: ServiceCall) -> None:
-        _async_get_elk_panel(hass, service).speak_word(service.data["number"])
-
-    @callback
-    def _speak_phrase_service(service: ServiceCall) -> None:
-        _async_get_elk_panel(hass, service).speak_phrase(service.data["number"])
-
-    @callback
-    def _set_time_service(service: ServiceCall) -> None:
-        _async_get_elk_panel(hass, service).set_time(dt_util.now())
-
-    hass.services.async_register(
-        DOMAIN, "speak_word", _speak_word_service, SPEAK_SERVICE_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN, "speak_phrase", _speak_phrase_service, SPEAK_SERVICE_SCHEMA
-    )
-    hass.services.async_register(
-        DOMAIN, "set_time", _set_time_service, SET_TIME_SERVICE_SCHEMA
-    )
+                _LOGGER.debug("Received %s event", name)
+        finally:
+            self._elk.remove_handler("login", self._async_login_status)
+            self._elk.remove_handler("sync_complete", self._async_sync_complete)

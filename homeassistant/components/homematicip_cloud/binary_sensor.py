@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from homematicip.base.enums import SmokeDetectorAlarmType, WindowState
+from homematicip.base.functionalChannels import MultiModeInputChannel
 from homematicip.device import (
     AccelerationSensor,
     ContactInterface,
@@ -34,14 +35,13 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .entity import HomematicipGenericEntity
-from .hap import HomematicipHAP
+from .hap import HomematicIPConfigEntry, HomematicipHAP
 
 ATTR_ACCELERATION_SENSOR_MODE = "acceleration_sensor_mode"
 ATTR_ACCELERATION_SENSOR_NEUTRAL_POSITION = "acceleration_sensor_neutral_position"
@@ -75,11 +75,11 @@ SAM_DEVICE_ATTRIBUTES = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: HomematicIPConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the HomematicIP Cloud binary sensor from a config entry."""
-    hap = hass.data[DOMAIN][config_entry.unique_id]
+    hap = config_entry.runtime_data
     entities: list[HomematicipGenericEntity] = [HomematicipCloudConnectionSensor(hap)]
     for device in hap.home.devices:
         if isinstance(device, AccelerationSensor):
@@ -88,8 +88,11 @@ async def async_setup_entry(
             entities.append(HomematicipTiltVibrationSensor(hap, device))
         if isinstance(device, WiredInput32):
             entities.extend(
-                HomematicipMultiContactInterface(hap, device, channel=channel)
-                for channel in range(1, 33)
+                HomematicipMultiContactInterface(
+                    hap, device, channel_real_index=channel.index
+                )
+                for channel in device.functionalChannels
+                if isinstance(channel, MultiModeInputChannel)
             )
         elif isinstance(device, FullFlushContactInterface6):
             entities.extend(
@@ -228,21 +231,24 @@ class HomematicipMultiContactInterface(HomematicipGenericEntity, BinarySensorEnt
         device,
         channel=1,
         is_multi_channel=True,
+        channel_real_index=None,
     ) -> None:
         """Initialize the multi contact entity."""
         super().__init__(
-            hap, device, channel=channel, is_multi_channel=is_multi_channel
+            hap,
+            device,
+            channel=channel,
+            is_multi_channel=is_multi_channel,
+            channel_real_index=channel_real_index,
         )
 
     @property
     def is_on(self) -> bool | None:
         """Return true if the contact interface is on/open."""
-        if self._device.functionalChannels[self._channel].windowState is None:
+        channel = self.get_channel_or_raise()
+        if channel.windowState is None:
             return None
-        return (
-            self._device.functionalChannels[self._channel].windowState
-            != WindowState.CLOSED
-        )
+        return channel.windowState != WindowState.CLOSED
 
 
 class HomematicipContactInterface(HomematicipMultiContactInterface, BinarySensorEntity):

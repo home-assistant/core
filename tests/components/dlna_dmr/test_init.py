@@ -3,7 +3,7 @@
 from unittest.mock import Mock
 
 from homeassistant.components import media_player
-from homeassistant.components.dlna_dmr.const import DOMAIN as DLNA_DOMAIN
+from homeassistant.components.dlna_dmr.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
@@ -23,7 +23,7 @@ async def test_resource_lifecycle(
     """Test that resources are acquired/released as the entity is setup/unloaded."""
     # Set up the config entry
     config_entry_mock.add_to_hass(hass)
-    assert await async_setup_component(hass, DLNA_DOMAIN, {}) is True
+    assert await async_setup_component(hass, DOMAIN, {}) is True
     await hass.async_block_till_done()
 
     # Check the entity is created and working

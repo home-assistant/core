@@ -12,7 +12,7 @@ from synology_dsm.exceptions import (
     SynologyDSMLoginInvalidException,
     SynologyDSMRequestException,
 )
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.synology_dsm.config_flow import CONF_OTP_CODE
 from homeassistant.components.synology_dsm.const import (
@@ -252,9 +252,7 @@ async def test_user_2sa(
     assert result["step_id"] == "2sa"
 
     # Failed the first time because was too slow to enter the code
-    service_2sa.return_value.login = Mock(
-        side_effect=SynologyDSMLogin2SAFailedException
-    )
+    service_2sa.login = AsyncMock(side_effect=SynologyDSMLogin2SAFailedException)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_OTP_CODE: "000000"}
     )

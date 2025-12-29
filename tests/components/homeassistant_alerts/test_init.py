@@ -21,7 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import ATTR_COMPONENT, async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed, load_fixture
+from tests.common import async_fire_time_changed, async_load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import WebSocketGenerator
 
@@ -108,7 +108,7 @@ async def test_alerts(
     aioclient_mock.clear_requests()
     aioclient_mock.get(
         "https://alerts.home-assistant.io/alerts.json",
-        text=load_fixture("alerts_1.json", "homeassistant_alerts"),
+        text=await async_load_fixture(hass, "alerts_1.json", DOMAIN),
     )
     for alert in expected_alerts:
         stub_alert(aioclient_mock, alert[0])
@@ -159,7 +159,7 @@ async def test_alerts(
                 "breaks_in_ha_version": None,
                 "created": ANY,
                 "dismissed_version": None,
-                "domain": "homeassistant_alerts",
+                "domain": DOMAIN,
                 "ignored": False,
                 "is_fixable": False,
                 "issue_id": f"{alert_id}.markdown_{integration}",
@@ -305,7 +305,7 @@ async def test_alerts_refreshed_on_component_load(
     aioclient_mock.clear_requests()
     aioclient_mock.get(
         "https://alerts.home-assistant.io/alerts.json",
-        text=load_fixture("alerts_1.json", "homeassistant_alerts"),
+        text=await async_load_fixture(hass, "alerts_1.json", DOMAIN),
     )
     for alert in initial_alerts:
         stub_alert(aioclient_mock, alert[0])
@@ -342,7 +342,7 @@ async def test_alerts_refreshed_on_component_load(
                     "breaks_in_ha_version": None,
                     "created": ANY,
                     "dismissed_version": None,
-                    "domain": "homeassistant_alerts",
+                    "domain": DOMAIN,
                     "ignored": False,
                     "is_fixable": False,
                     "issue_id": f"{alert}.markdown_{integration}",
@@ -391,7 +391,7 @@ async def test_alerts_refreshed_on_component_load(
                     "breaks_in_ha_version": None,
                     "created": ANY,
                     "dismissed_version": None,
-                    "domain": "homeassistant_alerts",
+                    "domain": DOMAIN,
                     "ignored": False,
                     "is_fixable": False,
                     "issue_id": f"{alert}.markdown_{integration}",
@@ -438,7 +438,7 @@ async def test_bad_alerts(
     expected_alerts: list[tuple[str, str]],
 ) -> None:
     """Test creating issues based on alerts."""
-    fixture_content = load_fixture(fixture, "homeassistant_alerts")
+    fixture_content = await async_load_fixture(hass, fixture, DOMAIN)
     aioclient_mock.clear_requests()
     aioclient_mock.get(
         "https://alerts.home-assistant.io/alerts.json",
@@ -472,7 +472,7 @@ async def test_bad_alerts(
                 "breaks_in_ha_version": None,
                 "created": ANY,
                 "dismissed_version": None,
-                "domain": "homeassistant_alerts",
+                "domain": DOMAIN,
                 "ignored": False,
                 "is_fixable": False,
                 "issue_id": f"{alert_id}.markdown_{integration}",
@@ -589,7 +589,7 @@ async def test_alerts_change(
     expected_alerts_2: list[tuple[str, str]],
 ) -> None:
     """Test creating issues based on alerts."""
-    fixture_1_content = load_fixture(fixture_1, "homeassistant_alerts")
+    fixture_1_content = await async_load_fixture(hass, fixture_1, DOMAIN)
     aioclient_mock.clear_requests()
     aioclient_mock.get(
         "https://alerts.home-assistant.io/alerts.json",
@@ -633,7 +633,7 @@ async def test_alerts_change(
                 "breaks_in_ha_version": None,
                 "created": ANY,
                 "dismissed_version": None,
-                "domain": "homeassistant_alerts",
+                "domain": DOMAIN,
                 "ignored": False,
                 "is_fixable": False,
                 "issue_id": f"{alert_id}.markdown_{integration}",
@@ -650,7 +650,7 @@ async def test_alerts_change(
         ]
     )
 
-    fixture_2_content = load_fixture(fixture_2, "homeassistant_alerts")
+    fixture_2_content = await async_load_fixture(hass, fixture_2, DOMAIN)
     aioclient_mock.clear_requests()
     aioclient_mock.get(
         "https://alerts.home-assistant.io/alerts.json",
@@ -672,7 +672,7 @@ async def test_alerts_change(
                 "breaks_in_ha_version": None,
                 "created": ANY,
                 "dismissed_version": None,
-                "domain": "homeassistant_alerts",
+                "domain": DOMAIN,
                 "ignored": False,
                 "is_fixable": False,
                 "issue_id": f"{alert_id}.markdown_{integration}",

@@ -60,7 +60,13 @@ def mock_imeon_inverter() -> Generator[MagicMock]:
         inverter.__aenter__.return_value = inverter
         inverter.login.return_value = True
         inverter.get_serial.return_value = TEST_SERIAL
-        inverter.storage = load_json_object_fixture("sensor_data.json", DOMAIN)
+        inverter.inverter = {
+            "inverter": "3.6",
+            "software": "1.0",
+            "serial": TEST_SERIAL,
+            "url": f"http://{TEST_USER_INPUT[CONF_HOST]}",
+        }
+        inverter.storage = load_json_object_fixture("entity_data.json", DOMAIN)
         yield inverter
 
 

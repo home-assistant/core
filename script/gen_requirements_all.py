@@ -21,33 +21,16 @@ from script.hassfest.model import Config, Integration
 # in requirements_all.txt and requirements_test_all.txt.
 EXCLUDED_REQUIREMENTS_ALL = {
     "atenpdu",  # depends on pysnmp which is not maintained at this time
-    "avea",  # depends on bluepy
     "avion",
-    "beacontools",
     "beewi-smartclim",  # depends on bluepy
     "bluepy",
-    "decora",
-    "decora-wifi",
     "evdev",
-    "face-recognition",
-    "pybluez",
-    "pycocotools",
-    "pycups",
-    "python-gammu",
-    "python-lirc",
-    "pyuserinput",
-    "tensorflow",
-    "tf-models-official",
 }
 
 # Requirements excluded by EXCLUDED_REQUIREMENTS_ALL which should be included when
 # building integration wheels for all architectures.
 INCLUDED_REQUIREMENTS_WHEELS = {
-    "decora-wifi",
     "evdev",
-    "pycups",
-    "python-gammu",
-    "pyuserinput",
 }
 
 
@@ -60,24 +43,10 @@ INCLUDED_REQUIREMENTS_WHEELS = {
 OVERRIDDEN_REQUIREMENTS_ACTIONS = {
     "pytest": {
         "exclude": set(),
-        "include": {"python-gammu"},
+        "include": set(),
         "markers": {},
     },
     "wheels_aarch64": {
-        "exclude": set(),
-        "include": INCLUDED_REQUIREMENTS_WHEELS,
-        "markers": {},
-    },
-    # Pandas has issues building on armhf, it is expected they
-    # will drop the platform in the near future (they consider it
-    # "flimsy" on 386). The following packages depend on pandas,
-    # so we comment them out.
-    "wheels_armhf": {
-        "exclude": {"env-canada", "noaa-coops", "pyezviz", "pykrakenapi"},
-        "include": INCLUDED_REQUIREMENTS_WHEELS,
-        "markers": {},
-    },
-    "wheels_armv7": {
         "exclude": set(),
         "include": INCLUDED_REQUIREMENTS_WHEELS,
         "markers": {},
@@ -87,14 +56,7 @@ OVERRIDDEN_REQUIREMENTS_ACTIONS = {
         "include": INCLUDED_REQUIREMENTS_WHEELS,
         "markers": {},
     },
-    "wheels_i386": {
-        "exclude": set(),
-        "include": INCLUDED_REQUIREMENTS_WHEELS,
-        "markers": {},
-    },
 }
-
-IGNORE_PIN = ("colorlog>2.1,<3", "urllib3")
 
 URL_PIN = (
     "https://developers.home-assistant.io/docs/"
@@ -117,9 +79,9 @@ httplib2>=0.19.0
 # gRPC is an implicit dependency that we want to make explicit so we manage
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
-grpcio==1.71.0
-grpcio-status==1.71.0
-grpcio-reflection==1.71.0
+grpcio==1.75.1
+grpcio-status==1.75.1
+grpcio-reflection==1.75.1
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
@@ -139,17 +101,17 @@ uuid==1000000000.0.0
 # these requirements are quite loose. As the entire stack has some outstanding issues, and
 # even newer versions seem to introduce new issues, it's useful for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==4.9.0
-h11==0.14.0
-httpcore==1.0.7
+anyio==4.10.0
+h11==0.16.0
+httpcore==1.0.9
 
 # Ensure we have a hyperframe version that works in Python 3.10
 # 5.2.0 fixed a collections abc deprecation
 hyperframe>=5.2.0
 
 # Ensure we run compatible with musllinux build env
-numpy==2.2.2
-pandas~=2.2.3
+numpy==2.3.2
+pandas==2.3.3
 
 # Constrain multidict to avoid typing issues
 # https://github.com/home-assistant/core/pull/67046
@@ -159,10 +121,10 @@ multidict>=6.0.2
 backoff>=2.0
 
 # ensure pydantic version does not float since it might have breaking changes
-pydantic==2.11.3
+pydantic==2.12.2
 
-# Required for Python 3.12.4 compatibility (#119223).
-mashumaro>=3.13.1
+# Required for Python 3.14.0 compatibility (#119223).
+mashumaro>=3.17.0
 
 # Breaks asyncio
 # https://github.com/pubnub/python/issues/130
@@ -172,24 +134,16 @@ pubnub!=6.4.0
 # https://github.com/dahlia/iso4217/issues/16
 iso4217!=1.10.20220401
 
-# pyOpenSSL 24.0.0 or later required to avoid import errors when
-# cryptography 42.0.0 is installed with botocore
-pyOpenSSL>=24.0.0
-
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
-protobuf==5.29.2
+protobuf==6.32.0
 
 # faust-cchardet: Ensure we have a version we can build wheels
 # 2.1.18 is the first version that works with our wheel builder
 faust-cchardet>=2.1.18
 
-# websockets 13.1 is the first version to fully support the new
-# asyncio implementation. The legacy implementation is now
-# deprecated as of websockets 14.0.
-# https://websockets.readthedocs.io/en/13.0.1/howto/upgrade.html#missing-features
-# https://websockets.readthedocs.io/en/stable/howto/upgrade.html
-websockets>=13.1
+# Prevent accidental fallbacks
+websockets>=15.0.1
 
 # pysnmplib is no longer maintained and does not work with newer
 # python
@@ -206,7 +160,7 @@ poetry==1000000000.0.0
 # We want to skip the binary wheels for the 'charset-normalizer' packages.
 # They are build with mypyc, but causes issues with our wheel builder.
 # In order to do so, we need to constrain the version.
-charset-normalizer==3.4.0
+charset-normalizer==3.4.3
 
 # dacite: Ensure we have a version that is able to handle type unions for
 # NAM, Brother, and GIOS.
@@ -246,11 +200,29 @@ aiofiles>=24.1.0
 # https://github.com/aio-libs/multidict/issues/1134
 # https://github.com/aio-libs/multidict/issues/1131
 multidict>=6.4.2
+
+# Constraint num2words to 0.5.14 as 0.5.15 and 0.5.16 were removed from PyPI
+num2words==0.5.14
+
+# pymodbus does not follow SemVer, and it keeps getting
+# downgraded or upgraded by custom components
+# This ensures all use the same version
+pymodbus==3.11.2
+
+# Some packages don't support gql 4.0.0 yet
+gql<4.0.0
+
+# Pin pytest-rerunfailures to prevent accidental breaks
+pytest-rerunfailures==16.0.1
 """
 
 GENERATED_MESSAGE = (
     f"# Automatically generated by {Path(__file__).name}, do not edit\n\n"
 )
+
+MAP_HOOK_ID_TO_PACKAGE = {
+    "ruff-check": "ruff",
+}
 
 IGNORE_PRE_COMMIT_HOOK_ID = (
     "check-executables-have-shebangs",
@@ -378,6 +350,24 @@ def gather_modules() -> dict[str, list[str]] | None:
     return reqs
 
 
+def gather_entity_platform_requirements() -> set[str]:
+    """Gather all of the requirements from manifests for entity platforms."""
+    config = _get_hassfest_config()
+    integrations = Integration.load_dir(config.core_integrations_path, config)
+    reqs = set()
+    for domain in sorted(integrations):
+        integration = integrations[domain]
+
+        if integration.disabled:
+            continue
+
+        if integration.integration_type != "entity":
+            continue
+
+        reqs.update(gather_recursive_requirements(integration.domain))
+    return reqs
+
+
 def gather_requirements_from_manifests(
     errors: list[str], reqs: dict[str, list[str]]
 ) -> None:
@@ -424,7 +414,7 @@ def process_requirements(
     for req in module_requirements:
         if "://" in req:
             errors.append(f"{package}[Only pypi dependencies are allowed: {req}]")
-        if req.partition("==")[1] == "" and req not in IGNORE_PIN:
+        if req.partition("==")[1] == "":
             errors.append(f"{package}[Please pin requirement {req}, see {URL_PIN}]")
         reqs.setdefault(req, []).append(package)
 
@@ -460,7 +450,12 @@ def requirements_output() -> str:
         "\n",
         "# Home Assistant Core\n",
     ]
-    output.append("\n".join(core_requirements()))
+
+    requirements = set()
+    requirements.update(core_requirements())
+    requirements.update(gather_entity_platform_requirements())
+
+    output.append("\n".join(sorted(requirements, key=lambda key: key.lower())))
     output.append("\n")
 
     return "".join(output)
@@ -526,7 +521,8 @@ def requirements_pre_commit_output() -> str:
         rev: str = repo["rev"]
         for hook in repo["hooks"]:
             if hook["id"] not in IGNORE_PRE_COMMIT_HOOK_ID:
-                reqs.append(f"{hook['id']}=={rev.lstrip('v')}")
+                pkg = MAP_HOOK_ID_TO_PACKAGE.get(hook["id"]) or hook["id"]
+                reqs.append(f"{pkg}=={rev.lstrip('v')}")
                 reqs.extend(x for x in hook.get("additional_dependencies", ()))
     output = [
         f"# Automatically generated "

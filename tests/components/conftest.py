@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator, Callable, Generator
+from collections.abc import AsyncGenerator, Callable, Coroutine, Generator, Mapping
 from functools import lru_cache
 from importlib.util import find_spec
 from pathlib import Path
@@ -14,10 +14,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohasupervisor.models import (
     Discovery,
+    GreenInfo,
+    JobsInfo,
     Repository,
     ResolutionInfo,
     StoreAddon,
     StoreInfo,
+    YellowInfo,
 )
 import pytest
 import voluptuous as vol
@@ -31,7 +34,17 @@ from homeassistant.config_entries import (
     OptionsFlowManager,
 )
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.core import Context, HomeAssistant, ServiceRegistry, ServiceResponse
+from homeassistant.core import (
+    Context,
+    EntityServiceResponse,
+    HassJobType,
+    HomeAssistant,
+    ServiceCall,
+    ServiceRegistry,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
 from homeassistant.data_entry_flow import (
     FlowContext,
     FlowHandler,
@@ -42,6 +55,7 @@ from homeassistant.data_entry_flow import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.translation import async_get_translations
+from homeassistant.helpers.typing import VolSchemaType
 from homeassistant.util import yaml as yaml_util
 
 from tests.common import QualityScaleStatus, get_quality_scale
@@ -98,8 +112,9 @@ def entity_registry_enabled_by_default() -> Generator[None]:
 @pytest.fixture(name="stub_blueprint_populate")
 def stub_blueprint_populate_fixture() -> Generator[None]:
     """Stub copying the blueprints to the config folder."""
-    # pylint: disable-next=import-outside-toplevel
-    from .blueprint.common import stub_blueprint_populate_fixture_helper
+    from .blueprint.common import (  # noqa: PLC0415
+        stub_blueprint_populate_fixture_helper,
+    )
 
     yield from stub_blueprint_populate_fixture_helper()
 
@@ -108,8 +123,7 @@ def stub_blueprint_populate_fixture() -> Generator[None]:
 @pytest.fixture(name="mock_tts_get_cache_files")
 def mock_tts_get_cache_files_fixture() -> Generator[MagicMock]:
     """Mock the list TTS cache function."""
-    # pylint: disable-next=import-outside-toplevel
-    from .tts.common import mock_tts_get_cache_files_fixture_helper
+    from .tts.common import mock_tts_get_cache_files_fixture_helper  # noqa: PLC0415
 
     yield from mock_tts_get_cache_files_fixture_helper()
 
@@ -119,8 +133,7 @@ def mock_tts_init_cache_dir_fixture(
     init_tts_cache_dir_side_effect: Any,
 ) -> Generator[MagicMock]:
     """Mock the TTS cache dir in memory."""
-    # pylint: disable-next=import-outside-toplevel
-    from .tts.common import mock_tts_init_cache_dir_fixture_helper
+    from .tts.common import mock_tts_init_cache_dir_fixture_helper  # noqa: PLC0415
 
     yield from mock_tts_init_cache_dir_fixture_helper(init_tts_cache_dir_side_effect)
 
@@ -128,8 +141,9 @@ def mock_tts_init_cache_dir_fixture(
 @pytest.fixture(name="init_tts_cache_dir_side_effect")
 def init_tts_cache_dir_side_effect_fixture() -> Any:
     """Return the cache dir."""
-    # pylint: disable-next=import-outside-toplevel
-    from .tts.common import init_tts_cache_dir_side_effect_fixture_helper
+    from .tts.common import (  # noqa: PLC0415
+        init_tts_cache_dir_side_effect_fixture_helper,
+    )
 
     return init_tts_cache_dir_side_effect_fixture_helper()
 
@@ -142,8 +156,7 @@ def mock_tts_cache_dir_fixture(
     request: pytest.FixtureRequest,
 ) -> Generator[Path]:
     """Mock the TTS cache dir with empty dir."""
-    # pylint: disable-next=import-outside-toplevel
-    from .tts.common import mock_tts_cache_dir_fixture_helper
+    from .tts.common import mock_tts_cache_dir_fixture_helper  # noqa: PLC0415
 
     yield from mock_tts_cache_dir_fixture_helper(
         tmp_path, mock_tts_init_cache_dir, mock_tts_get_cache_files, request
@@ -153,8 +166,7 @@ def mock_tts_cache_dir_fixture(
 @pytest.fixture(name="tts_mutagen_mock")
 def tts_mutagen_mock_fixture() -> Generator[MagicMock]:
     """Mock writing tags."""
-    # pylint: disable-next=import-outside-toplevel
-    from .tts.common import tts_mutagen_mock_fixture_helper
+    from .tts.common import tts_mutagen_mock_fixture_helper  # noqa: PLC0415
 
     yield from tts_mutagen_mock_fixture_helper()
 
@@ -162,8 +174,9 @@ def tts_mutagen_mock_fixture() -> Generator[MagicMock]:
 @pytest.fixture(name="mock_conversation_agent")
 def mock_conversation_agent_fixture(hass: HomeAssistant) -> MockAgent:
     """Mock a conversation agent."""
-    # pylint: disable-next=import-outside-toplevel
-    from .conversation.common import mock_conversation_agent_fixture_helper
+    from .conversation.common import (  # noqa: PLC0415
+        mock_conversation_agent_fixture_helper,
+    )
 
     return mock_conversation_agent_fixture_helper(hass)
 
@@ -180,8 +193,7 @@ def prevent_ffmpeg_subprocess() -> Generator[None]:
 @pytest.fixture
 def mock_light_entities() -> list[MockLight]:
     """Return mocked light entities."""
-    # pylint: disable-next=import-outside-toplevel
-    from .light.common import MockLight
+    from .light.common import MockLight  # noqa: PLC0415
 
     return [
         MockLight("Ceiling", STATE_ON),
@@ -193,8 +205,7 @@ def mock_light_entities() -> list[MockLight]:
 @pytest.fixture
 def mock_sensor_entities() -> dict[str, MockSensor]:
     """Return mocked sensor entities."""
-    # pylint: disable-next=import-outside-toplevel
-    from .sensor.common import get_mock_sensor_entities
+    from .sensor.common import get_mock_sensor_entities  # noqa: PLC0415
 
     return get_mock_sensor_entities()
 
@@ -202,8 +213,7 @@ def mock_sensor_entities() -> dict[str, MockSensor]:
 @pytest.fixture
 def mock_switch_entities() -> list[MockSwitch]:
     """Return mocked toggle entities."""
-    # pylint: disable-next=import-outside-toplevel
-    from .switch.common import get_mock_switch_entities
+    from .switch.common import get_mock_switch_entities  # noqa: PLC0415
 
     return get_mock_switch_entities()
 
@@ -211,8 +221,7 @@ def mock_switch_entities() -> list[MockSwitch]:
 @pytest.fixture
 def mock_legacy_device_scanner() -> MockScanner:
     """Return mocked legacy device scanner entity."""
-    # pylint: disable-next=import-outside-toplevel
-    from .device_tracker.common import MockScanner
+    from .device_tracker.common import MockScanner  # noqa: PLC0415
 
     return MockScanner()
 
@@ -220,8 +229,7 @@ def mock_legacy_device_scanner() -> MockScanner:
 @pytest.fixture
 def mock_legacy_device_tracker_setup() -> Callable[[HomeAssistant, MockScanner], None]:
     """Return setup callable for legacy device tracker setup."""
-    # pylint: disable-next=import-outside-toplevel
-    from .device_tracker.common import mock_legacy_device_tracker_setup
+    from .device_tracker.common import mock_legacy_device_tracker_setup  # noqa: PLC0415
 
     return mock_legacy_device_tracker_setup
 
@@ -231,8 +239,7 @@ def addon_manager_fixture(
     hass: HomeAssistant, supervisor_client: AsyncMock
 ) -> AddonManager:
     """Return an AddonManager instance."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_addon_manager
+    from .hassio.common import mock_addon_manager  # noqa: PLC0415
 
     return mock_addon_manager(hass)
 
@@ -288,8 +295,7 @@ def addon_store_info_fixture(
     addon_store_info_side_effect: Any | None,
 ) -> AsyncMock:
     """Mock Supervisor add-on store info."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_addon_store_info
+    from .hassio.common import mock_addon_store_info  # noqa: PLC0415
 
     return mock_addon_store_info(supervisor_client, addon_store_info_side_effect)
 
@@ -305,8 +311,7 @@ def addon_info_fixture(
     supervisor_client: AsyncMock, addon_info_side_effect: Any | None
 ) -> AsyncMock:
     """Mock Supervisor add-on info."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_addon_info
+    from .hassio.common import mock_addon_info  # noqa: PLC0415
 
     return mock_addon_info(supervisor_client, addon_info_side_effect)
 
@@ -316,8 +321,7 @@ def addon_not_installed_fixture(
     addon_store_info: AsyncMock, addon_info: AsyncMock
 ) -> AsyncMock:
     """Mock add-on not installed."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_addon_not_installed
+    from .hassio.common import mock_addon_not_installed  # noqa: PLC0415
 
     return mock_addon_not_installed(addon_store_info, addon_info)
 
@@ -327,8 +331,7 @@ def addon_installed_fixture(
     addon_store_info: AsyncMock, addon_info: AsyncMock
 ) -> AsyncMock:
     """Mock add-on already installed but not running."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_addon_installed
+    from .hassio.common import mock_addon_installed  # noqa: PLC0415
 
     return mock_addon_installed(addon_store_info, addon_info)
 
@@ -338,8 +341,7 @@ def addon_running_fixture(
     addon_store_info: AsyncMock, addon_info: AsyncMock
 ) -> AsyncMock:
     """Mock add-on already running."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_addon_running
+    from .hassio.common import mock_addon_running  # noqa: PLC0415
 
     return mock_addon_running(addon_store_info, addon_info)
 
@@ -350,8 +352,7 @@ def install_addon_side_effect_fixture(
 ) -> Any | None:
     """Return the install add-on side effect."""
 
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_install_addon_side_effect
+    from .hassio.common import mock_install_addon_side_effect  # noqa: PLC0415
 
     return mock_install_addon_side_effect(addon_store_info, addon_info)
 
@@ -371,8 +372,7 @@ def start_addon_side_effect_fixture(
     addon_store_info: AsyncMock, addon_info: AsyncMock
 ) -> Any | None:
     """Return the start add-on options side effect."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_start_addon_side_effect
+    from .hassio.common import mock_start_addon_side_effect  # noqa: PLC0415
 
     return mock_start_addon_side_effect(addon_store_info, addon_info)
 
@@ -419,8 +419,7 @@ def set_addon_options_side_effect_fixture(
     addon_options: dict[str, Any],
 ) -> Any | None:
     """Return the set add-on options side effect."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_set_addon_options_side_effect
+    from .hassio.common import mock_set_addon_options_side_effect  # noqa: PLC0415
 
     return mock_set_addon_options_side_effect(addon_options)
 
@@ -444,12 +443,9 @@ def uninstall_addon_fixture(supervisor_client: AsyncMock) -> AsyncMock:
 
 
 @pytest.fixture(name="create_backup")
-def create_backup_fixture() -> Generator[AsyncMock]:
+def create_backup_fixture(supervisor_client: AsyncMock) -> AsyncMock:
     """Mock create backup."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_create_backup
-
-    yield from mock_create_backup()
+    return supervisor_client.backups.partial_backup
 
 
 @pytest.fixture(name="update_addon")
@@ -486,8 +482,7 @@ def store_info_fixture(
 @pytest.fixture(name="addon_stats")
 def addon_stats_fixture(supervisor_client: AsyncMock) -> AsyncMock:
     """Mock addon stats info."""
-    # pylint: disable-next=import-outside-toplevel
-    from .hassio.common import mock_addon_stats
+    from .hassio.common import mock_addon_stats  # noqa: PLC0415
 
     return mock_addon_stats(supervisor_client)
 
@@ -526,6 +521,31 @@ def resolution_suggestions_for_issue_fixture(supervisor_client: AsyncMock) -> As
     return supervisor_client.resolution.suggestions_for_issue
 
 
+@pytest.fixture(name="jobs_info")
+def jobs_info_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock jobs info from supervisor."""
+    supervisor_client.jobs.info.return_value = JobsInfo(ignore_conditions=[], jobs=[])
+    return supervisor_client.jobs.info
+
+
+@pytest.fixture(name="os_yellow_info")
+def os_yellow_info_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock yellow info API from supervisor OS."""
+    supervisor_client.os.yellow_info.return_value = YellowInfo(
+        disk_led=True, heartbeat_led=True, power_led=True
+    )
+    return supervisor_client.os.yellow_info
+
+
+@pytest.fixture(name="os_green_info")
+def os_green_info_fixture(supervisor_client: AsyncMock) -> AsyncMock:
+    """Mock green info API from supervisor OS."""
+    supervisor_client.os.green_info.return_value = GreenInfo(
+        activity_led=True, power_led=True, system_health_led=True
+    )
+    return supervisor_client.os.green_info
+
+
 @pytest.fixture(name="supervisor_client")
 def supervisor_client() -> Generator[AsyncMock]:
     """Mock the supervisor client."""
@@ -538,6 +558,7 @@ def supervisor_client() -> Generator[AsyncMock]:
     supervisor_client.homeassistant = AsyncMock()
     supervisor_client.host = AsyncMock()
     supervisor_client.jobs = AsyncMock()
+    supervisor_client.jobs.info.return_value = MagicMock()
     supervisor_client.mounts.info.return_value = mounts_info_mock
     supervisor_client.os = AsyncMock()
     supervisor_client.resolution = AsyncMock()
@@ -569,6 +590,10 @@ def supervisor_client() -> Generator[AsyncMock]:
         ),
         patch(
             "homeassistant.components.hassio.issues.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+        patch(
+            "homeassistant.components.hassio.jobs.get_supervisor_client",
             return_value=supervisor_client,
         ),
         patch(
@@ -610,7 +635,7 @@ async def _validate_translation(
     category: str,
     component: str,
     key: str,
-    description_placeholders: dict[str, str] | None,
+    description_placeholders: Mapping[str, str] | None,
     *,
     translation_required: bool = True,
 ) -> None:
@@ -635,6 +660,13 @@ async def _validate_translation(
 
     translations = await async_get_translations(hass, "en", category, [component])
 
+    if full_key.endswith("."):
+        for subkey, translation in translations.items():
+            if subkey.startswith(full_key):
+                _validate_translation_placeholders(
+                    subkey, translation, description_placeholders, translation_errors
+                )
+        return
     if (translation := translations.get(full_key)) is not None:
         _validate_translation_placeholders(
             full_key, translation, description_placeholders, translation_errors
@@ -779,6 +811,7 @@ async def _check_config_flow_result_translations(
         return
 
     key_prefix = ""
+    description_placeholders = result.get("description_placeholders")
     if isinstance(manager, ConfigEntriesFlowManager):
         category = "config"
         integration = flow.handler
@@ -791,6 +824,12 @@ async def _check_config_flow_result_translations(
         issue_id = flow.issue_id
         issue = ir.async_get(flow.hass).async_get_issue(integration, issue_id)
         key_prefix = f"{issue.translation_key}.fix_flow."
+        description_placeholders = {
+            # Both are used in issue translations, and description_placeholders
+            # takes precedence over translation_placeholders
+            **(issue.translation_placeholders or {}),
+            **(description_placeholders or {}),
+        }
     else:
         return
 
@@ -806,7 +845,7 @@ async def _check_config_flow_result_translations(
                 category,
                 integration,
                 f"{key_prefix}step.{step_id}",
-                result["description_placeholders"],
+                description_placeholders,
                 result["data_schema"],
                 ignore_translations_for_mock_domains,
             )
@@ -820,7 +859,7 @@ async def _check_config_flow_result_translations(
                     category,
                     integration,
                     f"{key_prefix}error.{error}",
-                    result["description_placeholders"],
+                    description_placeholders,
                 )
         return
 
@@ -836,7 +875,7 @@ async def _check_config_flow_result_translations(
             category,
             integration,
             f"{key_prefix}abort.{result['reason']}",
-            result["description_placeholders"],
+            description_placeholders,
         )
 
 
@@ -907,6 +946,27 @@ async def _check_exception_translation(
     )
 
 
+async def _check_service_registration_translation(
+    hass: HomeAssistant,
+    domain: str,
+    service_name: str,
+    description_placeholders: Mapping[str, str] | None,
+    translation_errors: dict[str, str],
+    ignore_translations_for_mock_domains: set[str],
+) -> None:
+    # Use trailing . to check all subkeys
+    # This validates placeholders only, and only if the translation exists
+    await _validate_translation(
+        hass,
+        translation_errors,
+        ignore_translations_for_mock_domains,
+        "services",
+        domain,
+        f"{service_name}.",
+        description_placeholders,
+    )
+
+
 @pytest.fixture(autouse=True)
 async def check_translations(
     ignore_missing_translations: str | list[str],
@@ -937,6 +997,7 @@ async def check_translations(
     _original_flow_manager_async_handle_step = FlowManager._async_handle_step
     _original_issue_registry_async_create_issue = ir.IssueRegistry.async_get_or_create
     _original_service_registry_async_call = ServiceRegistry.async_call
+    _original_service_registry_async_register = ServiceRegistry.async_register
 
     # Prepare override functions
     async def _flow_manager_async_handle_step(
@@ -950,7 +1011,7 @@ async def check_translations(
 
     def _issue_registry_async_create_issue(
         self: ir.IssueRegistry, domain: str, issue_id: str, *args, **kwargs
-    ) -> None:
+    ) -> ir.IssueEntry:
         result = _original_issue_registry_async_create_issue(
             self, domain, issue_id, *args, **kwargs
         )
@@ -994,6 +1055,45 @@ async def check_translations(
             )
             raise
 
+    @callback
+    def _service_registry_async_register(
+        self: ServiceRegistry,
+        domain: str,
+        service: str,
+        service_func: Callable[
+            [ServiceCall],
+            Coroutine[Any, Any, ServiceResponse | EntityServiceResponse]
+            | ServiceResponse
+            | EntityServiceResponse
+            | None,
+        ],
+        schema: VolSchemaType | None = None,
+        supports_response: SupportsResponse = SupportsResponse.NONE,
+        job_type: HassJobType | None = None,
+        *,
+        description_placeholders: Mapping[str, str] | None = None,
+    ) -> None:
+        translation_coros.add(
+            _check_service_registration_translation(
+                self._hass,
+                domain,
+                service,
+                description_placeholders,
+                translation_errors,
+                ignored_domains,
+            )
+        )
+        _original_service_registry_async_register(
+            self,
+            domain,
+            service,
+            service_func,
+            schema,
+            supports_response,
+            job_type,
+            description_placeholders=description_placeholders,
+        )
+
     # Use override functions
     with (
         patch(
@@ -1007,6 +1107,10 @@ async def check_translations(
         patch(
             "homeassistant.core.ServiceRegistry.async_call",
             _service_registry_async_call,
+        ),
+        patch(
+            "homeassistant.core.ServiceRegistry.async_register",
+            _service_registry_async_register,
         ),
     ):
         yield

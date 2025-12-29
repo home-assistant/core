@@ -24,8 +24,10 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Google Mail platform."""
+    """Set up the Google Mail integration."""
     hass.data.setdefault(DOMAIN, {})[DATA_HASS_CONFIG] = config
+
+    async_setup_services(hass)
 
     return True
 
@@ -52,15 +54,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoogleMailConfigEntry) -
         entry, [platform for platform in PLATFORMS if platform != Platform.NOTIFY]
     )
 
-    await async_setup_services(hass)
-
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: GoogleMailConfigEntry) -> bool:
     """Unload a config entry."""
-    if not hass.config_entries.async_loaded_entries(DOMAIN):
-        for service_name in hass.services.async_services_for_domain(DOMAIN):
-            hass.services.async_remove(DOMAIN, service_name)
-
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

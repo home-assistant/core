@@ -2,9 +2,13 @@
 
 from unittest.mock import AsyncMock, patch
 
+from aiocomelit.api import ComelitSerialBridgeObject
+from aiocomelit.const import LIGHT, WATT
+from freezegun.api import FrozenDateTimeFactory
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.comelit.const import SCAN_INTERVAL
 from homeassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,
     SERVICE_TOGGLE,
@@ -17,7 +21,7 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = "light.light0"
 
@@ -74,3 +78,53 @@ async def test_light_set_state(
 
     assert (state := hass.states.get(ENTITY_ID))
     assert state.state == status
+
+
+async def test_light_dynamic(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_serial_bridge: AsyncMock,
+    mock_serial_bridge_config_entry: MockConfigEntry,
+) -> None:
+    """Test light dynamically added."""
+
+    mock_serial_bridge.reset_mock()
+    await setup_integration(hass, mock_serial_bridge_config_entry)
+
+    assert hass.states.get(ENTITY_ID)
+
+    entity_id_2 = "light.light1"
+
+    mock_serial_bridge.get_all_devices.return_value[LIGHT] = {
+        0: ComelitSerialBridgeObject(
+            index=0,
+            name="Light0",
+            status=0,
+            human_status="stopped",
+            type="light",
+            val=0,
+            protected=0,
+            zone="Open space",
+            power=0.0,
+            power_unit=WATT,
+        ),
+        1: ComelitSerialBridgeObject(
+            index=1,
+            name="Light1",
+            status=0,
+            human_status="stopped",
+            type="light",
+            val=0,
+            protected=0,
+            zone="Open space",
+            power=0.0,
+            power_unit=WATT,
+        ),
+    }
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID)
+    assert hass.states.get(entity_id_2)

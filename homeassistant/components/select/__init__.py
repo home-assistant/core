@@ -127,7 +127,7 @@ class SelectEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _entity_component_unrecorded_attributes = frozenset({ATTR_OPTIONS})
 
     entity_description: SelectEntityDescription
-    _attr_current_option: str | None
+    _attr_current_option: str | None = None
     _attr_options: list[str]
     _attr_state: None = None
 

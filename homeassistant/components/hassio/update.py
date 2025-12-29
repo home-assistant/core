@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from aiohasupervisor import SupervisorError
+from aiohasupervisor.models import Job
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 
 from homeassistant.components.update import (
@@ -14,14 +16,13 @@ from homeassistant.components.update import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ICON, ATTR_NAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     ADDONS_COORDINATOR,
     ATTR_AUTO_UPDATE,
-    ATTR_CHANGELOG,
     ATTR_VERSION,
     ATTR_VERSION_LATEST,
     DATA_KEY_ADDONS,
@@ -35,6 +36,7 @@ from .entity import (
     HassioOSEntity,
     HassioSupervisorEntity,
 )
+from .jobs import JobSubscription
 from .update_helper import update_addon, update_core, update_os
 
 ENTITY_DESCRIPTION = UpdateEntityDescription(
@@ -89,6 +91,7 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
         UpdateEntityFeature.INSTALL
         | UpdateEntityFeature.BACKUP
         | UpdateEntityFeature.RELEASE_NOTES
+        | UpdateEntityFeature.PROGRESS
     )
 
     @property
@@ -117,11 +120,6 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
         return self._addon_data[ATTR_VERSION]
 
     @property
-    def release_summary(self) -> str | None:
-        """Release summary for the add-on."""
-        return self._strip_release_notes()
-
-    @property
     def entity_picture(self) -> str | None:
         """Return the icon of the add-on if any."""
         if not self.available:
@@ -130,27 +128,22 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
             return f"/api/hassio/addons/{self._addon_slug}/icon"
         return None
 
-    def _strip_release_notes(self) -> str | None:
-        """Strip the release notes to contain the needed sections."""
-        if (notes := self._addon_data[ATTR_CHANGELOG]) is None:
-            return None
-
-        if (
-            f"# {self.latest_version}" in notes
-            and f"# {self.installed_version}" in notes
-        ):
-            # Split the release notes to only what is between the versions if we can
-            new_notes = notes.split(f"# {self.installed_version}")[0]
-            if f"# {self.latest_version}" in new_notes:
-                # Make sure the latest version is still there.
-                # This can be False if the order of the release notes are not correct
-                # In that case we just return the whole release notes
-                return new_notes
-        return notes
-
     async def async_release_notes(self) -> str | None:
         """Return the release notes for the update."""
-        return self._strip_release_notes()
+        if (
+            changelog := await self.coordinator.get_changelog(self._addon_slug)
+        ) is None:
+            return None
+
+        if self.latest_version is None or self.installed_version is None:
+            return changelog
+
+        regex_pattern = re.compile(
+            rf"^#* {re.escape(self.latest_version)}\n(?:^(?!#* {re.escape(self.installed_version)}).*\n)*",
+            re.MULTILINE,
+        )
+        match = regex_pattern.search(changelog)
+        return match.group(0) if match else changelog
 
     async def async_install(
         self,
@@ -162,7 +155,31 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
         await update_addon(
             self.hass, self._addon_slug, backup, self.title, self.installed_version
         )
-        await self.coordinator.force_info_update_supervisor()
+        await self.coordinator.async_refresh()
+
+    @callback
+    def _update_job_changed(self, job: Job) -> None:
+        """Process update for this entity's update job."""
+        if job.done is False:
+            self._attr_in_progress = True
+            self._attr_update_percentage = job.progress
+        else:
+            self._attr_in_progress = False
+            self._attr_update_percentage = None
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to progress updates."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.coordinator.jobs.subscribe(
+                JobSubscription(
+                    self._update_job_changed,
+                    name="addon_manager_update",
+                    reference=self._addon_slug,
+                )
+            )
+        )
 
 
 class SupervisorOSUpdateEntity(HassioOSEntity, UpdateEntity):
@@ -260,6 +277,7 @@ class SupervisorCoreUpdateEntity(HassioCoreEntity, UpdateEntity):
         UpdateEntityFeature.INSTALL
         | UpdateEntityFeature.SPECIFIC_VERSION
         | UpdateEntityFeature.BACKUP
+        | UpdateEntityFeature.PROGRESS
     )
     _attr_title = "Home Assistant Core"
 
@@ -291,3 +309,25 @@ class SupervisorCoreUpdateEntity(HassioCoreEntity, UpdateEntity):
     ) -> None:
         """Install an update."""
         await update_core(self.hass, version, backup)
+
+    @callback
+    def _update_job_changed(self, job: Job) -> None:
+        """Process update for this entity's update job."""
+        if job.done is False:
+            self._attr_in_progress = True
+            self._attr_update_percentage = job.progress
+        else:
+            self._attr_in_progress = False
+            self._attr_update_percentage = None
+        self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to progress updates."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.coordinator.jobs.subscribe(
+                JobSubscription(
+                    self._update_job_changed, name="home_assistant_core_update"
+                )
+            )
+        )

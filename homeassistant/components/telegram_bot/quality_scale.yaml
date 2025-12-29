@@ -1,0 +1,83 @@
+rules:
+  # Bronze
+  action-setup: done
+  appropriate-polling:
+    status: exempt
+    comment: |
+      The integration provides webhooks (push based), polling (long polling) and broadcast (no data fetching) platforms which do not have interval polling.
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: |
+      The integration does not provide any entities.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable:
+    status: exempt
+    comment: |
+      There are no entities that fetch data.
+  integration-owner: done
+  log-when-unavailable:
+    status: exempt
+    comment: |
+      There are no entities that fetch data.
+  parallel-updates:
+    status: exempt
+    comment: |
+      There are no entities that fetch data.
+  reauthentication-flow: done
+  test-coverage: done
+
+  # Gold
+  devices: todo
+  diagnostics: done
+  discovery-update-info:
+    status: exempt
+    comment: the service cannot be discovered
+  discovery:
+    status: exempt
+    comment: the service cannot be discovered
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: done
+  docs-supported-devices:
+    status: exempt
+    comment: the integration is a service
+  docs-supported-functions: todo
+  docs-troubleshooting: done
+  docs-use-cases: todo
+  dynamic-devices: todo
+  entity-category: todo
+  entity-device-class: todo
+  entity-disabled-by-default: todo
+  entity-translations: todo
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow: done
+  repair-issues: todo
+  stale-devices:
+    status: exempt
+    comment: only one device per entry, is deleted with the entry.
+
+  # Platinum
+  async-dependency: todo
+  inject-websession: todo
+  strict-typing: done

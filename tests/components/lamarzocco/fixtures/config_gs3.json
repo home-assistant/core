@@ -25,7 +25,7 @@
           "status": "StandBy",
           "startTime": 1742857195332
         },
-        "brewingStartTime": null
+        "brewingStartTime": 1746641060000
       },
       "tutorialUrl": null
     },
@@ -299,7 +299,7 @@
       "code": "CMBackFlush",
       "index": 1,
       "output": {
-        "lastCleaningStartTime": null,
+        "lastCleaningStartTime": 1743236747166,
         "status": "Off"
       },
       "tutorialUrl": "http://lamarzocco.com/it/en/app/support/cleaning-and-backflush/#gs3-av"

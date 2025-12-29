@@ -58,7 +58,10 @@ from homeassistant.const import (
 from homeassistant.helpers import network
 from homeassistant.util import color as color_util, dt as dt_util
 from homeassistant.util.decorator import Registry
-from homeassistant.util.unit_conversion import TemperatureConverter
+from homeassistant.util.unit_conversion import (
+    TemperatureConverter,
+    TemperatureDeltaConverter,
+)
 
 from .config import AbstractConfig
 from .const import (
@@ -566,7 +569,7 @@ async def async_api_set_volume(
 
     data: dict[str, Any] = {
         ATTR_ENTITY_ID: entity.entity_id,
-        media_player.const.ATTR_MEDIA_VOLUME_LEVEL: volume,
+        media_player.ATTR_MEDIA_VOLUME_LEVEL: volume,
     }
 
     await hass.services.async_call(
@@ -589,7 +592,7 @@ async def async_api_select_input(
 
     # Attempt to map the ALL UPPERCASE payload name to a source.
     # Strips trailing 1 to match single input devices.
-    source_list = entity.attributes.get(media_player.const.ATTR_INPUT_SOURCE_LIST) or []
+    source_list = entity.attributes.get(media_player.ATTR_INPUT_SOURCE_LIST) or []
     for source in source_list:
         formatted_source = (
             source.lower().replace("-", "").replace("_", "").replace(" ", "")
@@ -611,7 +614,7 @@ async def async_api_select_input(
 
     data: dict[str, Any] = {
         ATTR_ENTITY_ID: entity.entity_id,
-        media_player.const.ATTR_INPUT_SOURCE: media_input,
+        media_player.ATTR_INPUT_SOURCE: media_input,
     }
 
     await hass.services.async_call(
@@ -636,7 +639,7 @@ async def async_api_adjust_volume(
     volume_delta = int(directive.payload["volume"])
 
     entity = directive.entity
-    current_level = entity.attributes[media_player.const.ATTR_MEDIA_VOLUME_LEVEL]
+    current_level = entity.attributes[media_player.ATTR_MEDIA_VOLUME_LEVEL]
 
     # read current state
     try:
@@ -648,7 +651,7 @@ async def async_api_adjust_volume(
 
     data: dict[str, Any] = {
         ATTR_ENTITY_ID: entity.entity_id,
-        media_player.const.ATTR_MEDIA_VOLUME_LEVEL: volume,
+        media_player.ATTR_MEDIA_VOLUME_LEVEL: volume,
     }
 
     await hass.services.async_call(
@@ -709,7 +712,7 @@ async def async_api_set_mute(
     entity = directive.entity
     data: dict[str, Any] = {
         ATTR_ENTITY_ID: entity.entity_id,
-        media_player.const.ATTR_MEDIA_VOLUME_MUTED: mute,
+        media_player.ATTR_MEDIA_VOLUME_MUTED: mute,
     }
 
     await hass.services.async_call(
@@ -844,7 +847,7 @@ def temperature_from_object(
         temp -= 273.15
 
     if interval:
-        return TemperatureConverter.convert_interval(temp, from_unit, to_unit)
+        return TemperatureDeltaConverter.convert(temp, from_unit, to_unit)
     return TemperatureConverter.convert(temp, from_unit, to_unit)
 
 
@@ -1261,9 +1264,9 @@ async def async_api_set_mode(
     elif instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":
         position = mode.split(".")[1]
 
-        if position == cover.STATE_CLOSED:
+        if position == cover.CoverState.CLOSED:
             service = cover.SERVICE_CLOSE_COVER
-        elif position == cover.STATE_OPEN:
+        elif position == cover.CoverState.OPEN:
             service = cover.SERVICE_OPEN_COVER
         elif position == "custom":
             service = cover.SERVICE_STOP_COVER
@@ -1708,15 +1711,13 @@ async def async_api_changechannel(
 
     data: dict[str, Any] = {
         ATTR_ENTITY_ID: entity.entity_id,
-        media_player.const.ATTR_MEDIA_CONTENT_ID: channel,
-        media_player.const.ATTR_MEDIA_CONTENT_TYPE: (
-            media_player.const.MEDIA_TYPE_CHANNEL
-        ),
+        media_player.ATTR_MEDIA_CONTENT_ID: channel,
+        media_player.ATTR_MEDIA_CONTENT_TYPE: (media_player.MediaType.CHANNEL),
     }
 
     await hass.services.async_call(
         entity.domain,
-        media_player.const.SERVICE_PLAY_MEDIA,
+        media_player.SERVICE_PLAY_MEDIA,
         data,
         blocking=False,
         context=context,
@@ -1825,13 +1826,13 @@ async def async_api_set_eq_mode(
     context: ha.Context,
 ) -> AlexaResponse:
     """Process a SetMode request for EqualizerController."""
-    mode = directive.payload["mode"]
+    mode: str = directive.payload["mode"]
     entity = directive.entity
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
 
-    sound_mode_list = entity.attributes.get(media_player.const.ATTR_SOUND_MODE_LIST)
+    sound_mode_list = entity.attributes.get(media_player.ATTR_SOUND_MODE_LIST)
     if sound_mode_list and mode.lower() in sound_mode_list:
-        data[media_player.const.ATTR_SOUND_MODE] = mode.lower()
+        data[media_player.ATTR_SOUND_MODE] = mode.lower()
     else:
         msg = f"failed to map sound mode {mode} to a mode on {entity.entity_id}"
         raise AlexaInvalidValueError(msg)

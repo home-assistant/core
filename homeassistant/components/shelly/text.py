@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Final
+from typing import Final
 
 from aioshelly.const import RPC_GENERATIONS
 
@@ -12,20 +12,26 @@ from homeassistant.components.text import (
     TextEntity,
     TextEntityDescription,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import ShellyConfigEntry
+from .const import ROLE_GENERIC
+from .coordinator import ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
     RpcEntityDescription,
     ShellyRpcAttributeEntity,
     async_setup_entry_rpc,
+    rpc_call,
 )
 from .utils import (
     async_remove_orphaned_entities,
     get_device_entry_gen,
+    get_rpc_channel_name,
     get_virtual_component_ids,
+    is_view_for_platform,
 )
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -34,10 +40,13 @@ class RpcTextDescription(RpcEntityDescription, TextEntityDescription):
 
 
 RPC_TEXT_ENTITIES: Final = {
-    "text": RpcTextDescription(
+    "text_generic": RpcTextDescription(
         key="text",
         sub_key="value",
-        has_entity_name=True,
+        removal_condition=lambda config, _status, key: not is_view_for_platform(
+            config, key, TEXT_PLATFORM
+        ),
+        role=ROLE_GENERIC,
     ),
 }
 
@@ -47,43 +56,66 @@ async def async_setup_entry(
     config_entry: ShellyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up sensors for device."""
+    """Set up text entities."""
     if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
-        coordinator = config_entry.runtime_data.rpc
-        assert coordinator
+        return _async_setup_rpc_entry(hass, config_entry, async_add_entities)
 
-        async_setup_entry_rpc(
-            hass, config_entry, async_add_entities, RPC_TEXT_ENTITIES, RpcText
-        )
+    return None
 
-        # the user can remove virtual components from the device configuration, so
-        # we need to remove orphaned entities
-        virtual_text_ids = get_virtual_component_ids(
-            coordinator.device.config, TEXT_PLATFORM
-        )
-        async_remove_orphaned_entities(
-            hass,
-            config_entry.entry_id,
-            coordinator.mac,
-            TEXT_PLATFORM,
-            virtual_text_ids,
-            "text",
-        )
+
+@callback
+def _async_setup_rpc_entry(
+    hass: HomeAssistant,
+    config_entry: ShellyConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up entities for RPC device."""
+    coordinator = config_entry.runtime_data.rpc
+    assert coordinator
+
+    async_setup_entry_rpc(
+        hass, config_entry, async_add_entities, RPC_TEXT_ENTITIES, RpcText
+    )
+
+    # the user can remove virtual components from the device configuration, so
+    # we need to remove orphaned entities
+    virtual_text_ids = get_virtual_component_ids(
+        coordinator.device.config, TEXT_PLATFORM
+    )
+    async_remove_orphaned_entities(
+        hass,
+        config_entry.entry_id,
+        coordinator.mac,
+        TEXT_PLATFORM,
+        virtual_text_ids,
+        "text",
+    )
 
 
 class RpcText(ShellyRpcAttributeEntity, TextEntity):
     """Represent a RPC text entity."""
 
     entity_description: RpcTextDescription
+    attribute_value: str | None
+    _id: int
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcTextDescription,
+    ) -> None:
+        """Initialize sensor."""
+        super().__init__(coordinator, key, attribute, description)
+        self._attr_name = get_rpc_channel_name(coordinator.device, key)
 
     @property
     def native_value(self) -> str | None:
         """Return value of sensor."""
-        if TYPE_CHECKING:
-            assert isinstance(self.attribute_value, str | None)
-
         return self.attribute_value
 
+    @rpc_call
     async def async_set_value(self, value: str) -> None:
         """Change the value."""
-        await self.call_rpc("Text.Set", {"id": self._id, "value": value})
+        await self.coordinator.device.text_set(self._id, value)

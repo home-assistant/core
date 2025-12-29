@@ -4,10 +4,9 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import re
-from typing import Any
 
-import datapoint
+from datapoint.Forecast import Forecast
+from datapoint.Manager import Manager
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -17,9 +16,8 @@ from homeassistant.const import (
     CONF_NAME,
     Platform,
 )
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import TimestampDataUpdateCoordinator
 
@@ -30,11 +28,9 @@ from .const import (
     METOFFICE_DAILY_COORDINATOR,
     METOFFICE_HOURLY_COORDINATOR,
     METOFFICE_NAME,
-    MODE_3HOURLY,
-    MODE_DAILY,
+    METOFFICE_TWICE_DAILY_COORDINATOR,
 )
-from .data import MetOfficeData
-from .helpers import fetch_data, fetch_site
+from .helpers import fetch_data
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,59 +47,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinates = f"{latitude}_{longitude}"
 
-    @callback
-    def update_unique_id(
-        entity_entry: er.RegistryEntry,
-    ) -> dict[str, Any] | None:
-        """Update unique ID of entity entry."""
+    connection = Manager(api_key=api_key)
 
-        if entity_entry.domain != Platform.SENSOR:
-            return None
-
-        name_to_key = {
-            "Station Name": "name",
-            "Weather": "weather",
-            "Temperature": "temperature",
-            "Feels Like Temperature": "feels_like_temperature",
-            "Wind Speed": "wind_speed",
-            "Wind Direction": "wind_direction",
-            "Wind Gust": "wind_gust",
-            "Visibility": "visibility",
-            "Visibility Distance": "visibility_distance",
-            "UV Index": "uv",
-            "Probability of Precipitation": "precipitation",
-            "Humidity": "humidity",
-        }
-
-        match = re.search(f"(?P<name>.*)_{coordinates}.*", entity_entry.unique_id)
-
-        if match is None:
-            return None
-
-        if (name := match.group("name")) in name_to_key:
-            return {
-                "new_unique_id": entity_entry.unique_id.replace(name, name_to_key[name])
-            }
-        return None
-
-    await er.async_migrate_entries(hass, entry.entry_id, update_unique_id)
-
-    connection = datapoint.connection(api_key=api_key)
-
-    site = await hass.async_add_executor_job(
-        fetch_site, connection, latitude, longitude
-    )
-    if site is None:
-        raise ConfigEntryNotReady
-
-    async def async_update_3hourly() -> MetOfficeData:
+    async def async_update_hourly() -> Forecast:
         return await hass.async_add_executor_job(
-            fetch_data, connection, site, MODE_3HOURLY
+            fetch_data, connection, latitude, longitude, "hourly"
         )
 
-    async def async_update_daily() -> MetOfficeData:
+    async def async_update_daily() -> Forecast:
         return await hass.async_add_executor_job(
-            fetch_data, connection, site, MODE_DAILY
+            fetch_data, connection, latitude, longitude, "daily"
+        )
+
+    async def async_update_twice_daily() -> Forecast:
+        return await hass.async_add_executor_job(
+            fetch_data, connection, latitude, longitude, "twice-daily"
         )
 
     metoffice_hourly_coordinator = TimestampDataUpdateCoordinator(
@@ -111,7 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER,
         config_entry=entry,
         name=f"MetOffice Hourly Coordinator for {site_name}",
-        update_method=async_update_3hourly,
+        update_method=async_update_hourly,
         update_interval=DEFAULT_SCAN_INTERVAL,
     )
 
@@ -124,10 +82,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_interval=DEFAULT_SCAN_INTERVAL,
     )
 
+    metoffice_twice_daily_coordinator = TimestampDataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        config_entry=entry,
+        name=f"MetOffice Twice Daily Coordinator for {site_name}",
+        update_method=async_update_twice_daily,
+        update_interval=DEFAULT_SCAN_INTERVAL,
+    )
+
     metoffice_hass_data = hass.data.setdefault(DOMAIN, {})
     metoffice_hass_data[entry.entry_id] = {
         METOFFICE_HOURLY_COORDINATOR: metoffice_hourly_coordinator,
         METOFFICE_DAILY_COORDINATOR: metoffice_daily_coordinator,
+        METOFFICE_TWICE_DAILY_COORDINATOR: metoffice_twice_daily_coordinator,
         METOFFICE_NAME: site_name,
         METOFFICE_COORDINATES: coordinates,
     }

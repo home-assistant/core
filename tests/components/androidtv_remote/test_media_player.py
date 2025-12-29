@@ -291,7 +291,7 @@ async def test_media_player_play_media(
     )
     mock_api.send_launch_app_command.assert_called_with("tv.twitch.android.app")
 
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError, match="Channel must be numeric: abc"):
         await hass.services.async_call(
             "media_player",
             "play_media",
@@ -303,7 +303,7 @@ async def test_media_player_play_media(
             blocking=True,
         )
 
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError, match="Invalid media type: music"):
         await hass.services.async_call(
             "media_player",
             "play_media",

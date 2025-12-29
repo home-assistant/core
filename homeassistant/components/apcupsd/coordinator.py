@@ -100,6 +100,7 @@ class APCUPSdCoordinator(DataUpdateCoordinator[APCUPSdData]):
             name=self.data.name or "APC UPS",
             hw_version=self.data.get("FIRMWARE"),
             sw_version=self.data.get("VERSION"),
+            serial_number=self.data.serial_no,
         )
 
     async def _async_update_data(self) -> APCUPSdData:
@@ -113,4 +114,7 @@ class APCUPSdCoordinator(DataUpdateCoordinator[APCUPSdData]):
                 data = await aioapcaccess.request_status(self._host, self._port)
                 return APCUPSdData(data)
             except (OSError, asyncio.IncompleteReadError) as error:
-                raise UpdateFailed(error) from error
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="cannot_connect",
+                ) from error

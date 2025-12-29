@@ -11,6 +11,19 @@
         }
       }
     },
+    "fan": {
+      "homee": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "auto": "mdi:auto-mode",
+              "manual": "mdi:hand-back-left",
+              "summer": "mdi:sun-thermometer-outline"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "brightness": {
         "default": "mdi:brightness-5"
@@ -26,11 +39,11 @@
       }
     },
     "switch": {
-      "watchdog": {
-        "default": "mdi:dog"
-      },
       "manual_operation": {
         "default": "mdi:hand-back-left"
+      },
+      "watchdog": {
+        "default": "mdi:dog"
       }
     }
   }
