@@ -31,7 +31,7 @@ class ActronAirAcEntity(ActronAirEntity):
     def __init__(self, coordinator: ActronAirSystemCoordinator) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
-        self._attr_device_info: DeviceInfo = DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._serial_number)},
             name=coordinator.data.ac_system.system_name,
             manufacturer="Actron Air",
@@ -53,7 +53,7 @@ class ActronAirZoneEntity(ActronAirEntity):
         super().__init__(coordinator)
         self._zone_id: int = zone.zone_id
         self._zone_identifier = f"{self._serial_number}_zone_{zone.zone_id}"
-        self._attr_device_info: DeviceInfo = DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._zone_identifier)},
             name=zone.title,
             manufacturer="Actron Air",
