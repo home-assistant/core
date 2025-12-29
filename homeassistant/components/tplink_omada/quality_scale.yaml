@@ -1,8 +1,6 @@
 rules:
   # Bronze
-  action-setup:
-    status: todo
-    comment: Actions are created in async_setup_entry, and need to be moved.
+  action-setup: done
   appropriate-polling:
     status: done
     comment: Service data APIs are polled every 5 minutes

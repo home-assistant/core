@@ -4,6 +4,7 @@
   "codeowners": ["@jeeftor"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/monarchmoney",
+  "integration_type": "service",
   "iot_class": "cloud_polling",
   "requirements": ["typedmonarchmoney==0.4.4"]
 }
