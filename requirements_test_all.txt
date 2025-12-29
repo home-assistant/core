@@ -2162,7 +2162,7 @@ python-pooldose==0.8.1
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==3.21.0
+python-roborock==4.1.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.46
