@@ -9,7 +9,17 @@ from homeassistant.core import HomeAssistant
 
 from . import PooldoseConfigEntry
 
-TO_REDACT = {"IP", "MAC", "SERIAL_NUMBER", "DEVICE_ID", "OWNERID", "NAME", "GROUPNAME"}
+TO_REDACT = {
+    "IP",
+    "MAC",
+    "WIFI_SSID",
+    "AP_SSID",
+    "SERIAL_NUMBER",
+    "DEVICE_ID",
+    "OWNERID",
+    "NAME",
+    "GROUPNAME",
+}
 
 
 async def async_get_config_entry_diagnostics(
