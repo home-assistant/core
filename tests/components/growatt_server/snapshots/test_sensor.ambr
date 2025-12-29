@@ -6058,7 +6058,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2025-12-25T14:00:00+00:00',
+    'state': '2023-10-20T13:00:00+00:00',
   })
 # ---
 # name: test_sensors_classic_api[mix][sensor.mix123456_lifetime_battery_charged-entry]

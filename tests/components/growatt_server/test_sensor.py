@@ -48,6 +48,7 @@ async def test_min_sensors_v1_api(
     ids=["tlx", "inverter", "storage", "mix"],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.freeze_time("2023-10-21")
 async def test_sensors_classic_api(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
