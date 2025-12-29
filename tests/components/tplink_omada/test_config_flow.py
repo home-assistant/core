@@ -1,7 +1,6 @@
 """Test the TP-Link Omada config flows."""
 
-from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from tplink_omada_client import OmadaSite
@@ -39,24 +38,9 @@ MOCK_ENTRY_DATA = {
 }
 
 
-@pytest.fixture
-def mock_config_flow_client() -> Generator[MagicMock]:
-    """Mock Omada client for config flow testing."""
-    with patch(
-        "homeassistant.components.tplink_omada.config_flow.create_omada_client",
-        autospec=True,
-    ) as client_mock:
-        client = client_mock.return_value
-        # Set default return values for the client methods
-        client.login = AsyncMock(return_value="omada_id")
-        client.get_controller_name = AsyncMock(return_value="OC200")
-        client.get_sites = AsyncMock(return_value=[])
-        yield client
-
-
 async def test_form_single_site(
     hass: HomeAssistant,
-    mock_config_flow_client: MagicMock,
+    mock_omada_client: MagicMock,
     mock_setup_entry: MagicMock,
 ) -> None:
     """Test we get the form."""
@@ -66,17 +50,14 @@ async def test_form_single_site(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    mock_config_flow_client.login.return_value = "omada_id"
-    mock_config_flow_client.get_controller_name.return_value = "OC200"
-    mock_config_flow_client.get_sites.return_value = [
-        OmadaSite("Display Name", "SiteId")
-    ]
+    mock_omada_client.login.return_value = "omada_id"
+    mock_omada_client.get_controller_name.return_value = "OC200"
+    mock_omada_client.get_sites.return_value = [OmadaSite("Display Name", "SiteId")]
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         MOCK_USER_DATA,
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "OC200 (Display Name)"
@@ -87,7 +68,7 @@ async def test_form_single_site(
 
 async def test_form_multiple_sites(
     hass: HomeAssistant,
-    mock_config_flow_client: MagicMock,
+    mock_omada_client: MagicMock,
     mock_setup_entry: MagicMock,
 ) -> None:
     """Test we get the form."""
@@ -98,9 +79,9 @@ async def test_form_multiple_sites(
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
-    mock_config_flow_client.login.return_value = "omada_id"
-    mock_config_flow_client.get_controller_name.return_value = "OC200"
-    mock_config_flow_client.get_sites.return_value = [
+    mock_omada_client.login.return_value = "omada_id"
+    mock_omada_client.get_controller_name.return_value = "OC200"
+    mock_omada_client.get_sites.return_value = [
         OmadaSite("Site 1", "first"),
         OmadaSite("Site 2", "second"),
     ]
@@ -109,7 +90,6 @@ async def test_form_multiple_sites(
         result["flow_id"],
         MOCK_USER_DATA,
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "site"
@@ -120,7 +100,6 @@ async def test_form_multiple_sites(
             "site": "second",
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "OC200 (Site 2)"
@@ -146,7 +125,7 @@ async def test_form_multiple_sites(
 )
 async def test_form_errors_and_recovery(
     hass: HomeAssistant,
-    mock_config_flow_client: MagicMock,
+    mock_omada_client: MagicMock,
     mock_setup_entry: MagicMock,
     side_effect: Exception,
     expected_error: str,
@@ -157,7 +136,7 @@ async def test_form_errors_and_recovery(
     )
 
     # First attempt: trigger the error
-    mock_config_flow_client.login.side_effect = side_effect
+    mock_omada_client.login.side_effect = side_effect
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -168,18 +147,15 @@ async def test_form_errors_and_recovery(
     assert result["errors"] == {"base": expected_error}
 
     # Second attempt: clear error and complete successfully
-    mock_config_flow_client.login.side_effect = None
-    mock_config_flow_client.login.return_value = "omada_id"
-    mock_config_flow_client.get_controller_name.return_value = "OC200"
-    mock_config_flow_client.get_sites.return_value = [
-        OmadaSite("Display Name", "SiteId")
-    ]
+    mock_omada_client.login.side_effect = None
+    mock_omada_client.login.return_value = "omada_id"
+    mock_omada_client.get_controller_name.return_value = "OC200"
+    mock_omada_client.get_sites.return_value = [OmadaSite("Display Name", "SiteId")]
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         MOCK_USER_DATA,
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "OC200 (Display Name)"
@@ -187,17 +163,15 @@ async def test_form_errors_and_recovery(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_no_sites(
-    hass: HomeAssistant, mock_config_flow_client: MagicMock
-) -> None:
+async def test_form_no_sites(hass: HomeAssistant, mock_omada_client: MagicMock) -> None:
     """Test we handle the case when no sites are found."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_config_flow_client.login.return_value = "omada_id"
-    mock_config_flow_client.get_controller_name.return_value = "OC200"
-    mock_config_flow_client.get_sites.return_value = []
+    mock_omada_client.login.return_value = "omada_id"
+    mock_omada_client.get_controller_name.return_value = "OC200"
+    mock_omada_client.get_sites.return_value = []
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -218,7 +192,7 @@ async def test_form_no_sites(
 async def test_async_step_reauth(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_config_flow_client: MagicMock,
+    mock_omada_client: MagicMock,
     controller_id: str,
     expected_reason: str,
 ) -> None:
@@ -230,16 +204,13 @@ async def test_async_step_reauth(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
-    mock_config_flow_client.login.return_value = controller_id
-    mock_config_flow_client.get_controller_name.return_value = "OC200"
-    mock_config_flow_client.get_sites.return_value = [
-        OmadaSite("Display Name", "SiteId")
-    ]
+    mock_omada_client.login.return_value = controller_id
+    mock_omada_client.get_controller_name.return_value = "OC200"
+    mock_omada_client.get_sites.return_value = [OmadaSite("Display Name", "SiteId")]
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"username": "new_uname", "password": "new_passwd"}
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == expected_reason
@@ -258,7 +229,7 @@ async def test_async_step_reauth(
 async def test_async_step_reauth_invalid_auth(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_config_flow_client: MagicMock,
+    mock_omada_client: MagicMock,
     side_effect: Exception,
     expected_error: str,
 ) -> None:
@@ -270,12 +241,11 @@ async def test_async_step_reauth_invalid_auth(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
-    mock_config_flow_client.login.side_effect = side_effect
+    mock_omada_client.login.side_effect = side_effect
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"username": "new_uname", "password": "new_passwd"}
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"

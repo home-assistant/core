@@ -153,14 +153,22 @@ async def _get_mock_client(hass: HomeAssistant, mac: str) -> OmadaNetworkClient:
 @pytest.fixture
 def mock_omada_client(mock_omada_site_client: AsyncMock) -> Generator[MagicMock]:
     """Mock Omada client."""
-    with patch(
-        "homeassistant.components.tplink_omada.create_omada_client",
-        autospec=True,
-    ) as client_mock:
+    with (
+        patch(
+            "homeassistant.components.tplink_omada.create_omada_client",
+            autospec=True,
+        ) as client_mock,
+        patch(
+            "homeassistant.components.tplink_omada.config_flow.create_omada_client",
+            new=client_mock,
+        ),
+    ):
         client = client_mock.return_value
 
         client.get_site_client.return_value = mock_omada_site_client
-        client.login = AsyncMock()
+        client.login = AsyncMock(return_value="omada_id")
+        client.get_controller_name = AsyncMock(return_value="OC200")
+        client.get_sites = AsyncMock(return_value=[])
         yield client
 
 
