@@ -34,6 +34,7 @@ from . import (
     group,
     label_registry as lr,
 )
+from .deprecation import deprecated_class
 from .event import async_track_state_change_event
 from .typing import ConfigType
 
@@ -53,8 +54,8 @@ def _has_match(ids: str | list[str] | None) -> TypeGuard[str | list[str]]:
     return ids not in (None, ENTITY_MATCH_NONE)
 
 
-class TargetSelectorData:
-    """Class to hold data of target selector."""
+class TargetSelection:
+    """Class to represent target selection."""
 
     __slots__ = ("area_ids", "device_ids", "entity_ids", "floor_ids", "label_ids")
 
@@ -81,8 +82,8 @@ class TargetSelectorData:
         )
 
     @property
-    def has_any_selector(self) -> bool:
-        """Determine if any selectors are present."""
+    def has_any_target(self) -> bool:
+        """Determine if any target is present."""
         return bool(
             self.entity_ids
             or self.device_ids
@@ -92,14 +93,24 @@ class TargetSelectorData:
         )
 
 
+@deprecated_class("TargetSelection", breaks_in_ha_version="2026.12.0")
+class TargetSelectorData(TargetSelection):
+    """Class to represent target selector data."""
+
+    @property
+    def has_any_selector(self) -> bool:
+        """Determine if any selectors are present."""
+        return super().has_any_target
+
+
 @dataclasses.dataclass(slots=True)
 class SelectedEntities:
     """Class to hold the selected entities."""
 
-    # Entities that were explicitly mentioned.
+    # Entity IDs of entities that were explicitly mentioned.
     referenced: set[str] = dataclasses.field(default_factory=set)
 
-    # Entities that were referenced via device/area/floor/label ID.
+    # Entity IDs of entities that were referenced via device/area/floor/label ID.
     # Should not trigger a warning when they don't exist.
     indirectly_referenced: set[str] = dataclasses.field(default_factory=set)
 
@@ -135,25 +146,25 @@ class SelectedEntities:
 
 
 def async_extract_referenced_entity_ids(
-    hass: HomeAssistant, selector_data: TargetSelectorData, expand_group: bool = True
+    hass: HomeAssistant, target_selection: TargetSelection, expand_group: bool = True
 ) -> SelectedEntities:
-    """Extract referenced entity IDs from a target selector."""
+    """Extract referenced entity IDs from a target selection."""
     selected = SelectedEntities()
 
-    if not selector_data.has_any_selector:
+    if not target_selection.has_any_target:
         return selected
 
-    entity_ids: set[str] | list[str] = selector_data.entity_ids
+    entity_ids: set[str] | list[str] = target_selection.entity_ids
     if expand_group:
         entity_ids = group.expand_entity_ids(hass, entity_ids)
 
     selected.referenced.update(entity_ids)
 
     if (
-        not selector_data.device_ids
-        and not selector_data.area_ids
-        and not selector_data.floor_ids
-        and not selector_data.label_ids
+        not target_selection.device_ids
+        and not target_selection.area_ids
+        and not target_selection.floor_ids
+        and not target_selection.label_ids
     ):
         return selected
 
@@ -161,31 +172,28 @@ def async_extract_referenced_entity_ids(
     dev_reg = dr.async_get(hass)
     area_reg = ar.async_get(hass)
 
-    if selector_data.floor_ids:
+    if target_selection.floor_ids:
         floor_reg = fr.async_get(hass)
-        for floor_id in selector_data.floor_ids:
+        for floor_id in target_selection.floor_ids:
             if floor_id not in floor_reg.floors:
                 selected.missing_floors.add(floor_id)
 
-    for area_id in selector_data.area_ids:
+    for area_id in target_selection.area_ids:
         if area_id not in area_reg.areas:
             selected.missing_areas.add(area_id)
 
-    for device_id in selector_data.device_ids:
+    for device_id in target_selection.device_ids:
         if device_id not in dev_reg.devices:
             selected.missing_devices.add(device_id)
 
-    if selector_data.label_ids:
+    if target_selection.label_ids:
         label_reg = lr.async_get(hass)
-        for label_id in selector_data.label_ids:
+        for label_id in target_selection.label_ids:
             if label_id not in label_reg.labels:
                 selected.missing_labels.add(label_id)
 
             for entity_entry in entities.get_entries_for_label(label_id):
-                if (
-                    entity_entry.entity_category is None
-                    and entity_entry.hidden_by is None
-                ):
+                if entity_entry.hidden_by is None:
                     selected.indirectly_referenced.add(entity_entry.entity_id)
 
             for device_entry in dev_reg.devices.get_devices_for_label(label_id):
@@ -195,15 +203,15 @@ def async_extract_referenced_entity_ids(
                 selected.referenced_areas.add(area_entry.id)
 
     # Find areas for targeted floors
-    if selector_data.floor_ids:
+    if target_selection.floor_ids:
         selected.referenced_areas.update(
             area_entry.id
-            for floor_id in selector_data.floor_ids
+            for floor_id in target_selection.floor_ids
             for area_entry in area_reg.areas.get_areas_for_floor(floor_id)
         )
 
-    selected.referenced_areas.update(selector_data.area_ids)
-    selected.referenced_devices.update(selector_data.device_ids)
+    selected.referenced_areas.update(target_selection.area_ids)
+    selected.referenced_devices.update(target_selection.device_ids)
 
     if not selected.referenced_areas and not selected.referenced_devices:
         return selected
@@ -266,13 +274,13 @@ class TargetStateChangeTracker:
     def __init__(
         self,
         hass: HomeAssistant,
-        selector_data: TargetSelectorData,
+        target_selection: TargetSelection,
         action: Callable[[TargetStateChangedData], Any],
         entity_filter: Callable[[set[str]], set[str]],
     ) -> None:
         """Initialize the state change tracker."""
         self._hass = hass
-        self._selector_data = selector_data
+        self._target_selection = target_selection
         self._action = action
         self._entity_filter = entity_filter
 
@@ -288,11 +296,11 @@ class TargetStateChangeTracker:
     def _track_entities_state_change(self) -> None:
         """Set up state change tracking for currently selected entities."""
         selected = async_extract_referenced_entity_ids(
-            self._hass, self._selector_data, expand_group=False
+            self._hass, self._target_selection, expand_group=False
         )
 
         tracked_entities = self._entity_filter(
-            selected.referenced.union(selected.indirectly_referenced)
+            selected.referenced | selected.indirectly_referenced
         )
 
         @callback
@@ -355,10 +363,10 @@ def async_track_target_selector_state_change_event(
     entity_filter: Callable[[set[str]], set[str]] = lambda x: x,
 ) -> CALLBACK_TYPE:
     """Track state changes for entities referenced directly or indirectly in a target selector."""
-    selector_data = TargetSelectorData(target_selector_config)
-    if not selector_data.has_any_selector:
+    target_selection = TargetSelection(target_selector_config)
+    if not target_selection.has_any_target:
         raise HomeAssistantError(
             f"Target selector {target_selector_config} does not have any selectors defined"
         )
-    tracker = TargetStateChangeTracker(hass, selector_data, action, entity_filter)
+    tracker = TargetStateChangeTracker(hass, target_selection, action, entity_filter)
     return tracker.async_setup()

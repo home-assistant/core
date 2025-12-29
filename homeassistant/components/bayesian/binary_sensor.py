@@ -272,6 +272,13 @@ async def async_setup_entry(
     observations: list[ConfigType] = [
         dict(subentry.data) for subentry in config_entry.subentries.values()
     ]
+
+    for observation in observations:
+        if observation[CONF_PLATFORM] == CONF_TEMPLATE:
+            observation[CONF_VALUE_TEMPLATE] = Template(
+                observation[CONF_VALUE_TEMPLATE], hass
+            )
+
     prior: float = config[CONF_PRIOR]
     probability_threshold: float = config[CONF_PROBABILITY_THRESHOLD]
     device_class: BinarySensorDeviceClass | None = config.get(CONF_DEVICE_CLASS)
@@ -497,16 +504,18 @@ class BayesianBinarySensor(BinarySensorEntity):
                 _LOGGER.debug(
                     (
                         "Observation for entity '%s' returned None, it will not be used"
-                        " for Bayesian updating"
+                        " for updating Bayesian sensor '%s'"
                     ),
                     observation.entity_id,
+                    self.entity_id,
                 )
                 continue
             _LOGGER.debug(
                 (
                     "Observation for template entity returned None rather than a valid"
-                    " boolean, it will not be used for Bayesian updating"
+                    " boolean, it will not be used for updating Bayesian sensor '%s'"
                 ),
+                self.entity_id,
             )
         # the prior has been updated and is now the posterior
         return prior

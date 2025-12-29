@@ -1,0 +1,111 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "no_devices_found": "There are no devices paired with this Nintendo account, go to [Nintendo Support]({more_info_url}) for further assistance.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "api_token": "Access token"
+        },
+        "data_description": {
+          "api_token": "The link copied from the Nintendo website"
+        },
+        "description": "To obtain your access token, click [Nintendo Login]({link}) to sign in to your Nintendo account. Then, for the account you want to link, right-click on the red **Select this person** button and choose **Copy Link Address**."
+      },
+      "user": {
+        "data": {
+          "api_token": "Access token"
+        },
+        "data_description": {
+          "api_token": "The link copied from the Nintendo website"
+        },
+        "description": "To obtain your access token, click [Nintendo Login]({link}) to sign in to your Nintendo account. Then, for the account you want to link, right-click on the red **Select this person** button and choose **Copy Link Address**."
+      }
+    }
+  },
+  "entity": {
+    "number": {
+      "today_max_screentime": {
+        "name": "Max screentime today"
+      }
+    },
+    "select": {
+      "timer_mode": {
+        "name": "Restriction mode",
+        "state": {
+          "daily": "Same for all days",
+          "each_day_of_the_week": "Different for each day"
+        }
+      }
+    },
+    "sensor": {
+      "playing_time": {
+        "name": "Used screen time"
+      },
+      "time_extended": {
+        "name": "Extended screen time"
+      },
+      "time_remaining": {
+        "name": "Screen time remaining"
+      }
+    },
+    "switch": {
+      "suspend_software": {
+        "name": "Suspend software"
+      }
+    },
+    "time": {
+      "bedtime_alarm": {
+        "name": "Bedtime alarm"
+      }
+    }
+  },
+  "exceptions": {
+    "auth_expired": {
+      "message": "Authentication token expired."
+    },
+    "bedtime_alarm_out_of_range": {
+      "message": "{value} not accepted. Bedtime Alarm must be between {bedtime_alarm_min} and {bedtime_alarm_max}. To disable, set to {bedtime_alarm_disable}."
+    },
+    "config_entry_not_found": {
+      "message": "Config entry not found."
+    },
+    "device_not_found": {
+      "message": "Device not found."
+    },
+    "invalid_device": {
+      "message": "The specified device is not a Nintendo device."
+    },
+    "no_devices_found": {
+      "message": "No Nintendo devices found for this account."
+    },
+    "update_required": {
+      "message": "The Nintendo Switch parental controls integration requires an update due to changes in Nintendo's API."
+    }
+  },
+  "services": {
+    "add_bonus_time": {
+      "description": "Add bonus screen time to the selected Nintendo Switch.",
+      "fields": {
+        "bonus_time": {
+          "description": "The amount of bonus time to add in minutes. Maximum is 30 minutes, minimum is 5.",
+          "name": "Bonus Time"
+        },
+        "device_id": {
+          "description": "The ID of the device to add bonus time to.",
+          "example": "1234567890abcdef",
+          "name": "Device"
+        }
+      },
+      "name": "Add Bonus Time"
+    }
+  }
+}

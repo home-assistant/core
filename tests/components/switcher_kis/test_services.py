@@ -16,7 +16,7 @@ from homeassistant.components.switcher_kis.const import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceNotSupported
 from homeassistant.helpers.config_validation import time_period_str
 from homeassistant.util import slugify
 
@@ -137,32 +137,26 @@ async def test_plug_unsupported_services(
     entity_id = f"{SWITCH_DOMAIN}.{slugify(device.name)}"
 
     # Turn on with timer
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_TURN_ON_WITH_TIMER_NAME,
-        {
-            ATTR_ENTITY_ID: entity_id,
-            CONF_TIMER_MINUTES: DUMMY_TIMER_MINUTES_SET,
-        },
-        blocking=True,
-    )
+    with pytest.raises(ServiceNotSupported):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TURN_ON_WITH_TIMER_NAME,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                CONF_TIMER_MINUTES: DUMMY_TIMER_MINUTES_SET,
+            },
+            blocking=True,
+        )
 
     assert mock_api.call_count == 0
-    assert (
-        f"Service '{SERVICE_TURN_ON_WITH_TIMER_NAME}' is not supported by {device.name}"
-        in caplog.text
-    )
 
     # Auto off
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SET_AUTO_OFF_NAME,
-        {ATTR_ENTITY_ID: entity_id, CONF_AUTO_OFF: DUMMY_AUTO_OFF_SET},
-        blocking=True,
-    )
+    with pytest.raises(ServiceNotSupported):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_AUTO_OFF_NAME,
+            {ATTR_ENTITY_ID: entity_id, CONF_AUTO_OFF: DUMMY_AUTO_OFF_SET},
+            blocking=True,
+        )
 
     assert mock_api.call_count == 0
-    assert (
-        f"Service '{SERVICE_SET_AUTO_OFF_NAME}' is not supported by {device.name}"
-        in caplog.text
-    )

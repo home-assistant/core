@@ -7,7 +7,7 @@ from collections import defaultdict
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, cast
+from typing import Any
 
 from aiohomeconnect.client import Client as HomeConnectClient
 from aiohomeconnect.model import (
@@ -247,14 +247,15 @@ class HomeConnectCoordinator(
                                             value=event.value,
                                         )
                                 else:
+                                    event_value = event.value
                                     if event_key in (
                                         EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
                                         EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
-                                    ):
+                                    ) and isinstance(event_value, str):
                                         await self.update_options(
                                             event_message_ha_id,
                                             event_key,
-                                            ProgramKey(cast(str, event.value)),
+                                            ProgramKey(event_value),
                                         )
                                     events[event_key] = event
                             self._call_event_listener(event_message)
@@ -659,17 +660,3 @@ class HomeConnectCoordinator(
             )
 
         return False
-
-    async def reset_execution_tracker(self, appliance_ha_id: str) -> None:
-        """Reset the execution tracker for a specific appliance."""
-        self._execution_tracker.pop(appliance_ha_id, None)
-        appliance_info = await self.client.get_specific_appliance(appliance_ha_id)
-
-        appliance_data = await self._get_appliance_data(
-            appliance_info, self.data.get(appliance_info.ha_id)
-        )
-        self.data[appliance_ha_id].update(appliance_data)
-        for listener, context in self._special_listeners.values():
-            if EventKey.BSH_COMMON_APPLIANCE_DEPAIRED not in context:
-                listener()
-        self._call_all_event_listeners_for_appliance(appliance_ha_id)

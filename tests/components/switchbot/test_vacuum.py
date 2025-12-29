@@ -18,8 +18,10 @@ from . import (
     K10_POR_COMBO_VACUUM_SERVICE_INFO,
     K10_PRO_VACUUM_SERVICE_INFO,
     K10_VACUUM_SERVICE_INFO,
+    K11_PLUS_VACUUM_SERVICE_INFO,
     K20_VACUUM_SERVICE_INFO,
     S10_VACUUM_SERVICE_INFO,
+    S20_VACUUM_SERVICE_INFO,
 )
 
 from tests.common import MockConfigEntry
@@ -34,6 +36,8 @@ from tests.components.bluetooth import inject_bluetooth_service_info
         ("k10_pro_combo_vacumm", K10_POR_COMBO_VACUUM_SERVICE_INFO),
         ("k10_vacuum", K10_VACUUM_SERVICE_INFO),
         ("k10_pro_vacuum", K10_PRO_VACUUM_SERVICE_INFO),
+        ("k11+_vacuum", K11_PLUS_VACUUM_SERVICE_INFO),
+        ("s20_vacuum", S20_VACUUM_SERVICE_INFO),
     ],
 )
 @pytest.mark.parametrize(

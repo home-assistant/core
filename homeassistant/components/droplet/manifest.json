@@ -1,0 +1,12 @@
+{
+  "domain": "droplet",
+  "name": "Droplet",
+  "codeowners": ["@sarahseidman"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/droplet",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "quality_scale": "bronze",
+  "requirements": ["pydroplet==2.3.4"],
+  "zeroconf": ["_droplet._tcp.local."]
+}

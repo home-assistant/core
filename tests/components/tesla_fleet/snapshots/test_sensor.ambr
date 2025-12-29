@@ -71,7 +71,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.energy_site_battery_discharged-entry]
@@ -146,7 +146,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.energy_site_battery_exported-entry]
@@ -1121,7 +1121,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.energy_site_grid_exported_from_battery-entry]
@@ -1757,7 +1757,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'Grid Status',
+    'original_name': 'Grid status',
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1771,7 +1771,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Energy Site Grid Status',
+      'friendly_name': 'Energy Site Grid status',
       'options': list([
         'island_status_unknown',
         'on_grid',
@@ -1792,7 +1792,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'Energy Site Grid Status',
+      'friendly_name': 'Energy Site Grid status',
       'options': list([
         'island_status_unknown',
         'on_grid',
@@ -1881,7 +1881,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.energy_site_load_power-entry]
@@ -2178,7 +2178,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.0',
+    'state': 'unknown',
   })
 # ---
 # name: test_sensors[sensor.energy_site_solar_power-entry]

@@ -20,6 +20,9 @@ PLATFORMS = [
     Platform.SWITCH,
 ]
 
+UPNP_ISSUE_ID = "upnp_disabled"
+UPNP_DOCUMENTATION_URL = "https://www.home-assistant.io/integrations/sonos/#403-error-when-setting-up-the-integration"
+
 SUB_FAIL_ISSUE_ID = "subscriptions_failed"
 SUB_FAIL_URL = "https://www.home-assistant.io/integrations/sonos/#network-requirements"
 
@@ -194,6 +197,7 @@ ATTR_SPEECH_ENHANCEMENT_ENABLED = "speech_enhance_enabled"
 SPEECH_DIALOG_LEVEL = "speech_dialog_level"
 ATTR_DIALOG_LEVEL = "dialog_level"
 ATTR_DIALOG_LEVEL_ENUM = "dialog_level_enum"
+ATTR_QUEUE_POSITION = "queue_position"
 
 AVAILABILITY_CHECK_INTERVAL = datetime.timedelta(minutes=1)
 AVAILABILITY_TIMEOUT = AVAILABILITY_CHECK_INTERVAL.total_seconds() * 4.5

@@ -181,6 +181,7 @@ EXCEPTIONS = {
     "PySwitchmate",  # https://github.com/Danielhiversen/pySwitchmate/pull/16
     "PyXiaomiGateway",  # https://github.com/Danielhiversen/PyXiaomiGateway/pull/201
     "chacha20poly1305",  # LGPL
+    "caio",  # Apache 2 https://github.com/mosquito/caio/?tab=Apache-2.0-1-ov-file#readme
     "commentjson",  # https://github.com/vaidik/commentjson/pull/55
     "crownstone-cloud",  # https://github.com/crownstone/crownstone-lib-python-cloud/pull/5
     "crownstone-core",  # https://github.com/crownstone/crownstone-lib-python-core/pull/6
@@ -211,8 +212,6 @@ TODO = {
     "aiocache": AwesomeVersion(
         "0.12.3"
     ),  # https://github.com/aio-libs/aiocache/blob/master/LICENSE all rights reserved?
-    "caldav": AwesomeVersion("1.6.0"),  # None -- GPL -- ['GNU General Public License (GPL)', 'Apache Software License']  # https://github.com/python-caldav/caldav
-    "xbox-webapi": AwesomeVersion("2.1.0"),  # None -- GPL -- ['MIT License']
 }
 # fmt: on
 

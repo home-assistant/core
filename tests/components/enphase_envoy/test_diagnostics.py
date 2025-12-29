@@ -94,6 +94,14 @@ async def test_entry_diagnostics_with_fixtures_with_error(
     ) == snapshot(exclude=limit_diagnostic_attrs)
 
 
+@pytest.mark.parametrize(
+    ("mock_envoy"),
+    [
+        "envoy_metered_batt_relay",
+        "envoy",
+    ],
+    indirect=["mock_envoy"],
+)
 async def test_entry_diagnostics_with_interface_information(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,

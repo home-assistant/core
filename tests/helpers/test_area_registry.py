@@ -1,6 +1,6 @@
 """Tests for the Area Registry."""
 
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 from functools import partial
 from typing import Any
 
@@ -438,15 +438,64 @@ async def test_migration_from_1_1(
     """Test migration from version 1.1."""
     hass_storage[ar.STORAGE_KEY] = {
         "version": 1,
-        "data": {"areas": [{"id": "12345A", "name": "mock"}]},
+        "data": {
+            "areas": [
+                {"id": "12345A", "name": "AAA"},
+                {"id": "12345B", "name": "CCC"},
+                {"id": "12345C", "name": "bbb"},
+            ]
+        },
     }
 
     await ar.async_load(hass)
     registry = ar.async_get(hass)
 
     # Test data was loaded
-    entry = registry.async_get_or_create("mock")
+    entry = registry.async_get_or_create("AAA")
     assert entry.id == "12345A"
+
+    # Check sort order
+    assert list(registry.async_list_areas()) == [
+        ar.AreaEntry(
+            name="AAA",
+            created_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            modified_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            aliases=set(),
+            floor_id=None,
+            humidity_entity_id=None,
+            icon=None,
+            id="12345A",
+            labels=set(),
+            picture=None,
+            temperature_entity_id=None,
+        ),
+        ar.AreaEntry(
+            name="bbb",
+            created_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            modified_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            aliases=set(),
+            floor_id=None,
+            humidity_entity_id=None,
+            icon=None,
+            id="12345C",
+            labels=set(),
+            picture=None,
+            temperature_entity_id=None,
+        ),
+        ar.AreaEntry(
+            name="CCC",
+            created_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            modified_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            aliases=set(),
+            floor_id=None,
+            humidity_entity_id=None,
+            icon=None,
+            id="12345B",
+            labels=set(),
+            picture=None,
+            temperature_entity_id=None,
+        ),
+    ]
 
     # Check we store migrated data
     await flush_store(registry._store)
@@ -458,17 +507,43 @@ async def test_migration_from_1_1(
             "areas": [
                 {
                     "aliases": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
                     "floor_id": None,
+                    "humidity_entity_id": None,
                     "icon": None,
                     "id": "12345A",
                     "labels": [],
-                    "name": "mock",
-                    "picture": None,
-                    "created_at": "1970-01-01T00:00:00+00:00",
                     "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": "AAA",
+                    "picture": None,
                     "temperature_entity_id": None,
+                },
+                {
+                    "aliases": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "floor_id": None,
                     "humidity_entity_id": None,
-                }
+                    "icon": None,
+                    "id": "12345C",
+                    "labels": [],
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": "bbb",
+                    "picture": None,
+                    "temperature_entity_id": None,
+                },
+                {
+                    "aliases": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "floor_id": None,
+                    "humidity_entity_id": None,
+                    "icon": None,
+                    "id": "12345B",
+                    "labels": [],
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": "CCC",
+                    "picture": None,
+                    "temperature_entity_id": None,
+                },
             ]
         },
     }
@@ -503,18 +578,43 @@ async def test_async_get_areas_by_alias(
 
     assert len(area_registry.areas) == 2
 
-    alias1_list = area_registry.async_get_areas_by_alias("A l i a s_1")
-    alias2_list = area_registry.async_get_areas_by_alias("A l i a s_2")
-    alias3_list = area_registry.async_get_areas_by_alias("A l i a s_3")
+    assert area_registry.async_get_areas_by_alias("A l i a s_1") == [area1, area2]
+    assert area_registry.async_get_areas_by_alias("A l i a s_2") == [area1]
+    assert area_registry.async_get_areas_by_alias("A l i a s_3")
 
-    assert len(alias1_list) == 2
-    assert len(alias2_list) == 1
-    assert len(alias3_list) == 1
 
-    assert area1 in alias1_list
-    assert area1 in alias2_list
-    assert area2 in alias1_list
-    assert area2 in alias3_list
+async def test_async_get_areas_by_alias_collisions(
+    area_registry: ar.AreaRegistry,
+) -> None:
+    """Make sure we can get the areas by alias when the aliases have collisions."""
+    area = area_registry.async_create("Mock1")
+    assert area_registry.async_get_areas_by_alias("A l i a s 1") == []
+
+    # Add an alias
+    updated_area = area_registry.async_update(area.id, aliases={"alias1"})
+    assert area_registry.async_get_areas_by_alias("A l i a s 1") == [updated_area]
+
+    # Add a colliding alias
+    updated_area = area_registry.async_update(area.id, aliases={"alias1", "alias  1"})
+    assert area_registry.async_get_areas_by_alias("A l i a s 1") == [updated_area]
+
+    # Add a colliding alias
+    updated_area = area_registry.async_update(
+        area.id, aliases={"alias1", "alias 1", "alias  1"}
+    )
+    assert area_registry.async_get_areas_by_alias("A l i a s 1") == [updated_area]
+
+    # Remove a colliding alias
+    updated_area = area_registry.async_update(area.id, aliases={"alias1", "alias  1"})
+    assert area_registry.async_get_areas_by_alias("A l i a s 1") == [updated_area]
+
+    # Remove a colliding alias
+    updated_area = area_registry.async_update(area.id, aliases={"alias1"})
+    assert area_registry.async_get_areas_by_alias("A l i a s 1") == [updated_area]
+
+    # Remove all aliases
+    updated_area = area_registry.async_update(area.id, aliases={})
+    assert area_registry.async_get_areas_by_alias("A l i a s 1") == []
 
 
 async def test_async_get_area_by_name_not_found(area_registry: ar.AreaRegistry) -> None:
