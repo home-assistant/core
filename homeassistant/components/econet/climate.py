@@ -190,14 +190,11 @@ class EcoNetThermostat(EcoNetEntity[Thermostat], ClimateEntity):
     @property
     def fan_modes(self) -> list[str]:
         """Return the fan modes."""
-        supported_fan_modes = []
-        for mode in self._econet.fan_speeds:
-            # Remove the MEDLO MEDHI once we figure out how to handle it
-            if mode not in [ThermostatFanSpeed.UNKNOWN,
-                            ThermostatFanSpeed.MEDLO,
-                            ThermostatFanSpeed.MEDHI,
-                            ]:
-                supported_fan_modes.append(ECONET_FAN_SPEED_TO_HA[mode])
+        # Remove the MEDLO MEDHI once we figure out how to handle it
+        supported_fan_modes = [mode for mode in self._econet.fan_speeds if mode not in [ThermostatFanSpeed.UNKNOWN,
+                                                                                        ThermostatFanSpeed.MEDLO,
+                                                                                        ThermostatFanSpeed.MEDHI,
+                                                                                        ]]
         return supported_fan_modes
 
     def set_fan_mode(self, fan_mode: str) -> None:
