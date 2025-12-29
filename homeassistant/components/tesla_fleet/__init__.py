@@ -14,7 +14,7 @@ from tesla_fleet_api.exceptions import (
     OAuthExpired,
     TeslaFleetError,
 )
-from tesla_fleet_api.tesla import EnergySite, VehicleFleet
+from tesla_fleet_api.tesla import VehicleFleet
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN, Platform
@@ -179,7 +179,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
                 )
                 continue
 
-            api_energy: EnergySite = tesla.energySites.create(site_id)
+            api_energy = tesla.energySites.create(site_id)
 
             live_coordinator = TeslaFleetEnergySiteLiveCoordinator(
                 hass, entry, api_energy
