@@ -5,7 +5,8 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import DOMAIN, SERVICE_UPDATE_DEVS, VS_DEVICES, VS_DISCOVERY, VS_MANAGER
+from . import VesyncConfigEntry
+from .const import DOMAIN, SERVICE_UPDATE_DEVS, VS_DEVICES, VS_DISCOVERY
 
 
 @callback
@@ -21,13 +22,13 @@ async def async_new_device_discovery(call: ServiceCall) -> None:
     """Discover and add new devices."""
 
     entries = call.hass.config_entries.async_entries(DOMAIN)
-    entry = entries[0] if entries else None
+    config_entry: VesyncConfigEntry | None = entries[0] if entries else None
 
-    if not entry:
+    if not config_entry:
         raise ServiceValidationError("Entry not found")
-    if entry.state is not ConfigEntryState.LOADED:
+    if config_entry.state is not ConfigEntryState.LOADED:
         raise ServiceValidationError("Entry not loaded")
-    manager = call.hass.data[DOMAIN][VS_MANAGER]
+    manager = config_entry.runtime_data.manager
     known_devices = list(manager.devices)
     await manager.get_devices()
     new_devices = [device for device in manager.devices if device not in known_devices]
