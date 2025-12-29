@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from http import HTTPStatus
-from unittest.mock import AsyncMock
+from pathlib import Path
+from unittest.mock import AsyncMock, MagicMock
 
 from fishaudio import RateLimitError
 from fishaudio.exceptions import ServerError
@@ -25,6 +26,16 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from tests.common import MockConfigEntry, async_mock_service
 from tests.components.tts.common import retrieve_media
 from tests.typing import ClientSessionGenerator
+
+
+@pytest.fixture(autouse=True)
+def tts_mutagen_mock_fixture_autouse(tts_mutagen_mock: MagicMock) -> None:
+    """Mock writing tags."""
+
+
+@pytest.fixture(autouse=True)
+def mock_tts_cache_dir_autouse(mock_tts_cache_dir: Path) -> None:
+    """Mock the TTS cache dir with empty dir."""
 
 
 @pytest.fixture(autouse=True)
