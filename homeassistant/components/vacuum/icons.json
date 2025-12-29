@@ -5,10 +5,10 @@
     }
   },
   "services": {
-    "clean_spot": {
+    "clean_area": {
       "service": "mdi:target-variant"
     },
-    "clean_area": {
+    "clean_spot": {
       "service": "mdi:target-variant"
     },
     "locate": {
