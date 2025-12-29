@@ -4,6 +4,7 @@
   "codeowners": ["@hacf-fr", "@Quentame", "@starkillerOG"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/netgear",
+  "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["pynetgear"],
   "requirements": ["pynetgear==0.10.10"],
