@@ -178,10 +178,10 @@ OSI_APPROVED_LICENSES = {
 }
 
 EXCEPTIONS = {
-    "PyMicroBot",  # https://github.com/spycle/pyMicroBot/pull/3
     "PySwitchmate",  # https://github.com/Danielhiversen/pySwitchmate/pull/16
     "PyXiaomiGateway",  # https://github.com/Danielhiversen/PyXiaomiGateway/pull/201
     "chacha20poly1305",  # LGPL
+    "caio",  # Apache 2 https://github.com/mosquito/caio/?tab=Apache-2.0-1-ov-file#readme
     "commentjson",  # https://github.com/vaidik/commentjson/pull/55
     "crownstone-cloud",  # https://github.com/crownstone/crownstone-lib-python-cloud/pull/5
     "crownstone-core",  # https://github.com/crownstone/crownstone-lib-python-core/pull/6
@@ -203,13 +203,17 @@ EXCEPTIONS = {
     "pysabnzbd",  # https://github.com/jeradM/pysabnzbd/pull/6
     "sharp_aquos_rc",  # https://github.com/jmoore987/sharp_aquos_rc/pull/14
     "tapsaff",  # https://github.com/bazwilliams/python-taps-aff/pull/5
+    "ujson",  # https://github.com/ultrajson/ultrajson/blob/main/LICENSE.txt
 }
 
+# fmt: off
 TODO = {
+    "TravisPy": AwesomeVersion("0.3.5"),  # None -- GPL -- ['GNU General Public License v3 (GPLv3)']
     "aiocache": AwesomeVersion(
         "0.12.3"
     ),  # https://github.com/aio-libs/aiocache/blob/master/LICENSE all rights reserved?
 }
+# fmt: on
 
 EXCEPTIONS_AND_TODOS = EXCEPTIONS.union(TODO)
 

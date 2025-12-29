@@ -102,7 +102,6 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):
             name=wemo.name,
             update_interval=timedelta(seconds=30),
         )
-        self.hass = hass
         self.wemo = wemo
         self.device_id: str | None = None
         self.device_info = _create_device_info(wemo)

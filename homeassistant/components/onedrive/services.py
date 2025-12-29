@@ -16,6 +16,7 @@ from homeassistant.core import (
     ServiceCall,
     ServiceResponse,
     SupportsResponse,
+    callback,
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
@@ -70,6 +71,7 @@ def _read_file_contents(
     return results
 
 
+@callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register OneDrive services."""
 
@@ -127,4 +129,5 @@ def async_setup_services(hass: HomeAssistant) -> None:
         async_handle_upload,
         schema=UPLOAD_SERVICE_SCHEMA,
         supports_response=SupportsResponse.OPTIONAL,
+        description_placeholders={"example_image_path": "/config/www/image.jpg"},
     )

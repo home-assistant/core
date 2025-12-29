@@ -29,7 +29,10 @@ from .const import (
     HOT_WATER_TEMPERATURE_OPTIONS,
     INTENSIVE_LEVEL_OPTIONS,
     PROGRAMS_TRANSLATION_KEYS_MAP,
+    RINSE_PLUS_OPTIONS,
     SPIN_SPEED_OPTIONS,
+    STAINS_OPTIONS,
+    SUCTION_POWER_OPTIONS,
     TEMPERATURE_OPTIONS,
     TRANSLATION_KEYS_PROGRAMS_MAP,
     VARIO_PERFECT_OPTIONS,
@@ -169,6 +172,16 @@ PROGRAM_SELECT_OPTION_ENTITY_DESCRIPTIONS = (
         },
     ),
     HomeConnectSelectEntityDescription(
+        key=OptionKey.CONSUMER_PRODUCTS_CLEANING_ROBOT_SUCTION_POWER,
+        translation_key="suction_power",
+        options=list(SUCTION_POWER_OPTIONS),
+        translation_key_values=SUCTION_POWER_OPTIONS,
+        values_translation_key={
+            value: translation_key
+            for translation_key, value in SUCTION_POWER_OPTIONS.items()
+        },
+    ),
+    HomeConnectSelectEntityDescription(
         key=OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_BEAN_AMOUNT,
         translation_key="bean_amount",
         options=list(BEAN_AMOUNT_OPTIONS),
@@ -269,6 +282,16 @@ PROGRAM_SELECT_OPTION_ENTITY_DESCRIPTIONS = (
         },
     ),
     HomeConnectSelectEntityDescription(
+        key=OptionKey.LAUNDRY_CARE_WASHER_RINSE_PLUS,
+        translation_key="rinse_plus",
+        options=list(RINSE_PLUS_OPTIONS),
+        translation_key_values=RINSE_PLUS_OPTIONS,
+        values_translation_key={
+            value: translation_key
+            for translation_key, value in RINSE_PLUS_OPTIONS.items()
+        },
+    ),
+    HomeConnectSelectEntityDescription(
         key=OptionKey.LAUNDRY_CARE_WASHER_TEMPERATURE,
         translation_key="washer_temperature",
         options=list(TEMPERATURE_OPTIONS),
@@ -286,6 +309,15 @@ PROGRAM_SELECT_OPTION_ENTITY_DESCRIPTIONS = (
         values_translation_key={
             value: translation_key
             for translation_key, value in SPIN_SPEED_OPTIONS.items()
+        },
+    ),
+    HomeConnectSelectEntityDescription(
+        key=OptionKey.LAUNDRY_CARE_WASHER_STAINS,
+        translation_key="auto_stain",
+        options=list(STAINS_OPTIONS),
+        translation_key_values=STAINS_OPTIONS,
+        values_translation_key={
+            value: translation_key for translation_key, value in STAINS_OPTIONS.items()
         },
     ),
     HomeConnectSelectEntityDescription(
@@ -401,8 +433,8 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
         """Set the program value."""
         event = self.appliance.events.get(cast(EventKey, self.bsh_key))
         self._attr_current_option = (
-            PROGRAMS_TRANSLATION_KEYS_MAP.get(cast(ProgramKey, event.value))
-            if event
+            PROGRAMS_TRANSLATION_KEYS_MAP.get(ProgramKey(event_value))
+            if event and isinstance(event_value := event.value, str)
             else None
         )
 

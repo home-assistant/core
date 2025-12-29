@@ -25,7 +25,8 @@ from homeassistant.const import (
     EVENT_PANELS_UPDATED,
     EVENT_THEMES_UPDATED,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall, async_get_hass, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.icon import async_get_icons
 from homeassistant.helpers.json import json_dumps_sorted
@@ -37,7 +38,10 @@ from homeassistant.util.hass_dict import HassKey
 
 from .storage import async_setup_frontend_storage
 
+_LOGGER = logging.getLogger(__name__)
+
 DOMAIN = "frontend"
+CONF_NAME_DARK = "name_dark"
 CONF_THEMES = "themes"
 CONF_THEMES_MODES = "modes"
 CONF_THEMES_LIGHT = "light"
@@ -49,7 +53,7 @@ CONF_EXTRA_JS_URL_ES5 = "extra_js_url_es5"
 CONF_FRONTEND_REPO = "development_repo"
 CONF_JS_VERSION = "javascript_version"
 
-DEFAULT_THEME_COLOR = "#03A9F4"
+DEFAULT_THEME_COLOR = "#2980b9"
 
 
 DATA_PANELS: HassKey[dict[str, Panel]] = HassKey("frontend_panels")
@@ -72,9 +76,11 @@ VALUE_NO_THEME = "none"
 
 PRIMARY_COLOR = "primary-color"
 
-_LOGGER = logging.getLogger(__name__)
 
-EXTENDED_THEME_SCHEMA = vol.Schema(
+LEGACY_THEME_SCHEMA = vol.Any(
+    # Legacy theme scheme
+    {cv.string: cv.string},
+    # New extended schema with mode support
     {
         # Theme variables that apply to all modes
         cv.string: cv.string,
@@ -85,28 +91,46 @@ EXTENDED_THEME_SCHEMA = vol.Schema(
                 vol.Optional(CONF_THEMES_DARK): vol.Schema({cv.string: cv.string}),
             }
         ),
-    }
+    },
 )
 
 THEME_SCHEMA = vol.Schema(
     {
-        cv.string: (
-            vol.Any(
-                # Legacy theme scheme
-                {cv.string: cv.string},
-                # New extended schema with mode support
-                EXTENDED_THEME_SCHEMA,
-            )
-        )
+        # Theme variables that apply to all modes
+        cv.string: cv.string,
+        # Mode specific theme variables
+        vol.Optional(CONF_THEMES_MODES): vol.All(
+            {
+                vol.Optional(CONF_THEMES_LIGHT): vol.Schema({cv.string: cv.string}),
+                vol.Optional(CONF_THEMES_DARK): vol.Schema({cv.string: cv.string}),
+            },
+            cv.has_at_least_one_key(CONF_THEMES_LIGHT, CONF_THEMES_DARK),
+        ),
     }
 )
+
+
+def _validate_themes(themes: dict) -> dict[str, Any]:
+    """Validate themes."""
+    validated_themes = {}
+    for theme_name, theme in themes.items():
+        theme_name = cv.string(theme_name)
+        LEGACY_THEME_SCHEMA(theme)
+
+        try:
+            validated_themes[theme_name] = THEME_SCHEMA(theme)
+        except vol.Invalid as err:
+            _LOGGER.error("Theme %s is invalid: %s", theme_name, err)
+
+    return validated_themes
+
 
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
                 vol.Optional(CONF_FRONTEND_REPO): cv.isdir,
-                vol.Optional(CONF_THEMES): THEME_SCHEMA,
+                vol.Optional(CONF_THEMES): vol.All(dict, _validate_themes),
                 vol.Optional(CONF_EXTRA_MODULE_URL): vol.All(
                     cv.ensure_list, [cv.string]
                 ),
@@ -240,6 +264,9 @@ class Panel:
     # Title to show in the sidebar
     sidebar_title: str | None = None
 
+    # If the panel should be visible by default in the sidebar
+    sidebar_default_visible: bool = True
+
     # Url to show the panel in the frontend
     frontend_url_path: str
 
@@ -257,6 +284,7 @@ class Panel:
         component_name: str,
         sidebar_title: str | None,
         sidebar_icon: str | None,
+        sidebar_default_visible: bool,
         frontend_url_path: str | None,
         config: dict[str, Any] | None,
         require_admin: bool,
@@ -270,6 +298,7 @@ class Panel:
         self.config = config
         self.require_admin = require_admin
         self.config_panel_domain = config_panel_domain
+        self.sidebar_default_visible = sidebar_default_visible
 
     @callback
     def to_response(self) -> PanelResponse:
@@ -278,6 +307,7 @@ class Panel:
             "component_name": self.component_name,
             "icon": self.sidebar_icon,
             "title": self.sidebar_title,
+            "default_visible": self.sidebar_default_visible,
             "config": self.config,
             "url_path": self.frontend_url_path,
             "require_admin": self.require_admin,
@@ -292,6 +322,7 @@ def async_register_built_in_panel(
     component_name: str,
     sidebar_title: str | None = None,
     sidebar_icon: str | None = None,
+    sidebar_default_visible: bool = True,
     frontend_url_path: str | None = None,
     config: dict[str, Any] | None = None,
     require_admin: bool = False,
@@ -304,6 +335,7 @@ def async_register_built_in_panel(
         component_name,
         sidebar_title,
         sidebar_icon,
+        sidebar_default_visible,
         frontend_url_path,
         config,
         require_admin,
@@ -364,8 +396,7 @@ def _frontend_root(dev_repo_path: str | None) -> pathlib.Path:
     if dev_repo_path is not None:
         return pathlib.Path(dev_repo_path) / "hass_frontend"
     # Keep import here so that we can import frontend without installing reqs
-    # pylint: disable-next=import-outside-toplevel
-    import hass_frontend
+    import hass_frontend  # noqa: PLC0415
 
     return hass_frontend.where()
 
@@ -430,6 +461,35 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.http.app.router.register_resource(IndexView(repo_path, hass))
 
+    async_register_built_in_panel(
+        hass,
+        "light",
+        sidebar_icon="mdi:lamps",
+        sidebar_title="light",
+        sidebar_default_visible=False,
+    )
+    async_register_built_in_panel(
+        hass,
+        "security",
+        sidebar_icon="mdi:security",
+        sidebar_title="security",
+        sidebar_default_visible=False,
+    )
+    async_register_built_in_panel(
+        hass,
+        "climate",
+        sidebar_icon="mdi:home-thermometer",
+        sidebar_title="climate",
+        sidebar_default_visible=False,
+    )
+    async_register_built_in_panel(
+        hass,
+        "home",
+        sidebar_icon="mdi:home",
+        sidebar_title="home",
+        sidebar_default_visible=False,
+    )
+
     async_register_built_in_panel(hass, "profile")
 
     async_register_built_in_panel(
@@ -437,7 +497,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         "developer-tools",
         require_admin=True,
         sidebar_title="developer_tools",
-        sidebar_icon="hass:hammer",
+        sidebar_icon="mdi:hammer",
     )
 
     @callback
@@ -465,6 +525,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await _async_setup_themes(hass, conf.get(CONF_THEMES))
 
     return True
+
+
+def _validate_selected_theme(theme: str) -> str:
+    """Validate that a user selected theme is a valid theme."""
+    if theme in (DEFAULT_THEME, VALUE_NO_THEME):
+        return theme
+    hass = async_get_hass()
+    if theme not in hass.data[DATA_THEMES]:
+        raise vol.Invalid(f"Theme {theme} not found")
+    return theme
 
 
 async def _async_setup_themes(
@@ -510,27 +580,32 @@ async def _async_setup_themes(
     @callback
     def set_theme(call: ServiceCall) -> None:
         """Set backend-preferred theme."""
-        name = call.data[CONF_NAME]
-        mode = call.data.get("mode", "light")
 
-        if (
-            name not in (DEFAULT_THEME, VALUE_NO_THEME)
-            and name not in hass.data[DATA_THEMES]
-        ):
-            _LOGGER.warning("Theme %s not found", name)
-            return
+        def _update_hass_theme(theme: str, light: bool) -> None:
+            theme_key = DATA_DEFAULT_THEME if light else DATA_DEFAULT_DARK_THEME
+            if theme == VALUE_NO_THEME:
+                to_set = DEFAULT_THEME if light else None
+            else:
+                _LOGGER.info(
+                    "Theme %s set as default %s theme",
+                    theme,
+                    "light" if light else "dark",
+                )
+                to_set = theme
+            hass.data[theme_key] = to_set
 
-        light_mode = mode == "light"
-
-        theme_key = DATA_DEFAULT_THEME if light_mode else DATA_DEFAULT_DARK_THEME
-
-        if name == VALUE_NO_THEME:
-            to_set = DEFAULT_THEME if light_mode else None
+        name = call.data.get(CONF_NAME)
+        if name is not None and CONF_MODE in call.data:
+            mode = call.data.get("mode", "light")
+            light_mode = mode == "light"
+            _update_hass_theme(name, light_mode)
         else:
-            _LOGGER.info("Theme %s set as default %s theme", name, mode)
-            to_set = name
+            name_dark = call.data.get(CONF_NAME_DARK)
+            if name:
+                _update_hass_theme(name, True)
+            if name_dark:
+                _update_hass_theme(name_dark, False)
 
-        hass.data[theme_key] = to_set
         store.async_delay_save(
             lambda: {
                 DATA_DEFAULT_THEME: hass.data[DATA_DEFAULT_THEME],
@@ -544,6 +619,12 @@ async def _async_setup_themes(
         """Reload themes."""
         config = await async_hass_config_yaml(hass)
         new_themes = config.get(DOMAIN, {}).get(CONF_THEMES, {})
+
+        try:
+            new_themes = _validate_themes(new_themes)
+        except vol.Invalid as err:
+            raise HomeAssistantError(f"Failed to reload themes: {err}") from err
+
         hass.data[DATA_THEMES] = new_themes
         if hass.data[DATA_DEFAULT_THEME] not in new_themes:
             hass.data[DATA_DEFAULT_THEME] = DEFAULT_THEME
@@ -559,11 +640,13 @@ async def _async_setup_themes(
         DOMAIN,
         SERVICE_SET_THEME,
         set_theme,
-        vol.Schema(
+        vol.All(
             {
-                vol.Required(CONF_NAME): cv.string,
-                vol.Optional(CONF_MODE): vol.Any("dark", "light"),
-            }
+                vol.Optional(CONF_NAME): _validate_selected_theme,
+                vol.Exclusive(CONF_NAME_DARK, "dark_modes"): _validate_selected_theme,
+                vol.Exclusive(CONF_MODE, "dark_modes"): vol.Any("dark", "light"),
+            },
+            cv.has_at_least_one_key(CONF_NAME, CONF_NAME_DARK),
         ),
     )
 
@@ -712,7 +795,9 @@ class ManifestJSONView(HomeAssistantView):
 @websocket_api.websocket_command(
     {
         "type": "frontend/get_icons",
-        vol.Required("category"): vol.In({"entity", "entity_component", "services"}),
+        vol.Required("category"): vol.In(
+            {"conditions", "entity", "entity_component", "services", "triggers"}
+        ),
         vol.Optional("integration"): vol.All(cv.ensure_list, [str]),
     }
 )
@@ -847,6 +932,7 @@ class PanelResponse(TypedDict):
     component_name: str
     icon: str | None
     title: str | None
+    default_visible: bool
     config: dict[str, Any] | None
     url_path: str
     require_admin: bool

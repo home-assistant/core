@@ -8,6 +8,7 @@ import logging
 
 from aiopvapi.helpers.aiorequest import PvApiMaintenance
 from aiopvapi.hub import Hub
+from aiopvapi.resources.shade_data import PowerviewShadeData
 from aiopvapi.shades import Shades
 
 from homeassistant.config_entries import ConfigEntry
@@ -15,7 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import HUB_EXCEPTIONS
-from .shade_data import PowerviewShadeData
 
 _LOGGER = logging.getLogger(__name__)
 

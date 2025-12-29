@@ -3,11 +3,15 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable, Iterable
 from copy import deepcopy
+from dataclasses import dataclass
 import re
 from typing import cast
 
 import pypck
+from pypck.connection import PchkConnectionManager
+from pypck.device import DeviceConnection
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -23,6 +27,7 @@ from homeassistant.const import (
     CONF_SWITCHES,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 
@@ -33,16 +38,30 @@ from .const import (
     CONF_HARDWARE_TYPE,
     CONF_SCENES,
     CONF_SOFTWARE_SERIAL,
-    CONNECTION,
-    DEVICE_CONNECTIONS,
     DOMAIN,
 )
 
-# typing
-type AddressType = tuple[int, int, bool]
-type DeviceConnectionType = pypck.module.ModuleConnection | pypck.module.GroupConnection
 
-type InputType = type[pypck.inputs.Input]
+@dataclass
+class LcnRuntimeData:
+    """Data for LCN config entry."""
+
+    connection: PchkConnectionManager
+    """Connection to PCHK host."""
+
+    device_connections: dict[str, DeviceConnection]
+    """Logical addresses of devices connected to the host."""
+
+    add_entities_callbacks: dict[str, Callable[[Iterable[ConfigType]], None]]
+    """Callbacks to add entities for platforms."""
+
+
+# typing
+type LcnConfigEntry = ConfigEntry[LcnRuntimeData]
+
+type AddressType = tuple[int, int, bool]
+
+type InputType = pypck.inputs.Input
 
 # Regex for address validation
 PATTERN_ADDRESS = re.compile(
@@ -62,12 +81,12 @@ DOMAIN_LOOKUP = {
 
 
 def get_device_connection(
-    hass: HomeAssistant, address: AddressType, config_entry: ConfigEntry
-) -> DeviceConnectionType:
+    hass: HomeAssistant, address: AddressType, config_entry: LcnConfigEntry
+) -> DeviceConnection:
     """Return a lcn device_connection."""
-    host_connection = hass.data[DOMAIN][config_entry.entry_id][CONNECTION]
+    host_connection = config_entry.runtime_data.connection
     addr = pypck.lcn_addr.LcnAddr(*address)
-    return host_connection.get_address_conn(addr)
+    return host_connection.get_device_connection(addr)
 
 
 def get_resource(domain_name: str, domain_data: ConfigType) -> str:
@@ -82,7 +101,11 @@ def get_resource(domain_name: str, domain_data: ConfigType) -> str:
         return cast(str, domain_data["setpoint"])
     if domain_name == "scene":
         return f"{domain_data['register']}{domain_data['scene']}"
-    raise ValueError("Unknown domain")
+    raise HomeAssistantError(
+        translation_domain=DOMAIN,
+        translation_key="invalid_domain",
+        translation_placeholders={CONF_DOMAIN: domain_name},
+    )
 
 
 def generate_unique_id(
@@ -165,7 +188,7 @@ def purge_device_registry(
         device_registry.async_remove_device(device_id)
 
 
-def register_lcn_host_device(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+def register_lcn_host_device(hass: HomeAssistant, config_entry: LcnConfigEntry) -> None:
     """Register LCN host for given config_entry in device registry."""
     device_registry = dr.async_get(hass)
 
@@ -179,7 +202,7 @@ def register_lcn_host_device(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 
 
 def register_lcn_address_devices(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: LcnConfigEntry
 ) -> None:
     """Register LCN modules and groups defined in config_entry as devices in device registry.
 
@@ -217,33 +240,39 @@ def register_lcn_address_devices(
             model=device_model,
         )
 
-        hass.data[DOMAIN][config_entry.entry_id][DEVICE_CONNECTIONS][
-            device_entry.id
-        ] = get_device_connection(hass, address, config_entry)
+        config_entry.runtime_data.device_connections[device_entry.id] = (
+            get_device_connection(hass, address, config_entry)
+        )
 
 
 async def async_update_device_config(
-    device_connection: DeviceConnectionType, device_config: ConfigType
+    device_connection: DeviceConnection, device_config: ConfigType
 ) -> None:
     """Fill missing values in device_config with infos from LCN bus."""
     # fetch serial info if device is module
     if not (is_group := device_config[CONF_ADDRESS][2]):  # is module
-        await device_connection.serial_known
+        await device_connection.serials_known()
         if device_config[CONF_HARDWARE_SERIAL] == -1:
-            device_config[CONF_HARDWARE_SERIAL] = device_connection.hardware_serial
+            device_config[CONF_HARDWARE_SERIAL] = (
+                device_connection.serials.hardware_serial
+            )
         if device_config[CONF_SOFTWARE_SERIAL] == -1:
-            device_config[CONF_SOFTWARE_SERIAL] = device_connection.software_serial
+            device_config[CONF_SOFTWARE_SERIAL] = (
+                device_connection.serials.software_serial
+            )
         if device_config[CONF_HARDWARE_TYPE] == -1:
-            device_config[CONF_HARDWARE_TYPE] = device_connection.hardware_type.value
+            device_config[CONF_HARDWARE_TYPE] = (
+                device_connection.serials.hardware_type.value
+            )
 
     # fetch name if device is module
     if device_config[CONF_NAME] != "":
         return
 
-    device_name = ""
+    device_name: str | None = None
     if not is_group:
         device_name = await device_connection.request_name()
-    if is_group or device_name == "":
+    if is_group or device_name is None:
         module_type = "Group" if is_group else "Module"
         device_name = (
             f"{module_type} "
@@ -254,7 +283,7 @@ async def async_update_device_config(
 
 
 async def async_update_config_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: LcnConfigEntry
 ) -> None:
     """Fill missing values in config_entry with infos from LCN bus."""
     device_configs = deepcopy(config_entry.data[CONF_DEVICES])
@@ -286,6 +315,8 @@ def get_device_config(
 def is_states_string(states_string: str) -> list[str]:
     """Validate the given states string and return states list."""
     if len(states_string) != 8:
-        raise ValueError("Invalid length of states string")
+        raise HomeAssistantError(
+            translation_domain=DOMAIN, translation_key="invalid_length_of_states_string"
+        )
     states = {"1": "ON", "0": "OFF", "T": "TOGGLE", "-": "NOCHANGE"}
     return [states[state_string] for state_string in states_string]

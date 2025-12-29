@@ -48,7 +48,7 @@ from .const import (
 
 DEFAULT_OFF_DELAY = 2.0
 
-CONNECT_TIMEOUT = 30.0
+CONNECT_TIMEOUT = 60.0
 
 _LOGGER = logging.getLogger(__name__)
 

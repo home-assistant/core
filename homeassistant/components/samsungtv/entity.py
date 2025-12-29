@@ -76,10 +76,10 @@ class SamsungTVEntity(CoordinatorEntity[SamsungTVDataUpdateCoordinator], Entity)
 
     def _wake_on_lan(self) -> None:
         """Wake the device via wake on lan."""
-        send_magic_packet(self._mac, ip_address=self._host)
+        send_magic_packet(self._mac, ip_address=self._host)  # type: ignore[arg-type]
         # If the ip address changed since we last saw the device
         # broadcast a packet as well
-        send_magic_packet(self._mac)
+        send_magic_packet(self._mac)  # type: ignore[arg-type]
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
@@ -92,10 +92,8 @@ class SamsungTVEntity(CoordinatorEntity[SamsungTVDataUpdateCoordinator], Entity)
             LOGGER.debug("Attempting to turn on %s via automation", self.entity_id)
             await self._turn_on_action.async_run(self.hass, self._context)
         elif self._mac:
-            LOGGER.warning(
-                "Attempting to turn on %s via Wake-On-Lan; if this does not work, "
-                "please ensure that Wake-On-Lan is available for your device or use "
-                "a turn_on automation",
+            LOGGER.debug(
+                "Attempting to turn on %s via Wake-On-Lan",
                 self.entity_id,
             )
             await self.hass.async_add_executor_job(self._wake_on_lan)

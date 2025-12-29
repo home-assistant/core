@@ -35,6 +35,7 @@ SERVICE_STOP_LOG_OBJECTS = "stop_log_objects"
 SERVICE_START_LOG_OBJECT_SOURCES = "start_log_object_sources"
 SERVICE_STOP_LOG_OBJECT_SOURCES = "stop_log_object_sources"
 SERVICE_DUMP_LOG_OBJECTS = "dump_log_objects"
+SERVICE_DUMP_SOCKETS = "dump_sockets"
 SERVICE_LRU_STATS = "lru_stats"
 SERVICE_LOG_THREAD_FRAMES = "log_thread_frames"
 SERVICE_LOG_EVENT_LOOP_SCHEDULED = "log_event_loop_scheduled"
@@ -166,7 +167,7 @@ async def async_setup_entry(  # noqa: C901
         # Imports deferred to avoid loading modules
         # in memory since usually only one part of this
         # integration is used at a time
-        import objgraph  # pylint: disable=import-outside-toplevel
+        import objgraph  # noqa: PLC0415
 
         obj_type = call.data[CONF_TYPE]
 
@@ -192,7 +193,7 @@ async def async_setup_entry(  # noqa: C901
         # Imports deferred to avoid loading modules
         # in memory since usually only one part of this
         # integration is used at a time
-        import objgraph  # pylint: disable=import-outside-toplevel
+        import objgraph  # noqa: PLC0415
 
         for lru in objgraph.by_type(_LRU_CACHE_WRAPPER_OBJECT):
             lru = cast(_lru_cache_wrapper, lru)
@@ -229,6 +230,15 @@ async def async_setup_entry(  # noqa: C901
             ),
             title="LRU stats completed",
             notification_id="profile_lru_stats",
+        )
+
+    def _dump_sockets(call: ServiceCall) -> None:
+        """Dump list of all currently existing sockets to the log."""
+        import objgraph  # noqa: PLC0415
+
+        _LOGGER.critical(
+            "Sockets used by Home Assistant:\n%s",
+            "\n".join(repr(sock) for sock in objgraph.by_type("socket")),
         )
 
     async def _async_dump_thread_frames(call: ServiceCall) -> None:
@@ -349,6 +359,13 @@ async def async_setup_entry(  # noqa: C901
     async_register_admin_service(
         hass,
         DOMAIN,
+        SERVICE_DUMP_SOCKETS,
+        _dump_sockets,
+    )
+
+    async_register_admin_service(
+        hass,
+        DOMAIN,
         SERVICE_LRU_STATS,
         _lru_stats,
     )
@@ -399,7 +416,7 @@ async def _async_generate_profile(hass: HomeAssistant, call: ServiceCall):
     # Imports deferred to avoid loading modules
     # in memory since usually only one part of this
     # integration is used at a time
-    import cProfile  # pylint: disable=import-outside-toplevel
+    import cProfile  # noqa: PLC0415
 
     start_time = int(time.time() * 1000000)
     persistent_notification.async_create(
@@ -436,7 +453,11 @@ async def _async_generate_memory_profile(hass: HomeAssistant, call: ServiceCall)
     # Imports deferred to avoid loading modules
     # in memory since usually only one part of this
     # integration is used at a time
-    from guppy import hpy  # pylint: disable=import-outside-toplevel
+    if sys.version_info >= (3, 14):
+        raise HomeAssistantError(
+            "Memory profiling is not supported on Python 3.14. Please use Python 3.13."
+        )
+    from guppy import hpy  # noqa: PLC0415
 
     start_time = int(time.time() * 1000000)
     persistent_notification.async_create(
@@ -467,7 +488,7 @@ def _write_profile(profiler, cprofile_path, callgrind_path):
     # Imports deferred to avoid loading modules
     # in memory since usually only one part of this
     # integration is used at a time
-    from pyprof2calltree import convert  # pylint: disable=import-outside-toplevel
+    from pyprof2calltree import convert  # noqa: PLC0415
 
     profiler.create_stats()
     profiler.dump_stats(cprofile_path)
@@ -482,14 +503,14 @@ def _log_objects(*_):
     # Imports deferred to avoid loading modules
     # in memory since usually only one part of this
     # integration is used at a time
-    import objgraph  # pylint: disable=import-outside-toplevel
+    import objgraph  # noqa: PLC0415
 
     _LOGGER.critical("Memory Growth: %s", objgraph.growth(limit=1000))
 
 
 def _get_function_absfile(func: Any) -> str | None:
     """Get the absolute file path of a function."""
-    import inspect  # pylint: disable=import-outside-toplevel
+    import inspect  # noqa: PLC0415
 
     abs_file: str | None = None
     with suppress(Exception):
@@ -510,7 +531,7 @@ def _safe_repr(obj: Any) -> str:
 
 
 def _find_backrefs_not_to_self(_object: Any) -> list[str]:
-    import objgraph  # pylint: disable=import-outside-toplevel
+    import objgraph  # noqa: PLC0415
 
     return [
         _safe_repr(backref)
@@ -526,7 +547,7 @@ def _log_object_sources(
     # Imports deferred to avoid loading modules
     # in memory since usually only one part of this
     # integration is used at a time
-    import gc  # pylint: disable=import-outside-toplevel
+    import gc  # noqa: PLC0415
 
     gc.collect()
 

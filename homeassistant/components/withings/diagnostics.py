@@ -2,15 +2,22 @@
 
 from __future__ import annotations
 
+from dataclasses import asdict
 from typing import Any
 
 from yarl import URL
 
+from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.components.webhook import async_generate_url as webhook_generate_url
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 
 from . import CONF_CLOUDHOOK_URL, WithingsConfigEntry
+
+TO_REDACT = {
+    "device_id",
+    "hashed_device_id",
+}
 
 
 async def async_get_config_entry_diagnostics(
@@ -53,4 +60,8 @@ async def async_get_config_entry_diagnostics(
         "received_sleep_data": withings_data.sleep_coordinator.data is not None,
         "received_workout_data": withings_data.workout_coordinator.data is not None,
         "received_activity_data": withings_data.activity_coordinator.data is not None,
+        "devices": async_redact_data(
+            [asdict(v) for v in withings_data.device_coordinator.data.values()],
+            TO_REDACT,
+        ),
     }

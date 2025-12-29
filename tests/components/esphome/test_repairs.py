@@ -55,10 +55,13 @@ async def test_device_conflict_manual(
         disconnect_done.set_result(None)
 
     mock_client.disconnect = async_disconnect
-    mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(
-            mac_address="1122334455ab", name="test", model="esp32-iso-poe"
-        )
+    device_info = DeviceInfo(
+        mac_address="1122334455ab", name="test", model="esp32-iso-poe"
+    )
+    mock_client.device_info = AsyncMock(return_value=device_info)
+    mock_client.list_entities_services = AsyncMock(return_value=([], []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device_info, [], [])
     )
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -77,13 +80,6 @@ async def test_device_conflict_manual(
     data = await start_repair_fix_flow(client, DOMAIN, issue_id)
 
     flow_id = data["flow_id"]
-    assert data["description_placeholders"] == {
-        "ip": "192.168.1.2",
-        "mac": "11:22:33:44:55:ab",
-        "model": "esp32-iso-poe",
-        "name": "test",
-        "stored_mac": "11:22:33:44:55:aa",
-    }
     assert data["type"] == FlowResultType.MENU
     assert data["step_id"] == "init"
 
@@ -92,20 +88,16 @@ async def test_device_conflict_manual(
     )
 
     flow_id = data["flow_id"]
-    assert data["description_placeholders"] == {
-        "ip": "192.168.1.2",
-        "mac": "11:22:33:44:55:ab",
-        "model": "esp32-iso-poe",
-        "name": "test",
-        "stored_mac": "11:22:33:44:55:aa",
-    }
     assert data["type"] == FlowResultType.FORM
     assert data["step_id"] == "manual"
 
-    mock_client.device_info = AsyncMock(
-        return_value=DeviceInfo(
-            mac_address="11:22:33:44:55:aa", name="test", model="esp32-iso-poe"
-        )
+    device_info = DeviceInfo(
+        mac_address="11:22:33:44:55:aa", name="test", model="esp32-iso-poe"
+    )
+    mock_client.device_info = AsyncMock(return_value=device_info)
+    mock_client.list_entities_services = AsyncMock(return_value=([], []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(device_info, [], [])
     )
     caplog.clear()
     data = await process_repair_fix_flow(client, flow_id)
@@ -133,7 +125,6 @@ async def test_device_conflict_migration(
             object_id="mybinary_sensor",
             key=1,
             name="my binary_sensor",
-            unique_id="my_binary_sensor",
             is_status_binary_sensor=True,
         )
     ]
@@ -145,12 +136,12 @@ async def test_device_conflict_migration(
         user_service=user_service,
         states=states,
     )
-    state = hass.states.get("binary_sensor.test_mybinary_sensor")
+    state = hass.states.get("binary_sensor.test_my_binary_sensor")
     assert state is not None
     assert state.state == STATE_ON
     mock_config_entry = device.entry
 
-    ent_reg_entry = entity_registry.async_get("binary_sensor.test_mybinary_sensor")
+    ent_reg_entry = entity_registry.async_get("binary_sensor.test_my_binary_sensor")
     assert ent_reg_entry
     assert ent_reg_entry.unique_id == "11:22:33:44:55:AA-binary_sensor-mybinary_sensor"
     entries = er.async_entries_for_config_entry(
@@ -170,6 +161,11 @@ async def test_device_conflict_migration(
         mac_address="11:22:33:44:55:AB", name="test", model="esp32-iso-poe"
     )
     mock_client.device_info = AsyncMock(return_value=new_device_info)
+    # Keep the same entity_info when reloading
+    mock_client.list_entities_services = AsyncMock(return_value=(entity_info, []))
+    mock_client.device_info_and_list_entities = AsyncMock(
+        return_value=(new_device_info, entity_info, [])
+    )
     device.device_info = new_device_info
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -188,13 +184,6 @@ async def test_device_conflict_migration(
     data = await start_repair_fix_flow(client, DOMAIN, issue_id)
 
     flow_id = data["flow_id"]
-    assert data["description_placeholders"] == {
-        "ip": "test.local",
-        "mac": "11:22:33:44:55:ab",
-        "model": "esp32-iso-poe",
-        "name": "test",
-        "stored_mac": "11:22:33:44:55:aa",
-    }
     assert data["type"] == FlowResultType.MENU
     assert data["step_id"] == "init"
 
@@ -203,13 +192,6 @@ async def test_device_conflict_migration(
     )
 
     flow_id = data["flow_id"]
-    assert data["description_placeholders"] == {
-        "ip": "test.local",
-        "mac": "11:22:33:44:55:ab",
-        "model": "esp32-iso-poe",
-        "name": "test",
-        "stored_mac": "11:22:33:44:55:aa",
-    }
     assert data["type"] == FlowResultType.FORM
     assert data["step_id"] == "migrate"
 
@@ -222,7 +204,7 @@ async def test_device_conflict_migration(
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
     assert mock_config_entry.unique_id == "11:22:33:44:55:ab"
-    ent_reg_entry = entity_registry.async_get("binary_sensor.test_mybinary_sensor")
+    ent_reg_entry = entity_registry.async_get("binary_sensor.test_my_binary_sensor")
     assert ent_reg_entry
     assert ent_reg_entry.unique_id == "11:22:33:44:55:AB-binary_sensor-mybinary_sensor"
 

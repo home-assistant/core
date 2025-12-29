@@ -7,24 +7,21 @@ from types import MappingProxyType
 from typing import Any
 
 from telegram import Bot, ChatFullInfo
-from telegram.error import BadRequest, InvalidToken, NetworkError
+from telegram.error import BadRequest, InvalidToken, TelegramError
 import voluptuous as vol
 
 from homeassistant.config_entries import (
-    SOURCE_IMPORT,
     SOURCE_RECONFIGURE,
     ConfigFlow,
     ConfigFlowResult,
-    ConfigSubentryData,
     ConfigSubentryFlow,
     OptionsFlow,
     SubentryFlowResult,
 )
 from homeassistant.const import CONF_API_KEY, CONF_PLATFORM, CONF_URL
 from homeassistant.core import callback
-from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.data_entry_flow import section
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.selector import (
     SelectSelector,
@@ -39,8 +36,6 @@ from .bot import TelegramBotConfigEntry
 from .const import (
     ATTR_PARSER,
     BOT_NAME,
-    CONF_ALLOWED_CHAT_IDS,
-    CONF_BOT_COUNT,
     CONF_CHAT_ID,
     CONF_PROXY_URL,
     CONF_TRUSTED_NETWORKS,
@@ -48,19 +43,26 @@ from .const import (
     DOMAIN,
     ERROR_FIELD,
     ERROR_MESSAGE,
-    ISSUE_DEPRECATED_YAML,
-    ISSUE_DEPRECATED_YAML_HAS_MORE_PLATFORMS,
-    ISSUE_DEPRECATED_YAML_IMPORT_ISSUE_ERROR,
     PARSER_HTML,
     PARSER_MD,
     PARSER_MD2,
+    PARSER_PLAIN_TEXT,
     PLATFORM_BROADCAST,
     PLATFORM_POLLING,
     PLATFORM_WEBHOOKS,
+    SECTION_ADVANCED_SETTINGS,
     SUBENTRY_TYPE_ALLOWED_CHAT_IDS,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+DESCRIPTION_PLACEHOLDERS: dict[str, str] = {
+    "botfather_username": "@BotFather",
+    "botfather_url": "https://t.me/botfather",
+    "getidsbot_username": "@GetIDs Bot",
+    "getidsbot_url": "https://t.me/getidsbot",
+    "socks_url": "socks5://username:password@proxy_ip:proxy_port",
+}
 
 STEP_USER_DATA_SCHEMA: vol.Schema = vol.Schema(
     {
@@ -80,8 +82,15 @@ STEP_USER_DATA_SCHEMA: vol.Schema = vol.Schema(
                 autocomplete="current-password",
             )
         ),
-        vol.Optional(CONF_PROXY_URL): TextSelector(
-            config=TextSelectorConfig(type=TextSelectorType.URL)
+        vol.Required(SECTION_ADVANCED_SETTINGS): section(
+            vol.Schema(
+                {
+                    vol.Optional(CONF_PROXY_URL): TextSelector(
+                        config=TextSelectorConfig(type=TextSelectorType.URL)
+                    ),
+                },
+            ),
+            {"collapsed": True},
         ),
     }
 )
@@ -97,8 +106,15 @@ STEP_RECONFIGURE_USER_DATA_SCHEMA: vol.Schema = vol.Schema(
                 translation_key="platforms",
             )
         ),
-        vol.Optional(CONF_PROXY_URL): TextSelector(
-            config=TextSelectorConfig(type=TextSelectorType.URL)
+        vol.Required(SECTION_ADVANCED_SETTINGS): section(
+            vol.Schema(
+                {
+                    vol.Optional(CONF_PROXY_URL): TextSelector(
+                        config=TextSelectorConfig(type=TextSelectorType.URL)
+                    ),
+                },
+            ),
+            {"collapsed": True},
         ),
     }
 )
@@ -126,8 +142,8 @@ OPTIONS_SCHEMA: vol.Schema = vol.Schema(
             ATTR_PARSER,
         ): SelectSelector(
             SelectSelectorConfig(
-                options=[PARSER_MD, PARSER_MD2, PARSER_HTML],
-                translation_key="parsers",
+                options=[PARSER_MD, PARSER_MD2, PARSER_HTML, PARSER_PLAIN_TEXT],
+                translation_key="parse_mode",
             )
         )
     }
@@ -184,116 +200,17 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
         # for passing data between steps
         self._step_user_data: dict[str, Any] = {}
 
-    # triggered by async_setup() from __init__.py
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Handle import of config entry from configuration.yaml."""
-
-        telegram_bot: str = f"{import_data[CONF_PLATFORM]} Telegram bot"
-        bot_count: int = import_data[CONF_BOT_COUNT]
-
-        import_data[CONF_TRUSTED_NETWORKS] = ",".join(
-            import_data[CONF_TRUSTED_NETWORKS]
-        )
-        try:
-            config_flow_result: ConfigFlowResult = await self.async_step_user(
-                import_data
-            )
-        except AbortFlow:
-            # this happens if the config entry is already imported
-            self._create_issue(ISSUE_DEPRECATED_YAML, telegram_bot, bot_count)
-            raise
-        else:
-            errors: dict[str, str] | None = config_flow_result.get("errors")
-            if errors:
-                error: str = errors.get("base", "unknown")
-                self._create_issue(
-                    error,
-                    telegram_bot,
-                    bot_count,
-                    config_flow_result["description_placeholders"],
-                )
-                return self.async_abort(reason="import_failed")
-
-            subentries: list[ConfigSubentryData] = []
-            allowed_chat_ids: list[int] = import_data[CONF_ALLOWED_CHAT_IDS]
-            for chat_id in allowed_chat_ids:
-                chat_name: str = await _async_get_chat_name(self._bot, chat_id)
-                subentry: ConfigSubentryData = ConfigSubentryData(
-                    data={CONF_CHAT_ID: chat_id},
-                    subentry_type=CONF_ALLOWED_CHAT_IDS,
-                    title=chat_name,
-                    unique_id=str(chat_id),
-                )
-                subentries.append(subentry)
-            config_flow_result["subentries"] = subentries
-
-            self._create_issue(
-                ISSUE_DEPRECATED_YAML,
-                telegram_bot,
-                bot_count,
-                config_flow_result["description_placeholders"],
-            )
-            return config_flow_result
-
-    def _create_issue(
-        self,
-        issue: str,
-        telegram_bot_type: str,
-        bot_count: int,
-        description_placeholders: Mapping[str, str] | None = None,
-    ) -> None:
-        translation_key: str = (
-            ISSUE_DEPRECATED_YAML
-            if bot_count == 1
-            else ISSUE_DEPRECATED_YAML_HAS_MORE_PLATFORMS
-        )
-        if issue != ISSUE_DEPRECATED_YAML:
-            translation_key = ISSUE_DEPRECATED_YAML_IMPORT_ISSUE_ERROR
-
-        telegram_bot = (
-            description_placeholders.get(BOT_NAME, telegram_bot_type)
-            if description_placeholders
-            else telegram_bot_type
-        )
-        error_field = (
-            description_placeholders.get(ERROR_FIELD, "Unknown error")
-            if description_placeholders
-            else "Unknown error"
-        )
-        error_message = (
-            description_placeholders.get(ERROR_MESSAGE, "Unknown error")
-            if description_placeholders
-            else "Unknown error"
-        )
-
-        async_create_issue(
-            self.hass,
-            DOMAIN,
-            ISSUE_DEPRECATED_YAML,
-            breaks_in_ha_version="2025.12.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=IssueSeverity.WARNING,
-            translation_key=translation_key,
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": "Telegram Bot",
-                "telegram_bot": telegram_bot,
-                ERROR_FIELD: error_field,
-                ERROR_MESSAGE: error_message,
-            },
-            learn_more_url="https://github.com/home-assistant/core/pull/144617",
-        )
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow to create a new config entry for a Telegram bot."""
 
+        description_placeholders: dict[str, str] = DESCRIPTION_PLACEHOLDERS.copy()
         if not user_input:
             return self.async_show_form(
                 step_id="user",
                 data_schema=STEP_USER_DATA_SCHEMA,
+                description_placeholders=description_placeholders,
             )
 
         # prevent duplicates
@@ -302,7 +219,9 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # validate connection to Telegram API
         errors: dict[str, str] = {}
-        description_placeholders: dict[str, str] = {}
+        user_input[CONF_PROXY_URL] = user_input[SECTION_ADVANCED_SETTINGS].get(
+            CONF_PROXY_URL
+        )
         bot_name = await self._validate_bot(
             user_input, errors, description_placeholders
         )
@@ -325,32 +244,23 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                 data={
                     CONF_PLATFORM: user_input[CONF_PLATFORM],
                     CONF_API_KEY: user_input[CONF_API_KEY],
-                    CONF_PROXY_URL: user_input.get(CONF_PROXY_URL),
+                    CONF_PROXY_URL: user_input[SECTION_ADVANCED_SETTINGS].get(
+                        CONF_PROXY_URL
+                    ),
                 },
-                options={
-                    # this value may come from yaml import
-                    ATTR_PARSER: user_input.get(ATTR_PARSER, PARSER_MD)
-                },
+                options={ATTR_PARSER: PARSER_MD},
                 description_placeholders=description_placeholders,
             )
 
         self._bot_name = bot_name
         self._step_user_data.update(user_input)
 
-        if self.source == SOURCE_IMPORT:
-            return await self.async_step_webhooks(
-                {
-                    CONF_URL: user_input.get(CONF_URL),
-                    CONF_TRUSTED_NETWORKS: user_input[CONF_TRUSTED_NETWORKS],
-                }
-            )
         return await self.async_step_webhooks()
 
     async def _shutdown_bot(self) -> None:
         """Shutdown the bot if it exists."""
         if self._bot:
             await self._bot.shutdown()
-            self._bot = None
 
     async def _validate_bot(
         self,
@@ -371,11 +281,15 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
             placeholders[ERROR_FIELD] = "API key"
             placeholders[ERROR_MESSAGE] = str(err)
             return "Unknown bot"
-        except (ValueError, NetworkError) as err:
+        except ValueError as err:
             _LOGGER.warning("Invalid proxy")
             errors["base"] = "invalid_proxy_url"
             placeholders["proxy_url_error"] = str(err)
             placeholders[ERROR_FIELD] = "proxy url"
+            placeholders[ERROR_MESSAGE] = str(err)
+            return "Unknown bot"
+        except TelegramError as err:
+            errors["base"] = "telegram_error"
             placeholders[ERROR_MESSAGE] = str(err)
             return "Unknown bot"
         else:
@@ -387,12 +301,20 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle config flow for webhook Telegram bot."""
 
         if not user_input:
+            default_trusted_networks = ",".join(
+                [str(network) for network in DEFAULT_TRUSTED_NETWORKS]
+            )
+
             if self.source == SOURCE_RECONFIGURE:
+                suggested_values = dict(self._get_reconfigure_entry().data)
+                if CONF_TRUSTED_NETWORKS not in self._get_reconfigure_entry().data:
+                    suggested_values[CONF_TRUSTED_NETWORKS] = default_trusted_networks
+
                 return self.async_show_form(
                     step_id="webhooks",
                     data_schema=self.add_suggested_values_to_schema(
                         STEP_WEBHOOKS_DATA_SCHEMA,
-                        self._get_reconfigure_entry().data,
+                        suggested_values,
                     ),
                 )
 
@@ -401,9 +323,7 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                 data_schema=self.add_suggested_values_to_schema(
                     STEP_WEBHOOKS_DATA_SCHEMA,
                     {
-                        CONF_TRUSTED_NETWORKS: ",".join(
-                            [str(network) for network in DEFAULT_TRUSTED_NETWORKS]
-                        ),
+                        CONF_TRUSTED_NETWORKS: default_trusted_networks,
                     },
                 ),
             )
@@ -437,7 +357,9 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
             data={
                 CONF_PLATFORM: self._step_user_data[CONF_PLATFORM],
                 CONF_API_KEY: self._step_user_data[CONF_API_KEY],
-                CONF_PROXY_URL: self._step_user_data.get(CONF_PROXY_URL),
+                CONF_PROXY_URL: self._step_user_data[SECTION_ADVANCED_SETTINGS].get(
+                    CONF_PROXY_URL
+                ),
                 CONF_URL: user_input.get(CONF_URL),
                 CONF_TRUSTED_NETWORKS: user_input[CONF_TRUSTED_NETWORKS],
             },
@@ -452,12 +374,8 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
         description_placeholders: dict[str, str],
     ) -> None:
         # validate URL
-        if CONF_URL in user_input and not user_input[CONF_URL].startswith("https"):
-            errors["base"] = "invalid_url"
-            description_placeholders[ERROR_FIELD] = "URL"
-            description_placeholders[ERROR_MESSAGE] = "URL must start with https"
-            return
-        if CONF_URL not in user_input:
+        url: str | None = user_input.get(CONF_URL)
+        if url is None:
             try:
                 get_url(self.hass, require_ssl=True, allow_internal=False)
             except NoURLAvailableError:
@@ -467,6 +385,11 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                     "URL is required since you have not configured an external URL in Home Assistant"
                 )
                 return
+        elif not url.startswith("https"):
+            errors["base"] = "invalid_url"
+            description_placeholders[ERROR_FIELD] = "URL"
+            description_placeholders[ERROR_MESSAGE] = "URL must start with https"
+            return
 
         # validate trusted networks
         csv_trusted_networks: list[str] = []
@@ -502,12 +425,23 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="reconfigure",
                 data_schema=self.add_suggested_values_to_schema(
                     STEP_RECONFIGURE_USER_DATA_SCHEMA,
-                    self._get_reconfigure_entry().data,
+                    {
+                        **self._get_reconfigure_entry().data,
+                        SECTION_ADVANCED_SETTINGS: {
+                            CONF_PROXY_URL: self._get_reconfigure_entry().data.get(
+                                CONF_PROXY_URL
+                            ),
+                        },
+                    },
                 ),
+                description_placeholders=DESCRIPTION_PLACEHOLDERS,
             )
+        user_input[CONF_PROXY_URL] = user_input[SECTION_ADVANCED_SETTINGS].get(
+            CONF_PROXY_URL
+        )
 
         errors: dict[str, str] = {}
-        description_placeholders: dict[str, str] = {}
+        description_placeholders: dict[str, str] = DESCRIPTION_PLACEHOLDERS.copy()
 
         user_input[CONF_API_KEY] = api_key
         bot_name = await self._validate_bot(
@@ -520,7 +454,12 @@ class TelgramBotConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="reconfigure",
                 data_schema=self.add_suggested_values_to_schema(
                     STEP_RECONFIGURE_USER_DATA_SCHEMA,
-                    user_input,
+                    {
+                        **user_input,
+                        SECTION_ADVANCED_SETTINGS: {
+                            CONF_PROXY_URL: user_input.get(CONF_PROXY_URL),
+                        },
+                    },
                 ),
                 errors=errors,
                 description_placeholders=description_placeholders,
@@ -595,7 +534,7 @@ class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
             chat_name = await _async_get_chat_name(bot, chat_id)
             if chat_name:
                 return self.async_create_entry(
-                    title=chat_name,
+                    title=f"{chat_name} ({chat_id})",
                     data={CONF_CHAT_ID: chat_id},
                     unique_id=str(chat_id),
                 )
@@ -605,14 +544,12 @@ class AllowedChatIdsSubEntryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema({vol.Required(CONF_CHAT_ID): vol.Coerce(int)}),
+            description_placeholders=DESCRIPTION_PLACEHOLDERS,
             errors=errors,
         )
 
 
-async def _async_get_chat_name(bot: Bot | None, chat_id: int) -> str:
-    if not bot:
-        return str(chat_id)
-
+async def _async_get_chat_name(bot: Bot, chat_id: int) -> str:
     try:
         chat_info: ChatFullInfo = await bot.get_chat(chat_id)
         return chat_info.effective_name or str(chat_id)

@@ -100,49 +100,70 @@ class EsphomeAlarmControlPanel(
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         self._client.alarm_control_panel_command(
-            self._key, AlarmControlPanelCommand.DISARM, code
+            self._key,
+            AlarmControlPanelCommand.DISARM,
+            code,
+            device_id=self._static_info.device_id,
         )
 
     @convert_api_error_ha_error
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         self._client.alarm_control_panel_command(
-            self._key, AlarmControlPanelCommand.ARM_HOME, code
+            self._key,
+            AlarmControlPanelCommand.ARM_HOME,
+            code,
+            device_id=self._static_info.device_id,
         )
 
     @convert_api_error_ha_error
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         self._client.alarm_control_panel_command(
-            self._key, AlarmControlPanelCommand.ARM_AWAY, code
+            self._key,
+            AlarmControlPanelCommand.ARM_AWAY,
+            code,
+            device_id=self._static_info.device_id,
         )
 
     @convert_api_error_ha_error
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm away command."""
         self._client.alarm_control_panel_command(
-            self._key, AlarmControlPanelCommand.ARM_NIGHT, code
+            self._key,
+            AlarmControlPanelCommand.ARM_NIGHT,
+            code,
+            device_id=self._static_info.device_id,
         )
 
     @convert_api_error_ha_error
     async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
         """Send arm away command."""
         self._client.alarm_control_panel_command(
-            self._key, AlarmControlPanelCommand.ARM_CUSTOM_BYPASS, code
+            self._key,
+            AlarmControlPanelCommand.ARM_CUSTOM_BYPASS,
+            code,
+            device_id=self._static_info.device_id,
         )
 
     @convert_api_error_ha_error
     async def async_alarm_arm_vacation(self, code: str | None = None) -> None:
         """Send arm away command."""
         self._client.alarm_control_panel_command(
-            self._key, AlarmControlPanelCommand.ARM_VACATION, code
+            self._key,
+            AlarmControlPanelCommand.ARM_VACATION,
+            code,
+            device_id=self._static_info.device_id,
         )
 
     @convert_api_error_ha_error
     async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Send alarm trigger command."""
         self._client.alarm_control_panel_command(
-            self._key, AlarmControlPanelCommand.TRIGGER, code
+            self._key,
+            AlarmControlPanelCommand.TRIGGER,
+            code,
+            device_id=self._static_info.device_id,
         )
 
 

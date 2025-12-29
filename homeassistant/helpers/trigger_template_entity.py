@@ -13,7 +13,11 @@ from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DEVICE_CLASSES_SCHEMA,
     STATE_CLASSES_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
+)
+from homeassistant.components.sensor.helpers import (  # pylint: disable=hass-component-root-import
+    async_parse_date_datetime,
 )
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
@@ -35,10 +39,10 @@ from .template import (
     _SENTINEL,
     Template,
     TemplateStateFromEntityId,
-    _render_with_context,
     render_complex,
     result_as_boolean,
 )
+from .template.context import render_with_context
 from .typing import ConfigType
 
 CONF_AVAILABILITY = "availability"
@@ -129,7 +133,7 @@ class ValueTemplate(Template):
         compiled = self._compiled or self._ensure_compiled()
 
         try:
-            render_result = _render_with_context(
+            render_result = render_with_context(
                 self.template, compiled, **variables
             ).strip()
         except jinja2.TemplateError as ex:
@@ -389,3 +393,20 @@ class ManualTriggerSensorEntity(ManualTriggerEntity, SensorEntity):
         ManualTriggerEntity.__init__(self, hass, config)
         self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
         self._attr_state_class = config.get(CONF_STATE_CLASS)
+
+    @callback
+    def _set_native_value_with_possible_timestamp(self, value: Any) -> None:
+        """Set native value with possible timestamp.
+
+        If self.device_class is `date` or `timestamp`,
+        it will try to parse the value to a date/datetime object.
+        """
+        if self.device_class not in (
+            SensorDeviceClass.DATE,
+            SensorDeviceClass.TIMESTAMP,
+        ):
+            self._attr_native_value = value
+        elif value is not None:
+            self._attr_native_value = async_parse_date_datetime(
+                value, self.entity_id, self.device_class
+            )

@@ -1,0 +1,206 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "alarm_ofa_cl": {
+        "default": "mdi:clock-alert-outline",
+        "state": {
+          "on": "mdi:clock-alert"
+        }
+      },
+      "alarm_ofa_orp": {
+        "default": "mdi:clock-alert-outline",
+        "state": {
+          "on": "mdi:clock-alert"
+        }
+      },
+      "alarm_ofa_ph": {
+        "default": "mdi:clock-alert-outline",
+        "state": {
+          "on": "mdi:clock-alert"
+        }
+      },
+      "flow_rate_alarm": {
+        "default": "mdi:autorenew",
+        "state": {
+          "on": "mdi:autorenew-off"
+        }
+      },
+      "orp_level_alarm": {
+        "default": "mdi:flask",
+        "state": {
+          "on": "mdi:flask-empty"
+        }
+      },
+      "ph_level_alarm": {
+        "default": "mdi:flask",
+        "state": {
+          "on": "mdi:flask-empty"
+        }
+      },
+      "pump_alarm": {
+        "default": "mdi:pump",
+        "state": {
+          "on": "mdi:pump-off"
+        }
+      },
+      "relay_alarm": {
+        "default": "mdi:electric-switch-closed",
+        "state": {
+          "on": "mdi:electric-switch"
+        }
+      },
+      "relay_aux1": {
+        "default": "mdi:electric-switch-closed",
+        "state": {
+          "on": "mdi:electric-switch"
+        }
+      },
+      "relay_aux2": {
+        "default": "mdi:electric-switch-closed",
+        "state": {
+          "on": "mdi:electric-switch"
+        }
+      },
+      "relay_aux3": {
+        "default": "mdi:electric-switch-closed",
+        "state": {
+          "on": "mdi:electric-switch"
+        }
+      }
+    },
+    "number": {
+      "cl_target": {
+        "default": "mdi:pool"
+      },
+      "ofa_cl_lower": {
+        "default": "mdi:arrow-down-bold"
+      },
+      "ofa_cl_upper": {
+        "default": "mdi:arrow-up-bold"
+      },
+      "ofa_orp_lower": {
+        "default": "mdi:arrow-down-bold"
+      },
+      "ofa_orp_upper": {
+        "default": "mdi:arrow-up-bold"
+      },
+      "ofa_ph_lower": {
+        "default": "mdi:arrow-down-bold"
+      },
+      "ofa_ph_upper": {
+        "default": "mdi:arrow-up-bold"
+      },
+      "orp_target": {
+        "default": "mdi:water-check"
+      },
+      "ph_target": {
+        "default": "mdi:ph"
+      }
+    },
+    "select": {
+      "cl_type_dosing_method": {
+        "default": "mdi:beaker"
+      },
+      "cl_type_dosing_set": {
+        "default": "mdi:pool"
+      },
+      "flow_rate_unit": {
+        "default": "mdi:pipe-valve"
+      },
+      "orp_type_dosing_method": {
+        "default": "mdi:beaker"
+      },
+      "orp_type_dosing_set": {
+        "default": "mdi:water-check"
+      },
+      "ph_type_dosing_method": {
+        "default": "mdi:beaker"
+      },
+      "ph_type_dosing_set": {
+        "default": "mdi:ph"
+      },
+      "water_meter_unit": {
+        "default": "mdi:water"
+      }
+    },
+    "sensor": {
+      "cl": {
+        "default": "mdi:pool"
+      },
+      "cl_type_dosing": {
+        "default": "mdi:beaker"
+      },
+      "flow_rate": {
+        "default": "mdi:pipe-valve"
+      },
+      "ofa_orp_time": {
+        "default": "mdi:clock"
+      },
+      "ofa_ph_time": {
+        "default": "mdi:clock"
+      },
+      "orp": {
+        "default": "mdi:water-check"
+      },
+      "orp_calibration_offset": {
+        "default": "mdi:tune"
+      },
+      "orp_calibration_slope": {
+        "default": "mdi:slope-downhill"
+      },
+      "orp_calibration_type": {
+        "default": "mdi:form-select"
+      },
+      "orp_type_dosing": {
+        "default": "mdi:beaker"
+      },
+      "peristaltic_cl_dosing": {
+        "default": "mdi:pump"
+      },
+      "peristaltic_orp_dosing": {
+        "default": "mdi:pump"
+      },
+      "peristaltic_ph_dosing": {
+        "default": "mdi:pump"
+      },
+      "ph_calibration_offset": {
+        "default": "mdi:tune"
+      },
+      "ph_calibration_slope": {
+        "default": "mdi:slope-downhill"
+      },
+      "ph_calibration_type": {
+        "default": "mdi:form-select"
+      },
+      "ph_type_dosing": {
+        "default": "mdi:beaker"
+      },
+      "water_meter_total_permanent": {
+        "default": "mdi:counter"
+      }
+    },
+    "switch": {
+      "frequency_input": {
+        "default": "mdi:sine-wave",
+        "state": {
+          "off": "mdi:pulse",
+          "on": "mdi:sine-wave"
+        }
+      },
+      "pause_dosing": {
+        "default": "mdi:pause",
+        "state": {
+          "off": "mdi:play",
+          "on": "mdi:pause"
+        }
+      },
+      "pump_monitoring": {
+        "default": "mdi:pump",
+        "state": {
+          "off": "mdi:pump-off",
+          "on": "mdi:pump"
+        }
+      }
+    }
+  }
+}

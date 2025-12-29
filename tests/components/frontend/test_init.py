@@ -1,6 +1,7 @@
 """The tests for Home Assistant frontend."""
 
 from collections.abc import Generator
+from contextlib import nullcontext
 from http import HTTPStatus
 from pathlib import Path
 import re
@@ -10,6 +11,7 @@ from unittest.mock import patch
 from aiohttp.test_utils import TestClient
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+import voluptuous as vol
 
 from homeassistant.components.frontend import (
     CONF_EXTRA_JS_URL_ES5,
@@ -26,6 +28,7 @@ from homeassistant.components.frontend import (
 )
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import async_get_integration
 from homeassistant.setup import async_setup_component
 
@@ -277,6 +280,30 @@ async def test_themes_save_storage(
     }
 
 
+@pytest.mark.usefixtures("frontend_themes")
+async def test_themes_save_storage_new_schema(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that theme settings are restores after restart."""
+
+    await hass.services.async_call(
+        DOMAIN, "set_theme", {"name": "happy", "name_dark": "dark"}, blocking=True
+    )
+
+    # To trigger the call_later
+    freezer.tick(60.0)
+    async_fire_time_changed(hass)
+    # To execute the save
+    await hass.async_block_till_done()
+
+    assert hass_storage[THEMES_STORAGE_KEY]["data"] == {
+        "frontend_default_theme": "happy",
+        "frontend_default_dark_theme": "dark",
+    }
+
+
 async def test_themes_set_theme(
     hass: HomeAssistant, themes_ws_client: MockHAClientWebSocket
 ) -> None:
@@ -316,9 +343,13 @@ async def test_themes_set_theme_wrong_name(
 ) -> None:
     """Test frontend.set_theme service called with wrong name."""
 
-    await hass.services.async_call(
-        DOMAIN, "set_theme", {"name": "wrong"}, blocking=True
-    )
+    with pytest.raises(
+        vol.error.MultipleInvalid,
+        match="Theme wrong not found",
+    ):
+        await hass.services.async_call(
+            DOMAIN, "set_theme", {"name": "wrong"}, blocking=True
+        )
 
     await themes_ws_client.send_json({"id": 5, "type": "frontend/get_themes"})
 
@@ -369,14 +400,58 @@ async def test_themes_set_dark_theme(
     assert msg["result"]["default_dark_theme"] == "light_and_dark"
 
 
-@pytest.mark.usefixtures("frontend")
-async def test_themes_set_dark_theme_wrong_name(
+async def test_themes_set_combined_theme(
     hass: HomeAssistant, themes_ws_client: MockHAClientWebSocket
 ) -> None:
-    """Test frontend.set_theme service called with mode dark and wrong name."""
+    """Test frontend.set_theme service setting both light and dark modes."""
+
     await hass.services.async_call(
-        DOMAIN, "set_theme", {"name": "wrong", "mode": "dark"}, blocking=True
+        DOMAIN, "set_theme", {"name_dark": "dark"}, blocking=True
     )
+
+    await themes_ws_client.send_json({"id": 5, "type": "frontend/get_themes"})
+    msg = await themes_ws_client.receive_json()
+
+    assert msg["result"]["default_theme"] == "default"
+    assert msg["result"]["default_dark_theme"] == "dark"
+
+    await hass.services.async_call(
+        DOMAIN, "set_theme", {"name": "happy"}, blocking=True
+    )
+
+    await themes_ws_client.send_json({"id": 6, "type": "frontend/get_themes"})
+    msg = await themes_ws_client.receive_json()
+
+    assert msg["result"]["default_theme"] == "happy"
+    assert msg["result"]["default_dark_theme"] == "dark"
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_theme",
+        {"name": "light_only", "name_dark": "dark_only"},
+        blocking=True,
+    )
+
+    await themes_ws_client.send_json({"id": 7, "type": "frontend/get_themes"})
+    msg = await themes_ws_client.receive_json()
+
+    assert msg["result"]["default_theme"] == "light_only"
+    assert msg["result"]["default_dark_theme"] == "dark_only"
+
+
+@pytest.mark.usefixtures("frontend")
+@pytest.mark.parametrize(
+    ("schema"), [{"name": "wrong", "mode": "dark"}, {"name_dark": "wrong"}]
+)
+async def test_themes_set_dark_theme_wrong_name(
+    hass: HomeAssistant, themes_ws_client: MockHAClientWebSocket, schema
+) -> None:
+    """Test frontend.set_theme service called with mode dark and wrong name."""
+    with pytest.raises(
+        vol.error.MultipleInvalid,
+        match="Theme wrong not found",
+    ):
+        await hass.services.async_call(DOMAIN, "set_theme", schema, blocking=True)
 
     await themes_ws_client.send_json({"id": 5, "type": "frontend/get_themes"})
 
@@ -395,9 +470,13 @@ async def test_themes_reload_themes(
         "homeassistant.components.frontend.async_hass_config_yaml",
         return_value={DOMAIN: {CONF_THEMES: {"sad": {"primary-color": "blue"}}}},
     ):
-        await hass.services.async_call(
-            DOMAIN, "set_theme", {"name": "happy"}, blocking=True
-        )
+        with pytest.raises(
+            vol.error.MultipleInvalid,
+            match="Theme happy not found",
+        ):
+            await hass.services.async_call(
+                DOMAIN, "set_theme", {"name": "happy"}, blocking=True
+            )
         await hass.services.async_call(DOMAIN, "reload_themes", blocking=True)
 
     await themes_ws_client.send_json({"id": 5, "type": "frontend/get_themes"})
@@ -405,6 +484,108 @@ async def test_themes_reload_themes(
     msg = await themes_ws_client.receive_json()
 
     assert msg["result"]["themes"] == {"sad": {"primary-color": "blue"}}
+    assert msg["result"]["default_theme"] == "default"
+
+
+@pytest.mark.usefixtures("frontend")
+@pytest.mark.parametrize(
+    ("invalid_theme", "error", "log"),
+    [
+        (
+            {
+                "invalid0": "blue",
+            },
+            "expected a dictionary",
+            None,
+        ),
+        (
+            {
+                "invalid1": {
+                    "primary-color": "black",
+                    "modes": "light:{} dark:{}",
+                }
+            },
+            None,
+            "expected a dictionary",
+        ),
+        (
+            {
+                "invalid2": None,
+            },
+            "expected a dictionary",
+            None,
+        ),
+        (
+            {
+                "invalid3": {
+                    "primary-color": "black",
+                    "modes": {},
+                }
+            },
+            None,
+            "must contain at least one of light, dark",
+        ),
+        (
+            {
+                "invalid4": {
+                    "primary-color": "black",
+                    "modes": None,
+                }
+            },
+            "string value is None for dictionary value",
+            None,
+        ),
+        (
+            {
+                "invalid5": {
+                    "primary-color": "black",
+                    "modes": {"light": {}, "dank": {}},
+                }
+            },
+            "extra keys not allowed.*dank",
+            None,
+        ),
+    ],
+)
+async def test_themes_reload_invalid(
+    hass: HomeAssistant,
+    themes_ws_client: MockHAClientWebSocket,
+    invalid_theme: dict,
+    error: str | None,
+    log: str | None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test frontend.reload_themes service with an invalid theme."""
+
+    with patch(
+        "homeassistant.components.frontend.async_hass_config_yaml",
+        return_value={DOMAIN: {CONF_THEMES: {"happy": {"primary-color": "pink"}}}},
+    ):
+        await hass.services.async_call(DOMAIN, "reload_themes", blocking=True)
+
+    with (
+        patch(
+            "homeassistant.components.frontend.async_hass_config_yaml",
+            return_value={DOMAIN: {CONF_THEMES: invalid_theme}},
+        ),
+        pytest.raises(HomeAssistantError, match=rf"Failed to reload themes.*{error}")
+        if error is not None
+        else nullcontext(),
+    ):
+        await hass.services.async_call(DOMAIN, "reload_themes", blocking=True)
+
+    if log is not None:
+        assert log in caplog.text
+
+    await themes_ws_client.send_json({"id": 5, "type": "frontend/get_themes"})
+
+    msg = await themes_ws_client.receive_json()
+
+    expected_themes = {"happy": {"primary-color": "pink"}}
+    if error is None:
+        expected_themes = {}
+
+    assert msg["result"]["themes"] == expected_themes
     assert msg["result"]["default_theme"] == "default"
 
 
@@ -541,6 +722,7 @@ async def test_get_panels(
     assert msg["result"]["map"]["icon"] == "mdi:tooltip-account"
     assert msg["result"]["map"]["title"] == "Map"
     assert msg["result"]["map"]["require_admin"] is True
+    assert msg["result"]["map"]["default_visible"] is True
 
     async_remove_panel(hass, "map")
 
@@ -579,6 +761,45 @@ async def test_get_panels_non_admin(
     assert msg["success"]
     assert "history" in msg["result"]
     assert "map" not in msg["result"]
+
+
+async def test_panel_sidebar_default_visible(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_http_client: TestClient,
+) -> None:
+    """Test sidebar_default_visible property in panels."""
+    async_register_built_in_panel(
+        hass,
+        "default_panel",
+        "Default Panel",
+    )
+    async_register_built_in_panel(
+        hass,
+        "visible_panel",
+        "Visible Panel",
+        "mdi:eye",
+        sidebar_default_visible=True,
+    )
+    async_register_built_in_panel(
+        hass,
+        "hidden_panel",
+        "Hidden Panel",
+        "mdi:eye-off",
+        sidebar_default_visible=False,
+    )
+
+    client = await hass_ws_client(hass)
+    await client.send_json({"id": 5, "type": "get_panels"})
+
+    msg = await client.receive_json()
+
+    assert msg["id"] == 5
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+    assert msg["result"]["default_panel"]["default_visible"] is True
+    assert msg["result"]["visible_panel"]["default_visible"] is True
+    assert msg["result"]["hidden_panel"]["default_visible"] is False
 
 
 async def test_get_translations(ws_client: MockHAClientWebSocket) -> None:

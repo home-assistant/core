@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import asyncio
+import inspect
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
@@ -186,15 +186,15 @@ async def trigger_subscription_callback(
         ):
             continue
 
-        event = MassEvent(
+        mass_event = MassEvent(
             event=event,
             object_id=object_id,
             data=data,
         )
-        if asyncio.iscoroutinefunction(cb_func):
-            await cb_func(event)
+        if inspect.iscoroutinefunction(cb_func):
+            await cb_func(mass_event)
         else:
-            cb_func(event)
+            cb_func(mass_event)
 
     await hass.async_block_till_done()
 

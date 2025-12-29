@@ -23,6 +23,7 @@ async def test_binary_sensor(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
+    mock_legacy: AsyncMock,
 ) -> None:
     """Tests that the binary sensor entities are correct."""
 
@@ -37,6 +38,7 @@ async def test_binary_sensor_refresh(
     entity_registry: er.EntityRegistry,
     mock_vehicle_data: AsyncMock,
     freezer: FrozenDateTimeFactory,
+    mock_legacy: AsyncMock,
 ) -> None:
     """Tests that the binary sensor entities are correct."""
 

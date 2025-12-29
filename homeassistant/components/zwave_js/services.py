@@ -58,6 +58,7 @@ TARGET_VALIDATORS = {
 }
 
 
+@callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register integration services."""
     services = ZWaveServices(hass, er.async_get(hass), dr.async_get(hass))
@@ -451,6 +452,9 @@ class ZWaveServices:
                     has_at_least_one_node,
                 ),
             ),
+            description_placeholders={
+                "api_docs_url": "https://zwave-js.github.io/node-zwave-js/#/api/CCs/index"
+            },
         )
 
         self._hass.services.async_register(
@@ -703,7 +707,7 @@ class ZWaveServices:
             client = first_node.client
         except StopIteration:
             data = self._hass.config_entries.async_entries(const.DOMAIN)[0].runtime_data
-            client = data[const.DATA_CLIENT]
+            client = data.client
             assert client.driver
             first_node = next(
                 node

@@ -58,7 +58,7 @@ async def async_setup_entry(
     zha_data = get_zha_data(hass)
     if zha_data.update_coordinator is None:
         zha_data.update_coordinator = ZHAFirmwareUpdateCoordinator(
-            hass, get_zha_gateway(hass).application_controller
+            hass, config_entry, get_zha_gateway(hass).application_controller
         )
     entities_to_create = zha_data.platforms[Platform.UPDATE]
 
@@ -79,12 +79,16 @@ class ZHAFirmwareUpdateCoordinator(DataUpdateCoordinator[None]):  # pylint: disa
     """Firmware update coordinator that broadcasts updates network-wide."""
 
     def __init__(
-        self, hass: HomeAssistant, controller_application: ControllerApplication
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        controller_application: ControllerApplication,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name="ZHA firmware update coordinator",
             update_method=self.async_update_data,
         )

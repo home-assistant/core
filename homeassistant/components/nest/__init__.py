@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import asyncio
-from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 import logging
 
 from aiohttp import ClientError, ClientResponseError, web
 from google_nest_sdm.camera_traits import CameraClipPreviewTrait
 from google_nest_sdm.device import Device
+from google_nest_sdm.device_manager import DeviceManager
 from google_nest_sdm.event import EventMessage
 from google_nest_sdm.event_media import Media
 from google_nest_sdm.exceptions import (
@@ -19,6 +19,7 @@ from google_nest_sdm.exceptions import (
     ConfigurationException,
     DecodeException,
     SubscriberException,
+    SubscriberTimeoutException,
 )
 from google_nest_sdm.traits import TraitType
 import voluptuous as vol
@@ -70,7 +71,7 @@ from .media_source import (
     async_get_media_source_devices,
     async_get_transcoder,
 )
-from .types import NestConfigEntry, NestData
+from .types import DevicesAddedListener, NestConfigEntry, NestData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -123,19 +124,17 @@ class SignalUpdateCallback:
     def __init__(
         self,
         hass: HomeAssistant,
-        config_reload_cb: Callable[[], Awaitable[None]],
         config_entry: NestConfigEntry,
     ) -> None:
         """Initialize EventCallback."""
         self._hass = hass
-        self._config_reload_cb = config_reload_cb
         self._config_entry = config_entry
+        self._device_listeners: list[DevicesAddedListener] = []
+        self._known_devices: dict[str, Device] = {}
+        self._device_manager: DeviceManager | None = None
 
     async def async_handle_event(self, event_message: EventMessage) -> None:
         """Process an incoming EventMessage."""
-        if event_message.relation_update:
-            _LOGGER.info("Devices or homes have changed; Need reload to take effect")
-            return
         if not event_message.resource_update_name:
             return
         device_id = event_message.resource_update_name
@@ -186,6 +185,59 @@ class SignalUpdateCallback:
             return []
         return list(device.traits)
 
+    def set_device_manager(self, device_manager: DeviceManager) -> None:
+        """Set the device manager and register for device changes."""
+        self._device_manager = device_manager
+        device_manager.set_change_callback(self._devices_updated_cb)
+        self._update_devices(self._device_manager.devices)
+
+    async def _devices_updated_cb(self) -> None:
+        """Handle callback when devices are updated."""
+        _LOGGER.debug("Devices updated callback invoked")
+        if self._device_manager is None:
+            _LOGGER.debug("No device manager available")
+            return
+        self._update_devices(self._device_manager.devices)
+
+    def register_devices_listener(self, listener: DevicesAddedListener) -> None:
+        """Add a listener for device changes."""
+        self._device_listeners.append(listener)
+        # Immediately notify about existing devices
+        listener(list(self._known_devices.values()))
+
+    def _update_devices(self, devices: dict[str, Device]) -> None:
+        """Update the set of devices and notify listeners of changes.
+
+        This is invoked when the set of devices changes with the entire set of
+        devices, and will notify listeners about any newly added devices and
+        remove devices from the device registry that are no longer present.
+        """
+        added_devices = []
+        for device_id, device in devices.items():
+            if device_id in self._known_devices:
+                continue
+            added_devices.append(device)
+            self._known_devices[device_id] = device
+        if added_devices:
+            _LOGGER.debug("Adding new devices: %s", added_devices)
+            for listener in self._device_listeners:
+                listener(added_devices)
+
+        # Remove any device entries that are no longer present
+        device_registry = dr.async_get(self._hass)
+        device_entries = dr.async_entries_for_config_entry(
+            device_registry, self._config_entry.entry_id
+        )
+        for device_entry in device_entries:
+            device_id = next(iter(device_entry.identifiers))[1]
+            if device_id in devices:
+                continue
+            _LOGGER.info("Removing stale device entry '%s'", device_id)
+            device_registry.async_update_device(
+                device_id=device_entry.id,
+                remove_config_entry_id=self._config_entry.entry_id,
+            )
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: NestConfigEntry) -> bool:
     """Set up Nest from a config entry with dispatch between old/new flows."""
@@ -203,10 +255,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: NestConfigEntry) -> bool
         await auth.async_get_access_token()
     except ClientResponseError as err:
         if 400 <= err.status < 500:
-            raise ConfigEntryAuthFailed from err
-        raise ConfigEntryNotReady from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN, translation_key="reauth_required"
+            ) from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN, translation_key="auth_server_error"
+        ) from err
     except ClientError as err:
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN, translation_key="auth_client_error"
+        ) from err
 
     subscriber = await api.new_subscriber(hass, entry, auth)
     if not subscriber:
@@ -218,28 +276,42 @@ async def async_setup_entry(hass: HomeAssistant, entry: NestConfigEntry) -> bool
     subscriber.cache_policy.store = await async_get_media_event_store(hass, subscriber)
     subscriber.cache_policy.transcoder = await async_get_transcoder(hass)
 
-    async def async_config_reload() -> None:
-        await hass.config_entries.async_reload(entry.entry_id)
-
-    update_callback = SignalUpdateCallback(hass, async_config_reload, entry)
+    # The device manager has a single change callback. When the change
+    # callback is invoked, we update the DeviceListener with the current
+    # set of devices which will notify any registered listeners with the
+    # changes.
+    update_callback = SignalUpdateCallback(hass, entry)
     subscriber.set_update_callback(update_callback.async_handle_event)
     try:
         unsub = await subscriber.start_async()
     except AuthException as err:
         raise ConfigEntryAuthFailed(
-            f"Subscriber authentication error: {err!s}"
+            translation_domain=DOMAIN,
+            translation_key="reauth_required",
         ) from err
     except ConfigurationException as err:
         _LOGGER.error("Configuration error: %s", err)
         return False
+    except SubscriberTimeoutException as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="subscriber_timeout",
+        ) from err
     except SubscriberException as err:
-        raise ConfigEntryNotReady(f"Subscriber error: {err!s}") from err
+        _LOGGER.error("Subscriber error: %s", err)
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="subscriber_error",
+        ) from err
 
     try:
         device_manager = await subscriber.async_get_device_manager()
     except ApiException as err:
         unsub()
-        raise ConfigEntryNotReady(f"Device manager error: {err!s}") from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="device_api_error",
+        ) from err
 
     @callback
     def on_hass_stop(_: Event) -> None:
@@ -250,10 +322,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: NestConfigEntry) -> bool
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
     )
 
+    update_callback.set_device_manager(device_manager)
+
     entry.async_on_unload(unsub)
     entry.runtime_data = NestData(
         subscriber=subscriber,
         device_manager=device_manager,
+        register_devices_listener=update_callback.register_devices_listener,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

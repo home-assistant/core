@@ -4,10 +4,12 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Generic
 
-from deebot_client.capabilities import CapabilitySet
+from deebot_client.capabilities import CapabilityNumber, CapabilitySet
+from deebot_client.device import Device
 from deebot_client.events import CleanCountEvent, CutDirectionEvent, VolumeEvent
+from deebot_client.events.base import Event
+from deebot_client.events.water_info import WaterCustomAmountEvent
 
 from homeassistant.components.number import (
     NumberEntity,
@@ -23,16 +25,14 @@ from .entity import (
     EcovacsCapabilityEntityDescription,
     EcovacsDescriptionEntity,
     EcovacsEntity,
-    EventT,
 )
 from .util import get_supported_entities
 
 
 @dataclass(kw_only=True, frozen=True)
-class EcovacsNumberEntityDescription(
+class EcovacsNumberEntityDescription[EventT: Event](
     NumberEntityDescription,
     EcovacsCapabilityEntityDescription,
-    Generic[EventT],
 ):
     """Ecovacs number entity description."""
 
@@ -77,6 +77,19 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsNumberEntityDescription, ...] = (
         native_step=1.0,
         mode=NumberMode.BOX,
     ),
+    EcovacsNumberEntityDescription[WaterCustomAmountEvent](
+        capability_fn=lambda caps: (
+            caps.water.amount
+            if caps.water and isinstance(caps.water.amount, CapabilityNumber)
+            else None
+        ),
+        value_fn=lambda e: e.value,
+        key="water_amount",
+        translation_key="water_amount",
+        entity_category=EntityCategory.CONFIG,
+        native_step=1.0,
+        mode=NumberMode.BOX,
+    ),
 )
 
 
@@ -94,13 +107,25 @@ async def async_setup_entry(
         async_add_entities(entities)
 
 
-class EcovacsNumberEntity(
+class EcovacsNumberEntity[EventT: Event](
     EcovacsDescriptionEntity[CapabilitySet[EventT, [int]]],
     NumberEntity,
 ):
     """Ecovacs number entity."""
 
     entity_description: EcovacsNumberEntityDescription
+
+    def __init__(
+        self,
+        device: Device,
+        capability: CapabilitySet[EventT, [int]],
+        entity_description: EcovacsNumberEntityDescription,
+    ) -> None:
+        """Initialize entity."""
+        super().__init__(device, capability, entity_description)
+        if isinstance(capability, CapabilityNumber):
+            self._attr_native_min_value = capability.min
+            self._attr_native_max_value = capability.max
 
     async def async_added_to_hass(self) -> None:
         """Set up the event listeners now that hass is ready."""

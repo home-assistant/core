@@ -40,7 +40,7 @@ EVENT_AREA_REGISTRY_UPDATED: EventType[EventAreaRegistryUpdatedData] = EventType
 )
 STORAGE_KEY = "core.area_registry"
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 8
+STORAGE_VERSION_MINOR = 9
 
 
 class _AreaStoreData(TypedDict):
@@ -68,8 +68,8 @@ class AreasRegistryStoreData(TypedDict):
 class EventAreaRegistryUpdatedData(TypedDict):
     """EventAreaRegistryUpdated data."""
 
-    action: Literal["create", "remove", "update"]
-    area_id: str
+    action: Literal["create", "remove", "update", "reorder"]
+    area_id: str | None
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
@@ -157,6 +157,13 @@ class AreaRegistryStore(Store[AreasRegistryStoreData]):
                     area["humidity_entity_id"] = None
                     area["temperature_entity_id"] = None
 
+            if old_minor_version < 9:
+                # Version 1.9 sorts the areas by name
+                old_data["areas"] = sorted(
+                    old_data["areas"],
+                    key=lambda area: area["name"].casefold(),
+                )
+
         if old_major_version > 1:
             raise NotImplementedError
         return old_data  # type: ignore[return-value]
@@ -179,8 +186,7 @@ class AreaRegistryItems(NormalizedNameBaseRegistryItems[AreaEntry]):
             self._floors_index[entry.floor_id][key] = True
         for label in entry.labels:
             self._labels_index[label][key] = True
-        for alias in entry.aliases:
-            normalized_alias = normalize_name(alias)
+        for normalized_alias in {normalize_name(alias) for alias in entry.aliases}:
             self._aliases_index[normalized_alias][key] = True
 
     def _unindex_entry(
@@ -190,8 +196,7 @@ class AreaRegistryItems(NormalizedNameBaseRegistryItems[AreaEntry]):
         super()._unindex_entry(key, replacement_entry)
         entry = self.data[key]
         if aliases := entry.aliases:
-            for alias in aliases:
-                normalized_alias = normalize_name(alias)
+            for normalized_alias in {normalize_name(alias) for alias in aliases}:
                 self._unindex_entry_value(key, normalized_alias, self._aliases_index)
         if labels := entry.labels:
             for label in labels:
@@ -422,6 +427,26 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         self.async_schedule_save()
         return new
 
+    @callback
+    def async_reorder(self, area_ids: list[str]) -> None:
+        """Reorder areas."""
+        self.hass.verify_event_loop_thread("area_registry.async_reorder")
+
+        if set(area_ids) != set(self.areas.data.keys()):
+            raise ValueError(
+                "The area_ids list must contain all existing area IDs exactly once"
+            )
+
+        reordered_data = {area_id: self.areas.data[area_id] for area_id in area_ids}
+        self.areas.data.clear()
+        self.areas.data.update(reordered_data)
+
+        self.async_schedule_save()
+        self.hass.bus.async_fire_internal(
+            EVENT_AREA_REGISTRY_UPDATED,
+            EventAreaRegistryUpdatedData(action="reorder", area_id=None),
+        )
+
     async def async_load(self) -> None:
         """Load the area registry."""
         self._async_setup_cleanup()
@@ -475,8 +500,7 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
     @callback
     def _async_setup_cleanup(self) -> None:
         """Set up the area registry cleanup."""
-        # pylint: disable-next=import-outside-toplevel
-        from . import (  # Circular dependencies
+        from . import (  # Circular dependencies  # noqa: PLC0415
             floor_registry as fr,
             label_registry as lr,
         )
@@ -492,6 +516,8 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         @callback
         def _handle_floor_registry_update(event: fr.EventFloorRegistryUpdated) -> None:
             """Update areas that are associated with a floor that has been removed."""
+            if TYPE_CHECKING:
+                assert event.data["action"] == "remove"
             floor_id = event.data["floor_id"]
             for area in self.areas.get_areas_for_floor(floor_id):
                 self.async_update(area.id, floor_id=None)
@@ -543,8 +569,7 @@ def async_entries_for_label(registry: AreaRegistry, label_id: str) -> list[AreaE
 
 def _validate_temperature_entity(hass: HomeAssistant, entity_id: str) -> None:
     """Validate temperature entity."""
-    # pylint: disable=import-outside-toplevel
-    from homeassistant.components.sensor import SensorDeviceClass
+    from homeassistant.components.sensor import SensorDeviceClass  # noqa: PLC0415
 
     if not (state := hass.states.get(entity_id)):
         raise ValueError(f"Entity {entity_id} does not exist")
@@ -558,8 +583,7 @@ def _validate_temperature_entity(hass: HomeAssistant, entity_id: str) -> None:
 
 def _validate_humidity_entity(hass: HomeAssistant, entity_id: str) -> None:
     """Validate humidity entity."""
-    # pylint: disable=import-outside-toplevel
-    from homeassistant.components.sensor import SensorDeviceClass
+    from homeassistant.components.sensor import SensorDeviceClass  # noqa: PLC0415
 
     if not (state := hass.states.get(entity_id)):
         raise ValueError(f"Entity {entity_id} does not exist")

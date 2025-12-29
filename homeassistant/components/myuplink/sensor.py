@@ -293,8 +293,8 @@ class MyUplinkDevicePointSensor(MyUplinkEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Sensor state value."""
-        device_point = self.coordinator.data.points[self.device_id][self.point_id]
-        if device_point.value == MARKER_FOR_UNKNOWN_VALUE:
+        device_point = self.coordinator.data.points[self.device_id].get(self.point_id)
+        if device_point is None or device_point.value == MARKER_FOR_UNKNOWN_VALUE:
             return None
         return device_point.value  # type: ignore[no-any-return]
 

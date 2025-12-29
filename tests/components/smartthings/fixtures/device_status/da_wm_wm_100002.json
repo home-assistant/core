@@ -1,0 +1,261 @@
+{
+  "components": {
+    "sub": {
+      "ocf": {
+        "st": {
+          "value": null
+        },
+        "mndt": {
+          "value": null
+        },
+        "mnfv": {
+          "value": null
+        },
+        "mnhw": {
+          "value": null
+        },
+        "di": {
+          "value": null
+        },
+        "mnsl": {
+          "value": null
+        },
+        "dmv": {
+          "value": null
+        },
+        "n": {
+          "value": null
+        },
+        "mnmo": {
+          "value": null
+        },
+        "vid": {
+          "value": null
+        },
+        "mnmn": {
+          "value": null
+        },
+        "mnml": {
+          "value": null
+        },
+        "mnpv": {
+          "value": null
+        },
+        "mnos": {
+          "value": null
+        },
+        "pi": {
+          "value": null
+        },
+        "icv": {
+          "value": null
+        }
+      },
+      "remoteControlStatus": {
+        "remoteControlEnabled": {
+          "value": "true",
+          "timestamp": "2025-11-14T02:38:34.039Z"
+        }
+      },
+      "samsungce.driverVersion": {
+        "versionNumber": {
+          "value": null
+        }
+      },
+      "refresh": {},
+      "samsungce.washerOperatingState": {
+        "washerJobState": {
+          "value": "none",
+          "timestamp": "2025-11-14T02:27:39.046Z"
+        },
+        "operatingState": {
+          "value": "ready",
+          "timestamp": "2025-11-14T02:27:39.046Z"
+        },
+        "supportedOperatingStates": {
+          "value": ["ready", "running", "paused"],
+          "timestamp": "2025-11-14T02:27:39.046Z"
+        },
+        "scheduledJobs": {
+          "value": null
+        },
+        "scheduledPhases": {
+          "value": null
+        },
+        "progress": {
+          "value": null
+        },
+        "remainingTimeStr": {
+          "value": "00:43",
+          "timestamp": "2025-11-14T02:27:39.046Z"
+        },
+        "washerJobPhase": {
+          "value": null
+        },
+        "operationTime": {
+          "value": null
+        },
+        "remainingTime": {
+          "value": 43,
+          "unit": "min",
+          "timestamp": "2025-11-14T02:27:39.046Z"
+        }
+      },
+      "washerOperatingState": {
+        "completionTime": {
+          "value": "2025-11-14T03:10:39Z",
+          "timestamp": "2025-11-14T02:27:39.046Z"
+        },
+        "machineState": {
+          "value": "stop",
+          "timestamp": "2025-11-14T02:27:39.046Z"
+        },
+        "washerJobState": {
+          "value": "none",
+          "timestamp": "2025-11-14T02:27:39.046Z"
+        },
+        "supportedMachineStates": {
+          "value": null
+        }
+      },
+      "switch": {
+        "switch": {
+          "value": null
+        }
+      }
+    },
+    "main": {
+      "ocf": {
+        "st": {
+          "value": null
+        },
+        "mndt": {
+          "value": null
+        },
+        "mnfv": {
+          "value": null
+        },
+        "mnhw": {
+          "value": null
+        },
+        "di": {
+          "value": "C097276D-C8D4-0000-0000-000000000000",
+          "timestamp": "2025-11-14T02:27:38.956Z"
+        },
+        "mnsl": {
+          "value": null
+        },
+        "dmv": {
+          "value": "res.1.1.0,sh.1.1.0",
+          "timestamp": "2025-11-14T02:27:38.956Z"
+        },
+        "n": {
+          "value": "Washer",
+          "timestamp": "2025-11-14T02:27:38.956Z"
+        },
+        "mnmo": {
+          "value": "TP6X_WV60M9900AV|20198041|20020001001111060100000000000000",
+          "timestamp": "2025-11-14T02:27:38.956Z"
+        },
+        "vid": {
+          "value": "DA-WM-WM-100002",
+          "timestamp": "2025-11-14T02:27:38.956Z"
+        },
+        "mnmn": {
+          "value": "Samsung Electronics",
+          "timestamp": "2025-11-14T02:27:38.956Z"
+        },
+        "mnml": {
+          "value": null
+        },
+        "mnpv": {
+          "value": null
+        },
+        "mnos": {
+          "value": null
+        },
+        "pi": {
+          "value": "shp",
+          "timestamp": "2025-11-14T02:27:38.956Z"
+        },
+        "icv": {
+          "value": "core.1.1.0",
+          "timestamp": "2025-11-14T02:27:38.956Z"
+        }
+      },
+      "remoteControlStatus": {
+        "remoteControlEnabled": {
+          "value": "true",
+          "timestamp": "2025-11-14T02:38:36.210Z"
+        }
+      },
+      "samsungce.driverVersion": {
+        "versionNumber": {
+          "value": 22100103,
+          "timestamp": "2025-11-14T02:27:38.980Z"
+        }
+      },
+      "refresh": {},
+      "samsungce.washerOperatingState": {
+        "washerJobState": {
+          "value": "spin",
+          "timestamp": "2025-11-14T02:27:39.112Z"
+        },
+        "operatingState": {
+          "value": "running",
+          "timestamp": "2025-11-14T02:27:39.112Z"
+        },
+        "supportedOperatingStates": {
+          "value": ["ready", "running", "paused"],
+          "timestamp": "2025-11-14T02:27:39.112Z"
+        },
+        "scheduledJobs": {
+          "value": null
+        },
+        "scheduledPhases": {
+          "value": null
+        },
+        "progress": {
+          "value": null
+        },
+        "remainingTimeStr": {
+          "value": "00:05",
+          "timestamp": "2025-11-14T02:27:39.112Z"
+        },
+        "washerJobPhase": {
+          "value": null
+        },
+        "operationTime": {
+          "value": null
+        },
+        "remainingTime": {
+          "value": 5,
+          "unit": "min",
+          "timestamp": "2025-11-14T02:27:39.112Z"
+        }
+      },
+      "washerOperatingState": {
+        "completionTime": {
+          "value": "2025-11-14T02:32:39Z",
+          "timestamp": "2025-11-14T02:27:39.112Z"
+        },
+        "machineState": {
+          "value": "run",
+          "timestamp": "2025-11-14T02:27:39.112Z"
+        },
+        "washerJobState": {
+          "value": "spin",
+          "timestamp": "2025-11-14T02:27:39.112Z"
+        },
+        "supportedMachineStates": {
+          "value": null
+        }
+      },
+      "switch": {
+        "switch": {
+          "value": null
+        }
+      }
+    }
+  }
+}
