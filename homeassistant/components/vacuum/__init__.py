@@ -194,7 +194,7 @@ STATE_VACUUM_CACHED_PROPERTIES_WITH_ATTR_ = {
 }
 
 
-class StateVacuumEntity[SegmentIdType = Any](
+class StateVacuumEntity(
     Entity, cached_properties=STATE_VACUUM_CACHED_PROPERTIES_WITH_ATTR_
 ):
     """Representation of a vacuum cleaner robot that supports states."""
@@ -437,7 +437,7 @@ class StateVacuumEntity[SegmentIdType = Any](
         """
         await self.hass.async_add_executor_job(partial(self.clean_spot, **kwargs))
 
-    async def async_get_segments(self) -> list[Segment[SegmentIdType]]:
+    async def async_get_segments(self) -> list[Segment]:
         """Get the segments that can be cleaned.
 
         Returns a list of segments containing their ids and names.
@@ -460,10 +460,10 @@ class StateVacuumEntity[SegmentIdType = Any](
             return
 
         options: Mapping[str, Any] = self.registry_entry.options.get(DOMAIN, {})
-        area_mapping: dict[str, list[SegmentIdType]] = options.get("area_mapping", {})
+        area_mapping: dict[str, list[str]] = options.get("area_mapping", {})
 
         # We use a dict to preserve the order of segments.
-        segment_ids: dict[SegmentIdType, None] = {}
+        segment_ids: dict[str, None] = {}
         for area_id in area_ids:
             for segment_id in area_mapping.get(area_id, []):
                 segment_ids[segment_id] = None
@@ -473,13 +473,11 @@ class StateVacuumEntity[SegmentIdType = Any](
 
         await self.async_clean_area(list(segment_ids), **kwargs)
 
-    def clean_area(self, segment_ids: list[SegmentIdType], **kwargs: Any) -> None:
+    def clean_area(self, segment_ids: list[str], **kwargs: Any) -> None:
         """Perform an area clean."""
         raise NotImplementedError
 
-    async def async_clean_area(
-        self, segment_ids: list[SegmentIdType], **kwargs: Any
-    ) -> None:
+    async def async_clean_area(self, segment_ids: list[str], **kwargs: Any) -> None:
         """Perform an area clean."""
         await self.hass.async_add_executor_job(partial(self.clean_area, **kwargs))
 
@@ -554,8 +552,8 @@ class StateVacuumEntity[SegmentIdType = Any](
 
 
 @dataclass
-class Segment[SegmentIdType]:
-    id: SegmentIdType
+class Segment:
+    id: str
     name: str
 
 
