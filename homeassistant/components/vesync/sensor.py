@@ -7,6 +7,7 @@ from dataclasses import dataclass
 import logging
 
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
+from pyvesync.device_container import DeviceContainer
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -14,7 +15,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     PERCENTAGE,
@@ -30,8 +30,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .common import is_humidifier, is_outlet, rgetattr
-from .const import DOMAIN, VS_COORDINATOR, VS_DEVICES, VS_DISCOVERY, VS_MANAGER
-from .coordinator import VeSyncDataCoordinator
+from .const import VS_DEVICES, VS_DISCOVERY
+from .coordinator import VesyncConfigEntry, VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -154,12 +154,12 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: VesyncConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switches."""
 
-    coordinator = hass.data[DOMAIN][VS_COORDINATOR]
+    coordinator = config_entry.runtime_data
 
     @callback
     def discover(devices: list[VeSyncBaseDevice]) -> None:
@@ -171,13 +171,13 @@ async def async_setup_entry(
     )
 
     _setup_entities(
-        hass.data[DOMAIN][VS_MANAGER].devices, async_add_entities, coordinator
+        config_entry.runtime_data.manager.devices, async_add_entities, coordinator
     )
 
 
 @callback
 def _setup_entities(
-    devices: list[VeSyncBaseDevice],
+    devices: DeviceContainer | list[VeSyncBaseDevice],
     async_add_entities: AddConfigEntryEntitiesCallback,
     coordinator: VeSyncDataCoordinator,
 ) -> None:
