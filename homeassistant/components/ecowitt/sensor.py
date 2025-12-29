@@ -151,14 +151,12 @@ ECOWITT_SENSORS_MAPPING: Final = {
         key="RAIN_COUNT_MM",
         native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
         device_class=SensorDeviceClass.PRECIPITATION,
-        state_class=SensorStateClass.TOTAL,
         suggested_display_precision=1,
     ),
     EcoWittSensorTypes.RAIN_COUNT_INCHES: SensorEntityDescription(
         key="RAIN_COUNT_INCHES",
         native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
         device_class=SensorDeviceClass.PRECIPITATION,
-        state_class=SensorStateClass.TOTAL,
         suggested_display_precision=2,
     ),
     EcoWittSensorTypes.RAIN_RATE_MM: SensorEntityDescription(
@@ -287,16 +285,14 @@ async def async_setup_entry(
             name=sensor.name,
         )
 
-        # Hourly rain doesn't reset to fixed hours, it must be measurement state classes
+        # Only total rain needs state class for long-term statistics
         if sensor.key in (
-            "hrain_piezomm",
-            "hrain_piezo",
-            "hourlyrainmm",
-            "hourlyrainin",
+            "totalrainin",
+            "totalrainmm",
         ):
             description = dataclasses.replace(
                 description,
-                state_class=SensorStateClass.MEASUREMENT,
+                state_class=SensorStateClass.TOTAL_INCREASING,
             )
 
         async_add_entities([EcowittSensorEntity(sensor, description)])

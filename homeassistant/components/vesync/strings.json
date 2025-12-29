@@ -5,7 +5,9 @@
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     },
     "error": {
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+      "api_response_error": "API response error",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "server_error": "Server error occurred"
     },
     "step": {
       "reauth_confirm": {
@@ -41,9 +43,21 @@
             "state": {
               "advanced_sleep": "Advanced sleep",
               "auto": "[%key:common::state::auto%]",
+              "normal": "[%key:common::state::normal%]",
               "pet": "Pet",
               "sleep": "Sleep",
               "turbo": "Turbo"
+            }
+          }
+        }
+      }
+    },
+    "humidifier": {
+      "vesync": {
+        "state_attributes": {
+          "mode": {
+            "state": {
+              "humidity": "Humidity"
             }
           }
         }
@@ -92,6 +106,9 @@
       }
     },
     "switch": {
+      "child_lock": {
+        "name": "Child lock"
+      },
       "display": {
         "name": "Display"
       }

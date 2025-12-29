@@ -101,6 +101,7 @@ def get_vitals_mock() -> Vitals:
     mock.currentA_a = 10
     mock.currentB_a = 11.1
     mock.currentC_a = 12
+    mock.total_power_w = 7650.3
     mock.session_energy_wh = 1234.56
     mock.contactor_closed = False
     mock.vehicle_connected = True

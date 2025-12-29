@@ -10,7 +10,6 @@ import voluptuous as vol
 
 from homeassistant import data_entry_flow
 from homeassistant.components.repairs import ConfirmRepairFlow, RepairsFlow
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 
@@ -165,7 +164,7 @@ class RTSPRepair(ProtectRepair):
 
 @callback
 def _async_get_or_create_api_client(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: UFPConfigEntry
 ) -> ProtectApiClient:
     """Get or create an API client."""
     if data := async_get_data_for_entry_id(hass, entry.entry_id):

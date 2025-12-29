@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Any
 
 from homeassistant.const import CONF_STATE, CONF_VARIABLES
@@ -50,6 +51,19 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         else:
             self._unique_id = unique_id
 
+    def setup_state_template(
+        self,
+        option: str,
+        attribute: str,
+        validator: Callable[[Any], Any] | None = None,
+        on_update: Callable[[Any], None] | None = None,
+    ) -> None:
+        """Set up a template that manages the main state of the entity."""
+        if self._config.get(option):
+            self._to_render_simple.append(CONF_STATE)
+            self._parse_result.add(CONF_STATE)
+            self.add_template(option, attribute, validator, on_update)
+
     @property
     def referenced_blueprint(self) -> str | None:
         """Return referenced blueprint or None."""
@@ -88,6 +102,23 @@ class TriggerEntity(  # pylint: disable=hass-enforce-class-module
         self._render_single_templates(rendered, variables, [CONF_STATE])
         self._render_attributes(rendered, variables)
         self._rendered = rendered
+
+    def handle_rendered_result(self, key: str) -> bool:
+        """Get a rendered result and return the value."""
+        if (rendered := self._rendered.get(key)) is not None:
+            if (entity_template := self._templates.get(key)) is not None:
+                value = rendered
+                if entity_template.validator:
+                    value = entity_template.validator(rendered)
+
+                if entity_template.on_update:
+                    entity_template.on_update(value)
+                else:
+                    setattr(self, entity_template.attribute, value)
+
+                return True
+
+        return False
 
     @callback
     def _process_data(self) -> None:

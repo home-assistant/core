@@ -6,15 +6,16 @@ from collections.abc import Mapping
 import logging
 from typing import TYPE_CHECKING, Any
 
+from pynintendoauth.exceptions import HttpException, InvalidSessionTokenException
 from pynintendoparental import Authenticator
-from pynintendoparental.exceptions import HttpException, InvalidSessionTokenException
+from pynintendoparental.api import Api
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_SESSION_TOKEN, DOMAIN
+from .const import APP_SETUP_URL, CONF_SESSION_TOKEN, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,15 +33,14 @@ class NintendoConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if self.auth is None:
-            self.auth = Authenticator.generate_login(
-                client_session=async_get_clientsession(self.hass)
-            )
+            self.auth = Authenticator(client_session=async_get_clientsession(self.hass))
 
         if user_input is not None:
+            nintendo_api = Api(
+                self.auth, self.hass.config.time_zone, self.hass.config.language
+            )
             try:
-                await self.auth.complete_login(
-                    self.auth, user_input[CONF_API_TOKEN], False
-                )
+                await self.auth.async_complete_login(user_input[CONF_API_TOKEN])
             except (ValueError, InvalidSessionTokenException, HttpException):
                 errors["base"] = "invalid_auth"
             else:
@@ -48,12 +48,24 @@ class NintendoConfigFlow(ConfigFlow, domain=DOMAIN):
                     assert self.auth.account_id
                 await self.async_set_unique_id(self.auth.account_id)
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(
-                    title=self.auth.account_id,
-                    data={
-                        CONF_SESSION_TOKEN: self.auth.get_session_token,
-                    },
-                )
+            try:
+                if "base" not in errors:
+                    await nintendo_api.async_get_account_devices()
+            except HttpException as err:
+                if err.status_code == 404:
+                    return self.async_abort(
+                        reason="no_devices_found",
+                        description_placeholders={"more_info_url": APP_SETUP_URL},
+                    )
+                errors["base"] = "cannot_connect"
+            else:
+                if "base" not in errors:
+                    return self.async_create_entry(
+                        title=self.auth.account_id,
+                        data={
+                            CONF_SESSION_TOKEN: self.auth.session_token,
+                        },
+                    )
         return self.async_show_form(
             step_id="user",
             description_placeholders={"link": self.auth.login_url},
@@ -74,14 +86,10 @@ class NintendoConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         reauth_entry = self._get_reauth_entry()
         if self.auth is None:
-            self.auth = Authenticator.generate_login(
-                client_session=async_get_clientsession(self.hass)
-            )
+            self.auth = Authenticator(client_session=async_get_clientsession(self.hass))
         if user_input is not None:
             try:
-                await self.auth.complete_login(
-                    self.auth, user_input[CONF_API_TOKEN], False
-                )
+                await self.auth.async_complete_login(user_input[CONF_API_TOKEN])
             except (ValueError, InvalidSessionTokenException, HttpException):
                 errors["base"] = "invalid_auth"
             else:
@@ -89,7 +97,7 @@ class NintendoConfigFlow(ConfigFlow, domain=DOMAIN):
                     reauth_entry,
                     data={
                         **reauth_entry.data,
-                        CONF_SESSION_TOKEN: self.auth.get_session_token,
+                        CONF_SESSION_TOKEN: self.auth.session_token,
                     },
                 )
         return self.async_show_form(

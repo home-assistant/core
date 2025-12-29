@@ -1,0 +1,78 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "create_entry": {
+      "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    },
+    "step": {
+      "pick_implementation": {
+        "data": {
+          "implementation": "[%key:common::config_flow::data::implementation%]"
+        },
+        "data_description": {
+          "implementation": "[%key:common::config_flow::description::implementation%]"
+        },
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::description::confirm_setup%]"
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "dismiss_alert": {
+        "name": "Dismiss alert"
+      }
+    },
+    "camera": {
+      "cleaning_map": {
+        "name": "Cleaning map"
+      }
+    },
+    "switch": {
+      "schedule": {
+        "name": "Schedule"
+      }
+    }
+  },
+  "exceptions": {
+    "oauth2_implementation_unavailable": {
+      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    }
+  },
+  "services": {
+    "custom_cleaning": {
+      "description": "Starts a custom cleaning of your house.",
+      "fields": {
+        "category": {
+          "description": "Whether to use a persistent map or not for cleaning (i.e. No go lines): 2 for no map, 4 for map. Default to using map if not set (and fallback to no map if no map is found).",
+          "name": "Use cleaning map"
+        },
+        "mode": {
+          "description": "Sets the cleaning mode: 1 for eco and 2 for turbo. Defaults to turbo if not set.",
+          "name": "Cleaning mode"
+        },
+        "navigation": {
+          "description": "Sets the navigation mode: 1 for normal, 2 for extra care, 3 for deep. Defaults to normal if not set.",
+          "name": "Navigation mode"
+        },
+        "zone": {
+          "description": "Name of the zone to clean (only supported on the Botvac D7). Defaults to no zone i.e. complete house cleanup.",
+          "name": "Zone"
+        }
+      },
+      "name": "Custom cleaning"
+    }
+  }
+}

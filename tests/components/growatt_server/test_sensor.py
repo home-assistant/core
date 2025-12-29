@@ -18,18 +18,60 @@ from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_plat
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_all_sensors(
+async def test_min_sensors_v1_api(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     mock_growatt_v1_api,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test all sensor entities with snapshot."""
+    """Test MIN device sensor entities with V1 API."""
+    # V1 API only supports MIN devices (type 7)
+    mock_growatt_v1_api.device_list.return_value = {
+        "devices": [{"device_sn": "MIN123456", "type": 7}]
+    }
+
     with patch("homeassistant.components.growatt_server.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.parametrize(
+    ("device_type", "device_sn"),
+    [
+        ("tlx", "TLX123456"),
+        ("inverter", "INV123456"),
+        ("storage", "STO123456"),
+        ("mix", "MIX123456"),
+    ],
+    ids=["tlx", "inverter", "storage", "mix"],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.freeze_time("2023-10-21")
+async def test_sensors_classic_api(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    mock_growatt_classic_api,
+    mock_config_entry_classic: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_type: str,
+    device_sn: str,
+) -> None:
+    """Test sensor entities for non-MIN device types with Classic API."""
+    # Classic API supports all device types
+    mock_growatt_classic_api.device_list.return_value = [
+        {"deviceSn": device_sn, "deviceType": device_type}
+    ]
+    # Device detail methods (inverter_detail, storage_detail, mix_detail, tlx_detail)
+    # are already configured in the default mock_growatt_classic_api fixture
+
+    with patch("homeassistant.components.growatt_server.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry_classic)
+
+    await snapshot_platform(
+        hass, entity_registry, snapshot, mock_config_entry_classic.entry_id
+    )
 
 
 async def test_sensor_coordinator_updates(
@@ -116,18 +158,3 @@ async def test_total_sensors_classic_api(
     await snapshot_platform(
         hass, entity_registry, snapshot, mock_config_entry_classic.entry_id
     )
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_sensor_entity_registry(
-    hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
-    mock_growatt_v1_api,
-    mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test sensor entities are properly registered."""
-    with patch("homeassistant.components.growatt_server.PLATFORMS", [Platform.SENSOR]):
-        await setup_integration(hass, mock_config_entry)
-
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)

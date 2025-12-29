@@ -1,0 +1,511 @@
+{
+  "components": {
+    "cookinglight": {
+      "switch": {
+        "switch": {
+          "value": null
+        }
+      }
+    },
+    "main": {
+      "samsungce.deviceIdentification": {
+        "micomAssayCode": {
+          "value": "20136141",
+          "timestamp": "2025-11-11T18:21:15.455Z"
+        },
+        "modelName": {
+          "value": null
+        },
+        "serialNumber": {
+          "value": null
+        },
+        "serialNumberExtra": {
+          "value": null
+        },
+        "modelClassificationCode": {
+          "value": "7800006B001713C44D00090001030000",
+          "timestamp": "2025-11-11T18:21:15.455Z"
+        },
+        "description": {
+          "value": "AHD-WW-TP1-22-COMMON",
+          "timestamp": "2025-11-11T18:21:15.455Z"
+        },
+        "releaseYear": {
+          "value": 23,
+          "timestamp": "2025-06-12T02:50:48.730Z"
+        },
+        "binaryId": {
+          "value": "AHD-WW-TP1-22-COMMON",
+          "timestamp": "2025-11-11T18:21:15.451Z"
+        }
+      },
+      "airQualitySensor": {
+        "airQuality": {
+          "value": 1,
+          "unit": "CAQI",
+          "timestamp": "2025-11-11T23:41:21.652Z"
+        }
+      },
+      "switch": {
+        "switch": {
+          "value": "on",
+          "timestamp": "2025-11-11T23:41:24.907Z"
+        }
+      },
+      "fineDustHealthConcern": {
+        "fineDustHealthConcern": {
+          "value": "good",
+          "timestamp": "2025-11-11T23:41:25.482Z"
+        },
+        "supportedFineDustValues": {
+          "value": null
+        }
+      },
+      "ocf": {
+        "st": {
+          "value": null
+        },
+        "mndt": {
+          "value": null
+        },
+        "mnfv": {
+          "value": "AHD-WW-TP1-22-COMMON_40230419",
+          "timestamp": "2025-06-12T18:01:45.191Z"
+        },
+        "mnhw": {
+          "value": "Realtek",
+          "timestamp": "2025-06-12T18:01:45.191Z"
+        },
+        "di": {
+          "value": "fa5fca25-fa7a-1807-030a-2f72ee0f7bff",
+          "timestamp": "2025-06-12T18:01:45.191Z"
+        },
+        "mnsl": {
+          "value": "http://www.samsung.com",
+          "timestamp": "2025-06-12T18:01:45.191Z"
+        },
+        "dmv": {
+          "value": "res.1.1.0,sh.1.1.0",
+          "timestamp": "2025-06-12T18:01:45.191Z"
+        },
+        "n": {
+          "value": "Samsung-Hood",
+          "timestamp": "2025-06-12T18:01:45.191Z"
+        },
+        "mnmo": {
+          "value": "AHD-WW-TP1-22-COMMON|20136141|7800006B001713C44D00090001030000",
+          "timestamp": "2025-06-12T18:01:45.191Z"
+        },
+        "vid": {
+          "value": "DA-KS-HOOD-01001",
+          "timestamp": "2025-06-12T18:01:45.191Z"
+        },
+        "mnmn": {
+          "value": "Samsung Electronics",
+          "timestamp": "2025-06-12T18:01:45.191Z"
+        },
+        "mnml": {
+          "value": "http://www.samsung.com",
+          "timestamp": "2025-06-12T18:01:45.191Z"
+        },
+        "mnpv": {
+          "value": "DAWIT 2.0",
+          "timestamp": "2025-06-12T18:01:45.191Z"
+        },
+        "mnos": {
+          "value": "TizenRT 3.1",
+          "timestamp": "2025-06-12T18:01:45.191Z"
+        },
+        "pi": {
+          "value": "fa5fca25-fa7a-1807-030a-2f72ee0f7bff",
+          "timestamp": "2025-06-12T18:01:45.191Z"
+        },
+        "icv": {
+          "value": "core.1.1.0",
+          "timestamp": "2025-06-12T18:01:45.191Z"
+        }
+      },
+      "veryFineDustHealthConcern": {
+        "supportedVeryFineDustValues": {
+          "value": null
+        },
+        "veryFineDustHealthConcern": {
+          "value": "good",
+          "timestamp": "2025-11-11T23:41:25.482Z"
+        }
+      },
+      "samsungce.autoVentilation": {
+        "supportedActions": {
+          "value": ["start"],
+          "timestamp": "2025-06-12T02:50:48.730Z"
+        }
+      },
+      "custom.disabledCapabilities": {
+        "disabledCapabilities": {
+          "value": ["samsungce.autoVentilation", "odorSensor"],
+          "timestamp": "2024-03-09T00:58:59.857Z"
+        }
+      },
+      "samsungce.driverVersion": {
+        "versionNumber": {
+          "value": 25040101,
+          "timestamp": "2025-06-12T02:50:48.730Z"
+        }
+      },
+      "sec.diagnosticsInformation": {
+        "logType": {
+          "value": ["errCode", "dump"],
+          "timestamp": "2025-11-11T18:21:15.455Z"
+        },
+        "endpoint": {
+          "value": "SSM",
+          "timestamp": "2025-11-11T18:21:15.455Z"
+        },
+        "minVersion": {
+          "value": "1.0",
+          "timestamp": "2025-11-11T18:21:15.455Z"
+        },
+        "signinPermission": {
+          "value": null
+        },
+        "setupId": {
+          "value": "KH0",
+          "timestamp": "2025-11-11T18:21:15.455Z"
+        },
+        "protocolType": {
+          "value": "wifi_https",
+          "timestamp": "2025-11-11T18:21:15.455Z"
+        },
+        "tsId": {
+          "value": null
+        },
+        "mnId": {
+          "value": "0AJT",
+          "timestamp": "2025-11-11T18:21:15.455Z"
+        },
+        "dumpType": {
+          "value": "file",
+          "timestamp": "2025-11-11T18:21:15.455Z"
+        }
+      },
+      "dustSensor": {
+        "dustLevel": {
+          "value": 16,
+          "unit": "\u03bcg/m^3",
+          "timestamp": "2025-11-11T23:41:21.652Z"
+        },
+        "fineDustLevel": {
+          "value": 13,
+          "unit": "\u03bcg/m^3",
+          "timestamp": "2025-11-11T23:41:21.652Z"
+        }
+      },
+      "custom.deviceReportStateConfiguration": {
+        "reportStateRealtimePeriod": {
+          "value": "disabled",
+          "timestamp": "2025-11-11T23:41:10.291Z"
+        },
+        "reportStateRealtime": {
+          "value": {
+            "state": "enabled",
+            "duration": 10,
+            "unit": "minute"
+          },
+          "timestamp": "2025-11-11T23:41:10.291Z"
+        },
+        "reportStatePeriod": {
+          "value": "enabled",
+          "timestamp": "2025-11-11T23:41:10.291Z"
+        }
+      },
+      "custom.periodicSensing": {
+        "automaticExecutionSetting": {
+          "value": null
+        },
+        "automaticExecutionMode": {
+          "value": "Airpurify",
+          "timestamp": "2025-11-11T23:10:52.866Z"
+        },
+        "supportedAutomaticExecutionSetting": {
+          "value": null
+        },
+        "supportedAutomaticExecutionMode": {
+          "value": ["Airpurify", "Alarm"],
+          "timestamp": "2025-11-11T23:10:52.866Z"
+        },
+        "periodicSensing": {
+          "value": "on",
+          "timestamp": "2025-11-11T23:10:52.866Z"
+        },
+        "periodicSensingInterval": {
+          "value": 3600,
+          "timestamp": "2025-11-11T23:10:52.866Z"
+        },
+        "lastSensingTime": {
+          "value": "1762904483",
+          "unit": "second",
+          "timestamp": "2025-11-11T23:41:25.273Z"
+        },
+        "lastSensingLevel": {
+          "value": "Kr1",
+          "timestamp": "2025-11-11T23:10:52.866Z"
+        },
+        "periodicSensingStatus": {
+          "value": "nonprocessing",
+          "timestamp": "2025-11-11T23:41:25.273Z"
+        }
+      },
+      "dustHealthConcern": {
+        "supportedDustValues": {
+          "value": null
+        },
+        "dustHealthConcern": {
+          "value": "good",
+          "timestamp": "2025-11-11T23:41:25.482Z"
+        }
+      },
+      "custom.disabledComponents": {
+        "disabledComponents": {
+          "value": ["lamp", "cookinglight", "edgelight"],
+          "timestamp": "2024-03-09T00:58:59.857Z"
+        }
+      },
+      "demandResponseLoadControl": {
+        "drlcStatus": {
+          "value": {
+            "drlcType": 1,
+            "drlcLevel": 0,
+            "start": "1970-01-01T00:00:00Z",
+            "duration": 0,
+            "override": false
+          },
+          "timestamp": "2025-11-11T18:21:15.455Z"
+        }
+      },
+      "powerConsumptionReport": {
+        "powerConsumption": {
+          "value": {
+            "energy": 19997,
+            "deltaEnergy": 0,
+            "power": 0,
+            "powerEnergy": 0.0,
+            "persistedEnergy": 0,
+            "energySaved": 0,
+            "persistedSavedEnergy": 0,
+            "start": "2025-11-11T20:10:41Z",
+            "end": "2025-11-11T23:41:24Z"
+          },
+          "timestamp": "2025-11-11T23:41:24.848Z"
+        }
+      },
+      "refresh": {},
+      "samsungce.hoodFanSpeed": {
+        "settableMaxFanSpeed": {
+          "value": 19,
+          "timestamp": "2025-11-11T23:41:21.525Z"
+        },
+        "hoodFanSpeed": {
+          "value": 15,
+          "timestamp": "2025-11-11T23:41:21.525Z"
+        },
+        "supportedHoodFanSpeed": {
+          "value": [14, 15, 16, 17, 19],
+          "timestamp": "2025-11-11T23:41:21.525Z"
+        },
+        "settableMinFanSpeed": {
+          "value": 14,
+          "timestamp": "2025-11-11T23:41:21.525Z"
+        }
+      },
+      "execute": {
+        "data": {
+          "value": null
+        }
+      },
+      "samsungce.hoodFilter": {
+        "hoodFilterUsageStep": {
+          "value": 1,
+          "timestamp": "2025-11-11T18:21:15.455Z"
+        },
+        "hoodFilterLastResetDate": {
+          "value": null
+        },
+        "hoodFilterCapacity": {
+          "value": 60,
+          "unit": "Hour",
+          "timestamp": "2025-11-11T18:21:15.455Z"
+        },
+        "hoodFilterStatus": {
+          "value": "wash",
+          "timestamp": "2025-11-11T18:21:15.455Z"
+        },
+        "hoodFilterResetType": {
+          "value": ["replaceable", "washable"],
+          "timestamp": "2025-11-11T18:21:15.455Z"
+        },
+        "hoodFilterUsage": {
+          "value": 100,
+          "timestamp": "2025-11-11T18:21:15.455Z"
+        }
+      },
+      "samsungce.softwareVersion": {
+        "versions": {
+          "value": [
+            {
+              "id": "0",
+              "swType": "Software",
+              "versionNumber": "01294A230419",
+              "description": "Version"
+            },
+            {
+              "id": "1",
+              "swType": "Firmware",
+              "versionNumber": "22112900,23022000",
+              "description": "Version"
+            },
+            {
+              "id": "2",
+              "swType": "Firmware",
+              "versionNumber": "10000400",
+              "description": "Version"
+            },
+            {
+              "id": "3",
+              "swType": "Firmware",
+              "versionNumber": "22021000",
+              "description": "Version"
+            }
+          ],
+          "timestamp": "2025-11-11T18:21:15.455Z"
+        }
+      },
+      "odorSensor": {
+        "odorLevel": {
+          "value": null
+        }
+      },
+      "custom.energyType": {
+        "energyType": {
+          "value": "2.0",
+          "timestamp": "2024-03-09T00:58:59.857Z"
+        },
+        "energySavingSupport": {
+          "value": true,
+          "timestamp": "2024-03-09T00:58:59.857Z"
+        },
+        "drMaxDuration": {
+          "value": 99999999,
+          "unit": "min",
+          "timestamp": "2024-03-09T00:58:59.857Z"
+        },
+        "energySavingLevel": {
+          "value": null
+        },
+        "energySavingInfo": {
+          "value": null
+        },
+        "supportedEnergySavingLevels": {
+          "value": null
+        },
+        "energySavingOperation": {
+          "value": false,
+          "timestamp": "2025-11-11T18:21:15.455Z"
+        },
+        "notificationTemplateID": {
+          "value": null
+        },
+        "energySavingOperationSupport": {
+          "value": true,
+          "timestamp": "2024-03-09T00:58:59.857Z"
+        }
+      },
+      "samsungce.softwareUpdate": {
+        "targetModule": {
+          "value": {},
+          "timestamp": "2025-11-11T16:40:49.431Z"
+        },
+        "otnDUID": {
+          "value": "ZPCHUODPLNS6Q",
+          "timestamp": "2025-11-11T18:21:15.455Z"
+        },
+        "lastUpdatedDate": {
+          "value": null
+        },
+        "availableModules": {
+          "value": [],
+          "timestamp": "2025-11-11T16:40:49.496Z"
+        },
+        "newVersionAvailable": {
+          "value": false,
+          "timestamp": "2025-11-11T18:21:15.455Z"
+        },
+        "operatingState": {
+          "value": null
+        },
+        "progress": {
+          "value": null
+        }
+      },
+      "veryFineDustSensor": {
+        "veryFineDustLevel": {
+          "value": 8,
+          "unit": "\u03bcg/m^3",
+          "timestamp": "2025-11-11T23:41:21.652Z"
+        }
+      },
+      "custom.doNotDisturbMode": {
+        "doNotDisturb": {
+          "value": "off",
+          "timestamp": "2025-11-11T23:10:52.866Z"
+        },
+        "startTime": {
+          "value": "0000",
+          "timestamp": "2025-11-11T23:10:52.866Z"
+        },
+        "endTime": {
+          "value": "0000",
+          "timestamp": "2025-11-11T23:10:52.866Z"
+        }
+      }
+    },
+    "lamp": {
+      "switch": {
+        "switch": {
+          "value": "off",
+          "timestamp": "2025-11-12T00:04:46.554Z"
+        }
+      },
+      "samsungce.lamp": {
+        "brightnessLevel": {
+          "value": "high",
+          "timestamp": "2025-11-12T00:04:44.863Z"
+        },
+        "supportedBrightnessLevel": {
+          "value": ["low", "high"],
+          "timestamp": "2025-11-11T23:41:14.069Z"
+        }
+      }
+    },
+    "edgelight": {
+      "samsungce.hoodLampAutomation": {
+        "condition": {
+          "value": null
+        },
+        "supportedConditions": {
+          "value": null
+        },
+        "startTime": {
+          "value": null
+        },
+        "endTime": {
+          "value": null
+        }
+      },
+      "switch": {
+        "switch": {
+          "value": null
+        }
+      }
+    }
+  }
+}

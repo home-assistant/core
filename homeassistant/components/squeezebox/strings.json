@@ -7,6 +7,7 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "missing_uuid": "Your LMS did not provide a unique identifier and is not compatible with this integration. Please check and update your LMS version.",
       "no_server_found": "Could not automatically discover server.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
@@ -41,6 +42,15 @@
   },
   "entity": {
     "binary_sensor": {
+      "alarm_active": {
+        "name": "Alarm active"
+      },
+      "alarm_snooze": {
+        "name": "Alarm snoozed"
+      },
+      "alarm_upcoming": {
+        "name": "Alarm upcoming"
+      },
       "needsrestart": {
         "name": "Needs restart"
       },
@@ -72,6 +82,9 @@
       }
     },
     "sensor": {
+      "alarm_next": {
+        "name": "Next alarm"
+      },
       "info_total_albums": {
         "name": "Total albums",
         "unit_of_measurement": "albums"
