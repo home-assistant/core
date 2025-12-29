@@ -92,6 +92,44 @@ async def test_reauth_started(
     assert flows[0]["step_id"] == "reauth_confirm"
 
 
+async def test_mqtt_session_unauthorized_hook_called(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    device_manager: AsyncMock,
+) -> None:
+    """Test that the mqtt session unauthorized hook is called on unauthorized event."""
+    device_manager_kwargs = {}
+
+    def create_device_manager(*args: Any, **kwargs: Any) -> AsyncMock:
+        nonlocal device_manager_kwargs
+        device_manager_kwargs = kwargs
+        return device_manager
+
+    with patch(
+        "homeassistant.components.roborock.create_device_manager",
+        side_effect=create_device_manager,
+    ):
+        await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+        await hass.async_block_till_done()
+        assert mock_roborock_entry.state is ConfigEntryState.LOADED
+
+    flows = hass.config_entries.flow.async_progress()
+    assert not flows
+
+    # Simulate an unauthorized event by calling the captured hook
+    assert device_manager_kwargs
+    mqtt_session_unauthorized_hook = device_manager_kwargs.get(
+        "mqtt_session_unauthorized_hook"
+    )
+    assert mqtt_session_unauthorized_hook
+    mqtt_session_unauthorized_hook()
+
+    # Verify that reauth flow is started
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
+
+
 @pytest.mark.parametrize("platforms", [[Platform.IMAGE]])
 @pytest.mark.parametrize(
     ("exists", "is_dir", "rmtree_called"),
@@ -408,6 +446,63 @@ async def test_cloud_api_repair(
     await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
     await hass.async_block_till_done()
 
+    assert len(issue_registry.issues) == 0
+
+
+@pytest.mark.parametrize("platforms", [[Platform.SENSOR]])
+async def test_cloud_api_repair_cleared_on_update(
+    hass: HomeAssistant,
+    mock_roborock_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a repair is created then cleared if the device is reachable locally again."""
+
+    # Fake that the device is only reachable via cloud
+    fake_vacuum.is_connected = True
+    fake_vacuum.is_local_connected = False
+
+    # Load the integration and verify that a repair issue is created
+    await async_setup_component(hass, HA_DOMAIN, {})
+    await hass.config_entries.async_setup(mock_roborock_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_roborock_entry.state is ConfigEntryState.LOADED
+
+    issue_registry = ir.async_get(hass)
+    assert len(issue_registry.issues) == 1
+
+    # Fake that the device is reachable locally again.
+    fake_vacuum.is_local_connected = True
+
+    # Refresh the coordinator using an arbitrary sensor, which should
+    # clear the repair issue.
+    sensor_entity_id = "sensor.roborock_s7_maxv_battery"
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: sensor_entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    # Verify that the repair issue is cleared
+    issue_registry = ir.async_get(hass)
+    assert len(issue_registry.issues) == 0
+
+    # Fake the device is cloud only again. Refreshing the coordinator
+    # should not recreate the repair issue.
+    fake_vacuum.is_local_connected = False
+
+    await hass.services.async_call(
+        HA_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: sensor_entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    # Verify that the repair issue still does not exist
+    issue_registry = ir.async_get(hass)
     assert len(issue_registry.issues) == 0
 
 

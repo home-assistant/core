@@ -21,13 +21,14 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import CONF_KEEP_MAIN_LIGHT, DEFAULT_KEEP_MAIN_LIGHT, DOMAIN
-from .coordinator import WLEDConfigEntry
+from .coordinator import WLEDConfigEntry, normalize_mac_address
 
 
 class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a WLED config flow."""
 
     VERSION = 1
+    MINOR_VERSION = 2
     discovered_host: str
     discovered_device: Device
 
@@ -53,16 +54,15 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
             except WLEDConnectionError:
                 errors["base"] = "cannot_connect"
             else:
-                await self.async_set_unique_id(
-                    device.info.mac_address, raise_on_progress=False
-                )
+                mac_address = normalize_mac_address(device.info.mac_address)
+                await self.async_set_unique_id(mac_address, raise_on_progress=False)
                 if self.source == SOURCE_RECONFIGURE:
                     entry = self._get_reconfigure_entry()
                     self._abort_if_unique_id_mismatch(
                         reason="unique_id_mismatch",
                         description_placeholders={
                             "expected_mac": format_mac(entry.unique_id).upper(),
-                            "actual_mac": format_mac(self.unique_id).upper(),
+                            "actual_mac": mac_address.upper(),
                         },
                     )
                     return self.async_update_reload_and_abort(
@@ -104,7 +104,7 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle zeroconf discovery."""
         # Abort quick if the mac address is provided by discovery info
         if mac := discovery_info.properties.get(CONF_MAC):
-            await self.async_set_unique_id(mac)
+            await self.async_set_unique_id(normalize_mac_address(mac))
             self._abort_if_unique_id_configured(
                 updates={CONF_HOST: discovery_info.host}
             )
@@ -117,7 +117,10 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
         except WLEDConnectionError:
             return self.async_abort(reason="cannot_connect")
 
-        await self.async_set_unique_id(self.discovered_device.info.mac_address)
+        device_mac_address = normalize_mac_address(
+            self.discovered_device.info.mac_address
+        )
+        await self.async_set_unique_id(device_mac_address)
         self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.host})
 
         self.context.update(

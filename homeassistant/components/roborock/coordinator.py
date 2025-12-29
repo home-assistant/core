@@ -111,6 +111,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState]):
         # Tracks the last successful update to control when we report failure
         # to the base class. This is reset on successful data update.
         self._last_update_success_time: datetime | None = None
+        self._has_connected_locally: bool = False
 
     @cached_property
     def dock_device_info(self) -> DeviceInfo:
@@ -180,7 +181,8 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState]):
     async def _verify_api(self) -> None:
         """Verify that the api is reachable."""
         if self._device.is_connected:
-            if self._device.is_local_connected:
+            self._has_connected_locally |= self._device.is_local_connected
+            if self._has_connected_locally:
                 async_delete_issue(
                     self.hass, DOMAIN, f"cloud_api_used_{self.duid_slug}"
                 )
@@ -223,6 +225,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState]):
 
     async def _async_update_data(self) -> DeviceState:
         """Update data via library."""
+        await self._verify_api()
         try:
             # Update device props and standard api information
             await self._update_device_prop()

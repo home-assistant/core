@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from wled import (
     WLED,
     Device as WLEDDevice,
@@ -32,6 +34,17 @@ from .const import (
 type WLEDConfigEntry = ConfigEntry[WLEDDataUpdateCoordinator]
 
 
+def normalize_mac_address(mac: str) -> str:
+    """Normalize a MAC address to lowercase without separators.
+
+    This format is used by WLED firmware as well as unique IDs in Home Assistant.
+
+    The homeassistant.helpers.device_registry.format_mac function is preferred but
+    returns MAC addresses with colons as separators.
+    """
+    return mac.lower().replace(":", "").replace(".", "").replace("-", "").strip()
+
+
 class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
     """Class to manage fetching WLED data from single endpoint."""
 
@@ -50,6 +63,10 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
         )
         self.wled = WLED(entry.data[CONF_HOST], session=async_get_clientsession(hass))
         self.unsub: CALLBACK_TYPE | None = None
+
+        if TYPE_CHECKING:
+            assert entry.unique_id
+        self.config_mac_address = normalize_mac_address(entry.unique_id)
 
         super().__init__(
             hass,
@@ -131,13 +148,14 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
                 translation_placeholders={"error": str(error)},
             ) from error
 
-        if device.info.mac_address != self.config_entry.unique_id:
+        device_mac_address = normalize_mac_address(device.info.mac_address)
+        if device_mac_address != self.config_mac_address:
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="mac_address_mismatch",
                 translation_placeholders={
-                    "expected_mac": format_mac(self.config_entry.unique_id).upper(),
-                    "actual_mac": format_mac(device.info.mac_address).upper(),
+                    "expected_mac": format_mac(self.config_mac_address).upper(),
+                    "actual_mac": format_mac(device_mac_address).upper(),
                 },
             )
 
