@@ -5,7 +5,15 @@ rules:
   brands: done
   common-modules: done
   config-flow-test-coverage: todo
-  config-flow: done
+  config-flow:
+    status: todo
+    comment: |
+      `test_user` initializes flow with `None` data
+      `test_user` imports a fixture that already patches, but then patches again
+      `test_user` doesn't continue the old flow but creates a second one
+      `test_user` can be parametrized to test the false SSL part
+      `test_user_2sa` directly initialized the flow with form data
+      Flows should end in CREATE_ENTRY or ABORT
   dependency-transparency: done
   docs-actions: todo
   docs-high-level-description: done
@@ -34,10 +42,17 @@ rules:
       Handled by coordinator.
   parallel-updates: todo
   reauthentication-flow: done
-  test-coverage: todo
+  test-coverage:
+    status: todo
+    comment: |
+      consts.py -> const.py
+      fixture could be autospecced and also be combined with the config flow one
+      Consider creating a fixture of the mock config entry
 
   # Gold
-  devices: done
+  devices:
+    status: done
+    comment: Could add serial number to camera device
   diagnostics: done
   discovery-update-info: done
   discovery: done
@@ -51,12 +66,18 @@ rules:
   dynamic-devices:
     status: todo
     comment: cameras and disks can be replaced and removed
-  entity-category: done
+  entity-category:
+    status: todo
+    comment: CPU load sounds like diagnostic data
   entity-device-class: done
   entity-disabled-by-default: done
-  entity-translations: done
+  entity-translations:
+    status: todo
+    comment: button still has names, can use placeholders
   exception-translations: todo
-  icon-translations: done
+  icon-translations:
+    status: todo
+    comment: button still has icons
   reconfiguration-flow: todo
   repair-issues: done
   stale-devices:
@@ -66,4 +87,6 @@ rules:
   # Platinum
   async-dependency: done
   inject-websession: done
-  strict-typing: done
+  strict-typing:
+    status: done
+    comment: Would be nice if we can get rid of getattr
