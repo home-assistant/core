@@ -5,11 +5,23 @@ from enum import StrEnum, unique
 import voluptuous as vol
 
 from homeassistant.components.climate import HVACMode
+from homeassistant.components.sensor import (
+    CONF_STATE_CLASS as CONF_SENSOR_STATE_CLASS,
+    DEVICE_CLASS_STATE_CLASSES,
+    DEVICE_CLASS_UNITS,
+    STATE_CLASS_UNITS,
+    SensorDeviceClass,
+    SensorStateClass,
+)
+from homeassistant.components.text import TextMode
 from homeassistant.const import (
+    CONF_DEVICE_CLASS,
     CONF_ENTITY_CATEGORY,
     CONF_ENTITY_ID,
+    CONF_MODE,
     CONF_NAME,
     CONF_PLATFORM,
+    CONF_UNIT_OF_MEASUREMENT,
     Platform,
 )
 from homeassistant.helpers import config_validation as cv, selector
@@ -30,13 +42,17 @@ from ..const import (
     CoverConf,
     FanConf,
     FanZeroMode,
+    SceneConf,
 )
+from ..dpt import get_supported_dpts
 from .const import (
+    CONF_ALWAYS_CALLBACK,
     CONF_COLOR,
     CONF_COLOR_TEMP_MAX,
     CONF_COLOR_TEMP_MIN,
     CONF_DATA,
     CONF_DEVICE_INFO,
+    CONF_DPT,
     CONF_ENTITY,
     CONF_GA_ACTIVE,
     CONF_GA_ANGLE,
@@ -69,6 +85,7 @@ from .const import (
     CONF_GA_RED_BRIGHTNESS,
     CONF_GA_RED_SWITCH,
     CONF_GA_SATURATION,
+    CONF_GA_SCENE,
     CONF_GA_SENSOR,
     CONF_GA_SETPOINT_SHIFT,
     CONF_GA_SPEED,
@@ -77,6 +94,7 @@ from .const import (
     CONF_GA_SWITCH,
     CONF_GA_TEMPERATURE_CURRENT,
     CONF_GA_TEMPERATURE_TARGET,
+    CONF_GA_TEXT,
     CONF_GA_TIME,
     CONF_GA_UP_DOWN,
     CONF_GA_VALVE,
@@ -406,10 +424,43 @@ LIGHT_KNX_SCHEMA = AllSerializeFirst(
     ),
 )
 
+SCENE_KNX_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_GA_SCENE): GASelector(
+            state=False,
+            passive=False,
+            write_required=True,
+            valid_dpt=["17.001", "18.001"],
+        ),
+        vol.Required(SceneConf.SCENE_NUMBER): AllSerializeFirst(
+            selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    min=1, max=64, step=1, mode=selector.NumberSelectorMode.BOX
+                )
+            ),
+            vol.Coerce(int),
+        ),
+    },
+)
+
 SWITCH_KNX_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_GA_SWITCH): GASelector(write_required=True, valid_dpt="1"),
         vol.Optional(CONF_INVERT, default=False): selector.BooleanSelector(),
+        vol.Optional(CONF_RESPOND_TO_READ, default=False): selector.BooleanSelector(),
+        vol.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
+    },
+)
+
+TEXT_KNX_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_GA_TEXT): GASelector(write_required=True, dpt=["string"]),
+        vol.Required(CONF_MODE, default=TextMode.TEXT): selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=list(TextMode),
+                translation_key="component.knx.config_panel.entities.create.text.knx.mode",
+            ),
+        ),
         vol.Optional(CONF_RESPOND_TO_READ, default=False): selector.BooleanSelector(),
         vol.Optional(CONF_SYNC_STATE, default=True): SyncStateSelector(),
     },
@@ -565,6 +616,114 @@ CLIMATE_KNX_SCHEMA = vol.Schema(
     },
 )
 
+
+def _validate_sensor_attributes(config: dict) -> dict:
+    """Validate that state_class is compatible with device_class and unit_of_measurement."""
+    dpt = config[CONF_GA_SENSOR][CONF_DPT]
+    dpt_metadata = get_supported_dpts()[dpt]
+    state_class = config.get(
+        CONF_SENSOR_STATE_CLASS,
+        dpt_metadata["sensor_state_class"],
+    )
+    device_class = config.get(
+        CONF_DEVICE_CLASS,
+        dpt_metadata["sensor_device_class"],
+    )
+    unit_of_measurement = config.get(
+        CONF_UNIT_OF_MEASUREMENT,
+        dpt_metadata["unit"],
+    )
+    if (
+        state_class
+        and device_class
+        and (state_classes := DEVICE_CLASS_STATE_CLASSES.get(device_class)) is not None
+        and state_class not in state_classes
+    ):
+        raise vol.Invalid(
+            f"State class '{state_class}' is not valid for device class '{device_class}'. "
+            f"Valid options are: {', '.join(sorted(map(str, state_classes), key=str.casefold))}",
+            path=[CONF_SENSOR_STATE_CLASS],
+        )
+    if (
+        device_class
+        and (d_c_units := DEVICE_CLASS_UNITS.get(device_class)) is not None
+        and unit_of_measurement not in d_c_units
+    ):
+        raise vol.Invalid(
+            f"Unit of measurement '{unit_of_measurement}' is not valid for device class '{device_class}'. "
+            f"Valid options are: {', '.join(sorted(map(str, d_c_units), key=str.casefold))}",
+            path=(
+                [CONF_DEVICE_CLASS]
+                if CONF_DEVICE_CLASS in config
+                else [CONF_UNIT_OF_MEASUREMENT]
+            ),
+        )
+    if (
+        state_class
+        and (s_c_units := STATE_CLASS_UNITS.get(state_class)) is not None
+        and unit_of_measurement not in s_c_units
+    ):
+        raise vol.Invalid(
+            f"Unit of measurement '{unit_of_measurement}' is not valid for state class '{state_class}'. "
+            f"Valid options are: {', '.join(sorted(map(str, s_c_units), key=str.casefold))}",
+            path=(
+                [CONF_SENSOR_STATE_CLASS]
+                if CONF_SENSOR_STATE_CLASS in config
+                else [CONF_UNIT_OF_MEASUREMENT]
+            ),
+        )
+    return config
+
+
+SENSOR_KNX_SCHEMA = AllSerializeFirst(
+    vol.Schema(
+        {
+            vol.Required(CONF_GA_SENSOR): GASelector(
+                write=False, state_required=True, dpt=["numeric", "string"]
+            ),
+            "section_advanced_options": KNXSectionFlat(collapsible=True),
+            vol.Optional(CONF_UNIT_OF_MEASUREMENT): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=sorted(
+                        {
+                            str(unit)
+                            for units in DEVICE_CLASS_UNITS.values()
+                            for unit in units
+                            if unit is not None
+                        }
+                    ),
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                    translation_key="component.knx.selector.sensor_unit_of_measurement",
+                    custom_value=True,
+                ),
+            ),
+            vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[
+                        cls.value
+                        for cls in SensorDeviceClass
+                        if cls != SensorDeviceClass.ENUM
+                    ],
+                    translation_key="component.knx.selector.sensor_device_class",
+                    sort=True,
+                )
+            ),
+            vol.Optional(CONF_SENSOR_STATE_CLASS): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=list(SensorStateClass),
+                    translation_key="component.knx.selector.sensor_state_class",
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                )
+            ),
+            vol.Optional(CONF_ALWAYS_CALLBACK): selector.BooleanSelector(),
+            vol.Required(CONF_SYNC_STATE, default=True): SyncStateSelector(
+                allow_false=True
+            ),
+        },
+    ),
+    _validate_sensor_attributes,
+)
+
 KNX_SCHEMA_FOR_PLATFORM = {
     Platform.BINARY_SENSOR: BINARY_SENSOR_KNX_SCHEMA,
     Platform.CLIMATE: CLIMATE_KNX_SCHEMA,
@@ -573,7 +732,10 @@ KNX_SCHEMA_FOR_PLATFORM = {
     Platform.DATETIME: DATETIME_KNX_SCHEMA,
     Platform.FAN: FAN_KNX_SCHEMA,
     Platform.LIGHT: LIGHT_KNX_SCHEMA,
+    Platform.SCENE: SCENE_KNX_SCHEMA,
+    Platform.SENSOR: SENSOR_KNX_SCHEMA,
     Platform.SWITCH: SWITCH_KNX_SCHEMA,
+    Platform.TEXT: TEXT_KNX_SCHEMA,
     Platform.TIME: TIME_KNX_SCHEMA,
 }
 
