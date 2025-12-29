@@ -33,6 +33,10 @@ _LOGGER = logging.getLogger(__name__)
 type MetWeatherConfigEntry = ConfigEntry[MetDataUpdateCoordinator]
 
 
+class CannotConnect(HomeAssistantError):
+    """Unable to connect to the web site."""
+
+
 class MetWeatherData:
     """Keep data for Met.no weather entities."""
 
@@ -75,10 +79,7 @@ class MetWeatherData:
         """Fetch data from API - (current weather and forecast)."""
         resp = await self._weather_data.fetching_data()
         if not resp:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect",
-            )
+            raise CannotConnect
         self.current_weather_data = self._weather_data.get_current_weather()
         time_zone = dt_util.get_default_time_zone()
         self.daily_forecast = self._weather_data.get_forecast(time_zone, False, 0)
@@ -115,7 +116,7 @@ class MetDataUpdateCoordinator(DataUpdateCoordinator[MetWeatherData]):
         """Fetch data from Met."""
         try:
             return await self.weather.fetch_data()
-        except Exception as err:
+        except CannotConnect as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
