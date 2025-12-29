@@ -347,15 +347,12 @@ class TractiveClient:
         sleep = data.get("sleep", {})
 
         payload = {
-            ATTR_ACTIVITY_LABEL: activity.get("label"),
-            ATTR_CALORIES: activity.get("caloriesBurnt"),
             ATTR_DAILY_GOAL: activity.get("minutesGoal"),
             ATTR_MINUTES_ACTIVE: activity.get("minutesActive"),
             ATTR_MINUTES_DAY_SLEEP: sleep.get("minutesDaySleep"),
             ATTR_MINUTES_NIGHT_SLEEP: sleep.get("minutesNightSleep"),
             # Calm minutes can be used as rest indicator
             ATTR_MINUTES_REST: sleep.get("minutesCalm"),
-            ATTR_SLEEP_LABEL: sleep.get("label"),
         }
         self._dispatch_tracker_event(
             TRACKER_WELLNESS_STATUS_UPDATED, data["petId"], payload
