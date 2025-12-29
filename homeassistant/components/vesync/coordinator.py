@@ -15,15 +15,17 @@ from .const import UPDATE_INTERVAL, UPDATE_INTERVAL_ENERGY
 
 _LOGGER = logging.getLogger(__name__)
 
+type VesyncConfigEntry = ConfigEntry[VeSyncDataCoordinator]
+
 
 class VeSyncDataCoordinator(DataUpdateCoordinator[None]):
     """Class representing data coordinator for VeSync devices."""
 
-    config_entry: ConfigEntry
+    config_entry: VesyncConfigEntry
     update_time: datetime | None = None
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, manager: VeSync
+        self, hass: HomeAssistant, config_entry: VesyncConfigEntry, manager: VeSync
     ) -> None:
         """Initialize."""
         self.manager = manager

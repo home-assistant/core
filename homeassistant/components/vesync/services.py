@@ -5,6 +5,7 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
+from . import VesyncConfigEntry
 from .const import DOMAIN, SERVICE_UPDATE_DEVS, VS_DEVICES, VS_DISCOVERY
 
 
@@ -21,7 +22,7 @@ async def async_new_device_discovery(call: ServiceCall) -> None:
     """Discover and add new devices."""
 
     entries = call.hass.config_entries.async_entries(DOMAIN)
-    config_entry = entries[0] if entries else None
+    config_entry: VesyncConfigEntry | None = entries[0] if entries else None
 
     if not config_entry:
         raise ServiceValidationError("Entry not found")
