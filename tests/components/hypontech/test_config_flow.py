@@ -141,6 +141,53 @@ async def test_form_cannot_connect(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_form_timeout(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+    """Test we handle timeout error."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.hypontech.config_flow.HyponCloud.connect",
+        side_effect=TimeoutError,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    # Make sure the config flow tests finish with either an
+    # FlowResultType.CREATE_ENTRY or FlowResultType.ABORT so
+    # we can show the config flow is able to recover from an error.
+
+    with patch(
+        "homeassistant.components.hypontech.config_flow.HyponCloud.connect",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Hypontech micro inverter"
+    assert result["data"] == {
+        CONF_USERNAME: "test-username",
+        CONF_PASSWORD: "test-password",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
 @pytest.mark.parametrize(
     ("existing_username", "new_username"),
     [

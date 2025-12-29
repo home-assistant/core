@@ -27,8 +27,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: HypontechConfigEntry) ->
         entry.data[CONF_PASSWORD],
         session,
     )
-    if not await hypontech_cloud.connect():
-        raise ConfigEntryNotReady
+    try:
+        if not await hypontech_cloud.connect():
+            raise ConfigEntryNotReady
+    except TimeoutError as ex:
+        raise ConfigEntryNotReady("Timeout connecting to Hypontech Cloud") from ex
 
     coordinator = HypontechDataCoordinator(hass, entry, hypontech_cloud)
     await coordinator.async_config_entry_first_refresh()

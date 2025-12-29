@@ -36,6 +36,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     try:
         if not await hypon.connect():
             raise CannotConnect
+    except TimeoutError:
+        raise CannotConnect from None
     except AuthenticationError:
         raise InvalidAuth from None
 
