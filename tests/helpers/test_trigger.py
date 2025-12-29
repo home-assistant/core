@@ -548,6 +548,7 @@ async def test_platform_multiple_triggers(
     action_method = getattr(action_helper, action_method)
 
     await async_initialize_triggers(hass, config_1, action_method, "test", "", log_cb)
+    await hass.async_block_till_done()
     assert len(action_helper.action_calls) == 1
     assert action_helper.action_calls[0][0] == {
         "trigger": {
@@ -562,6 +563,7 @@ async def test_platform_multiple_triggers(
     action_helper.action_calls.clear()
 
     await async_initialize_triggers(hass, config_2, action_method, "test", "", log_cb)
+    await hass.async_block_till_done()
     assert len(action_helper.action_calls) == 1
     assert action_helper.action_calls[0][0] == {
         "trigger": {

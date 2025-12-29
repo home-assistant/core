@@ -161,6 +161,52 @@ async def test_form_exception(
     assert result["result"].unique_id == TEST_DEVICE_ID
 
 
+async def test_form_unknown_exception(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_hikcamera: MagicMock,
+) -> None:
+    """Test we handle unknown exception during connection and can recover."""
+    mock_hikcamera.side_effect = Exception("Unexpected error")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: TEST_HOST,
+            CONF_PORT: TEST_PORT,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_SSL: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
+
+    # Recover from error
+    mock_hikcamera.side_effect = None
+    mock_hikcamera.return_value.get_id = TEST_DEVICE_ID
+    mock_hikcamera.return_value.get_name = TEST_DEVICE_NAME
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: TEST_HOST,
+            CONF_PORT: TEST_PORT,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_SSL: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == TEST_DEVICE_ID
+
+
 async def test_form_already_configured(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
@@ -295,6 +341,30 @@ async def test_import_flow_no_device_id(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
+
+
+async def test_import_flow_unknown_exception(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_hikcamera: MagicMock,
+) -> None:
+    """Test YAML import flow aborts on unknown exception."""
+    mock_hikcamera.side_effect = Exception("Unexpected error")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_PORT: TEST_PORT,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_SSL: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unknown"
 
 
 async def test_import_flow_already_configured(

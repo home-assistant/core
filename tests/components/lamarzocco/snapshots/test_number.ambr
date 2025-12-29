@@ -29,7 +29,7 @@
     }),
     'original_device_class': <NumberDeviceClass.WEIGHT: 'weight'>,
     'original_icon': None,
-    'original_name': 'Brew by weight Dose 1',
+    'original_name': 'Brew by weight dose 1',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -69,7 +69,7 @@
     }),
     'original_device_class': <NumberDeviceClass.WEIGHT: 'weight'>,
     'original_icon': None,
-    'original_name': 'Brew by weight Dose 2',
+    'original_name': 'Brew by weight dose 2',
     'platform': 'lamarzocco',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -83,7 +83,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'weight',
-      'friendly_name': 'LM012345 Brew by weight Dose 1',
+      'friendly_name': 'LM012345 Brew by weight dose 1',
       'max': 100,
       'min': 5,
       'mode': <NumberMode.AUTO: 'auto'>,
@@ -102,7 +102,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'weight',
-      'friendly_name': 'LM012345 Brew by weight Dose 2',
+      'friendly_name': 'LM012345 Brew by weight dose 2',
       'max': 100,
       'min': 5,
       'mode': <NumberMode.AUTO: 'auto'>,
