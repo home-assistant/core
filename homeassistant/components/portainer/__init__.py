@@ -101,8 +101,12 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PortainerConfigEntry) 
             new_identifier = f"{entry.entry_id}_{endpoint_id}_{container}"
             _LOGGER.debug("New identifier: %s", new_identifier)
 
+            new_identifiers = set(device.identifiers)
+            new_identifiers.add((DOMAIN, new_identifier))
+
             device_registry.async_update_device(
-                device.id, new_identifiers={(DOMAIN, new_identifier)}
+                device.id,
+                new_identifiers=new_identifiers,
             )
 
             # Now also update the underlying entities with the new unique_attr_id
@@ -113,8 +117,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PortainerConfigEntry) 
             for entity in entities_device:
                 _LOGGER.debug("Handling entity: %s", entity)
                 # This time we also also have a rest tail (for instance _firefly_iii_db)
-                _, rest = entity.unique_id.split("_", 1)
-                _, rest_tail = rest.split("_", 1)
+                _, _, rest_tail = entity.unique_id.split("_", 2)
                 new_unique_id = f"{new_identifier}_{rest_tail}"
                 _LOGGER.debug("New unique ID: %s", new_unique_id)
                 entity_registry.async_update_entity(

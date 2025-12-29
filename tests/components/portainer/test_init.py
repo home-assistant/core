@@ -130,5 +130,8 @@ async def test_migration_v3_to_v4(
     container_after = device_registry.async_get(container_device.id)
     entity_after = entity_registry.async_get(container_entity.entity_id)
 
-    assert container_after.identifiers == {(DOMAIN, f"{entry.entry_id}_1_adguard")}
+    assert container_after.identifiers == {
+        (DOMAIN, original_container_identifier),
+        (DOMAIN, f"{entry.entry_id}_1_adguard"),
+    }
     assert entity_after.unique_id == f"{entry.entry_id}_1_adguard_container"
