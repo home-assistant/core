@@ -1,11 +1,12 @@
-"""Support for Waterfurnaces."""
+"""Support for WaterFurnace geothermal systems."""
+
+from __future__ import annotations
 
 from datetime import timedelta
 import logging
 import threading
 import time
 
-import voluptuous as vol
 from waterfurnace.waterfurnace import WaterFurnace, WFCredentialError, WFException
 
 from homeassistant.components import persistent_notification
@@ -16,11 +17,15 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import discovery
 from homeassistant.helpers.dispatcher import dispatcher_send
-from homeassistant.helpers.typing import ConfigType
+
+from .models import WaterFurnaceConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
+PLATFORMS = [Platform.SENSOR]
 
 DOMAIN = "waterfurnace"
 UPDATE_TOPIC = f"{DOMAIN}_update"
@@ -31,40 +36,36 @@ NOTIFICATION_ID = "waterfurnace_website_notification"
 NOTIFICATION_TITLE = "WaterFurnace website status"
 
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Required(CONF_USERNAME): cv.string,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+async def async_setup_entry(
+    hass: HomeAssistant, entry: WaterFurnaceConfigEntry
+) -> bool:
+    """Set up WaterFurnace from a config entry."""
+    username = entry.data[CONF_USERNAME]
+    password = entry.data[CONF_PASSWORD]
 
+    client = WaterFurnace(username, password)
 
-def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
-    """Set up waterfurnace platform."""
-
-    config = base_config[DOMAIN]
-
-    username = config[CONF_USERNAME]
-    password = config[CONF_PASSWORD]
-
-    wfconn = WaterFurnace(username, password)
-    # NOTE(sdague): login will throw an exception if this doesn't
-    # work, which will abort the setup.
     try:
-        wfconn.login()
-    except WFCredentialError:
-        _LOGGER.error("Invalid credentials for waterfurnace login")
-        return False
+        await hass.async_add_executor_job(client.login)
+    except WFCredentialError as err:
+        _LOGGER.error("Invalid credentials for WaterFurnace device")
+        raise ConfigEntryAuthFailed(
+            "Authentication failed. Please update your credentials."
+        ) from err
+    except WFException as err:
+        _LOGGER.error("Failed to connect to WaterFurnace service: %s", err)
+        raise ConfigEntryNotReady(
+            f"Failed to connect to WaterFurnace service: {err}"
+        ) from err
+    except Exception as err:
+        _LOGGER.exception("Unexpected error during WaterFurnace setup")
+        raise ConfigEntryNotReady(f"Unexpected error during setup: {err}") from err
 
-    hass.data[DOMAIN] = WaterFurnaceData(hass, wfconn)
+    hass.data[DOMAIN] = WaterFurnaceData(hass, client)
     hass.data[DOMAIN].start()
 
-    discovery.load_platform(hass, Platform.SENSOR, DOMAIN, {}, config)
+    discovery.load_platform(hass, Platform.SENSOR, DOMAIN, {}, entry.as_dict())
+
     return True
 
 
@@ -79,7 +80,7 @@ class WaterFurnaceData(threading.Thread):
     to do.
     """
 
-    def __init__(self, hass, client):
+    def __init__(self, hass: HomeAssistant, client) -> None:
         """Initialize the data object."""
         super().__init__()
         self.hass = hass

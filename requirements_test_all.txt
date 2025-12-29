@@ -2636,6 +2636,9 @@ wallbox==0.9.0
 # homeassistant.components.folder_watcher
 watchdog==6.0.0
 
+# homeassistant.components.waterfurnace
+waterfurnace==1.2.0
+
 # homeassistant.components.watergate
 watergate-local-api==2025.1.0
 

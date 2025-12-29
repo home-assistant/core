@@ -1,0 +1,41 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This device is already configured",
+      "no_devices": "No devices found on this account",
+      "reauth_successful": "Reauthentication successful",
+      "wrong_account": "The credentials provided are for a different account"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to WaterFurnace service",
+      "invalid_auth": "Invalid username or password",
+      "unknown": "An unexpected error occurred"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "Password",
+          "username": "Username"
+        },
+        "data_description": {
+          "password": "Your new WaterFurnace Symphony account password",
+          "username": "Your WaterFurnace Symphony account username"
+        },
+        "description": "The credentials for your WaterFurnace account need to be updated.",
+        "title": "Reauthenticate WaterFurnace"
+      },
+      "user": {
+        "data": {
+          "password": "Password",
+          "username": "Username"
+        },
+        "data_description": {
+          "password": "Your WaterFurnace Symphony account password",
+          "username": "Your WaterFurnace Symphony account username"
+        },
+        "description": "Enter your WaterFurnace Symphony account credentials.",
+        "title": "Connect to WaterFurnace"
+      }
+    }
+  }
+}
