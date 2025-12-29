@@ -2,7 +2,7 @@
 
 from collections.abc import Generator
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from wsdot import TravelTime, WsdotTravelError
@@ -16,14 +16,22 @@ from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
-def mock_travel_time() -> Generator[TravelTime]:
+def mock_travel_time() -> Generator[AsyncMock]:
     """WsdotTravelTimes.get_travel_time is mocked to return a TravelTime data based on test fixture payload."""
-    with patch("wsdot.WsdotTravelTimes", autospec=True) as mock:
+    with (
+        patch(
+            "homeassistant.components.wsdot.wsdot_api.WsdotTravelTimes", autospec=True
+        ) as mock,
+        patch(
+            "homeassistant.components.wsdot.config_flow.wsdot_api.WsdotTravelTimes",
+            new=mock,
+        ),
+    ):
         client = mock.return_value
         response = TravelTime(**load_json_object_fixture("wsdot.json", DOMAIN))
         client.get_travel_time.return_value = response
         client.get_all_travel_times.return_value = [response]
-        yield mock
+        yield client
 
 
 @pytest.fixture
@@ -33,17 +41,17 @@ def failed_travel_time_status() -> int:
 
 
 @pytest.fixture
-def mock_failed_travel_time(failed_travel_time_status: int) -> Generator[None]:
+def mock_failed_travel_time(
+    mock_travel_time: AsyncMock, failed_travel_time_status: int
+) -> AsyncMock:
     """WsdotTravelTimes.get_travel_time is mocked to raise a WsdotTravelError."""
-    with patch("wsdot.WsdotTravelTimes", autospec=True) as mock:
-        client = mock.return_value
-        client.get_travel_time.side_effect = WsdotTravelError(
-            status=failed_travel_time_status
-        )
-        client.get_all_travel_times.side_effect = WsdotTravelError(
-            status=failed_travel_time_status
-        )
-        yield
+    mock_travel_time.get_travel_time.side_effect = WsdotTravelError(
+        status=failed_travel_time_status
+    )
+    mock_travel_time.get_all_travel_times.side_effect = WsdotTravelError(
+        status=failed_travel_time_status
+    )
+    return mock_travel_time
 
 
 @pytest.fixture
@@ -94,3 +102,12 @@ async def init_integration(
     await hass.async_block_till_done()
 
     return mock_config_entry
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Mock config entry setup."""
+    with patch(
+        "homeassistant.components.wsdot.async_setup_entry", return_value=True
+    ) as mock_setup:
+        yield mock_setup

@@ -1,14 +1,10 @@
 """The tests for the WSDOT platform."""
 
-from datetime import datetime, timedelta, timezone
-from typing import Any
 from unittest.mock import AsyncMock
 
-import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.wsdot.const import CONF_TRAVEL_TIMES, DOMAIN
-import homeassistant.components.wsdot.sensor as wsdot_sensor
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_ID,
@@ -16,52 +12,27 @@ from homeassistant.const import (
     CONF_PLATFORM,
     Platform,
 )
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry
-
-TRAVEL_TIME_SUBENTRY = {
-    "subentry_type": "travel_time",
-    "title": "I-90 EB",
-    "data": {
-        CONF_ID: 96,
-        CONF_NAME: "Seattle-Bellevue via I-90 (EB AM)",
-    },
-}
+from tests.common import MockConfigEntry, snapshot_platform
 
 
-@pytest.mark.parametrize(
-    "mock_subentries",
-    [
-        [TRAVEL_TIME_SUBENTRY],
-    ],
-    ids=[""],
-)
 async def test_travel_sensor_details(
     hass: HomeAssistant,
     mock_travel_time: AsyncMock,
     init_integration: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the wsdot Travel Time sensor details."""
-    await hass.async_block_till_done()
-    state = hass.states.get("sensor.seattle_bellevue_via_i_90_eb_am")
-    assert state is not None
-    assert state.name == "Seattle-Bellevue via I-90 (EB AM)"
-    assert state.state == "11"
-    assert (
-        state.attributes["Description"]
-        == "Downtown Seattle to Downtown Bellevue via I-90"
-    )
-    assert state.attributes["TimeUpdated"] == datetime(
-        2017, 1, 21, 15, 10, tzinfo=timezone(timedelta(hours=-8))
-    )
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 async def test_travel_sensor_platform_setup(
-    hass: HomeAssistant,
-    mock_travel_time: AsyncMock,
+    hass: HomeAssistant, mock_travel_time: AsyncMock, issue_registry: ir.IssueRegistry
 ) -> None:
     """Test the wsdot Travel Time sensor still supports setup from platform config."""
     assert await async_setup_component(
@@ -78,21 +49,15 @@ async def test_travel_sensor_platform_setup(
         },
     )
     await hass.async_block_till_done()
-    state = hass.states.get("sensor.seattle_bellevue_via_i_90_eb_am")
-    assert state is not None
-    assert state.name == "Seattle-Bellevue via I-90 (EB AM)"
-    assert (
-        state.attributes["Description"]
-        == "Downtown Seattle to Downtown Bellevue via I-90"
-    )
-    assert state.attributes["TimeUpdated"] == datetime(
-        2017, 1, 21, 15, 10, tzinfo=timezone(timedelta(hours=-8))
-    )
+    entry = next(iter(hass.config_entries.async_entries(DOMAIN)), None)
+    assert entry is not None
+    assert entry.data[CONF_API_KEY] == "foo"
+    assert len(entry.subentries) == 1
+    assert len(issue_registry.issues) == 1
 
 
 async def test_travel_sensor_platform_setup_bad_routes(
-    hass: HomeAssistant,
-    mock_travel_time: AsyncMock,
+    hass: HomeAssistant, mock_travel_time: AsyncMock, issue_registry: ir.IssueRegistry
 ) -> None:
     """Test the wsdot Travel Time sensor platform upgrade skips unknown route ids."""
     assert await async_setup_component(
@@ -112,103 +77,8 @@ async def test_travel_sensor_platform_setup_bad_routes(
 
     entry = next(iter(hass.config_entries.async_entries(DOMAIN)), None)
     assert entry is None
-
-
-async def test_travel_sensor_setup_no_auth(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_failed_travel_time: None,
-) -> None:
-    """Test the wsdot Travel Time sensor does not create an entry with a bad API key."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    entry = next(iter(hass.config_entries.async_entries(DOMAIN)), None)
-    assert entry is not None
-    assert entry.state == ConfigEntryState.SETUP_ERROR
-
-
-@pytest.mark.parametrize(
-    "api_key",
-    [
-        "foo",
-        "bar",
-    ],
-    ids=["key-matches-", "key-does-not-match-"],
-)
-@pytest.mark.parametrize(
-    "mock_subentries",
-    [
-        [],
-    ],
-    ids=[""],
-)
-async def test_travel_sensor_platform_setup_skipped(
-    hass: HomeAssistant,
-    mock_travel_time: AsyncMock,
-    mock_config_data: dict[str, Any],
-    init_integration: MockConfigEntry,
-    api_key: str,
-) -> None:
-    """Test the wsdot Travel Time sensor platform upgrade is skipped when already exists."""
-    assert await async_setup_component(
-        hass,
-        Platform.SENSOR,
-        {
-            Platform.SENSOR: [
-                {
-                    CONF_PLATFORM: DOMAIN,
-                    CONF_API_KEY: api_key,
-                    CONF_TRAVEL_TIMES: [{CONF_ID: 96, CONF_NAME: "I90 EB"}],
-                }
-            ]
-        },
+    assert len(issue_registry.issues) == 1
+    issue = issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_invalid_travel_time_id"
     )
-    await hass.async_block_till_done()
-
-    entry = next(iter(hass.config_entries.async_entries(DOMAIN)), None)
-    assert entry is not None
-    assert entry.data[CONF_API_KEY] == mock_config_data[CONF_API_KEY]
-    assert entry.subentries == {}
-
-
-@pytest.mark.parametrize(
-    "mock_subentries",
-    [
-        [],
-    ],
-    ids=[""],
-)
-async def test_travel_sensor_platform_setup_raises_issue(
-    hass: HomeAssistant,
-    issue_registry: ir.IssueRegistry,
-    mock_travel_time: AsyncMock,
-    mock_config_data: dict[str, Any],
-    init_integration: MockConfigEntry,
-) -> None:
-    """Test the wsdot Travel Time sensor platform upgrade is skipped when already exists."""
-    entries = list(hass.config_entries.async_entries(DOMAIN))
-    assert len(entries) == 1
-
-    def mock_async_add_entities(*args, **kwargs):
-        pytest.fail("mock_async_add_entities should never be called")
-
-    await wsdot_sensor.async_setup_platform(
-        hass=hass,
-        config={
-            CONF_PLATFORM: DOMAIN,
-            CONF_TRAVEL_TIMES: [{CONF_ID: 96, CONF_NAME: "I90 EB"}],
-            **mock_config_data,
-        },
-        async_add_entities=mock_async_add_entities,
-    )
-    await hass.async_block_till_done()
-
-    entries = list(hass.config_entries.async_entries(DOMAIN))
-    assert len(entries) == 1
-
-    issue = issue_registry.async_get_issue(HOMEASSISTANT_DOMAIN, "deprecated_yaml")
     assert issue
-    assert issue.active is True
-    assert issue.severity == ir.IssueSeverity.WARNING

@@ -63,7 +63,7 @@ async def async_setup_platform(
             hass,
             DOMAIN,
             f"deprecated_yaml_import_issue_{result.get('reason')}",
-            breaks_in_ha_version="2026.4.0",
+            breaks_in_ha_version="2026.7.0",
             is_fixable=False,
             is_persistent=True,
             issue_domain=DOMAIN,
@@ -76,7 +76,7 @@ async def async_setup_platform(
         hass,
         HOMEASSISTANT_DOMAIN,
         "deprecated_yaml",
-        breaks_in_ha_version="2026.4.0",
+        breaks_in_ha_version="2026.7.0",
         is_fixable=False,
         is_persistent=True,
         issue_domain=DOMAIN,
@@ -143,7 +143,7 @@ class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
         self._data: wsdot_api.TravelTime | None = None
         self._travel_time_id = travel_time_id
         self._wsdot_travel = wsdot_travel
-        self._attr_unique_id = str(travel_time_id)
+        self._attr_unique_id = f"travel_time-{travel_time_id}"
 
     async def async_update(self) -> None:
         """Get the latest data from WSDOT."""

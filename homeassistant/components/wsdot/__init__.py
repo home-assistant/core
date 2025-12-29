@@ -5,7 +5,7 @@ import wsdot as wsdot_api
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 PLATFORMS = [Platform.SENSOR]
@@ -24,7 +24,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WsdotConfigEntry) -> boo
         # we don't need the data here, only the non-exception
         await wsdot_travel_times.get_all_travel_times()
     except wsdot_api.WsdotTravelError as api_error:
-        raise ConfigEntryAuthFailed from api_error
+        raise ConfigEntryError("Bad auth") from api_error
     entry.runtime_data = wsdot_travel_times
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
