@@ -125,4 +125,4 @@ class VeSyncNumberEntity(VeSyncBaseEntity, NumberEntity):
         """Set new value."""
         if not await self.entity_description.set_value_fn(self.device, value):
             raise HomeAssistantError(self.device.last_response.message)
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()

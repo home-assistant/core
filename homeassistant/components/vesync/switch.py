@@ -135,11 +135,11 @@ class VeSyncSwitchEntity(SwitchEntity, VeSyncBaseEntity):
         if not await self.entity_description.off_fn(self.device):
             raise HomeAssistantError(self.device.last_response.message)
 
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         if not await self.entity_description.on_fn(self.device):
             raise HomeAssistantError(self.device.last_response.message)
 
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
