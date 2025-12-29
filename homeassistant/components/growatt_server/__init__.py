@@ -62,12 +62,18 @@ def _login_classic_api(
     return login_response
 
 
-def _resolve_plant_id(
+def _get_first_plant_id(
     api: growattServer.GrowattApi, username: str, password: str
 ) -> str:
-    """Resolve DEFAULT_PLANT_ID to actual plant_id for Classic API."""
+    """Get the first available plant_id for the authenticated user in Classic API."""
     login_response = _login_classic_api(api, username, password)
-    user_id = login_response["user"]["id"]
+
+    # Safely extract user_id with validation
+    user_data = login_response.get("user")
+    if not user_data or "id" not in user_data:
+        raise ConfigEntryError("Login response missing required user information.")
+
+    user_id = user_data["id"]
 
     try:
         plant_info = api.plant_list(user_id)
@@ -109,9 +115,9 @@ def get_device_list_v1(
 ) -> tuple[list[dict[str, str]], str]:
     """Device list logic for Open API V1.
 
-    Note: Plant selection (including auto-selection if only one plant exists)
-    is handled in the config flow before this function is called. This function
-    only fetches devices for the already-selected plant_id.
+    Plant selection is handled in the config flow before this function is called.
+    This function expects a specific plant_id and fetches devices for that plant.
+
     """
     plant_id = config[CONF_PLANT_ID]
     try:
@@ -204,23 +210,26 @@ async def async_setup_entry(
         # Resolve DEFAULT_PLANT_ID to actual plant_id for Classic API
         if api_version == "classic":
             try:
-                resolved_plant_id = await hass.async_add_executor_job(
-                    _resolve_plant_id, api, config[CONF_USERNAME], config[CONF_PASSWORD]
+                first_plant_id = await hass.async_add_executor_job(
+                    _get_first_plant_id,
+                    api,
+                    config[CONF_USERNAME],
+                    config[CONF_PASSWORD],
                 )
             except (RequestException, JSONDecodeError) as ex:
                 raise ConfigEntryError(
                     f"Error resolving plant_id during migration: {ex}"
                 ) from ex
 
-            # Update config with resolved plant_id
+            # Update config with real plant_id
             new_data = dict(config_entry.data)
-            new_data[CONF_PLANT_ID] = resolved_plant_id
+            new_data[CONF_PLANT_ID] = first_plant_id
             hass.config_entries.async_update_entry(config_entry, data=new_data)
             config = config_entry.data  # Refresh config with updated data
 
             _LOGGER.info(
                 "Migrated config entry to use specific plant_id '%s' instead of default plant selection",
-                resolved_plant_id,
+                first_plant_id,
             )
         else:
             # V1 API should not have DEFAULT_PLANT_ID, but log and continue
