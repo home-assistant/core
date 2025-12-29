@@ -190,7 +190,7 @@ async def test_import_flow_connection_failure(
 @pytest.mark.parametrize(
     ("user_input", "entry_options"),
     [
-        (MOCK_CONFIG_OPTIONS, MOCK_CONFIG_OPTIONS),
+        ({CONF_CODE: "1111"}, {CONF_CODE: "1111"}),
         ({}, {CONF_CODE: None}),
     ],
 )
