@@ -3,12 +3,8 @@
   "name": "Hypontech Cloud",
   "codeowners": ["@jcisio"],
   "config_flow": true,
-  "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/hypontech",
-  "homekit": {},
   "iot_class": "cloud_polling",
   "quality_scale": "bronze",
-  "requirements": ["hyponcloud==0.2.0"],
-  "ssdp": [],
-  "zeroconf": []
+  "requirements": ["hyponcloud==0.2.0"]
 }

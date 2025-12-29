@@ -46,5 +46,10 @@
         "name": "Today energy"
       }
     }
+  },
+  "exceptions": {
+    "connection_error": {
+      "message": "Failed to connect to Hypontech Cloud. Maybe you make too frequent connection from multiple devices in your network."
+    }
   }
 }

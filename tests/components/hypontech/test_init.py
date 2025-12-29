@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
-from hyponcloud import AuthenticationError
+from hyponcloud import AuthenticationError, ConnectionError as HyponConnectionError
 import pytest
 
 from homeassistant.components.hypontech.const import DOMAIN
@@ -69,6 +69,33 @@ async def test_setup_entry_connect_false(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.hypontech.HyponCloud.connect",
         return_value=False,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_entry_connection_error(hass: HomeAssistant) -> None:
+    """Test setup entry with connection error during data fetch."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: "test-username",
+            CONF_PASSWORD: "test-password",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.hypontech.HyponCloud.connect",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.hypontech.coordinator.HyponCloud.get_overview",
+            side_effect=HyponConnectionError,
+        ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()

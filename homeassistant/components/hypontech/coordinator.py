@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 
-from hyponcloud import HyponCloud, OverviewData
+from hyponcloud import ConnectionError as HyponConnectionError, HyponCloud, OverviewData
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -57,8 +57,8 @@ class HypontechDataCoordinator(DataUpdateCoordinator[HypontechSensorData]):
     async def _async_update_data(self) -> HypontechSensorData:
         try:
             data = await self.api.get_overview()
-        except Exception:  # noqa: BLE001
+        except HyponConnectionError as ex:
             raise UpdateFailed(
-                translation_domain=DOMAIN, translation_key="update_error"
-            ) from None
+                translation_domain=DOMAIN, translation_key="connection_error"
+            ) from ex
         return HypontechSensorData(overview_data=data)
