@@ -257,6 +257,23 @@ ECOWITT_SENSORS_MAPPING: Final = {
     ),
 }
 
+RAIN_TOTAL_INCREASING_SENSOR_KEYS: Final = (
+    "totalrainin",
+    "eventrainin",
+    "hourlyrainin",
+    "dailyrainin",
+    "weeklyrainin",
+    "monthlyrainin",
+    "yearlyrainin",
+    "totalrainmm",
+    "eventrainmm",
+    "hourlyrainmm",
+    "dailyrainmm",
+    "weeklyrainmm",
+    "monthlyrainmm",
+    "yearlyrainmm",
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -286,10 +303,7 @@ async def async_setup_entry(
         )
 
         # Only total rain needs state class for long-term statistics
-        if sensor.key in (
-            "totalrainin",
-            "totalrainmm",
-        ):
+        if sensor.key in RAIN_TOTAL_INCREASING_SENSOR_KEYS:
             description = dataclasses.replace(
                 description,
                 state_class=SensorStateClass.TOTAL_INCREASING,
