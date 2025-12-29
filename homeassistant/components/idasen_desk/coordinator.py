@@ -59,8 +59,22 @@ class IdasenDeskCoordinator(DataUpdateCoordinator[int | None]):
         if ble_device is None:
             _LOGGER.debug("No BLEDevice for %s", self.address)
             return False
-        await self.desk.connect(ble_device)
+        try:
+            await self.desk.connect(ble_device)
+        except Exception as err:
+            # Fix for BLE race condition with ESP32 Bluetooth Proxy:
+            # Bleak may raise "Notifications are already enabled" when reconnecting
+            # while notifications are still active. This is harmless but caused
+            # massive log spam and task crashes.
+            if "Notifications are already enabled" in str(err):
+                _LOGGER.debug(
+                    "BLE notifications already active for %s, skipping restart",
+                    self.address,
+                )
+            else:
+                raise
         return True
+
 
     async def async_disconnect(self) -> None:
         """Disconnect from desk."""
