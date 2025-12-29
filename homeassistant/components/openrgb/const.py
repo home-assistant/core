@@ -13,6 +13,8 @@ from openrgb.utils import (
 
 DOMAIN = "openrgb"
 
+UID_SEPARATOR = "||"
+
 # Defaults
 DEFAULT_PORT = 6742
 DEFAULT_CLIENT_NAME = "Home Assistant"

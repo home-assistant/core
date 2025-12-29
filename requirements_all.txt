@@ -222,7 +222,7 @@ aiobafi6==0.9.0
 aiobotocore==2.21.1
 
 # homeassistant.components.comelit
-aiocomelit==1.1.2
+aiocomelit==2.0.0
 
 # homeassistant.components.dhcp
 aiodhcpwatcher==1.2.1
@@ -420,7 +420,7 @@ aiotankerkoenig==0.4.2
 aiotedee==0.2.25
 
 # homeassistant.components.tractive
-aiotractive==0.6.0
+aiotractive==0.7.0
 
 # homeassistant.components.unifi
 aiounifi==88
@@ -609,7 +609,7 @@ azure-servicebus==7.10.0
 azure-storage-blob==12.24.0
 
 # homeassistant.components.backblaze_b2
-b2sdk==2.8.1
+b2sdk==2.10.1
 
 # homeassistant.components.holiday
 babel==2.15.0
@@ -961,6 +961,9 @@ fing_agent_api==1.0.3
 # homeassistant.components.fints
 fints==3.1.0
 
+# homeassistant.components.fish_audio
+fish-audio-sdk==1.1.0
+
 # homeassistant.components.fitbit
 fitbit-web-api==2.13.5
 
@@ -1210,7 +1213,7 @@ hole==0.9.0
 holidays==0.84
 
 # homeassistant.components.frontend
-home-assistant-frontend==20251203.3
+home-assistant-frontend==20251229.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.12.2
@@ -3183,7 +3186,7 @@ webio-api==0.1.12
 webmin-xmlrpc==0.0.2
 
 # homeassistant.components.weheat
-weheat==2025.6.10
+weheat==2025.12.24
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==1.0.3
