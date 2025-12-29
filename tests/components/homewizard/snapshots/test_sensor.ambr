@@ -540,6 +540,97 @@
     'state': '123.0',
   })
 # ---
+# name: test_sensors[HWE-BAT-entity_ids10][sensor.device_production_power:device-registry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        '5c:2f:af:ab:cd:ef',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'homewizard',
+        '5c2fafabcdef',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'HomeWizard',
+    'model': 'Plug-In Battery',
+    'model_id': 'HWE-BAT',
+    'name': 'Device',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': '1.00',
+    'via_device_id': None,
+  })
+# ---
+# name: test_sensors[HWE-BAT-entity_ids10][sensor.device_production_power:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.device_production_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Production power',
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'active_production_power_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_production_power_w',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_sensors[HWE-BAT-entity_ids10][sensor.device_production_power:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Device Production power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.device_production_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-123.0',
+  })
+# ---
 # name: test_sensors[HWE-BAT-entity_ids10][sensor.device_state_of_charge:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -1608,6 +1699,97 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '61.1',
+  })
+# ---
+# name: test_sensors[HWE-KWH1-entity_ids7][sensor.device_production_power:device-registry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        '5c:2f:af:ab:cd:ef',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'homewizard',
+        '5c2fafabcdef',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'HomeWizard',
+    'model': 'Wi-Fi kWh Meter 1-phase',
+    'model_id': 'HWE-KWH1',
+    'name': 'Device',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': '3.06',
+    'via_device_id': None,
+  })
+# ---
+# name: test_sensors[HWE-KWH1-entity_ids7][sensor.device_production_power:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.device_production_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Production power',
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'active_production_power_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_production_power_w',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_sensors[HWE-KWH1-entity_ids7][sensor.device_production_power:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Device Production power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.device_production_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1058.296',
   })
 # ---
 # name: test_sensors[HWE-KWH1-entity_ids7][sensor.device_reactive_power:device-registry]
@@ -3589,6 +3771,97 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
+  })
+# ---
+# name: test_sensors[HWE-KWH3-entity_ids8][sensor.device_production_power:device-registry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        '5c:2f:af:ab:cd:ef',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'homewizard',
+        '5c2fafabcdef',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'HomeWizard',
+    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model_id': 'HWE-KWH3',
+    'name': 'Device',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': '3.06',
+    'via_device_id': None,
+  })
+# ---
+# name: test_sensors[HWE-KWH3-entity_ids8][sensor.device_production_power:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.device_production_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Production power',
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'active_production_power_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_production_power_w',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_sensors[HWE-KWH3-entity_ids8][sensor.device_production_power:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Device Production power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.device_production_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '900.194',
   })
 # ---
 # name: test_sensors[HWE-KWH3-entity_ids8][sensor.device_reactive_power:device-registry]
@@ -15525,6 +15798,97 @@
     'state': '1457.277',
   })
 # ---
+# name: test_sensors[HWE-SKT-11-entity_ids2][sensor.device_production_power:device-registry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        '5c:2f:af:ab:cd:ef',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'homewizard',
+        '5c2fafabcdef',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'HomeWizard',
+    'model': 'Wi-Fi Energy Socket',
+    'model_id': 'HWE-SKT',
+    'name': 'Device',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': '3.03',
+    'via_device_id': None,
+  })
+# ---
+# name: test_sensors[HWE-SKT-11-entity_ids2][sensor.device_production_power:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.device_production_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Production power',
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'active_production_power_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_production_power_w',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_sensors[HWE-SKT-11-entity_ids2][sensor.device_production_power:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Device Production power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.device_production_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-1457.277',
+  })
+# ---
 # name: test_sensors[HWE-SKT-11-entity_ids2][sensor.device_wi_fi_ssid:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -16418,6 +16782,97 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '543.312',
+  })
+# ---
+# name: test_sensors[HWE-SKT-21-entity_ids3][sensor.device_production_power:device-registry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        '5c:2f:af:ab:cd:ef',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'homewizard',
+        '5c2fafabcdef',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'HomeWizard',
+    'model': 'Wi-Fi Energy Socket',
+    'model_id': 'HWE-SKT',
+    'name': 'Device',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': '4.07',
+    'via_device_id': None,
+  })
+# ---
+# name: test_sensors[HWE-SKT-21-entity_ids3][sensor.device_production_power:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.device_production_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Production power',
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'active_production_power_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_production_power_w',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_sensors[HWE-SKT-21-entity_ids3][sensor.device_production_power:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Device Production power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.device_production_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-543.312',
   })
 # ---
 # name: test_sensors[HWE-SKT-21-entity_ids3][sensor.device_reactive_power:device-registry]
@@ -17752,6 +18207,97 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '61.1',
+  })
+# ---
+# name: test_sensors[SDM230-entity_ids5][sensor.device_production_power:device-registry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        '5c:2f:af:ab:cd:ef',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'homewizard',
+        '5c2fafabcdef',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'HomeWizard',
+    'model': 'Wi-Fi kWh Meter 1-phase',
+    'model_id': 'SDM230-wifi',
+    'name': 'Device',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': '3.06',
+    'via_device_id': None,
+  })
+# ---
+# name: test_sensors[SDM230-entity_ids5][sensor.device_production_power:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.device_production_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Production power',
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'active_production_power_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_production_power_w',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_sensors[SDM230-entity_ids5][sensor.device_production_power:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Device Production power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.device_production_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1058.296',
   })
 # ---
 # name: test_sensors[SDM230-entity_ids5][sensor.device_reactive_power:device-registry]
@@ -19733,6 +20279,97 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
+  })
+# ---
+# name: test_sensors[SDM630-entity_ids6][sensor.device_production_power:device-registry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        '5c:2f:af:ab:cd:ef',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'homewizard',
+        '5c2fafabcdef',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'HomeWizard',
+    'model': 'Wi-Fi kWh Meter 3-phase',
+    'model_id': 'SDM630-wifi',
+    'name': 'Device',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': '3.06',
+    'via_device_id': None,
+  })
+# ---
+# name: test_sensors[SDM630-entity_ids6][sensor.device_production_power:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.device_production_power',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.POWER: 'power'>,
+    'original_icon': None,
+    'original_name': 'Production power',
+    'platform': 'homewizard',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'active_production_power_w',
+    'unique_id': 'HWE-P1_5c2fafabcdef_active_production_power_w',
+    'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+  })
+# ---
+# name: test_sensors[SDM630-entity_ids6][sensor.device_production_power:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'power',
+      'friendly_name': 'Device Production power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.device_production_power',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '900.194',
   })
 # ---
 # name: test_sensors[SDM630-entity_ids6][sensor.device_reactive_power:device-registry]
