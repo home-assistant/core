@@ -26,6 +26,7 @@ class SupportedModels(StrEnum):
     CONTACT = "contact"
     PLUG = "plug"
     MOTION = "motion"
+    PRESENCE_SENSOR = "presence_sensor"
     HUMIDIFIER = "humidifier"
     LOCK = "lock"
     LOCK_PRO = "lock_pro"
@@ -60,6 +61,7 @@ class SupportedModels(StrEnum):
     CLIMATE_PANEL = "climate_panel"
     SMART_THERMOSTAT_RADIATOR = "smart_thermostat_radiator"
     S20_VACUUM = "s20_vacuum"
+    ART_FRAME = "art_frame"
 
 
 CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -99,6 +101,7 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.GARAGE_DOOR_OPENER: SupportedModels.GARAGE_DOOR_OPENER,
     SwitchbotModel.CLIMATE_PANEL: SupportedModels.CLIMATE_PANEL,
     SwitchbotModel.SMART_THERMOSTAT_RADIATOR: SupportedModels.SMART_THERMOSTAT_RADIATOR,
+    SwitchbotModel.ART_FRAME: SupportedModels.ART_FRAME,
 }
 
 NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -108,6 +111,7 @@ NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.METER_PRO_C: SupportedModels.HYGROMETER_CO2,
     SwitchbotModel.CONTACT_SENSOR: SupportedModels.CONTACT,
     SwitchbotModel.MOTION_SENSOR: SupportedModels.MOTION,
+    SwitchbotModel.PRESENCE_SENSOR: SupportedModels.PRESENCE_SENSOR,
     SwitchbotModel.LEAK: SupportedModels.LEAK,
     SwitchbotModel.REMOTE: SupportedModels.REMOTE,
     SwitchbotModel.HUBMINI_MATTER: SupportedModels.HUBMINI_MATTER,
@@ -137,6 +141,7 @@ ENCRYPTED_MODELS = {
     SwitchbotModel.RELAY_SWITCH_2PM,
     SwitchbotModel.GARAGE_DOOR_OPENER,
     SwitchbotModel.SMART_THERMOSTAT_RADIATOR,
+    SwitchbotModel.ART_FRAME,
 }
 
 ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS: dict[
@@ -159,6 +164,7 @@ ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS: dict[
     SwitchbotModel.RELAY_SWITCH_2PM: switchbot.SwitchbotRelaySwitch2PM,
     SwitchbotModel.GARAGE_DOOR_OPENER: switchbot.SwitchbotRelaySwitch,
     SwitchbotModel.SMART_THERMOSTAT_RADIATOR: switchbot.SwitchbotSmartThermostatRadiator,
+    SwitchbotModel.ART_FRAME: switchbot.SwitchbotArtFrame,
 }
 
 HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL = {

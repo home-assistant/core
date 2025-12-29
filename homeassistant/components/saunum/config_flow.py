@@ -8,7 +8,7 @@ from typing import Any
 from pysaunum import SaunumClient, SaunumException
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers import config_validation as cv
 
@@ -46,14 +46,18 @@ class LeilSaunaConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 1
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        return await self.async_step_user(user_input)
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
-
         if user_input is not None:
-            # Check for duplicate configuration
             self._async_abort_entries_match(user_input)
 
             try:
@@ -64,9 +68,14 @@ class LeilSaunaConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                return self.async_create_entry(
-                    title="Saunum Leil Sauna",
-                    data=user_input,
+                if self.source == SOURCE_USER:
+                    return self.async_create_entry(
+                        title="Saunum",
+                        data=user_input,
+                    )
+                return self.async_update_reload_and_abort(
+                    self._get_reconfigure_entry(),
+                    data_updates=user_input,
                 )
 
         return self.async_show_form(

@@ -3,7 +3,7 @@
 from datetime import timedelta
 import http
 import time
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from aiohttp import ClientConnectionError, ClientResponseError
 from freezegun.api import FrozenDateTimeFactory
@@ -215,7 +215,7 @@ async def test_setup_all_platforms(
 @pytest.mark.parametrize(
     "side_effect",
     [
-        ClientResponseError("test", "Test"),
+        ClientResponseError(Mock(), Mock()),
         TimeoutError,
     ],
     ids=[

@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from actron_neo_api import ActronAirNeoStatus, ActronAirNeoZone
+from actron_neo_api import ActronAirStatus, ActronAirZone
 
 from homeassistant.components.climate import (
     FAN_AUTO,
@@ -132,7 +132,7 @@ class ActronSystemClimate(BaseClimateEntity):
         return self._status.max_temp
 
     @property
-    def _status(self) -> ActronAirNeoStatus:
+    def _status(self) -> ActronAirStatus:
         """Get the current status from the coordinator."""
         return self.coordinator.data
 
@@ -148,7 +148,7 @@ class ActronSystemClimate(BaseClimateEntity):
     @property
     def fan_mode(self) -> str | None:
         """Return the current fan mode."""
-        fan_mode = self._status.user_aircon_settings.fan_mode
+        fan_mode = self._status.user_aircon_settings.base_fan_mode
         return FAN_MODE_MAPPING_ACTRONAIR_TO_HA.get(fan_mode)
 
     @property
@@ -194,7 +194,7 @@ class ActronZoneClimate(BaseClimateEntity):
     def __init__(
         self,
         coordinator: ActronAirSystemCoordinator,
-        zone: ActronAirNeoZone,
+        zone: ActronAirZone,
     ) -> None:
         """Initialize an Actron Air unit."""
         super().__init__(coordinator, zone.title)
@@ -221,7 +221,7 @@ class ActronZoneClimate(BaseClimateEntity):
         return self._zone.max_temp
 
     @property
-    def _zone(self) -> ActronAirNeoZone:
+    def _zone(self) -> ActronAirZone:
         """Get the current zone data from the coordinator."""
         status = self.coordinator.data
         return status.zones[self._zone_id]

@@ -56,7 +56,9 @@ async def test_full_flow(
         },
     }
     assert result["result"].unique_id == TEST_USERNAME
-    mock_amazon_devices_client.login_mode_interactive.assert_called_once_with("023123")
+    mock_amazon_devices_client.login.login_mode_interactive.assert_called_once_with(
+        "023123"
+    )
 
 
 @pytest.mark.parametrize(
@@ -75,7 +77,7 @@ async def test_flow_errors(
     error: str,
 ) -> None:
     """Test flow errors."""
-    mock_amazon_devices_client.login_mode_interactive.side_effect = exception
+    mock_amazon_devices_client.login.login_mode_interactive.side_effect = exception
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -97,7 +99,7 @@ async def test_flow_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
-    mock_amazon_devices_client.login_mode_interactive.side_effect = None
+    mock_amazon_devices_client.login.login_mode_interactive.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -196,7 +198,7 @@ async def test_reauth_not_successful(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
-    mock_amazon_devices_client.login_mode_interactive.side_effect = side_effect
+    mock_amazon_devices_client.login.login_mode_interactive.side_effect = side_effect
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
@@ -209,7 +211,7 @@ async def test_reauth_not_successful(
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {"base": error}
 
-    mock_amazon_devices_client.login_mode_interactive.side_effect = None
+    mock_amazon_devices_client.login.login_mode_interactive.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -295,7 +297,7 @@ async def test_reconfigure_fails(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
-    mock_amazon_devices_client.login_mode_interactive.side_effect = side_effect
+    mock_amazon_devices_client.login.login_mode_interactive.side_effect = side_effect
 
     reconfigure_result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -309,7 +311,7 @@ async def test_reconfigure_fails(
     assert reconfigure_result["step_id"] == "reconfigure"
     assert reconfigure_result["errors"] == {"base": error}
 
-    mock_amazon_devices_client.login_mode_interactive.side_effect = None
+    mock_amazon_devices_client.login.login_mode_interactive.side_effect = None
 
     reconfigure_result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

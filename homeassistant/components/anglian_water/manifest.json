@@ -1,0 +1,13 @@
+{
+  "domain": "anglian_water",
+  "name": "Anglian Water",
+  "after_dependencies": ["recorder"],
+  "codeowners": ["@pantherale0"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/anglian_water",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "loggers": ["pyanglianwater"],
+  "quality_scale": "bronze",
+  "requirements": ["pyanglianwater==3.1.0"]
+}

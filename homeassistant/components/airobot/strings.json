@@ -1,0 +1,102 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "wrong_device": "Device ID does not match the existing configuration. Please use the correct device credentials."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "dhcp_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::airobot::config::step::user::data_description::password%]"
+        },
+        "description": "Airobot thermostat {device_id} discovered at {host}. Enter the password to complete setup. Find the password in the thermostat settings menu under Connectivity → Mobile app."
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "[%key:component::airobot::config::step::user::data_description::password%]"
+        },
+        "description": "The authentication for Airobot thermostat at {host} (Device ID: {username}) has expired. Please enter the password to reauthenticate. Find the password in the thermostat settings menu under Connectivity → Mobile app."
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "Device ID"
+        },
+        "data_description": {
+          "host": "[%key:component::airobot::config::step::user::data_description::host%]",
+          "password": "[%key:component::airobot::config::step::user::data_description::password%]",
+          "username": "[%key:component::airobot::config::step::user::data_description::username%]"
+        },
+        "description": "Update your Airobot thermostat connection details. Note: The Device ID must remain the same as the original configuration."
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "Device ID"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Airobot thermostat.",
+          "password": "The thermostat password.",
+          "username": "The thermostat Device ID (e.g., T01XXXXXX)."
+        },
+        "description": "Enter your Airobot thermostat connection details. Find the Device ID and password in the thermostat settings menu under Connectivity → Mobile app."
+      }
+    }
+  },
+  "entity": {
+    "number": {
+      "hysteresis_band": {
+        "name": "Hysteresis band"
+      }
+    },
+    "sensor": {
+      "air_temperature": {
+        "name": "Air temperature"
+      },
+      "device_uptime": {
+        "name": "Device uptime"
+      },
+      "errors": {
+        "name": "Error count"
+      },
+      "floor_temperature": {
+        "name": "Floor temperature"
+      },
+      "heating_uptime": {
+        "name": "Heating uptime"
+      }
+    }
+  },
+  "exceptions": {
+    "authentication_failed": {
+      "message": "Authentication failed, please reauthenticate."
+    },
+    "connection_failed": {
+      "message": "Failed to communicate with device."
+    },
+    "set_preset_mode_failed": {
+      "message": "Failed to set preset mode to {preset_mode}."
+    },
+    "set_temperature_failed": {
+      "message": "Failed to set temperature to {temperature}."
+    },
+    "set_value_failed": {
+      "message": "Failed to set value: {error}"
+    }
+  }
+}
