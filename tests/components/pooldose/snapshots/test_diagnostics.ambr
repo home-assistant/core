@@ -1,11 +1,6 @@
 # serializer version: 1
 # name: test_entry_diagnostics
   dict({
-    'coordinator': dict({
-      'last_exception': None,
-      'last_update_success': True,
-      'update_interval': 600.0,
-    }),
     'data': dict({
       'binary_sensor': dict({
         'alarm_ofa_cl': dict({
@@ -245,11 +240,6 @@
       'OWNERID': '**REDACTED**',
       'SERIAL_NUMBER': '**REDACTED**',
       'SW_VERSION': '2.10',
-    }),
-    'entry': dict({
-      'title': 'Pool Device',
-      'unique_id': 'TEST123456789',
-      'version': 1,
     }),
   })
 # ---
