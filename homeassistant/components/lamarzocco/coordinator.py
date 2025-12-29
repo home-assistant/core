@@ -23,7 +23,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import CONF_OFFLINE_MODE, DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=60)
 SETTINGS_UPDATE_INTERVAL = timedelta(hours=8)
@@ -49,7 +49,8 @@ type LaMarzoccoConfigEntry = ConfigEntry[LaMarzoccoRuntimeData]
 class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
     """Base class for La Marzocco coordinators."""
 
-    _default_update_interval = SCAN_INTERVAL
+    _default_update_interval: timedelta | None = SCAN_INTERVAL
+    _ignore_offline_mode = False
     config_entry: LaMarzoccoConfigEntry
     update_success = False
 
@@ -60,12 +61,17 @@ class LaMarzoccoUpdateCoordinator(DataUpdateCoordinator[None]):
         device: LaMarzoccoMachine,
     ) -> None:
         """Initialize coordinator."""
+        update_interval = self._default_update_interval
+        if not self._ignore_offline_mode and entry.options.get(
+            CONF_OFFLINE_MODE, False
+        ):
+            update_interval = None
         super().__init__(
             hass,
             _LOGGER,
             config_entry=entry,
             name=DOMAIN,
-            update_interval=self._default_update_interval,
+            update_interval=update_interval,
         )
         self.device = device
         self._websocket_task: Task | None = None
@@ -213,6 +219,8 @@ class LaMarzoccoStatisticsUpdateCoordinator(LaMarzoccoUpdateCoordinator):
 
 class LaMarzoccoBluetoothUpdateCoordinator(LaMarzoccoUpdateCoordinator):
     """Class to handle fetching data from the La Marzocco Bluetooth API centrally."""
+
+    _ignore_offline_mode = True
 
     async def _internal_async_setup(self) -> None:
         """Initial setup for Bluetooth coordinator."""

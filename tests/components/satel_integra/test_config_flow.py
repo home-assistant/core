@@ -1,7 +1,7 @@
 """Test the satel integra config flow."""
 
 from typing import Any
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -190,22 +190,22 @@ async def test_import_flow_connection_failure(
 @pytest.mark.parametrize(
     ("user_input", "entry_options"),
     [
-        (MOCK_CONFIG_OPTIONS, MOCK_CONFIG_OPTIONS),
+        ({CONF_CODE: "1111"}, {CONF_CODE: "1111"}),
         ({}, {CONF_CODE: None}),
     ],
 )
 async def test_options_flow(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
+    mock_satel: AsyncMock,
+    mock_reload_after_entry_update: MagicMock,
+    mock_config_entry: MockConfigEntry,
     user_input: dict[str, Any],
     entry_options: dict[str, Any],
 ) -> None:
     """Test general options flow."""
+    await setup_integration(hass, mock_config_entry)
 
-    entry = MockConfigEntry(domain=DOMAIN)
-    await setup_integration(hass, entry)
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
@@ -215,7 +215,10 @@ async def test_options_flow(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert entry.options == entry_options
+    assert mock_config_entry.options == entry_options
+
+    # Assert the entry is reloaded to use the updated code
+    assert mock_reload_after_entry_update.call_count == 1
 
 
 @pytest.mark.parametrize(
@@ -230,6 +233,7 @@ async def test_options_flow(
 async def test_subentry_creation(
     hass: HomeAssistant,
     mock_satel: AsyncMock,
+    mock_reload_after_entry_update: MagicMock,
     mock_config_entry: MockConfigEntry,
     user_input: dict[str, Any],
     subentry: ConfigSubentry,
@@ -262,6 +266,9 @@ async def test_subentry_creation(
     assert mock_config_entry.subentries.get(subentry_id) == ConfigSubentry(
         **subentry_result
     )
+
+    # Assert the entry is reloaded to set up the entity
+    assert mock_reload_after_entry_update.call_count == 1
 
 
 @pytest.mark.parametrize(
