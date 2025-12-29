@@ -359,7 +359,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "fail2ban",
     "familyhub",
     "fastdotcom",
-    "feedreader",
     "ffmpeg_motion",
     "ffmpeg_noise",
     "fibaro",
