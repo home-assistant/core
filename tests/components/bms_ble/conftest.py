@@ -149,33 +149,6 @@ def mock_config(
     )
 
 
-def mock_config_v1_0(bms: str, unique_id: str = "cc:cc:cc:cc:cc:cc") -> MockConfigEntry:
-    """Return a Mock of the HA entity config v1.0."""
-    return MockConfigEntry(
-        domain=DOMAIN,
-        version=1,
-        minor_version=0,
-        unique_id=unique_id,
-        data={"type": f"custom_components.bms_ble.plugins.{bms}"},
-        title=f"config_test_{bms}",
-    )
-
-
-@pytest.fixture(params=["OGTBms", "DalyBms"])
-def mock_config_v0_1(
-    request: pytest.FixtureRequest, unique_id: str = "cc:cc:cc:cc:cc:cc"
-) -> MockConfigEntry:
-    """Return a Mock of the HA entity config."""
-    return MockConfigEntry(
-        domain=DOMAIN,
-        version=0,
-        minor_version=1,
-        unique_id=unique_id,
-        data={"type": request.param},
-        title="ogt_bms_v0_1",
-    )
-
-
 @pytest.fixture(params=[TimeoutError, BleakError, EOFError])
 def mock_coordinator_exception(request: pytest.FixtureRequest) -> Exception:
     """Return possible exceptions for mock BMS update function."""
