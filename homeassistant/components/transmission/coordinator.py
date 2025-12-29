@@ -112,6 +112,7 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
                         "name": torrent.name,
                         "id": torrent.id,
                         "download_path": torrent.download_dir,
+                        "labels": torrent.labels,
                     },
                 )
 
@@ -133,6 +134,7 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
                         "name": torrent.name,
                         "id": torrent.id,
                         "download_path": torrent.download_dir,
+                        "labels": torrent.labels,
                     },
                 )
 
@@ -150,6 +152,7 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
                         "name": torrent.name,
                         "id": torrent.id,
                         "download_path": torrent.download_dir,
+                        "labels": torrent.labels,
                     },
                 )
 
