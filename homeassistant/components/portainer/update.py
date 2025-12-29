@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
@@ -12,7 +12,7 @@ from pyportainer.exceptions import (
     PortainerAuthenticationError,
     PortainerConnectionError,
 )
-from pyportainer.models.docker import ImageInformation
+from pyportainer.models.docker import DockerContainer, ImageInformation
 
 from homeassistant.components.update import (
     UpdateDeviceClass,
@@ -41,8 +41,8 @@ class PortainerContainerUpdateEntityDescription(UpdateEntityDescription):
 
     latest_version: Callable[[ImageInformation], str | None]
     update_func: Callable[
-        [Portainer, int, str, str | None],
-        Coroutine[Any, Any, None],
+        [Portainer, int, str],
+        Awaitable[DockerContainer],
     ]
     display_precision: int = 0
 
@@ -54,7 +54,7 @@ CONTAINER_IMAGE: tuple[PortainerContainerUpdateEntityDescription] = (
     PortainerContainerUpdateEntityDescription(
         key="container_image_update",
         translation_key="container_image_update",
-        device_class=UpdateDeviceClass.FIRMWARE,
+        device_class=UpdateDeviceClass.FIRMWARE,  # @TODO: find a better device class. Let's await the review.
         entity_category=EntityCategory.CONFIG,
         latest_version=lambda data: (
             data.descriptor.digest
@@ -62,11 +62,10 @@ CONTAINER_IMAGE: tuple[PortainerContainerUpdateEntityDescription] = (
             else None
         ),
         update_func=(
-            lambda portainer,
-            endpoint_id,
-            container_id,
-            image: portainer.container_recreate_helper(
-                endpoint_id, container_id, str(image), DEFAULT_RECREATE_TIMEOUT
+            lambda portainer, endpoint_id, container_id: portainer.container_recreate(
+                endpoint_id,
+                container_id,
+                pull_image=True,
             )
         ),
     ),
@@ -147,7 +146,6 @@ class PortainerContainerImageUpdateEntity(PortainerContainerUpdateEntity, Update
                 self.coordinator.portainer,
                 self.endpoint.id,
                 self.container.core.id,
-                self.latest_version,
             )
         except PortainerAuthenticationError as ex:
             self.coordinator.config_entry.async_start_reauth(self.hass)
