@@ -4578,7 +4578,7 @@
     },
     "nuheat": {
       "name": "NuHeat",
-      "integration_type": "service",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
