@@ -24,7 +24,7 @@ from .coordinator import HypontechConfigEntry, HypontechDataCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)
-class HypontechSensorDescription(SensorEntityDescription):  # type: ignore[override]
+class HypontechSensorDescription(SensorEntityDescription):
     """Describes Hypontech Inverter sensor entity."""
 
     value_fn: Callable[[OverviewData], float | None]
