@@ -2010,6 +2010,12 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
+    "fish_audio": {
+      "name": "Fish Audio",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "fitbit": {
       "name": "Fitbit",
       "integration_type": "service",
@@ -5272,7 +5278,7 @@
     },
     "pure_energie": {
       "name": "Pure Energie",
-      "integration_type": "service",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
     },

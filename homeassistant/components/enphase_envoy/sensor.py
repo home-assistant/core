@@ -620,6 +620,7 @@ ENCHARGE_INVENTORY_SENSORS = (
     EnvoyEnchargeSensorEntityDescription(
         key="temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
         value_fn=attrgetter("temperature"),
     ),
@@ -634,6 +635,7 @@ ENCHARGE_INVENTORY_SENSORS = (
 ENCHARGE_POWER_SENSORS = (
     EnvoyEnchargePowerSensorEntityDescription(
         key="soc",
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         value_fn=attrgetter("soc"),
@@ -641,12 +643,14 @@ ENCHARGE_POWER_SENSORS = (
     EnvoyEnchargePowerSensorEntityDescription(
         key="apparent_power_mva",
         native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.APPARENT_POWER,
         value_fn=lambda encharge: encharge.apparent_power_mva * 0.001,
     ),
     EnvoyEnchargePowerSensorEntityDescription(
         key="real_power_mw",
         native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
         value_fn=lambda encharge: encharge.real_power_mw * 0.001,
     ),
@@ -664,6 +668,7 @@ ENPOWER_SENSORS = (
     EnvoyEnpowerSensorEntityDescription(
         key="temperature",
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
         value_fn=attrgetter("temperature"),
     ),
@@ -693,6 +698,7 @@ COLLAR_SENSORS = (
     EnvoyCollarSensorEntityDescription(
         key="temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
         value_fn=attrgetter("temperature"),
     ),
@@ -760,6 +766,7 @@ ENCHARGE_AGGREGATE_SENSORS = (
     EnvoyEnchargeAggregateSensorEntityDescription(
         key="battery_level",
         native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.BATTERY,
         value_fn=attrgetter("state_of_charge"),
     ),
@@ -767,6 +774,7 @@ ENCHARGE_AGGREGATE_SENSORS = (
         key="reserve_soc",
         translation_key="reserve_soc",
         native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.BATTERY,
         value_fn=attrgetter("reserve_state_of_charge"),
     ),
@@ -774,6 +782,7 @@ ENCHARGE_AGGREGATE_SENSORS = (
         key="available_energy",
         translation_key="available_energy",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.ENERGY,
         value_fn=attrgetter("available_energy"),
     ),
@@ -781,6 +790,7 @@ ENCHARGE_AGGREGATE_SENSORS = (
         key="reserve_energy",
         translation_key="reserve_energy",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.ENERGY,
         value_fn=attrgetter("backup_reserve"),
     ),
@@ -805,12 +815,14 @@ ACB_BATTERY_POWER_SENSORS = (
     EnvoyAcbBatterySensorEntityDescription(
         key="acb_power",
         native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
         value_fn=attrgetter("power"),
     ),
     EnvoyAcbBatterySensorEntityDescription(
         key="acb_soc",
         native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.BATTERY,
         value_fn=attrgetter("state_of_charge"),
     ),
@@ -828,6 +840,7 @@ ACB_BATTERY_ENERGY_SENSORS = (
         key="acb_available_energy",
         translation_key="acb_available_energy",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.ENERGY_STORAGE,
         value_fn=attrgetter("charge_wh"),
     ),
@@ -845,6 +858,7 @@ AGGREGATE_BATTERY_SENSORS = (
     EnvoyAggregateBatterySensorEntityDescription(
         key="aggregated_soc",
         translation_key="aggregated_soc",
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         value_fn=attrgetter("state_of_charge"),
@@ -853,6 +867,7 @@ AGGREGATE_BATTERY_SENSORS = (
         key="aggregated_available_energy",
         translation_key="aggregated_available_energy",
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.ENERGY_STORAGE,
         value_fn=attrgetter("available_energy"),
     ),
