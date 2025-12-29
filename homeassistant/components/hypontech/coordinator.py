@@ -4,14 +4,17 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import TYPE_CHECKING
 
 from hyponcloud import ConnectionError as HyponConnectionError, HyponCloud, OverviewData
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER
+
+if TYPE_CHECKING:
+    from . import HypontechConfigEntry
 
 
 @dataclass
@@ -29,13 +32,11 @@ class HypontechData:
     coordinator: HypontechDataCoordinator
 
 
-type HypontechConfigEntry = ConfigEntry[HypontechData]
-
-
 class HypontechDataCoordinator(DataUpdateCoordinator[HypontechSensorData]):
     """Coordinator used for all sensors."""
 
-    config_entry: ConfigEntry
+    config_entry: HypontechConfigEntry
+    api: HyponCloud
 
     def __init__(
         self,
