@@ -1918,6 +1918,9 @@ pybalboa==1.1.3
 # homeassistant.components.bbox
 pybbox==0.0.5-alpha
 
+# homeassistant.components.blackbird
+pyblackbird==0.6
+
 # homeassistant.components.bluesound
 pyblu==2.0.5
 
