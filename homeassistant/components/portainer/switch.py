@@ -18,11 +18,11 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import PortainerConfigEntry
 from .const import DOMAIN
 from .coordinator import PortainerContainerData, PortainerCoordinator
 from .entity import PortainerContainerEntity, PortainerCoordinatorData
@@ -80,11 +80,11 @@ SWITCHES: tuple[PortainerSwitchEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: PortainerConfigEntry,
+    entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Portainer switch sensors."""
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.coordinator
 
     def _async_add_new_containers(
         containers: list[tuple[PortainerCoordinatorData, PortainerContainerData]],

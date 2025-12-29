@@ -5,10 +5,10 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 
-from . import PortainerConfigEntry
 from .coordinator import PortainerCoordinator
 
 TO_REDACT = [CONF_API_TOKEN]
@@ -45,11 +45,11 @@ def _serialize_coordinator(coordinator: PortainerCoordinator) -> dict[str, Any]:
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, config_entry: PortainerConfigEntry
+    hass: HomeAssistant, config_entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a Portainer config entry."""
 
     return {
         "config_entry": async_redact_data(config_entry.as_dict(), TO_REDACT),
-        "coordinator": _serialize_coordinator(config_entry.runtime_data),
+        "coordinator": _serialize_coordinator(config_entry.runtime_data.coordinator),
     }

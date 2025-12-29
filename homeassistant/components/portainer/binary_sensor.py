@@ -10,11 +10,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import PortainerConfigEntry
 from .coordinator import PortainerContainerData, PortainerCoordinator
 from .entity import (
     PortainerContainerEntity,
@@ -60,11 +60,11 @@ ENDPOINT_SENSORS: tuple[PortainerEndpointBinarySensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: PortainerConfigEntry,
+    entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Portainer binary sensors."""
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.coordinator
 
     def _async_add_new_endpoints(endpoints: list[PortainerCoordinatorData]) -> None:
         """Add new endpoint binary sensors."""

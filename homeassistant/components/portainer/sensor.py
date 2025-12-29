@@ -13,15 +13,12 @@ from homeassistant.components.sensor import (
     SensorStateClass,
     StateType,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import (
-    PortainerConfigEntry,
-    PortainerContainerData,
-    PortainerCoordinator,
-)
+from .coordinator import PortainerContainerData, PortainerCoordinator
 from .entity import (
     PortainerContainerEntity,
     PortainerCoordinatorData,
@@ -215,11 +212,11 @@ ENDPOINT_SENSORS: tuple[PortainerEndpointSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: PortainerConfigEntry,
+    entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Portainer sensors based on a config entry."""
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.coordinator
 
     def _async_add_new_endpoints(endpoints: list[PortainerCoordinatorData]) -> None:
         """Add new endpoint sensor."""

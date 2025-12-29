@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from pyportainer import Portainer
 
 from homeassistant.config_entries import ConfigEntry
@@ -16,20 +18,26 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .coordinator import PortainerCoordinator
+from .coordinator import PortainerBeaconCoordinator, PortainerCoordinator
 
 _PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.SENSOR,
     Platform.SWITCH,
     Platform.BUTTON,
+    Platform.UPDATE,
 ]
 
 
-type PortainerConfigEntry = ConfigEntry[PortainerCoordinator]
+@dataclass(frozen=True, kw_only=True)
+class PortainerRuntimeData:
+    """Class to hold Portainer runtime data."""
+
+    coordinator: PortainerCoordinator
+    beacon: PortainerBeaconCoordinator
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Portainer from a config entry."""
 
     client = Portainer(
@@ -43,18 +51,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
     coordinator = PortainerCoordinator(hass, entry, client)
     await coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = coordinator
+    beacon_coordinator = PortainerBeaconCoordinator(hass, entry, client, coordinator)
+    await beacon_coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = PortainerRuntimeData(
+        coordinator=coordinator, beacon=beacon_coordinator
+    )
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: PortainerConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: PortainerConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate old entry."""
 
     if entry.version < 2:
