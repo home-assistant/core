@@ -27,7 +27,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
+async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
@@ -42,8 +42,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     except AuthenticationError:
         raise InvalidAuth from None
 
-    return {"title": "Hypontech micro inverter"}
-
 
 class HypontechConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Hypontech Cloud."""
@@ -57,7 +55,7 @@ class HypontechConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             try:
-                info = await validate_input(self.hass, user_input)
+                await validate_input(self.hass, user_input)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -73,7 +71,7 @@ class HypontechConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title=info["title"],
+                    title="Hypontech micro inverter",
                     data=user_input,
                 )
 
