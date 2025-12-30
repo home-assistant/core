@@ -293,7 +293,7 @@
     'area_id': None,
     'capabilities': dict({
       'source_list': list([
-        'digitalTv',
+        'dtv',
         'HDMI1',
         'HDMI4',
         'HDMI4',
@@ -336,7 +336,7 @@
       'is_volume_muted': True,
       'source': 'HDMI1',
       'source_list': list([
-        'digitalTv',
+        'dtv',
         'HDMI1',
         'HDMI4',
         'HDMI4',
