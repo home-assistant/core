@@ -28,9 +28,10 @@ from Tea.exceptions import UnretryableException
 
 from homeassistant.components import bluetooth
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntry
 
 from .config import MammotionConfigStore
@@ -50,7 +51,7 @@ from .const import (
     DOMAIN,
     EXPIRED_CREDENTIAL_EXCEPTIONS,
 )
-from .coordinator import MammotionReportUpdateCoordinator
+from .coordinator import MammotionMowerUpdateCoordinator
 from .models import MammotionDevices, MammotionMowerData
 
 PLATFORMS: list[Platform] = [Platform.LAWN_MOWER]
@@ -154,13 +155,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) ->
                     ble = mammotion_device.add_ble(ble_device)
                     ble.set_disconnect_strategy(disconnect=not stay_connected_ble)
 
-            api = HomeAssistantMowerApi()
+            api = HomeAssistantMowerApi(async_get_clientsession(hass))
 
-            report_coordinator = MammotionReportUpdateCoordinator(
-                hass, entry, device, api
-            )
+            coordinator = MammotionMowerUpdateCoordinator(hass, entry, device, api)
 
-            await report_coordinator.async_restore_data()
+            await coordinator.async_restore_data()
 
             device_config = DeviceConfig()
             device_limits = device_config.get_best_default(device.product_key)
@@ -168,7 +167,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) ->
             if not use_wifi:
                 mammotion_device.preference = ConnectionPreference.BLUETOOTH
                 if cloud := mammotion_device.cloud:
-                    await cloud.stop()
+                    cloud.stop()
                     cloud.mqtt.disconnect() if cloud.mqtt.is_connected() else None
                     mammotion_device.remove_cloud()
 
@@ -176,7 +175,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) ->
                 MammotionMowerData(
                     name=device.device_name,
                     api=api,
-                    reporting_coordinator=report_coordinator,
+                    coordinator=coordinator,
                     device_limits=device_limits,
                     device=device,
                 )
@@ -184,6 +183,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) ->
 
     mammotion_devices.mowers = mammotion_mowers
     entry.runtime_data = mammotion_devices
+
+    async def shutdown_mammotion(_: Event | None = None) -> None:
+        await api.mammotion.stop()
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown_mammotion)
+    )
+    entry.async_on_unload(shutdown_mammotion)
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -307,10 +315,10 @@ async def async_remove_config_entry(
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
+    hass: HomeAssistant, config_entry: MammotionConfigEntry, device_entry: DeviceEntry
 ) -> bool:
     """Remove a config entry from a device."""
-    mower_name = (
+    mower_names = (
         next(
             identifier[1]
             for identifier in device_entry.identifiers
@@ -318,7 +326,12 @@ async def async_remove_config_entry_device(
         ),
     )
     mower = next(
-        (mower for mower in config_entry.runtime_data if mower.name == mower_name), None
+        (
+            mower
+            for mower in config_entry.runtime_data.mowers
+            if mower.name in mower_names
+        ),
+        None,
     )
 
     return not bool(mower)

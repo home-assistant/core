@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import MammotionConfigEntry, MammotionReportUpdateCoordinator
+from . import MammotionConfigEntry, MammotionMowerUpdateCoordinator
 from .const import COMMAND_EXCEPTIONS, DOMAIN, LOGGER
 from .entity import MammotionBaseEntity
 
@@ -44,8 +44,7 @@ async def async_setup_entry(
     """Set up the Luba config entry."""
     mammotion_devices = entry.runtime_data.mowers
     entities: list[MammotionLawnMowerEntity] = [
-        MammotionLawnMowerEntity(mower.reporting_coordinator)
-        for mower in mammotion_devices
+        MammotionLawnMowerEntity(mower.coordinator) for mower in mammotion_devices
     ]
     async_add_entities(entities)
 
@@ -58,7 +57,7 @@ class MammotionLawnMowerEntity(MammotionBaseEntity, LawnMowerEntity):
         LawnMowerEntityFeature.DOCK | LawnMowerEntityFeature.PAUSE
     )
 
-    def __init__(self, coordinator: MammotionReportUpdateCoordinator) -> None:
+    def __init__(self, coordinator: MammotionMowerUpdateCoordinator) -> None:
         """Initialize the lawn mower."""
         super().__init__(coordinator, "mower")
 

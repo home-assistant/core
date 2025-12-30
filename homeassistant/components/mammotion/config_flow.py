@@ -25,6 +25,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, format_mac
 
+from . import MammotionConfigEntry
 from .const import (
     CONF_ACCOUNT_ID,
     CONF_ACCOUNTNAME,
@@ -276,7 +277,7 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: MammotionConfigEntry,
     ) -> OptionsFlow:
         """Create the options flow."""
         return MammotionConfigFlowHandler(config_entry)
@@ -324,7 +325,7 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
 class MammotionConfigFlowHandler(OptionsFlow):
     """Handles options flow for the component."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, config_entry: MammotionConfigEntry) -> None:
         """Initialize options flow."""
         self.stay_connected_bluetooth = config_entry.options.get(
             CONF_STAY_CONNECTED_BLUETOOTH, False
