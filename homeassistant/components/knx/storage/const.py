@@ -77,3 +77,6 @@ CONF_GA_SCENE: Final = "ga_scene"
 
 # Sensor
 CONF_ALWAYS_CALLBACK: Final = "always_callback"
+
+# Text
+CONF_GA_TEXT: Final = "ga_text"

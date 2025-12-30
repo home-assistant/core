@@ -69,6 +69,7 @@ async def mock_omada_site_client(hass: HomeAssistant) -> AsyncGenerator[AsyncMoc
     )
     switch1 = OmadaSwitch(switch1_data)
     site_client.get_switches = AsyncMock(return_value=[switch1])
+    site_client.get_switch = AsyncMock(return_value=switch1)
 
     devices_data = json.loads(await async_load_fixture(hass, "devices.json", DOMAIN))
     devices = [OmadaListDevice(d) for d in devices_data]

@@ -684,7 +684,6 @@
             }
           }
         },
-        "header": "Create new entity",
         "light": {
           "description": "The KNX light platform is used as an interface to dimming actuators, LED controllers, DALI gateways and similar.",
           "knx": {
@@ -837,6 +836,23 @@
             }
           }
         },
+        "text": {
+          "description": "The KNX text platform is used as an interface to text objects.",
+          "knx": {
+            "ga_text": {
+              "description": "The group address of the text object.",
+              "label": "Text"
+            },
+            "mode": {
+              "description": "Select how the entity is displayed in Home Assistant.",
+              "label": "[%key:common::config_flow::data::mode%]",
+              "options": {
+                "password": "[%key:common::config_flow::data::password%]",
+                "text": "[%key:component::text::entity_component::_::state_attributes::mode::state::text%]"
+              }
+            }
+          }
+        },
         "time": {
           "description": "The KNX time platform is used as an interface to time objects.",
           "knx": {
@@ -846,11 +862,25 @@
             }
           }
         },
+        "title": "Create KNX entity",
         "type_selection": {
-          "header": "Create KNX entity",
-          "title": "Select entity type"
+          "header": "Select entity type"
         }
-      }
+      },
+      "description": "Add and manage KNX entities",
+      "title": "Entities"
+    },
+    "group_monitor": {
+      "description": "Monitor KNX group communication",
+      "title": "Group monitor"
+    },
+    "info": {
+      "description": "Version information, manage KNX project file",
+      "title": "Information"
+    },
+    "project": {
+      "description": "Inspect imported group addresses",
+      "title": "Project"
     }
   },
   "device_automation": {

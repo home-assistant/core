@@ -48,7 +48,7 @@
       },
       "switch": {
         "switch": {
-          "value": "off",
+          "value": "on",
           "timestamp": "2025-11-11T23:41:24.907Z"
         }
       },
@@ -305,7 +305,7 @@
           "timestamp": "2025-11-11T23:41:21.525Z"
         },
         "hoodFanSpeed": {
-          "value": 14,
+          "value": 15,
           "timestamp": "2025-11-11T23:41:21.525Z"
         },
         "supportedHoodFanSpeed": {

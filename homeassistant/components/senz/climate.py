@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from aiosenz import MODE_AUTO, Thermostat
 from httpx import RequestError
+from pysenz import MODE_AUTO, Thermostat
 
 from homeassistant.components.climate import (
     ClimateEntity,
