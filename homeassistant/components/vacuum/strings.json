@@ -35,6 +35,12 @@
       }
     }
   },
+  "issues": {
+    "segments_changed": {
+      "description": "",
+      "title": "Vacuum segments have changed for {entity_id}"
+    }
+  },
   "selector": {
     "trigger_behavior": {
       "options": {

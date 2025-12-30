@@ -23,7 +23,7 @@ from homeassistant.const import (  # noqa: F401 # STATE_PAUSED/IDLE are API
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.deprecation import (
     DeprecatedConstantEnum,
     all_with_deprecated_constants,
@@ -76,6 +76,8 @@ SERVICE_PAUSE = "pause"
 SERVICE_STOP = "stop"
 
 DEFAULT_NAME = "Vacuum cleaner robot"
+
+ISSUE_SEGMENTS_CHANGED = "segments_changed"
 
 # These STATE_* constants are deprecated as of Home Assistant 2025.1.
 # Please use the VacuumActivity enum instead.
@@ -444,6 +446,27 @@ class StateVacuumEntity(
         """
         raise NotImplementedError
 
+    @property
+    def last_seen_segments(self) -> list[Segment] | None:
+        """Return segments as seen by the user, when last mapping the areas.
+
+        Returns None if no mapping has been saved yet.
+        """
+        if self.registry_entry is None:
+            _LOGGER.error(
+                "Cannot access last_seen_segments, registry entry is not set for %s",
+                self.entity_id,
+            )
+            return None
+
+        options: Mapping[str, Any] = self.registry_entry.options.get(DOMAIN, {})
+        last_seen_segments = options.get("last_seen_segments")
+
+        if last_seen_segments is None:
+            return None
+
+        return [Segment(**segment) for segment in last_seen_segments]
+
     @final
     async def async_internal_clean_area(
         self, area_ids: list[str], **kwargs: Any
@@ -480,6 +503,39 @@ class StateVacuumEntity(
     async def async_clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
         """Perform an area clean."""
         await self.hass.async_add_executor_job(partial(self.clean_segments, **kwargs))
+
+    @callback
+    def async_create_segments_issue(self) -> None:
+        """Create a repair issue when vacuum segments have changed.
+
+        Integrations should call this method when the vacuum reports
+        different segments than what was previously mapped to areas.
+
+        The issue is non-fixable via the standard repair flow. The frontend
+        will handle the fix by showing the segment mapping dialog.
+        """
+        if self.registry_entry is None:
+            _LOGGER.error(
+                "Cannot create segments issue, registry entry is not set for %s",
+                self.entity_id,
+            )
+            return
+
+        issue_id = f"{ISSUE_SEGMENTS_CHANGED}_{self.registry_entry.id}"
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            issue_id,
+            data={
+                "entry_id": self.registry_entry.id,
+            },
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=ISSUE_SEGMENTS_CHANGED,
+            translation_placeholders={
+                "entity_id": self.entity_id,
+            },
+        )
 
     def locate(self, **kwargs: Any) -> None:
         """Locate the vacuum cleaner."""
