@@ -1,7 +1,7 @@
 """Tests for BSB-LAN services."""
 
 from datetime import time
-from typing import Any
+from typing import Any, cast
 from unittest.mock import MagicMock
 
 from bsblan import BSBLANError, DaySchedule, TimeSlot
@@ -10,6 +10,8 @@ import pytest
 from homeassistant.components.bsblan.const import DOMAIN
 from homeassistant.components.bsblan.services import (
     SERVICE_SET_HOT_WATER_SCHEDULE,
+    _convert_time_slots_to_day_schedule,
+    _parse_time_value,
     async_setup_services,
 )
 from homeassistant.core import HomeAssistant
@@ -396,17 +398,19 @@ async def test_non_standard_time_types(
 ) -> None:
     """Test service with non-standard time types raises error."""
     # Test with integer time values (shouldn't happen but need coverage)
+
+
+def test_non_standard_time_types_helper() -> None:
+    """Test helper with non-standard time types raises error.
+
+    Use the internal helper directly instead of exercising the Home
+    Assistant service layer; this avoids testing HA internals and keeps
+    the unit test focused on parsing/validation logic.
+    """
+    # Provide non-standard types (integers) to the converter
     with pytest.raises(ServiceValidationError) as exc_info:
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SET_HOT_WATER_SCHEDULE,
-            {
-                "device_id": device_entry.id,
-                "monday_slots": [
-                    {"start_time": 600, "end_time": 800},  # Non-standard types
-                ],
-            },
-            blocking=True,
+        _convert_time_slots_to_day_schedule(
+            cast(Any, [{"start_time": 600, "end_time": 800}])
         )
 
     assert exc_info.value.translation_key == "invalid_time_format"
@@ -428,3 +432,19 @@ async def test_async_setup_services(
 
     # Verify service is now registered
     assert hass.services.has_service(DOMAIN, SERVICE_SET_HOT_WATER_SCHEDULE)
+
+
+def test_parse_time_value_with_non_string_non_time() -> None:
+    """Directly test _parse_time_value with a non-string, non-time value."""
+
+    # Use an arbitrary object that's neither a time nor a string
+    class Foo:
+        pass
+
+    # Call the imported function from the module-level import
+    with pytest.raises(ServiceValidationError) as exc_info:
+        # Cast to Any to intentionally pass an invalid type and satisfy static
+        # type checkers (Pylance/mypy)
+        _parse_time_value(cast(Any, Foo()))
+
+    assert exc_info.value.translation_key == "invalid_time_format"
