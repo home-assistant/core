@@ -929,7 +929,7 @@ esphome-dashboard-api==1.3.0
 essent-dynamic-pricing==0.2.7
 
 # homeassistant.components.netgear_lte
-eternalegypt==0.0.16
+eternalegypt==0.0.18
 
 # homeassistant.components.eufylife_ble
 eufylife-ble-client==0.1.8
