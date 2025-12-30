@@ -19,7 +19,7 @@ class HypontechEntity(CoordinatorEntity[HypontechDataCoordinator]):
         super().__init__(coordinator)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
-            name=coordinator.config_entry.title,
+            name="Hypontech",
             manufacturer="Hypontech",
             model="Overview",
         )

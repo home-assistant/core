@@ -18,7 +18,7 @@ async def test_setup_entry_timeout(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_USERNAME: "test-username",
+            CONF_USERNAME: "test@example.com",
             CONF_PASSWORD: "test-password",
         },
     )
@@ -39,7 +39,7 @@ async def test_setup_entry_authentication_error(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_USERNAME: "test-username",
+            CONF_USERNAME: "test@example.com",
             CONF_PASSWORD: "test-password",
         },
     )
@@ -60,7 +60,7 @@ async def test_setup_entry_connection_error(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_USERNAME: "test-username",
+            CONF_USERNAME: "test@example.com",
             CONF_PASSWORD: "test-password",
         },
     )
@@ -89,7 +89,7 @@ async def test_setup_entry_success(
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_USERNAME: "test-username",
+            CONF_USERNAME: "test@example.com",
             CONF_PASSWORD: "test-password",
         },
     )
@@ -106,7 +106,7 @@ async def test_unload_entry(hass: HomeAssistant, mock_hyponcloud: AsyncMock) -> 
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_USERNAME: "test-username",
+            CONF_USERNAME: "test@example.com",
             CONF_PASSWORD: "test-password",
         },
     )

@@ -28,16 +28,16 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_USERNAME: "test-username",
+                CONF_USERNAME: "test@example.com",
                 CONF_PASSWORD: "test-password",
             },
         )
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Hypontech micro inverter"
+    assert result["title"] == "test@example.com"
     assert result["data"] == {
-        CONF_USERNAME: "test-username",
+        CONF_USERNAME: "test@example.com",
         CONF_PASSWORD: "test-password",
     }
     assert len(mock_setup_entry.mock_calls) == 1
@@ -58,7 +58,7 @@ async def test_form_invalid_auth(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_USERNAME: "test-username",
+                CONF_USERNAME: "test@example.com",
                 CONF_PASSWORD: "test-password",
             },
         )
@@ -75,16 +75,16 @@ async def test_form_invalid_auth(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_USERNAME: "test-username",
+                CONF_USERNAME: "test@example.com",
                 CONF_PASSWORD: "test-password",
             },
         )
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Hypontech micro inverter"
+    assert result["title"] == "test@example.com"
     assert result["data"] == {
-        CONF_USERNAME: "test-username",
+        CONF_USERNAME: "test@example.com",
         CONF_PASSWORD: "test-password",
     }
     assert len(mock_setup_entry.mock_calls) == 1
@@ -105,7 +105,7 @@ async def test_form_cannot_connect(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_USERNAME: "test-username",
+                CONF_USERNAME: "test@example.com",
                 CONF_PASSWORD: "test-password",
             },
         )
@@ -123,16 +123,16 @@ async def test_form_cannot_connect(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_USERNAME: "test-username",
+                CONF_USERNAME: "test@example.com",
                 CONF_PASSWORD: "test-password",
             },
         )
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Hypontech micro inverter"
+    assert result["title"] == "test@example.com"
     assert result["data"] == {
-        CONF_USERNAME: "test-username",
+        CONF_USERNAME: "test@example.com",
         CONF_PASSWORD: "test-password",
     }
     assert len(mock_setup_entry.mock_calls) == 1
@@ -151,7 +151,7 @@ async def test_form_timeout(hass: HomeAssistant, mock_setup_entry: AsyncMock) ->
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_USERNAME: "test-username",
+                CONF_USERNAME: "test@example.com",
                 CONF_PASSWORD: "test-password",
             },
         )
@@ -169,16 +169,16 @@ async def test_form_timeout(hass: HomeAssistant, mock_setup_entry: AsyncMock) ->
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_USERNAME: "test-username",
+                CONF_USERNAME: "test@example.com",
                 CONF_PASSWORD: "test-password",
             },
         )
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Hypontech micro inverter"
+    assert result["title"] == "test@example.com"
     assert result["data"] == {
-        CONF_USERNAME: "test-username",
+        CONF_USERNAME: "test@example.com",
         CONF_PASSWORD: "test-password",
     }
     assert len(mock_setup_entry.mock_calls) == 1
@@ -187,11 +187,11 @@ async def test_form_timeout(hass: HomeAssistant, mock_setup_entry: AsyncMock) ->
 @pytest.mark.parametrize(
     ("existing_username", "new_username"),
     [
-        ("test-username", "test-username"),
-        ("test-username", "TEST-USERNAME"),
-        ("Test-Username", "test-username"),
-        ("test-username ", "test-username"),
-        ("test-username ", "test-username  "),
+        ("test@example.com", "test@example.com"),
+        ("test@example.com", "TEST@EXAMPLE.COM"),
+        ("Test@Example.Com", "test@example.com"),
+        ("test@example.com ", "test@example.com"),
+        ("test@example.com ", "test@example.com  "),
     ],
 )
 async def test_duplicate_entry(
