@@ -4,9 +4,12 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "api_auth_failed": "Failed to authenticate with the Control4 account API: {error}",
+      "cannot_connect": "Failed to connect to the Control4 director at {host}: {error}",
+      "controller_not_found": "No Control4 controller found on this account: {error}",
+      "credentials_invalid": "The username or password is incorrect: {error}",
+      "director_auth_failed": "The Control4 director rejected the authentication token: {error}",
+      "unknown": "An unexpected error occurred: {error}"
     },
     "step": {
       "user": {
