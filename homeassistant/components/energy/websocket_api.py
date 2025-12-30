@@ -14,11 +14,14 @@ import voluptuous as vol
 
 from homeassistant.components import recorder, websocket_api
 from homeassistant.components.recorder.statistics import StatisticsRow
+from homeassistant.components.recorder.websocket_api import UNIT_SCHEMA
+from homeassistant.components.websocket_api import messages
 from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
+from homeassistant.helpers.json import json_bytes
 from homeassistant.helpers.singleton import singleton
 from homeassistant.util import dt as dt_util
 
@@ -51,6 +54,7 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_info)
     websocket_api.async_register_command(hass, ws_validate)
     websocket_api.async_register_command(hass, ws_solar_forecast)
+    websocket_api.async_register_command(hass, ws_get_power_statistics)
     websocket_api.async_register_command(hass, ws_get_fossil_energy_consumption)
 
 
@@ -235,6 +239,100 @@ async def ws_solar_forecast(
             forecasts[config_entry_id] = forecast
 
     connection.send_result(msg["id"], forecasts)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "energy/get_power_statistics",
+        vol.Required("start_time"): str,
+        vol.Optional("end_time"): str,
+        vol.Required("statistic_ids"): vol.All([str], vol.Length(min=1)),
+        vol.Required("period"): vol.Any("5minute", "hour", "day", "week", "month"),
+        vol.Optional("units"): UNIT_SCHEMA,
+    }
+)
+@websocket_api.async_response
+async def ws_get_power_statistics(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Retrieve power statistic information correcting for sensor direction."""
+    start_time_str = msg["start_time"]
+    end_time_str = msg.get("end_time")
+
+    if start_time_str:
+        if start_time := dt_util.parse_datetime(start_time_str):
+            start_time = dt_util.as_utc(start_time)
+        else:
+            connection.send_error(msg["id"], "invalid_start_time", "Invalid start_time")
+            return
+
+    if end_time_str:
+        if end_time := dt_util.parse_datetime(end_time_str):
+            end_time = dt_util.as_utc(end_time)
+        else:
+            connection.send_error(msg["id"], "invalid_end_time", "Invalid end_time")
+            return
+    else:
+        end_time = None
+
+    statistic_ids = msg["statistic_ids"]
+
+    # Fetch power statistics for requested period
+    statistics = await recorder.get_instance(hass).async_add_executor_job(
+        recorder.statistics.statistics_during_period,
+        hass,
+        start_time,
+        end_time,
+        statistic_ids,
+        msg["period"],
+        msg.get("units"),
+        {"mean"},
+    )
+
+    # If 5minute data requested, also fetch hourly data
+    if msg["period"] == "5minute":
+        statistics_hour = await recorder.get_instance(hass).async_add_executor_job(
+            recorder.statistics.statistics_during_period,
+            hass,
+            start_time,
+            end_time,
+            statistic_ids,
+            "hour",
+            msg.get("units"),
+            {"mean"},
+        )
+    else:
+        statistics_hour = None
+
+    for statistics_id, statistic_rows in statistics.items():
+        # Check if we have extra hourly data
+        statistic_rows_hour = (
+            statistics_hour.get(statistics_id) if statistics_hour else None
+        )
+        if statistic_rows_hour:
+            # If so, we may need to insert hourly data into statistic items
+            if not statistic_rows or len(statistic_rows) <= 0:
+                # There was no 5-minute data, so replace with hourly data
+                statistic_rows = statistic_rows_hour
+                statistics[statistics_id] = statistic_rows_hour
+            else:
+                # We have 5-minute data. Only insert hourly values for time
+                # periods before the first 5-minute value.
+                first_row = statistic_rows[0]
+                keep_end_idx = 0
+                for rowIdx, row in enumerate(statistic_rows_hour):
+                    if row["end"] > first_row["start"]:
+                        break
+                    keep_end_idx = rowIdx
+                statistic_rows[:0] = statistic_rows_hour[:keep_end_idx]
+        # Update all rows for this statistic accordingly
+        for row in statistic_rows:
+            row["start"] = int(row["start"] * 1000)
+            row["end"] = int(row["end"] * 1000)
+
+    connection.send_message(json_bytes(messages.result_message(msg["id"], statistics)))
 
 
 @websocket_api.websocket_command(
