@@ -23,6 +23,7 @@
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::email%]"
         },
+        "description": "Enter the account used in the vesync app. 2FA is not supported and must be disabled.",
         "title": "Enter username and password"
       }
     }
