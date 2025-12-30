@@ -7,5 +7,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_push",
   "loggers": ["sleekxmppfs", "sucks", "deebot_client"],
-  "requirements": ["py-sucks==0.9.11", "deebot-client==16.3.0"]
+  "requirements": ["py-sucks==0.9.11", "deebot-client==17.0.0"]
 }
