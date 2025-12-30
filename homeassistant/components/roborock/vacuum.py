@@ -304,8 +304,9 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
     @property
     def activity(self) -> VacuumActivity | None:
         """Return the status of the vacuum cleaner."""
-        assert self.coordinator.data.status is not None
-        return Q7_STATE_CODE_TO_STATE.get(self.coordinator.data.status)
+        if self.coordinator.data.status is not None:
+            return Q7_STATE_CODE_TO_STATE.get(self.coordinator.data.status)
+        return None
 
     @property
     def fan_speed(self) -> str | None:

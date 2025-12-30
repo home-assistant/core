@@ -293,6 +293,7 @@ def fake_q7_vacuum_api_fixture(
     assert fake_q7_vacuum.b01_q7_properties is not None
     api = fake_q7_vacuum.b01_q7_properties
     if send_message_exception is not None:
+        # For exception tests, override side effects to raise the exception
         api.start_clean.side_effect = send_message_exception
         api.pause_clean.side_effect = send_message_exception
         api.stop_clean.side_effect = send_message_exception
@@ -318,15 +319,15 @@ async def test_q7_registry_entries(
 
 
 @pytest.mark.parametrize(
-    ("service", "api_method", "service_params", "called_params"),
+    ("service", "api_method", "service_params", "called_params", "expected_activity"),
     [
-        (SERVICE_START, "start_clean", None, None),
-        (SERVICE_PAUSE, "pause_clean", None, None),
-        (SERVICE_STOP, "stop_clean", None, None),
-        (SERVICE_RETURN_TO_BASE, "return_to_dock", None, None),
-        (SERVICE_LOCATE, "find_me", None, None),
-        (SERVICE_SET_FAN_SPEED, "set_fan_speed", {"fan_speed": "quiet"}, None),
-        (SERVICE_SEND_COMMAND, "send", {"command": "test_command"}, None),
+        (SERVICE_START, "start_clean", None, None, "cleaning"),
+        (SERVICE_PAUSE, "pause_clean", None, None, "paused"),
+        (SERVICE_STOP, "stop_clean", None, None, "idle"),
+        (SERVICE_RETURN_TO_BASE, "return_to_dock", None, None, "returning"),
+        (SERVICE_LOCATE, "find_me", None, None, None),
+        (SERVICE_SET_FAN_SPEED, "set_fan_speed", {"fan_speed": "quiet"}, None, None),
+        (SERVICE_SEND_COMMAND, "send", {"command": "test_command"}, None, None),
     ],
 )
 async def test_q7_commands(
@@ -336,7 +337,9 @@ async def test_q7_commands(
     api_method: str,
     service_params: dict[str, Any] | None,
     called_params: list | None,
+    expected_activity: str | None,
     q7_vacuum_api: Mock,
+    fake_q7_vacuum: FakeDevice,
 ) -> None:
     """Test sending commands to the Q7 vacuum."""
     vacuum = hass.states.get(Q7_ENTITY_ID)
@@ -353,6 +356,19 @@ async def test_q7_commands(
     assert api_call.call_count == 1
     if called_params is not None:
         assert api_call.call_args[0] == tuple(called_params)
+
+    # Verify the entity state was updated for state-changing commands
+    if expected_activity is not None:
+        assert fake_q7_vacuum.b01_q7_properties is not None
+        # Force coordinator refresh to get updated state
+        config_entry = setup_entry
+        coordinator = config_entry.runtime_data.b01[0]
+
+        await coordinator.async_refresh()
+        await hass.async_block_till_done()
+        vacuum = hass.states.get(Q7_ENTITY_ID)
+        assert vacuum
+        assert vacuum.state == expected_activity
 
 
 @pytest.mark.parametrize(
@@ -379,6 +395,8 @@ async def test_q7_failed_commands(
     """Test that when Q7 commands fail, we raise HomeAssistantError."""
     vacuum = hass.states.get(Q7_ENTITY_ID)
     assert vacuum
+    # Store the original state to verify it doesn't change on error
+    original_state = vacuum.state
 
     data = {ATTR_ENTITY_ID: Q7_ENTITY_ID, **(service_params or {})}
     command_name = (
@@ -392,3 +410,30 @@ async def test_q7_failed_commands(
             data,
             blocking=True,
         )
+
+    # Verify the entity state remains unchanged after failed command
+    await hass.async_block_till_done()
+    vacuum = hass.states.get(Q7_ENTITY_ID)
+    assert vacuum
+    assert vacuum.state == original_state
+
+
+async def test_q7_activity_none_status(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_q7_vacuum: FakeDevice,
+) -> None:
+    """Test that activity returns None when status is None."""
+    assert fake_q7_vacuum.b01_q7_properties is not None
+    # Set status to None
+    fake_q7_vacuum.b01_q7_properties._props_data.status = None
+
+    # Force coordinator refresh to get updated state
+    coordinator = setup_entry.runtime_data.b01[0]
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    # Verify the entity state is unknown when status is None
+    vacuum = hass.states.get(Q7_ENTITY_ID)
+    assert vacuum
+    assert vacuum.state == "unknown"
