@@ -4,9 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_component import async_update_entity
 
 from tests.common import MockConfigEntry
 
@@ -37,11 +35,6 @@ async def test_sensor_setup(
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-
-    # Trigger updates for all sensor entities
-
-    for entity_id in hass.states.async_entity_ids(SENSOR_DOMAIN):
-        await async_update_entity(hass, entity_id)
     await hass.async_block_till_done()
 
     state = hass.states.get("sensor.charging_status")
