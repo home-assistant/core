@@ -14,6 +14,7 @@ import pytest
 from homeassistant.components import http
 from homeassistant.components.http.ban import (
     IP_BANS_FILE,
+    IP_WHITELIST_FILE,
     KEY_BAN_MANAGER,
     KEY_FAILED_LOGIN_ATTEMPTS,
     process_success_login,
@@ -465,3 +466,317 @@ async def test_single_ban_file_entry(
         await manager.async_add_ban(remote_ip)
 
     assert m_open.call_count == 1
+
+
+async def test_whitelisted_ip_bypasses_ban_check(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
+    """Test that whitelisted IPs bypass ban checks in middleware."""
+    app = web.Application()
+    app[KEY_HASS] = hass
+    setup_bans(hass, app, 5)
+    set_real_ip = mock_real_ip(app)
+
+    whitelisted_ip = "192.168.1.100"
+    banned_ip = "200.201.202.203"
+
+    def load_config_side_effect(path):
+        """Mock loading config files."""
+        if path == hass.config.path(IP_BANS_FILE):
+            return {banned_ip: {"banned_at": "2016-11-16T19:20:03"}}
+        if path == hass.config.path(IP_WHITELIST_FILE):
+            return [whitelisted_ip]
+        raise FileNotFoundError
+
+    with patch(
+        "homeassistant.components.http.ban.load_yaml_config_file",
+        side_effect=load_config_side_effect,
+    ):
+        client = await aiohttp_client(app)
+
+    # Whitelisted IP should bypass ban check even if it's in ban list
+    set_real_ip(whitelisted_ip)
+    resp = await client.get("/")
+    assert resp.status == HTTPStatus.NOT_FOUND
+
+    # Banned IP should still be blocked
+    set_real_ip(banned_ip)
+    resp = await client.get("/")
+    assert resp.status == HTTPStatus.FORBIDDEN
+
+
+async def test_whitelisted_ip_not_banned_after_failed_logins(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that whitelisted IPs are not banned after failed login attempts."""
+    app = web.Application()
+    app[KEY_HASS] = hass
+
+    async def unauth_handler(request):
+        """Return a mock web response."""
+        raise HTTPUnauthorized
+
+    app.router.add_get("/example", unauth_handler)
+    setup_bans(hass, app, 2)
+    whitelisted_ip = "192.168.1.100"
+    mock_real_ip(app)(whitelisted_ip)
+
+    def load_config_side_effect(path):
+        """Mock loading config files."""
+        if path == hass.config.path(IP_BANS_FILE):
+            return {}
+        if path == hass.config.path(IP_WHITELIST_FILE):
+            return [whitelisted_ip]
+        raise FileNotFoundError
+
+    with patch(
+        "homeassistant.components.http.ban.load_yaml_config_file",
+        side_effect=load_config_side_effect,
+    ):
+        client = await aiohttp_client(app)
+
+    manager = app[KEY_BAN_MANAGER]
+    m_open = mock_open()
+
+    with patch("homeassistant.components.http.ban.open", m_open, create=True):
+        # Make multiple failed login attempts
+        for _ in range(5):
+            resp = await client.get("/example")
+            assert resp.status == HTTPStatus.UNAUTHORIZED
+
+    # Whitelisted IP should never be banned
+    assert ip_address(whitelisted_ip) not in manager.ip_bans_lookup
+    assert m_open.call_count == 0
+
+    # Verify IP can still access (not banned)
+    resp = await client.get("/example")
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+
+
+async def test_load_whitelist_from_list_format(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
+    """Test loading whitelist from YAML list format."""
+    app = web.Application()
+    app[KEY_HASS] = hass
+    setup_bans(hass, app, 5)
+    set_real_ip = mock_real_ip(app)
+
+    whitelist_ips = ["192.168.1.100", "10.0.0.50", "2001:db8::1"]
+
+    def load_config_side_effect(path):
+        """Mock loading config files."""
+        if path == hass.config.path(IP_BANS_FILE):
+            return {}
+        if path == hass.config.path(IP_WHITELIST_FILE):
+            return whitelist_ips
+        raise FileNotFoundError
+
+    with patch(
+        "homeassistant.components.http.ban.load_yaml_config_file",
+        side_effect=load_config_side_effect,
+    ):
+        client = await aiohttp_client(app)
+
+    manager = app[KEY_BAN_MANAGER]
+    assert len(manager.ip_whitelist_lookup) == len(whitelist_ips)
+
+    # All whitelisted IPs should bypass ban checks
+    for ip in whitelist_ips:
+        set_real_ip(ip)
+        resp = await client.get("/")
+        assert resp.status == HTTPStatus.NOT_FOUND
+
+
+async def test_load_whitelist_from_dict_format(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
+    """Test loading whitelist from YAML dict format."""
+    app = web.Application()
+    app[KEY_HASS] = hass
+    setup_bans(hass, app, 5)
+    set_real_ip = mock_real_ip(app)
+
+    whitelist_ips = ["192.168.1.100", "10.0.0.50"]
+
+    def load_config_side_effect(path):
+        """Mock loading config files."""
+        if path == hass.config.path(IP_BANS_FILE):
+            return {}
+        if path == hass.config.path(IP_WHITELIST_FILE):
+            return {ip: {} for ip in whitelist_ips}
+        raise FileNotFoundError
+
+    with patch(
+        "homeassistant.components.http.ban.load_yaml_config_file",
+        side_effect=load_config_side_effect,
+    ):
+        client = await aiohttp_client(app)
+
+    manager = app[KEY_BAN_MANAGER]
+    assert len(manager.ip_whitelist_lookup) == len(whitelist_ips)
+
+    # All whitelisted IPs should bypass ban checks
+    for ip in whitelist_ips:
+        set_real_ip(ip)
+        resp = await client.get("/")
+        assert resp.status == HTTPStatus.NOT_FOUND
+
+
+async def test_missing_whitelist_file(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
+    """Test handling missing whitelist file (FileNotFoundError)."""
+    app = web.Application()
+    app[KEY_HASS] = hass
+    setup_bans(hass, app, 5)
+    set_real_ip = mock_real_ip(app)
+
+    def load_config_side_effect(path):
+        """Mock loading config files."""
+        if path == hass.config.path(IP_BANS_FILE):
+            return {}
+        if path == hass.config.path(IP_WHITELIST_FILE):
+            raise FileNotFoundError
+        raise FileNotFoundError
+
+    with patch(
+        "homeassistant.components.http.ban.load_yaml_config_file",
+        side_effect=load_config_side_effect,
+    ):
+        client = await aiohttp_client(app)
+
+    manager = app[KEY_BAN_MANAGER]
+    # Whitelist should be empty when file doesn't exist
+    assert len(manager.ip_whitelist_lookup) == 0
+
+    # Normal request should work
+    set_real_ip("192.168.1.1")
+    resp = await client.get("/")
+    assert resp.status == HTTPStatus.NOT_FOUND
+
+
+async def test_invalid_whitelist_format(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test handling invalid whitelist format."""
+    app = web.Application()
+    app[KEY_HASS] = hass
+    setup_bans(hass, app, 5)
+    set_real_ip = mock_real_ip(app)
+
+    def load_config_side_effect(path):
+        """Mock loading config files."""
+        if path == hass.config.path(IP_BANS_FILE):
+            return {}
+        if path == hass.config.path(IP_WHITELIST_FILE):
+            # Invalid format - not a list or dict
+            return "invalid_string_format"
+        raise FileNotFoundError
+
+    with patch(
+        "homeassistant.components.http.ban.load_yaml_config_file",
+        side_effect=load_config_side_effect,
+    ):
+        client = await aiohttp_client(app)
+
+    manager = app[KEY_BAN_MANAGER]
+    # Whitelist should be empty when format is invalid
+    assert len(manager.ip_whitelist_lookup) == 0
+
+    assert "Invalid whitelist format" in caplog.text
+
+    # Normal request should still work
+    set_real_ip("192.168.1.1")
+    resp = await client.get("/")
+    assert resp.status == HTTPStatus.NOT_FOUND
+
+
+async def test_invalid_ip_addresses_in_whitelist(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test handling invalid IP addresses in whitelist."""
+    app = web.Application()
+    app[KEY_HASS] = hass
+    setup_bans(hass, app, 5)
+    set_real_ip = mock_real_ip(app)
+
+    valid_ip = "192.168.1.100"
+    invalid_ips = ["invalid_ip", "999.999.999.999", "not.an.ip.address"]
+
+    def load_config_side_effect(path):
+        """Mock loading config files."""
+        if path == hass.config.path(IP_BANS_FILE):
+            return {}
+        if path == hass.config.path(IP_WHITELIST_FILE):
+            return [valid_ip, *invalid_ips]
+        raise FileNotFoundError
+
+    with patch(
+        "homeassistant.components.http.ban.load_yaml_config_file",
+        side_effect=load_config_side_effect,
+    ):
+        client = await aiohttp_client(app)
+
+    manager = app[KEY_BAN_MANAGER]
+    # Only valid IP should be loaded
+    assert len(manager.ip_whitelist_lookup) == 1
+    assert ip_address(valid_ip) in manager.ip_whitelist_lookup
+
+    # Check that invalid IPs were logged
+    for invalid_ip in invalid_ips:
+        assert (
+            "homeassistant.components.http.ban",
+            logging.ERROR,
+            f"Failed to load IP whitelist: invalid IP address {invalid_ip}",
+        ) in caplog.record_tuples
+
+    # Valid whitelisted IP should bypass ban checks
+    set_real_ip(valid_ip)
+    resp = await client.get("/")
+    assert resp.status == HTTPStatus.NOT_FOUND
+
+
+async def test_whitelist_with_both_ipv4_and_ipv6(
+    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
+) -> None:
+    """Test whitelist supports both IPv4 and IPv6 addresses."""
+    app = web.Application()
+    app[KEY_HASS] = hass
+    setup_bans(hass, app, 5)
+    set_real_ip = mock_real_ip(app)
+
+    ipv4_ip = "192.168.1.100"
+    ipv6_ip = "2001:db8::1"
+
+    def load_config_side_effect(path):
+        """Mock loading config files."""
+        if path == hass.config.path(IP_BANS_FILE):
+            return {}
+        if path == hass.config.path(IP_WHITELIST_FILE):
+            return [ipv4_ip, ipv6_ip]
+        raise FileNotFoundError
+
+    with patch(
+        "homeassistant.components.http.ban.load_yaml_config_file",
+        side_effect=load_config_side_effect,
+    ):
+        client = await aiohttp_client(app)
+
+    manager = app[KEY_BAN_MANAGER]
+    assert len(manager.ip_whitelist_lookup) == 2
+
+    # Both IPv4 and IPv6 should bypass ban checks
+    set_real_ip(ipv4_ip)
+    resp = await client.get("/")
+    assert resp.status == HTTPStatus.NOT_FOUND
+
+    set_real_ip(ipv6_ip)
+    resp = await client.get("/")
+    assert resp.status == HTTPStatus.NOT_FOUND
