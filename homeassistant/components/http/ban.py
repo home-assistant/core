@@ -45,6 +45,7 @@ NOTIFICATION_ID_BAN: Final = "ip-ban"
 NOTIFICATION_ID_LOGIN: Final = "http-login"
 
 IP_BANS_FILE: Final = "ip_bans.yaml"
+IP_WHITELIST_FILE: Final = "ip_whitelist.yaml"
 ATTR_BANNED_AT: Final = "banned_at"
 
 SCHEMA_IP_BAN_ENTRY: Final = vol.Schema(
@@ -76,9 +77,14 @@ async def ban_middleware(
         _LOGGER.error("IP Ban middleware loaded but banned IPs not loaded")
         return await handler(request)
 
+    ip_address_ = ip_address(request.remote)  # type: ignore[arg-type]
+
+    # Check whitelist first - whitelisted IPs bypass ban checks
+    if ban_manager.ip_whitelist_lookup and ip_address_ in ban_manager.ip_whitelist_lookup:
+        return await handler(request)
+
     if ip_bans_lookup := ban_manager.ip_bans_lookup:
         # Verify if IP is not banned
-        ip_address_ = ip_address(request.remote)  # type: ignore[arg-type]
         if ip_address_ in ip_bans_lookup:
             raise HTTPForbidden
 
@@ -146,17 +152,22 @@ async def process_wrong_login(request: Request) -> None:
     if KEY_BAN_MANAGER not in request.app or request.app[KEY_LOGIN_THRESHOLD] < 1:
         return
 
-    request.app[KEY_FAILED_LOGIN_ATTEMPTS][remote_addr] += 1
+    ban_manager = request.app[KEY_BAN_MANAGER]
+
+    # Whitelisted IPs should never be banned
+    if ban_manager.ip_whitelist_lookup and remote_addr in ban_manager.ip_whitelist_lookup:
+        return
 
     # Supervisor IP should never be banned
     if is_hassio(hass) and str(remote_addr) == get_supervisor_ip():
         return
 
+    request.app[KEY_FAILED_LOGIN_ATTEMPTS][remote_addr] += 1
+
     if (
         request.app[KEY_FAILED_LOGIN_ATTEMPTS][remote_addr]
         >= request.app[KEY_LOGIN_THRESHOLD]
     ):
-        ban_manager = request.app[KEY_BAN_MANAGER]
         _LOGGER.warning("Banned IP %s for too many login attempts", remote_addr)
         await ban_manager.async_add_ban(remote_addr)
 
@@ -204,15 +215,22 @@ class IpBan:
 
 
 class IpBanManager:
-    """Manage IP bans."""
+    """Manage IP bans and whitelist."""
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Init the ban manager."""
         self.hass = hass
         self.path = hass.config.path(IP_BANS_FILE)
+        self.whitelist_path = hass.config.path(IP_WHITELIST_FILE)
         self.ip_bans_lookup: dict[IPv4Address | IPv6Address, IpBan] = {}
+        self.ip_whitelist_lookup: set[IPv4Address | IPv6Address] = set()
 
     async def async_load(self) -> None:
+        """Load the existing IP bans and whitelist."""
+        await self._async_load_bans()
+        await self._async_load_whitelist()
+
+    async def _async_load_bans(self) -> None:
         """Load the existing IP bans."""
         try:
             list_ = await self.hass.async_add_executor_job(
@@ -238,6 +256,43 @@ class IpBanManager:
                 continue
 
         self.ip_bans_lookup = ip_bans_lookup
+
+    async def _async_load_whitelist(self) -> None:
+        """Load the IP whitelist."""
+        try:
+            list_ = await self.hass.async_add_executor_job(
+                load_yaml_config_file, self.whitelist_path
+            )
+        except FileNotFoundError:
+            return
+        except HomeAssistantError as err:
+            _LOGGER.error("Unable to load %s: %s", self.whitelist_path, str(err))
+            return
+
+        ip_whitelist_lookup: set[IPv4Address | IPv6Address] = set()
+        # Support both list and dict formats
+        if isinstance(list_, list):
+            ip_list = list_
+        elif isinstance(list_, dict):
+            ip_list = list_.keys()
+        else:
+            _LOGGER.error(
+                "Invalid whitelist format in %s: expected list or dict",
+                self.whitelist_path,
+            )
+            return
+
+        for ip_entry in ip_list:
+            try:
+                ip_address_ = ip_address(ip_entry)
+                ip_whitelist_lookup.add(ip_address_)
+            except ValueError:
+                _LOGGER.error(
+                    "Failed to load IP whitelist: invalid IP address %s", ip_entry
+                )
+                continue
+
+        self.ip_whitelist_lookup = ip_whitelist_lookup
 
     def _add_ban(self, ip_ban: IpBan) -> None:
         """Update config file with new banned IP address."""
