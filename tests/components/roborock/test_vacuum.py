@@ -31,7 +31,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .conftest import FakeDevice
+from .conftest import FakeDevice, set_trait_attributes
+from .mock_data import STATUS
 
 from tests.common import MockConfigEntry
 
@@ -132,8 +133,14 @@ async def test_resume_cleaning(
     vacuum_command: Mock,
 ) -> None:
     """Test resuming clean on start button when a clean is paused."""
-    fake_vacuum.v1_properties.status.in_cleaning = in_cleaning_int
-    fake_vacuum.v1_properties.status.in_returning = in_returning_int
+
+    async def refresh_properties() -> None:
+        set_trait_attributes(fake_vacuum.v1_properties.status, STATUS)
+        fake_vacuum.v1_properties.status.in_cleaning = in_cleaning_int
+        fake_vacuum.v1_properties.status.in_returning = in_returning_int
+
+    fake_vacuum.v1_properties.status.refresh.side_effect = refresh_properties
+
     await async_setup_component(hass, DOMAIN, {})
     vacuum = hass.states.get(ENTITY_ID)
     assert vacuum

@@ -148,6 +148,20 @@ class FakeDevice(RoborockDevice):
         """Close the device."""
 
 
+def set_trait_attributes(
+    trait: AsyncMock,
+    dataclass_template: RoborockBase,
+    init_none: bool = False,
+) -> None:
+    """Set attributes on a mock roborock trait."""
+    template_copy = deepcopy(dataclass_template)
+    for attr_name in dir(template_copy):
+        if attr_name.startswith("_"):
+            continue
+        attr_value = getattr(template_copy, attr_name) if not init_none else None
+        setattr(trait, attr_name, attr_value)
+
+
 def make_mock_trait(
     trait_spec: type[V1TraitMixin] | None = None,
     dataclass_template: RoborockBase | None = None,
@@ -156,12 +170,14 @@ def make_mock_trait(
     trait = AsyncMock(spec=trait_spec or V1TraitMixin)
     if dataclass_template is not None:
         # Copy all attributes and property methods (e.g. computed properties)
-        template_copy = deepcopy(dataclass_template)
-        for attr_name in dir(template_copy):
-            if attr_name.startswith("_"):
-                continue
-            setattr(trait, attr_name, getattr(template_copy, attr_name))
-    trait.refresh = AsyncMock()
+        # on the first call to refresh(). The object starts uninitialized.
+        set_trait_attributes(trait, dataclass_template, init_none=True)
+
+    async def refresh() -> None:
+        if dataclass_template is not None:
+            set_trait_attributes(trait, dataclass_template)
+
+    trait.refresh = AsyncMock(side_effect=refresh)
     return trait
 
 
