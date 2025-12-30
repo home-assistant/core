@@ -80,7 +80,7 @@ async def ban_middleware(
     ip_address_ = ip_address(request.remote)  # type: ignore[arg-type]
 
     # Check whitelist first - whitelisted IPs bypass ban checks
-    if ban_manager.ip_whitelist_lookup and ip_address_ in ban_manager.ip_whitelist_lookup:
+    if ip_address_ in ban_manager.ip_whitelist_lookup:
         return await handler(request)
 
     if ip_bans_lookup := ban_manager.ip_bans_lookup:
@@ -155,7 +155,7 @@ async def process_wrong_login(request: Request) -> None:
     ban_manager = request.app[KEY_BAN_MANAGER]
 
     # Whitelisted IPs should never be banned
-    if ban_manager.ip_whitelist_lookup and remote_addr in ban_manager.ip_whitelist_lookup:
+    if remote_addr in ban_manager.ip_whitelist_lookup:
         return
 
     # Supervisor IP should never be banned
@@ -277,7 +277,8 @@ class IpBanManager:
             ip_list = list_.keys()
         else:
             _LOGGER.error(
-                "Invalid whitelist format in %s: expected list or dict",
+                "Invalid whitelist format in %s: expected list of IP addresses or "
+                "dict with IP addresses as keys",
                 self.whitelist_path,
             )
             return
