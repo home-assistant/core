@@ -63,6 +63,30 @@ async def test_user_flow_flaky(
     }
 
 
+async def test_user_flow_duplicate(
+    hass: HomeAssistant,
+    mock_config_entry: MagicMock,
+    mock_charger: MagicMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test user flow aborts when config entry already exists."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "192.168.1.100"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
 async def test_import_flow(
     hass: HomeAssistant,
     mock_charger: MagicMock,
@@ -112,3 +136,21 @@ async def test_import_flow_flaky(
     assert result["data"] == {
         CONF_HOST: "10.0.0.131",
     }
+
+
+async def test_import_flow_duplicate(
+    hass: HomeAssistant,
+    mock_config_entry: MagicMock,
+    mock_charger: MagicMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test import flow aborts when config entry already exists."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={CONF_HOST: "192.168.1.100"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"

@@ -53,6 +53,8 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, data: dict[str, str]) -> ConfigFlowResult:
         """Handle the initial step."""
 
+        self._async_abort_entries_match({CONF_HOST: data[CONF_HOST]})
+
         if not await self.check_status(data[CONF_HOST]):
             return self.async_abort(reason="missing_host")
 
