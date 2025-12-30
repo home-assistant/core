@@ -22,6 +22,7 @@ from roborock.data import (
     RoborockBase,
     RoborockDyadStateCode,
     ValleyElectricityTimer,
+    WorkStatusMapping,
     ZeoError,
     ZeoState,
 )
@@ -66,6 +67,7 @@ from .mock_data import (
     MAP_DATA,
     MULTI_MAP_LIST,
     NETWORK_INFO_BY_DEVICE,
+    Q7_B01_PROPS,
     ROBOROCK_RRUID,
     ROOM_MAPPING,
     SCENES,
@@ -104,6 +106,39 @@ def create_zeo_trait() -> Mock:
         RoborockZeoProtocol.ERROR: ZeoError.none.name,
     }
     return zeo_trait
+
+
+def create_b01_q7_trait() -> Mock:
+    """Create B01 Q7 trait for B01 devices."""
+    b01_trait = AsyncMock()
+    b01_trait._props_data = deepcopy(Q7_B01_PROPS)
+
+    async def query_values_side_effect(protocols):
+        return b01_trait._props_data
+
+    b01_trait.query_values = AsyncMock(side_effect=query_values_side_effect)
+
+    # Add API methods that update the state when called
+    async def start_clean_side_effect():
+        b01_trait._props_data.status = WorkStatusMapping.SWEEP_MOPING
+
+    async def pause_clean_side_effect():
+        b01_trait._props_data.status = WorkStatusMapping.PAUSED
+
+    async def stop_clean_side_effect():
+        b01_trait._props_data.status = WorkStatusMapping.WAITING_FOR_ORDERS
+
+    async def return_to_dock_side_effect():
+        b01_trait._props_data.status = WorkStatusMapping.DOCKING
+
+    b01_trait.start_clean = AsyncMock(side_effect=start_clean_side_effect)
+    b01_trait.pause_clean = AsyncMock(side_effect=pause_clean_side_effect)
+    b01_trait.stop_clean = AsyncMock(side_effect=stop_clean_side_effect)
+    b01_trait.return_to_dock = AsyncMock(side_effect=return_to_dock_side_effect)
+    b01_trait.find_me = AsyncMock()
+    b01_trait.set_fan_speed = AsyncMock()
+    b01_trait.send = AsyncMock()
+    return b01_trait
 
 
 @pytest.fixture(name="bypass_api_client_fixture")
@@ -332,6 +367,8 @@ def fake_devices_fixture() -> list[FakeDevice]:
                 fake_device.zeo = create_zeo_trait()
             else:
                 raise ValueError("Unknown A01 category in test HOME_DATA")
+        elif device_data.pv == "B01":
+            fake_device.b01_q7_properties = create_b01_q7_trait()
         else:
             raise ValueError("Unknown pv in test HOME_DATA")
         devices.append(fake_device)

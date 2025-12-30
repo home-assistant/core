@@ -10,7 +10,8 @@
     "bellows",
     "universal_silabs_flasher",
     "zigpy.serial",
-    "serial_asyncio_fast"
+    "serial_asyncio_fast",
+    "serialx"
   ],
   "usb": [
     {

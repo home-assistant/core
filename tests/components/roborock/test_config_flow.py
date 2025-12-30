@@ -213,7 +213,7 @@ async def test_options_flow_drawables(
             mock_roborock_entry.entry_id
         )
 
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == DRAWABLES
         with patch(
             "homeassistant.components.roborock.async_setup_entry", return_value=True
@@ -224,7 +224,7 @@ async def test_options_flow_drawables(
             )
             await hass.async_block_till_done()
 
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert mock_roborock_entry.options[DRAWABLES][Drawable.PREDICTED_PATH] is True
         assert len(mock_setup.mock_calls) == 1
 

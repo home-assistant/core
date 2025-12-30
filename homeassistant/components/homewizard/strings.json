@@ -12,13 +12,13 @@
       "wrong_device": "The configured device is not the same found on this IP address."
     },
     "error": {
-      "api_not_enabled": "The local API is disabled. Go to the HomeWizard Energy app and enable the API in the device settings.",
+      "api_not_enabled": "The local API is disabled. Go to the HomeWizard app and enable the API in the device settings.",
       "authorization_failed": "Failed to authorize, make sure to press the button of the device within 30 seconds",
       "network_error": "Device unreachable, make sure that you have entered the correct IP address and that the device is available in your network"
     },
     "step": {
       "authorize": {
-        "description": "Press the button on the HomeWizard Energy device for two seconds, then select the button below.",
+        "description": "Press the button on the HomeWizard device for two seconds, then select the button below.",
         "title": "Authorize"
       },
       "discovery_confirm": {
@@ -30,7 +30,7 @@
         "title": "Re-authenticate"
       },
       "reauth_enable_api": {
-        "description": "The local API is disabled. Go to the HomeWizard Energy app and enable the API in the device settings."
+        "description": "The local API is disabled. Go to the HomeWizard app and enable the API in the device settings."
       },
       "reconfigure": {
         "data": {
@@ -46,9 +46,9 @@
           "ip_address": "[%key:common::config_flow::data::ip%]"
         },
         "data_description": {
-          "ip_address": "The IP address of your HomeWizard Energy device."
+          "ip_address": "The IP address of your HomeWizard device."
         },
-        "description": "Enter the IP address of your HomeWizard Energy device to integrate with Home Assistant.",
+        "description": "Enter the IP address of your HomeWizard device to integrate with Home Assistant.",
         "title": "Configure device"
       }
     }
@@ -65,7 +65,9 @@
         "state": {
           "standby": "Standby",
           "to_full": "Manual charge mode",
-          "zero": "Zero mode"
+          "zero": "Zero mode",
+          "zero_charge_only": "Zero mode (charge only)",
+          "zero_discharge_only": "Zero mode (discharge only)"
         }
       }
     },
@@ -87,6 +89,9 @@
       },
       "active_power_phase_w": {
         "name": "Power phase {phase}"
+      },
+      "active_production_power_w": {
+        "name": "Production power"
       },
       "active_reactive_power_phase_var": {
         "name": "Reactive power phase {phase}"
@@ -172,7 +177,7 @@
       "message": "The local API is unauthorized. Restore API access by following the instructions in the repair issue."
     },
     "communication_error": {
-      "message": "An error occurred while communicating with your HomeWizard Energy device"
+      "message": "An error occurred while communicating with your HomeWizard device"
     }
   },
   "issues": {
