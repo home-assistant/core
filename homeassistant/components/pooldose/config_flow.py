@@ -143,3 +143,47 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
             title=f"PoolDose {serial_number}",
             data={CONF_HOST: host},
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfigure to change the device host/IP for an existing entry."""
+        reconfigure_entry = self._get_reconfigure_entry()
+        # Show form to enter new host
+        if not user_input:
+            # Pre-fill with current host from the entry being reconfigured
+            return self.async_show_form(
+                step_id="reconfigure",
+                data_schema=vol.Schema(
+                    {
+                        vol.Required(
+                            CONF_HOST, default=reconfigure_entry.data[CONF_HOST]
+                        ): cv.string
+                    }
+                ),
+            )
+
+        host = user_input[CONF_HOST]
+        serial_number, api_versions, errors = await self._validate_host(host)
+        if errors:
+            return self.async_show_form(
+                step_id="reconfigure",
+                data_schema=vol.Schema({vol.Required(CONF_HOST): cv.string}),
+                errors=errors,
+                description_placeholders={
+                    "api_version_is": api_versions.get("api_version_is") or "",
+                    "api_version_should": api_versions.get("api_version_should") or "",
+                }
+                if api_versions
+                else None,
+            )
+
+        # Ensure new serial number matches the existing entry unique_id (serial number)
+        if str(serial_number) != str(reconfigure_entry.unique_id):
+            return self.async_abort(reason="wrong_device")
+
+        # Update the existing config entry with the new host and schedule reload
+        reconfigure_entry = self._get_reconfigure_entry()
+        return self.async_update_reload_and_abort(
+            reconfigure_entry, data_updates={CONF_HOST: host}
+        )
