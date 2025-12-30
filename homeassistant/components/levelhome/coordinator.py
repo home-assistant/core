@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import timedelta
 import logging
 from typing import Any
@@ -126,14 +126,21 @@ class LevelLocksCoordinator(DataUpdateCoordinator[dict[str, LevelLockDevice]]):
                 )
                 current[lock_id] = device
                 self._ws_manager.register_device_uuid(device.lock_id, device.uuid)
+                self.async_set_updated_data(current)
+                LOGGER.info("Added new device %s: is_locked=%s, state=%s", device.lock_id, device.is_locked, device.state)
+                return
 
+        updates = {}
         if is_locked is not None:
-            device.is_locked = is_locked
+            updates["is_locked"] = is_locked
         if payload is not None and "state" in payload:
             state = payload.get("state")
-            device.state = str(state) if state is not None else None
-        LOGGER.info("Updated device %s: is_locked=%s, state=%s", device.lock_id, device.is_locked, device.state)
-        self.async_set_updated_data(current)
+            updates["state"] = str(state) if state is not None else None
+        if updates:
+            updated_device = replace(device, **updates)
+            current[device.lock_id] = updated_device
+            LOGGER.info("Updated device %s: is_locked=%s, state=%s", updated_device.lock_id, updated_device.is_locked, updated_device.state)
+            self.async_set_updated_data(current)
 
     async def async_send_command(self, lock_id: str, command: str) -> None:
         """Send a command via WebSocket."""

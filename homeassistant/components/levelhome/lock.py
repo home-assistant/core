@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 import logging
 from typing import Any
 
@@ -145,11 +146,8 @@ class LevelLockEntity(CoordinatorEntity[LevelLocksCoordinator], LockEntity):
         WebSocket push updates.
         """
         if self._lock_id in self.coordinator.data:
-            # Create a copy of the data to update
             current_data = dict(self.coordinator.data)
             device = current_data[self._lock_id]
-            # Update the device state to transitional state
-            device.state = state
-            device.is_locked = None  # Transitional states have None for is_locked
-            # Update coordinator data without triggering a refresh
+            updated_device = replace(device, state=state, is_locked=None)
+            current_data[self._lock_id] = updated_device
             self.coordinator.async_set_updated_data(current_data)

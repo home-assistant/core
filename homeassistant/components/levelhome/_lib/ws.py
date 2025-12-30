@@ -40,6 +40,7 @@ class LevelWebsocketManager:
         self._on_state_update = on_state_update
         self._session: ClientSession = session
         self._stop_event = asyncio.Event()
+        self._connected_event = asyncio.Event()
         self._task: asyncio.Task[None] | None = None
         self._ws: ClientWebSocketResponse | None = None
         self._send_lock = asyncio.Lock()
@@ -53,11 +54,16 @@ class LevelWebsocketManager:
         LOGGER.info("Starting WebSocket connection")
         if self._task is None or self._task.done():
             self._stop_event.clear()
+            self._connected_event.clear()
             self._list_devices_event.clear()
             self._task = asyncio.create_task(self._run_connection())
-            LOGGER.info("WebSocket connection task created, waiting 0.5s for connection")
-            await asyncio.sleep(0.5)
-            LOGGER.info("Initial wait complete, WebSocket connected: %s", self._ws is not None and not (self._ws.closed if self._ws else True))
+            LOGGER.info("WebSocket connection task created, waiting for connection")
+            try:
+                await asyncio.wait_for(self._connected_event.wait(), timeout=10.0)
+                LOGGER.info("WebSocket connected successfully")
+            except TimeoutError:
+                LOGGER.warning("Timeout waiting for WebSocket connection")
+                return
         await self._fetch_device_list()
 
     async def async_get_devices(self) -> list[dict[str, Any]]:
@@ -75,6 +81,7 @@ class LevelWebsocketManager:
     async def async_stop(self) -> None:
         """Stop WebSocket connection and background task."""
         self._stop_event.set()
+        self._connected_event.clear()
         if self._ws is not None and not self._ws.closed:
             with suppress(Exception):
                 await self._ws.close()
@@ -165,6 +172,7 @@ class LevelWebsocketManager:
                 self._ws = ws
                 backoff_seconds = 1.0
                 LOGGER.info("WebSocket connected")
+                self._connected_event.set()
                 async for msg in ws:
                     if msg.type == WSMsgType.TEXT:
                         await self._handle_text_message(msg.data)
@@ -177,6 +185,7 @@ class LevelWebsocketManager:
             except Exception:
                 LOGGER.exception("Unexpected WebSocket error")
             finally:
+                self._connected_event.clear()
                 if self._ws is not None and not self._ws.closed:
                     with suppress(Exception):
                         await self._ws.close()
