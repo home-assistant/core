@@ -609,8 +609,10 @@ class StateVacuumEntity(
         await self.hass.async_add_executor_job(self.pause)
 
 
-@dataclass
+@dataclass(slots=True)
 class Segment:
+    """Represents a cleanable segment reported by a vacuum."""
+
     id: str
     name: str
     group: str | None = None
