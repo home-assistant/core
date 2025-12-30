@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from pyvesync.utils.errors import VeSyncLoginError
 
-from homeassistant.components.vesync import DOMAIN, config_flow
+from homeassistant.components.vesync import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -12,29 +12,46 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-async def test_abort_already_setup(hass: HomeAssistant) -> None:
-    """Test if we abort because component is already setup."""
-    flow = config_flow.VeSyncFlowHandler()
-    flow.hass = hass
-    MockConfigEntry(domain=DOMAIN, title="user", data={"user": "pass"}).add_to_hass(
-        hass
+async def test_abort_duplicate_unique_id(hass: HomeAssistant) -> None:
+    """Test if we abort because component is already setup under that email."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="user@user.com",
+        unique_id="user@user.com",
+        data={CONF_USERNAME: "user@user.com", CONF_PASSWORD: "pass"},
     )
-    result = await flow.async_step_user()
+    mock_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    with patch("pyvesync.vesync.VeSync.login"):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: "user@user.com", CONF_PASSWORD: "pass"},
+        )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
+    assert result["reason"] == "already_configured"
 
 
 async def test_invalid_login_error(hass: HomeAssistant) -> None:
     """Test if we return error for invalid username and password."""
-    test_dict = {CONF_USERNAME: "user", CONF_PASSWORD: "pass"}
-    flow = config_flow.VeSyncFlowHandler()
-    flow.hass = hass
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
+    assert result["type"] is FlowResultType.FORM
+
     with patch(
         "pyvesync.vesync.VeSync.login",
         side_effect=VeSyncLoginError("Mock login failed"),
     ):
-        result = await flow.async_step_user(user_input=test_dict)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: "user", CONF_PASSWORD: "pass"},
+        )
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
@@ -42,17 +59,20 @@ async def test_invalid_login_error(hass: HomeAssistant) -> None:
 
 async def test_config_flow_user_input(hass: HomeAssistant) -> None:
     """Test config flow with user input."""
-    flow = config_flow.VeSyncFlowHandler()
-    flow.hass = hass
-    result = await flow.async_step_user()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
     assert result["type"] is FlowResultType.FORM
+
     with patch("pyvesync.vesync.VeSync.login"):
-        result = await flow.async_step_user(
-            {CONF_USERNAME: "user", CONF_PASSWORD: "pass"}
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: "user", CONF_PASSWORD: "pass"},
         )
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["data"][CONF_USERNAME] == "user"
-        assert result["data"][CONF_PASSWORD] == "pass"
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_USERNAME] == "user"
+    assert result["data"][CONF_PASSWORD] == "pass"
 
 
 async def test_reauth_flow(hass: HomeAssistant) -> None:
