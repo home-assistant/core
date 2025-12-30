@@ -84,6 +84,44 @@ WASHER_WATER_TEMPERATURE_TO_HA = {
     "high": "high",
 }
 
+DISHWASHER_WASHING_COURSE_TO_HA = {
+    "auto": "auto",
+    "AI": "ai",
+    "normal": "normal",
+    "daily": "daily",
+    "daily_09": "daily_09",
+    "eco": "eco",
+    "eco_08": "eco_08",
+    "eco_10": "eco_10",
+    "intensive": "intensive",
+    "heavy": "heavy",
+    "chef": "chef",
+    "potsAndPans": "pots_and_pans",
+    "delicate": "delicate",
+    "glasses": "glasses",
+    "drinkware": "drinkware",
+    "express": "express",
+    "express_0C": "express_0_c",
+    "quick": "quick",
+    "quick_14": "quick_14",
+    "upperExpress": "upper_express",
+    "preWash": "pre_wash",
+    "preBlast": "pre_blast",
+    "rinseOnly": "rinse_only",
+    "coldRinse": "cold_rinse",
+    "babycare": "babycare",
+    "babyBottle": "baby_bottle",
+    "plastics": "plastics",
+    "steamSoak": "steam_soak",
+    "night": "night",
+    "nightSilence": "night_silence",
+    "extraSilence": "extra_silence",
+    "dryOnly": "dry_only",
+    "rinseDry": "rinse_dry",
+    "selfClean": "self_clean",
+    "machineCare": "machine_care",
+}
+
 
 @dataclass(frozen=True, kw_only=True)
 class SmartThingsSelectDescription(SelectEntityDescription):
@@ -138,6 +176,16 @@ CAPABILITIES_TO_SELECT: dict[Capability | str, SmartThingsSelectDescription] = {
         status_attribute=Attribute.AMOUNT,
         command=Command.SET_AMOUNT,
         entity_category=EntityCategory.CONFIG,
+    ),
+    Capability.SAMSUNG_CE_DISHWASHER_WASHING_COURSE: SmartThingsSelectDescription(
+        key=Capability.SAMSUNG_CE_DISHWASHER_WASHING_COURSE,
+        name=None,
+        translation_key="dishwasher_washing_course",
+        requires_remote_control_status=True,
+        options_attribute=Attribute.SUPPORTED_COURSES,
+        status_attribute=Attribute.WASHING_COURSE,
+        command=Command.SET_WASHING_COURSE,
+        options_map=DISHWASHER_WASHING_COURSE_TO_HA,
     ),
     Capability.SAMSUNG_CE_FLEXIBLE_AUTO_DISPENSE_DETERGENT: SmartThingsSelectDescription(
         key=Capability.SAMSUNG_CE_FLEXIBLE_AUTO_DISPENSE_DETERGENT,
