@@ -40,9 +40,7 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
             if await self.check_status(user_input[CONF_HOST]):
                 return self.async_create_entry(
                     title=f"OpenEVSE {user_input[CONF_HOST]}",
-                    data={
-                        CONF_HOST: user_input[CONF_HOST],
-                    },
+                    data=user_input,
                 )
             errors = {CONF_HOST: "cannot_connect"}
 
@@ -56,11 +54,9 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
 
         if not await self.check_status(data[CONF_HOST]):
-            self.async_abort(reason="Host is not available")
+            self.async_abort(reason="missing_host")
 
         return self.async_create_entry(
             title=f"OpenEVSE {data[CONF_HOST]}",
-            data={
-                CONF_HOST: data[CONF_HOST],
-            },
+            data=data,
         )

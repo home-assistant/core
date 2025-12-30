@@ -1,4 +1,25 @@
 {
+  "config": {
+    "abort": {
+      "missing_host": "Host is not available"
+    },
+    "error": {
+      "cannot_connect": "Unable to connect"
+    },
+    "step": {
+      "import": {
+        "data": {
+          "host": "Host"
+        },
+        "title": "OpenEVSE Import"
+      },
+      "user": {
+        "data": {
+          "host": "Host"
+        }
+      }
+    }
+  },
   "issues": {
     "yaml_deprecated": {
       "description": "Configuring OpenEVSE using YAML is being removed. Your existing YAML configuration has been imported into the UI automatically. Remove the `openevse` configuration from your configuration.yaml file and restart Home Assistant to fix this issue.",
