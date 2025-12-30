@@ -7,11 +7,12 @@ import logging
 from typing import TYPE_CHECKING
 
 from bsblan import BSBLANError, DaySchedule, DHWSchedule, TimeSlot
+import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import DOMAIN
 
@@ -31,6 +32,29 @@ ATTR_SUNDAY_SLOTS = "sunday_slots"
 
 # Service name
 SERVICE_SET_HOT_WATER_SCHEDULE = "set_hot_water_schedule"
+
+
+# Schema for a single time slot
+_SLOT_SCHEMA = vol.Schema(
+    {
+        vol.Required("start_time"): vol.Any(cv.time, cv.string),
+        vol.Required("end_time"): vol.Any(cv.time, cv.string),
+    }
+)
+
+
+SERVICE_SET_HOT_WATER_SCHEDULE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): cv.string,
+        vol.Optional(ATTR_MONDAY_SLOTS): vol.All(cv.ensure_list, [_SLOT_SCHEMA]),
+        vol.Optional(ATTR_TUESDAY_SLOTS): vol.All(cv.ensure_list, [_SLOT_SCHEMA]),
+        vol.Optional(ATTR_WEDNESDAY_SLOTS): vol.All(cv.ensure_list, [_SLOT_SCHEMA]),
+        vol.Optional(ATTR_THURSDAY_SLOTS): vol.All(cv.ensure_list, [_SLOT_SCHEMA]),
+        vol.Optional(ATTR_FRIDAY_SLOTS): vol.All(cv.ensure_list, [_SLOT_SCHEMA]),
+        vol.Optional(ATTR_SATURDAY_SLOTS): vol.All(cv.ensure_list, [_SLOT_SCHEMA]),
+        vol.Optional(ATTR_SUNDAY_SLOTS): vol.All(cv.ensure_list, [_SLOT_SCHEMA]),
+    }
+)
 
 
 def _parse_time_value(value: time | str) -> time:
@@ -214,4 +238,5 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_SET_HOT_WATER_SCHEDULE,
         set_hot_water_schedule,
+        schema=SERVICE_SET_HOT_WATER_SCHEDULE_SCHEMA,
     )
