@@ -34,7 +34,7 @@ from .const import (
 if TYPE_CHECKING:
     from . import MammotionConfigEntry
 
-REPORT_INTERVAL = timedelta(minutes=1)
+DEFAULT_INTERVAL = timedelta(minutes=1)
 
 
 class MammotionBaseUpdateCoordinator(DataUpdateCoordinator[MowingDevice]):
@@ -63,6 +63,10 @@ class MammotionBaseUpdateCoordinator(DataUpdateCoordinator[MowingDevice]):
         self.account = config_entry.data[CONF_ACCOUNTNAME]
         self.password = config_entry.data[CONF_PASSWORD]
         self.update_failures = 0
+
+    def __del__(self) -> None:
+        """Cleanup and store credentials."""
+        self.store_cloud_credentials()
 
     @abstractmethod
     def get_coordinator_data(self, device: MammotionMowerDeviceManager) -> MowingDevice:
@@ -110,7 +114,7 @@ class MammotionBaseUpdateCoordinator(DataUpdateCoordinator[MowingDevice]):
         return await self.api.async_send_command(self.device_name, command, **kwargs)
 
 
-class MammotionReportUpdateCoordinator(MammotionBaseUpdateCoordinator):
+class MammotionMowerUpdateCoordinator(MammotionBaseUpdateCoordinator):
     """Class to manage fetching mammotion report data."""
 
     def __init__(
@@ -126,7 +130,7 @@ class MammotionReportUpdateCoordinator(MammotionBaseUpdateCoordinator):
             config_entry=config_entry,
             device=device,
             api=api,
-            update_interval=REPORT_INTERVAL,
+            update_interval=DEFAULT_INTERVAL,
         )
 
     def get_coordinator_data(self, device: MammotionMowerDeviceManager) -> MowingDevice:

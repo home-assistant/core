@@ -6,7 +6,7 @@ from pymammotion.aliyun.model.dev_by_account_response import Device
 from pymammotion.data.model.device_limits import DeviceLimits
 from pymammotion.homeassistant import HomeAssistantMowerApi
 
-from .coordinator import MammotionReportUpdateCoordinator
+from .coordinator import MammotionMowerUpdateCoordinator
 
 
 @dataclass
@@ -15,7 +15,7 @@ class MammotionMowerData:
 
     name: str
     api: HomeAssistantMowerApi
-    reporting_coordinator: MammotionReportUpdateCoordinator
+    coordinator: MammotionMowerUpdateCoordinator
     device_limits: DeviceLimits
     device: Device
 
