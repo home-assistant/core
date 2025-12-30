@@ -54,7 +54,7 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
 
         if not await self.check_status(data[CONF_HOST]):
-            self.async_abort(reason="missing_host")
+            return self.async_abort(reason="missing_host")
 
         return self.async_create_entry(
             title=f"OpenEVSE {data[CONF_HOST]}",

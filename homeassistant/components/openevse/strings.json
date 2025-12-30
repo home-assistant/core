@@ -1,6 +1,7 @@
 {
   "config": {
     "abort": {
+      "already_configured": "This charger is already configured",
       "missing_host": "Host is not available"
     },
     "error": {
