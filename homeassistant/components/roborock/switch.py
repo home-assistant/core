@@ -83,8 +83,8 @@ A01_SWITCH_DESCRIPTIONS: list[RoborockSwitchDescriptionA01] = [
     RoborockSwitchDescriptionA01(
         key="sound_setting",
         data_protocol=RoborockZeoProtocol.SOUND_SET,
-        translation_key="zeo_sound_setting",
-        entity_category=EntityCategory.DIAGNOSTIC,
+        translation_key="sound_setting",
+        entity_category=EntityCategory.CONFIG,
     ),
 ]
 
@@ -190,7 +190,7 @@ class RoborockSwitchA01(RoborockCoordinatedEntityA01, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         try:
-            await self.coordinator.api.set_value(
+            await self.coordinator.api.set_value(  # type: ignore[attr-defined]
                 self.entity_description.data_protocol, 0
             )
             await self.coordinator.async_request_refresh()
@@ -203,7 +203,7 @@ class RoborockSwitchA01(RoborockCoordinatedEntityA01, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         try:
-            await self.coordinator.api.set_value(
+            await self.coordinator.api.set_value(  # type: ignore[attr-defined]
                 self.entity_description.data_protocol, 1
             )
             await self.coordinator.async_request_refresh()
