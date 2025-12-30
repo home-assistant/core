@@ -10,7 +10,6 @@
 astroid==4.0.1
 coverage==7.10.6
 freezegun==1.5.2
-go2rtc-client==0.3.0
 # librt is an internal mypy dependency
 librt==0.2.1
 license-expression==30.4.3

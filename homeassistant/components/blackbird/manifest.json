@@ -2,7 +2,6 @@
   "domain": "blackbird",
   "name": "Monoprice Blackbird Matrix Switch",
   "codeowners": [],
-  "disabled": "This integration is disabled because it references pyserial-asyncio, which does blocking I/O in the asyncio loop and is not maintained.",
   "documentation": "https://www.home-assistant.io/integrations/blackbird",
   "iot_class": "local_polling",
   "loggers": ["pyblackbird"],

@@ -90,6 +90,9 @@
       "active_power_phase_w": {
         "name": "Power phase {phase}"
       },
+      "active_production_power_w": {
+        "name": "Production power"
+      },
       "active_reactive_power_phase_var": {
         "name": "Reactive power phase {phase}"
       },
