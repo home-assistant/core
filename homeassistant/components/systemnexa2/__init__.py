@@ -28,7 +28,7 @@ async def async_setup(hass: HomeAssistant, _config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: SystemNexa2ConfigEntry) -> bool:
     """Set up from a config entry."""
     coordinator = SystemNexa2DataUpdateCoordinator(hass, config_entry=entry)
-    await coordinator.async_setup()
+    await coordinator.async_setup(hass)
 
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(

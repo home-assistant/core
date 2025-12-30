@@ -18,6 +18,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
@@ -79,12 +80,13 @@ class SystemNexa2DataUpdateCoordinator(DataUpdateCoordinator[SystemNexa2Data]):
         self._unavailable_logged = False
         self.data = SystemNexa2Data()
 
-    async def async_setup(self) -> None:
+    async def async_setup(self, hass: HomeAssistant) -> None:
         """Set up the coordinator and initialize the device connection."""
         try:
             self.device = await Device.initiate_device(
                 host=self.config_entry.data[CONF_HOST],
                 on_update=self._async_handle_update,
+                session=async_get_clientsession(hass),
             )
 
             self.data.available = False
