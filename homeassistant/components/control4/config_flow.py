@@ -77,6 +77,7 @@ class Control4Validator:
                 await account.getDirectorBearerToken(self.controller_unique_id)
             )["token"]
         except (Unauthorized, NotFound):
+            _LOGGER.error("Failed to get authentication token from Control4 API")
             return False
         return True
 
@@ -90,8 +91,24 @@ class Control4Validator:
                 self.host, self.director_bearer_token, director_session
             )
             await director.getAllItemInfo()
-        except (Unauthorized, ClientError, TimeoutError):
-            _LOGGER.error("Failed to connect to the Control4 controller")
+        except Unauthorized:
+            _LOGGER.error(
+                "Unauthorized when connecting to Control4 controller at %s",
+                self.host,
+            )
+            return False
+        except ClientError as err:
+            _LOGGER.error(
+                "Failed to connect to Control4 controller at %s: %s",
+                self.host,
+                err,
+            )
+            return False
+        except TimeoutError:
+            _LOGGER.error(
+                "Timeout connecting to Control4 controller at %s",
+                self.host,
+            )
             return False
         return True
 
