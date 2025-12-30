@@ -198,11 +198,14 @@
     }),
     'remote_55555555': dict({
       'address': '',
-      'appVersion': '1.0.0',
-      'batteryLevel': 50,
+      'app_version': '1.0.0',
+      'battery_level': 50,
       'connected': True,
+      'db_version': None,
+      'last_seen': None,
       'name': 'BEORC',
-      'serialNumber': '55555555',
+      'serial_number': '55555555',
+      'updated': None,
     }),
     'remote_55555555_battery_level': dict({
       'attributes': dict({
