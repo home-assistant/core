@@ -226,8 +226,8 @@ async def test_export_rule_restore(
                 "customer_preferred_export_rule": "pv_only",
                 "non_export_configured": None,
             },
-            None,
-            "pv_only",
+            EnergyExportMode.BATTERY_OK.value,
+            EnergyExportMode.PV_ONLY.value,
         ),
         # Path 2: In VPP, Export is disabled (non_export_configured is True)
         (
@@ -235,7 +235,7 @@ async def test_export_rule_restore(
                 "customer_preferred_export_rule": None,
                 "non_export_configured": True,
             },
-            None,
+            EnergyExportMode.BATTERY_OK.value,
             EnergyExportMode.NEVER.value,
         ),
         # Path 3: In VPP, Export enabled but state shows disabled (current_option is NEVER)
@@ -279,20 +279,19 @@ async def test_export_rule_update_attrs_logic(
     entity_id = "select.energy_site_allow_export"
 
     # If we need to set a current option first, do it via service call
-    if current_option is not None:
-        with patch(
-            "tesla_fleet_api.teslemetry.EnergySite.grid_import_export",
-            return_value=COMMAND_OK,
-        ):
-            await hass.services.async_call(
-                SELECT_DOMAIN,
-                SERVICE_SELECT_OPTION,
-                {
-                    ATTR_ENTITY_ID: entity_id,
-                    ATTR_OPTION: current_option,
-                },
-                blocking=True,
-            )
+    with patch(
+        "tesla_fleet_api.teslemetry.EnergySite.grid_import_export",
+        return_value=COMMAND_OK,
+    ):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_OPTION: current_option,
+            },
+            blocking=True,
+        )
 
     # Coordinator refresh
     freezer.tick(ENERGY_INFO_INTERVAL)
