@@ -306,8 +306,9 @@ async def ws_get_power_statistics(
     else:
         statistics_hour = None
 
-    for statistics_id, statistic_rows in statistics.items():
+    for statistics_id in statistic_ids:
         # Check if we have extra hourly data
+        statistic_rows = statistics.get(statistics_id) if statistics else None
         statistic_rows_hour = (
             statistics_hour.get(statistics_id) if statistics_hour else None
         )
@@ -327,6 +328,9 @@ async def ws_get_power_statistics(
                         break
                     keep_end_idx = rowIdx
                 statistic_rows[:0] = statistic_rows_hour[:keep_end_idx]
+        elif not statistic_rows:
+            # Skip as we have no statistics data
+            continue
         # Update all rows for this statistic accordingly
         for row in statistic_rows:
             row["start"] = int(row["start"] * 1000)
