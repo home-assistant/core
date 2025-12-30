@@ -39,6 +39,7 @@ from .const import (
     SERVER_UNAVAILABLE,
     SWITCH_KEY_MAP,
     TRACKER_HARDWARE_STATUS_UPDATED,
+    TRACKER_HEALTH_OVERVIEW_UPDATED,
     TRACKER_POSITION_UPDATED,
     TRACKER_SWITCH_STATUS_UPDATED,
     TRACKER_WELLNESS_STATUS_UPDATED,
@@ -206,7 +207,7 @@ class TractiveClient:
 
         return not self._listen_task.cancelled()
 
-    async def trackable_objects(
+    async def trackable_pets(
         self,
     ) -> list[aiotractive.trackable_object.TrackableObject]:
         """Get list of trackable objects."""
@@ -219,7 +220,7 @@ class TractiveClient:
         """Get tracker by id."""
         return self._client.tracker(tracker_id)
 
-    def trackable_object(
+    def trackable_pet(
         self, trackable_id: str
     ) -> aiotractive.trackable_object.TrackableObject:
         """Get trackable object by id."""
@@ -355,7 +356,7 @@ class TractiveClient:
             ATTR_MINUTES_REST: sleep.get("minutesCalm"),
         }
         self._dispatch_tracker_event(
-            TRACKER_WELLNESS_STATUS_UPDATED, data["petId"], payload
+            TRACKER_HEALTH_OVERVIEW_UPDATED, data["petId"], payload
         )
 
     def _send_position_update(self, event: dict[str, Any]) -> None:
