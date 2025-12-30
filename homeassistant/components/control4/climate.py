@@ -38,6 +38,8 @@ CONTROL4_CURRENT_TEMPERATURE = "TEMPERATURE_F"
 CONTROL4_HUMIDITY = "HUMIDITY"
 CONTROL4_COOL_SETPOINT = "COOL_SETPOINT_F"
 CONTROL4_HEAT_SETPOINT = "HEAT_SETPOINT_F"
+CONTROL4_FAN_MODE = "FAN_MODE"
+CONTROL4_FAN_MODES_LIST = "FAN_MODES_LIST"
 
 VARIABLES_OF_INTEREST = {
     CONTROL4_HVAC_STATE,
@@ -46,6 +48,8 @@ VARIABLES_OF_INTEREST = {
     CONTROL4_HUMIDITY,
     CONTROL4_COOL_SETPOINT,
     CONTROL4_HEAT_SETPOINT,
+    CONTROL4_FAN_MODE,
+    CONTROL4_FAN_MODES_LIST,
 }
 
 # Map Control4 HVAC modes to Home Assistant
@@ -152,12 +156,6 @@ class Control4Climate(Control4Entity, ClimateEntity):
 
     _attr_has_entity_name = True
     _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
-    _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE
-        | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-        | ClimateEntityFeature.TURN_ON
-        | ClimateEntityFeature.TURN_OFF
-    )
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT, HVACMode.COOL, HVACMode.HEAT_COOL]
 
     def __init__(
@@ -199,6 +197,19 @@ class Control4Climate(Control4Entity, ClimateEntity):
     def _thermostat_data(self) -> dict[str, Any] | None:
         """Return the thermostat data from the coordinator."""
         return self.coordinator.data.get(self._idx)
+
+    @property
+    def supported_features(self) -> ClimateEntityFeature:
+        """Return the list of supported features."""
+        features = (
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            | ClimateEntityFeature.TURN_ON
+            | ClimateEntityFeature.TURN_OFF
+        )
+        if self.fan_modes:
+            features |= ClimateEntityFeature.FAN_MODE
+        return features
 
     @property
     def current_temperature(self) -> float | None:
@@ -271,6 +282,28 @@ class Control4Climate(Control4Entity, ClimateEntity):
             return data.get(CONTROL4_HEAT_SETPOINT)
         return None
 
+    @property
+    def fan_mode(self) -> str | None:
+        """Return the current fan mode."""
+        data = self._thermostat_data
+        if data is None:
+            return None
+        return data.get(CONTROL4_FAN_MODE)
+
+    @property
+    def fan_modes(self) -> list[str] | None:
+        """Return the list of available fan modes."""
+        data = self._thermostat_data
+        if data is None:
+            return None
+        modes = data.get(CONTROL4_FAN_MODES_LIST)
+        if modes is None:
+            return None
+        # Handle both string (comma-separated) and list formats
+        if isinstance(modes, str):
+            return [m.strip() for m in modes.split(",") if m.strip()]
+        return list(modes) if modes else None
+
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target HVAC mode."""
         c4_hvac_mode = HA_TO_C4_HVAC_MODE[hvac_mode]
@@ -298,4 +331,10 @@ class Control4Climate(Control4Entity, ClimateEntity):
             elif self.hvac_mode == HVACMode.HEAT:
                 await c4_climate.setHeatSetpointF(temp)
 
+        await self.coordinator.async_request_refresh()
+
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
+        """Set new target fan mode."""
+        c4_climate = self._create_api_object()
+        await c4_climate.setFanMode(fan_mode)
         await self.coordinator.async_request_refresh()

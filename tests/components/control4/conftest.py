@@ -102,6 +102,8 @@ def mock_climate_variables() -> dict:
             "HUMIDITY": 45,
             "COOL_SETPOINT_F": 75.0,
             "HEAT_SETPOINT_F": 68.0,
+            "FAN_MODE": "Auto",
+            "FAN_MODES_LIST": "Auto,On,Circulate",
         }
     }
 
@@ -132,6 +134,7 @@ def mock_c4_climate() -> Generator[MagicMock]:
         mock_instance.setHvacMode = AsyncMock()
         mock_instance.setHeatSetpointF = AsyncMock()
         mock_instance.setCoolSetpointF = AsyncMock()
+        mock_instance.setFanMode = AsyncMock()
         yield mock_instance
 
 
