@@ -218,42 +218,54 @@ async def test_export_rule_restore(
 
 
 @pytest.mark.parametrize(
-    ("site_data", "current_option", "expected_state"),
+    ("previous_data", "new_data", "expected_state"),
     [
         # Path 1: Customer selected export option (has value)
         (
             {
+                "customer_preferred_export_rule": "battery_ok",
+                "non_export_configured": None,
+            },
+            {
                 "customer_preferred_export_rule": "pv_only",
                 "non_export_configured": None,
             },
-            EnergyExportMode.BATTERY_OK.value,
             EnergyExportMode.PV_ONLY.value,
         ),
         # Path 2: In VPP, Export is disabled (non_export_configured is True)
         (
             {
+                "customer_preferred_export_rule": "battery_ok",
+                "non_export_configured": None,
+            },
+            {
                 "customer_preferred_export_rule": None,
                 "non_export_configured": True,
             },
-            EnergyExportMode.BATTERY_OK.value,
             EnergyExportMode.NEVER.value,
         ),
         # Path 3: In VPP, Export enabled but state shows disabled (current_option is NEVER)
         (
             {
+                "customer_preferred_export_rule": "never",
+                "non_export_configured": None,
+            },
+            {
                 "customer_preferred_export_rule": None,
                 "non_export_configured": None,
             },
-            EnergyExportMode.NEVER.value,
             STATE_UNKNOWN,
         ),
         # Path 4: In VPP Mode, Export isn't disabled, use last known state
         (
             {
+                "customer_preferred_export_rule": "battery_ok",
+                "non_export_configured": None,
+            },
+            {
                 "customer_preferred_export_rule": None,
                 "non_export_configured": None,
             },
-            EnergyExportMode.BATTERY_OK.value,
             EnergyExportMode.BATTERY_OK.value,
         ),
     ],
@@ -262,36 +274,23 @@ async def test_export_rule_update_attrs_logic(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_site_info: AsyncMock,
-    site_data: dict,
-    current_option: str | None,
+    previous_data: dict,
+    new_data: str | None,
     expected_state: str,
 ) -> None:
     """Test all logic paths in TeslemetryExportRuleSelectEntity._async_update_attrs."""
     # Create site info with the test data
     test_site_info = deepcopy(SITE_INFO)
-    test_site_info["response"]["components"].update(site_data)
-
+    test_site_info["response"]["components"].update(previous_data)
     mock_site_info.side_effect = lambda: test_site_info
 
     # Set up platform
     await setup_platform(hass, [Platform.SELECT])
 
-    entity_id = "select.energy_site_allow_export"
-
-    # If we need to set a current option first, do it via service call
-    with patch(
-        "tesla_fleet_api.teslemetry.EnergySite.grid_import_export",
-        return_value=COMMAND_OK,
-    ):
-        await hass.services.async_call(
-            SELECT_DOMAIN,
-            SERVICE_SELECT_OPTION,
-            {
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_OPTION: current_option,
-            },
-            blocking=True,
-        )
+    # Change the state
+    test_site_info = deepcopy(SITE_INFO)
+    test_site_info["response"]["components"].update(new_data)
+    mock_site_info.side_effect = lambda: test_site_info
 
     # Coordinator refresh
     freezer.tick(ENERGY_INFO_INTERVAL)
@@ -299,6 +298,6 @@ async def test_export_rule_update_attrs_logic(
     await hass.async_block_till_done()
 
     # Check the final state matches expected
-    state = hass.states.get(entity_id)
+    state = hass.states.get("select.energy_site_allow_export")
     assert state
     assert state.state == expected_state
