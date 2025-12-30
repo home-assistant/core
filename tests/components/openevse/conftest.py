@@ -42,6 +42,18 @@ def mock_bad_charger():
 
 
 @pytest.fixture
+def mock_flaky_charger():
+    """Create a mock OpenEVSE charger."""
+    with patch(
+        "homeassistant.components.openevse.config_flow.openevsewifi.Charger"
+    ) as mock:
+        charger = MagicMock()
+        charger.getStatus.side_effect = [AttributeError, "Charging"]
+        mock.return_value = charger
+        yield charger
+
+
+@pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
