@@ -123,7 +123,11 @@ async def async_migrate_entry(
             else:
                 _LOGGER.debug("Skipping entity with unique_id: %s", reg_entry.unique_id)
         hass.config_entries.async_update_entry(config_entry, minor_version=2)
-
+    if config_entry.version == 1:
+        username = config_entry.data[CONF_USERNAME].lower()
+        hass.config_entries.async_update_entry(
+            config_entry, unique_id=username, version=2
+        )
     return True
 
 

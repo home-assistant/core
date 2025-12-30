@@ -29,7 +29,7 @@ DATA_SCHEMA = vol.Schema(
 class VeSyncFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
-    VERSION = 1
+    VERSION = 2
     MINOR_VERSION = 2
 
     @callback
@@ -45,14 +45,15 @@ class VeSyncFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow start."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
 
         if not user_input:
             return self._show_form()
 
-        username = user_input[CONF_USERNAME]
+        username = user_input[CONF_USERNAME].lower()
         password = user_input[CONF_PASSWORD]
+
+        await self.async_set_unique_id(username)
+        self._abort_if_unique_id_configured()
 
         time_zone = str(self.hass.config.time_zone)
 
@@ -85,9 +86,11 @@ class VeSyncFlowHandler(ConfigFlow, domain=DOMAIN):
         """Confirm re-authentication with vesync."""
 
         if user_input:
-            username = user_input[CONF_USERNAME]
+            username = user_input[CONF_USERNAME].lower()
             password = user_input[CONF_PASSWORD]
 
+            await self.async_set_unique_id(username)
+            self._abort_if_unique_id_configured(updates={CONF_USERNAME: username})
             time_zone = str(self.hass.config.time_zone)
 
             manager = VeSync(
@@ -109,6 +112,7 @@ class VeSyncFlowHandler(ConfigFlow, domain=DOMAIN):
 
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(),
+                unique_id=username,
                 data_updates={
                     CONF_USERNAME: username,
                     CONF_PASSWORD: password,
