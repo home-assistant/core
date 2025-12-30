@@ -60,3 +60,45 @@ class StiebelEltronConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a reconfiguration flow."""
+        config_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        assert config_entry is not None
+
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            error = await check_controller_model(
+                user_input[CONF_HOST], user_input[CONF_PORT]
+            )
+            if error is not None:
+                errors["base"] = error
+            else:
+                return self.async_update_reload_and_abort(
+                    config_entry,
+                    reason="reconfigure_successful",
+                    data_updates={
+                        CONF_HOST: user_input[CONF_HOST],
+                        CONF_PORT: user_input[CONF_PORT],
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_HOST, default=config_entry.data.get(CONF_HOST)
+                    ): str,
+                    vol.Required(
+                        CONF_PORT,
+                        default=config_entry.data.get(CONF_PORT, DEFAULT_PORT),
+                    ): int,
+                }
+            ),
+            errors=errors,
+        )

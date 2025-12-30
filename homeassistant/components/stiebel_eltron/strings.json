@@ -3,6 +3,7 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
@@ -18,6 +19,16 @@
         "data_description": {
           "host": "The hostname or IP address of your Stiebel Eltron device.",
           "port": "The port of your Stiebel Eltron device."
+        }
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "[%key:component::stiebel_eltron::config::step::user::data_description::host%]",
+          "port": "[%key:component::stiebel_eltron::config::step::user::data_description::port%]"
         }
       }
     }
