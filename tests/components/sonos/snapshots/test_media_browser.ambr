@@ -32,6 +32,17 @@
         'can_play': False,
         'can_search': False,
         'children_media_class': None,
+        'media_class': 'podcast',
+        'media_content_id': 'object.container.podcast',
+        'media_content_type': 'favorites_folder',
+        'thumbnail': None,
+        'title': 'Podcast',
+      }),
+      dict({
+        'can_expand': True,
+        'can_play': False,
+        'can_search': False,
+        'children_media_class': None,
         'media_class': 'track',
         'media_content_id': 'object.item.audioItem.audioBook',
         'media_content_type': 'favorites_folder',
@@ -84,6 +95,33 @@
     'not_shown': 0,
     'thumbnail': None,
     'title': 'Albums',
+  })
+# ---
+# name: test_browse_media_favorites[object.container.podcast-favorites_folder]
+  dict({
+    'can_expand': True,
+    'can_play': False,
+    'can_search': False,
+    'children': list([
+      dict({
+        'can_expand': False,
+        'can_play': True,
+        'can_search': False,
+        'children_media_class': None,
+        'media_class': 'podcast',
+        'media_content_id': 'FV:2/11',
+        'media_content_type': 'favorite_item_id',
+        'thumbnail': 'https://www.radiofrance.fr/s3/cruiser-production/2023/05/67b86ee2-78c7-41a9-9d89-62c95e619036/1000x1000_sc_les-p-tits-bateaux.jpg',
+        'title': "Les P'tits Bateaux",
+      }),
+    ]),
+    'children_media_class': 'podcast',
+    'media_class': 'directory',
+    'media_content_id': '',
+    'media_content_type': 'favorites',
+    'not_shown': 0,
+    'thumbnail': None,
+    'title': 'Podcast',
   })
 # ---
 # name: test_browse_media_favorites[object.item.audioItem.audioBook-favorites_folder]
