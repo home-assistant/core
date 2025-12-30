@@ -319,29 +319,25 @@ async def test_q7_registry_entries(
 
 
 @pytest.mark.parametrize(
-    ("service", "api_method", "service_params", "called_params", "expected_activity"),
+    ("service", "api_method", "service_params", "expected_activity"),
     [
-        (SERVICE_START, "start_clean", None, None, "cleaning"),
-        (SERVICE_PAUSE, "pause_clean", None, None, "paused"),
-        (SERVICE_STOP, "stop_clean", None, None, "idle"),
-        (SERVICE_RETURN_TO_BASE, "return_to_dock", None, None, "returning"),
-        (SERVICE_LOCATE, "find_me", None, None, None),
-        (SERVICE_SET_FAN_SPEED, "set_fan_speed", {"fan_speed": "quiet"}, None, None),
-        (SERVICE_SEND_COMMAND, "send", {"command": "test_command"}, None, None),
+        (SERVICE_START, "start_clean", None, "cleaning"),
+        (SERVICE_PAUSE, "pause_clean", None, "paused"),
+        (SERVICE_STOP, "stop_clean", None, "idle"),
+        (SERVICE_RETURN_TO_BASE, "return_to_dock", None, "returning"),
     ],
 )
-async def test_q7_commands(
+async def test_q7_state_changing_commands(
     hass: HomeAssistant,
     setup_entry: MockConfigEntry,
     service: str,
     api_method: str,
     service_params: dict[str, Any] | None,
-    called_params: list | None,
-    expected_activity: str | None,
+    expected_activity: str,
     q7_vacuum_api: Mock,
     fake_q7_vacuum: FakeDevice,
 ) -> None:
-    """Test sending commands to the Q7 vacuum."""
+    """Test sending state-changing commands to the Q7 vacuum."""
     vacuum = hass.states.get(Q7_ENTITY_ID)
     assert vacuum
 
@@ -354,21 +350,77 @@ async def test_q7_commands(
     )
     api_call = getattr(q7_vacuum_api, api_method)
     assert api_call.call_count == 1
-    if called_params is not None:
-        assert api_call.call_args[0] == tuple(called_params)
+    assert api_call.call_args[0] == ()
 
-    # Verify the entity state was updated for state-changing commands
-    if expected_activity is not None:
-        assert fake_q7_vacuum.b01_q7_properties is not None
-        # Force coordinator refresh to get updated state
-        config_entry = setup_entry
-        coordinator = config_entry.runtime_data.b01[0]
+    # Verify the entity state was updated
+    assert fake_q7_vacuum.b01_q7_properties is not None
+    # Force coordinator refresh to get updated state
+    coordinator = setup_entry.runtime_data.b01[0]
 
-        await coordinator.async_refresh()
-        await hass.async_block_till_done()
-        vacuum = hass.states.get(Q7_ENTITY_ID)
-        assert vacuum
-        assert vacuum.state == expected_activity
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+    vacuum = hass.states.get(Q7_ENTITY_ID)
+    assert vacuum
+    assert vacuum.state == expected_activity
+
+
+async def test_q7_locate_command(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    q7_vacuum_api: Mock,
+) -> None:
+    """Test sending locate command to the Q7 vacuum."""
+    vacuum = hass.states.get(Q7_ENTITY_ID)
+    assert vacuum
+
+    await hass.services.async_call(
+        Platform.VACUUM,
+        SERVICE_LOCATE,
+        {ATTR_ENTITY_ID: Q7_ENTITY_ID},
+        blocking=True,
+    )
+    assert q7_vacuum_api.find_me.call_count == 1
+    assert q7_vacuum_api.find_me.call_args[0] == ()
+
+
+async def test_q7_set_fan_speed_command(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    q7_vacuum_api: Mock,
+) -> None:
+    """Test sending set_fan_speed command to the Q7 vacuum."""
+    vacuum = hass.states.get(Q7_ENTITY_ID)
+    assert vacuum
+
+    await hass.services.async_call(
+        Platform.VACUUM,
+        SERVICE_SET_FAN_SPEED,
+        {ATTR_ENTITY_ID: Q7_ENTITY_ID, "fan_speed": "quiet"},
+        blocking=True,
+    )
+    assert q7_vacuum_api.set_fan_speed.call_count == 1
+    # set_fan_speed is called with the fan speed value as first argument
+    assert len(q7_vacuum_api.set_fan_speed.call_args[0]) == 1
+
+
+async def test_q7_send_command(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    q7_vacuum_api: Mock,
+) -> None:
+    """Test sending custom command to the Q7 vacuum."""
+    vacuum = hass.states.get(Q7_ENTITY_ID)
+    assert vacuum
+
+    await hass.services.async_call(
+        Platform.VACUUM,
+        SERVICE_SEND_COMMAND,
+        {ATTR_ENTITY_ID: Q7_ENTITY_ID, "command": "test_command"},
+        blocking=True,
+    )
+    assert q7_vacuum_api.send.call_count == 1
+    # send is called with command as first argument and params as second
+    assert q7_vacuum_api.send.call_args[0] == ("test_command", None)
 
 
 @pytest.mark.parametrize(
