@@ -502,7 +502,9 @@ class StateVacuumEntity(
 
     async def async_clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
         """Perform an area clean."""
-        await self.hass.async_add_executor_job(partial(self.clean_segments, **kwargs))
+        await self.hass.async_add_executor_job(
+            partial(self.clean_segments, segment_ids, **kwargs)
+        )
 
     @callback
     def async_create_segments_issue(self) -> None:
