@@ -19,9 +19,11 @@ if TYPE_CHECKING:
 
 @dataclass
 class HypontechSensorData:
-    """Representing different Hypontech sensor data."""
+    """Representing different Hypontech sensor data.
 
-    # plant_data: PlantData
+    It contains only OverviewData for now, but Hypontech has other kind of data like PlantData that we plan to add support later.
+    """
+
     overview_data: OverviewData
 
 
