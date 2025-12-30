@@ -51,7 +51,6 @@ ALL_BINARY_SENSORS = [
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
-    Platform.NOTIFY,
     Platform.SENSOR,
 ]
 
@@ -102,13 +101,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: NetgearLTEConfigEntry) -
         hass,
         Platform.NOTIFY,
         DOMAIN,
-        {CONF_NAME: entry.title, "modem": modem},
+        {CONF_NAME: entry.title, "modem": modem, "entry": entry},
         hass.data[DATA_HASS_CONFIG],
     )
 
-    await hass.config_entries.async_forward_entry_setups(
-        entry, [platform for platform in PLATFORMS if platform != Platform.NOTIFY]
-    )
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
