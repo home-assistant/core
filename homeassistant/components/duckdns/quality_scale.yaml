@@ -43,7 +43,7 @@ rules:
   reauthentication-flow:
     status: exempt
     comment: service does not explicitly return authentication errors
-  test-coverage: todo
+  test-coverage: done
 
   # Gold
   devices:
