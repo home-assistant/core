@@ -6,7 +6,7 @@ from PySrDaliGateway import CallbackEventType
 from PySrDaliGateway.types import MotionState
 import pytest
 
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -154,14 +154,14 @@ async def test_illuminance_sensor_on_off_callback(
 
     state = hass.states.get(TEST_ILLUMINANCE_ENTITY_ID)
     assert state is not None
-    assert state.state == "unknown"
+    assert state.state == STATE_UNKNOWN
 
     on_off_callback(True)
     await hass.async_block_till_done()
 
     state = hass.states.get(TEST_ILLUMINANCE_ENTITY_ID)
     assert state is not None
-    assert state.state == "unknown"
+    assert state.state == STATE_UNKNOWN
 
 
 @pytest.mark.usefixtures("init_integration")
