@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 
 import openevsewifi
@@ -27,7 +26,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -64,6 +62,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="rtc_temp",
@@ -71,6 +70,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="usage_session",
@@ -98,8 +98,6 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
         ),
     }
 )
-
-SCAN_INTERVAL = timedelta(minutes=1)
 
 
 async def async_setup_platform(
@@ -139,7 +137,7 @@ async def async_setup_platform(
         hass,
         DOMAIN,
         "deprecated_yaml",
-        breaks_in_ha_version="2026.4.0",
+        breaks_in_ha_version="2026.7.0",
         is_fixable=False,
         issue_domain=DOMAIN,
         severity=ir.IssueSeverity.WARNING,
@@ -166,7 +164,8 @@ async def async_setup_entry(
                 description,
             )
             for description in SENSOR_TYPES
-        ]
+        ],
+        True,
     )
 
 
@@ -181,7 +180,7 @@ class OpenEVSESensor(SensorEntity):
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        self._attr_unique_id = entry_id
+        self._attr_unique_id = f"{entry_id}-{description.key}"
         self.entity_description = description
         self.host = host
         self.charger = charger
@@ -208,18 +207,7 @@ class OpenEVSESensor(SensorEntity):
                 self._attr_native_value = float(self.charger.getUsageSession()) / 1000
             elif sensor_type == "usage_total":
                 self._attr_native_value = float(self.charger.getUsageTotal()) / 1000
-            elif sensor_type == "charging_current":
-                self._attr_native_value = self.charger.charging_current
             else:
                 self._attr_native_value = "Unknown"
         except (RequestException, ValueError, KeyError):
             _LOGGER.warning("Could not update status for %s", self.name)
-
-    @property
-    def device_info(self) -> DeviceInfo | None:
-        """Return device information for the OpenEVSE charger."""
-        return {
-            "identifiers": {("openevse", self.host)},
-            "name": f"OpenEVSE {self.host}",
-            "manufacturer": "OpenEVSE",
-        }

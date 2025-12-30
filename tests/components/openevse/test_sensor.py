@@ -5,7 +5,6 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import async_update_entity
 
@@ -24,19 +23,8 @@ def mock_charger():
         charger.getRTCTemperature.return_value = 28.7
         charger.getUsageSession.return_value = 15000  # 15 kWh in Wh
         charger.getUsageTotal.return_value = 500000  # 500 kWh in Wh
-        charger.charging_current = 32.0
         mock.return_value = charger
         yield charger
-
-
-@pytest.fixture
-def mock_config_entry():
-    """Create a mock config entry."""
-    return MockConfigEntry(
-        domain="openevse",
-        data={CONF_HOST: "192.168.1.100"},
-        unique_id="192.168.1.100",
-    )
 
 
 async def test_sensor_setup(
@@ -70,6 +58,3 @@ async def test_sensor_setup(
 
     state = hass.states.get("sensor.total_usage")
     assert state.state == "500.0"
-
-    state = hass.states.get("sensor.current_charging_current")
-    assert state.state == "32.0"
