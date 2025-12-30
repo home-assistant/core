@@ -511,6 +511,44 @@
       },
       "washing_left": {
         "name": "Washing left"
+      },
+      "zeo_error": {
+        "name": "Error",
+        "state": {
+          "communication_error": "Communication error",
+          "door_lock_error": "Door lock error",
+          "drain_error": "Drain error",
+          "drying_error": "Drying error",
+          "drying_error_e_12": "Drying error E12",
+          "drying_error_e_13": "Drying error E13",
+          "drying_error_e_14": "Drying error E14",
+          "drying_error_e_15": "Drying error E15",
+          "drying_error_e_16": "Drying error E16",
+          "drying_error_restart": "Restart the washer",
+          "drying_error_water_flow": "Check water flow",
+          "heating_error": "Heating error",
+          "inverter_error": "Inverter error",
+          "none": "[%key:component::roborock::entity::sensor::vacuum_error::state::none%]",
+          "refill_error": "Refill error",
+          "spin_error": "Re-arrange clothes",
+          "temperature_error": "Temperature error",
+          "water_level_error": "Water level error"
+        }
+      },
+      "zeo_state": {
+        "name": "State",
+        "state": {
+          "cooling": "Cooling",
+          "done": "Done",
+          "drying": "Drying",
+          "rinsing": "Rinsing",
+          "soaking": "Soaking",
+          "spinning": "Spinning",
+          "standby": "[%key:common::state::standby%]",
+          "under_delay_start": "Delayed start",
+          "washing": "Washing",
+          "weighing": "Weighing"
+        }
       }
     },
     "switch": {
