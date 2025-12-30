@@ -5,6 +5,7 @@ DOMAIN = "levelhome"
 # Config keys
 CONF_OAUTH2_BASE_URL = "oauth2_base_url"
 CONF_PARTNER_BASE_URL = "partner_base_url"
+CONF_CONTACT_INFO = "contact_info"
 
 # Default base URLs (can be overridden via YAML options or other configuration)
 DEFAULT_OAUTH2_BASE_URL = "https://oauth2-dev.level.co"

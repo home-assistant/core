@@ -3,9 +3,13 @@
     "step": {
       "user": {
         "title": "Connect Level account",
-        "description": "Optionally override server URLs for testing.",
+        "description": "Enter your email address or phone number to receive a verification code.",
         "data": {
+          "contact_info": "Email or phone number",
           "partner_base_url": "Partner server base URL"
+        },
+        "data_description": {
+          "contact_info": "Enter your email address or phone number (e.g., user@example.com or +1234567890)"
         }
       },
       "verify": {

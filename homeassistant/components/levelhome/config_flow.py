@@ -16,6 +16,7 @@ from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
 from .const import (
+    CONF_CONTACT_INFO,
     CONF_PARTNER_BASE_URL,
     DEFAULT_PARTNER_BASE_URL,
     DEVICE_CODE_INITIATE_PATH,
@@ -39,6 +40,8 @@ class OAuth2FlowHandler(
         self._code_verifier: str | None = None
         self._partner_base_url: str = DEFAULT_PARTNER_BASE_URL
         self._poll_interval: int = 5
+        self._contact_info: str | None = None
+        self._delivery_method: str = "email"
 
     @property
     def logger(self) -> logging.Logger:
@@ -53,6 +56,17 @@ class OAuth2FlowHandler(
     def _build_partner_url(self, path: str) -> str:
         """Build a partner server URL by appending path to the base URL."""
         return f"{self._partner_base_url}{path}"
+
+    def _detect_contact_type(self, contact: str) -> tuple[str, str]:
+        """Detect if contact is email or phone and return (delivery_method, normalized_contact)."""
+        import re
+        contact = contact.strip()
+        if "@" in contact and re.match(r"^[^@]+@[^@]+\.[^@]+$", contact):
+            return "email", contact
+        phone = re.sub(r"[^\d+]", "", contact)
+        if phone and (phone.startswith("+") or len(phone) >= 10):
+            return "sms", phone
+        return "email", contact
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -80,6 +94,7 @@ class OAuth2FlowHandler(
                 step_id="user",
                 data_schema=vol.Schema(
                     {
+                        vol.Required(CONF_CONTACT_INFO): str,
                         vol.Optional(CONF_PARTNER_BASE_URL, default=default_partner): str,
                     }
                 ),
@@ -88,6 +103,9 @@ class OAuth2FlowHandler(
         self._partner_base_url = user_input.get(
             CONF_PARTNER_BASE_URL, default_partner
         ).rstrip("/")
+
+        contact_info = user_input[CONF_CONTACT_INFO]
+        self._delivery_method, self._contact_info = self._detect_contact_type(contact_info)
 
         self.hass.data.setdefault(DOMAIN, {})[CONF_PARTNER_BASE_URL] = self._partner_base_url
 
@@ -124,8 +142,13 @@ class OAuth2FlowHandler(
                 "code_challenge": code_challenge,
                 "code_challenge_method": "S256",
                 "scope": "all",
-                "delivery_method": "email",
+                "delivery_method": self._delivery_method,
             }
+            if self._contact_info:
+                if self._delivery_method == "email":
+                    payload["email"] = self._contact_info
+                else:
+                    payload["phone_number"] = self._contact_info
 
             async with session.post(initiate_url, json=payload) as resp:
                 if resp.status >= HTTPStatus.BAD_REQUEST:
