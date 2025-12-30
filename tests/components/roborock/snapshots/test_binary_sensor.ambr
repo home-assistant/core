@@ -1,0 +1,125 @@
+# serializer version: 1
+# name: test_binary_sensors
+  list([
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'connectivity',
+        'friendly_name': 'Roborock S7 MaxV Mop attached',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.roborock_s7_maxv_mop_attached',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'connectivity',
+        'friendly_name': 'Roborock S7 MaxV Water box attached',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.roborock_s7_maxv_water_box_attached',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'problem',
+        'friendly_name': 'Roborock S7 MaxV Water shortage',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.roborock_s7_maxv_water_shortage',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'running',
+        'friendly_name': 'Roborock S7 MaxV Cleaning',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.roborock_s7_maxv_cleaning',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'battery_charging',
+        'friendly_name': 'Roborock S7 MaxV Charging',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.roborock_s7_maxv_charging',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'connectivity',
+        'friendly_name': 'Roborock S7 2 Mop attached',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.roborock_s7_2_mop_attached',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'connectivity',
+        'friendly_name': 'Roborock S7 2 Water box attached',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.roborock_s7_2_water_box_attached',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'problem',
+        'friendly_name': 'Roborock S7 2 Water shortage',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.roborock_s7_2_water_shortage',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'running',
+        'friendly_name': 'Roborock S7 2 Cleaning',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.roborock_s7_2_cleaning',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'off',
+    }),
+    StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'battery_charging',
+        'friendly_name': 'Roborock S7 2 Charging',
+      }),
+      'context': <ANY>,
+      'entity_id': 'binary_sensor.roborock_s7_2_charging',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'on',
+    }),
+  ])
+# ---
