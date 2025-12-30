@@ -121,7 +121,7 @@ async def test_import_flow_flaky(
     mock_flaky_charger: MagicMock,
     mock_setup_entry: AsyncMock,
 ) -> None:
-    """Test import flow with bad charger."""
+    """Test import flow with flaky charger."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_IMPORT}, data={CONF_HOST: "10.0.0.131"}
     )
