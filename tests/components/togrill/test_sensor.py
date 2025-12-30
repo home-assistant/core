@@ -82,6 +82,14 @@ async def test_setup(
             [PacketA1Notify([10, None, 25])],
             id="ambient_temp_with_missing_probe",
         ),
+        pytest.param(
+            [PacketA1Notify([])],
+            id="ambient_empty_temperatures",
+        ),
+        pytest.param(
+            [PacketA1Notify([10, 20, None])],
+            id="ambient_temp_none",
+        ),
     ],
 )
 async def test_setup_with_ambient(
