@@ -15,13 +15,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import HypontechConfigEntry
-from .const import DOMAIN
 from .coordinator import HypontechDataCoordinator
+from .entity import HypontechEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -72,13 +70,10 @@ async def async_setup_entry(
     )
 
 
-class HypontechSensorWithDescription(
-    CoordinatorEntity[HypontechDataCoordinator], SensorEntity
-):
+class HypontechSensorWithDescription(HypontechEntity, SensorEntity):
     """Class describing Hypontech sensor entities."""
 
     entity_description: HypontechSensorDescription
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -89,9 +84,6 @@ class HypontechSensorWithDescription(
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
-        )
 
     @property
     def native_value(self) -> float | None:

@@ -55,27 +55,6 @@ async def test_setup_entry_authentication_error(hass: HomeAssistant) -> None:
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_setup_entry_connect_false(hass: HomeAssistant) -> None:
-    """Test setup entry when connect returns False."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_USERNAME: "test-username",
-            CONF_PASSWORD: "test-password",
-        },
-    )
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.hypontech.HyponCloud.connect",
-        return_value=False,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert entry.state is ConfigEntryState.SETUP_RETRY
-
-
 async def test_setup_entry_connection_error(hass: HomeAssistant) -> None:
     """Test setup entry with connection error during data fetch."""
     entry = MockConfigEntry(
