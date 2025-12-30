@@ -411,13 +411,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         # invoke the service for each target
         for target_config_entry, target_chat_id, target_notify_entity_id in targets:
-            if not hasattr(target_config_entry, "runtime_data"):
-                raise ServiceValidationError(
-                    "No config entries found or setup failed. Please set up the Telegram Bot first.",
-                    translation_domain=DOMAIN,
-                    translation_key="missing_config_entry",
-                )
-
             try:
                 service_response = await _call_service(
                     service, target_config_entry.runtime_data, target_chat_id
@@ -588,12 +581,12 @@ def _deprecate_timeout(hass: HomeAssistant, service: ServiceCall) -> None:
 
 def _build_targets(
     hass: HomeAssistant, service: ServiceCall
-) -> list[tuple[TelegramBotConfigEntry, int, str | None]]:
+) -> list[tuple[TelegramBotConfigEntry, int, str]]:
     """Build list of targets where each target is represented by its corresponding config entry, chat ID and notify entity id."""
 
     migrate_chat_ids = _warn_chat_id_migration(hass, service)
 
-    targets: list[tuple[TelegramBotConfigEntry, int, str | None]] = []
+    targets: list[tuple[TelegramBotConfigEntry, int, str]] = []
 
     # build target list from notify entities using service data: `entity_id`
 
@@ -646,10 +639,10 @@ def _build_targets(
     if config_entry is not None:
         chat_ids = migrate_chat_ids
         if ATTR_CHAT_ID in service.data:
-            chat_ids = chat_ids | set(
-                [service.data[ATTR_CHAT_ID]]
+            chat_ids = chat_ids | (
+                {int(service.data[ATTR_CHAT_ID])}
                 if isinstance(service.data[ATTR_CHAT_ID], int)
-                else service.data[ATTR_CHAT_ID]
+                else set(map(int, set(service.data[ATTR_CHAT_ID])))
             )
 
         if not chat_ids and not targets:
@@ -672,20 +665,36 @@ def _build_targets(
             )
             chat_ids = {default_chat_id}
 
+        invalid_chat_ids: set[int] = set()
         for chat_id in chat_ids:
             # map chat_id to notify entity ID
 
-            entity_id: str | None = None
-            if hasattr(
-                config_entry, "runtime_data"
-            ):  # this can be None due to disabled config entry, re-auth etc.
-                entity_id = entity_registry.async_get_entity_id(
-                    "notify",
-                    DOMAIN,
-                    f"{config_entry.runtime_data.bot.id}_{chat_id}",
+            if not hasattr(config_entry, "runtime_data"):
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="missing_config_entry",
                 )
 
-            targets.append((config_entry, chat_id, entity_id))
+            entity_id = entity_registry.async_get_entity_id(
+                "notify",
+                DOMAIN,
+                f"{config_entry.runtime_data.bot.id}_{chat_id}",
+            )
+
+            if not entity_id:
+                invalid_chat_ids.add(chat_id)
+            else:
+                targets.append((config_entry, chat_id, entity_id))
+
+        if invalid_chat_ids:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_chat_ids",
+                translation_placeholders={
+                    "chat_ids": ", ".join(str(chat_id) for chat_id in invalid_chat_ids),
+                    "bot_name": config_entry.title,
+                },
+            )
 
     # we're done building targets from service data
     if targets:
