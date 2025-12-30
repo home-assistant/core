@@ -265,6 +265,13 @@ A01_SENSOR_DESCRIPTIONS: list[RoborockSensorDescriptionA01] = [
         options=RoborockDyadStateCode.keys(),
     ),
     RoborockSensorDescriptionA01(
+        key="battery",
+        data_protocol=RoborockDyadDataProtocol.POWER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
+    ),
+    RoborockSensorDescriptionA01(
         key="filter_time_left",
         data_protocol=RoborockDyadDataProtocol.MESH_LEFT,
         suggested_unit_of_measurement=UnitOfTime.HOURS,
@@ -283,7 +290,7 @@ A01_SENSOR_DESCRIPTIONS: list[RoborockSensorDescriptionA01] = [
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     RoborockSensorDescriptionA01(
-        key="dyad_error",
+        key="error",
         data_protocol=RoborockDyadDataProtocol.ERROR,
         device_class=SensorDeviceClass.ENUM,
         translation_key="a01_error",
@@ -303,6 +310,7 @@ A01_SENSOR_DESCRIPTIONS: list[RoborockSensorDescriptionA01] = [
         key="state",
         data_protocol=RoborockZeoProtocol.STATE,
         translation_key="zeo_state",
+        entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENUM,
         options=ZeoState.keys(),
     ),
@@ -320,12 +328,14 @@ A01_SENSOR_DESCRIPTIONS: list[RoborockSensorDescriptionA01] = [
         data_protocol=RoborockZeoProtocol.WASHING_LEFT,
         device_class=SensorDeviceClass.DURATION,
         translation_key="washing_left",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     RoborockSensorDescriptionA01(
-        key="zeo_error",
+        key="error",
         data_protocol=RoborockZeoProtocol.ERROR,
         device_class=SensorDeviceClass.ENUM,
-        translation_key="error",
+        translation_key="zeo_error",
+        entity_category=EntityCategory.DIAGNOSTIC,
         options=ZeoError.keys(),
     ),
     # Additional Zeo sensors
