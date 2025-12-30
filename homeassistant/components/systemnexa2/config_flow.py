@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_NAME,
 )
 from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util.network import is_ip_address
 
@@ -75,7 +76,10 @@ class SystemNexa2ConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_add_by_ip_or_hostname(self, host_or_ip: str) -> ConfigFlowResult:
         if not _is_valid_host(host_or_ip):
             return self.async_abort(reason="invalid_host")
-        temp_dev = await Device.initiate_device(host=host_or_ip)
+        temp_dev = await Device.initiate_device(
+            host=host_or_ip,
+            session=async_get_clientsession(self.hass),
+        )
 
         try:
             info = await temp_dev.get_info()
