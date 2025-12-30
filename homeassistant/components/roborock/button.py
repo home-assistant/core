@@ -75,7 +75,6 @@ class RoborockButtonDescriptionA01(ButtonEntityDescription):
     """Describes a Roborock A01 button entity."""
 
     data_protocol: RoborockZeoProtocol
-    param: Any = None
 
 
 A01_BUTTON_DESCRIPTIONS = [
@@ -221,18 +220,12 @@ class RoborockButtonEntityA01(RoborockCoordinatedEntityA01, ButtonEntity):
     async def async_press(self) -> None:
         """Press the button."""
         try:
-            if self.entity_description.param is not None:
-                await self.coordinator.api.set_value(
-                    self.entity_description.data_protocol,
-                    self.entity_description.param,
-                )
-            else:
-                await self.coordinator.api.set_value(
-                    self.entity_description.data_protocol,
-                    1,  # Default value for button press
-                )
+            await self.coordinator.api.set_value(  # type: ignore[attr-defined]
+                self.entity_description.data_protocol,
+                1,
+            )
             await self.coordinator.async_request_refresh()
-        except Exception as err:
+        except RoborockException as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="button_press_failed",

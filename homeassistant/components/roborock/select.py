@@ -7,6 +7,7 @@ import logging
 
 from roborock.data import (
     RoborockDockDustCollectionModeCode,
+    RoborockEnum,
     ZeoDryingMode,
     ZeoMode,
     ZeoProgram,
@@ -66,10 +67,8 @@ class RoborockSelectDescriptionA01(SelectEntityDescription):
 
     # The protocol that the select entity will send to the api.
     data_protocol: RoborockZeoProtocol
-    # Available options for the select entity
-    options: list[str]
-    # Maps option names to their protocol values
-    option_values: dict[str, int]
+    # Enum class for the select entity
+    enum_class: type[RoborockEnum]
 
 
 SELECT_DESCRIPTIONS: list[RoborockSelectDescription] = [
@@ -122,50 +121,44 @@ A01_SELECT_DESCRIPTIONS: list[RoborockSelectDescriptionA01] = [
     RoborockSelectDescriptionA01(
         key="program",
         data_protocol=RoborockZeoProtocol.PROGRAM,
-        translation_key="zeo_program",
+        translation_key="program",
         entity_category=EntityCategory.CONFIG,
-        options=list(ZeoProgram.keys()),
-        option_values=dict(ZeoProgram.as_dict().items()),
+        enum_class=ZeoProgram,
     ),
     RoborockSelectDescriptionA01(
         key="mode",
         data_protocol=RoborockZeoProtocol.MODE,
-        translation_key="zeo_mode",
+        translation_key="mode",
         entity_category=EntityCategory.CONFIG,
-        options=list(ZeoMode.keys()),
-        option_values=dict(ZeoMode.as_dict().items()),
+        enum_class=ZeoMode,
     ),
     RoborockSelectDescriptionA01(
         key="temperature",
         data_protocol=RoborockZeoProtocol.TEMP,
-        translation_key="zeo_temperature",
+        translation_key="temperature",
         entity_category=EntityCategory.CONFIG,
-        options=list(ZeoTemperature.keys()),
-        option_values=dict(ZeoTemperature.as_dict().items()),
+        enum_class=ZeoTemperature,
     ),
     RoborockSelectDescriptionA01(
         key="drying_mode",
         data_protocol=RoborockZeoProtocol.DRYING_MODE,
-        translation_key="zeo_drying_mode",
+        translation_key="drying_mode",
         entity_category=EntityCategory.CONFIG,
-        options=list(ZeoDryingMode.keys()),
-        option_values=dict(ZeoDryingMode.as_dict().items()),
+        enum_class=ZeoDryingMode,
     ),
     RoborockSelectDescriptionA01(
         key="spin_level",
         data_protocol=RoborockZeoProtocol.SPIN_LEVEL,
-        translation_key="zeo_spin_level",
+        translation_key="spin_level",
         entity_category=EntityCategory.CONFIG,
-        options=list(ZeoSpin.keys()),
-        option_values=dict(ZeoSpin.as_dict().items()),
+        enum_class=ZeoSpin,
     ),
     RoborockSelectDescriptionA01(
         key="rinse_times",
         data_protocol=RoborockZeoProtocol.RINSE_TIMES,
-        translation_key="zeo_rinse_times",
+        translation_key="rinse_times",
         entity_category=EntityCategory.CONFIG,
-        options=list(ZeoRinse.keys()),
-        option_values=dict(ZeoRinse.as_dict().items()),
+        enum_class=ZeoRinse,
     ),
 ]
 
@@ -317,20 +310,22 @@ class RoborockSelectEntityA01(RoborockCoordinatedEntityA01, SelectEntity):
             f"{entity_description.key}_{coordinator.duid_slug}",
             coordinator,
         )
-        self._attr_options = entity_description.options
+        self._attr_options = list(entity_description.enum_class.keys())
 
     async def async_select_option(self, option: str) -> None:
         """Set the option."""
         try:
             # Get the protocol value for the selected option
-            value = self.entity_description.option_values.get(option)
-            if value is not None:
-                await self.coordinator.api.set_value(
-                    self.entity_description.data_protocol,
-                    value,
-                )
-                await self.coordinator.async_request_refresh()
-        except Exception as err:
+            option_values = self.entity_description.enum_class.as_dict()
+            if option not in option_values:
+                raise ValueError(f"Invalid option: {option}")
+            value = option_values[option]
+            await self.coordinator.api.set_value(  # type: ignore[attr-defined]
+                self.entity_description.data_protocol,
+                value,
+            )
+            await self.coordinator.async_request_refresh()
+        except RoborockException as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="select_option_failed",
@@ -346,10 +341,9 @@ class RoborockSelectEntityA01(RoborockCoordinatedEntityA01, SelectEntity):
         if current_value is None:
             return None
         _LOGGER.debug(
-            "current_value: %s for %s with values %s",
+            "current_value: %s for %s",
             current_value,
             self.entity_description.key,
-            self.entity_description.option_values,
         )
         # Find the option name that matches the current value
-        return current_value
+        return str(current_value)
