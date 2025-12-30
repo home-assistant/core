@@ -12,7 +12,6 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
@@ -34,13 +33,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     """
     session = async_get_clientsession(hass)
     hypon = HyponCloud(data[CONF_USERNAME], data[CONF_PASSWORD], session)
-    try:
-        if not await hypon.connect():
-            raise CannotConnect
-    except TimeoutError:
-        raise CannotConnect from None
-    except AuthenticationError:
-        raise InvalidAuth from None
+    await hypon.connect()
 
 
 class HypontechConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -54,10 +47,10 @@ class HypontechConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 await validate_input(self.hass, user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
+            except AuthenticationError:
                 errors["base"] = "invalid_auth"
+            except (TimeoutError, ConnectionError):
+                errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -93,10 +86,10 @@ class HypontechConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 await validate_input(self.hass, user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
+            except AuthenticationError:
                 errors["base"] = "invalid_auth"
+            except (TimeoutError, ConnectionError):
+                errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -120,11 +113,3 @@ class HypontechConfigFlow(ConfigFlow, domain=DOMAIN):
                 "username": reauth_entry.data[CONF_USERNAME],
             },
         )
-
-
-class CannotConnect(HomeAssistantError):
-    """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""

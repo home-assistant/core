@@ -2,10 +2,10 @@
 
 from unittest.mock import AsyncMock, patch
 
+from hyponcloud import AuthenticationError
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.hypontech.config_flow import CannotConnect, InvalidAuth
 from homeassistant.components.hypontech.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -24,7 +24,6 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
 
     with patch(
         "homeassistant.components.hypontech.config_flow.HyponCloud.connect",
-        return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -54,7 +53,7 @@ async def test_form_invalid_auth(
 
     with patch(
         "homeassistant.components.hypontech.config_flow.HyponCloud.connect",
-        side_effect=InvalidAuth,
+        side_effect=AuthenticationError,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -72,7 +71,6 @@ async def test_form_invalid_auth(
     # we can show the config flow is able to recover from an error.
     with patch(
         "homeassistant.components.hypontech.config_flow.HyponCloud.connect",
-        return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -102,7 +100,7 @@ async def test_form_cannot_connect(
 
     with patch(
         "homeassistant.components.hypontech.config_flow.HyponCloud.connect",
-        side_effect=CannotConnect,
+        side_effect=ConnectionError,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -121,7 +119,6 @@ async def test_form_cannot_connect(
 
     with patch(
         "homeassistant.components.hypontech.config_flow.HyponCloud.connect",
-        return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -168,7 +165,6 @@ async def test_form_timeout(hass: HomeAssistant, mock_setup_entry: AsyncMock) ->
 
     with patch(
         "homeassistant.components.hypontech.config_flow.HyponCloud.connect",
-        return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -223,7 +219,6 @@ async def test_duplicate_entry(
 
     with patch(
         "homeassistant.components.hypontech.config_flow.HyponCloud.connect",
-        return_value=True,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
