@@ -79,6 +79,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
                 map_scale=MAP_SCALE,
             ),
             mqtt_session_unauthorized_hook=lambda: entry.async_start_reauth(hass),
+            prefer_cache=False,
         )
     except RoborockInvalidCredentials as err:
         raise ConfigEntryAuthFailed(
