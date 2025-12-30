@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import logging
-
 from pyportainer import Portainer
 
 from homeassistant.config_entries import ConfigEntry
@@ -28,8 +26,6 @@ _PLATFORMS: list[Platform] = [
     Platform.SWITCH,
     Platform.BUTTON,
 ]
-
-_LOGGER = logging.getLogger(__name__)
 
 
 type PortainerConfigEntry = ConfigEntry[PortainerCoordinator]
@@ -96,6 +92,5 @@ async def async_remove_config_entry_device(
         for endpoint in coordinator.data.values()
         for container_name in endpoint.containers
     )
-    _LOGGER.debug("Valid identifiers: %s", valid_identifiers)
 
     return not device.identifiers.intersection(valid_identifiers)
