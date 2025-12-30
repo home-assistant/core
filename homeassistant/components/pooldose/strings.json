@@ -261,5 +261,13 @@
         "name": "Pump monitoring"
       }
     }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Value can not be set because the device is not connected"
+    },
+    "write_rejected": {
+      "message": "The device rejected the value for {entity}: {value}"
+    }
   }
 }
