@@ -29,12 +29,9 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
 
-    coordinator = config_entry.runtime_data.status
-    consoles_coordinator = config_entry.runtime_data.consoles
-
     presence = [
         async_redact_data(person.model_dump(), TO_REDACT)
-        for person in coordinator.data.presence.values()
+        for person in config_entry.runtime_data.presence.data.presence.values()
     ]
     consoles_status = [
         {
@@ -43,10 +40,16 @@ async def async_get_config_entry_diagnostics(
                 console.app_details.model_dump() if console.app_details else None
             ),
         }
-        for console in coordinator.data.consoles.values()
+        for console in config_entry.runtime_data.status.data.values()
     ]
-    consoles_list = consoles_coordinator.data.model_dump()
-    title_info = [title.model_dump() for title in coordinator.data.title_info.values()]
+    consoles_list = [
+        console.model_dump()
+        for console in config_entry.runtime_data.consoles.data.values()
+    ]
+    title_info = [
+        title.model_dump()
+        for title in config_entry.runtime_data.presence.data.title_info.values()
+    ]
 
     return {
         "consoles_status": consoles_status,
