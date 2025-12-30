@@ -1,0 +1,51 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "flow_title": "{name}",
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of your HDFury device."
+        },
+        "description": "Set up your HDFury to integrate with Home Assistant."
+      }
+    }
+  },
+  "entity": {
+    "select": {
+      "opmode": {
+        "name": "Operation Mode"
+      },
+      "portseltx0": {
+        "name": "Port Select TX0"
+      },
+      "portseltx1": {
+        "name": "Port Select TX1"
+      }
+    }
+  },
+  "exceptions": {
+    "communication_error": {
+      "message": "Error communicating with HDFury device: {error}"
+    },
+    "data_error": {
+      "message": "Data inconsistency: {error}"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "Set user-friendly names for each HDMI input.",
+        "title": "Customize Input Labels"
+      }
+    }
+  }
+}
