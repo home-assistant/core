@@ -21,6 +21,7 @@ from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     _LOGGER,
+    ALL_MATCH_REGEX,
     CONF_AREA_FILTER,
     CONF_FILTERS,
     CONF_HEADLINE_FILTER,
@@ -168,9 +169,20 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
 
             errors["base"] = "no_selection"
 
+        default_filters = {
+            CONF_FILTERS: {
+                CONF_HEADLINE_FILTER: NO_MATCH_REGEX,
+                CONF_AREA_FILTER: ALL_MATCH_REGEX,
+            }
+        }
+
+        schema_with_suggested = self.add_suggested_values_to_schema(
+            create_schema(self.regions), default_filters
+        )
+
         return self.async_show_form(
             step_id="user",
-            data_schema=create_schema(self.regions),
+            data_schema=schema_with_suggested,
             errors=errors,
         )
 

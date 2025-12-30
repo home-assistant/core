@@ -24,7 +24,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, ENDPOINT_STATUS_DOWN
+from .const import CONTAINER_STATE_RUNNING, DOMAIN, ENDPOINT_STATUS_DOWN
 
 type PortainerConfigEntry = ConfigEntry[PortainerCoordinator]
 
@@ -158,10 +158,11 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                         ),
                     )
                     for container in containers
+                    if container.state == CONTAINER_STATE_RUNNING
                 ]
 
                 container_stats_gather = await asyncio.gather(
-                    *[task for _, task in container_stats_task],
+                    *[task for _, task in container_stats_task]
                 )
                 for (container, _), container_stats in zip(
                     container_stats_task, container_stats_gather, strict=False

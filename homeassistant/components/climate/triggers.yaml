@@ -65,6 +65,48 @@ hvac_mode_changed:
             - unknown
           multiple: true
 
+current_humidity_changed:
+  target: *trigger_climate_target
+  fields:
+    above: *number_or_entity
+    below: *number_or_entity
+
+current_humidity_crossed_threshold:
+  target: *trigger_climate_target
+  fields:
+    behavior: *trigger_behavior
+    threshold_type: *trigger_threshold_type
+    lower_limit: *number_or_entity
+    upper_limit: *number_or_entity
+
+target_humidity_changed:
+  target: *trigger_climate_target
+  fields:
+    above: *number_or_entity
+    below: *number_or_entity
+
+target_humidity_crossed_threshold:
+  target: *trigger_climate_target
+  fields:
+    behavior: *trigger_behavior
+    threshold_type: *trigger_threshold_type
+    lower_limit: *number_or_entity
+    upper_limit: *number_or_entity
+
+current_temperature_changed:
+  target: *trigger_climate_target
+  fields:
+    above: *number_or_entity
+    below: *number_or_entity
+
+current_temperature_crossed_threshold:
+  target: *trigger_climate_target
+  fields:
+    behavior: *trigger_behavior
+    threshold_type: *trigger_threshold_type
+    lower_limit: *number_or_entity
+    upper_limit: *number_or_entity
+
 target_temperature_changed:
   target: *trigger_climate_target
   fields:
