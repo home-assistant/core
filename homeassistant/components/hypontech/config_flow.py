@@ -46,8 +46,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 class HypontechConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Hypontech Cloud."""
 
-    VERSION = 1
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
