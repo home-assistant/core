@@ -151,15 +151,11 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
         reconfigure_entry = self._get_reconfigure_entry()
         # Show form to enter new host
         if not user_input:
-            # Pre-fill with current host from the entry being reconfigured
             return self.async_show_form(
                 step_id="reconfigure",
-                data_schema=vol.Schema(
-                    {
-                        vol.Required(
-                            CONF_HOST, default=reconfigure_entry.data[CONF_HOST]
-                        ): cv.string
-                    }
+                # Pre-fill with current host from the entry being reconfigured
+                data_schema=self.add_suggested_values_to_schema(
+                    SCHEMA_DEVICE, reconfigure_entry.data
                 ),
             )
 
@@ -168,7 +164,7 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
         if errors:
             return self.async_show_form(
                 step_id="reconfigure",
-                data_schema=vol.Schema({vol.Required(CONF_HOST): cv.string}),
+                data_schema=SCHEMA_DEVICE,
                 errors=errors,
                 description_placeholders={
                     "api_version_is": api_versions.get("api_version_is") or "",
