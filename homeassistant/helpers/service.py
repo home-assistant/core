@@ -35,7 +35,6 @@ from homeassistant.core import (
     HassJob,
     HassJobType,
     HomeAssistant,
-    Service,
     ServiceCall,
     ServiceResponse,
     SupportsResponse,
@@ -729,14 +728,14 @@ def _filter_entities(
     entity_device_classes: Iterable[str | None] | None,
     required_features: Iterable[int] | None,
     referenced: target_helpers.SelectedEntities | None,
-    service_obj: Service,
+    config_entries_with_overrides: set[ConfigEntry],
     domain: str,
     service: str,
 ) -> tuple[list[Entity], dict[ConfigEntry, set[Entity]]]:
     """Return a list of entities that pass availability, device class, and features."""
     filtered: list[Entity] = []
     per_entry_entities: dict[ConfigEntry, set[Entity]] = {
-        ce: set() for ce in service_obj.overrides
+        ce: set() for ce in config_entries_with_overrides
     }
 
     for entity in entity_candidates:
@@ -759,11 +758,17 @@ def _filter_entities(
                 if referenced and entity.entity_id in referenced.referenced:
                     raise ServiceNotSupported(domain, service, entity.entity_id)
                 continue
-        ce = entity.platform.config_entry
-        if ce in per_entry_entities:
+        platform = entity.platform
+        ce = platform.config_entry if platform is not None else None
+        if ce in config_entries_with_overrides:
             per_entry_entities[ce].add(entity)
         else:
             filtered.append(entity)
+
+    # remove empty entity lists
+    per_entry_entities = {
+        ce: entities for ce, entities in per_entry_entities.items() if entities
+    }
 
     return filtered, per_entry_entities
 
@@ -879,13 +884,18 @@ async def entity_service_call(
             missing.discard(entity.entity_id)
         referenced.log_missing(missing, _LOGGER)
 
-    service_obj = hass.services.async_services_internal()[call.domain][call.service]
+    services = hass.services.async_services_internal()
+    domain_services = services.get(call.domain)
+    registered_service = domain_services.get(call.service) if domain_services else None
+    config_overrides = registered_service.overrides if registered_service else {}
+    config_entries_with_overrides = set(config_overrides.keys())
+
     entities, per_config_entities = _filter_entities(
         entity_candidates,
         entity_device_classes,
         required_features,
         referenced,
-        service_obj,
+        config_entries_with_overrides,
         call.domain,
         call.service,
     )
@@ -903,7 +913,7 @@ async def entity_service_call(
         _service_call_wrapper(
             hass=hass,
             entities=entities_set,
-            handler=service_obj.overrides[ce],
+            handler=config_overrides[ce],
             config_entry=ce,
             call=call,
             data=data,
