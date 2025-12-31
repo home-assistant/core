@@ -76,6 +76,8 @@ class Elke27Hub:
         """Connect the client, then await readiness."""
         result = await self._client.connect(self._link_keys, panel=self._panel)
         if not result.ok:
+            if isinstance(result.error, Exception):
+                raise result.error
             raise RuntimeError(result.error or "Connect failed")
 
         if not self._client.is_ready:

@@ -14,7 +14,11 @@ _package_module.client = _client_module
 sys.modules.setdefault("elke27_lib", _package_module)
 sys.modules.setdefault("elke27_lib.client", _client_module)
 
-from homeassistant.components.elke27.const import DOMAIN
+from homeassistant.components.elke27.const import (
+    CONF_INTEGRATION_SERIAL,
+    CONF_LINK_KEYS,
+    DOMAIN,
+)
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -66,7 +70,12 @@ async def test_area_entities_and_updates(hass: HomeAssistant) -> None:
 
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: "192.168.1.60", CONF_PORT: 2101},
+        data={
+            CONF_HOST: "192.168.1.60",
+            CONF_PORT: 2101,
+            CONF_LINK_KEYS: {"link_key": "lk", "link_hmac": "lh"},
+            CONF_INTEGRATION_SERIAL: "11:22:33:44:55:66",
+        },
     )
     entry.add_to_hass(hass)
 

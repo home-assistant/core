@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 import contextlib
 from dataclasses import asdict, is_dataclass
-import json
 import logging
 from typing import Any
 
@@ -18,16 +17,20 @@ from homeassistant.helpers import config_validation as cv
 from elke27_lib.client import Elke27Client
 
 from .const import (
+    CONF_INTEGRATION_SERIAL,
     CONF_LINK_KEYS,
     CONF_PANEL,
     DEFAULT_PORT,
     DOMAIN,
     READY_TIMEOUT,
 )
+from .identity import async_get_integration_serial
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_DEVICE = "device"
+CONF_ACCESS_CODE = "access_code"
+CONF_PASSPHRASE = "passphrase"
 CONF_PANEL_INFO = "panel_info"
 CONF_TABLE_INFO = "table_info"
 
@@ -39,13 +42,13 @@ STEP_MANUAL_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): vol.Coerce(int),
-        vol.Optional(CONF_LINK_KEYS, default=""): cv.string,
     }
 )
 
-STEP_LINK_DATA_SCHEMA = vol.Schema(
+STEP_CREDENTIALS_DATA_SCHEMA = vol.Schema(
     {
-        vol.Optional(CONF_LINK_KEYS, default=""): cv.string,
+        vol.Required(CONF_ACCESS_CODE): cv.string,
+        vol.Required(CONF_PASSPHRASE): cv.string,
     }
 )
 
@@ -62,6 +65,7 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
         self._selected_panel: Any | None = None
         self._selected_host: str | None = None
         self._selected_port: int | None = None
+        self._reauth_entry: Any | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -87,7 +91,7 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
             self._selected_panel = panel
             self._selected_host = host
             self._selected_port = port
-            return await self.async_step_link()
+            return await self.async_step_credentials()
 
         panels = await self._async_discover()
         if panels:
@@ -112,17 +116,11 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             host = user_input[CONF_HOST]
             port = user_input[CONF_PORT]
-            link_keys = _parse_link_keys(user_input.get(CONF_LINK_KEYS, ""))
-            if link_keys is _INVALID_LINK_KEYS:
-                errors["base"] = "invalid_link_keys"
-            else:
-                self._async_abort_entries_match({CONF_HOST: host, CONF_PORT: port})
-                return await self._async_create_entry(
-                    host=host,
-                    port=port,
-                    link_keys=link_keys,
-                    panel=None,
-                )
+            self._async_abort_entries_match({CONF_HOST: host, CONF_PORT: port})
+            self._selected_host = host
+            self._selected_port = port
+            self._selected_panel = None
+            return await self.async_step_credentials()
 
         return self.async_show_form(
             step_id="manual",
@@ -130,48 +128,112 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_link(
+    async def async_step_credentials(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle optional link keys after discovery selection."""
+        """Handle access code and passphrase entry."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            link_keys = _parse_link_keys(user_input.get(CONF_LINK_KEYS, ""))
-            if link_keys is _INVALID_LINK_KEYS:
-                errors["base"] = "invalid_link_keys"
-            else:
-                return await self._async_create_entry(
-                    host=self._selected_host,
-                    port=self._selected_port,
-                    link_keys=link_keys,
-                    panel=self._selected_panel,
-                )
+            access_code = user_input[CONF_ACCESS_CODE]
+            passphrase = user_input[CONF_PASSPHRASE]
+            return await self._async_link_and_create_entry(
+                host=self._selected_host,
+                port=self._selected_port,
+                panel=self._selected_panel,
+                access_code=access_code,
+                passphrase=passphrase,
+                errors=errors,
+                step_id="credentials",
+            )
 
         return self.async_show_form(
-            step_id="link",
-            data_schema=STEP_LINK_DATA_SCHEMA,
+            step_id="credentials",
+            data_schema=STEP_CREDENTIALS_DATA_SCHEMA,
             errors=errors,
         )
 
-    async def _async_create_entry(
-        self, host: str, port: int, link_keys: Any, panel: Any | None
+    async def async_step_reauth(
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Connect, fetch snapshots, and create the entry."""
+        """Handle reauth for missing or invalid link keys."""
+        entry_id = self.context.get("entry_id")
+        self._reauth_entry = (
+            self.hass.config_entries.async_get_entry(entry_id)
+            if entry_id is not None
+            else None
+        )
+        return await self.async_step_relink(user_input)
+
+    async def async_step_relink(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Relink using access code and passphrase."""
         errors: dict[str, str] = {}
-        panel_info, table_info, error = await _async_connect_and_fetch(
-            host, port, link_keys, panel
+        if user_input is not None:
+            entry = self._reauth_entry
+            if entry is None:
+                return self.async_abort(reason="missing_context")
+
+            access_code = user_input[CONF_ACCESS_CODE]
+            passphrase = user_input[CONF_PASSPHRASE]
+            return await self._async_link_and_create_entry(
+                host=entry.data[CONF_HOST],
+                port=entry.data[CONF_PORT],
+                panel=entry.data.get(CONF_PANEL),
+                access_code=access_code,
+                passphrase=passphrase,
+                errors=errors,
+                step_id="relink",
+                entry=entry,
+            )
+
+        return self.async_show_form(
+            step_id="relink",
+            data_schema=STEP_CREDENTIALS_DATA_SCHEMA,
+            errors=errors,
+        )
+
+    async def _async_link_and_create_entry(
+        self,
+        host: str | None,
+        port: int | None,
+        panel: Any | None,
+        access_code: str,
+        passphrase: str,
+        errors: dict[str, str],
+        step_id: str,
+        entry: Any | None = None,
+    ) -> ConfigFlowResult:
+        """Link, connect, fetch snapshots, and create/update the entry."""
+        if host is None or port is None:
+            errors["base"] = "missing_context"
+            return self.async_show_form(
+                step_id=step_id,
+                data_schema=STEP_CREDENTIALS_DATA_SCHEMA,
+                errors=errors,
+            )
+
+        integration_serial = await async_get_integration_serial(
+            self.hass,
+            host,
+            entry.data.get(CONF_INTEGRATION_SERIAL) if entry is not None else None,
+        )
+
+        link_keys, panel_info, table_info, error = await _async_link_and_fetch(
+            host, port, access_code, passphrase, panel
         )
         if error:
             errors["base"] = error
             return self.async_show_form(
-                step_id="manual" if panel is None else "link",
-                data_schema=STEP_MANUAL_DATA_SCHEMA if panel is None else STEP_LINK_DATA_SCHEMA,
+                step_id=step_id,
+                data_schema=STEP_CREDENTIALS_DATA_SCHEMA,
                 errors=errors,
             )
 
         data: dict[str, Any] = {CONF_HOST: host, CONF_PORT: port}
         if link_keys is not None:
             data[CONF_LINK_KEYS] = link_keys
+        data[CONF_INTEGRATION_SERIAL] = integration_serial
         if panel is not None:
             data[CONF_PANEL] = _panel_to_dict(panel)
 
@@ -181,6 +243,15 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
         }
 
         title = panel_info.get("panel_name") if panel_info else host
+        if entry is not None:
+            self.hass.config_entries.async_update_entry(
+                entry,
+                data={**entry.data, **data},
+                options={**entry.options, **options},
+            )
+            await self.hass.config_entries.async_reload(entry.entry_id)
+            return self.async_abort(reason="reauth_successful")
+
         return self.async_create_entry(title=title, data=data, options=options)
 
     async def _async_discover(self) -> dict[str, Any]:
@@ -204,20 +275,6 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
             if panel_id:
                 panels[panel_id] = panel
         return panels
-
-
-_INVALID_LINK_KEYS = object()
-
-
-def _parse_link_keys(raw: str) -> Any:
-    """Parse link keys from a JSON string."""
-    raw = raw.strip()
-    if not raw:
-        return None
-    try:
-        return json.loads(raw)
-    except json.JSONDecodeError:
-        return _INVALID_LINK_KEYS
 
 
 def _panel_to_dict(panel: Any) -> dict[str, Any]:
@@ -254,22 +311,28 @@ def _panel_label(panel: dict[str, Any]) -> str:
     return name
 
 
-async def _async_connect_and_fetch(
+async def _async_link_and_fetch(
     host: str,
     port: int,
-    link_keys: Any,
+    access_code: str,
+    passphrase: str,
     panel: Any | None,
-) -> tuple[dict[str, Any], dict[str, Any], str | None]:
-    """Connect to the panel and return snapshots."""
+) -> tuple[Any, dict[str, Any], dict[str, Any], str | None]:
+    """Link, connect to the panel, and return snapshots."""
     client = Elke27Client(host, port)
     try:
+        link_result = await client.link(access_code, passphrase, panel=panel)
+        if not link_result.ok:
+            return None, {}, {}, _map_error(link_result.error)
+
+        link_keys = link_result.data
         result = await client.connect(link_keys, panel=panel)
         if not result.ok:
-            return {}, {}, _map_error(result.error)
+            return link_keys, {}, {}, _map_error(result.error)
 
         ready = await asyncio.to_thread(client.wait_ready, timeout_s=READY_TIMEOUT)
         if not ready:
-            return {}, {}, "cannot_connect"
+            return link_keys, {}, {}, "cannot_connect"
 
         panel_info = _snapshot_to_dict(
             client.panel_info,
@@ -293,10 +356,10 @@ async def _async_connect_and_fetch(
                 "thermostats",
             ],
         )
-        return panel_info, table_info, None
-    except Exception as err:
-        _LOGGER.debug("Connection setup failed: %s", err)
-        return {}, {}, "cannot_connect"
+        return link_keys, panel_info, table_info, None
+    except Exception:
+        _LOGGER.debug("Linking or connection setup failed")
+        return None, {}, {}, "cannot_connect"
     finally:
         with contextlib.suppress(Exception):
             await client.disconnect()
@@ -321,7 +384,7 @@ def _map_error(error: Any) -> str:
     name = error.__class__.__name__
     return {
         "InvalidLinkKeys": "invalid_link_keys",
-        "InvalidCredentials": "invalid_auth",
+        "InvalidCredentials": "invalid_credentials",
         "AuthorizationRequired": "authorization_required",
         "MissingContext": "missing_context",
         "ConnectionLost": "cannot_connect",

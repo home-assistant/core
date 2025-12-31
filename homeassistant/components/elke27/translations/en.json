@@ -1,12 +1,15 @@
 {
   "title": "Elke27",
   "config": {
+    "abort": {
+      "reauth_successful": "Linking was updated successfully."
+    },
     "error": {
       "authorization_required": "Authorization is required before the panel can be used.",
       "cannot_connect": "Unable to connect to the panel.",
-      "invalid_auth": "Invalid credentials.",
+      "invalid_credentials": "Invalid access code or passphrase.",
       "invalid_link_keys": "Invalid link keys.",
-      "missing_context": "Missing connection context. Check the panel and link keys.",
+      "missing_context": "Missing connection context. Check the panel information.",
       "unknown": "Unknown error"
     },
     "step": {
@@ -22,26 +25,38 @@
       },
       "manual": {
         "title": "Manual connection",
-        "description": "Enter the host, port, and optional link keys.",
+        "description": "Enter the host and port.",
         "data": {
           "host": "Host",
-          "port": "Port",
-          "link_keys": "Link keys (JSON)"
+          "port": "Port"
         },
         "data_description": {
           "host": "The panel host name or IP address.",
-          "port": "The TCP port for the panel.",
-          "link_keys": "Paste the link keys JSON provided during linking."
+          "port": "The TCP port for the panel."
         }
       },
-      "link": {
-        "title": "Link keys",
-        "description": "Provide link keys if required for this panel.",
+      "credentials": {
+        "title": "Link credentials",
+        "description": "Enter the access code and passphrase to link the panel.",
         "data": {
-          "link_keys": "Link keys (JSON)"
+          "access_code": "Access code",
+          "passphrase": "Passphrase"
         },
         "data_description": {
-          "link_keys": "Paste the link keys JSON provided during linking."
+          "access_code": "The panel access code used during linking.",
+          "passphrase": "The passphrase used during linking."
+        }
+      },
+      "relink": {
+        "title": "Relink panel",
+        "description": "Enter the access code and passphrase to relink the panel.",
+        "data": {
+          "access_code": "Access code",
+          "passphrase": "Passphrase"
+        },
+        "data_description": {
+          "access_code": "The panel access code used during linking.",
+          "passphrase": "The passphrase used during linking."
         }
       }
     }

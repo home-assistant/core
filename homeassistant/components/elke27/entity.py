@@ -8,7 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.device_registry import DeviceInfo
 
-from .const import DOMAIN
+from .const import CONF_INTEGRATION_SERIAL, DOMAIN, MANUFACTURER_NUMBER
 from .hub import Elke27Hub
 
 
@@ -25,7 +25,13 @@ def device_info_for_entry(hub: Elke27Hub, entry: ConfigEntry) -> DeviceInfo:
     panel_name = get_panel_field(hub, "panel_name") or entry.title
     mac = get_panel_field(hub, "panel_mac")
     identifiers = {(DOMAIN, mac)} if mac else {(DOMAIN, entry.entry_id)}
-    return DeviceInfo(identifiers=identifiers, name=panel_name)
+    serial = entry.data.get(CONF_INTEGRATION_SERIAL)
+    return DeviceInfo(
+        identifiers=identifiers,
+        name=panel_name,
+        manufacturer=str(MANUFACTURER_NUMBER),
+        serial_number=serial,
+    )
 
 
 def unique_base(hub: Elke27Hub, entry: ConfigEntry) -> str:

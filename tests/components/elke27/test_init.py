@@ -16,7 +16,13 @@ _package_module.client = _client_module
 sys.modules.setdefault("elke27_lib", _package_module)
 sys.modules.setdefault("elke27_lib.client", _client_module)
 
-from homeassistant.components.elke27.const import DEFAULT_PORT, DOMAIN, READY_TIMEOUT
+from homeassistant.components.elke27.const import (
+    CONF_INTEGRATION_SERIAL,
+    CONF_LINK_KEYS,
+    DEFAULT_PORT,
+    DOMAIN,
+    READY_TIMEOUT,
+)
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
@@ -51,7 +57,12 @@ async def test_setup_unload_calls_connect_disconnect_and_subscribe(
 
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: "192.168.1.10", CONF_PORT: DEFAULT_PORT},
+        data={
+            CONF_HOST: "192.168.1.10",
+            CONF_PORT: DEFAULT_PORT,
+            CONF_LINK_KEYS: {"link_key": "lk", "link_hmac": "lh"},
+            CONF_INTEGRATION_SERIAL: "11:22:33:44:55:66",
+        },
     )
     entry.add_to_hass(hass)
 
@@ -93,7 +104,12 @@ async def test_setup_waits_for_ready(
 
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: "192.168.1.11", CONF_PORT: DEFAULT_PORT},
+        data={
+            CONF_HOST: "192.168.1.11",
+            CONF_PORT: DEFAULT_PORT,
+            CONF_LINK_KEYS: {"link_key": "lk", "link_hmac": "lh"},
+            CONF_INTEGRATION_SERIAL: "11:22:33:44:55:66",
+        },
     )
     entry.add_to_hass(hass)
 
@@ -118,7 +134,12 @@ async def test_setup_failure_stops_client(
 
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: "192.168.1.12", CONF_PORT: DEFAULT_PORT},
+        data={
+            CONF_HOST: "192.168.1.12",
+            CONF_PORT: DEFAULT_PORT,
+            CONF_LINK_KEYS: {"link_key": "lk", "link_hmac": "lh"},
+            CONF_INTEGRATION_SERIAL: "11:22:33:44:55:66",
+        },
     )
     entry.add_to_hass(hass)
 

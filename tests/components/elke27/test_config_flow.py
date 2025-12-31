@@ -9,13 +9,6 @@ from dataclasses import dataclass
 from types import ModuleType
 from unittest.mock import AsyncMock, Mock, patch
 
-from homeassistant import config_entries
-from homeassistant.components.elke27.const import DEFAULT_PORT, DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
-
-
 _client_module = ModuleType("elke27_lib.client")
 _client_module.Elke27Client = object
 _client_module.Result = object
@@ -24,6 +17,17 @@ _package_module.client = _client_module
 sys.modules.setdefault("elke27_lib", _package_module)
 sys.modules.setdefault("elke27_lib.client", _client_module)
 
+from homeassistant import config_entries
+from homeassistant.components.elke27.const import (
+    CONF_INTEGRATION_SERIAL,
+    DEFAULT_PORT,
+    DOMAIN,
+)
+from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+
+from tests.common import MockConfigEntry
 
 @dataclass
 class FakeDiscoverResult:
@@ -91,24 +95,32 @@ async def test_user_flow_creates_entry(hass: HomeAssistant) -> None:
         return_value=FakeResult(ok=True, data=FakeDiscoverResult(panels=[]), error=None)
     )
 
-    connect_client = AsyncMock()
-    connect_client.connect = AsyncMock(
+    link_client = AsyncMock()
+    link_client.link = AsyncMock(
+        return_value=FakeResult(
+            ok=True, data={"link_key": "lk", "link_hmac": "lh"}, error=None
+        )
+    )
+    link_client.connect = AsyncMock(
         return_value=FakeResult(ok=True, data=None, error=None)
     )
-    connect_client.wait_ready = Mock(return_value=True)
-    connect_client.disconnect = AsyncMock(
+    link_client.wait_ready = Mock(return_value=True)
+    link_client.disconnect = AsyncMock(
         return_value=FakeResult(ok=True, data=None, error=None)
     )
-    connect_client.panel_info = FakePanelInfo(
+    link_client.panel_info = FakePanelInfo(
         panel_name="Test Panel",
         panel_mac="aa:bb:cc:dd:ee:ff",
         panel_serial="1234",
     )
-    connect_client.table_info = FakeTableInfo(areas=8, zones=16)
+    link_client.table_info = FakeTableInfo(areas=8, zones=16)
 
     with patch(
         "homeassistant.components.elke27.config_flow.Elke27Client",
-        side_effect=[discover_client, connect_client],
+        side_effect=[discover_client, link_client],
+    ), patch(
+        "homeassistant.components.elke27.config_flow.async_get_integration_serial",
+        AsyncMock(return_value="11:22:33:44:55:66"),
     ), patch(
         "homeassistant.components.elke27.async_setup_entry", return_value=True
     ):
@@ -127,12 +139,22 @@ async def test_user_flow_creates_entry(hass: HomeAssistant) -> None:
             },
         )
 
-        assert result2["type"] is FlowResultType.CREATE_ENTRY
-        assert result2["title"] == "Test Panel"
-        assert result2["data"][CONF_HOST] == "192.168.1.10"
-        assert result2["data"][CONF_PORT] == DEFAULT_PORT
-        assert "panel_info" in result2["options"]
-        assert "table_info" in result2["options"]
+        assert result2["type"] is FlowResultType.FORM
+        assert result2["step_id"] == "credentials"
+
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {"access_code": "1234", "passphrase": "test-pass"},
+        )
+
+        assert result3["type"] is FlowResultType.CREATE_ENTRY
+        assert result3["title"] == "Test Panel"
+        assert result3["data"][CONF_HOST] == "192.168.1.10"
+        assert result3["data"][CONF_PORT] == DEFAULT_PORT
+        assert "link_keys" in result3["data"]
+        assert result3["data"][CONF_INTEGRATION_SERIAL] == "11:22:33:44:55:66"
+        assert "panel_info" in result3["options"]
+        assert "table_info" in result3["options"]
 
 
 async def test_discovery_selection_creates_entry(hass: HomeAssistant) -> None:
@@ -151,24 +173,32 @@ async def test_discovery_selection_creates_entry(hass: HomeAssistant) -> None:
         )
     )
 
-    connect_client = AsyncMock()
-    connect_client.connect = AsyncMock(
+    link_client = AsyncMock()
+    link_client.link = AsyncMock(
+        return_value=FakeResult(
+            ok=True, data={"link_key": "lk", "link_hmac": "lh"}, error=None
+        )
+    )
+    link_client.connect = AsyncMock(
         return_value=FakeResult(ok=True, data=None, error=None)
     )
-    connect_client.wait_ready = Mock(return_value=True)
-    connect_client.disconnect = AsyncMock(
+    link_client.wait_ready = Mock(return_value=True)
+    link_client.disconnect = AsyncMock(
         return_value=FakeResult(ok=True, data=None, error=None)
     )
-    connect_client.panel_info = FakePanelInfo(
+    link_client.panel_info = FakePanelInfo(
         panel_name="Panel A",
         panel_mac="aa:bb:cc:dd:ee:11",
         panel_serial="5678",
     )
-    connect_client.table_info = FakeTableInfo(areas=2, zones=4)
+    link_client.table_info = FakeTableInfo(areas=2, zones=4)
 
     with patch(
         "homeassistant.components.elke27.config_flow.Elke27Client",
-        side_effect=[discover_client, connect_client],
+        side_effect=[discover_client, link_client],
+    ), patch(
+        "homeassistant.components.elke27.config_flow.async_get_integration_serial",
+        AsyncMock(return_value="11:22:33:44:55:66"),
     ), patch(
         "homeassistant.components.elke27.async_setup_entry", return_value=True
     ):
@@ -184,36 +214,44 @@ async def test_discovery_selection_creates_entry(hass: HomeAssistant) -> None:
             {"device": panel.panel_mac},
         )
         assert result2["type"] is FlowResultType.FORM
-        assert result2["step_id"] == "link"
+        assert result2["step_id"] == "credentials"
 
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
-            {},
+            {"access_code": "1234", "passphrase": "test-pass"},
         )
 
         assert result3["type"] is FlowResultType.CREATE_ENTRY
         assert result3["data"][CONF_HOST] == "192.168.1.20"
         assert result3["data"][CONF_PORT] == DEFAULT_PORT
+        assert "link_keys" in result3["data"]
+        assert result3["data"][CONF_INTEGRATION_SERIAL] == "11:22:33:44:55:66"
 
 
-async def test_manual_entry_handles_invalid_link_keys(hass: HomeAssistant) -> None:
-    """Test invalid link keys returns a form error."""
+async def test_invalid_credentials_returns_error(hass: HomeAssistant) -> None:
+    """Test invalid credentials returns a form error."""
     discover_client = AsyncMock()
     discover_client.discover = AsyncMock(
         return_value=FakeResult(ok=True, data=FakeDiscoverResult(panels=[]), error=None)
     )
 
-    connect_client = AsyncMock()
-    connect_client.connect = AsyncMock(
-        return_value=FakeResult(ok=False, data=None, error=RuntimeError("bad keys"))
+    class InvalidCredentials(Exception):
+        """Stub invalid credentials error."""
+
+    link_client = AsyncMock()
+    link_client.link = AsyncMock(
+        return_value=FakeResult(ok=False, data=None, error=InvalidCredentials())
     )
-    connect_client.disconnect = AsyncMock(
+    link_client.disconnect = AsyncMock(
         return_value=FakeResult(ok=True, data=None, error=None)
     )
 
     with patch(
         "homeassistant.components.elke27.config_flow.Elke27Client",
-        side_effect=[discover_client, connect_client],
+        side_effect=[discover_client, link_client],
+    ), patch(
+        "homeassistant.components.elke27.config_flow.async_get_integration_serial",
+        AsyncMock(return_value="11:22:33:44:55:66"),
     ), patch(
         "homeassistant.components.elke27.async_setup_entry", return_value=True
     ):
@@ -227,9 +265,78 @@ async def test_manual_entry_handles_invalid_link_keys(hass: HomeAssistant) -> No
             {
                 CONF_HOST: "192.168.1.30",
                 CONF_PORT: DEFAULT_PORT,
-                "link_keys": "{bad json",
             },
         )
 
         assert result2["type"] is FlowResultType.FORM
-        assert result2["errors"]["base"] == "invalid_link_keys"
+        assert result2["step_id"] == "credentials"
+
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {"access_code": "1234", "passphrase": "bad-pass"},
+        )
+
+        assert result3["type"] is FlowResultType.FORM
+        assert result3["errors"]["base"] == "invalid_credentials"
+
+
+async def test_relink_updates_entry(hass: HomeAssistant) -> None:
+    """Test relink flow updates entry with regenerated link keys."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Panel",
+        data={
+            CONF_HOST: "192.168.1.40",
+            CONF_PORT: DEFAULT_PORT,
+            CONF_INTEGRATION_SERIAL: "11:22:33:44:55:66",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    link_client = AsyncMock()
+    link_client.link = AsyncMock(
+        return_value=FakeResult(
+            ok=True, data={"link_key": "new", "link_hmac": "newh"}, error=None
+        )
+    )
+    link_client.connect = AsyncMock(
+        return_value=FakeResult(ok=True, data=None, error=None)
+    )
+    link_client.wait_ready = Mock(return_value=True)
+    link_client.disconnect = AsyncMock(
+        return_value=FakeResult(ok=True, data=None, error=None)
+    )
+    link_client.panel_info = FakePanelInfo(
+        panel_name="Panel",
+        panel_mac="aa:bb:cc:dd:ee:44",
+        panel_serial="9999",
+    )
+    link_client.table_info = FakeTableInfo(areas=1, zones=1)
+
+    with patch(
+        "homeassistant.components.elke27.config_flow.Elke27Client",
+        return_value=link_client,
+    ), patch(
+        "homeassistant.components.elke27.config_flow.async_get_integration_serial",
+        AsyncMock(return_value="11:22:33:44:55:66"),
+    ), patch(
+        "homeassistant.components.elke27.async_setup_entry", return_value=True
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_REAUTH,
+                "entry_id": entry.entry_id,
+            },
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "relink"
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"access_code": "1234", "passphrase": "new-pass"},
+        )
+
+        assert result2["type"] is FlowResultType.ABORT
+        assert result2["reason"] == "reauth_successful"
+        assert entry.data["link_keys"]["link_key"] == "new"
