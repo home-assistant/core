@@ -28,10 +28,6 @@ def mock_waterfurnace_client() -> Generator[Mock]:
             "homeassistant.components.waterfurnace.config_flow.WaterFurnace",
             autospec=True,
         ) as mock_client_class,
-        patch(
-            "homeassistant.components.waterfurnace.WaterFurnaceData",
-            new=mock_client_class,
-        ),
     ):
         mock_client = mock_client_class.return_value
 
