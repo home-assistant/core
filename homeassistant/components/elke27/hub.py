@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import asyncio
+import inspect
+import logging
 from typing import Any, Callable
 
 from elke27_lib.client import Elke27Client, Result
@@ -11,6 +13,7 @@ from homeassistant.core import callback
 
 from .const import READY_TIMEOUT
 
+_LOGGER = logging.getLogger(__name__)
 
 class Elke27Hub:
     """Manage a single Elke27 client instance and its snapshots."""
@@ -64,6 +67,11 @@ class Elke27Hub:
         """Register a listener for zone updates."""
         return self.async_add_listener(listener)
 
+    @callback
+    def async_add_output_listener(self, listener: Callable[[], None]) -> Callable[[], None]:
+        """Register a listener for output updates."""
+        return self.async_add_listener(listener)
+
     async def async_start(self) -> None:
         """Connect the client, then await readiness."""
         result = await self._client.connect(self._link_keys, panel=self._panel)
@@ -85,6 +93,39 @@ class Elke27Hub:
         """Disconnect the client and unregister event handlers."""
         self._client.unsubscribe(self._handle_event)
         await self._client.disconnect()
+
+    async def async_set_output(self, output_id: int, state: bool) -> bool:
+        """Request an output state change if supported."""
+        method = None
+        if hasattr(self._client, "set_output"):
+            method = self._client.set_output
+        elif hasattr(self._client, "set_output_state"):
+            method = self._client.set_output_state
+
+        if method is None:
+            _LOGGER.warning(
+                "Output control is not supported by the client for output %s",
+                output_id,
+            )
+            return False
+
+        if inspect.iscoroutinefunction(method):
+            result = await method(output_id, state)
+        else:
+            result = await asyncio.to_thread(method, output_id, state)
+
+        if isinstance(result, Result):
+            if not result.ok:
+                _LOGGER.warning(
+                    "Output %s state change failed: %s",
+                    output_id,
+                    result.error or "unknown error",
+                )
+                return False
+            return True
+        if isinstance(result, bool):
+            return result
+        return True
 
     def _handle_event(self, result: Result) -> None:
         """Handle semantic events from the client."""

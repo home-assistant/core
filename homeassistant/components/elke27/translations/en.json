@@ -52,6 +52,11 @@
         "name": "Zone"
       }
     },
+    "light": {
+      "output": {
+        "name": "Output"
+      }
+    },
     "sensor": {
       "panel_name": {
         "name": "Panel name"
