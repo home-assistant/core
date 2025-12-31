@@ -27,6 +27,8 @@ async def async_get_integration_serial(
         source_ip = await network.async_get_source_ip(hass, target_ip=target_ip)
     except Exception:
         return _generate_serial_number()
+    if not source_ip:
+        return _generate_serial_number()
     mac = await hass.async_add_executor_job(_get_mac_for_source_ip, source_ip)
     if mac:
         return mac
@@ -60,7 +62,6 @@ def _extract_mac(addrs: list[Any]) -> str | None:
     mac_families = {
         getattr(socket, "AF_PACKET", None),
         getattr(socket, "AF_LINK", None),
-        getattr(ha_psutil.psutil, "AF_LINK", None),
     }
     for addr in addrs:
         if addr.family in mac_families and addr.address:
