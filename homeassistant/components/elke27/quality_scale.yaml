@@ -1,0 +1,152 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: The integration does not register custom actions.
+  appropriate-polling:
+    status: exempt
+    comment: The integration does not poll in Milestone 0.
+  brands: done
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage:
+    status: exempt
+    comment: Config flow tests will be expanded in a later milestone.
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: The integration does not register custom actions.
+  docs-high-level-description:
+    status: exempt
+    comment: Documentation will be added when the integration is functional.
+  docs-installation-instructions:
+    status: exempt
+    comment: Documentation will be added when the integration is functional.
+  docs-removal-instructions:
+    status: exempt
+    comment: Documentation will be added when the integration is functional.
+  entity-event-setup:
+    status: exempt
+    comment: The integration does not create entities in Milestone 0.
+  entity-unique-id:
+    status: exempt
+    comment: The integration does not create entities in Milestone 0.
+  has-entity-name:
+    status: exempt
+    comment: The integration does not create entities in Milestone 0.
+  runtime-data:
+    status: exempt
+    comment: Runtime data will be migrated to ConfigEntry.runtime_data later.
+  test-before-configure:
+    status: exempt
+    comment: Connection testing will be added in a later milestone.
+  test-before-setup:
+    status: exempt
+    comment: Connection testing will be added in a later milestone.
+  unique-config-entry:
+    status: exempt
+    comment: Unique ID handling will be added in a later milestone.
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: The integration does not register custom actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: The integration has no options in Milestone 0.
+  docs-installation-parameters:
+    status: exempt
+    comment: The integration has no parameters in Milestone 0.
+  entity-unavailable:
+    status: exempt
+    comment: The integration does not create entities in Milestone 0.
+  integration-owner: done
+  log-when-unavailable:
+    status: exempt
+    comment: The integration does not create entities in Milestone 0.
+  parallel-updates:
+    status: exempt
+    comment: The integration does not create entities in Milestone 0.
+  reauthentication-flow:
+    status: exempt
+    comment: Authentication is not implemented in Milestone 0.
+  test-coverage:
+    status: exempt
+    comment: Full test coverage will be added in a later milestone.
+
+  # Gold
+  devices:
+    status: exempt
+    comment: The integration does not create devices in Milestone 0.
+  diagnostics:
+    status: exempt
+    comment: Diagnostics will be added in a later milestone.
+  discovery:
+    status: exempt
+    comment: Discovery will be added in a later milestone.
+  discovery-update-info:
+    status: exempt
+    comment: Discovery will be added in a later milestone.
+  docs-data-update:
+    status: exempt
+    comment: Documentation will be added when the integration is functional.
+  docs-examples:
+    status: exempt
+    comment: Documentation will be added when the integration is functional.
+  docs-known-limitations:
+    status: exempt
+    comment: Documentation will be added when the integration is functional.
+  docs-supported-devices:
+    status: exempt
+    comment: Documentation will be added when the integration is functional.
+  docs-supported-functions:
+    status: exempt
+    comment: Documentation will be added when the integration is functional.
+  docs-troubleshooting:
+    status: exempt
+    comment: Documentation will be added when the integration is functional.
+  docs-use-cases:
+    status: exempt
+    comment: Documentation will be added when the integration is functional.
+  dynamic-devices:
+    status: exempt
+    comment: The integration does not create devices in Milestone 0.
+  entity-category:
+    status: exempt
+    comment: The integration does not create entities in Milestone 0.
+  entity-device-class:
+    status: exempt
+    comment: The integration does not create entities in Milestone 0.
+  entity-disabled-by-default:
+    status: exempt
+    comment: The integration does not create entities in Milestone 0.
+  entity-translations:
+    status: exempt
+    comment: The integration does not create entities in Milestone 0.
+  exception-translations:
+    status: exempt
+    comment: The integration does not raise translated exceptions in Milestone 0.
+  icon-translations:
+    status: exempt
+    comment: The integration does not create entities in Milestone 0.
+  reconfiguration-flow:
+    status: exempt
+    comment: Reconfiguration will be added in a later milestone.
+  repair-issues:
+    status: exempt
+    comment: Repairs will be added in a later milestone.
+  stale-devices:
+    status: exempt
+    comment: The integration does not create devices in Milestone 0.
+
+  # Platinum
+  async-dependency:
+    status: exempt
+    comment: Dependencies are not introduced in Milestone 0.
+  inject-websession:
+    status: exempt
+    comment: Web session injection will be added with the client library.
+  strict-typing:
+    status: exempt
+    comment: Strict typing will be added in a later milestone.

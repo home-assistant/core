@@ -22,7 +22,6 @@ from homeassistant.components.sensor import (
 from homeassistant.const import EntityCategory, UnitOfElectricPotential
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 
@@ -67,28 +66,6 @@ async def async_setup_entry(
     create_elk_entities(elk_data, elk.zones, "zone", ElkZone, entities)
     async_add_entities(entities)
 
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_SENSOR_COUNTER_REFRESH,
-        None,
-        "async_counter_refresh",
-    )
-    platform.async_register_entity_service(
-        SERVICE_SENSOR_COUNTER_SET,
-        ELK_SET_COUNTER_SERVICE_SCHEMA,
-        "async_counter_set",
-    )
-    platform.async_register_entity_service(
-        SERVICE_SENSOR_ZONE_BYPASS,
-        ELK_USER_CODE_SERVICE_SCHEMA,
-        "async_zone_bypass",
-    )
-    platform.async_register_entity_service(
-        SERVICE_SENSOR_ZONE_TRIGGER,
-        None,
-        "async_zone_trigger",
-    )
 
 
 def temperature_to_state(temperature: int, undefined_temperature: int) -> str | None:

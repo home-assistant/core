@@ -19,7 +19,7 @@ from homeassistant.components.alarm_control_panel import (
     CodeFormat,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import VolDictType
@@ -64,38 +64,6 @@ async def async_setup_entry(
     create_elk_entities(elk_data, elk.areas, "area", ElkArea, entities)
     async_add_entities(entities)
 
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_ALARM_ARM_VACATION,
-        ELK_USER_CODE_SERVICE_SCHEMA,
-        "async_alarm_arm_vacation",
-    )
-    platform.async_register_entity_service(
-        SERVICE_ALARM_ARM_HOME_INSTANT,
-        ELK_USER_CODE_SERVICE_SCHEMA,
-        "async_alarm_arm_home_instant",
-    )
-    platform.async_register_entity_service(
-        SERVICE_ALARM_ARM_NIGHT_INSTANT,
-        ELK_USER_CODE_SERVICE_SCHEMA,
-        "async_alarm_arm_night_instant",
-    )
-    platform.async_register_entity_service(
-        SERVICE_ALARM_DISPLAY_MESSAGE,
-        DISPLAY_MESSAGE_SERVICE_SCHEMA,
-        "async_display_message",
-    )
-    platform.async_register_entity_service(
-        SERVICE_ALARM_BYPASS,
-        ELK_USER_CODE_SERVICE_SCHEMA,
-        "async_bypass",
-    )
-    platform.async_register_entity_service(
-        SERVICE_ALARM_CLEAR_BYPASS,
-        ELK_USER_CODE_SERVICE_SCHEMA,
-        "async_clear_bypass",
-    )
 
 
 class ElkArea(ElkAttachedEntity, AlarmControlPanelEntity, RestoreEntity):
