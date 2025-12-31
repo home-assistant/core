@@ -344,7 +344,28 @@ async def _async_link_and_fetch(
     """Link, connect to the panel, and return snapshots."""
     client = Elke27Client()
     try:
-        link_result = await client.link(access_code, passphrase, panel=panel)
+        try:
+            link_result = await client.link(
+                access_code=access_code,
+                passphrase=passphrase,
+                panel=panel,
+            )
+        except TypeError as err:
+            message = str(err)
+            if "passphrase" in message or "pass_phrase" in message:
+                link_result = await client.link(
+                    access_code=access_code,
+                    pass_phrase=passphrase,
+                    panel=panel,
+                )
+            elif "panel" in message:
+                link_result = await client.link(
+                    access_code=access_code,
+                    passphrase=passphrase,
+                )
+            else:
+                raise
+
         if not link_result.ok:
             return None, {}, {}, _map_error(link_result.error)
 
@@ -382,8 +403,9 @@ async def _async_link_and_fetch(
         return link_keys, panel_info, table_info, None
     except Exception as err:
         _LOGGER.debug(
-            "Linking or connection setup failed (%s)",
+            "Linking or connection setup failed (%s): %s",
             err.__class__.__name__,
+            err,
         )
         return None, {}, {}, "cannot_connect"
     finally:
