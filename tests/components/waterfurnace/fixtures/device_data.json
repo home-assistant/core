@@ -1,5 +1,5 @@
 {
-  "mode": "heating",
+  "modeofoperation": 6,
   "totalunitpower": 1500,
   "tstatactivesetpoint": 72,
   "leavingairtemp": 110.5,
