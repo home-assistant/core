@@ -1,0 +1,25 @@
+{
+  "installedAppId": "123aa123-2be1-4e40-b257-e4ef59083324",
+  "installedAppType": "WEBHOOK_SMART_APP",
+  "installedAppStatus": "PENDING",
+  "displayName": "pysmartthings",
+  "appId": "c6cde2b0-203e-44cf-a510-3b3ed4706996",
+  "referenceId": null,
+  "locationId": "397678e5-9995-4a39-9d9f-ae6ba310236b",
+  "owner": {
+    "ownerType": "USER",
+    "ownerId": "3c19270b-fca6-5cde-82bc-86a37e52cfa8"
+  },
+  "notices": [],
+  "createdDate": "2018-12-19T02:49:58Z",
+  "lastUpdatedDate": "2018-12-19T02:49:58Z",
+  "ui": {
+    "pluginId": null,
+    "dashboardCardsEnabled": false,
+    "preInstallDashboardCardsEnabled": false
+  },
+  "iconImage": {
+    "url": null
+  },
+  "classifications": ["AUTOMATION"]
+}

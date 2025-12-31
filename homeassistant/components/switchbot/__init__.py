@@ -46,6 +46,7 @@ PLATFORMS_BY_TYPE = {
     SupportedModels.HYGROMETER_CO2.value: [Platform.SENSOR],
     SupportedModels.CONTACT.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
     SupportedModels.MOTION.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
+    SupportedModels.PRESENCE_SENSOR.value: [Platform.BINARY_SENSOR, Platform.SENSOR],
     SupportedModels.HUMIDIFIER.value: [Platform.HUMIDIFIER, Platform.SENSOR],
     SupportedModels.LOCK.value: [
         Platform.BINARY_SENSOR,
@@ -107,6 +108,11 @@ PLATFORMS_BY_TYPE = {
         Platform.CLIMATE,
         Platform.SENSOR,
     ],
+    SupportedModels.ART_FRAME.value: [
+        Platform.SENSOR,
+        Platform.BINARY_SENSOR,
+        Platform.BUTTON,
+    ],
 }
 CLASS_BY_DEVICE = {
     SupportedModels.CEILING_LIGHT.value: switchbot.SwitchbotCeilingLight,
@@ -143,6 +149,7 @@ CLASS_BY_DEVICE = {
     SupportedModels.RELAY_SWITCH_2PM.value: switchbot.SwitchbotRelaySwitch2PM,
     SupportedModels.GARAGE_DOOR_OPENER.value: switchbot.SwitchbotGarageDoorOpener,
     SupportedModels.SMART_THERMOSTAT_RADIATOR.value: switchbot.SwitchbotSmartThermostatRadiator,
+    SupportedModels.ART_FRAME.value: switchbot.SwitchbotArtFrame,
 }
 
 

@@ -1,9 +1,10 @@
 """Support for Roborock vacuum class."""
 
+import logging
 from typing import Any
 
-from roborock.data import RoborockStateCode
-from roborock.roborock_message import RoborockDataProtocol
+from roborock.data import RoborockStateCode, SCWindMapping, WorkStatusMapping
+from roborock.exceptions import RoborockException
 from roborock.roborock_typing import RoborockCommand
 import voluptuous as vol
 
@@ -23,15 +24,23 @@ from .const import (
     GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
     SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
 )
-from .coordinator import RoborockConfigEntry, RoborockDataUpdateCoordinator
-from .entity import RoborockCoordinatedEntityV1
+from .coordinator import (
+    RoborockB01Q7UpdateCoordinator,
+    RoborockConfigEntry,
+    RoborockDataUpdateCoordinator,
+)
+from .entity import RoborockCoordinatedEntityB01, RoborockCoordinatedEntityV1
+
+_LOGGER = logging.getLogger(__name__)
 
 STATE_CODE_TO_STATE = {
     RoborockStateCode.starting: VacuumActivity.IDLE,  # "Starting"
+    RoborockStateCode.attaching_the_mop: VacuumActivity.DOCKED,  # "Attaching the mop"
     RoborockStateCode.charger_disconnected: VacuumActivity.IDLE,  # "Charger disconnected"
     RoborockStateCode.idle: VacuumActivity.IDLE,  # "Idle"
     RoborockStateCode.remote_control_active: VacuumActivity.CLEANING,  # "Remote control active"
     RoborockStateCode.cleaning: VacuumActivity.CLEANING,  # "Cleaning"
+    RoborockStateCode.detaching_the_mop: VacuumActivity.DOCKED,  # "Detaching the mop"
     RoborockStateCode.returning_home: VacuumActivity.RETURNING,  # "Returning home"
     RoborockStateCode.manual_mode: VacuumActivity.CLEANING,  # "Manual mode"
     RoborockStateCode.charging: VacuumActivity.DOCKED,  # "Charging"
@@ -52,6 +61,20 @@ STATE_CODE_TO_STATE = {
     RoborockStateCode.device_offline: VacuumActivity.ERROR,  # "Device offline"
 }
 
+Q7_STATE_CODE_TO_STATE = {
+    WorkStatusMapping.SLEEPING: VacuumActivity.IDLE,
+    WorkStatusMapping.WAITING_FOR_ORDERS: VacuumActivity.IDLE,
+    WorkStatusMapping.PAUSED: VacuumActivity.PAUSED,
+    WorkStatusMapping.DOCKING: VacuumActivity.RETURNING,
+    WorkStatusMapping.CHARGING: VacuumActivity.DOCKED,
+    WorkStatusMapping.SWEEP_MOPING: VacuumActivity.CLEANING,
+    WorkStatusMapping.SWEEP_MOPING_2: VacuumActivity.CLEANING,
+    WorkStatusMapping.MOPING: VacuumActivity.CLEANING,
+    WorkStatusMapping.UPDATING: VacuumActivity.DOCKED,
+    WorkStatusMapping.MOP_CLEANING: VacuumActivity.DOCKED,
+    WorkStatusMapping.MOP_AIRDRYING: VacuumActivity.DOCKED,
+}
+
 PARALLEL_UPDATES = 0
 
 
@@ -62,11 +85,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Roborock sensor."""
     async_add_entities(
-        RoborockVacuum(coordinator)
-        for coordinator in config_entry.runtime_data.v1
-        if isinstance(coordinator, RoborockDataUpdateCoordinator)
+        RoborockVacuum(coordinator) for coordinator in config_entry.runtime_data.v1
     )
-
+    async_add_entities(
+        RoborockQ7Vacuum(coordinator)
+        for coordinator in config_entry.runtime_data.b01
+        if isinstance(coordinator, RoborockB01Q7UpdateCoordinator)
+    )
     platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
@@ -124,12 +149,12 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
             self,
             coordinator.duid_slug,
             coordinator,
-            listener_request=[
-                RoborockDataProtocol.FAN_POWER,
-                RoborockDataProtocol.STATE,
-            ],
         )
-        self._attr_fan_speed_list = self._device_status.fan_power_options
+
+    @property
+    def fan_speed_list(self) -> list[str]:
+        """Get the list of available fan speeds."""
+        return self._device_status.fan_power_options
 
     @property
     def activity(self) -> VacuumActivity | None:
@@ -197,32 +222,40 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
 
     async def get_maps(self) -> ServiceResponse:
         """Get map information such as map id and room ids."""
+        home_trait = self.coordinator.properties_api.home
         return {
             "maps": [
                 {
-                    "flag": vacuum_map.flag,
+                    "flag": vacuum_map.map_flag,
                     "name": vacuum_map.name,
-                    # JsonValueType does not accept a int as a key - was not a
-                    # issue with previous asdict() implementation.
-                    "rooms": vacuum_map.rooms,  # type: ignore[dict-item]
+                    "rooms": {
+                        # JsonValueType does not accept a int as a key - was not a
+                        # issue with previous asdict() implementation.
+                        room.segment_id: room.name  # type: ignore[misc]
+                        for room in vacuum_map.rooms
+                    },
                 }
-                for vacuum_map in self.coordinator.maps.values()
+                for vacuum_map in (home_trait.home_map_info or {}).values()
             ]
         }
 
     async def get_vacuum_current_position(self) -> ServiceResponse:
         """Get the current position of the vacuum from the map."""
-
-        map_data = await self.coordinator.cloud_api.get_map_v1()
-        if not isinstance(map_data, bytes):
+        map_content_trait = self.coordinator.properties_api.map_content
+        try:
+            await map_content_trait.refresh()
+        except RoborockException as err:
+            _LOGGER.debug("Failed to refresh map content: %s", err)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="map_failure",
+            ) from err
+        if map_content_trait.map_data is None:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="map_failure",
             )
-        parsed_map = self.coordinator.map_parser.parse(map_data)
-        robot_position = parsed_map.vacuum_position
-
-        if robot_position is None:
+        if (robot_position := map_content_trait.map_data.vacuum_position) is None:
             raise HomeAssistantError(
                 translation_domain=DOMAIN, translation_key="position_not_found"
             )
@@ -231,3 +264,149 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
             "x": robot_position.x,
             "y": robot_position.y,
         }
+
+
+class RoborockQ7Vacuum(RoborockCoordinatedEntityB01, StateVacuumEntity):
+    """General Representation of a Roborock vacuum."""
+
+    _attr_icon = "mdi:robot-vacuum"
+    _attr_supported_features = (
+        VacuumEntityFeature.PAUSE
+        | VacuumEntityFeature.STOP
+        | VacuumEntityFeature.RETURN_HOME
+        | VacuumEntityFeature.FAN_SPEED
+        | VacuumEntityFeature.SEND_COMMAND
+        | VacuumEntityFeature.LOCATE
+        | VacuumEntityFeature.STATE
+        | VacuumEntityFeature.START
+    )
+    _attr_translation_key = DOMAIN
+    _attr_name = None
+    coordinator: RoborockB01Q7UpdateCoordinator
+
+    def __init__(
+        self,
+        coordinator: RoborockB01Q7UpdateCoordinator,
+    ) -> None:
+        """Initialize a vacuum."""
+        StateVacuumEntity.__init__(self)
+        RoborockCoordinatedEntityB01.__init__(
+            self,
+            coordinator.duid_slug,
+            coordinator,
+        )
+
+    @property
+    def fan_speed_list(self) -> list[str]:
+        """Get the list of available fan speeds."""
+        return SCWindMapping.keys()
+
+    @property
+    def activity(self) -> VacuumActivity | None:
+        """Return the status of the vacuum cleaner."""
+        if self.coordinator.data.status is not None:
+            return Q7_STATE_CODE_TO_STATE.get(self.coordinator.data.status)
+        return None
+
+    @property
+    def fan_speed(self) -> str | None:
+        """Return the fan speed of the vacuum cleaner."""
+        return self.coordinator.data.wind_name
+
+    async def async_start(self) -> None:
+        """Start the vacuum."""
+        try:
+            await self.coordinator.api.start_clean()
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={
+                    "command": "start_clean",
+                },
+            ) from err
+
+    async def async_pause(self) -> None:
+        """Pause the vacuum."""
+        try:
+            await self.coordinator.api.pause_clean()
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={
+                    "command": "pause_clean",
+                },
+            ) from err
+
+    async def async_stop(self, **kwargs: Any) -> None:
+        """Stop the vacuum."""
+        try:
+            await self.coordinator.api.stop_clean()
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={
+                    "command": "stop_clean",
+                },
+            ) from err
+
+    async def async_return_to_base(self, **kwargs: Any) -> None:
+        """Send vacuum back to base."""
+        try:
+            await self.coordinator.api.return_to_dock()
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={
+                    "command": "return_to_dock",
+                },
+            ) from err
+
+    async def async_locate(self, **kwargs: Any) -> None:
+        """Locate vacuum."""
+        try:
+            await self.coordinator.api.find_me()
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={
+                    "command": "find_me",
+                },
+            ) from err
+
+    async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
+        """Set vacuum fan speed."""
+        try:
+            await self.coordinator.api.set_fan_speed(
+                SCWindMapping.from_value(fan_speed)
+            )
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={
+                    "command": "set_fan_speed",
+                },
+            ) from err
+
+    async def async_send_command(
+        self,
+        command: str,
+        params: dict[str, Any] | list[Any] | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Send a command to a vacuum cleaner."""
+        try:
+            await self.coordinator.api.send(command, params)
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={
+                    "command": command,
+                },
+            ) from err

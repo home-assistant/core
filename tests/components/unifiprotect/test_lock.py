@@ -17,6 +17,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
+from . import patch_ufp_method
 from .utils import (
     MockUFPFixture,
     adopt_devices,
@@ -210,17 +211,17 @@ async def test_lock_do_lock(
     await init_entry(hass, ufp, [doorlock, unadopted_doorlock])
     assert_entity_counts(hass, Platform.LOCK, 1, 1)
 
-    doorlock.__pydantic_fields__["close_lock"] = Mock(final=False, frozen=False)
-    doorlock.close_lock = AsyncMock()
+    with patch_ufp_method(
+        doorlock, "close_lock", new_callable=AsyncMock
+    ) as mock_method:
+        await hass.services.async_call(
+            "lock",
+            "lock",
+            {ATTR_ENTITY_ID: "lock.test_lock_lock"},
+            blocking=True,
+        )
 
-    await hass.services.async_call(
-        "lock",
-        "lock",
-        {ATTR_ENTITY_ID: "lock.test_lock_lock"},
-        blocking=True,
-    )
-
-    doorlock.close_lock.assert_called_once()
+        mock_method.assert_called_once()
 
 
 async def test_lock_do_unlock(
@@ -245,14 +246,12 @@ async def test_lock_do_unlock(
     ufp.ws_msg(mock_msg)
     await hass.async_block_till_done()
 
-    doorlock.__pydantic_fields__["open_lock"] = Mock(final=False, frozen=False)
-    new_lock.open_lock = AsyncMock()
+    with patch_ufp_method(new_lock, "open_lock", new_callable=AsyncMock) as mock_method:
+        await hass.services.async_call(
+            "lock",
+            "unlock",
+            {ATTR_ENTITY_ID: "lock.test_lock_lock"},
+            blocking=True,
+        )
 
-    await hass.services.async_call(
-        "lock",
-        "unlock",
-        {ATTR_ENTITY_ID: "lock.test_lock_lock"},
-        blocking=True,
-    )
-
-    new_lock.open_lock.assert_called_once()
+        mock_method.assert_called_once()

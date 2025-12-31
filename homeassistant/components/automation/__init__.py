@@ -12,8 +12,9 @@ from typing import Any, Protocol, cast
 from propcache.api import cached_property
 import voluptuous as vol
 
-from homeassistant.components import websocket_api
+from homeassistant.components import labs, websocket_api
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
+from homeassistant.components.labs import async_listen as async_labs_listen
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
@@ -26,6 +27,7 @@ from homeassistant.const import (
     CONF_EVENT_DATA,
     CONF_ID,
     CONF_MODE,
+    CONF_OPTIONS,
     CONF_PATH,
     CONF_PLATFORM,
     CONF_TRIGGERS,
@@ -113,6 +115,60 @@ ATTR_LAST_TRIGGERED = "last_triggered"
 ATTR_SOURCE = "source"
 ATTR_VARIABLES = "variables"
 SERVICE_TRIGGER = "trigger"
+
+NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG = "new_triggers_conditions"
+
+_EXPERIMENTAL_CONDITION_PLATFORMS = {
+    "light",
+}
+
+_EXPERIMENTAL_TRIGGER_PLATFORMS = {
+    "alarm_control_panel",
+    "assist_satellite",
+    "binary_sensor",
+    "button",
+    "climate",
+    "cover",
+    "device_tracker",
+    "fan",
+    "humidifier",
+    "lawn_mower",
+    "light",
+    "lock",
+    "media_player",
+    "scene",
+    "siren",
+    "switch",
+    "text",
+    "update",
+    "vacuum",
+}
+
+
+@callback
+def is_disabled_experimental_condition(hass: HomeAssistant, platform: str) -> bool:
+    """Check if the platform is a disabled experimental condition platform."""
+    return (
+        platform in _EXPERIMENTAL_CONDITION_PLATFORMS
+        and not labs.async_is_preview_feature_enabled(
+            hass,
+            DOMAIN,
+            NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
+        )
+    )
+
+
+@callback
+def is_disabled_experimental_trigger(hass: HomeAssistant, platform: str) -> bool:
+    """Check if the platform is a disabled experimental trigger platform."""
+    return (
+        platform in _EXPERIMENTAL_TRIGGER_PLATFORMS
+        and not labs.async_is_preview_feature_enabled(
+            hass,
+            DOMAIN,
+            NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
+        )
+    )
 
 
 class IfAction(Protocol):
@@ -315,6 +371,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_RELOAD,
         reload_helper.execute_service,
         schema=vol.Schema({vol.Optional(CONF_ID): str}),
+    )
+
+    @callback
+    def new_triggers_conditions_listener() -> None:
+        """Handle new_triggers_conditions flag change."""
+        hass.async_create_task(
+            reload_helper.execute_service(ServiceCall(hass, DOMAIN, SERVICE_RELOAD))
+        )
+
+    async_labs_listen(
+        hass,
+        DOMAIN,
+        NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
+        new_triggers_conditions_listener,
     )
 
     websocket_api.async_register_command(hass, websocket_config)
@@ -1149,7 +1219,7 @@ def _trigger_extract_entities(trigger_conf: dict) -> list[str]:
         return trigger_conf[CONF_ENTITY_ID]  # type: ignore[no-any-return]
 
     if trigger_conf[CONF_PLATFORM] == "calendar":
-        return [trigger_conf[CONF_ENTITY_ID]]
+        return [trigger_conf[CONF_OPTIONS][CONF_ENTITY_ID]]
 
     if trigger_conf[CONF_PLATFORM] == "zone":
         return trigger_conf[CONF_ENTITY_ID] + [trigger_conf[CONF_ZONE]]  # type: ignore[no-any-return]

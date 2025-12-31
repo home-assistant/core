@@ -19,8 +19,8 @@ def has_location(state: State) -> bool:
     """
     return (
         isinstance(state, State)
-        and isinstance(state.attributes.get(ATTR_LATITUDE), float)
-        and isinstance(state.attributes.get(ATTR_LONGITUDE), float)
+        and isinstance(state.attributes.get(ATTR_LATITUDE), (float, int))
+        and isinstance(state.attributes.get(ATTR_LONGITUDE), (float, int))
     )
 
 
