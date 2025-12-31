@@ -5,3 +5,5 @@ from typing import Final
 DOMAIN: Final = "saj"
 
 CONNECTION_TYPES = ["ethernet", "wifi"]
+
+CONF_MAC: Final = "mac"
