@@ -167,7 +167,7 @@ async def test_user_flow_creates_entry(hass: HomeAssistant) -> None:
         side_effect=_client_factory([discover_client, manual_discover_client, link_client]),
     ), patch(
         "homeassistant.components.elke27.config_flow.async_get_integration_serial",
-        AsyncMock(return_value="11:22:33:44:55:66"),
+        AsyncMock(return_value="112233445566"),
     ), patch(
         "homeassistant.components.elke27.async_setup_entry", return_value=True
     ):
@@ -192,7 +192,7 @@ async def test_user_flow_creates_entry(hass: HomeAssistant) -> None:
         assert result2["data"][CONF_HOST] == "192.168.1.10"
         assert result2["data"][CONF_PORT] == DEFAULT_PORT
         assert "link_keys" in result2["data"]
-        assert result2["data"][CONF_INTEGRATION_SERIAL] == "11:22:33:44:55:66"
+        assert result2["data"][CONF_INTEGRATION_SERIAL] == "112233445566"
         assert "panel_info" in result2["options"]
         assert "table_info" in result2["options"]
 
@@ -244,7 +244,7 @@ async def test_discovery_selection_creates_entry(hass: HomeAssistant) -> None:
         side_effect=_client_factory([discover_client, link_client]),
     ), patch(
         "homeassistant.components.elke27.config_flow.async_get_integration_serial",
-        AsyncMock(return_value="11:22:33:44:55:66"),
+        AsyncMock(return_value="112233445566"),
     ), patch(
         "homeassistant.components.elke27.async_setup_entry", return_value=True
     ):
@@ -271,7 +271,7 @@ async def test_discovery_selection_creates_entry(hass: HomeAssistant) -> None:
         assert result3["data"][CONF_HOST] == "192.168.1.20"
         assert result3["data"][CONF_PORT] == DEFAULT_PORT
         assert "link_keys" in result3["data"]
-        assert result3["data"][CONF_INTEGRATION_SERIAL] == "11:22:33:44:55:66"
+        assert result3["data"][CONF_INTEGRATION_SERIAL] == "112233445566"
 
 
 async def test_invalid_credentials_returns_error(hass: HomeAssistant) -> None:
@@ -302,7 +302,7 @@ async def test_invalid_credentials_returns_error(hass: HomeAssistant) -> None:
         side_effect=_client_factory([discover_client, manual_discover_client, link_client]),
     ), patch(
         "homeassistant.components.elke27.config_flow.async_get_integration_serial",
-        AsyncMock(return_value="11:22:33:44:55:66"),
+        AsyncMock(return_value="112233445566"),
     ), patch(
         "homeassistant.components.elke27.async_setup_entry", return_value=True
     ):
@@ -332,7 +332,7 @@ async def test_relink_updates_entry(hass: HomeAssistant) -> None:
         data={
             CONF_HOST: "192.168.1.40",
             CONF_PORT: DEFAULT_PORT,
-            CONF_INTEGRATION_SERIAL: "11:22:33:44:55:66",
+            CONF_INTEGRATION_SERIAL: "112233445566",
         },
     )
     entry.add_to_hass(hass)
@@ -368,7 +368,7 @@ async def test_relink_updates_entry(hass: HomeAssistant) -> None:
         side_effect=_client_factory([link_client]),
     ), patch(
         "homeassistant.components.elke27.config_flow.async_get_integration_serial",
-        AsyncMock(return_value="11:22:33:44:55:66"),
+        AsyncMock(return_value="112233445566"),
     ), patch(
         "homeassistant.components.elke27.async_setup_entry", return_value=True
     ):

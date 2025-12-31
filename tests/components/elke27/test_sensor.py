@@ -96,7 +96,7 @@ async def test_sensor_updates_from_hub(hass: HomeAssistant) -> None:
                 "linkkey_hex": "lk",
                 "linkhmac_hex": "lh",
             },
-            CONF_INTEGRATION_SERIAL: "11:22:33:44:55:66",
+            CONF_INTEGRATION_SERIAL: "112233445566",
         },
     )
     entry.add_to_hass(hass)

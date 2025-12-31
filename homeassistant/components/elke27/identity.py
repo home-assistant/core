@@ -31,7 +31,7 @@ async def async_get_integration_serial(
         return _generate_serial_number()
     mac = await hass.async_add_executor_job(_get_mac_for_source_ip, source_ip)
     if mac:
-        return mac
+        return _normalize_serial(mac)
     return _generate_serial_number()
 
 
@@ -73,3 +73,8 @@ def _generate_serial_number() -> str:
     return "".join(
         secrets.choice("0123456789") for _ in range(INTEGRATION_SERIAL_LENGTH)
     )
+
+
+def _normalize_serial(serial: str) -> str:
+    """Return a digits-only serial string for provisioning."""
+    return "".join(ch for ch in serial if ch.isalnum()).lower()

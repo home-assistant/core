@@ -101,7 +101,7 @@ async def test_setup_unload_calls_connect_disconnect_and_subscribe(
                 "linkkey_hex": "lk",
                 "linkhmac_hex": "lh",
             },
-            CONF_INTEGRATION_SERIAL: "11:22:33:44:55:66",
+            CONF_INTEGRATION_SERIAL: "112233445566",
         },
     )
     entry.add_to_hass(hass)
@@ -153,7 +153,7 @@ async def test_setup_waits_for_ready(
                 "linkkey_hex": "lk",
                 "linkhmac_hex": "lh",
             },
-            CONF_INTEGRATION_SERIAL: "11:22:33:44:55:66",
+            CONF_INTEGRATION_SERIAL: "112233445566",
         },
     )
     entry.add_to_hass(hass)
@@ -188,7 +188,7 @@ async def test_setup_failure_stops_client(
                 "linkkey_hex": "lk",
                 "linkhmac_hex": "lh",
             },
-            CONF_INTEGRATION_SERIAL: "11:22:33:44:55:66",
+            CONF_INTEGRATION_SERIAL: "112233445566",
         },
     )
     entry.add_to_hass(hass)
