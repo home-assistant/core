@@ -542,6 +542,7 @@ async def mock_block_device():
             initialized=True,
             model=MODEL_1,
             gen=1,
+            ip_address="10.10.10.11",
         )
         type(device).name = PropertyMock(return_value="Test name")
         block_device_mock.return_value = device
