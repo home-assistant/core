@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import builtins
 import importlib
+from unittest.mock import patch
 
 from homeassistant import config_entries
 from homeassistant.components.elke27.const import DEFAULT_PORT, DOMAIN
@@ -28,24 +29,27 @@ def test_imports_without_elkm1_lib(monkeypatch) -> None:
 
 async def test_user_flow_creates_entry(hass: HomeAssistant) -> None:
     """Test the user step creates an entry without validation."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
+    with patch(
+        "homeassistant.components.elke27.async_setup_entry", return_value=True
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "192.168.1.10",
+                CONF_PORT: DEFAULT_PORT,
+            },
+        )
+
+        assert result2["type"] is FlowResultType.CREATE_ENTRY
+        assert result2["title"] == "192.168.1.10"
+        assert result2["data"] == {
             CONF_HOST: "192.168.1.10",
             CONF_PORT: DEFAULT_PORT,
-        },
-    )
-
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "192.168.1.10"
-    assert result2["data"] == {
-        CONF_HOST: "192.168.1.10",
-        CONF_PORT: DEFAULT_PORT,
-    }
+        }
