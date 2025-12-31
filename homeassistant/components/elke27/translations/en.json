@@ -15,7 +15,7 @@
     "step": {
       "user": {
         "title": "Set up Elke27",
-        "description": "Choose a discovered panel or select manual entry.",
+        "description": "Choose a discovered panel or select manual entry to continue.",
         "data": {
           "device": "Panel"
         },
