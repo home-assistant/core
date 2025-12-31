@@ -40,6 +40,15 @@ def _mock_elke27_lib(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setitem(sys.modules, "elke27_lib.client", client_module)
 
 
+def _client_factory(client: AsyncMock) -> callable:
+    def _factory(*args, **kwargs):
+        assert not args
+        assert not kwargs
+        return client
+
+    return _factory
+
+
 async def test_setup_unload_calls_connect_disconnect_and_subscribe(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -67,7 +76,8 @@ async def test_setup_unload_calls_connect_disconnect_and_subscribe(
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.elke27.hub.Elke27Client", return_value=client
+        "homeassistant.components.elke27.hub.Elke27Client",
+        side_effect=_client_factory(client),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -114,7 +124,8 @@ async def test_setup_waits_for_ready(
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.elke27.hub.Elke27Client", return_value=client
+        "homeassistant.components.elke27.hub.Elke27Client",
+        side_effect=_client_factory(client),
     ):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
@@ -144,7 +155,8 @@ async def test_setup_failure_stops_client(
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.elke27.hub.Elke27Client", return_value=client
+        "homeassistant.components.elke27.hub.Elke27Client",
+        side_effect=_client_factory(client),
     ):
         assert not await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()

@@ -219,8 +219,9 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
             entry.data.get(CONF_INTEGRATION_SERIAL) if entry is not None else None,
         )
 
+        panel_for_link = panel or {"panel_host": host, "port": port}
         link_keys, panel_info, table_info, error = await _async_link_and_fetch(
-            host, port, access_code, passphrase, panel
+            access_code, passphrase, panel_for_link
         )
         if error:
             errors["base"] = error
@@ -257,7 +258,7 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_discover(self) -> dict[str, Any]:
         """Discover panels via the client."""
         try:
-            client = Elke27Client("0.0.0.0", DEFAULT_PORT)
+            client = Elke27Client()
             result = await client.discover(timeout=DISCOVERY_TIMEOUT)
         except Exception as err:
             _LOGGER.debug("Discovery failed: %s", err)
@@ -312,14 +313,12 @@ def _panel_label(panel: dict[str, Any]) -> str:
 
 
 async def _async_link_and_fetch(
-    host: str,
-    port: int,
     access_code: str,
     passphrase: str,
-    panel: Any | None,
+    panel: Any,
 ) -> tuple[Any, dict[str, Any], dict[str, Any], str | None]:
     """Link, connect to the panel, and return snapshots."""
-    client = Elke27Client(host, port)
+    client = Elke27Client()
     try:
         link_result = await client.link(access_code, passphrase, panel=panel)
         if not link_result.ok:

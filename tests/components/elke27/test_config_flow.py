@@ -29,6 +29,18 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
+
+def _client_factory(instances: list[AsyncMock]) -> callable:
+    iterator = iter(instances)
+
+    def _factory(*args, **kwargs):
+        assert not args
+        assert not kwargs
+        return next(iterator)
+
+    return _factory
+
+
 @dataclass
 class FakeDiscoverResult:
     """Minimal discover result stub."""
@@ -117,7 +129,7 @@ async def test_user_flow_creates_entry(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.elke27.config_flow.Elke27Client",
-        side_effect=[discover_client, link_client],
+        side_effect=_client_factory([discover_client, link_client]),
     ), patch(
         "homeassistant.components.elke27.config_flow.async_get_integration_serial",
         AsyncMock(return_value="11:22:33:44:55:66"),
@@ -195,7 +207,7 @@ async def test_discovery_selection_creates_entry(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.elke27.config_flow.Elke27Client",
-        side_effect=[discover_client, link_client],
+        side_effect=_client_factory([discover_client, link_client]),
     ), patch(
         "homeassistant.components.elke27.config_flow.async_get_integration_serial",
         AsyncMock(return_value="11:22:33:44:55:66"),
@@ -248,7 +260,7 @@ async def test_invalid_credentials_returns_error(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.elke27.config_flow.Elke27Client",
-        side_effect=[discover_client, link_client],
+        side_effect=_client_factory([discover_client, link_client]),
     ), patch(
         "homeassistant.components.elke27.config_flow.async_get_integration_serial",
         AsyncMock(return_value="11:22:33:44:55:66"),
@@ -315,7 +327,7 @@ async def test_relink_updates_entry(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.elke27.config_flow.Elke27Client",
-        return_value=link_client,
+        side_effect=_client_factory([link_client]),
     ), patch(
         "homeassistant.components.elke27.config_flow.async_get_integration_serial",
         AsyncMock(return_value="11:22:33:44:55:66"),
