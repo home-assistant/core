@@ -3,13 +3,14 @@
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from homeassistant.components.eufy_security import async_remove_config_entry_device
-from homeassistant.components.eufy_security.api import (
+from eufy_security import (
     CannotConnectError,
     CaptchaRequiredError,
     EufySecurityError,
     InvalidCredentialsError,
 )
+
+from homeassistant.components.eufy_security import async_remove_config_entry_device
 from homeassistant.components.eufy_security.const import (
     CONF_API_BASE,
     CONF_PRIVATE_KEY,

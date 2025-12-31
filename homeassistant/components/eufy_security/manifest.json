@@ -8,5 +8,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "quality_scale": "platinum",
-  "requirements": []
+  "requirements": ["pyeufysecurity==0.4.3"]
 }

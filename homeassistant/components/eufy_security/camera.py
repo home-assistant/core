@@ -10,6 +10,7 @@ from typing import Any
 from urllib.parse import quote as url_quote
 
 from aiohttp import ClientError
+from eufy_security import Camera, EufySecurityError
 
 from homeassistant.components.camera import (
     Camera as CameraEntity,
@@ -21,7 +22,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .api import Camera, EufySecurityError
 from .const import (
     ATTR_HARDWARE_VERSION,
     ATTR_IP_ADDRESS,
