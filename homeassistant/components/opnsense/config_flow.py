@@ -18,6 +18,15 @@ from .types import APIData, Interfaces
 
 _LOGGER = logging.getLogger(__name__)
 
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_URL): str,
+        vol.Required(CONF_API_KEY): str,
+        vol.Required(CONF_API_SECRET): str,
+        vol.Required(CONF_VERIFY_SSL): bool,
+    }
+)
+
 
 class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
     """OPNsense config flow."""
@@ -41,20 +50,8 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_URL, default=user_input.get(CONF_URL, "")): str,
-                    vol.Required(
-                        CONF_API_KEY,
-                        default=user_input.get(CONF_API_KEY, ""),
-                    ): str,
-                    vol.Required(
-                        CONF_API_SECRET, default=user_input.get(CONF_API_SECRET, "")
-                    ): str,
-                    vol.Required(
-                        CONF_VERIFY_SSL, default=user_input.get(CONF_VERIFY_SSL, False)
-                    ): bool,
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, user_input
             ),
             errors=errors or {},
             description_placeholders=description_placeholders,
