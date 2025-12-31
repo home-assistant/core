@@ -20,11 +20,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
-from .models import WaterFurnaceConfigEntry
+from .models import WaterFurnaceConfigEntry, WaterFurnaceData as WaterFurnaceConfigData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -83,10 +83,13 @@ async def async_setup_entry(
             f"Failed to connect to WaterFurnace service: {err}"
         ) from err
 
-    hass.data[DOMAIN] = WaterFurnaceData(hass, client)
-    hass.data[DOMAIN].start()
+    if not client.gwid:
+        raise ConfigEntryNotReady(
+            "Failed to connect to WaterFurnace service: No GWID found for device"
+        )
 
-    discovery.load_platform(hass, Platform.SENSOR, DOMAIN, {}, entry.as_dict())
+    entry.runtime_data = WaterFurnaceConfigData(client=client, gwid=client.gwid)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
