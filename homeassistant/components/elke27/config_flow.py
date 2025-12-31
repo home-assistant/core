@@ -217,7 +217,9 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "missing_context"
             return self.async_show_form(
                 step_id=step_id,
-                data_schema=STEP_CREDENTIALS_DATA_SCHEMA,
+                data_schema=STEP_MANUAL_DATA_SCHEMA
+                if step_id == "manual"
+                else STEP_CREDENTIALS_DATA_SCHEMA,
                 errors=errors,
             )
 
@@ -235,7 +237,9 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = error
             return self.async_show_form(
                 step_id=step_id,
-                data_schema=STEP_CREDENTIALS_DATA_SCHEMA,
+                data_schema=_manual_schema(host)
+                if step_id == "manual"
+                else STEP_CREDENTIALS_DATA_SCHEMA,
                 errors=errors,
             )
 
@@ -306,6 +310,18 @@ def _panel_to_dict(panel: Any) -> dict[str, Any]:
         )
         if getattr(panel, key, None) is not None
     }
+
+
+def _manual_schema(host: str | None) -> vol.Schema:
+    if host:
+        return vol.Schema(
+            {
+                vol.Required(CONF_HOST, default=host): cv.string,
+                vol.Required(CONF_ACCESS_CODE): cv.string,
+                vol.Required(CONF_PASSPHRASE): cv.string,
+            }
+        )
+    return STEP_MANUAL_DATA_SCHEMA
 
 
 def _panel_label(panel: dict[str, Any]) -> str:
