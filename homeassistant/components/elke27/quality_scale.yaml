@@ -25,15 +25,9 @@ rules:
   docs-removal-instructions:
     status: exempt
     comment: Documentation will be added when the integration is functional.
-  entity-event-setup:
-    status: exempt
-    comment: The integration does not create entities in Milestone 0.
-  entity-unique-id:
-    status: exempt
-    comment: The integration does not create entities in Milestone 0.
-  has-entity-name:
-    status: exempt
-    comment: The integration does not create entities in Milestone 0.
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
   runtime-data:
     status: exempt
     comment: Runtime data will be migrated to ConfigEntry.runtime_data later.

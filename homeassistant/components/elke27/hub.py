@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any
+from typing import Any, Callable
 
 from elke27_lib.client import Elke27Client, Result
+
+from homeassistant.core import callback
 
 from .const import READY_TIMEOUT
 
@@ -19,6 +21,7 @@ class Elke27Hub:
         self._link_keys = link_keys
         self._panel = panel
         self._last_result: Result | None = None
+        self._listeners: list[Callable[[], None]] = []
         self.panel_info: Any | None = None
         self.table_info: Any | None = None
         self.areas: Any | None = None
@@ -34,6 +37,22 @@ class Elke27Hub:
     def client(self) -> Elke27Client:
         """Return the underlying client."""
         return self._client
+
+    @property
+    def is_ready(self) -> bool:
+        """Return if the client is ready."""
+        return self._client.is_ready
+
+    @callback
+    def async_add_listener(self, listener: Callable[[], None]) -> Callable[[], None]:
+        """Register a listener for hub updates."""
+        self._listeners.append(listener)
+
+        def _remove() -> None:
+            if listener in self._listeners:
+                self._listeners.remove(listener)
+
+        return _remove
 
     async def async_start(self) -> None:
         """Connect the client, then await readiness."""
@@ -61,6 +80,8 @@ class Elke27Hub:
         """Handle semantic events from the client."""
         self._last_result = result
         self._refresh_snapshots()
+        for listener in list(self._listeners):
+            listener()
 
     def _refresh_snapshots(self) -> None:
         """Capture the latest snapshots from the client."""

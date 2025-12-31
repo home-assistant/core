@@ -46,6 +46,8 @@ async def test_setup_unload_calls_connect_disconnect_and_subscribe(
     client.subscribe = Mock()
     client.unsubscribe = Mock(return_value=True)
     client.disconnect = AsyncMock(return_value=SimpleNamespace(ok=True, error=None))
+    client.panel_info = {"panel_mac": "aa:bb:cc:dd:ee:ff", "panel_name": "Panel"}
+    client.table_info = {"zones": 1}
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -86,6 +88,8 @@ async def test_setup_waits_for_ready(
     client.wait_ready = Mock(side_effect=_wait_ready)
     client.subscribe = Mock()
     client.unsubscribe = Mock(return_value=True)
+    client.panel_info = {"panel_mac": "aa:bb:cc:dd:ee:11", "panel_name": "Panel"}
+    client.table_info = {"zones": 1}
 
     entry = MockConfigEntry(
         domain=DOMAIN,
