@@ -75,18 +75,13 @@ async def async_setup_entry(
     try:
         await hass.async_add_executor_job(client.login)
     except WFCredentialError as err:
-        _LOGGER.error("Invalid credentials for WaterFurnace device")
         raise ConfigEntryAuthFailed(
             "Authentication failed. Please update your credentials."
         ) from err
-    except WFException as err:
-        _LOGGER.error("Failed to connect to WaterFurnace service: %s", err)
+    except Exception as err:
         raise ConfigEntryNotReady(
             f"Failed to connect to WaterFurnace service: {err}"
         ) from err
-    except Exception as err:
-        _LOGGER.exception("Unexpected error during WaterFurnace setup")
-        raise ConfigEntryNotReady(f"Unexpected error during setup: {err}") from err
 
     hass.data[DOMAIN] = WaterFurnaceData(hass, client)
     hass.data[DOMAIN].start()
