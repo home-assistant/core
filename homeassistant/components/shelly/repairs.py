@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from aioshelly.const import MODEL_OUT_PLUG_S_G3, MODEL_PLUG_S_G3
+from aioshelly.block_device import BlockDevice
+from aioshelly.const import MODEL_OUT_PLUG_S_G3, MODEL_PLUG_S_G3, RPC_GENERATIONS
 from aioshelly.exceptions import DeviceConnectionError, RpcCallError
 from aioshelly.rpc_device import RpcDevice
 from awesomeversion import AwesomeVersion
@@ -18,6 +19,7 @@ from homeassistant.helpers import issue_registry as ir
 from .const import (
     BLE_SCANNER_FIRMWARE_UNSUPPORTED_ISSUE_ID,
     BLE_SCANNER_MIN_FIRMWARE,
+    COIOT_UNCONFIGURED_ISSUE_ID,
     CONF_BLE_SCANNER_MODE,
     DEPRECATED_FIRMWARE_ISSUE_ID,
     DEPRECATED_FIRMWARES,
@@ -27,7 +29,7 @@ from .const import (
     BLEScannerMode,
 )
 from .coordinator import ShellyConfigEntry
-from .utils import get_rpc_ws_url
+from .utils import get_coiot_address, get_device_entry_gen, get_rpc_ws_url
 
 
 @callback
@@ -151,6 +153,50 @@ def async_manage_outbound_websocket_incorrectly_enabled_issue(
 
 
 @callback
+def async_manage_coiot_unconfigured_issue(
+    hass: HomeAssistant,
+    entry: ShellyConfigEntry,
+) -> None:
+    """Manage the CoIoT unconfigured issue."""
+    issue_id = COIOT_UNCONFIGURED_ISSUE_ID.format(unique=entry.unique_id)
+
+    if TYPE_CHECKING:
+        assert entry.runtime_data.block is not None
+
+    device = entry.runtime_data.block.device
+    coiot_config = device.settings.get("coiot")
+    if not coiot_config:
+        ir.async_delete_issue(hass, DOMAIN, issue_id)
+        return
+
+    coiot_enabled = coiot_config.get("enabled")
+
+    # Check if CoIoT is disabled or peer address is not correctly set
+    if not coiot_enabled or (
+        coiot_enabled
+        and (peer_config := coiot_config.get("peer"))
+        and peer_config != get_coiot_address(hass)
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            is_fixable=True,
+            is_persistent=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="coiot_unconfigured",
+            translation_placeholders={
+                "device_name": device.name,
+                "ip_address": device.ip_address,
+            },
+            data={"entry_id": entry.entry_id},
+        )
+        return
+
+    ir.async_delete_issue(hass, DOMAIN, issue_id)
+
+
+@callback
 def async_manage_open_wifi_ap_issue(
     hass: HomeAssistant,
     entry: ShellyConfigEntry,
@@ -187,6 +233,69 @@ def async_manage_open_wifi_ap_issue(
         return
 
     ir.async_delete_issue(hass, DOMAIN, issue_id)
+
+
+class ShellyBlockRepairsFlow(RepairsFlow):
+    """Handler for an issue fixing flow."""
+
+    def __init__(self, device: BlockDevice) -> None:
+        """Initialize."""
+        self._device = device
+
+    async def async_step_init(
+        self, user_input: dict[str, str] | None = None
+    ) -> data_entry_flow.FlowResult:
+        """Handle the first step of a fix flow."""
+        return await self.async_step_confirm()
+
+    async def async_step_confirm(
+        self, user_input: dict[str, str] | None = None
+    ) -> data_entry_flow.FlowResult:
+        """Handle the confirm step of a fix flow."""
+        if user_input is not None:
+            return await self._async_step_confirm()
+
+        issue_registry = ir.async_get(self.hass)
+        description_placeholders = None
+        if issue := issue_registry.async_get_issue(self.handler, self.issue_id):
+            description_placeholders = issue.translation_placeholders
+
+        return self.async_show_form(
+            step_id="confirm",
+            data_schema=vol.Schema({}),
+            description_placeholders=description_placeholders,
+        )
+
+    async def _async_step_confirm(self) -> data_entry_flow.FlowResult:
+        """Handle the confirm step of a fix flow."""
+        raise NotImplementedError
+
+
+class CoiotConfigureFlow(ShellyBlockRepairsFlow):
+    """Handler for fixing CoIoT configuration flow."""
+
+    async def _async_step_confirm(self) -> data_entry_flow.FlowResult:
+        """Handle the confirm step of a fix flow."""
+        return await self.async_step_configure_coiot()
+
+    async def async_step_configure_coiot(
+        self, user_input: dict[str, str] | None = None
+    ) -> data_entry_flow.FlowResult:
+        """Handle the confirm step of a fix flow."""
+        peer = get_coiot_address(self.hass)
+        try:
+            result = await self._device.http_request(
+                method="POST",
+                path="settings/advanced",
+                params=f"coiot_enable=true&coiot_peer={peer}",
+            )
+            if result.get("coiot", {}).get("peer") != peer:
+                return self.async_abort(reason="cannot_configure")
+            await self._device.trigger_reboot()
+        except DeviceConnectionError:
+            return self.async_abort(reason="cannot_connect")
+
+        return self.async_create_entry(title="", data={})
 
 
 class ShellyRpcRepairsFlow(RepairsFlow):
@@ -325,7 +434,13 @@ async def async_create_fix_flow(
     if TYPE_CHECKING:
         assert entry is not None
 
-    device = entry.runtime_data.rpc.device
+    if get_device_entry_gen(entry) in RPC_GENERATIONS:
+        device = entry.runtime_data.rpc.device
+    else:
+        device = entry.runtime_data.block.device
+
+    if "coiot_unconfigured" in issue_id:
+        return CoiotConfigureFlow(device)
 
     if (
         "ble_scanner_firmware_unsupported" in issue_id
