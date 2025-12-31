@@ -353,11 +353,20 @@ async def _async_link_and_fetch(
         except TypeError as err:
             message = str(err)
             if "unexpected keyword argument 'access_code'" in message:
-                link_result = await client.link(
-                    access_code,
-                    passphrase,
-                    _panel_to_dict(panel),
-                )
+                try:
+                    link_result = await client.link(
+                        access_code,
+                        passphrase,
+                        _panel_to_dict(panel),
+                    )
+                except AttributeError as attr_err:
+                    if "object has no attribute 'get'" not in str(attr_err):
+                        raise
+                    link_result = await client.link(
+                        _panel_to_dict(panel),
+                        access_code,
+                        passphrase,
+                    )
             elif "passphrase" in message or "pass_phrase" in message:
                 link_result = await client.link(
                     access_code=access_code,
