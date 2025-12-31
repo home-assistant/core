@@ -1732,7 +1732,7 @@ pyfibaro==0.8.3
 pyfido==2.1.2
 
 # homeassistant.components.firefly_iii
-pyfirefly==0.1.8
+pyfirefly==0.1.10
 
 # homeassistant.components.fireservicerota
 pyfireservicerota==0.0.46
@@ -1959,7 +1959,7 @@ pyplaato==0.0.19
 pypoint==3.0.0
 
 # homeassistant.components.portainer
-pyportainer==1.0.17
+pyportainer==1.0.19
 
 # homeassistant.components.probe_plus
 pyprobeplus==1.1.2
