@@ -20,7 +20,9 @@ class Elke27Hub:
 
     def __init__(self, host: str, port: int, link_keys: Any, panel: Any | None) -> None:
         """Initialize the hub wrapper."""
-        self._client = Elke27Client(host, port)
+        self._client = Elke27Client()
+        self._host = host
+        self._port = port
         self._link_keys = link_keys
         self._panel = panel
         self._last_result: Result | None = None
@@ -74,7 +76,8 @@ class Elke27Hub:
 
     async def async_start(self) -> None:
         """Connect the client, then await readiness."""
-        result = await self._client.connect(self._link_keys, panel=self._panel)
+        panel = self._panel or {"panel_host": self._host, "port": self._port}
+        result = await self._client.connect(self._link_keys, panel=panel)
         if not result.ok:
             if isinstance(result.error, Exception):
                 raise result.error

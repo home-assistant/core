@@ -41,7 +41,8 @@ DISCOVERY_TIMEOUT = 5
 STEP_MANUAL_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): vol.Coerce(int),
+        vol.Required(CONF_ACCESS_CODE): cv.string,
+        vol.Required(CONF_PASSPHRASE): cv.string,
     }
 )
 
@@ -115,12 +116,19 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             host = user_input[CONF_HOST]
-            port = user_input[CONF_PORT]
+            port = DEFAULT_PORT
+            access_code = user_input[CONF_ACCESS_CODE]
+            passphrase = user_input[CONF_PASSPHRASE]
             self._async_abort_entries_match({CONF_HOST: host, CONF_PORT: port})
-            self._selected_host = host
-            self._selected_port = port
-            self._selected_panel = None
-            return await self.async_step_credentials()
+            return await self._async_link_and_create_entry(
+                host=host,
+                port=port,
+                panel=None,
+                access_code=access_code,
+                passphrase=passphrase,
+                errors=errors,
+                step_id="manual",
+            )
 
         return self.async_show_form(
             step_id="manual",

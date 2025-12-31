@@ -147,26 +147,19 @@ async def test_user_flow_creates_entry(hass: HomeAssistant) -> None:
             result["flow_id"],
             {
                 CONF_HOST: "192.168.1.10",
-                CONF_PORT: DEFAULT_PORT,
+                "access_code": "1234",
+                "passphrase": "test-pass",
             },
         )
 
-        assert result2["type"] is FlowResultType.FORM
-        assert result2["step_id"] == "credentials"
-
-        result3 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"],
-            {"access_code": "1234", "passphrase": "test-pass"},
-        )
-
-        assert result3["type"] is FlowResultType.CREATE_ENTRY
-        assert result3["title"] == "Test Panel"
-        assert result3["data"][CONF_HOST] == "192.168.1.10"
-        assert result3["data"][CONF_PORT] == DEFAULT_PORT
-        assert "link_keys" in result3["data"]
-        assert result3["data"][CONF_INTEGRATION_SERIAL] == "11:22:33:44:55:66"
-        assert "panel_info" in result3["options"]
-        assert "table_info" in result3["options"]
+        assert result2["type"] is FlowResultType.CREATE_ENTRY
+        assert result2["title"] == "Test Panel"
+        assert result2["data"][CONF_HOST] == "192.168.1.10"
+        assert result2["data"][CONF_PORT] == DEFAULT_PORT
+        assert "link_keys" in result2["data"]
+        assert result2["data"][CONF_INTEGRATION_SERIAL] == "11:22:33:44:55:66"
+        assert "panel_info" in result2["options"]
+        assert "table_info" in result2["options"]
 
 
 async def test_discovery_selection_creates_entry(hass: HomeAssistant) -> None:
@@ -276,20 +269,13 @@ async def test_invalid_credentials_returns_error(hass: HomeAssistant) -> None:
             result["flow_id"],
             {
                 CONF_HOST: "192.168.1.30",
-                CONF_PORT: DEFAULT_PORT,
+                "access_code": "1234",
+                "passphrase": "bad-pass",
             },
         )
 
         assert result2["type"] is FlowResultType.FORM
-        assert result2["step_id"] == "credentials"
-
-        result3 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"],
-            {"access_code": "1234", "passphrase": "bad-pass"},
-        )
-
-        assert result3["type"] is FlowResultType.FORM
-        assert result3["errors"]["base"] == "invalid_credentials"
+        assert result2["errors"]["base"] == "invalid_credentials"
 
 
 async def test_relink_updates_entry(hass: HomeAssistant) -> None:

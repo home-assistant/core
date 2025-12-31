@@ -24,14 +24,16 @@
       },
       "manual": {
         "title": "Manual connection",
-        "description": "Enter the host and port.",
+        "description": "Enter the host, access code, and passphrase.",
         "data": {
           "host": "Host",
-          "port": "Port"
+          "access_code": "Access code",
+          "passphrase": "Passphrase"
         },
         "data_description": {
           "host": "The panel host name or IP address.",
-          "port": "The TCP port for the panel."
+          "access_code": "The panel access code used during linking.",
+          "passphrase": "The passphrase used during linking."
         }
       },
       "credentials": {
