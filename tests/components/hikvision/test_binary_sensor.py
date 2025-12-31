@@ -294,6 +294,10 @@ async def test_binary_sensor_update_callback(
     callback_func = add_callback_call[0][0]
     callback_func("motion detected")
 
+    # Wait for the event loop to process the scheduled state update
+    # (callback uses call_soon_threadsafe to schedule update in event loop)
+    await hass.async_block_till_done()
+
     # Verify state was updated
     state = hass.states.get("binary_sensor.front_camera_motion")
     assert state is not None
