@@ -3,13 +3,10 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import ClientError
+from eufy_security import EufySecurityError, InvalidCredentialsError
 import pytest
 
 from homeassistant.components.camera import CameraEntityFeature
-from homeassistant.components.eufy_security.api import (
-    EufySecurityError,
-    InvalidCredentialsError,
-)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er

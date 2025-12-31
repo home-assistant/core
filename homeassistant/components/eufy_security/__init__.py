@@ -6,19 +6,20 @@ import contextlib
 from datetime import datetime
 import logging
 
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-
-from .api import (
+from eufy_security import (
     CannotConnectError,
     CaptchaRequiredError,
     EufySecurityAPI,
     EufySecurityError,
     InvalidCredentialsError,
 )
+
+from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+
 from .const import (
     CONF_API_BASE,
     CONF_PRIVATE_KEY,
@@ -45,9 +46,9 @@ async def async_setup_entry(
 
     # Create API instance
     api = EufySecurityAPI(
-        session,
         entry.data[CONF_EMAIL],
         entry.data[CONF_PASSWORD],
+        session,
     )
 
     # Try to restore crypto state from config entry to avoid re-authentication

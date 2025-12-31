@@ -3,14 +3,15 @@
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from homeassistant import config_entries
-from homeassistant.components.eufy_security.api import (
+from eufy_security import (
     CannotConnectError,
     CaptchaRequiredError,
     EufySecurityError,
     InvalidCaptchaError,
     InvalidCredentialsError,
 )
+
+from homeassistant import config_entries
 from homeassistant.components.eufy_security.config_flow import EufySecurityConfigFlow
 from homeassistant.components.eufy_security.const import DOMAIN
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD

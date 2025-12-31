@@ -1,15 +1,12 @@
 """Test Eufy Security API module."""
 
 import base64
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 import json as json_module
 from unittest.mock import AsyncMock, MagicMock
 
 from aiohttp import ClientError
-import pytest
-
-from homeassistant.components.eufy_security.api import (
-    SERVER_PUBLIC_KEY,
+from eufy_security import (
     Camera,
     CannotConnectError,
     CaptchaRequiredError,
@@ -19,48 +16,52 @@ from homeassistant.components.eufy_security.api import (
     InvalidCredentialsError,
     RequestError,
     Station,
-    _decrypt_api_data,
-    _encrypt_api_data,
-    _raise_on_error,
     async_login,
 )
+from eufy_security.api import (
+    SERVER_PUBLIC_KEY,
+    decrypt_api_data,
+    encrypt_api_data,
+    raise_error,
+)
+import pytest
 
 
 class TestRaiseOnError:
-    """Tests for _raise_on_error helper function."""
+    """Tests for raise_error helper function."""
 
     def test_no_error_when_code_zero(self) -> None:
         """Test no error is raised when code is 0."""
-        _raise_on_error({"code": 0})  # Should not raise
+        raise_error({"code": 0})  # Should not raise
 
     def test_no_error_when_code_missing(self) -> None:
         """Test no error is raised when code is missing."""
-        _raise_on_error({})  # Should not raise, defaults to 0
+        raise_error({})  # Should not raise, defaults to 0
 
     def test_raises_invalid_credentials_for_code_26006(self) -> None:
         """Test InvalidCredentialsError is raised for code 26006."""
         with pytest.raises(InvalidCredentialsError, match="Invalid credentials"):
-            _raise_on_error({"code": 26006, "msg": "Invalid credentials"})
+            raise_error({"code": 26006, "msg": "Invalid credentials"})
 
     def test_raises_invalid_credentials_for_code_26050(self) -> None:
         """Test InvalidCredentialsError is raised for code 26050 (wrong password)."""
         with pytest.raises(InvalidCredentialsError, match="Wrong password"):
-            _raise_on_error({"code": 26050, "msg": "Wrong password"})
+            raise_error({"code": 26050, "msg": "Wrong password"})
 
     def test_raises_invalid_captcha_for_code_100033(self) -> None:
         """Test InvalidCaptchaError is raised for code 100033."""
         with pytest.raises(InvalidCaptchaError, match="Wrong CAPTCHA"):
-            _raise_on_error({"code": 100033, "msg": "Wrong CAPTCHA"})
+            raise_error({"code": 100033, "msg": "Wrong CAPTCHA"})
 
     def test_raises_eufy_security_error_for_unknown_code(self) -> None:
         """Test EufySecurityError is raised for unknown error codes."""
         with pytest.raises(EufySecurityError, match="Unknown error"):
-            _raise_on_error({"code": 99999, "msg": "Unknown error"})
+            raise_error({"code": 99999, "msg": "Unknown error"})
 
     def test_default_message_for_missing_msg(self) -> None:
         """Test default message when msg is missing."""
         with pytest.raises(EufySecurityError, match="Unknown error \\(code 12345\\)"):
-            _raise_on_error({"code": 12345})
+            raise_error({"code": 12345})
 
 
 class TestEncryptDecryptApiData:
@@ -72,8 +73,8 @@ class TestEncryptDecryptApiData:
         key = b"0123456789abcdef0123456789abcdef"
         original_data = "Hello, World!"
 
-        encrypted = _encrypt_api_data(original_data, key)
-        decrypted = _decrypt_api_data(encrypted, key)
+        encrypted = encrypt_api_data(original_data, key)
+        decrypted = decrypt_api_data(encrypted, key)
 
         assert decrypted == original_data
 
@@ -82,7 +83,7 @@ class TestEncryptDecryptApiData:
         key = b"0123456789abcdef0123456789abcdef"
         data = "test data"
 
-        encrypted = _encrypt_api_data(data, key)
+        encrypted = encrypt_api_data(data, key)
 
         # Should be valid base64
         base64.b64decode(encrypted)  # Should not raise
@@ -92,8 +93,8 @@ class TestEncryptDecryptApiData:
         key = b"0123456789abcdef0123456789abcdef"
         # Encrypt data with null terminator
         original = "test\x00"
-        encrypted = _encrypt_api_data(original, key)
-        decrypted = _decrypt_api_data(encrypted, key)
+        encrypted = encrypt_api_data(original, key)
+        decrypted = decrypt_api_data(encrypted, key)
 
         # Null terminator should be stripped
         assert decrypted == "test"
@@ -103,8 +104,8 @@ class TestEncryptDecryptApiData:
         key = b"0123456789abcdef0123456789abcdef"
         original = '{"email": "test@example.com", "password": "secret"}'
 
-        encrypted = _encrypt_api_data(original, key)
-        decrypted = _decrypt_api_data(encrypted, key)
+        encrypted = encrypt_api_data(original, key)
+        decrypted = decrypt_api_data(encrypted, key)
 
         assert decrypted == original
 
@@ -163,7 +164,7 @@ class TestCamera:
 
     def test_camera_properties(self, api_mock: MagicMock, camera_info: dict) -> None:
         """Test Camera property accessors."""
-        camera = Camera(_api=api_mock, camera_info=camera_info)
+        camera = Camera(api=api_mock, camera_info=camera_info)
 
         assert camera.serial == "T1234567890"
         assert camera.name == "Front Door"
@@ -176,7 +177,7 @@ class TestCamera:
 
     def test_camera_missing_properties(self, api_mock: MagicMock) -> None:
         """Test Camera with missing properties."""
-        camera = Camera(_api=api_mock, camera_info={})
+        camera = Camera(api=api_mock, camera_info={})
 
         assert camera.serial == ""
         assert camera.name == "Unknown"
@@ -189,7 +190,7 @@ class TestCamera:
 
     def test_camera_ip_address_empty_string(self, api_mock: MagicMock) -> None:
         """Test Camera returns None for empty IP address."""
-        camera = Camera(_api=api_mock, camera_info={"ip_addr": ""})
+        camera = Camera(api=api_mock, camera_info={"ip_addr": ""})
 
         assert camera.ip_address is None
 
@@ -197,7 +198,7 @@ class TestCamera:
         self, api_mock: MagicMock, camera_info: dict
     ) -> None:
         """Test updating camera with event data."""
-        camera = Camera(_api=api_mock, camera_info=camera_info)
+        camera = Camera(api=api_mock, camera_info=camera_info)
 
         # Initial thumbnail from camera_info
         assert camera.last_camera_image_url == "https://example.com/thumbnail.jpg"
@@ -212,7 +213,7 @@ class TestCamera:
         self, api_mock: MagicMock, camera_info: dict
     ) -> None:
         """Test Camera RTSP credential storage."""
-        camera = Camera(_api=api_mock, camera_info=camera_info)
+        camera = Camera(api=api_mock, camera_info=camera_info)
 
         assert camera.rtsp_username is None
         assert camera.rtsp_password is None
@@ -229,7 +230,7 @@ class TestCamera:
     ) -> None:
         """Test starting stream with local RTSP."""
         camera = Camera(
-            _api=api_mock,
+            api=api_mock,
             camera_info=camera_info,
             rtsp_username="admin",
             rtsp_password="secret123",
@@ -239,7 +240,7 @@ class TestCamera:
 
         assert url == "rtsp://admin:secret123@192.168.1.100:554/live0"
         # API should not be called for local RTSP
-        api_mock.async_request.assert_not_called()
+        api_mock.request.assert_not_called()
 
     @pytest.mark.asyncio
     async def test_camera_start_stream_local_rtsp_url_encodes_credentials(
@@ -247,7 +248,7 @@ class TestCamera:
     ) -> None:
         """Test that RTSP credentials are URL-encoded."""
         camera = Camera(
-            _api=api_mock,
+            api=api_mock,
             camera_info=camera_info,
             rtsp_username="user@home",
             rtsp_password="pass:word/test",
@@ -264,25 +265,25 @@ class TestCamera:
         self, api_mock: MagicMock, camera_info: dict
     ) -> None:
         """Test fallback to cloud streaming when no RTSP credentials."""
-        api_mock.async_request = AsyncMock(
+        api_mock.request = AsyncMock(
             return_value={"data": {"url": "rtsp://cloud.eufy.com/stream"}}
         )
 
-        camera = Camera(_api=api_mock, camera_info=camera_info)
+        camera = Camera(api=api_mock, camera_info=camera_info)
 
         url = await camera.async_start_stream()
 
         assert url == "rtsp://cloud.eufy.com/stream"
-        api_mock.async_request.assert_called_once()
+        api_mock.request.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_camera_start_stream_cloud_failure(
         self, api_mock: MagicMock, camera_info: dict
     ) -> None:
         """Test handling of cloud stream failure."""
-        api_mock.async_request = AsyncMock(side_effect=EufySecurityError("API error"))
+        api_mock.request = AsyncMock(side_effect=EufySecurityError("API error"))
 
-        camera = Camera(_api=api_mock, camera_info=camera_info)
+        camera = Camera(api=api_mock, camera_info=camera_info)
 
         url = await camera.async_start_stream()
 
@@ -293,16 +294,16 @@ class TestCamera:
         self, api_mock: MagicMock, camera_info: dict
     ) -> None:
         """Test stopping camera stream."""
-        api_mock.async_request = AsyncMock()
+        api_mock.request = AsyncMock()
 
-        camera = Camera(_api=api_mock, camera_info=camera_info)
+        camera = Camera(api=api_mock, camera_info=camera_info)
 
         await camera.async_stop_stream()
 
-        api_mock.async_request.assert_called_once_with(
+        api_mock.request.assert_called_once_with(
             "post",
             "v1/web/equipment/stop_stream",
-            data={
+            json={
                 "device_sn": "T1234567890",
                 "station_sn": "T0987654321",
                 "proto": 2,
@@ -314,9 +315,9 @@ class TestCamera:
         self, api_mock: MagicMock, camera_info: dict
     ) -> None:
         """Test handling of stop stream failure."""
-        api_mock.async_request = AsyncMock(side_effect=EufySecurityError("API error"))
+        api_mock.request = AsyncMock(side_effect=EufySecurityError("API error"))
 
-        camera = Camera(_api=api_mock, camera_info=camera_info)
+        camera = Camera(api=api_mock, camera_info=camera_info)
 
         # Should not raise, just log warning
         await camera.async_stop_stream()
@@ -349,9 +350,9 @@ class TestEufySecurityAPI:
     def test_api_initialization(self, session_mock: MagicMock) -> None:
         """Test API client initialization."""
         api = EufySecurityAPI(
-            session_mock,
             email="test@example.com",
             password="secret",
+            websession=session_mock,
             country="US",
         )
 
@@ -366,7 +367,7 @@ class TestEufySecurityAPI:
 
     def test_api_set_token(self, session_mock: MagicMock) -> None:
         """Test setting auth token."""
-        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api = EufySecurityAPI("test@example.com", "secret", session_mock)
 
         expiration = datetime.now() + timedelta(days=1)
         api.set_token("my-token", expiration, "https://api.eufy.com")
@@ -377,7 +378,7 @@ class TestEufySecurityAPI:
 
     def test_api_get_crypto_state(self, session_mock: MagicMock) -> None:
         """Test getting crypto state for serialization."""
-        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api = EufySecurityAPI("test@example.com", "secret", session_mock)
 
         crypto_state = api.get_crypto_state()
 
@@ -390,7 +391,7 @@ class TestEufySecurityAPI:
 
     def test_api_restore_crypto_state_empty_keys(self, session_mock: MagicMock) -> None:
         """Test restore_crypto_state returns False for empty keys."""
-        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api = EufySecurityAPI("test@example.com", "secret", session_mock)
 
         assert api.restore_crypto_state("", "") is False
         assert api.restore_crypto_state("abc", "") is False
@@ -400,7 +401,7 @@ class TestEufySecurityAPI:
         self, session_mock: MagicMock
     ) -> None:
         """Test restore_crypto_state returns False for invalid keys."""
-        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api = EufySecurityAPI("test@example.com", "secret", session_mock)
 
         # Invalid hex
         assert api.restore_crypto_state("not-hex", "also-not-hex") is False
@@ -410,7 +411,7 @@ class TestEufySecurityAPI:
 
     def test_api_restore_crypto_state_valid_keys(self, session_mock: MagicMock) -> None:
         """Test restore_crypto_state works with valid keys."""
-        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api = EufySecurityAPI("test@example.com", "secret", session_mock)
 
         # Get the current crypto state
         original_state = api.get_crypto_state()
@@ -429,7 +430,7 @@ class TestEufySecurityAPI:
         self, session_mock: MagicMock
     ) -> None:
         """Test that _async_get_api_base caches the result."""
-        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api = EufySecurityAPI("test@example.com", "secret", session_mock)
 
         # Pre-set the API base
         api._api_base = "https://cached.eufy.com"
@@ -456,7 +457,7 @@ class TestEufySecurityAPI:
             return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
         )
 
-        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api = EufySecurityAPI("test@example.com", "secret", session_mock)
 
         result = await api._async_get_api_base()
 
@@ -475,7 +476,7 @@ class TestEufySecurityAPI:
             return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
         )
 
-        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api = EufySecurityAPI("test@example.com", "secret", session_mock)
 
         with pytest.raises(CannotConnectError, match="Failed to get API domain"):
             await api._async_get_api_base()
@@ -495,7 +496,7 @@ class TestEufySecurityAPI:
             return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
         )
 
-        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api = EufySecurityAPI("test@example.com", "secret", session_mock)
 
         with pytest.raises(CannotConnectError, match="Error getting domain"):
             await api._async_get_api_base()
@@ -513,7 +514,7 @@ class TestEufySecurityAPI:
             return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
         )
 
-        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api = EufySecurityAPI("test@example.com", "secret", session_mock)
 
         with pytest.raises(CannotConnectError, match="No domain in response"):
             await api._async_get_api_base()
@@ -525,13 +526,13 @@ class TestEufySecurityAPI:
         """Test that _async_get_api_base handles connection errors."""
         session_mock.get = MagicMock(side_effect=ClientError("Connection failed"))
 
-        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api = EufySecurityAPI("test@example.com", "secret", session_mock)
 
         with pytest.raises(CannotConnectError, match="Connection error"):
             await api._async_get_api_base()
 
     @pytest.mark.asyncio
-    async def test_api_async_request_success(self, session_mock: MagicMock) -> None:
+    async def test_api_request_success(self, session_mock: MagicMock) -> None:
         """Test successful API request."""
         mock_response = AsyncMock()
         mock_response.status = 200
@@ -543,19 +544,17 @@ class TestEufySecurityAPI:
             return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
         )
 
-        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api = EufySecurityAPI("test@example.com", "secret", session_mock)
         api._api_base = "https://api.eufy.com"
         api._token = "test-token"
 
-        result = await api.async_request("post", "v1/test/endpoint")
+        result = await api.request("post", "v1/test/endpoint")
 
         assert result == {"code": 0, "data": "test"}
         session_mock.request.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_api_async_request_non_json_response(
-        self, session_mock: MagicMock
-    ) -> None:
+    async def test_api_request_non_json_response(self, session_mock: MagicMock) -> None:
         """Test handling of non-JSON response."""
         mock_response = AsyncMock()
         mock_response.status = 200
@@ -566,16 +565,14 @@ class TestEufySecurityAPI:
             return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
         )
 
-        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api = EufySecurityAPI("test@example.com", "secret", session_mock)
         api._api_base = "https://api.eufy.com"
 
         with pytest.raises(CannotConnectError, match="Unexpected response type"):
-            await api.async_request("post", "v1/test/endpoint")
+            await api.request("post", "v1/test/endpoint")
 
     @pytest.mark.asyncio
-    async def test_api_async_request_empty_response(
-        self, session_mock: MagicMock
-    ) -> None:
+    async def test_api_request_empty_response(self, session_mock: MagicMock) -> None:
         """Test handling of empty response."""
         mock_response = AsyncMock()
         mock_response.status = 200
@@ -587,14 +584,14 @@ class TestEufySecurityAPI:
             return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
         )
 
-        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api = EufySecurityAPI("test@example.com", "secret", session_mock)
         api._api_base = "https://api.eufy.com"
 
         with pytest.raises(RequestError, match="No response"):
-            await api.async_request("post", "v1/test/endpoint")
+            await api.request("post", "v1/test/endpoint")
 
     @pytest.mark.asyncio
-    async def test_api_async_request_401_retry(self, session_mock: MagicMock) -> None:
+    async def test_api_request_401_retry(self, session_mock: MagicMock) -> None:
         """Test 401 response triggers re-authentication."""
         # First call returns 401
         error_401 = ClientError("401 Unauthorized")
@@ -617,29 +614,27 @@ class TestEufySecurityAPI:
 
         session_mock.request = mock_request
 
-        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api = EufySecurityAPI("test@example.com", "secret", session_mock)
         api._api_base = "https://api.eufy.com"
         api._token = "test-token"
         # Mock async_authenticate to avoid actual auth
         api.async_authenticate = AsyncMock()
 
-        result = await api.async_request("post", "v1/test/endpoint")
+        result = await api.request("post", "v1/test/endpoint")
 
         assert result == {"code": 0, "data": "success"}
         api.async_authenticate.assert_called_once()
 
     @pytest.mark.asyncio
-    async def test_api_async_request_connection_error(
-        self, session_mock: MagicMock
-    ) -> None:
+    async def test_api_request_connection_error(self, session_mock: MagicMock) -> None:
         """Test handling of connection error."""
         session_mock.request = MagicMock(side_effect=ClientError("Connection refused"))
 
-        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api = EufySecurityAPI("test@example.com", "secret", session_mock)
         api._api_base = "https://api.eufy.com"
 
         with pytest.raises(CannotConnectError, match="Request error"):
-            await api.async_request("post", "v1/test/endpoint")
+            await api.request("post", "v1/test/endpoint")
 
     @pytest.mark.asyncio
     async def test_api_async_update_device_info(self, session_mock: MagicMock) -> None:
@@ -688,7 +683,7 @@ class TestEufySecurityAPI:
 
         session_mock.request = mock_request_responses
 
-        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api = EufySecurityAPI("test@example.com", "secret", session_mock)
         api._api_base = "https://api.eufy.com"
         api._token = "test-token"
 
@@ -728,7 +723,7 @@ class TestEufySecurityAPI:
             return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
         )
 
-        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api = EufySecurityAPI("test@example.com", "secret", session_mock)
         api._api_base = "https://api.eufy.com"
         api._token = "test-token"
 
@@ -745,7 +740,7 @@ class TestEufySecurityAPI:
         """Test handling of events API failure."""
         session_mock.request = MagicMock(side_effect=EufySecurityError("API error"))
 
-        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api = EufySecurityAPI("test@example.com", "secret", session_mock)
         api._api_base = "https://api.eufy.com"
 
         result = await api.async_get_latest_events()
@@ -755,7 +750,7 @@ class TestEufySecurityAPI:
 
     def test_api_decrypt_response_no_key(self, session_mock: MagicMock) -> None:
         """Test _decrypt_response_data raises error when no key available."""
-        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api = EufySecurityAPI("test@example.com", "secret", session_mock)
         api._response_shared_secret = None
 
         with pytest.raises(EufySecurityError, match="No decryption key"):
@@ -804,7 +799,7 @@ class TestEufySecurityAPI:
             return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
         )
 
-        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api = EufySecurityAPI("test@example.com", "secret", session_mock)
 
         await api.async_authenticate()
 
@@ -844,7 +839,7 @@ class TestEufySecurityAPI:
             return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
         )
 
-        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api = EufySecurityAPI("test@example.com", "secret", session_mock)
 
         with pytest.raises(CaptchaRequiredError) as exc_info:
             await api.async_authenticate()
@@ -881,7 +876,7 @@ class TestEufySecurityAPI:
             return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
         )
 
-        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api = EufySecurityAPI("test@example.com", "secret", session_mock)
 
         with pytest.raises(InvalidCredentialsError, match="Invalid credentials"):
             await api.async_authenticate()
@@ -915,7 +910,7 @@ class TestEufySecurityAPI:
             return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
         )
 
-        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api = EufySecurityAPI("test@example.com", "secret", session_mock)
 
         with pytest.raises(InvalidCredentialsError, match="No auth token"):
             await api.async_authenticate()
@@ -937,7 +932,7 @@ class TestEufySecurityAPI:
         )
         session_mock.post = MagicMock(side_effect=ClientError("Connection failed"))
 
-        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api = EufySecurityAPI("test@example.com", "secret", session_mock)
 
         with pytest.raises(CannotConnectError, match="Connection error"):
             await api.async_authenticate()
@@ -966,7 +961,7 @@ class TestEufySecurityAPI:
             return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
         )
 
-        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api = EufySecurityAPI("test@example.com", "secret", session_mock)
 
         with pytest.raises(CannotConnectError, match="Unexpected response type"):
             await api.async_authenticate()
@@ -1003,7 +998,7 @@ class TestEufySecurityAPI:
             return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
         )
 
-        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api = EufySecurityAPI("test@example.com", "secret", session_mock)
 
         await api.async_authenticate(captcha_id="captcha123", captcha_code="ABC123")
 
@@ -1013,7 +1008,7 @@ class TestEufySecurityAPI:
         assert call_args is not None
 
     @pytest.mark.asyncio
-    async def test_api_async_request_token_expired_refresh(
+    async def test_api_request_token_expired_refresh(
         self, session_mock: MagicMock
     ) -> None:
         """Test that expired token triggers re-authentication."""
@@ -1027,16 +1022,16 @@ class TestEufySecurityAPI:
             return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
         )
 
-        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api = EufySecurityAPI("test@example.com", "secret", session_mock)
         api._api_base = "https://api.eufy.com"
         api._token = "old-token"
-        # Set expiration to the past
-        api._token_expiration = datetime(2020, 1, 1)
+        # Set expiration to the past (timezone-aware)
+        api._token_expiration = datetime(2020, 1, 1, tzinfo=UTC)
 
         # Mock async_authenticate
         api.async_authenticate = AsyncMock()
 
-        await api.async_request("post", "v1/test/endpoint")
+        await api.request("post", "v1/test/endpoint")
 
         # Should have called authenticate due to expired token
         api.async_authenticate.assert_called_once()
@@ -1051,7 +1046,7 @@ class TestEufySecurityAPI:
         events_data = [
             {"device_sn": "T1234567890", "pic_url": "https://example.com/thumb.jpg"}
         ]
-        encrypted = _encrypt_api_data(json_module.dumps(events_data), key)
+        encrypted = encrypt_api_data(json_module.dumps(events_data), key)
 
         mock_response = AsyncMock()
         mock_response.status = 200
@@ -1063,7 +1058,7 @@ class TestEufySecurityAPI:
             return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
         )
 
-        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api = EufySecurityAPI("test@example.com", "secret", session_mock)
         api._api_base = "https://api.eufy.com"
         api._token = "test-token"
         api._response_shared_secret = key
@@ -1100,7 +1095,7 @@ class TestEufySecurityAPI:
             return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
         )
 
-        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api = EufySecurityAPI("test@example.com", "secret", session_mock)
         api._api_base = "https://api.eufy.com"
         api._token = "test-token"
 
@@ -1129,8 +1124,8 @@ class TestEufySecurityAPI:
                 "station_model": "HomeBase 2",
             }
         ]
-        encrypted_devices = _encrypt_api_data(json_module.dumps(devices_data), key)
-        encrypted_stations = _encrypt_api_data(json_module.dumps(stations_data), key)
+        encrypted_devices = encrypt_api_data(json_module.dumps(devices_data), key)
+        encrypted_stations = encrypt_api_data(json_module.dumps(stations_data), key)
 
         call_count = 0
 
@@ -1158,7 +1153,7 @@ class TestEufySecurityAPI:
 
         session_mock.request = mock_request_responses
 
-        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api = EufySecurityAPI("test@example.com", "secret", session_mock)
         api._api_base = "https://api.eufy.com"
         api._token = "test-token"
         api._response_shared_secret = key
@@ -1206,7 +1201,7 @@ class TestEufySecurityAPI:
 
         session_mock.request = mock_request_responses
 
-        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api = EufySecurityAPI("test@example.com", "secret", session_mock)
         api._api_base = "https://api.eufy.com"
         api._token = "test-token"
 
@@ -1253,13 +1248,13 @@ class TestEufySecurityAPI:
 
         session_mock.request = mock_request_responses
 
-        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api = EufySecurityAPI("test@example.com", "secret", session_mock)
         api._api_base = "https://api.eufy.com"
         api._token = "test-token"
 
         # Pre-create camera
         existing_camera = Camera(
-            _api=api,
+            api=api,
             camera_info={
                 "device_sn": "T1234567890",
                 "device_name": "Old Name",
@@ -1363,7 +1358,7 @@ class TestAsyncLogin:
         api = await async_login(
             email="test@example.com",
             password="secret",
-            session=session_mock,
+            websession=session_mock,
             country="US",
         )
 
@@ -1406,7 +1401,7 @@ class TestAsyncLogin:
             await async_login(
                 email="test@example.com",
                 password="secret",
-                session=session_mock,
+                websession=session_mock,
             )
 
         # The error should include the API instance for retry
@@ -1420,7 +1415,7 @@ class TestAsyncLogin:
     ) -> None:
         """Test login with existing API instance (CAPTCHA retry)."""
         # Create an existing API instance
-        existing_api = EufySecurityAPI(session_mock, "test@example.com", "secret", "US")
+        existing_api = EufySecurityAPI("test@example.com", "secret", session_mock, "US")
         existing_api._api_base = "https://security.eufylife.com"
 
         # Mock login response (success with CAPTCHA)
@@ -1455,7 +1450,7 @@ class TestAsyncLogin:
         api = await async_login(
             email="test@example.com",
             password="secret",
-            session=session_mock,
+            websession=session_mock,
             captcha_id="captcha123",
             captcha_code="ABC123",
             api=existing_api,
@@ -1499,7 +1494,7 @@ class TestAsyncLogin:
             await async_login(
                 email="test@example.com",
                 password="wrong",
-                session=session_mock,
+                websession=session_mock,
             )
 
 
@@ -1518,7 +1513,7 @@ class TestEdgeCases:
         """Test getting latest events when decrypted response is null."""
         key = b"0123456789abcdef0123456789abcdef"
         # Encrypt null value
-        encrypted = _encrypt_api_data("null", key)
+        encrypted = encrypt_api_data("null", key)
 
         mock_response = AsyncMock()
         mock_response.status = 200
@@ -1530,7 +1525,7 @@ class TestEdgeCases:
             return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
         )
 
-        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api = EufySecurityAPI("test@example.com", "secret", session_mock)
         api._api_base = "https://api.eufy.com"
         api._token = "test-token"
         api._response_shared_secret = key
@@ -1550,7 +1545,7 @@ class TestEdgeCases:
                 {"device_sn": "T1234567890", "pic_url": "https://example.com/thumb.jpg"}
             ]
         }
-        encrypted = _encrypt_api_data(json_module.dumps(events_data), key)
+        encrypted = encrypt_api_data(json_module.dumps(events_data), key)
 
         mock_response = AsyncMock()
         mock_response.status = 200
@@ -1562,7 +1557,7 @@ class TestEdgeCases:
             return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
         )
 
-        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api = EufySecurityAPI("test@example.com", "secret", session_mock)
         api._api_base = "https://api.eufy.com"
         api._token = "test-token"
         api._response_shared_secret = key
@@ -1577,7 +1572,7 @@ class TestEdgeCases:
         """Test getting latest events when decrypted response is unexpected type."""
         key = b"0123456789abcdef0123456789abcdef"
         # Encrypt just a string (not list/dict/null)
-        encrypted = _encrypt_api_data('"just a string"', key)
+        encrypted = encrypt_api_data('"just a string"', key)
 
         mock_response = AsyncMock()
         mock_response.status = 200
@@ -1589,7 +1584,7 @@ class TestEdgeCases:
             return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
         )
 
-        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api = EufySecurityAPI("test@example.com", "secret", session_mock)
         api._api_base = "https://api.eufy.com"
         api._token = "test-token"
         api._response_shared_secret = key
@@ -1639,7 +1634,7 @@ class TestEdgeCases:
 
         session_mock.request = mock_request_responses
 
-        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api = EufySecurityAPI("test@example.com", "secret", session_mock)
         api._api_base = "https://api.eufy.com"
         api._token = "test-token"
 
@@ -1694,7 +1689,7 @@ class TestEdgeCases:
 
         session_mock.request = mock_request_responses
 
-        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api = EufySecurityAPI("test@example.com", "secret", session_mock)
         api._api_base = "https://api.eufy.com"
         api._token = "test-token"
 
@@ -1706,7 +1701,7 @@ class TestEdgeCases:
         )
 
     @pytest.mark.asyncio
-    async def test_api_async_request_with_custom_headers(
+    async def test_api_request_with_custom_headers(
         self, session_mock: MagicMock
     ) -> None:
         """Test API request with custom headers."""
@@ -1720,11 +1715,11 @@ class TestEdgeCases:
             return_value=AsyncMock(__aenter__=AsyncMock(return_value=mock_response))
         )
 
-        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api = EufySecurityAPI("test@example.com", "secret", session_mock)
         api._api_base = "https://api.eufy.com"
         api._token = "test-token"
 
-        await api.async_request(
+        await api.request(
             "post", "v1/test/endpoint", headers={"Custom-Header": "test-value"}
         )
 
@@ -1734,14 +1729,14 @@ class TestEdgeCases:
         assert call_args.kwargs["headers"]["Custom-Header"] == "test-value"
 
     @pytest.mark.asyncio
-    async def test_api_async_request_401_retry_twice_fails(
+    async def test_api_request_401_retry_twice_fails(
         self, session_mock: MagicMock
     ) -> None:
         """Test 401 response after retry raises InvalidCredentialsError."""
         # Always return 401
         session_mock.request = MagicMock(side_effect=ClientError("401 Unauthorized"))
 
-        api = EufySecurityAPI(session_mock, "test@example.com", "secret")
+        api = EufySecurityAPI("test@example.com", "secret", session_mock)
         api._api_base = "https://api.eufy.com"
         api._token = "test-token"
         api._retry_on_401 = True  # Already retried once
@@ -1749,4 +1744,4 @@ class TestEdgeCases:
         api.async_authenticate = AsyncMock()
 
         with pytest.raises(InvalidCredentialsError, match="Authentication failed"):
-            await api.async_request("post", "v1/test/endpoint")
+            await api.request("post", "v1/test/endpoint")
