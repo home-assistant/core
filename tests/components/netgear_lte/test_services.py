@@ -58,6 +58,10 @@ async def test_set_option(hass: HomeAssistant, setup_integration: None) -> None:
         )
     assert len(mock_client.mock_calls) == 1
 
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,

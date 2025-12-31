@@ -51,9 +51,8 @@ async def _service_handler(call: ServiceCall) -> None:
     host = call.data.get(ATTR_HOST)
 
     entry: NetgearLTEConfigEntry | None = None
-    for candidate in call.hass.config_entries.async_loaded_entries(DOMAIN):
-        if not host or candidate.data.get(CONF_HOST) == host:
-            entry = candidate
+    for entry in call.hass.config_entries.async_loaded_entries(DOMAIN):
+        if entry.data.get(CONF_HOST) == host:
             break
 
     if not entry or not (modem := entry.runtime_data.modem).token:
