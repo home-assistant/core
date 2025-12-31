@@ -8,7 +8,7 @@
   "homekit": {},
   "iot_class": "local_polling",
   "quality_scale": "bronze",
-  "requirements": ["TISApi==0.1.8"],
+  "requirements": ["TISApi==0.1.13"],
   "ssdp": [],
   "zeroconf": []
 }
