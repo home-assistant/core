@@ -1,28 +1,10 @@
 """Tests for the OpenEVSE sensor platform."""
 
-from unittest.mock import MagicMock, patch
-
-import pytest
+from unittest.mock import MagicMock
 
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
-
-
-@pytest.fixture
-def mock_charger():
-    """Create a mock OpenEVSE charger."""
-    with patch("homeassistant.components.openevse.openevsewifi.Charger") as mock:
-        charger = MagicMock()
-        charger.getStatus.return_value = "Charging"
-        charger.getChargeTimeElapsed.return_value = 3600  # 60 minutes in seconds
-        charger.getAmbientTemperature.return_value = 25.5
-        charger.getIRTemperature.return_value = 30.2
-        charger.getRTCTemperature.return_value = 28.7
-        charger.getUsageSession.return_value = 15000  # 15 kWh in Wh
-        charger.getUsageTotal.return_value = 500000  # 500 kWh in Wh
-        mock.return_value = charger
-        yield charger
 
 
 async def test_sensor_setup(
