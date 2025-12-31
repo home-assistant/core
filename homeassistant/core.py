@@ -9,7 +9,6 @@ from __future__ import annotations
 import asyncio
 from collections import UserDict, defaultdict
 from collections.abc import (
-    Awaitable,
     Callable,
     Collection,
     Coroutine,
@@ -129,7 +128,7 @@ type ServiceResponse = JsonObjectType | None
 type EntityServiceResponse = dict[str, ServiceResponse]
 type ConfigEntryServiceCallback = Callable[
     [ConfigEntry, set[Entity], ServiceCall],
-    Awaitable[dict[str, EntityServiceResponse] | None],
+    Coroutine[None, None, EntityServiceResponse | None],
 ]
 
 

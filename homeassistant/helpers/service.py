@@ -35,6 +35,7 @@ from homeassistant.core import (
     HassJob,
     HassJobType,
     HomeAssistant,
+    Service,
     ServiceCall,
     ServiceResponse,
     SupportsResponse,
@@ -728,11 +729,15 @@ def _filter_entities(
     entity_device_classes: Iterable[str | None] | None,
     required_features: Iterable[int] | None,
     referenced: target_helpers.SelectedEntities | None,
+    service_obj: Service,
     domain: str,
     service: str,
-) -> list[Entity]:
+) -> tuple[list[Entity], dict[ConfigEntry, set[Entity]]]:
     """Return a list of entities that pass availability, device class, and features."""
     filtered: list[Entity] = []
+    per_entry_entities: dict[ConfigEntry, set[Entity]] = {
+        ce: set() for ce in service_obj.overrides
+    }
 
     for entity in entity_candidates:
         if not entity.available:
@@ -754,10 +759,58 @@ def _filter_entities(
                 if referenced and entity.entity_id in referenced.referenced:
                     raise ServiceNotSupported(domain, service, entity.entity_id)
                 continue
+        ce = entity.platform.config_entry
+        if ce in per_entry_entities:
+            per_entry_entities[ce].add(entity)
+        else:
+            filtered.append(entity)
 
-        filtered.append(entity)
+    return filtered, per_entry_entities
 
-    return filtered
+
+async def _service_call_wrapper(
+    *,
+    hass: HomeAssistant,
+    entities: set[Entity],
+    handler: ConfigEntryServiceCallback | str | HassJob,
+    config_entry: ConfigEntry | None = None,
+    call: ServiceCall,
+    data: dict | ServiceCall,
+) -> EntityServiceResponse:
+    """Execute a service call for a set of entities, either via normal handler or override.
+
+    Returns a dict mapping entities to ServiceResponse, None, or BaseException.
+    All entities are included in the returned dict.
+
+    Raises:
+        HomeAssistantError: If both or neither of `func` and `override_handler` are provided,
+                            or if `config_entry` is missing for an override.
+    """
+
+    if not entities:
+        raise HomeAssistantError("No entities provided for service call")
+
+    gating_entity = next(iter(entities))
+    if callable(handler):
+        # Override callback path
+        if config_entry is None:
+            raise HomeAssistantError(
+                "`config_entry` must be provided when using an override callback"
+            )
+        result: EntityServiceResponse | None = await gating_entity.async_request_call(
+            handler(config_entry, entities, call)
+        )
+        if result is None:
+            return {entity.entity_id: None for entity in entities}
+        return {entity.entity_id: result.get(entity.entity_id) for entity in entities}
+    # Normal entity service path
+    if len(entities) != 1:
+        raise HomeAssistantError("Normal service handler expects exactly one entity")
+
+    res: ServiceResponse | None = await gating_entity.async_request_call(
+        _handle_entity_call(hass, gating_entity, handler, data, call.context)
+    )
+    return {gating_entity.entity_id: res}
 
 
 @bind_hass
@@ -826,53 +879,60 @@ async def entity_service_call(
             missing.discard(entity.entity_id)
         referenced.log_missing(missing, _LOGGER)
 
-    entities = _filter_entities(
+    service_obj = hass.services.async_services_internal()[call.domain][call.service]
+    entities, per_config_entities = _filter_entities(
         entity_candidates,
         entity_device_classes,
         required_features,
         referenced,
+        service_obj,
         call.domain,
         call.service,
     )
-    if not entities:
+    if not entities and not any(per_config_entities.values()):
         if return_response:
             raise HomeAssistantError(
                 "Service call requested response data but did not match any entities"
             )
         return None
-
-    if len(entities) == 1:
-        # Single entity case avoids creating task
-        entity = entities[0]
-        single_response = await _handle_entity_call(
-            hass, entity, func, data, call.context
-        )
-        if entity.should_poll:
-            # Context expires if the turn on commands took a long time.
-            # Set context again so it's there when we update
-            entity.async_set_context(call.context)
-            await entity.async_update_ha_state(True)
-        return {entity.entity_id: single_response} if return_response else None
-
-    # Use asyncio.gather here to ensure the returned results
-    # are in the same order as the entities list
-    results: list[ServiceResponse | BaseException] = await asyncio.gather(
-        *[
-            entity.async_request_call(
-                _handle_entity_call(hass, entity, func, data, call.context)
-            )
-            for entity in entities
-        ],
-        return_exceptions=True,
-    )
+    # Single entity optimization removed
 
     response_data: EntityServiceResponse = {}
-    for entity, result in zip(entities, results, strict=False):
+    # For overrides: each config entry has a handler and set of entities
+    override_coros = [
+        _service_call_wrapper(
+            hass=hass,
+            entities=entities_set,
+            handler=service_obj.overrides[ce],
+            config_entry=ce,
+            call=call,
+            data=data,
+        )
+        for ce, entities_set in per_config_entities.items()
+    ]
+
+    # For normal entities (not overridden)
+    normal_coros = [
+        _service_call_wrapper(
+            hass=hass,
+            entities={entity},
+            handler=func,
+            call=call,
+            data=data,
+        )
+        for entity in entities
+    ]
+
+    all_results = await asyncio.gather(
+        *override_coros, *normal_coros, return_exceptions=True
+    )
+
+    # Merge results into a single dict
+    for result in all_results:
         if isinstance(result, BaseException):
             raise result from None
-        response_data[entity.entity_id] = result
-
-    tasks: list[asyncio.Task[None]] = []
+        response_data.update(result)
+        tasks: list[asyncio.Task[None]] = []
 
     for entity in entities:
         if not entity.should_poll:
