@@ -59,6 +59,11 @@ class Elke27Hub:
         """Register a listener for area updates."""
         return self.async_add_listener(listener)
 
+    @callback
+    def async_add_zone_listener(self, listener: Callable[[], None]) -> Callable[[], None]:
+        """Register a listener for zone updates."""
+        return self.async_add_listener(listener)
+
     async def async_start(self) -> None:
         """Connect the client, then await readiness."""
         result = await self._client.connect(self._link_keys, panel=self._panel)

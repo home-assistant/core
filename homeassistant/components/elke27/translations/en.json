@@ -47,6 +47,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "zone": {
+        "name": "Zone"
+      }
+    },
     "sensor": {
       "panel_name": {
         "name": "Panel name"
