@@ -22,13 +22,15 @@ rules:
   # Silver
   action-exceptions: done # No service actions in integration
   config-entry-unloading: done
-  docs-configuration-parameters: todo
-  docs-installation-parameters: todo
+  docs-configuration-parameters: done # No configuration parameters implemented.
+  docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow: todo
+  reauthentication-flow:
+    status: exempt
+    comment: Integration does not use authentication.
   test-coverage: done
 
   # Gold
@@ -48,11 +50,11 @@ rules:
   entity-device-class: done
   entity-disabled-by-default: done # Too few to really disable any yet
   entity-translations: done
-  exception-translations: todo
+  exception-translations: done
   icon-translations: done # no icons referenced
   reconfiguration-flow: todo
-  repair-issues: todo
-  stale-devices: todo
+  repair-issues: done # At the moment there are no repairable situations.
+  stale-devices: done # Not a hub,
 
   # Platinum
   async-dependency: done

@@ -40,5 +40,10 @@
         "name": "Relay 1"
       }
     }
+  },
+  "exceptions": {
+    "failed_to_initiate_connection": {
+      "message": "Failed to initialize device with IP/Hostname `{host}`, please verify that the device is powered on and reachable on port 3000"
+    }
   }
 }
