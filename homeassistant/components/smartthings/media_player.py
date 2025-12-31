@@ -218,7 +218,7 @@ class SmartThingsMediaPlayer(SmartThingsEntity, MediaPlayerEntity):
             await self.execute_device_command(
                 Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE,
                 Command.SET_INPUT_SOURCE,
-                argument={"id": source},
+                argument=source,
             )
         else:
             await self.execute_device_command(

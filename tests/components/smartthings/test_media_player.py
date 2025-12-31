@@ -381,7 +381,7 @@ async def test_tv_select_source(
         Capability.SAMSUNG_VD_MEDIA_INPUT_SOURCE,
         Command.SET_INPUT_SOURCE,
         MAIN,
-        argument={"id": "HDMI1"},
+        argument="HDMI1",
     )
 
 
