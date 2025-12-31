@@ -1,17 +1,47 @@
 {
   "title": "Elke27",
   "config": {
+    "error": {
+      "authorization_required": "Authorization is required before the panel can be used.",
+      "cannot_connect": "Unable to connect to the panel.",
+      "invalid_auth": "Invalid credentials.",
+      "invalid_link_keys": "Invalid link keys.",
+      "missing_context": "Missing connection context. Check the panel and link keys.",
+      "unknown": "Unknown error"
+    },
     "step": {
       "user": {
         "title": "Set up Elke27",
-        "description": "Enter your connection details. Validation and device discovery will be added in a later milestone.",
+        "description": "Choose a discovered panel or select manual entry.",
+        "data": {
+          "device": "Panel"
+        },
+        "data_description": {
+          "device": "Select a discovered panel or manual entry."
+        }
+      },
+      "manual": {
+        "title": "Manual connection",
+        "description": "Enter the host, port, and optional link keys.",
         "data": {
           "host": "Host",
-          "port": "Port"
+          "port": "Port",
+          "link_keys": "Link keys (JSON)"
         },
         "data_description": {
           "host": "The panel host name or IP address.",
-          "port": "The TCP port for the panel."
+          "port": "The TCP port for the panel.",
+          "link_keys": "Paste the link keys JSON provided during linking."
+        }
+      },
+      "link": {
+        "title": "Link keys",
+        "description": "Provide link keys if required for this panel.",
+        "data": {
+          "link_keys": "Link keys (JSON)"
+        },
+        "data_description": {
+          "link_keys": "Paste the link keys JSON provided during linking."
         }
       }
     }

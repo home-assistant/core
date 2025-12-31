@@ -10,7 +10,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DOMAIN
+from .const import CONF_LINK_KEYS, CONF_PANEL, DOMAIN
 from .hub import Elke27Hub
 
 _LOGGER = logging.getLogger(__name__)
@@ -20,7 +20,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Elke27 from a config entry."""
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
-    hub = Elke27Hub(host, port)
+    link_keys = entry.data.get(CONF_LINK_KEYS)
+    panel = entry.data.get(CONF_PANEL)
+    hub = Elke27Hub(host, port, link_keys, panel)
     try:
         await hub.async_start()
     except Exception as err:

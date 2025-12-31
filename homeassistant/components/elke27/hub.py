@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Callable
+import asyncio
+from typing import Any
 
 from elke27_lib.client import Elke27Client, Result
 
@@ -12,10 +13,11 @@ from .const import READY_TIMEOUT
 class Elke27Hub:
     """Manage a single Elke27 client instance and its snapshots."""
 
-    def __init__(self, host: str, port: int) -> None:
+    def __init__(self, host: str, port: int, link_keys: Any, panel: Any | None) -> None:
         """Initialize the hub wrapper."""
         self._client = Elke27Client(host, port)
-        self._unsubscribe: Callable[[], None] | None = None
+        self._link_keys = link_keys
+        self._panel = panel
         self._last_result: Result | None = None
         self.panel_info: Any | None = None
         self.table_info: Any | None = None
@@ -34,21 +36,26 @@ class Elke27Hub:
         return self._client
 
     async def async_start(self) -> None:
-        """Connect and start the client, then await readiness."""
-        await self._client.start()
+        """Connect the client, then await readiness."""
+        result = await self._client.connect(self._link_keys, panel=self._panel)
+        if not result.ok:
+            raise RuntimeError(result.error or "Connect failed")
+
         if not self._client.is_ready:
-            await self._client.wait_ready(timeout_s=READY_TIMEOUT)
+            ready = await asyncio.to_thread(
+                self._client.wait_ready, timeout_s=READY_TIMEOUT
+            )
+            if not ready:
+                raise TimeoutError("Client did not become ready before timeout")
         if not self._client.is_ready:
             raise TimeoutError("Client did not become ready before timeout")
-        self._unsubscribe = self._client.subscribe(self._handle_event)
+        self._client.subscribe(self._handle_event)
         self._refresh_snapshots()
 
     async def async_stop(self) -> None:
-        """Stop the client and unregister event handlers."""
-        if self._unsubscribe is not None:
-            self._unsubscribe()
-            self._unsubscribe = None
-        await self._client.stop()
+        """Disconnect the client and unregister event handlers."""
+        self._client.unsubscribe(self._handle_event)
+        await self._client.disconnect()
 
     def _handle_event(self, result: Result) -> None:
         """Handle semantic events from the client."""

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import sys
-from types import ModuleType
+from types import ModuleType, SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -34,15 +34,18 @@ def _mock_elke27_lib(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setitem(sys.modules, "elke27_lib.client", client_module)
 
 
-async def test_setup_unload_calls_start_stop_and_subscribe(
+async def test_setup_unload_calls_connect_disconnect_and_subscribe(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Test client start/stop and event subscription lifecycle."""
+    """Test client connect/disconnect and event subscription lifecycle."""
     _mock_elke27_lib(monkeypatch)
     client = AsyncMock()
     client.is_ready = True
-    unsubscribe = Mock()
-    client.subscribe = Mock(return_value=unsubscribe)
+    client.connect = AsyncMock(return_value=SimpleNamespace(ok=True, error=None))
+    client.wait_ready = Mock(return_value=True)
+    client.subscribe = Mock()
+    client.unsubscribe = Mock(return_value=True)
+    client.disconnect = AsyncMock(return_value=SimpleNamespace(ok=True, error=None))
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -56,14 +59,14 @@ async def test_setup_unload_calls_start_stop_and_subscribe(
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        client.start.assert_awaited_once()
+        client.connect.assert_awaited_once()
         client.subscribe.assert_called_once()
 
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
 
-    unsubscribe.assert_called_once()
-    client.stop.assert_awaited_once()
+    client.unsubscribe.assert_called_once()
+    client.disconnect.assert_awaited_once()
 
 
 async def test_setup_waits_for_ready(
@@ -73,12 +76,16 @@ async def test_setup_waits_for_ready(
     _mock_elke27_lib(monkeypatch)
     client = AsyncMock()
     client.is_ready = False
+    client.connect = AsyncMock(return_value=SimpleNamespace(ok=True, error=None))
+    client.disconnect = AsyncMock(return_value=SimpleNamespace(ok=True, error=None))
 
-    async def _wait_ready(*, timeout_s: int) -> None:
+    def _wait_ready(*, timeout_s: int) -> bool:
         client.is_ready = True
+        return True
 
-    client.wait_ready = AsyncMock(side_effect=_wait_ready)
-    client.subscribe = Mock(return_value=Mock())
+    client.wait_ready = Mock(side_effect=_wait_ready)
+    client.subscribe = Mock()
+    client.unsubscribe = Mock(return_value=True)
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -92,7 +99,7 @@ async def test_setup_waits_for_ready(
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    client.wait_ready.assert_awaited_once_with(timeout_s=READY_TIMEOUT)
+    client.wait_ready.assert_called_once_with(timeout_s=READY_TIMEOUT)
 
 
 async def test_setup_failure_stops_client(
@@ -101,8 +108,9 @@ async def test_setup_failure_stops_client(
     """Test setup failure cleans up the client."""
     _mock_elke27_lib(monkeypatch)
     client = AsyncMock()
-    client.start.side_effect = TimeoutError
-    client.subscribe = Mock()
+    client.connect = AsyncMock(side_effect=TimeoutError)
+    client.unsubscribe = Mock(return_value=True)
+    client.disconnect = AsyncMock(return_value=SimpleNamespace(ok=True, error=None))
 
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -116,4 +124,4 @@ async def test_setup_failure_stops_client(
         assert not await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    client.stop.assert_awaited_once()
+    client.disconnect.assert_awaited_once()
