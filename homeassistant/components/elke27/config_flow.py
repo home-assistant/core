@@ -274,6 +274,8 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
         }
 
         title = panel_info.get("panel_name") if panel_info else host
+        if not title:
+            title = "Elke27 panel"
         if entry is not None:
             self.hass.config_entries.async_update_entry(
                 entry,
@@ -283,7 +285,10 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.hass.config_entries.async_reload(entry.entry_id)
             return self.async_abort(reason="reauth_successful")
 
-        return self.async_create_entry(title=title, data=data, options=options)
+        result = self.async_create_entry(title=title, data=data, options=options)
+        if "title" not in result:
+            result["title"] = title
+        return result
 
     async def _async_discover(self) -> dict[str, Any]:
         """Discover panels via the client."""
@@ -417,9 +422,13 @@ async def _async_link_and_fetch(
             return link_keys, {}, {}, _map_error(result.error)
 
         ready = await asyncio.to_thread(client.wait_ready, timeout_s=READY_TIMEOUT)
-        if not ready:
-            _LOGGER.debug("Client did not become ready before timeout")
-            return link_keys, {}, {}, "cannot_connect"
+        if not ready or not client.is_ready:
+            _LOGGER.debug(
+                "Client did not become ready (ready=%s, is_ready=%s)",
+                ready,
+                client.is_ready,
+            )
+            return link_keys, {}, {}, "not_ready"
 
         panel_info = _snapshot_to_dict(
             client.panel_info,

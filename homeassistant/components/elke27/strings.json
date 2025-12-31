@@ -4,11 +4,12 @@
       "reauth_successful": "Linking was updated successfully."
     },
     "error": {
-      "authorization_required": "Authorization is required before the panel can be used.",
-      "cannot_connect": "Unable to connect to the panel.",
-      "invalid_credentials": "Invalid access code or passphrase.",
-      "invalid_link_keys": "Invalid link keys.",
-      "missing_context": "Missing connection context. Check the panel information.",
+      "authorization_required": "Authorization is required before the panel can be used. Check the access code and passphrase, then try again.",
+      "cannot_connect": "Unable to connect to the panel. Confirm the host is reachable and the panel is online.",
+      "invalid_credentials": "The access code or passphrase is invalid.",
+      "invalid_link_keys": "Stored link keys are invalid. Relink the panel with the access code and passphrase.",
+      "missing_context": "Panel details are missing. Run discovery again or enter the host manually.",
+      "not_ready": "Connected, but the panel did not finish initializing. Wait a moment and try again.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
