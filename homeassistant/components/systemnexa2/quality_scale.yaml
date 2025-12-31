@@ -52,7 +52,7 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done # no icons referenced
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues: done # At the moment there are no repairable situations.
   stale-devices: done # Not a hub,
 

@@ -192,3 +192,52 @@ class SystemNexa2ConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_DEVICE_ID: self._discovered_device.device_id,
             },
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            host = user_input[CONF_HOST]
+            if not _is_valid_host(host):
+                return self.async_show_form(
+                    step_id="reconfigure",
+                    data_schema=vol.Schema(
+                        {vol.Required(CONF_HOST, default=host): str}
+                    ),
+                    errors={"base": "invalid_host"},
+                )
+
+            try:
+                temp_dev = await Device.initiate_device(
+                    host=host,
+                    session=async_get_clientsession(self.hass),
+                )
+                info = await temp_dev.get_info()
+                device_id = info.information.unique_id
+
+                # Verify it's the same device
+                if device_id != entry.unique_id:
+                    return self.async_abort(reason="wrong_device")
+
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data={**entry.data, CONF_HOST: host},
+                )
+            except Exception:  # noqa: BLE001
+                return self.async_show_form(
+                    step_id="reconfigure",
+                    data_schema=vol.Schema(
+                        {vol.Required(CONF_HOST, default=host): str}
+                    ),
+                    errors={"base": "cannot_connect"},
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema(
+                {vol.Required(CONF_HOST, default=entry.data[CONF_HOST]): str}
+            ),
+        )

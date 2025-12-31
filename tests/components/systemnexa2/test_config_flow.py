@@ -291,3 +291,132 @@ async def test_zeroconf_discovery_none_values(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unsupported_model"
+
+
+@pytest.mark.usefixtures("mock_system_nexa_2_device")
+async def test_reconfigure_flow(hass: HomeAssistant) -> None:
+    """Test reconfiguration flow."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "10.0.0.131",
+            CONF_NAME: "Test Device",
+            CONF_DEVICE_ID: "test_device_id",
+            CONF_MODEL: "Test Model",
+        },
+        unique_id="test_device_id",
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    # Test successful reconfiguration with new host
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "10.0.0.132"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_HOST] == "10.0.0.132"
+
+
+async def test_reconfigure_flow_invalid_host(hass: HomeAssistant) -> None:
+    """Test reconfiguration flow with invalid host."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "10.0.0.131",
+            CONF_NAME: "Test Device",
+            CONF_DEVICE_ID: "test_device_id",
+            CONF_MODEL: "Test Model",
+        },
+        unique_id="test_device_id",
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    # Mock socket.gethostbyname to raise error for invalid hostname
+    with patch("socket.gethostbyname", side_effect=socket.gaierror):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "invalid_hostname"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_host"}
+
+
+async def test_reconfigure_flow_cannot_connect(
+    hass: HomeAssistant, mock_system_nexa_2_device: MagicMock
+) -> None:
+    """Test reconfiguration flow with connection error."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "10.0.0.131",
+            CONF_NAME: "Test Device",
+            CONF_DEVICE_ID: "test_device_id",
+            CONF_MODEL: "Test Model",
+        },
+        unique_id="test_device_id",
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    # Mock connection failure
+    mock_system_nexa_2_device.initiate_device.side_effect = Exception(
+        "Connection failed"
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "10.0.0.132"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_reconfigure_flow_wrong_device(
+    hass: HomeAssistant, mock_system_nexa_2_device: MagicMock
+) -> None:
+    """Test reconfiguration flow with different device."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "10.0.0.131",
+            CONF_NAME: "Test Device",
+            CONF_DEVICE_ID: "test_device_id",
+            CONF_MODEL: "Test Model",
+        },
+        unique_id="test_device_id",
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    different_device_info = InformationData(
+        name="Different Device",
+        model="Test Model",
+        unique_id="different_device_id",
+        sw_version="Test Model Version",
+        hw_version="Test HW Version",
+        wifi_dbm=-50,
+        wifi_ssid="Test WiFi SSID",
+        dimmable=False,
+    )
+    mock_system_nexa_2_device.return_value.get_info.return_value = InformationUpdate(
+        information=different_device_info
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "10.0.0.132"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_device"
