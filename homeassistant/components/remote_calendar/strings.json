@@ -13,11 +13,13 @@
       "user": {
         "data": {
           "calendar_name": "Calendar name",
-          "url": "Calendar URL"
+          "url": "Calendar URL",
+          "user_agent": "Custom User-Agent header (optional)"
         },
         "data_description": {
           "calendar_name": "The name of the calendar shown in the UI.",
-          "url": "The URL of the remote calendar."
+          "url": "The URL of the remote calendar.",
+          "user_agent": "If set, this User-Agent string will be sent when fetching the calendar."
         },
         "description": "Please choose a name for the calendar to be imported"
       }

@@ -13,7 +13,7 @@ from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .client import get_calendar
-from .const import DOMAIN
+from .const import CONF_USER_AGENT, DOMAIN
 from .ics import InvalidIcsException, parse_calendar
 
 type RemoteCalendarConfigEntry = ConfigEntry[RemoteCalendarDataUpdateCoordinator]
@@ -44,11 +44,12 @@ class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator[Calendar]):
         )
         self._client = get_async_client(hass)
         self._url = config_entry.data[CONF_URL]
+        self._user_agent = config_entry.data.get(CONF_USER_AGENT)
 
     async def _async_update_data(self) -> Calendar:
         """Update data from the url."""
         try:
-            res = await get_calendar(self._client, self._url)
+            res = await get_calendar(self._client, self._url, self._user_agent)
             res.raise_for_status()
         except TimeoutException as err:
             _LOGGER.debug("%s: %s", self._url, str(err) or type(err).__name__)

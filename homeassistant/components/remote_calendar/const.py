@@ -2,3 +2,4 @@
 
 DOMAIN = "remote_calendar"
 CONF_CALENDAR_NAME = "calendar_name"
+CONF_USER_AGENT = "user_agent"

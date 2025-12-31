@@ -12,7 +12,7 @@ from homeassistant.const import CONF_URL
 from homeassistant.helpers.httpx_client import get_async_client
 
 from .client import get_calendar
-from .const import CONF_CALENDAR_NAME, DOMAIN
+from .const import CONF_CALENDAR_NAME, CONF_USER_AGENT, DOMAIN
 from .ics import InvalidIcsException, parse_calendar
 
 _LOGGER = logging.getLogger(__name__)
@@ -21,6 +21,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_CALENDAR_NAME): str,
         vol.Required(CONF_URL): str,
+        vol.Optional(CONF_USER_AGENT): str,
     }
 )
 
@@ -50,7 +51,9 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
         client = get_async_client(self.hass)
         try:
-            res = await get_calendar(client, user_input[CONF_URL])
+            res = await get_calendar(
+                client, user_input[CONF_URL], user_input[CONF_USER_AGENT]
+            )
             if res.status_code == HTTPStatus.FORBIDDEN:
                 errors["base"] = "forbidden"
                 return self.async_show_form(
