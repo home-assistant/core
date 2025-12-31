@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import asdict, is_dataclass
+from functools import partial
 import inspect
 import logging
 from typing import Any, Callable
@@ -39,6 +40,8 @@ class Elke27Hub:
         self._integration_serial = integration_serial
         self._last_result: Result | None = None
         self._listeners: list[Callable[[], None]] = []
+        self._areas_logged = False
+        self._zones_logged = False
         self.panel_info: Any | None = None
         self.table_info: Any | None = None
         self.areas: Any | None = None
@@ -117,6 +120,30 @@ class Elke27Hub:
         self._client.unsubscribe(self._handle_event)
         await self._client.disconnect()
 
+    async def async_refresh_inventory(self) -> None:
+        """Request the latest inventory from the panel."""
+        if not self._client.is_ready:
+            _LOGGER.debug("Refresh requested while client is not ready")
+            return
+
+        requests: list[Callable[[], Result]] = [
+            partial(self._client.request, ("area", "get_table_info")),
+            partial(self._client.request, ("zone", "get_table_info")),
+            partial(self._client.request, ("output", "get_table_info")),
+            partial(self._client.request, ("tstat", "get_table_info")),
+            partial(self._client.request, ("area", "get_configured"), block_id=1),
+            partial(self._client.request, ("zone", "get_configured"), block_id=1),
+        ]
+        results = await asyncio.gather(
+            *[self._hass.async_add_executor_job(req) for req in requests]
+        )
+        for result in results:
+            if isinstance(result, Result) and not result.ok:
+                _LOGGER.debug(
+                    "Inventory refresh request failed: %s",
+                    result.error or "unknown error",
+                )
+
     async def async_set_output(self, output_id: int, state: bool) -> bool:
         """Request an output state change if supported."""
         method = None
@@ -169,6 +196,31 @@ class Elke27Hub:
         self.settings = getattr(self._client, "settings", None)
         self.tasks = getattr(self._client, "tasks", None)
         self.thermostats = getattr(self._client, "thermostats", None)
+        self._maybe_log_inventory_ready()
+
+    def _maybe_log_inventory_ready(self) -> None:
+        if not self._areas_logged and _snapshot_count(self.areas) > 0:
+            self._areas_logged = True
+            self._schedule_log("areas", self.areas)
+        if not self._zones_logged and _snapshot_count(self.zones) > 0:
+            self._zones_logged = True
+            self._schedule_log("zones", self.zones)
+
+    def _schedule_log(self, label: str, snapshot: Any) -> None:
+        count = _snapshot_count(snapshot)
+
+        def _log() -> None:
+            _LOGGER.debug("Elke27 %s inventory now available (%s)", label, count)
+
+        self._hass.loop.call_soon_threadsafe(_log)
+
+
+def _snapshot_count(snapshot: Any) -> int:
+    if isinstance(snapshot, dict):
+        return sum(1 for item in snapshot.values() if isinstance(item, dict))
+    if isinstance(snapshot, list | tuple):
+        return sum(1 for item in snapshot if isinstance(item, dict))
+    return 0
 
 
 def _client_identity(integration_serial: str) -> E27Identity:
