@@ -4,9 +4,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "Failed to import configuration from YAML. Please verify your credentials and set up the integration via the UI",
       "no_devices": "No devices found on this account",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "unknown": "Failed to import configuration from YAML due to an unexpected error. Please set up the integration via the UI",
-      "wrong_account": "The credentials provided are for a different account"
+      "unknown": "Failed to import configuration from YAML due to an unexpected error. Please set up the integration via the UI"
     },
     "error": {
       "cannot_connect": "Failed to connect to WaterFurnace service",
@@ -14,18 +12,6 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-      "reauth_confirm": {
-        "data": {
-          "password": "[%key:common::config_flow::data::password%]",
-          "username": "[%key:common::config_flow::data::username%]"
-        },
-        "data_description": {
-          "password": "Your new WaterFurnace Symphony account password",
-          "username": "Your WaterFurnace Symphony account username"
-        },
-        "description": "The credentials for your WaterFurnace account need to be updated.",
-        "title": "Reauthenticate WaterFurnace"
-      },
       "user": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",

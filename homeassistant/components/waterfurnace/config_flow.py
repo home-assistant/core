@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -66,10 +65,6 @@ class WaterFurnaceConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize the config flow."""
-        self._username: str | None = None
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -99,56 +94,6 @@ class WaterFurnaceConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=STEP_USER_DATA_SCHEMA,
-            errors=errors,
-        )
-
-    async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Handle reauth flow when credentials expire."""
-        self._username = entry_data.get(CONF_USERNAME)
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reauth confirmation step."""
-        errors: dict[str, str] = {}
-
-        if user_input is not None:
-            # Get the existing entry
-            entry = self._get_reauth_entry()
-
-            # Merge existing entry data with new credentials
-            full_input = {**entry.data, **user_input}
-
-            try:
-                info = await validate_input(self.hass, full_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
-                # Verify the GWID matches the existing entry
-                await self.async_set_unique_id(info["gwid"])
-                self._abort_if_unique_id_mismatch(reason="wrong_account")
-
-                return self.async_update_reload_and_abort(
-                    entry,
-                    data_updates=user_input,
-                )
-
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_USERNAME, default=self._username): str,
-                    vol.Required(CONF_PASSWORD): str,
-                }
-            ),
             errors=errors,
         )
 
