@@ -144,7 +144,7 @@ async def test_migrate_config_entry(
     switch_entities = [
         e for e in entity_registry.entities.values() if e.domain == "switch"
     ]
-    assert len(switch_entities) == 2
+    assert len(switch_entities) == 3
 
     humidifier_entities = [
         e for e in entity_registry.entities.values() if e.domain == "humidifier"
