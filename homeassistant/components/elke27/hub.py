@@ -186,7 +186,8 @@ class Elke27Hub:
 
     def _refresh_snapshots(self) -> None:
         """Capture the latest snapshots from the client."""
-        self.panel_info = getattr(self._client, "panel_info", None)
+        panel_info = getattr(self._client, "panel_info", None)
+        self.panel_info = _merge_panel_info(panel_info, self._panel)
         self.table_info = getattr(self._client, "table_info", None)
         self.areas = getattr(self._client, "areas", None)
         self.zones = getattr(self._client, "zones", None)
@@ -221,6 +222,23 @@ def _snapshot_count(snapshot: Any) -> int:
     if isinstance(snapshot, list | tuple):
         return sum(1 for item in snapshot if isinstance(item, dict))
     return 0
+
+
+def _merge_panel_info(panel_info: Any, panel: Any | None) -> Any:
+    """Merge discovery panel name into panel info when missing."""
+    if panel is None:
+        return panel_info
+    panel_dict = panel if isinstance(panel, dict) else {}
+    panel_name = panel_dict.get("panel_name")
+    if not panel_name:
+        return panel_info
+    if isinstance(panel_info, dict):
+        if panel_info.get("panel_name"):
+            return panel_info
+        merged = dict(panel_info)
+        merged["panel_name"] = panel_name
+        return merged
+    return panel_info
 
 
 def _client_identity(integration_serial: str) -> E27Identity:

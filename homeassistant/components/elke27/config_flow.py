@@ -273,9 +273,11 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_TABLE_INFO: table_info,
         }
 
-        title = panel_info.get("panel_name") if panel_info else host
+        title = panel_info.get("panel_name") if panel_info else None
+        if not title and panel is not None:
+            title = _panel_to_dict(panel).get("panel_name")
         if not title:
-            title = "Elke27 panel"
+            title = host or "Elke27 panel"
         if entry is not None:
             self.hass.config_entries.async_update_entry(
                 entry,
@@ -343,21 +345,27 @@ def _panel_to_dict(panel: Any) -> dict[str, Any]:
     if panel is None:
         return {}
     if is_dataclass(panel):
-        return asdict(panel)
+        data = asdict(panel)
+        return _normalize_panel_keys(data)
     if isinstance(panel, dict):
-        return dict(panel)
-    return {
-        key: getattr(panel, key, None)
-        for key in (
-            "panel_mac",
-            "panel_name",
-            "panel_serial",
-            "panel_host",
-            "port",
-            "tls_port",
-        )
-        if getattr(panel, key, None) is not None
-    }
+        return _normalize_panel_keys(dict(panel))
+    return _normalize_panel_keys(
+        {
+            key: getattr(panel, key, None)
+            for key in (
+                "panel_mac",
+                "panel_name",
+                "panel_serial",
+                "panel_host",
+                "port",
+                "tls_port",
+                "mac",
+                "name",
+                "ip",
+            )
+            if getattr(panel, key, None) is not None
+        }
+    )
 
 
 def _manual_schema(host: str | None) -> vol.Schema:
@@ -382,6 +390,21 @@ def _panel_label(panel: dict[str, Any]) -> str:
             return f"{name} ({host}:{port})"
         return f"{name} ({host})"
     return name
+
+
+def _normalize_panel_keys(panel: dict[str, Any]) -> dict[str, Any]:
+    """Normalize discovery panel keys to the expected schema."""
+    normalized = dict(panel)
+    if "panel_name" not in normalized and "name" in normalized:
+        normalized["panel_name"] = normalized.get("name")
+    if "panel_host" not in normalized:
+        if "ip" in normalized:
+            normalized["panel_host"] = normalized.get("ip")
+        elif "host" in normalized:
+            normalized["panel_host"] = normalized.get("host")
+    if "panel_mac" not in normalized and "mac" in normalized:
+        normalized["panel_mac"] = normalized.get("mac")
+    return normalized
 
 
 async def _async_link_and_fetch(
@@ -442,6 +465,8 @@ async def _async_link_and_fetch(
                 "session_id",
             ],
         )
+        if panel_dict.get("panel_name") and not panel_info.get("panel_name"):
+            panel_info["panel_name"] = panel_dict["panel_name"]
         table_info = _snapshot_to_dict(
             client.table_info,
             [
