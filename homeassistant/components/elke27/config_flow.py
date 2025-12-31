@@ -380,8 +380,11 @@ async def _async_link_and_fetch(
             ],
         )
         return link_keys, panel_info, table_info, None
-    except Exception:
-        _LOGGER.debug("Linking or connection setup failed")
+    except Exception as err:
+        _LOGGER.debug(
+            "Linking or connection setup failed (%s)",
+            err.__class__.__name__,
+        )
         return None, {}, {}, "cannot_connect"
     finally:
         with contextlib.suppress(Exception):
