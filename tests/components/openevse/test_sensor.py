@@ -16,8 +16,6 @@ async def test_sensor_setup(
     mock_config_entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-    await hass.async_block_till_done()
 
     state = hass.states.get("sensor.charging_status")
     assert state.state == "Charging"
