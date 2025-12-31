@@ -3,28 +3,38 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import asdict, is_dataclass
 import inspect
 import logging
 from typing import Any, Callable
 
-from elke27_lib.client import Elke27Client, Result
+from elke27_lib.client import E27Identity, E27LinkKeys, Elke27Client, Result
 
 from homeassistant.core import callback
 
-from .const import READY_TIMEOUT
+from .const import MANUFACTURER_NUMBER, READY_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
+
 
 class Elke27Hub:
     """Manage a single Elke27 client instance and its snapshots."""
 
-    def __init__(self, host: str, port: int, link_keys: Any, panel: Any | None) -> None:
+    def __init__(
+        self,
+        host: str,
+        port: int,
+        link_keys: Any,
+        panel: Any | None,
+        integration_serial: str,
+    ) -> None:
         """Initialize the hub wrapper."""
         self._client = Elke27Client()
         self._host = host
         self._port = port
         self._link_keys = link_keys
         self._panel = panel
+        self._integration_serial = integration_serial
         self._last_result: Result | None = None
         self._listeners: list[Callable[[], None]] = []
         self.panel_info: Any | None = None
@@ -77,7 +87,13 @@ class Elke27Hub:
     async def async_start(self) -> None:
         """Connect the client, then await readiness."""
         panel = self._panel or {"panel_host": self._host, "port": self._port}
-        result = await self._client.connect(self._link_keys, panel=panel)
+        link_keys = _link_keys_from_data(self._link_keys)
+        client_identity = _client_identity(self._integration_serial)
+        result = await self._client.connect(
+            link_keys,
+            panel=panel,
+            client_identity=client_identity,
+        )
         if not result.ok:
             if isinstance(result.error, Exception):
                 raise result.error
@@ -151,3 +167,33 @@ class Elke27Hub:
         self.settings = getattr(self._client, "settings", None)
         self.tasks = getattr(self._client, "tasks", None)
         self.thermostats = getattr(self._client, "thermostats", None)
+
+
+def _client_identity(integration_serial: str) -> E27Identity:
+    """Build the client identity for connect."""
+    return E27Identity(
+        mn=str(MANUFACTURER_NUMBER),
+        sn=integration_serial,
+        fwver="0",
+        hwver="0",
+        osver="0",
+    )
+
+
+def _link_keys_from_data(data: Any) -> E27LinkKeys:
+    """Normalize link keys from stored entry data."""
+    if isinstance(data, E27LinkKeys):
+        return data
+    if is_dataclass(data):
+        data = asdict(data)
+    if isinstance(data, dict):
+        tempkey = data.get("tempkey_hex") or data.get("temp_key") or data.get("tempkey")
+        linkkey = data.get("linkkey_hex") or data.get("link_key") or data.get("linkkey")
+        linkhmac = data.get("linkhmac_hex") or data.get("link_hmac") or data.get("linkhmac")
+        if tempkey and linkkey and linkhmac:
+            return E27LinkKeys(
+                tempkey_hex=str(tempkey),
+                linkkey_hex=str(linkkey),
+                linkhmac_hex=str(linkhmac),
+            )
+    raise ValueError("Link keys are missing required fields")

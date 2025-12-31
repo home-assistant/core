@@ -10,8 +10,32 @@ from types import ModuleType
 from unittest.mock import AsyncMock, Mock, patch
 
 _client_module = ModuleType("elke27_lib.client")
+
+
+@dataclass(frozen=True, slots=True)
+class FakeIdentity:
+    """Minimal identity stub."""
+
+    mn: str
+    sn: str
+    fwver: str
+    hwver: str
+    osver: str
+
+
+@dataclass(frozen=True, slots=True)
+class FakeLinkKeys:
+    """Minimal link keys stub."""
+
+    tempkey_hex: str
+    linkkey_hex: str
+    linkhmac_hex: str
+
+
 _client_module.Elke27Client = object
 _client_module.Result = object
+_client_module.E27Identity = FakeIdentity
+_client_module.E27LinkKeys = FakeLinkKeys
 _package_module = ModuleType("elke27_lib")
 _package_module.client = _client_module
 sys.modules.setdefault("elke27_lib", _package_module)
@@ -110,7 +134,13 @@ async def test_user_flow_creates_entry(hass: HomeAssistant) -> None:
     link_client = AsyncMock()
     link_client.link = AsyncMock(
         return_value=FakeResult(
-            ok=True, data={"link_key": "lk", "link_hmac": "lh"}, error=None
+            ok=True,
+            data={
+                "tempkey_hex": "tk",
+                "linkkey_hex": "lk",
+                "linkhmac_hex": "lh",
+            },
+            error=None,
         )
     )
     link_client.connect = AsyncMock(
@@ -181,7 +211,13 @@ async def test_discovery_selection_creates_entry(hass: HomeAssistant) -> None:
     link_client = AsyncMock()
     link_client.link = AsyncMock(
         return_value=FakeResult(
-            ok=True, data={"link_key": "lk", "link_hmac": "lh"}, error=None
+            ok=True,
+            data={
+                "tempkey_hex": "tk",
+                "linkkey_hex": "lk",
+                "linkhmac_hex": "lh",
+            },
+            error=None,
         )
     )
     link_client.connect = AsyncMock(
@@ -294,7 +330,13 @@ async def test_relink_updates_entry(hass: HomeAssistant) -> None:
     link_client = AsyncMock()
     link_client.link = AsyncMock(
         return_value=FakeResult(
-            ok=True, data={"link_key": "new", "link_hmac": "newh"}, error=None
+            ok=True,
+            data={
+                "tempkey_hex": "newt",
+                "linkkey_hex": "new",
+                "linkhmac_hex": "newh",
+            },
+            error=None,
         )
     )
     link_client.connect = AsyncMock(
@@ -337,4 +379,4 @@ async def test_relink_updates_entry(hass: HomeAssistant) -> None:
 
         assert result2["type"] is FlowResultType.ABORT
         assert result2["reason"] == "reauth_successful"
-        assert entry.data["link_keys"]["link_key"] == "new"
+        assert entry.data["link_keys"]["linkkey_hex"] == "new"

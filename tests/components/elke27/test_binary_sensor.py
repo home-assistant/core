@@ -3,12 +3,37 @@
 from __future__ import annotations
 
 import sys
+from dataclasses import dataclass
 from types import ModuleType
 from unittest.mock import AsyncMock, patch
 
 _client_module = ModuleType("elke27_lib.client")
+
+
+@dataclass(frozen=True, slots=True)
+class FakeIdentity:
+    """Minimal identity stub."""
+
+    mn: str
+    sn: str
+    fwver: str
+    hwver: str
+    osver: str
+
+
+@dataclass(frozen=True, slots=True)
+class FakeLinkKeys:
+    """Minimal link keys stub."""
+
+    tempkey_hex: str
+    linkkey_hex: str
+    linkhmac_hex: str
+
+
 _client_module.Elke27Client = object
 _client_module.Result = object
+_client_module.E27Identity = FakeIdentity
+_client_module.E27LinkKeys = FakeLinkKeys
 _package_module = ModuleType("elke27_lib")
 _package_module.client = _client_module
 sys.modules.setdefault("elke27_lib", _package_module)
@@ -73,7 +98,11 @@ async def test_zone_entities_and_updates(hass: HomeAssistant) -> None:
         data={
             CONF_HOST: "192.168.1.60",
             CONF_PORT: 2101,
-            CONF_LINK_KEYS: {"link_key": "lk", "link_hmac": "lh"},
+            CONF_LINK_KEYS: {
+                "tempkey_hex": "tk",
+                "linkkey_hex": "lk",
+                "linkhmac_hex": "lh",
+            },
             CONF_INTEGRATION_SERIAL: "11:22:33:44:55:66",
         },
     )

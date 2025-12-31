@@ -37,12 +37,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry,
             data={**entry.data, CONF_INTEGRATION_SERIAL: integration_serial},
         )
+    integration_serial = entry.data[CONF_INTEGRATION_SERIAL]
     panel = entry.data.get(CONF_PANEL)
-    hub = Elke27Hub(host, port, link_keys, panel)
+    hub = Elke27Hub(host, port, link_keys, panel, integration_serial)
     try:
         await hub.async_start()
     except Exception as err:
-        if err.__class__.__name__ in {"InvalidLinkKeys", "InvalidCredentials"}:
+        if err.__class__.__name__ in {"InvalidLinkKeys", "InvalidCredentials"} or (
+            isinstance(err, ValueError) and "Link keys" in str(err)
+        ):
             raise ConfigEntryAuthFailed(
                 "Linking credentials are invalid; relink required"
             ) from err

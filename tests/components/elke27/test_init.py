@@ -3,14 +3,39 @@
 from __future__ import annotations
 
 import sys
+from dataclasses import dataclass
 from types import ModuleType, SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
 _client_module = ModuleType("elke27_lib.client")
+
+
+@dataclass(frozen=True, slots=True)
+class FakeIdentity:
+    """Minimal identity stub."""
+
+    mn: str
+    sn: str
+    fwver: str
+    hwver: str
+    osver: str
+
+
+@dataclass(frozen=True, slots=True)
+class FakeLinkKeys:
+    """Minimal link keys stub."""
+
+    tempkey_hex: str
+    linkkey_hex: str
+    linkhmac_hex: str
+
+
 _client_module.Elke27Client = object
 _client_module.Result = object
+_client_module.E27Identity = FakeIdentity
+_client_module.E27LinkKeys = FakeLinkKeys
 _package_module = ModuleType("elke27_lib")
 _package_module.client = _client_module
 sys.modules.setdefault("elke27_lib", _package_module)
@@ -32,6 +57,8 @@ from tests.common import MockConfigEntry
 def _mock_elke27_lib(monkeypatch: pytest.MonkeyPatch) -> None:
     """Install a minimal elke27_lib stub for import-time safety."""
     client_module = ModuleType("elke27_lib.client")
+    client_module.E27Identity = FakeIdentity
+    client_module.E27LinkKeys = FakeLinkKeys
     client_module.Elke27Client = object
     client_module.Result = object
     package_module = ModuleType("elke27_lib")
@@ -69,7 +96,11 @@ async def test_setup_unload_calls_connect_disconnect_and_subscribe(
         data={
             CONF_HOST: "192.168.1.10",
             CONF_PORT: DEFAULT_PORT,
-            CONF_LINK_KEYS: {"link_key": "lk", "link_hmac": "lh"},
+            CONF_LINK_KEYS: {
+                "tempkey_hex": "tk",
+                "linkkey_hex": "lk",
+                "linkhmac_hex": "lh",
+            },
             CONF_INTEGRATION_SERIAL: "11:22:33:44:55:66",
         },
     )
@@ -117,7 +148,11 @@ async def test_setup_waits_for_ready(
         data={
             CONF_HOST: "192.168.1.11",
             CONF_PORT: DEFAULT_PORT,
-            CONF_LINK_KEYS: {"link_key": "lk", "link_hmac": "lh"},
+            CONF_LINK_KEYS: {
+                "tempkey_hex": "tk",
+                "linkkey_hex": "lk",
+                "linkhmac_hex": "lh",
+            },
             CONF_INTEGRATION_SERIAL: "11:22:33:44:55:66",
         },
     )
@@ -148,7 +183,11 @@ async def test_setup_failure_stops_client(
         data={
             CONF_HOST: "192.168.1.12",
             CONF_PORT: DEFAULT_PORT,
-            CONF_LINK_KEYS: {"link_key": "lk", "link_hmac": "lh"},
+            CONF_LINK_KEYS: {
+                "tempkey_hex": "tk",
+                "linkkey_hex": "lk",
+                "linkhmac_hex": "lh",
+            },
             CONF_INTEGRATION_SERIAL: "11:22:33:44:55:66",
         },
     )

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
-from dataclasses import asdict, is_dataclass
+from dataclasses import asdict, dataclass, is_dataclass
 import logging
 from typing import Any
 
@@ -14,7 +14,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers import config_validation as cv
 
-from elke27_lib.client import Elke27Client
+from elke27_lib.client import E27Identity, E27LinkKeys, Elke27Client
 
 from .const import (
     CONF_INTEGRATION_SERIAL,
@@ -22,6 +22,7 @@ from .const import (
     CONF_PANEL,
     DEFAULT_PORT,
     DOMAIN,
+    MANUFACTURER_NUMBER,
     READY_TIMEOUT,
 )
 from .identity import async_get_integration_serial
@@ -52,6 +53,14 @@ STEP_CREDENTIALS_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_PASSPHRASE): cv.string,
     }
 )
+
+
+@dataclass(frozen=True, slots=True)
+class _LinkCredentials:
+    """Container for link credentials expected by the client API."""
+
+    access_code: str
+    passphrase: str
 
 
 class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -231,7 +240,7 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
 
         panel_for_link = panel or {"panel_host": host, "port": port}
         link_keys, panel_info, table_info, error = await _async_link_and_fetch(
-            access_code, passphrase, panel_for_link
+            access_code, passphrase, panel_for_link, integration_serial
         )
         if error:
             errors["base"] = error
@@ -245,7 +254,7 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
 
         data: dict[str, Any] = {CONF_HOST: host, CONF_PORT: port}
         if link_keys is not None:
-            data[CONF_LINK_KEYS] = link_keys
+            data[CONF_LINK_KEYS] = _link_keys_to_dict(link_keys)
         data[CONF_INTEGRATION_SERIAL] = integration_serial
         if panel is not None:
             data[CONF_PANEL] = _panel_to_dict(panel)
@@ -340,52 +349,27 @@ async def _async_link_and_fetch(
     access_code: str,
     passphrase: str,
     panel: Any,
-) -> tuple[Any, dict[str, Any], dict[str, Any], str | None]:
+    integration_serial: str,
+) -> tuple[E27LinkKeys | None, dict[str, Any], dict[str, Any], str | None]:
     """Link, connect to the panel, and return snapshots."""
+    panel_dict = _panel_to_dict(panel)
     client = Elke27Client()
     try:
-        try:
-            link_result = await client.link(
-                access_code=access_code,
-                passphrase=passphrase,
-                panel=panel,
-            )
-        except TypeError as err:
-            message = str(err)
-            if "unexpected keyword argument 'access_code'" in message:
-                try:
-                    link_result = await client.link(
-                        access_code,
-                        passphrase,
-                        _panel_to_dict(panel),
-                    )
-                except AttributeError as attr_err:
-                    if "object has no attribute 'get'" not in str(attr_err):
-                        raise
-                    link_result = await client.link(
-                        _panel_to_dict(panel),
-                        access_code,
-                        passphrase,
-                    )
-            elif "passphrase" in message or "pass_phrase" in message:
-                link_result = await client.link(
-                    access_code=access_code,
-                    pass_phrase=passphrase,
-                    panel=panel,
-                )
-            elif "panel" in message:
-                link_result = await client.link(
-                    access_code=access_code,
-                    passphrase=passphrase,
-                )
-            else:
-                raise
+        client_identity = _client_identity(integration_serial)
+        credentials = _LinkCredentials(access_code=access_code, passphrase=passphrase)
+        link_result = await client.link(panel_dict, client_identity, credentials)
 
         if not link_result.ok:
             return None, {}, {}, _map_error(link_result.error)
 
-        link_keys = link_result.data
-        result = await client.connect(link_keys, panel=panel)
+        link_keys = _link_keys_from_result(link_result.data)
+        if link_keys is None:
+            return None, {}, {}, "cannot_connect"
+        result = await client.connect(
+            link_keys,
+            panel=panel_dict,
+            client_identity=client_identity,
+        )
         if not result.ok:
             return link_keys, {}, {}, _map_error(result.error)
 
@@ -438,6 +422,50 @@ def _snapshot_to_dict(snapshot: Any, field_names: list[str]) -> dict[str, Any]:
         return dict(snapshot)
     data = {name: getattr(snapshot, name, None) for name in field_names}
     return {key: value for key, value in data.items() if value is not None}
+
+
+def _client_identity(integration_serial: str) -> E27Identity:
+    """Build the client identity for provisioning."""
+    return E27Identity(
+        mn=str(MANUFACTURER_NUMBER),
+        sn=integration_serial,
+        fwver="0",
+        hwver="0",
+        osver="0",
+    )
+
+
+def _link_keys_from_result(data: Any) -> E27LinkKeys | None:
+    """Normalize link keys from client result data."""
+    if data is None:
+        return None
+    if isinstance(data, E27LinkKeys):
+        return data
+    if is_dataclass(data):
+        data = asdict(data)
+    if isinstance(data, dict):
+        tempkey = data.get("tempkey_hex") or data.get("temp_key") or data.get("tempkey")
+        linkkey = data.get("linkkey_hex") or data.get("link_key") or data.get("linkkey")
+        linkhmac = data.get("linkhmac_hex") or data.get("link_hmac") or data.get("linkhmac")
+        if tempkey and linkkey and linkhmac:
+            return E27LinkKeys(
+                tempkey_hex=str(tempkey),
+                linkkey_hex=str(linkkey),
+                linkhmac_hex=str(linkhmac),
+            )
+    return None
+
+
+def _link_keys_to_dict(link_keys: E27LinkKeys) -> dict[str, str]:
+    """Serialize link keys for storage."""
+    if is_dataclass(link_keys):
+        data = asdict(link_keys)
+        return {key: str(value) for key, value in data.items()}
+    return {
+        "tempkey_hex": str(getattr(link_keys, "tempkey_hex")),
+        "linkkey_hex": str(getattr(link_keys, "linkkey_hex")),
+        "linkhmac_hex": str(getattr(link_keys, "linkhmac_hex")),
+    }
 
 
 def _map_error(error: Any) -> str:
