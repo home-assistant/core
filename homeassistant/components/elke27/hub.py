@@ -10,7 +10,7 @@ from typing import Any, Callable
 
 from elke27_lib.client import E27Identity, E27LinkKeys, Elke27Client, Result
 
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 
 from .const import MANUFACTURER_NUMBER, READY_TIMEOUT
 
@@ -22,6 +22,7 @@ class Elke27Hub:
 
     def __init__(
         self,
+        hass: HomeAssistant,
         host: str,
         port: int,
         link_keys: Any,
@@ -29,6 +30,7 @@ class Elke27Hub:
         integration_serial: str,
     ) -> None:
         """Initialize the hub wrapper."""
+        self._hass = hass
         self._client = Elke27Client()
         self._host = host
         self._port = port
@@ -153,7 +155,7 @@ class Elke27Hub:
         self._last_result = result
         self._refresh_snapshots()
         for listener in list(self._listeners):
-            listener()
+            self._hass.loop.call_soon_threadsafe(listener)
 
     def _refresh_snapshots(self) -> None:
         """Capture the latest snapshots from the client."""

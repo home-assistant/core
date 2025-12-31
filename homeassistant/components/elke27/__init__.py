@@ -39,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     integration_serial = entry.data[CONF_INTEGRATION_SERIAL]
     panel = entry.data.get(CONF_PANEL)
-    hub = Elke27Hub(host, port, link_keys, panel, integration_serial)
+    hub = Elke27Hub(hass, host, port, link_keys, panel, integration_serial)
     try:
         await hub.async_start()
     except Exception as err:
