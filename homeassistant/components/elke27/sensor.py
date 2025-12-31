@@ -11,12 +11,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, EntityCategory
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import DOMAIN
+from .entity import device_info_for_entry, get_panel_field, unique_base
 from .hub import Elke27Hub
 
 
@@ -32,7 +32,7 @@ SENSORS: tuple[Elke27SensorDescription, ...] = (
     Elke27SensorDescription(
         key="panel_name",
         translation_key="panel_name",
-        value_fn=lambda hub: _get_panel_field(hub, "panel_name"),
+        value_fn=lambda hub: get_panel_field(hub, "panel_name"),
     ),
     Elke27SensorDescription(
         key="panel_ready",
@@ -55,13 +55,6 @@ async def async_setup_entry(
     )
 
 
-def _get_panel_field(hub: Elke27Hub, field: str) -> Any:
-    panel_info = hub.panel_info
-    if isinstance(panel_info, dict):
-        return panel_info.get(field)
-    return getattr(panel_info, field, None)
-
-
 class Elke27Sensor(SensorEntity):
     """Representation of an Elke27 sensor."""
 
@@ -77,8 +70,8 @@ class Elke27Sensor(SensorEntity):
         self.entity_description = description
         self._attr_device_class = description.device_class
         self._attr_translation_key = description.translation_key
-        self._attr_unique_id = f"{_unique_base(hub, entry)}_{description.key}"
-        self._attr_device_info = _device_info(hub, entry)
+        self._attr_unique_id = f"{unique_base(hub, entry)}_{description.key}"
+        self._attr_device_info = device_info_for_entry(hub, entry)
 
     async def async_added_to_hass(self) -> None:
         """Register for hub updates."""
@@ -93,19 +86,3 @@ class Elke27Sensor(SensorEntity):
     def native_value(self) -> Any:
         """Return the current value."""
         return self.entity_description.value_fn(self._hub)
-
-
-def _device_info(hub: Elke27Hub, entry: ConfigEntry) -> DeviceInfo:
-    panel_name = _get_panel_field(hub, "panel_name") or entry.title
-    mac = _get_panel_field(hub, "panel_mac")
-    identifiers = {(DOMAIN, mac)} if mac else {(DOMAIN, entry.entry_id)}
-    return DeviceInfo(identifiers=identifiers, name=panel_name)
-
-
-def _unique_base(hub: Elke27Hub, entry: ConfigEntry) -> str:
-    mac = _get_panel_field(hub, "panel_mac")
-    if mac:
-        return str(mac)
-    if entry.unique_id:
-        return entry.unique_id
-    return entry.data[CONF_HOST]
