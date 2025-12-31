@@ -543,8 +543,9 @@ class BlockSleepingClimate(
         """Set block state (HTTP request)."""
         LOGGER.debug("Setting state for entity %s, state: %s", self.name, kwargs)
         try:
-            return await self.coordinator.device.http_request(
-                "get", f"thermostat/{self._channel}", kwargs
+            return await self.coordinator.device.set_thermostat_state(
+                self._channel,
+                kwargs,  # type: ignore[call-arg]
             )
         except DeviceConnectionError as err:
             self.coordinator.last_update_success = False
