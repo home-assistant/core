@@ -328,7 +328,7 @@ async def test_select_source(
     devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test media player stop command."""
+    """Test media player select source command."""
     await setup_integration(hass, mock_config_entry)
 
     state = hass.states.get("media_player.soundbar")
@@ -402,8 +402,8 @@ async def test_tv_source_list(
     assert state.attributes[ATTR_INPUT_SOURCE_LIST] == [
         "dtv",
         "HDMI1",
-        "HDMI4",
-        "HDMI4",
+        "HDMI2",
+        "HDMI3",
     ]
 
 
