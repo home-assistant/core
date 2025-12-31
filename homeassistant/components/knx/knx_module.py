@@ -75,6 +75,7 @@ class KNXModule:
         self.connected = False
         self.exposures: list[KNXExposeSensor | KNXExposeTime] = []
         self.service_exposures: dict[str, KNXExposeSensor | KNXExposeTime] = {}
+        self.ui_exposures: dict[str, KNXExposeSensor | KNXExposeTime] = {}
         self.entry = entry
 
         self.project = KNXProject(hass=hass, entry=entry)

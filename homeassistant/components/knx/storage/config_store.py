@@ -1,6 +1,7 @@
 """KNX entity configuration store."""
 
 from abc import ABC, abstractmethod
+from copy import deepcopy
 import logging
 from typing import Any, Final, TypedDict
 
@@ -11,8 +12,11 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.storage import Store
 from homeassistant.util.ulid import ulid_now
 
-from ..const import DOMAIN
-from .const import CONF_DATA
+from .. import create_and_register_knx_exposure
+from ..const import DOMAIN, KNX_ADDRESS
+from ..expose import create_knx_exposure
+from ..services import get_knx_module
+from .const import CONF_DATA, CONF_GA_WRITE
 from .migration import migrate_1_to_2, migrate_2_1_to_2_2
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,12 +29,14 @@ type KNXPlatformStoreModel = dict[str, dict[str, Any]]  # unique_id: configurati
 type KNXEntityStoreModel = dict[
     str, KNXPlatformStoreModel
 ]  # platform: KNXPlatformStoreModel
+type KNXExposeStoreModel = KNXPlatformStoreModel
 
 
 class KNXConfigStoreModel(TypedDict):
     """Represent KNX configuration store data."""
 
     entities: KNXEntityStoreModel
+    expose: KNXExposeStoreModel
 
 
 class PlatformControllerBase(ABC):
@@ -79,12 +85,13 @@ class KNXConfigStore:
         self._store = _KNXConfigStoreStorage(
             hass, STORAGE_VERSION, STORAGE_KEY, minor_version=STORAGE_VERSION_MINOR
         )
-        self.data = KNXConfigStoreModel(entities={})
+        self.data = KNXConfigStoreModel(entities={}, expose={})
         self._platform_controllers: dict[Platform, PlatformControllerBase] = {}
 
     async def load_data(self) -> None:
         """Load config store data from storage."""
         if data := await self._store.async_load():
+            data.setdefault("expose", {})
             self.data = KNXConfigStoreModel(**data)
             _LOGGER.debug(
                 "Loaded KNX config data from storage. %s entity platforms",
@@ -173,6 +180,69 @@ class KNXConfigStore:
             )
             if registry_entry.unique_id in unique_ids
         ]
+
+    async def create_expose(self, data: dict[str, Any]) -> str:
+        """Create a new expose and return its address."""
+        address = str(data[KNX_ADDRESS][CONF_GA_WRITE])
+        if address in self.data["expose"]:
+            raise ValueError(f'There is already an exposure registered at address {address}')
+        knx_module = get_knx_module(self.hass)
+        exposure = create_and_register_knx_exposure(self.hass, knx_module.xknx, data)
+        knx_module.ui_exposures[address] = exposure
+        # store data after the expose was added to be sure config didn't raise exceptions
+        self.data["expose"][address] = data
+        await self._store.async_save(self.data)
+        return address
+
+    @callback
+    def get_expose_config(self, address: str) -> dict[str, Any]:
+        """Return KNX expose configuration."""
+        knx_module = get_knx_module(self.hass)
+        if knx_module.ui_exposures.get(address) is None:
+            raise ConfigStoreException(f"Expose not found: {address}")
+        try:
+            return deepcopy(self.data["expose"][address])
+        except KeyError as err:
+            raise ConfigStoreException(f"Expose data not found: {address}") from err
+
+    async def update_expose(self, data: dict[str, Any]) -> str:
+        """Update an existing expose and return its address."""
+        address = str(data[KNX_ADDRESS][CONF_GA_WRITE])
+        knx_module = get_knx_module(self.hass)
+        if (existing_expose := knx_module.ui_exposures.get(address)) is None:
+            raise ConfigStoreException(f"Expose not found: {address}")
+        if address not in self.data["expose"]:
+            raise ConfigStoreException(
+                f"Expose not found in storage: {address}"
+            )
+        updated_expose = create_knx_exposure(self.hass, knx_module.xknx, data)
+        # remove previous expose only after ensuring the config doesn't raise exceptions
+        del knx_module.ui_exposures[address]
+        existing_expose.async_remove()
+        updated_expose.async_register()
+        knx_module.ui_exposures[address] = updated_expose
+        # store data after the expose is added to make sure config doesn't raise exceptions
+        self.data["expose"][address] = data
+        await self._store.async_save(self.data)
+        return address
+
+    async def delete_expose(self, address: str) -> None:
+        """Delete an existing expose."""
+        knx_module = get_knx_module(self.hass)
+        if (expose := knx_module.ui_exposures.pop(address)) is None:
+            raise ConfigStoreException(f"Expose not found: {address}")
+        try:
+            del self.data["expose"][address]
+        except KeyError as err:
+            raise ConfigStoreException(
+                f"Expose not found: {address}"
+            ) from err
+        expose.async_remove()
+        await self._store.async_save(self.data)
+
+    def get_expose_entries(self) -> dict[str, dict[str, Any]]:
+        """Get the data of all UI configured expose entries."""
+        return deepcopy(self.data["expose"])
 
 
 class ConfigStoreException(Exception):
