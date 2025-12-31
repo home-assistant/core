@@ -131,6 +131,11 @@ async def test_user_flow_creates_entry(hass: HomeAssistant) -> None:
         return_value=FakeResult(ok=True, data=FakeDiscoverResult(panels=[]), error=None)
     )
 
+    manual_discover_client = AsyncMock()
+    manual_discover_client.discover = AsyncMock(
+        return_value=FakeResult(ok=True, data=FakeDiscoverResult(panels=[]), error=None)
+    )
+
     link_client = AsyncMock()
     link_client.link = AsyncMock(
         return_value=FakeResult(
@@ -159,7 +164,7 @@ async def test_user_flow_creates_entry(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.elke27.config_flow.Elke27Client",
-        side_effect=_client_factory([discover_client, link_client]),
+        side_effect=_client_factory([discover_client, manual_discover_client, link_client]),
     ), patch(
         "homeassistant.components.elke27.config_flow.async_get_integration_serial",
         AsyncMock(return_value="11:22:33:44:55:66"),
@@ -276,6 +281,11 @@ async def test_invalid_credentials_returns_error(hass: HomeAssistant) -> None:
         return_value=FakeResult(ok=True, data=FakeDiscoverResult(panels=[]), error=None)
     )
 
+    manual_discover_client = AsyncMock()
+    manual_discover_client.discover = AsyncMock(
+        return_value=FakeResult(ok=True, data=FakeDiscoverResult(panels=[]), error=None)
+    )
+
     class InvalidCredentials(Exception):
         """Stub invalid credentials error."""
 
@@ -289,7 +299,7 @@ async def test_invalid_credentials_returns_error(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.elke27.config_flow.Elke27Client",
-        side_effect=_client_factory([discover_client, link_client]),
+        side_effect=_client_factory([discover_client, manual_discover_client, link_client]),
     ), patch(
         "homeassistant.components.elke27.config_flow.async_get_integration_serial",
         AsyncMock(return_value="11:22:33:44:55:66"),

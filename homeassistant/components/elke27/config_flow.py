@@ -128,11 +128,20 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
             port = DEFAULT_PORT
             access_code = user_input[CONF_ACCESS_CODE]
             passphrase = user_input[CONF_PASSPHRASE]
+            panel = await self._async_discover_panel_for_host(host)
+            if panel is not None:
+                panel_dict = _panel_to_dict(panel)
+                panel_mac = panel_dict.get("panel_mac")
+                if panel_mac:
+                    await self.async_set_unique_id(panel_mac)
+                    self._abort_if_unique_id_configured(
+                        updates={CONF_HOST: host, CONF_PORT: port}
+                    )
             self._async_abort_entries_match({CONF_HOST: host, CONF_PORT: port})
             return await self._async_link_and_create_entry(
                 host=host,
                 port=port,
-                panel=None,
+                panel=panel,
                 access_code=access_code,
                 passphrase=passphrase,
                 errors=errors,
@@ -298,6 +307,31 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
                 panels[panel_id] = panel
         return panels
 
+    async def _async_discover_panel_for_host(self, host: str) -> Any | None:
+        """Attempt discovery for a specific host to enrich panel context."""
+        try:
+            client = Elke27Client()
+            result = await client.discover(timeout=DISCOVERY_TIMEOUT, address=host)
+        except Exception as err:
+            _LOGGER.debug("Discovery for %s failed: %s", host, err)
+            return None
+
+        if not result.ok or result.data is None:
+            if result.error:
+                _LOGGER.debug("Discovery for %s error: %s", host, result.error)
+            return None
+
+        if result.data.panels:
+            panel = result.data.panels[0]
+            panel_dict = _panel_to_dict(panel)
+            _LOGGER.debug(
+                "Using discovered panel context for %s (keys=%s)",
+                host,
+                sorted(panel_dict),
+            )
+            return panel
+        return None
+
 
 def _panel_to_dict(panel: Any) -> dict[str, Any]:
     """Normalize a discovered panel entry into a dict."""
@@ -357,13 +391,20 @@ async def _async_link_and_fetch(
     try:
         client_identity = _client_identity(integration_serial)
         credentials = _LinkCredentials(access_code=access_code, passphrase=passphrase)
+        _LOGGER.debug(
+            "Linking using panel context keys=%s",
+            sorted(panel_dict),
+        )
         link_result = await client.link(panel_dict, client_identity, credentials)
 
         if not link_result.ok:
+            if link_result.error:
+                _LOGGER.debug("Link failed: %s", link_result.error)
             return None, {}, {}, _map_error(link_result.error)
 
         link_keys = _link_keys_from_result(link_result.data)
         if link_keys is None:
+            _LOGGER.debug("Link did not return usable keys")
             return None, {}, {}, "cannot_connect"
         result = await client.connect(
             link_keys,
@@ -371,10 +412,13 @@ async def _async_link_and_fetch(
             client_identity=client_identity,
         )
         if not result.ok:
+            if result.error:
+                _LOGGER.debug("Connect failed: %s", result.error)
             return link_keys, {}, {}, _map_error(result.error)
 
         ready = await asyncio.to_thread(client.wait_ready, timeout_s=READY_TIMEOUT)
         if not ready:
+            _LOGGER.debug("Client did not become ready before timeout")
             return link_keys, {}, {}, "cannot_connect"
 
         panel_info = _snapshot_to_dict(
