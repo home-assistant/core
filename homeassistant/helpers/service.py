@@ -788,20 +788,19 @@ async def _service_call_wrapper(
     All entities are included in the returned dict.
 
     Raises:
-        HomeAssistantError: If both or neither of `func` and `override_handler` are provided,
-                            or if `config_entry` is missing for an override.
+        HomeAssistantError
+          when no entities are provided, override handler isn't a callable, or
+          normal handler is given more than one entity.
     """
 
     if not entities:
         raise HomeAssistantError("No entities provided for service call")
 
     gating_entity = next(iter(entities))
-    if callable(handler):
-        # Override callback path
-        if config_entry is None:
-            raise HomeAssistantError(
-                "`config_entry` must be provided when using an override callback"
-            )
+    # Override callback path
+    if config_entry is not None:
+        if not callable(handler):
+            raise HomeAssistantError("Override handler must be a callable")
         result: EntityServiceResponse | None = await gating_entity.async_request_call(
             handler(config_entry, entities, call)
         )
@@ -812,8 +811,10 @@ async def _service_call_wrapper(
     if len(entities) != 1:
         raise HomeAssistantError("Normal service handler expects exactly one entity")
 
+    # make type checkers happy
+    normal_handler = cast(str | HassJob, handler)
     res: ServiceResponse | None = await gating_entity.async_request_call(
-        _handle_entity_call(hass, gating_entity, handler, data, call.context)
+        _handle_entity_call(hass, gating_entity, normal_handler, data, call.context)
     )
     return {gating_entity.entity_id: res}
 
