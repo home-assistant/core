@@ -25,11 +25,21 @@ async def async_setup_entry(
 ) -> None:
     """Set up Elke27 area alarm control panels from a config entry."""
     hub: Elke27Hub = hass.data[DOMAIN][entry.entry_id]
-    areas = _iter_areas(hub.areas)
-    async_add_entities(
-        Elke27AreaAlarmControlPanel(hub, entry, area_id, area)
-        for area_id, area in areas
-    )
+    known_ids: set[int] = set()
+
+    @callback
+    def _async_add_areas() -> None:
+        entities: list[Elke27AreaAlarmControlPanel] = []
+        for area_id, area in _iter_areas(hub.areas):
+            if area_id in known_ids:
+                continue
+            known_ids.add(area_id)
+            entities.append(Elke27AreaAlarmControlPanel(hub, entry, area_id, area))
+        if entities:
+            async_add_entities(entities)
+
+    _async_add_areas()
+    entry.async_on_unload(hub.async_add_area_listener(_async_add_areas))
 
 
 class Elke27AreaAlarmControlPanel(AlarmControlPanelEntity):

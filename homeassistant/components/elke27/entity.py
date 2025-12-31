@@ -8,7 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.helpers.device_registry import DeviceInfo
 
-from .const import CONF_INTEGRATION_SERIAL, DOMAIN, MANUFACTURER_NUMBER
+from .const import DOMAIN
 from .hub import Elke27Hub
 
 
@@ -24,13 +24,12 @@ def device_info_for_entry(hub: Elke27Hub, entry: ConfigEntry) -> DeviceInfo:
     """Build device info for entities tied to a config entry."""
     panel_name = get_panel_field(hub, "panel_name") or entry.title
     mac = get_panel_field(hub, "panel_mac")
+    panel_serial = get_panel_field(hub, "panel_serial")
     identifiers = {(DOMAIN, mac)} if mac else {(DOMAIN, entry.entry_id)}
-    serial = entry.data.get(CONF_INTEGRATION_SERIAL)
     return DeviceInfo(
         identifiers=identifiers,
         name=panel_name,
-        manufacturer=str(MANUFACTURER_NUMBER),
-        serial_number=serial,
+        serial_number=panel_serial,
     )
 
 

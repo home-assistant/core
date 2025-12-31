@@ -24,10 +24,21 @@ async def async_setup_entry(
 ) -> None:
     """Set up Elke27 zone binary sensors from a config entry."""
     hub: Elke27Hub = hass.data[DOMAIN][entry.entry_id]
-    zones = _iter_zones(hub.zones)
-    async_add_entities(
-        Elke27ZoneBinarySensor(hub, entry, zone_id, zone) for zone_id, zone in zones
-    )
+    known_ids: set[int] = set()
+
+    @callback
+    def _async_add_zones() -> None:
+        entities: list[Elke27ZoneBinarySensor] = []
+        for zone_id, zone in _iter_zones(hub.zones):
+            if zone_id in known_ids:
+                continue
+            known_ids.add(zone_id)
+            entities.append(Elke27ZoneBinarySensor(hub, entry, zone_id, zone))
+        if entities:
+            async_add_entities(entities)
+
+    _async_add_zones()
+    entry.async_on_unload(hub.async_add_zone_listener(_async_add_zones))
 
 
 class Elke27ZoneBinarySensor(BinarySensorEntity):
