@@ -28,7 +28,7 @@
         'suggested_unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.VOLUME: 'volume'>,
+    'original_device_class': <SensorDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Daily active water use',
     'platform': 'hydrawise',
@@ -44,7 +44,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by hydrawise.com',
-      'device_class': 'volume',
+      'device_class': 'water',
       'friendly_name': 'Home Controller Daily active water use',
       'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
     }),
@@ -139,7 +139,7 @@
         'suggested_unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.VOLUME: 'volume'>,
+    'original_device_class': <SensorDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Daily inactive water use',
     'platform': 'hydrawise',
@@ -155,7 +155,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by hydrawise.com',
-      'device_class': 'volume',
+      'device_class': 'water',
       'friendly_name': 'Home Controller Daily inactive water use',
       'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
     }),
@@ -196,7 +196,7 @@
         'suggested_unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.VOLUME: 'volume'>,
+    'original_device_class': <SensorDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Daily total water use',
     'platform': 'hydrawise',
@@ -212,7 +212,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by hydrawise.com',
-      'device_class': 'volume',
+      'device_class': 'water',
       'friendly_name': 'Home Controller Daily total water use',
       'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
     }),
@@ -253,7 +253,7 @@
         'suggested_unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.VOLUME: 'volume'>,
+    'original_device_class': <SensorDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Daily active water use',
     'platform': 'hydrawise',
@@ -269,7 +269,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by hydrawise.com',
-      'device_class': 'volume',
+      'device_class': 'water',
       'friendly_name': 'Zone One Daily active water use',
       'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
     }),
@@ -464,7 +464,7 @@
         'suggested_unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.VOLUME: 'volume'>,
+    'original_device_class': <SensorDeviceClass.WATER: 'water'>,
     'original_icon': 'mdi:water-outline',
     'original_name': 'Daily active water use',
     'platform': 'hydrawise',
@@ -480,7 +480,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by hydrawise.com',
-      'device_class': 'volume',
+      'device_class': 'water',
       'friendly_name': 'Zone Two Daily active water use',
       'icon': 'mdi:water-outline',
       'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
