@@ -99,7 +99,11 @@ class SystemNexa2DataUpdateCoordinator(DataUpdateCoordinator[SystemNexa2Data]):
                 "Failed to initialize device with IP/Hostname '%s', please verify that the device is powered on and reachable on port 3000",
                 self.config_entry.data[CONF_HOST],
             )
-            raise ConfigEntryNotReady from e
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="failed_to_initiate_connection",
+                translation_placeholders={CONF_HOST: self.config_entry.data[CONF_HOST]},
+            ) from e
         await self.device.connect()
 
     async def _async_handle_update(self, event: UpdateEvent) -> None:
