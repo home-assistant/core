@@ -44,6 +44,7 @@ from .const import (
     CONF_RECOMMENDED,
     CONF_SEXUAL_BLOCK_THRESHOLD,
     CONF_TEMPERATURE,
+    CONF_THINKING_BUDGET,
     CONF_TOP_K,
     CONF_TOP_P,
     CONF_USE_GOOGLE_SEARCH_TOOL,
@@ -62,6 +63,7 @@ from .const import (
     RECOMMENDED_STT_MODEL,
     RECOMMENDED_STT_OPTIONS,
     RECOMMENDED_TEMPERATURE,
+    RECOMMENDED_THINKING_BUDGET,
     RECOMMENDED_TOP_K,
     RECOMMENDED_TOP_P,
     RECOMMENDED_TTS_MODEL,
@@ -448,6 +450,11 @@ async def google_generative_ai_config_option_schema(
                 description={"suggested_value": options.get(CONF_MAX_TOKENS)},
                 default=RECOMMENDED_MAX_TOKENS,
             ): int,
+            vol.Optional(
+                CONF_THINKING_BUDGET,
+                description={"suggested_value": options.get(CONF_THINKING_BUDGET)},
+                default=RECOMMENDED_THINKING_BUDGET,
+            ): NumberSelector(NumberSelectorConfig(min=-1)),
             vol.Optional(
                 CONF_HARASSMENT_BLOCK_THRESHOLD,
                 description={

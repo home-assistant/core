@@ -79,12 +79,14 @@
             "recommended": "Recommended model settings",
             "sexual_block_threshold": "Contains references to sexual acts or other lewd content",
             "temperature": "Temperature",
+            "thinking_budget": "Thinking Budget",
             "top_k": "Top K",
             "top_p": "Top P"
           },
           "data_description": {
             "enable_google_search_tool": "Only works if there is nothing selected in the \"Control Home Assistant\" setting. See docs for a workaround using it with \"Assist\".",
-            "prompt": "Instruct how the LLM should respond. This can be a template."
+            "prompt": "Instruct how the LLM should respond. This can be a template.",
+            "thinking_budget": "Budget for reasoning tokens. 0 to disable, -1 for dynamic (auto), or entered amount (min 128)."
           }
         }
       }

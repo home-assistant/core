@@ -50,6 +50,7 @@ from .const import (
     CONF_MAX_TOKENS,
     CONF_SEXUAL_BLOCK_THRESHOLD,
     CONF_TEMPERATURE,
+    CONF_THINKING_BUDGET,
     CONF_TOP_K,
     CONF_TOP_P,
     CONF_USE_GOOGLE_SEARCH_TOOL,
@@ -467,6 +468,102 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
             model=subentry.data.get(CONF_CHAT_MODEL, default_model).split("/")[-1],
             entry_type=dr.DeviceEntryType.SERVICE,
         )
+        LOGGER.debug("🤖 GoogleGenerativeAILLMBaseEntity initialized! 🚀")
+
+    def _convert_history_to_gemini_messages(
+        self,
+        history: list[conversation.Content],
+        prompt: str,
+        supports_system_instruction: bool,
+    ) -> list[Content | ContentDict]:
+        """Convert HA history to Gemini messages."""
+        messages: list[Content | ContentDict] = []
+        tool_results: list[conversation.ToolResultContent] = []
+
+        for chat_content in history:
+            if chat_content.role == "tool_result":
+                tool_results.append(chat_content)
+                continue
+
+            if (
+                not isinstance(chat_content, conversation.ToolResultContent)
+                and chat_content.content == ""
+                and not getattr(chat_content, "tool_calls", None)
+            ):
+                # Skipping is not possible since the number of function calls need to match the number of function responses
+                # and skipping one would mean removing the other and hence this would prevent a proper chat log
+                chat_content = replace(chat_content, content=" ")
+
+            if tool_results:
+                # Check if the last message was a model message with a function call
+                # If not, we drop the tool results to avoid a 400 error or context corruption
+                if (
+                    messages
+                    and (last_msg := messages[-1])
+                    and (
+                        (isinstance(last_msg, dict) and last_msg.get("role") == "model")
+                        or (isinstance(last_msg, Content) and last_msg.role == "model")
+                    )
+                ):
+                    # Verify it has a function call
+                    has_fn_call = False
+                    if isinstance(last_msg, dict):
+                        # Not implemented for dict as we primarily use Content objects here
+                        pass
+                    elif isinstance(last_msg, Content):
+                        has_fn_call = any(part.function_call for part in last_msg.parts)
+
+                    if has_fn_call:
+                        messages.append(
+                            _create_google_tool_response_content(tool_results)
+                        )
+                    else:
+                        pass  # Drop orphan tool result
+                else:
+                    pass  # Drop orphan tool result
+
+                tool_results.clear()
+
+            messages.append(_convert_content(chat_content))
+
+        # Handle any remaining tool results (should not happen in valid flow but for completeness)
+        if tool_results:
+            if (
+                messages
+                and (last_msg := messages[-1])
+                and (
+                    (isinstance(last_msg, dict) and last_msg.get("role") == "model")
+                    or (isinstance(last_msg, Content) and last_msg.role == "model")
+                )
+            ):
+                has_fn_call = False
+                if isinstance(last_msg, Content):
+                    has_fn_call = any(part.function_call for part in last_msg.parts)
+
+                if has_fn_call:
+                    messages.append(_create_google_tool_response_content(tool_results))
+
+        # The SDK requires the first message to be a user message
+        # This is not the case if user used `start_conversation`
+        # Workaround from https://github.com/googleapis/python-genai/issues/529#issuecomment-2740964537
+        if messages and (
+            (isinstance(messages[0], Content) and messages[0].role != "user")
+            or (isinstance(messages[0], dict) and messages[0]["role"] != "user")
+        ):
+            messages.insert(
+                0,
+                Content(role="user", parts=[Part.from_text(text=" ")]),
+            )
+
+        # Check for system instruction support and prepend if needed
+        if not supports_system_instruction:
+            messages = [
+                Content(role="user", parts=[Part.from_text(text=prompt)]),
+                Content(role="model", parts=[Part.from_text(text="Ok")]),
+                *messages,
+            ]
+
+        return messages
 
     async def _async_handle_chat_log(
         self,
@@ -508,44 +605,10 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
         else:
             raise HomeAssistantError("Invalid prompt content")
 
-        messages: list[Content | ContentDict] = []
+        messages = self._convert_history_to_gemini_messages(
+            list(chat_log.content[1:-1]), prompt, supports_system_instruction
+        )
 
-        # Google groups tool results, we do not. Group them before sending.
-        tool_results: list[conversation.ToolResultContent] = []
-
-        for chat_content in chat_log.content[1:-1]:
-            if chat_content.role == "tool_result":
-                tool_results.append(chat_content)
-                continue
-
-            if (
-                not isinstance(chat_content, conversation.ToolResultContent)
-                and chat_content.content == ""
-            ):
-                # Skipping is not possible since the number of function calls need to match the number of function responses
-                # and skipping one would mean removing the other and hence this would prevent a proper chat log
-                chat_content = replace(chat_content, content=" ")
-
-            if tool_results:
-                messages.append(_create_google_tool_response_content(tool_results))
-                tool_results.clear()
-
-            messages.append(_convert_content(chat_content))
-
-        # The SDK requires the first message to be a user message
-        # This is not the case if user used `start_conversation`
-        # Workaround from https://github.com/googleapis/python-genai/issues/529#issuecomment-2740964537
-        if messages and (
-            (isinstance(messages[0], Content) and messages[0].role != "user")
-            or (isinstance(messages[0], dict) and messages[0]["role"] != "user")
-        ):
-            messages.insert(
-                0,
-                Content(role="user", parts=[Part.from_text(text=" ")]),
-            )
-
-        if tool_results:
-            messages.append(_create_google_tool_response_content(tool_results))
         generateContentConfig = self.create_generate_content_config()
         generateContentConfig.tools = tools or None
         generateContentConfig.system_instruction = (
@@ -567,12 +630,6 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
                 )
             )
 
-        if not supports_system_instruction:
-            messages = [
-                Content(role="user", parts=[Part.from_text(text=prompt)]),
-                Content(role="model", parts=[Part.from_text(text="Ok")]),
-                *messages,
-            ]
         chat = self._genai_client.aio.chats.create(
             model=model_name, history=messages, config=generateContentConfig
         )
@@ -587,9 +644,22 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
                     [(a.path, a.mime_type) for a in user_message.attachments],
                 )
             )
-
         # To prevent infinite loops, we limit the number of iterations
         for _iteration in range(MAX_TOOL_ITERATIONS):
+            # Workaround for Gemini API returning empty text parts with function calls
+            # We rebuild the history from chat_log every time to ensure we have a clean state
+            # and to avoid "broken" history in the SDK's chat object (e.g. empty text parts).
+            if _iteration > 0:
+                # Rebuild messages from the current chat_log
+                # We skip the first message (system prompt) and process the rest
+                messages = self._convert_history_to_gemini_messages(
+                    list(chat_log.content[1:]), prompt, supports_system_instruction
+                )
+
+                # Create a fresh chat object with the full, clean history
+                chat = self._genai_client.aio.chats.create(
+                    model=model_name, history=messages, config=generateContentConfig
+                )
             try:
                 chat_response_generator = await chat.send_message_stream(
                     message=chat_request
@@ -624,12 +694,15 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
     ) -> GenerateContentConfig:
         """Create the GenerateContentConfig for the LLM."""
         options = self.subentry.data
-        model = options.get(CONF_CHAT_MODEL, self.default_model)
+        thinking_budget = options.get(CONF_THINKING_BUDGET)
         thinking_config: ThinkingConfig | None = None
-        if model.startswith("models/gemini-2.5") and not model.endswith(
-            ("tts", "image", "image-preview")
-        ):
-            thinking_config = ThinkingConfig(include_thoughts=True)
+        if thinking_budget is not None:
+            if thinking_budget == 0:
+                thinking_config = ThinkingConfig(include_thoughts=False)
+            else:
+                thinking_config = ThinkingConfig(
+                    include_thoughts=True, thinking_budget=thinking_budget
+                )
 
         return GenerateContentConfig(
             temperature=options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE),
