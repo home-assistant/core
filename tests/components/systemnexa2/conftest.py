@@ -4,7 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from sn2 import InformationData, InformationUpdate
+from sn2 import InformationData, InformationUpdate, OnOffSetting
 
 from homeassistant.components.systemnexa2.const import DOMAIN
 from homeassistant.const import CONF_HOST
@@ -32,7 +32,21 @@ def mock_system_nexa_2_device() -> Generator[MagicMock]:
             wifi_ssid="Test WiFi SSID",
             dimmable=False,
         )
-        device.settings = []
+
+        # Create mock OnOffSettings
+        mock_setting_433mhz = MagicMock(spec=OnOffSetting)
+        mock_setting_433mhz.name = "433Mhz"
+        mock_setting_433mhz.enable = AsyncMock()
+        mock_setting_433mhz.disable = AsyncMock()
+        mock_setting_433mhz.is_enabled = MagicMock(return_value=True)
+
+        mock_setting_cloud = MagicMock(spec=OnOffSetting)
+        mock_setting_cloud.name = "Cloud Access"
+        mock_setting_cloud.enable = AsyncMock()
+        mock_setting_cloud.disable = AsyncMock()
+        mock_setting_cloud.is_enabled = MagicMock(return_value=False)
+
+        device.settings = [mock_setting_433mhz, mock_setting_cloud]
         device.get_info = AsyncMock()
         device.get_info.return_value = InformationUpdate(information=device.info_data)
         device.connect = AsyncMock()
