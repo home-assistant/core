@@ -28,14 +28,14 @@ def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        unique_id=TEST_HOST,
+        unique_id="000123456789",
         data={
             CONF_HOST: TEST_HOST,
         },
     )
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def mock_hdfury_client() -> Generator[AsyncMock]:
     """Mock a HDFury client."""
     with patch(
@@ -47,7 +47,7 @@ def mock_hdfury_client() -> Generator[AsyncMock]:
             return_value={
                 "hostname": "VRROOM-02",
                 "ipaddress": "192.168.1.123",
-                "serial": "XXXXXXXX",
+                "serial": "000123456789",
                 "pcbv": "3",
                 "version": "FW: 0.61",
             }
