@@ -151,13 +151,13 @@ async def _generate_trackables(
         return None
 
     tracker = client.tracker(trackable["device_id"])
-    trackable_obj = client.trackable_object(trackable["_id"])
+    trackable_pet = client.trackable_object(trackable["_id"])
 
     tracker_details, hw_info, pos_report, health_overview = await asyncio.gather(
         tracker.details(),
         tracker.hw_info(),
         tracker.pos_report(),
-        trackable_obj.health_overview(),
+        trackable_pet.health_overview(),
     )
 
     if not tracker_details.get("_id"):
