@@ -1,13 +1,10 @@
-"""Support for EnOcean binary sensors."""
+"""Support for EnOcean buttons."""
 
 from homeassistant_enocean.entity_id import EnOceanEntityID
 from homeassistant_enocean.entity_properties import HomeAssistantEntityProperties
 from homeassistant_enocean.gateway import EnOceanHomeAssistantGateway
 
-from homeassistant.components.binary_sensor import (
-    BinarySensorDeviceClass,
-    BinarySensorEntity,
-)
+from homeassistant.components.number import NumberEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -23,31 +20,35 @@ async def async_setup_entry(
     """Set up entry."""
     gateway = config_entry.runtime_data.gateway
 
-    for entity_id in gateway.binary_sensor_entities:
-        properties: HomeAssistantEntityProperties = gateway.binary_sensor_entities[
-            entity_id
-        ]
+    for entity_id in gateway.number_entities:
+        properties: HomeAssistantEntityProperties = gateway.number_entities[entity_id]
         async_add_entities(
             [
-                EnOceanBinarySensor(
+                EnOceanNumber(
                     entity_id,
                     gateway=gateway,
-                    device_class=gateway.binary_sensor_entities[entity_id].device_class,
                     entity_category=properties.entity_category,
+                    native_min_value=properties.native_min_value,
+                    native_max_value=properties.native_max_value,
+                    native_step=properties.native_step,
+                    native_value=properties.native_value,
                 )
             ]
         )
 
 
-class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
-    """Representation of EnOcean binary sensors such as wall switches."""
+class EnOceanNumber(EnOceanEntity, NumberEntity):
+    """Representation of EnOcean select."""
 
     def __init__(
         self,
         entity_id: EnOceanEntityID,
         gateway: EnOceanHomeAssistantGateway,
-        device_class: BinarySensorDeviceClass | None = None,
         entity_category: str | None = None,
+        native_min_value: float | None = None,
+        native_max_value: float | None = None,
+        native_step: float | None = None,
+        native_value: float | None = None,
     ) -> None:
         """Initialize the EnOcean binary sensor."""
         super().__init__(
@@ -55,15 +56,11 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
             gateway=gateway,
             entity_category=entity_category,
         )
-        self._attr_device_class = device_class
-        self.gateway.register_binary_sensor_callback(entity_id, self.update)
+        self._attr_native_min_value = native_min_value or 0.0
+        self._attr_native_max_value = native_max_value or 100.0
+        self._attr_native_step = native_step or 1.0
+        self._attr_native_value = native_value or 0.0
 
-    # @property
-    # def device_class(self) -> BinarySensorDeviceClass | None:
-    #     """Return the class of this sensor."""
-    #     return self._attr_device_class
-
-    def update(self, is_on: bool) -> None:
-        """Update the binary sensor state."""
-        self._attr_is_on = is_on
-        self.schedule_update_ha_state()
+    def set_native_value(self, value: float) -> None:
+        """Update the current value."""
+        # needs to be implemented

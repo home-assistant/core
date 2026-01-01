@@ -107,14 +107,33 @@
       },
       "a1b0": {
         "name": "A1B0"
+      },
+      "pairing": {
+        "name": "Pairing mode active"
       }
     },
     "button": {
       "query_state": {
         "name": "Query state"
       },
-      "learn": {
-        "name": "Activate learn mode"
+      "start_pairing": {
+        "name": "Start pairing"
+      }
+    },
+    "number": {
+      "min_brightness": {
+        "name": "Min. brightness"
+      },
+      "max_brightness": {
+        "name": "Max. brightness"
+      },
+      "ramping_time": {
+        "name": "Ramping time"
+      }
+    },
+    "select": {
+      "sender_id": {
+        "name": "Sender ID for pairing"
       }
     },
     "sensor": {
@@ -126,6 +145,9 @@
       },
       "supply_voltage": {
         "name": "Supply voltage"
+      },
+      "pairing_timeout": {
+        "name": "Pairing mode timeout"
       }
     },
     "switch": {

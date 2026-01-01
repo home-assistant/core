@@ -53,19 +53,41 @@
             },
             "b1": {
                 "name": "B1"
+            },
+            "pairing": {
+                "name": "Pairing mode active"
             }
         },
         "button": {
-            "learn": {
-                "name": "Activate learn mode"
-            },
             "query_state": {
                 "name": "Query state"
+            },
+            "start_pairing": {
+                "name": "Start pairing"
+            }
+        },
+        "number": {
+            "max_brightness": {
+                "name": "Max. brightness"
+            },
+            "min_brightness": {
+                "name": "Min. brightness"
+            },
+            "ramping_time": {
+                "name": "Ramping time"
+            }
+        },
+        "select": {
+            "sender_id": {
+                "name": "Sender ID for pairing"
             }
         },
         "sensor": {
             "last_seen": {
                 "name": "Last seen"
+            },
+            "pairing_timeout": {
+                "name": "Pairing mode timeout"
             },
             "supply_voltage": {
                 "name": "Supply voltage"
