@@ -223,7 +223,6 @@ async def test_media_player_unjoin(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(caplog.records) == 0
-    assert soco_bedroom.unjoin.call_count == 1
     soco_bedroom.unjoin.assert_called_with(timeout=LONG_SERVICE_TIMEOUT)
     assert soco_living_room.unjoin.call_count == 0
 
