@@ -301,7 +301,7 @@
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
-      'entity_id': 'sensor.air_purifier_400s_pm25',
+      'entity_id': 'sensor.air_purifier_400s_pm2_5',
       'has_entity_name': True,
       'hidden_by': None,
       'icon': None,
@@ -313,12 +313,12 @@
       }),
       'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
       'original_icon': None,
-      'original_name': 'PM25',
+      'original_name': 'PM2.5',
       'platform': 'vesync',
       'previous_unique_id': None,
       'suggested_object_id': None,
       'supported_features': 0,
-      'translation_key': 'pm25',
+      'translation_key': None,
       'unique_id': '400s-purifier-pm25',
       'unit_of_measurement': 'μg/m³',
     }),
@@ -387,16 +387,16 @@
     'state': '99',
   })
 # ---
-# name: test_sensor_state[Air Purifier 400s][sensor.air_purifier_400s_pm25]
+# name: test_sensor_state[Air Purifier 400s][sensor.air_purifier_400s_pm2_5]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'pm25',
-      'friendly_name': 'Air Purifier 400s PM25',
+      'friendly_name': 'Air Purifier 400s PM2.5',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.air_purifier_400s_pm25',
+    'entity_id': 'sensor.air_purifier_400s_pm2_5',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -485,7 +485,7 @@
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': None,
-      'entity_id': 'sensor.air_purifier_600s_pm25',
+      'entity_id': 'sensor.air_purifier_600s_pm2_5',
       'has_entity_name': True,
       'hidden_by': None,
       'icon': None,
@@ -497,12 +497,12 @@
       }),
       'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
       'original_icon': None,
-      'original_name': 'PM25',
+      'original_name': 'PM2.5',
       'platform': 'vesync',
       'previous_unique_id': None,
       'suggested_object_id': None,
       'supported_features': 0,
-      'translation_key': 'pm25',
+      'translation_key': None,
       'unique_id': '600s-purifier-pm25',
       'unit_of_measurement': 'μg/m³',
     }),
@@ -571,16 +571,16 @@
     'state': '99',
   })
 # ---
-# name: test_sensor_state[Air Purifier 600s][sensor.air_purifier_600s_pm25]
+# name: test_sensor_state[Air Purifier 600s][sensor.air_purifier_600s_pm2_5]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'pm25',
-      'friendly_name': 'Air Purifier 600s PM25',
+      'friendly_name': 'Air Purifier 600s PM2.5',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.air_purifier_600s_pm25',
+    'entity_id': 'sensor.air_purifier_600s_pm2_5',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
