@@ -328,7 +328,7 @@ class OptionsFlowHandler(OptionsFlow):
         errors: dict[str, str] = {}
         devices = deepcopy(self.config_entry.options.get(CONF_ENOCEAN_DEVICES, []))
 
-        device_id = "none"
+        device_id = "00:00:00:00"
         device_name = "none"
         device_type = EnOceanDeviceType(EEP(0, 0, 0))
         sender_id: EnOceanAddress = EnOceanAddress(0)
@@ -394,7 +394,7 @@ class OptionsFlowHandler(OptionsFlow):
                 ),
                 vol.Required(CONF_ENOCEAN_DEVICE_NAME, default=device_name): str,
                 vol.Optional(
-                    CONF_ENOCEAN_SENDER_ID, default=sender_id
+                    CONF_ENOCEAN_SENDER_ID, default=sender_id_string
                 ): selector.SelectSelector(
                     selector.SelectSelectorConfig(
                         options=self.config_entry.runtime_data.gateway.valid_sender_ids,
