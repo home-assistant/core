@@ -33,7 +33,11 @@ class EnOceanEntity(Entity):
         super().__init__()
 
         # set base class attributes
-        self._attr_translation_key = enocean_entity_id.unique_id
+        if enocean_entity_id.unique_id:
+            self._attr_translation_key = enocean_entity_id.unique_id
+        else:
+            self._attr_name = None
+
         self._attr_has_entity_name = True
         self._attr_should_poll = False
         self._attr_device_class = device_class

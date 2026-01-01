@@ -38,7 +38,7 @@ async def async_setup_entry(
 
 
 class EnOceanNumber(EnOceanEntity, NumberEntity):
-    """Representation of EnOcean select."""
+    """Representation of an EnOcean number entity."""
 
     def __init__(
         self,
@@ -64,3 +64,6 @@ class EnOceanNumber(EnOceanEntity, NumberEntity):
     def set_native_value(self, value: float) -> None:
         """Update the current value."""
         # needs to be implemented
+        self.gateway.set_number_value(self.enocean_entity_id, value)
+        self._attr_native_value = value
+        self.schedule_update_ha_state()
