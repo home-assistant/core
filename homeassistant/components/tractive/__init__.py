@@ -207,7 +207,7 @@ class TractiveClient:
 
         return not self._listen_task.cancelled()
 
-    async def trackable_pets(
+    async def trackable_objects(
         self,
     ) -> list[aiotractive.trackable_object.TrackableObject]:
         """Get list of trackable objects."""
