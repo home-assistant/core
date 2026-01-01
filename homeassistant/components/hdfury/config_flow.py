@@ -20,8 +20,6 @@ _LOGGER = logging.getLogger(__name__)
 class HDFuryConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle Config Flow for HDFury."""
 
-    VERSION = 1
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
