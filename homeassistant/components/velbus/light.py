@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import math
 from typing import Any
 
 from velbusaio.channels import (
@@ -78,7 +77,10 @@ class VelbusLight(VelbusEntity, LightEntity):
             if kwargs[ATTR_BRIGHTNESS] == 0:
                 brightness = 0
             else:
-                brightness = max(1, int(brightness_to_value(BRIGHTNESS_SCALE, kwargs[ATTR_BRIGHTNESS])))
+                brightness = max(
+                    1,
+                    int(brightness_to_value(BRIGHTNESS_SCALE, kwargs[ATTR_BRIGHTNESS])),
+                )
             attr, *args = (
                 "set_dimmer_state",
                 brightness,
