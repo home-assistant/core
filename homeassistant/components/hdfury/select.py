@@ -2,7 +2,6 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
 
 from hdfury import (
     OPERATION_MODES,
@@ -135,14 +134,6 @@ class HDFuryPortSelect(HDFuryEntity, SelectEntity):
             raw_value, f"Unknown ({raw_value})"
         )
 
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Set Select State Attributes."""
-
-        return {
-            "raw_value": self.coordinator.data["info"].get(self.entity_description.key)
-        }
-
     async def async_select_option(self, option: str) -> None:
         """Handle Port Select."""
 
@@ -203,14 +194,6 @@ class HDFuryOpModeSelect(HDFuryEntity, SelectEntity):
         return self.entity_description.label_map.get(
             raw_value, f"Unknown ({raw_value})"
         )
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Expose raw value for debugging."""
-
-        return {
-            "raw_value": self.coordinator.data["info"].get(self.entity_description.key)
-        }
 
     async def async_select_option(self, option: str) -> None:
         """Change the operation mode."""
