@@ -80,7 +80,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MieleConfigEntry) -> boo
         ) from err
 
     # Setup MieleAPI and coordinator for data fetch
-    entry.runtime_data = MieleRuntimeData  # type: ignore[assignment]
+    entry.runtime_data = MieleRuntimeData(None, None, None)  # type: ignore[arg-type]
     entry.runtime_data.api = MieleAPI(auth)
     coordinator = MieleDataUpdateCoordinator(hass, entry, entry.runtime_data.api)
     await coordinator.async_config_entry_first_refresh()
