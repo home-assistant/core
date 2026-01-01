@@ -227,3 +227,6 @@ class ViaggiaTrenoSensor(SensorEntity):
                     self._state = res.get("ritardo")
                     self._unit = UnitOfTime.MINUTES
                     self._icon = ICON
+        else:
+            self._state = NO_INFORMATION_STRING
+            self._unit = None
