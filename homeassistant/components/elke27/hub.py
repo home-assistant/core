@@ -94,15 +94,20 @@ class Elke27Hub:
         panel = self._panel or {"panel_host": self._host, "port": self._port}
         link_keys = _link_keys_from_data(self._link_keys)
         client_identity = _client_identity(self._integration_serial)
-        result = await self._client.connect(
-            link_keys,
-            panel=panel,
-            client_identity=client_identity,
-        )
-        if not result.ok:
-            if isinstance(result.error, Exception):
-                raise result.error
-            raise RuntimeError(result.error or "Connect failed")
+        self._client.subscribe(self._handle_event)
+        try:
+            result = await self._client.connect(
+                link_keys,
+                panel=panel,
+                client_identity=client_identity,
+            )
+            if not result.ok:
+                if isinstance(result.error, Exception):
+                    raise result.error
+                raise RuntimeError(result.error or "Connect failed")
+        except Exception:
+            self._client.unsubscribe(self._handle_event)
+            raise
 
         if not self._client.is_ready:
             ready = await asyncio.to_thread(
@@ -112,7 +117,6 @@ class Elke27Hub:
                 raise TimeoutError("Client did not become ready before timeout")
         if not self._client.is_ready:
             raise TimeoutError("Client did not become ready before timeout")
-        self._client.subscribe(self._handle_event)
         self._refresh_snapshots()
 
     async def async_stop(self) -> None:
