@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 
 from bsblan import BSBLANError, DaySchedule, TimeSlot
 import pytest
+import voluptuous as vol
 
 from homeassistant.components.bsblan.const import DOMAIN
 from homeassistant.components.bsblan.services import (
@@ -198,9 +199,7 @@ async def test_no_config_entry_for_device(
             SERVICE_SET_HOT_WATER_SCHEDULE,
             {
                 "device_id": device_entry.id,
-                "monday_slots": [
-                    {"start_time": time(6, 0), "end_time": time(8, 0)},
-                ],
+                "monday_slots": [{"start_time": time(6, 0), "end_time": time(8, 0)}],
             },
             blocking=True,
         )
@@ -274,14 +273,10 @@ async def test_api_error(
     [
         (time(13, 0), time(11, 0), "end_time_before_start_time"),
         ("13:00", "11:00", "end_time_before_start_time"),
-        ("invalid", "08:00", "invalid_time_format"),
-        ("06:00", "not-a-time", "invalid_time_format"),
     ],
     ids=[
         "time_objects_end_before_start",
         "strings_end_before_start",
-        "invalid_start_time_format",
-        "invalid_end_time_format",
     ],
 )
 async def test_time_validation_errors(
@@ -395,21 +390,19 @@ async def test_non_standard_time_types(
     device_entry: dr.DeviceEntry,
 ) -> None:
     """Test service with non-standard time types raises error."""
-    # Test with integer time values (shouldn't happen but need coverage)
-    with pytest.raises(ServiceValidationError) as exc_info:
+    # Test with integer time values - schema validation will reject these
+    with pytest.raises(vol.MultipleInvalid):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_HOT_WATER_SCHEDULE,
             {
                 "device_id": device_entry.id,
                 "monday_slots": [
-                    {"start_time": 600, "end_time": 800},  # Non-standard types
+                    {"start_time": 600, "end_time": 800},
                 ],
             },
             blocking=True,
         )
-
-    assert exc_info.value.translation_key == "invalid_time_format"
 
 
 async def test_async_setup_services(

@@ -7,11 +7,12 @@ import logging
 from typing import TYPE_CHECKING
 
 from bsblan import BSBLANError, DaySchedule, DHWSchedule, TimeSlot
+import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import DOMAIN
 
@@ -33,28 +34,27 @@ ATTR_SUNDAY_SLOTS = "sunday_slots"
 SERVICE_SET_HOT_WATER_SCHEDULE = "set_hot_water_schedule"
 
 
-def _parse_time_value(value: time | str) -> time:
-    """Parse a time value from either a time object or string.
+# Schema for a single time slot
+_SLOT_SCHEMA = vol.Schema(
+    {
+        vol.Required("start_time"): cv.time,
+        vol.Required("end_time"): cv.time,
+    }
+)
 
-    Raises ServiceValidationError if the format is invalid.
-    """
-    if isinstance(value, time):
-        return value
 
-    if isinstance(value, str):
-        try:
-            parts = value.split(":")
-            return time(int(parts[0]), int(parts[1]))
-        except (ValueError, IndexError):
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_time_format",
-            ) from None
-
-    raise ServiceValidationError(
-        translation_domain=DOMAIN,
-        translation_key="invalid_time_format",
-    )
+SERVICE_SET_HOT_WATER_SCHEDULE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): cv.string,
+        vol.Optional(ATTR_MONDAY_SLOTS): vol.All(cv.ensure_list, [_SLOT_SCHEMA]),
+        vol.Optional(ATTR_TUESDAY_SLOTS): vol.All(cv.ensure_list, [_SLOT_SCHEMA]),
+        vol.Optional(ATTR_WEDNESDAY_SLOTS): vol.All(cv.ensure_list, [_SLOT_SCHEMA]),
+        vol.Optional(ATTR_THURSDAY_SLOTS): vol.All(cv.ensure_list, [_SLOT_SCHEMA]),
+        vol.Optional(ATTR_FRIDAY_SLOTS): vol.All(cv.ensure_list, [_SLOT_SCHEMA]),
+        vol.Optional(ATTR_SATURDAY_SLOTS): vol.All(cv.ensure_list, [_SLOT_SCHEMA]),
+        vol.Optional(ATTR_SUNDAY_SLOTS): vol.All(cv.ensure_list, [_SLOT_SCHEMA]),
+    }
+)
 
 
 def _convert_time_slots_to_day_schedule(
@@ -62,8 +62,8 @@ def _convert_time_slots_to_day_schedule(
 ) -> DaySchedule | None:
     """Convert list of time slot dicts to a DaySchedule object.
 
-    Example: [{"start_time": "06:00", "end_time": "08:00"},
-              {"start_time": "17:00", "end_time": "21:00"}]
+    Example: [{"start_time": time(6, 0), "end_time": time(8, 0)},
+              {"start_time": time(17, 0), "end_time": time(21, 0)}]
     becomes: DaySchedule with two TimeSlot objects
 
     None returns None (don't modify this day).
@@ -77,30 +77,26 @@ def _convert_time_slots_to_day_schedule(
 
     time_slots = []
     for slot in slots:
-        start = slot.get("start_time")
-        end = slot.get("end_time")
+        start_time = slot["start_time"]
+        end_time = slot["end_time"]
 
-        if start and end:
-            start_time = _parse_time_value(start)
-            end_time = _parse_time_value(end)
-
-            # Validate that end time is after start time
-            if end_time <= start_time:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="end_time_before_start_time",
-                    translation_placeholders={
-                        "start_time": start_time.strftime("%H:%M"),
-                        "end_time": end_time.strftime("%H:%M"),
-                    },
-                )
-
-            time_slots.append(TimeSlot(start=start_time, end=end_time))
-            LOGGER.debug(
-                "Created time slot: %s-%s",
-                start_time.strftime("%H:%M"),
-                end_time.strftime("%H:%M"),
+        # Validate that end time is after start time
+        if end_time <= start_time:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="end_time_before_start_time",
+                translation_placeholders={
+                    "start_time": start_time.strftime("%H:%M"),
+                    "end_time": end_time.strftime("%H:%M"),
+                },
             )
+
+        time_slots.append(TimeSlot(start=start_time, end=end_time))
+        LOGGER.debug(
+            "Created time slot: %s-%s",
+            start_time.strftime("%H:%M"),
+            end_time.strftime("%H:%M"),
+        )
 
     LOGGER.debug("Created DaySchedule with %d slots", len(time_slots))
     return DaySchedule(slots=time_slots)
@@ -214,4 +210,5 @@ def async_setup_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_SET_HOT_WATER_SCHEDULE,
         set_hot_water_schedule,
+        schema=SERVICE_SET_HOT_WATER_SCHEDULE_SCHEMA,
     )
