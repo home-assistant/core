@@ -112,7 +112,11 @@ async def test_intent_set_missing_required_slots(hass: HomeAssistant) -> None:
 
     # Verify the error message indicates that at least one of the required slots is needed
     error_message = str(exc_info.value)
-    assert "color" in error_message or "temperature" in error_message or "brightness" in error_message
+    assert (
+        "color" in error_message
+        or "temperature" in error_message
+        or "brightness" in error_message
+    )
 
     # Test with empty slots - should also fail
     with pytest.raises(InvalidSlotInfo) as exc_info:

@@ -39,7 +39,8 @@ from .typing import VolSchemaType
 _LOGGER = logging.getLogger(__name__)
 type _SlotsType = dict[str, Any]
 type _IntentSlotsType = dict[
-    str | tuple[str, str], IntentSlotInfo | VolSchemaType | Callable[[Any], Any]
+    str | tuple[str, str] | vol.Any,
+    IntentSlotInfo | VolSchemaType | Callable[[Any], Any] | type[object],
 ]
 
 INTENT_TURN_OFF = "HassTurnOff"
@@ -895,9 +896,9 @@ class IntentSlotInfo:
 
 
 def _convert_slot_info(
-    key: str | tuple[str, str],
-    value: IntentSlotInfo | VolSchemaType | Callable[[Any], Any],
-) -> tuple[str, IntentSlotInfo]:
+    key: str | tuple[str, str] | vol.Any,
+    value: IntentSlotInfo | VolSchemaType | Callable[[Any], Any] | type[object],
+) -> tuple[str | vol.Any, IntentSlotInfo]:
     """Create an IntentSlotInfo from the various supported input arguments."""
     if isinstance(value, IntentSlotInfo):
         if not isinstance(key, str):
@@ -905,6 +906,7 @@ def _convert_slot_info(
         return key, value
     if isinstance(key, tuple):
         return key[0], IntentSlotInfo(service_data_name=key[1], value_schema=value)
+    # For str keys or vol.Any keys, preserve the key as-is
     return key, IntentSlotInfo(value_schema=value)
 
 
@@ -941,11 +943,11 @@ class DynamicServiceIntentHandler(IntentHandler):
         self.platforms = platforms
         self.device_classes = device_classes
 
-        self.required_slots: dict[str, IntentSlotInfo] = dict(
+        self.required_slots: dict[str | vol.Any, IntentSlotInfo] = dict(
             _convert_slot_info(key, value)
             for key, value in (required_slots or {}).items()
         )
-        self.optional_slots: dict[str, IntentSlotInfo] = dict(
+        self.optional_slots: dict[str | vol.Any, IntentSlotInfo] = dict(
             _convert_slot_info(key, value)
             for key, value in (optional_slots or {}).items()
         )
@@ -1194,6 +1196,8 @@ class DynamicServiceIntentHandler(IntentHandler):
 
         if self.optional_slots:
             for key, slot_info in self.optional_slots.items():
+                if isinstance(key, vol.Any):
+                    continue
                 if value := intent_obj.slots.get(key):
                     service_data[slot_info.service_data_name or key] = value["value"]
 
