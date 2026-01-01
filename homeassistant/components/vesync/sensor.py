@@ -75,7 +75,6 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
     ),
     VeSyncSensorEntityDescription(
         key="pm10",
-        translation_key="pm10",
         device_class=SensorDeviceClass.PM10,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
