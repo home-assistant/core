@@ -220,12 +220,6 @@ class TractiveClient:
         """Get tracker by id."""
         return self._client.tracker(tracker_id)
 
-    def trackable_pet(
-        self, trackable_id: str
-    ) -> aiotractive.trackable_object.TrackableObject:
-        """Get trackable object by id."""
-        return self._client.trackable_object(trackable_id)
-
     def subscribe(self) -> None:
         """Start event listener coroutine."""
         self._listen_task = asyncio.create_task(self._listen())
