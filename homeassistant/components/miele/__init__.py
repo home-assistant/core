@@ -80,24 +80,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: MieleConfigEntry) -> boo
         ) from err
 
     # Setup MieleAPI and coordinator for data fetch
-    entry.runtime_data = MieleRuntimeData(None, None, None)  # type: ignore[arg-type]
-    entry.runtime_data.api = MieleAPI(auth)
-    coordinator = MieleDataUpdateCoordinator(hass, entry, entry.runtime_data.api)
-    await coordinator.async_config_entry_first_refresh()
-    entry.runtime_data.coordinator = coordinator
+    _api = MieleAPI(auth)
+    _coordinator = MieleDataUpdateCoordinator(hass, entry, _api)
+    await _coordinator.async_config_entry_first_refresh()
+    _aux_coordinator = MieleAuxDataUpdateCoordinator(hass, entry, _api)
+    await _aux_coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = MieleRuntimeData(_api, _coordinator, _aux_coordinator)
 
     entry.async_create_background_task(
         hass,
         entry.runtime_data.api.listen_events(
-            data_callback=coordinator.callback_update_data,
-            actions_callback=coordinator.callback_update_actions,
+            data_callback=_coordinator.callback_update_data,
+            actions_callback=_coordinator.callback_update_actions,
         ),
         "pymiele event listener",
     )
-
-    aux_coordinator = MieleAuxDataUpdateCoordinator(hass, entry, entry.runtime_data.api)
-    await aux_coordinator.async_config_entry_first_refresh()
-    entry.runtime_data.aux_coordinator = aux_coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
