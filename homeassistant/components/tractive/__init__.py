@@ -203,10 +203,6 @@ class TractiveClient:
 
         return not self._listen_task.cancelled()
 
-    def tracker(self, tracker_id: str) -> aiotractive.tracker.Tracker:
-        """Get tracker by id."""
-        return self._client.tracker(tracker_id)
-
     def subscribe(self) -> None:
         """Start event listener coroutine."""
         self._listen_task = asyncio.create_task(self._listen())
