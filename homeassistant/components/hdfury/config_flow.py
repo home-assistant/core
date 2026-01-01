@@ -3,7 +3,7 @@
 import logging
 from typing import Any
 
-import aiohttp
+from aiohttp import ClientError
 from hdfury import HDFuryAPI, HDFuryError
 import voluptuous as vol
 
@@ -54,7 +54,7 @@ class HDFuryConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             await client.get_board()
-        except (HDFuryError, TimeoutError, aiohttp.ClientError) as error:
+        except (HDFuryError, TimeoutError, ClientError) as error:
             _LOGGER.error("%s", error)
             return False
 
