@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from homeassistant.components.alarm_control_panel import (
@@ -16,6 +17,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DOMAIN
 from .entity import device_info_for_entry, unique_base
 from .hub import Elke27Hub
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -36,6 +39,7 @@ async def async_setup_entry(
             known_ids.add(area_id)
             entities.append(Elke27AreaAlarmControlPanel(hub, entry, area_id, area))
         if entities:
+            _LOGGER.debug("Adding %s area entities", len(entities))
             async_add_entities(entities)
 
     _async_add_areas()

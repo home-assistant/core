@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from homeassistant.components.binary_sensor import (
@@ -15,6 +16,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DOMAIN
 from .entity import device_info_for_entry, unique_base
 from .hub import Elke27Hub
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -35,6 +38,7 @@ async def async_setup_entry(
             known_ids.add(zone_id)
             entities.append(Elke27ZoneBinarySensor(hub, entry, zone_id, zone))
         if entities:
+            _LOGGER.debug("Adding %s zone entities", len(entities))
             async_add_entities(entities)
 
     _async_add_zones()
