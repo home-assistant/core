@@ -148,7 +148,6 @@ async def test_server_unavailable(
     hass: HomeAssistant,
     mock_tractive_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test states of the sensor."""
     entity_id = "sensor.test_pet_tracker_battery"
