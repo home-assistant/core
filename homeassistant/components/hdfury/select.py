@@ -91,13 +91,13 @@ async def async_setup_entry(
 
     # Apply custom labels for port selectors
     for description in SELECT_PORTS:
-        if description.key not in coordinator.data["info"]:
+        if description.key not in coordinator.data.info:
             continue
 
         entities.append(HDFuryPortSelect(coordinator, description))
 
     # Add OPMODE select if present
-    if "opmode" in coordinator.data["info"]:
+    if "opmode" in coordinator.data.info:
         entities.append(HDFuryOpModeSelect(coordinator, SELECT_OPERATION_MODE))
 
     async_add_entities(entities)
@@ -112,7 +112,10 @@ class HDFuryPortSelect(HDFuryEntity, SelectEntity):
     def current_option(self) -> str | None:
         """Set Current Select Option."""
 
-        raw_value = self.coordinator.data["info"].get(self.entity_description.key)
+        raw_value = self.coordinator.data.info.get(self.entity_description.key)
+        if raw_value is None:
+            return None
+
         return self.entity_description.label_map.get(raw_value)
 
     async def async_select_option(self, option: str) -> None:
@@ -130,11 +133,11 @@ class HDFuryPortSelect(HDFuryEntity, SelectEntity):
             )
 
         # Update local data first
-        self.coordinator.data["info"][self.entity_description.key] = raw_value
+        self.coordinator.data.info[self.entity_description.key] = raw_value
 
         # Remap both TX0 and TX1 current selections
-        tx0_raw = self.coordinator.data["info"].get("portseltx0")
-        tx1_raw = self.coordinator.data["info"].get("portseltx1")
+        tx0_raw = self.coordinator.data.info.get("portseltx0")
+        tx1_raw = self.coordinator.data.info.get("portseltx1")
 
         # If either missing, raise exception to avoid incomplete updates
         if tx0_raw is None or tx1_raw is None:
@@ -171,7 +174,10 @@ class HDFuryOpModeSelect(HDFuryEntity, SelectEntity):
     def current_option(self) -> str | None:
         """Return the current operation mode."""
 
-        raw_value = self.coordinator.data["info"].get(self.entity_description.key)
+        raw_value = self.coordinator.data.info.get(self.entity_description.key)
+        if raw_value is None:
+            return None
+
         return self.entity_description.label_map.get(raw_value)
 
     async def async_select_option(self, option: str) -> None:
@@ -189,7 +195,7 @@ class HDFuryOpModeSelect(HDFuryEntity, SelectEntity):
             )
 
         # Update local data first
-        self.coordinator.data["info"][self.entity_description.key] = raw_value
+        self.coordinator.data.info[self.entity_description.key] = raw_value
 
         # Send command to device
         try:

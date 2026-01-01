@@ -22,19 +22,19 @@ class HDFuryEntity(CoordinatorEntity[HDFuryCoordinator]):
         self.entity_description = entity_description
 
         self._attr_unique_id = (
-            f"{coordinator.data['board']['serial']}_{entity_description.key}"
+            f"{coordinator.data.board['serial']}_{entity_description.key}"
         )
         self._attr_has_entity_name = True
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.data["board"]["serial"])},
-            name=f"HDFury {coordinator.data['board']['hostname']}",
+            identifiers={(DOMAIN, coordinator.data.board["serial"])},
+            name=f"HDFury {coordinator.data.board['hostname']}",
             manufacturer="HDFury",
-            model=coordinator.data["board"]["hostname"].split("-")[0],
-            serial_number=coordinator.data["board"]["serial"],
-            sw_version=coordinator.data["board"]["version"].removeprefix("FW: "),
-            hw_version=coordinator.data["board"].get("pcbv"),
+            model=coordinator.data.board["hostname"].split("-")[0],
+            serial_number=coordinator.data.board["serial"],
+            sw_version=coordinator.data.board["version"].removeprefix("FW: "),
+            hw_version=coordinator.data.board.get("pcbv"),
             configuration_url=f"http://{coordinator.host}",
             connections={
-                (dr.CONNECTION_NETWORK_MAC, coordinator.data["config"]["macaddr"])
+                (dr.CONNECTION_NETWORK_MAC, coordinator.data.config["macaddr"])
             },
         )

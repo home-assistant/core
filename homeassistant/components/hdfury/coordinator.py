@@ -1,8 +1,9 @@
 """DataUpdateCoordinator for HDFury Integration."""
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any, Final
+from typing import Final
 
 from hdfury import HDFuryAPI, HDFuryError
 
@@ -21,7 +22,16 @@ SCAN_INTERVAL: Final = timedelta(seconds=60)
 type HDFuryConfigEntry = ConfigEntry[HDFuryCoordinator]
 
 
-class HDFuryCoordinator(DataUpdateCoordinator):
+@dataclass(kw_only=True, frozen=True)
+class HDFuryData:
+    """HDFury Data Class."""
+
+    board: dict[str, str]
+    info: dict[str, str]
+    config: dict[str, str]
+
+
+class HDFuryCoordinator(DataUpdateCoordinator[HDFuryData]):
     """HDFury Device Coordinator Class."""
 
     def __init__(self, hass: HomeAssistant, entry: HDFuryConfigEntry) -> None:
@@ -36,13 +46,13 @@ class HDFuryCoordinator(DataUpdateCoordinator):
         )
         self.host: str = entry.data[CONF_HOST]
         self.client: HDFuryAPI = HDFuryAPI(self.host, async_get_clientsession(hass))
-        self.data: dict[str, Any] = {
-            "board": {},
-            "info": {},
-            "config": {},
-        }
+        self.data = HDFuryData(
+            board={},
+            info={},
+            config={},
+        )
 
-    async def _async_update_data(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> HDFuryData:
         """Fetch the latest device data."""
 
         try:
@@ -56,8 +66,8 @@ class HDFuryCoordinator(DataUpdateCoordinator):
                 translation_key="communication_error",
             ) from error
 
-        return {
-            "board": board,
-            "info": info,
-            "config": config,
-        }
+        return HDFuryData(
+            board=board,
+            info=info,
+            config=config,
+        )
