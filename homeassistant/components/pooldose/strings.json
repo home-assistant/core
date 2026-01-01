@@ -27,7 +27,7 @@
           "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "host": "IP address or hostname of your device"
+          "host": "[%key:component::pooldose::config::step::user::data_description::host%]"
         }
       },
       "user": {
