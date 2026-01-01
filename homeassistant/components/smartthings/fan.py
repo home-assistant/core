@@ -11,6 +11,8 @@ from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
+    ordered_list_item_to_percentage,
+    percentage_to_ordered_list_item,
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
@@ -22,6 +24,9 @@ from .entity import SmartThingsEntity
 
 SPEED_RANGE = (1, 3)  # off is not included
 
+SMART = 14
+PRESET_SMART = "smart"
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -30,7 +35,7 @@ async def async_setup_entry(
 ) -> None:
     """Add fans for a config entry."""
     entry_data = entry.runtime_data
-    async_add_entities(
+    entities: list[FanEntity] = [
         SmartThingsFan(entry_data.client, device)
         for device in entry_data.devices.values()
         if Capability.SWITCH in device.status[MAIN]
@@ -42,7 +47,20 @@ async def async_setup_entry(
             )
         )
         and Capability.THERMOSTAT_COOLING_SETPOINT not in device.status[MAIN]
+    ]
+    entities.extend(
+        SmartThingsHood(entry_data.client, device)
+        for device in entry_data.devices.values()
+        if Capability.SWITCH in device.status[MAIN]
+        and Capability.SAMSUNG_CE_HOOD_FAN_SPEED in device.status[MAIN]
+        and (
+            device.status[MAIN][Capability.SAMSUNG_CE_HOOD_FAN_SPEED][
+                Attribute.SETTABLE_MIN_FAN_SPEED
+            ].value
+            == SMART
+        )
     )
+    async_add_entities(entities)
 
 
 class SmartThingsFan(SmartThingsEntity, FanEntity):
@@ -149,3 +167,103 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
         return self.get_attribute_value(
             Capability.AIR_CONDITIONER_FAN_MODE, Attribute.SUPPORTED_AC_FAN_MODES
         )
+
+
+class SmartThingsHood(SmartThingsEntity, FanEntity):
+    """Define a SmartThings Hood."""
+
+    _attr_name = None
+    _attr_supported_features = (
+        FanEntityFeature.TURN_ON
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.PRESET_MODE
+        | FanEntityFeature.SET_SPEED
+    )
+    _attr_preset_modes = [PRESET_SMART]
+    _attr_translation_key = "hood"
+
+    def __init__(self, client: SmartThings, device: FullDevice) -> None:
+        """Init the class."""
+        super().__init__(
+            client,
+            device,
+            {
+                Capability.SWITCH,
+                Capability.SAMSUNG_CE_HOOD_FAN_SPEED,
+            },
+        )
+
+    @property
+    def fan_speeds(self) -> list[int]:
+        """Return a list of available fan speeds."""
+        return [
+            speed
+            for speed in self.get_attribute_value(
+                Capability.SAMSUNG_CE_HOOD_FAN_SPEED, Attribute.SUPPORTED_HOOD_FAN_SPEED
+            )
+            if speed != SMART
+        ]
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set the preset_mode of the fan."""
+        await self.execute_device_command(
+            Capability.SAMSUNG_CE_HOOD_FAN_SPEED,
+            Command.SET_HOOD_FAN_SPEED,
+            argument=SMART,
+        )
+
+    async def async_set_percentage(self, percentage: int) -> None:
+        """Set the speed percentage of the fan."""
+        if percentage == 0:
+            await self.execute_device_command(Capability.SWITCH, Command.OFF)
+        else:
+            await self.execute_device_command(
+                Capability.SAMSUNG_CE_HOOD_FAN_SPEED,
+                Command.SET_HOOD_FAN_SPEED,
+                argument=percentage_to_ordered_list_item(self.fan_speeds, percentage),
+            )
+
+    async def async_turn_on(
+        self,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Turn the fan on."""
+        await self.execute_device_command(Capability.SWITCH, Command.ON)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the fan off."""
+        await self.execute_device_command(Capability.SWITCH, Command.OFF)
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if fan is on."""
+        return self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH) == "on"
+
+    @property
+    def preset_mode(self) -> str | None:
+        """Return the current preset mode."""
+        if (
+            self.get_attribute_value(
+                Capability.SAMSUNG_CE_HOOD_FAN_SPEED, Attribute.HOOD_FAN_SPEED
+            )
+            == SMART
+        ):
+            return PRESET_SMART
+        return None
+
+    @property
+    def percentage(self) -> int | None:
+        """Return the current speed percentage."""
+        fan_speed = self.get_attribute_value(
+            Capability.SAMSUNG_CE_HOOD_FAN_SPEED, Attribute.HOOD_FAN_SPEED
+        )
+        if fan_speed == SMART:
+            return None
+        return ordered_list_item_to_percentage(self.fan_speeds, fan_speed)
+
+    @property
+    def speed_count(self) -> int:
+        """Return the number of available speeds."""
+        return len(self.fan_speeds)

@@ -10,9 +10,12 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
+from homeassistant.components.backup import AddonInfo, AgentBackup
 from homeassistant.components.google_drive.const import DOMAIN
+from homeassistant.const import UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util.unit_conversion import InformationConverter
 
 from tests.common import MockConfigEntry
 
@@ -42,6 +45,40 @@ def mock_api() -> Generator[MagicMock]:
         "homeassistant.components.google_drive.api.GoogleDriveApi"
     ) as mock_api_cl:
         mock_api = mock_api_cl.return_value
+
+        def mock_get_user(params=None):
+            params = params or {}
+            fields = params.get("fields")
+            result = {}
+            if not fields or "storageQuota" in fields:
+                result["storageQuota"] = {
+                    "limit": InformationConverter.convert(
+                        10, UnitOfInformation.GIBIBYTES, UnitOfInformation.BYTES
+                    ),
+                    "usage": InformationConverter.convert(
+                        5, UnitOfInformation.GIBIBYTES, UnitOfInformation.BYTES
+                    ),
+                    "usageInDrive": InformationConverter.convert(
+                        2, UnitOfInformation.GIBIBYTES, UnitOfInformation.BYTES
+                    ),
+                    "usageInTrash": InformationConverter.convert(
+                        1, UnitOfInformation.GIBIBYTES, UnitOfInformation.BYTES
+                    ),
+                }
+            if not fields or "user(emailAddress)" in fields:
+                result["user"] = {"emailAddress": TEST_USER_EMAIL}
+
+            return result
+
+        mock_api.get_user = AsyncMock(side_effect=mock_get_user)
+        # Setup looks up existing folder to make sure it still exists
+        # and list backups during coordinator update
+        mock_api.list_files = AsyncMock(
+            side_effect=[
+                {"files": [{"id": "HA folder ID", "name": "HA folder name"}]},
+                {"files": []},
+            ]
+        )
         yield mock_api
 
 
@@ -77,4 +114,26 @@ def mock_config_entry(expires_at: int) -> MockConfigEntry:
                 "scope": "https://www.googleapis.com/auth/drive.file",
             },
         },
+    )
+
+
+@pytest.fixture
+def mock_agent_backup() -> AgentBackup:
+    """Return a mocked AgentBackup."""
+    return AgentBackup(
+        addons=[AddonInfo(name="Test", slug="test", version="1.0.0")],
+        backup_id="test-backup",
+        database_included=True,
+        date="2025-01-01T01:23:45.678Z",
+        extra_metadata={
+            "with_automatic_settings": False,
+        },
+        folders=[],
+        homeassistant_included=True,
+        homeassistant_version="2024.12.0",
+        name="Test",
+        protected=False,
+        size=InformationConverter.convert(
+            100, UnitOfInformation.MEBIBYTES, UnitOfInformation.BYTES
+        ),
     )
