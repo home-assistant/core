@@ -60,7 +60,7 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: This integration does not provide repair issues, as it is designed for a single PoolDose device with a fixed configuration.
