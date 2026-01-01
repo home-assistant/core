@@ -41,7 +41,7 @@ async def test_user(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result.get("step_id") == "user"
 
     # Use async_configure instead of async_init for form submission
