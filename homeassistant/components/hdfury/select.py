@@ -1,16 +1,9 @@
 """Select platform for HDFury Integration."""
 
-from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
 
-from hdfury import (
-    OPERATION_MODES,
-    TX0_INPUT_PORTS,
-    TX1_INPUT_PORTS,
-    HDFuryAPI,
-    HDFuryError,
-)
+from hdfury import OPERATION_MODES, TX0_INPUT_PORTS, TX1_INPUT_PORTS, HDFuryError
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant
@@ -25,56 +18,37 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(kw_only=True, frozen=True)
-class HDFurySelectPortEntityDescription(SelectEntityDescription):
-    """Description for HDFury select port entities."""
+class HDFurySelectEntityDescription(SelectEntityDescription):
+    """Description for HDFury select entities."""
 
     label_map: dict[str, str]
     reverse_map: dict[str, str]
-    set_value_fn: Callable[[HDFuryAPI, str, str], Awaitable[None]]
 
 
-@dataclass(kw_only=True, frozen=True)
-class HDFurySelectOperationEntityDescription(SelectEntityDescription):
-    """Description for HDFury select operation entities."""
-
-    label_map: dict[str, str]
-    reverse_map: dict[str, str]
-    set_value_fn: Callable[[HDFuryAPI, str], Awaitable[None]]
-
-
-SELECT_PORTS: tuple[HDFurySelectPortEntityDescription, ...] = (
-    HDFurySelectPortEntityDescription(
+SELECT_PORTS: tuple[HDFurySelectEntityDescription, ...] = (
+    HDFurySelectEntityDescription(
         key="portseltx0",
         translation_key="portseltx0",
         options=list(TX0_INPUT_PORTS.values()),
         label_map=TX0_INPUT_PORTS,
         reverse_map={v: k for k, v in TX0_INPUT_PORTS.items()},
-        set_value_fn=lambda client, tx0_value, tx1_value: client.set_port_selection(
-            tx0_value, tx1_value
-        ),
     ),
-    HDFurySelectPortEntityDescription(
+    HDFurySelectEntityDescription(
         key="portseltx1",
         translation_key="portseltx1",
         options=list(TX1_INPUT_PORTS.values()),
         label_map=TX1_INPUT_PORTS,
         reverse_map={v: k for k, v in TX1_INPUT_PORTS.items()},
-        set_value_fn=lambda client, tx0_value, tx1_value: client.set_port_selection(
-            tx0_value, tx1_value
-        ),
     ),
 )
 
 
-SELECT_OPERATION_MODE: HDFurySelectOperationEntityDescription = (
-    HDFurySelectOperationEntityDescription(
-        key="opmode",
-        translation_key="opmode",
-        options=list(OPERATION_MODES.values()),
-        label_map=OPERATION_MODES,
-        reverse_map={v: k for k, v in OPERATION_MODES.items()},
-        set_value_fn=lambda client, value: client.set_operation_mode(value),
-    )
+SELECT_OPERATION_MODE: HDFurySelectEntityDescription = HDFurySelectEntityDescription(
+    key="opmode",
+    translation_key="opmode",
+    options=list(OPERATION_MODES.values()),
+    label_map=OPERATION_MODES,
+    reverse_map={v: k for k, v in OPERATION_MODES.items()},
 )
 
 
@@ -106,7 +80,7 @@ async def async_setup_entry(
 class HDFuryPortSelect(HDFuryEntity, SelectEntity):
     """Class to handle fetching and storing HDFury Port Select data."""
 
-    entity_description: HDFurySelectPortEntityDescription
+    entity_description: HDFurySelectEntityDescription
 
     @property
     def current_option(self) -> str | None:
@@ -151,9 +125,7 @@ class HDFuryPortSelect(HDFuryEntity, SelectEntity):
 
         # Send command to device
         try:
-            await self.entity_description.set_value_fn(
-                self.coordinator.client, tx0_raw, tx1_raw
-            )
+            await self.coordinator.client.set_port_selection(tx0_raw, tx1_raw)
         except HDFuryError as error:
             _LOGGER.error("%s", error)
             raise HomeAssistantError(
@@ -168,7 +140,7 @@ class HDFuryPortSelect(HDFuryEntity, SelectEntity):
 class HDFuryOpModeSelect(HDFuryEntity, SelectEntity):
     """Handle operation mode selection (opmode)."""
 
-    entity_description: HDFurySelectOperationEntityDescription
+    entity_description: HDFurySelectEntityDescription
 
     @property
     def current_option(self) -> str | None:
@@ -199,9 +171,7 @@ class HDFuryOpModeSelect(HDFuryEntity, SelectEntity):
 
         # Send command to device
         try:
-            await self.entity_description.set_value_fn(
-                self.coordinator.client, raw_value
-            )
+            await self.coordinator.client.set_operation_mode(raw_value)
         except HDFuryError as error:
             _LOGGER.error("%s", error)
             raise HomeAssistantError(
