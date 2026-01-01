@@ -1,17 +1,16 @@
 """The HDFury Integration."""
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .coordinator import HDFuryCoordinator
+from .coordinator import HDFuryConfigEntry, HDFuryCoordinator
 
 PLATFORMS = [
     Platform.SELECT,
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HDFuryConfigEntry) -> bool:
     """Set up HDFury as config entry."""
 
     coordinator = HDFuryCoordinator(hass, entry)
@@ -24,7 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HDFuryConfigEntry) -> bool:
     """Unload a HDFury config entry."""
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

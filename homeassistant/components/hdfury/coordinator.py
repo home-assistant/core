@@ -18,11 +18,13 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL: Final = timedelta(seconds=60)
 
+type HDFuryConfigEntry = ConfigEntry[HDFuryCoordinator]
+
 
 class HDFuryCoordinator(DataUpdateCoordinator):
     """HDFury Device Coordinator Class."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: HDFuryConfigEntry) -> None:
         """Initialize the coordinator."""
 
         super().__init__(

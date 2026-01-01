@@ -12,13 +12,12 @@ from hdfury import (
 )
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import HDFuryCoordinator
+from .coordinator import HDFuryConfigEntry, HDFuryCoordinator
 from .entity import HDFuryEntity
 
 
@@ -78,7 +77,7 @@ SELECT_OPERATION_MODE: HDFurySelectOperationEntityDescription = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: HDFuryConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up selects using the platform schema."""
