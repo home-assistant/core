@@ -9,6 +9,7 @@ from typing import Any
 
 import aiotractive
 
+from homeassistant.components.sensor import DOMAIN as SENSOR_PLATFORM
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
@@ -20,6 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -32,6 +34,7 @@ from .const import (
     ATTR_POWER_SAVING,
     ATTR_TRACKER_STATE,
     CLIENT_ID,
+    DOMAIN,
     RECONNECT_INTERVAL,
     SERVER_UNAVAILABLE,
     SWITCH_KEY_MAP,
@@ -124,6 +127,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: TractiveConfigEntry) -> 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cancel_listen_task)
     )
     entry.async_on_unload(tractive.unsubscribe)
+
+    # Remove sensor entities that are no longer supported by the Tractive API
+    entity_reg = er.async_get(hass)
+    for item in filtered_trackables:
+        for key in ("activity_label", "calories", "sleep_label"):
+            if entity_id := entity_reg.async_get_entity_id(
+                SENSOR_PLATFORM, DOMAIN, f"{item.trackable['_id']}_{key}"
+            ):
+                entity_reg.async_remove(entity_id)
 
     return True
 
