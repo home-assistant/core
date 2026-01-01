@@ -168,54 +168,25 @@ class BryantEvolutionClimate(ClimateEntity):
         if not is_active:
             return HVACAction.OFF
         match mode.upper():
-             # For HEAT and COOL, compare the current temp and setpoint to determine
-             # if this ZONE is HEATING or COOLING.  
-             # MODE only shows trhat the SYSTEM is running, not individual ZONES
             case "HEAT":
-                if (
-                    self.current_temperature is not None
-                    and self.target_temperature is not None
-                ):
-                    if self.target_temperature > self.current_temperature:
-                       return HVACAction.HEATING
-                    else:
-                       return HVACAction.OFF
+                return HVACAction.HEATING
             case "COOL":
-                if (
-                    self.current_temperature is not None
-                    and self.target_temperature is not None
-                ):
-                    if self.target_temperature < self.current_temperature:
-                       return HVACAction.COOLING
-                    else:
-                       return HVACAction.OFF                
+                return HVACAction.COOLING
             case "OFF":
                 return HVACAction.OFF
             case "AUTO":
-                # For AUTO, we need to figure out whether we're heating, cooling, or
-                # neither for this Zone based on the current temperature and the setpoints,
-                # and given that while the system itself is running in some zone(s), it may
-                # or may not be running in this one.
+                # In AUTO, we need to figure out what the actual action is
+                # based on the setpoints.
                 if (
                     self.current_temperature is not None
                     and self.target_temperature_low is not None
-                    and self.target_temperature_high is not None
                 ):
                     if self.current_temperature > self.target_temperature_low:
-                       # If the system is running and the current_temperature is
-                       # higher than the setpoint at which cooling would stop,
-                       # then the zone must be cooling.
-                       return HVACAction.COOLING
-                    elif self.current_temperature < self.target_temperature_high:
-                       # Or, conversely, heating
-                       return HVACAction.HEATING
-                    else:
-                       # Othewise, set the current zone to OFF because the current_temperature is
-                       # within the _high - _low temperature band, inclusive of both bounds. That is,
-                       # neither cooling, nor heating is required in this zone.
-                       # (By implication, some other zone(s) must be running (heating or cooling)
-                       return HVACAction.OFF
-
+                        # If the system is on and the current temperature is
+                        # higher than the point at which heating would activate,
+                        # then we must be cooling.
+                        return HVACAction.COOLING
+                    return HVACAction.HEATING
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="failed_to_parse_hvac_action",
