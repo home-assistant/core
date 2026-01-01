@@ -9,7 +9,13 @@ from datetime import timedelta
 import logging
 
 from aiohttp import ClientResponseError
-from pymiele import MieleAction, MieleAPI, MieleDevice, MieleFillingLevel
+from pymiele import (
+    MieleAction,
+    MieleAPI,
+    MieleDevice,
+    MieleFillingLevel,
+    MieleFillingLevels,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -153,8 +159,6 @@ class MieleAuxDataUpdateCoordinator(DataUpdateCoordinator[MieleAuxCoordinatorDat
     async def _async_update_data(self) -> MieleAuxCoordinatorData:
         """Fetch data from the Miele API."""
         filling_levels_json = await self.api.get_filling_levels()
-        filling_levels = {
-            record["deviceId"]: MieleFillingLevel(record["fillingLevels"])
-            for record in filling_levels_json
-        }
-        return MieleAuxCoordinatorData(filling_levels=filling_levels)
+        return MieleAuxCoordinatorData(
+            filling_levels=MieleFillingLevels(filling_levels_json).filling_levels
+        )
