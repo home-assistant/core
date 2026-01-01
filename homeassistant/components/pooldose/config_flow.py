@@ -168,7 +168,7 @@ class PooldoseConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
             # Ensure new serial number matches the existing entry unique_id (serial number)
-            if str(serial_number) != str(self._get_reconfigure_entry().unique_id):
+            if serial_number != self._get_reconfigure_entry().unique_id:
                 return self.async_abort(reason="wrong_device")
 
             # Update the existing config entry with the new host and schedule reload
