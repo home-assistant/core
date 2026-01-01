@@ -103,15 +103,6 @@
       },
       "filter_life": {
         "name": "Filter lifetime"
-      },
-      "pm1": {
-        "name": "PM1"
-      },
-      "pm10": {
-        "name": "PM10"
-      },
-      "pm25": {
-        "name": "PM25"
       }
     },
     "switch": {
