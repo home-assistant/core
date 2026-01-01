@@ -25,8 +25,8 @@ rules:
   # Silver
   action-exceptions: done
   config-entry-unloading: done
-  docs-configuration-parameters: todo
-  docs-installation-parameters: todo
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
   entity-unavailable: todo
   integration-owner: done
   log-when-unavailable: done
@@ -56,7 +56,7 @@ rules:
   entity-device-class: todo
   entity-disabled-by-default: done
   entity-translations: todo
-  exception-translations: todo
+  exception-translations: done
   icon-translations: todo
   reconfiguration-flow: todo
   repair-issues:
