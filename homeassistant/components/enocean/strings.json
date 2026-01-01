@@ -137,6 +137,9 @@
       }
     },
     "sensor": {
+      "base_id": {
+        "name": "Base ID"
+      },
       "last_seen": {
         "name": "Last seen"
       },
