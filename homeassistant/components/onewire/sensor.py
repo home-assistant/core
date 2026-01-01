@@ -310,7 +310,7 @@ EDS_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             native_unit_of_measurement=PERCENTAGE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
-    ),    
+    ),
     "EDS0066": (
         OneWireSensorEntityDescription(
             key="EDS0066/temperature",
