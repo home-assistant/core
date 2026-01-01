@@ -37,8 +37,8 @@ SERVICE_SET_HOT_WATER_SCHEDULE = "set_hot_water_schedule"
 # Schema for a single time slot
 _SLOT_SCHEMA = vol.Schema(
     {
-        vol.Required("start_time"): vol.Any(cv.time, cv.string),
-        vol.Required("end_time"): vol.Any(cv.time, cv.string),
+        vol.Required("start_time"): cv.time,
+        vol.Required("end_time"): cv.time,
     }
 )
 
@@ -57,37 +57,13 @@ SERVICE_SET_HOT_WATER_SCHEDULE_SCHEMA = vol.Schema(
 )
 
 
-def _parse_time_value(value: time | str) -> time:
-    """Parse a time value from either a time object or string.
-
-    Raises ServiceValidationError if the format is invalid.
-    """
-    if isinstance(value, time):
-        return value
-
-    if isinstance(value, str):
-        try:
-            parts = value.split(":")
-            return time(int(parts[0]), int(parts[1]))
-        except (ValueError, IndexError):
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_time_format",
-            ) from None
-
-    raise ServiceValidationError(
-        translation_domain=DOMAIN,
-        translation_key="invalid_time_format",
-    )
-
-
 def _convert_time_slots_to_day_schedule(
     slots: list[dict[str, time]] | None,
 ) -> DaySchedule | None:
     """Convert list of time slot dicts to a DaySchedule object.
 
-    Example: [{"start_time": "06:00", "end_time": "08:00"},
-              {"start_time": "17:00", "end_time": "21:00"}]
+    Example: [{"start_time": time(6, 0), "end_time": time(8, 0)},
+              {"start_time": time(17, 0), "end_time": time(21, 0)}]
     becomes: DaySchedule with two TimeSlot objects
 
     None returns None (don't modify this day).
@@ -101,30 +77,26 @@ def _convert_time_slots_to_day_schedule(
 
     time_slots = []
     for slot in slots:
-        start = slot.get("start_time")
-        end = slot.get("end_time")
+        start_time = slot["start_time"]
+        end_time = slot["end_time"]
 
-        if start and end:
-            start_time = _parse_time_value(start)
-            end_time = _parse_time_value(end)
-
-            # Validate that end time is after start time
-            if end_time <= start_time:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="end_time_before_start_time",
-                    translation_placeholders={
-                        "start_time": start_time.strftime("%H:%M"),
-                        "end_time": end_time.strftime("%H:%M"),
-                    },
-                )
-
-            time_slots.append(TimeSlot(start=start_time, end=end_time))
-            LOGGER.debug(
-                "Created time slot: %s-%s",
-                start_time.strftime("%H:%M"),
-                end_time.strftime("%H:%M"),
+        # Validate that end time is after start time
+        if end_time <= start_time:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="end_time_before_start_time",
+                translation_placeholders={
+                    "start_time": start_time.strftime("%H:%M"),
+                    "end_time": end_time.strftime("%H:%M"),
+                },
             )
+
+        time_slots.append(TimeSlot(start=start_time, end=end_time))
+        LOGGER.debug(
+            "Created time slot: %s-%s",
+            start_time.strftime("%H:%M"),
+            end_time.strftime("%H:%M"),
+        )
 
     LOGGER.debug("Created DaySchedule with %d slots", len(time_slots))
     return DaySchedule(slots=time_slots)
