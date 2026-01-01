@@ -34,10 +34,10 @@
   },
   "exceptions": {
     "communication_error": {
-      "message": "Error communicating with HDFury device: {error}"
+      "message": "An error occurred while communicating with HDFury device"
     },
     "data_error": {
-      "message": "Data inconsistency: {error}"
+      "message": "An error occurred while validating data consistency: {error}"
     }
   },
   "options": {

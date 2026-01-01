@@ -2,6 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+import logging
 
 from hdfury import (
     OPERATION_MODES,
@@ -19,6 +20,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DOMAIN
 from .coordinator import HDFuryConfigEntry, HDFuryCoordinator
 from .entity import HDFuryEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -168,10 +171,10 @@ class HDFuryPortSelect(HDFuryEntity, SelectEntity):
                 self.coordinator.client, tx0_raw, tx1_raw
             )
         except HDFuryError as error:
+            _LOGGER.error("%s", error)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
-                translation_placeholders={"error": str(error)},
             ) from error
 
         # Trigger HA state refresh
@@ -213,10 +216,10 @@ class HDFuryOpModeSelect(HDFuryEntity, SelectEntity):
                 self.coordinator.client, raw_value
             )
         except HDFuryError as error:
+            _LOGGER.error("%s", error)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
-                translation_placeholders={"error": str(error)},
             ) from error
 
         # Trigger HA state refresh

@@ -50,10 +50,10 @@ class HDFuryCoordinator(DataUpdateCoordinator):
             info = await self.client.get_info()
             config = await self.client.get_config()
         except HDFuryError as error:
+            _LOGGER.error("%s", error)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
-                translation_placeholders={"error": str(error)},
             ) from error
 
         return {
