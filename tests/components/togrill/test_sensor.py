@@ -70,6 +70,50 @@ async def test_setup(
     await snapshot_platform(hass, entity_registry, snapshot, mock_entry.entry_id)
 
 
+@pytest.mark.parametrize(
+    "packets",
+    [
+        pytest.param([], id="no_data"),
+        pytest.param(
+            [PacketA1Notify([10, 20, 25])],
+            id="ambient_temp_data",
+        ),
+        pytest.param(
+            [PacketA1Notify([10, None, 25])],
+            id="ambient_temp_with_missing_probe",
+        ),
+        pytest.param(
+            [PacketA1Notify([])],
+            id="ambient_empty_temperatures",
+        ),
+        pytest.param(
+            [PacketA1Notify([10, 20, None])],
+            id="ambient_temp_none",
+        ),
+    ],
+)
+async def test_setup_with_ambient(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    mock_entry_with_ambient: MockConfigEntry,
+    mock_client: Mock,
+    packets,
+) -> None:
+    """Test the sensors with ambient temperature sensor enabled."""
+
+    inject_bluetooth_service_info(hass, TOGRILL_SERVICE_INFO)
+
+    await setup_entry(hass, mock_entry_with_ambient, [Platform.SENSOR])
+
+    for packet in packets:
+        mock_client.mocked_notify(packet)
+
+    await snapshot_platform(
+        hass, entity_registry, snapshot, mock_entry_with_ambient.entry_id
+    )
+
+
 async def test_device_disconnected(
     hass: HomeAssistant,
     mock_entry: MockConfigEntry,
@@ -116,3 +160,25 @@ async def test_device_discovered(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "0"
+
+
+async def test_ambient_sensor_not_created_without_config(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_entry: MockConfigEntry,
+    mock_client: Mock,
+) -> None:
+    """Test ambient temperature sensor is not created when not configured."""
+    inject_bluetooth_service_info(hass, TOGRILL_SERVICE_INFO)
+
+    await setup_entry(hass, mock_entry, [Platform.SENSOR])
+
+    entity_id = "sensor.pro_05_ambient_temperature"
+
+    # Entity should not exist when CONF_HAS_AMBIENT is not set
+    state = hass.states.get(entity_id)
+    assert state is None
+
+    # Verify it's not in the entity registry
+    entry = entity_registry.async_get(entity_id)
+    assert entry is None

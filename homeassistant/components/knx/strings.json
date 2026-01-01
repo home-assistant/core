@@ -154,6 +154,27 @@
     }
   },
   "config_panel": {
+    "dashboard": {
+      "connection_flow": {
+        "description": "Reconfigure KNX connection or import a new KNX keyring file",
+        "title": "Connection settings"
+      },
+      "options_flow": {
+        "description": "Configure integration settings",
+        "title": "Integration options"
+      },
+      "project_upload": {
+        "description": "Import a KNX project file to help configure group addresses and datapoint types",
+        "title": "[%key:component::knx::config_panel::dialogs::project_upload::title%]"
+      }
+    },
+    "dialogs": {
+      "project_upload": {
+        "description": "Details such as group address names, datapoint types, devices and group objects are extracted from your project file. The ETS project file itself and its optional password are not stored.\n\n`.knxproj` files exported by ETS 4, 5 or 6 are supported.",
+        "file_upload_label": "ETS project file",
+        "title": "Import ETS project"
+      }
+    },
     "dpt": {
       "options": {
         "5": "Generic 1-byte unsigned integer",
@@ -347,8 +368,16 @@
           },
           "knx": {
             "knx_group_address": {
+              "add_passive_address": "+ Add passive address",
               "dpt": "Datapoint type",
-              "passive_addresses": "Passive addresses",
+              "dpt_incompatible": "DPT {dpt} is incompatible with this field's expected DPTs.",
+              "dpt_no_selection": "No DPT selected",
+              "dpt_select": "Select DPT",
+              "group_address_none_for_dpt": "No group addresses known for expected DPT",
+              "group_address_none_for_filter": "No group addresses known for current filter",
+              "group_address_search": "Search group address",
+              "group_address_unknown": "Unknown group address",
+              "passive_address": "Passive address",
               "send_address": "Send address",
               "state_address": "State address",
               "valid_dpts": "Valid DPTs"
@@ -676,7 +705,6 @@
             }
           }
         },
-        "header": "Create new entity",
         "light": {
           "description": "The KNX light platform is used as an interface to dimming actuators, LED controllers, DALI gateways and similar.",
           "knx": {
@@ -774,6 +802,19 @@
             }
           }
         },
+        "scene": {
+          "description": "A KNX entity can activate a KNX scene and updates when the scene number is received.",
+          "knx": {
+            "ga_scene": {
+              "description": "Group address to activate a scene.",
+              "label": "Scene"
+            },
+            "scene_number": {
+              "description": "The scene number this entity is associated with.",
+              "label": "Scene number"
+            }
+          }
+        },
         "sensor": {
           "description": "Read-only entity for numeric or string datapoints. Temperature, percent etc.",
           "knx": {
@@ -816,6 +857,23 @@
             }
           }
         },
+        "text": {
+          "description": "The KNX text platform is used as an interface to text objects.",
+          "knx": {
+            "ga_text": {
+              "description": "The group address of the text object.",
+              "label": "Text"
+            },
+            "mode": {
+              "description": "Select how the entity is displayed in Home Assistant.",
+              "label": "[%key:common::config_flow::data::mode%]",
+              "options": {
+                "password": "[%key:common::config_flow::data::password%]",
+                "text": "[%key:component::text::entity_component::_::state_attributes::mode::state::text%]"
+              }
+            }
+          }
+        },
         "time": {
           "description": "The KNX time platform is used as an interface to time objects.",
           "knx": {
@@ -825,11 +883,25 @@
             }
           }
         },
+        "title": "Create KNX entity",
         "type_selection": {
-          "header": "Create KNX entity",
-          "title": "Select entity type"
+          "header": "Select entity type"
         }
-      }
+      },
+      "description": "Add and manage KNX entities",
+      "title": "Entities"
+    },
+    "group_monitor": {
+      "description": "Monitor KNX group communication",
+      "title": "Group monitor"
+    },
+    "info": {
+      "description": "Version information, manage KNX project file",
+      "title": "Information"
+    },
+    "project": {
+      "description": "Inspect imported group addresses",
+      "title": "Project"
     }
   },
   "device_automation": {
