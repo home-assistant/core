@@ -128,15 +128,14 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
         self._switch_wrapper = switch_wrapper
 
         self._attr_fan_speed_list = []
-        self._attr_supported_features = (
-            VacuumEntityFeature.SEND_COMMAND | VacuumEntityFeature.STATE
-        )
+        self._attr_supported_features = VacuumEntityFeature.SEND_COMMAND
+        if status_wrapper or pause_wrapper:
+            self._attr_supported_features |= VacuumEntityFeature.STATE
         if pause_wrapper:
             self._attr_supported_features |= VacuumEntityFeature.PAUSE
 
         if charge_wrapper or (
-            mode_wrapper
-            and TUYA_MODE_RETURN_HOME in mode_wrapper.type_information.range
+            mode_wrapper and TUYA_MODE_RETURN_HOME in mode_wrapper.options
         ):
             self._attr_supported_features |= VacuumEntityFeature.RETURN_HOME
 
@@ -149,7 +148,7 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
             )
 
         if fan_speed_wrapper:
-            self._attr_fan_speed_list = fan_speed_wrapper.type_information.range
+            self._attr_fan_speed_list = fan_speed_wrapper.options
             self._attr_supported_features |= VacuumEntityFeature.FAN_SPEED
 
     @property

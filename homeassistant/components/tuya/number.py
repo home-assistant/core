@@ -25,7 +25,7 @@ from .const import (
     DPCode,
 )
 from .entity import TuyaEntity
-from .models import DPCodeIntegerWrapper, IntegerTypeData
+from .models import DPCodeIntegerWrapper
 
 NUMBERS: dict[DeviceCategory, tuple[NumberEntityDescription, ...]] = {
     DeviceCategory.BH: (
@@ -483,8 +483,6 @@ async def async_setup_entry(
 class TuyaNumberEntity(TuyaEntity, NumberEntity):
     """Tuya Number Entity."""
 
-    _number: IntegerTypeData | None = None
-
     def __init__(
         self,
         device: CustomerDevice,
@@ -498,9 +496,9 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
         self._attr_unique_id = f"{super().unique_id}{description.key}"
         self._dpcode_wrapper = dpcode_wrapper
 
-        self._attr_native_max_value = dpcode_wrapper.type_information.max_scaled
-        self._attr_native_min_value = dpcode_wrapper.type_information.min_scaled
-        self._attr_native_step = dpcode_wrapper.type_information.step_scaled
+        self._attr_native_max_value = dpcode_wrapper.max_value
+        self._attr_native_min_value = dpcode_wrapper.min_value
+        self._attr_native_step = dpcode_wrapper.value_step
         if description.native_unit_of_measurement is None:
             self._attr_native_unit_of_measurement = dpcode_wrapper.native_unit
 

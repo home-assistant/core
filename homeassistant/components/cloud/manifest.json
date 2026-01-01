@@ -8,11 +8,11 @@
     "google_assistant"
   ],
   "codeowners": ["@home-assistant/cloud"],
-  "dependencies": ["auth", "http", "repairs", "webhook"],
+  "dependencies": ["auth", "http", "repairs", "webhook", "web_rtc"],
   "documentation": "https://www.home-assistant.io/integrations/cloud",
   "integration_type": "system",
   "iot_class": "cloud_push",
   "loggers": ["acme", "hass_nabucasa", "snitun"],
-  "requirements": ["hass-nabucasa==1.6.2"],
+  "requirements": ["hass-nabucasa==1.7.0"],
   "single_config_entry": true
 }

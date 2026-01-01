@@ -619,6 +619,37 @@
     'via_device_id': None,
   })
 # ---
+# name: test_device_registry[5ebss29hqqmse7t5psm]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        '5ebss29hqqmse7t5psm',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'Automatic Cat Litter Box',
+    'model_id': '5t7esmqqh92ssbe5',
+    'name': 'Slimme kattenbak',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
 # name: test_device_registry[5gfyvvg48bsxbbnjzc]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
@@ -1294,6 +1325,37 @@
     'model': 'Mini Smart Plug',
     'model_id': 'qxJSyTLEtX5WrzA9',
     'name': 'LivR',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[9Ry4oUpdAYq8Pe0Bkw]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tuya',
+        '9Ry4oUpdAYq8Pe0Bkw',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Tuya',
+    'model': 'ITC-308-WIFI Thermostat',
+    'model_id': 'B0eP8qYAdpUo4yR9',
+    'name': 'ITC-308-WIFI Thermostat',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,

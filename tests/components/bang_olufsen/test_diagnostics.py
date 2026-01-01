@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
 
 from .conftest import mock_websocket_connection
-from .const import TEST_BUTTON_EVENT_ENTITY_ID
+from .const import TEST_BUTTON_EVENT_ENTITY_ID, TEST_REMOTE_KEY_EVENT_ENTITY_ID
 
 from tests.common import AsyncMock, MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
@@ -25,8 +25,11 @@ async def test_async_get_config_entry_diagnostics(
 ) -> None:
     """Test config entry diagnostics."""
 
-    # Enable an Event entity
+    # Enable a button and remote key Event entity
     entity_registry.async_update_entity(TEST_BUTTON_EVENT_ENTITY_ID, disabled_by=None)
+    entity_registry.async_update_entity(
+        TEST_REMOTE_KEY_EVENT_ENTITY_ID, disabled_by=None
+    )
     hass.config_entries.async_schedule_reload(mock_config_entry.entry_id)
 
     # Re-trigger WebSocket events after the reload

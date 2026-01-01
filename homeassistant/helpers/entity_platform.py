@@ -330,10 +330,18 @@ class EntityPlatform:
                 self.domain,
             )
             learn_more_url = None
-            if self.platform and "custom_components" not in self.platform.__file__:  # type: ignore[attr-defined]
-                learn_more_url = (
-                    f"https://www.home-assistant.io/integrations/{self.platform_name}/"
-                )
+            if self.platform:
+                if "custom_components" in self.platform.__file__:  # type: ignore[attr-defined]
+                    self.logger.warning(
+                        (
+                            "The %s platform module for the %s custom integration does not implement"
+                            " async_setup_platform or setup_platform."
+                        ),
+                        self.platform_name,
+                        self.domain,
+                    )
+                else:
+                    learn_more_url = f"https://www.home-assistant.io/integrations/{self.platform_name}/"
             platform_key = f"platform: {self.platform_name}"
             yaml_example = f"```yaml\n{self.domain}:\n  - {platform_key}\n```"
             async_create_issue(

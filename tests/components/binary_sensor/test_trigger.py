@@ -13,7 +13,6 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.setup import async_setup_component
 
 from tests.components import (
     StateDescription,
@@ -101,8 +100,6 @@ async def test_binary_sensor_state_attribute_trigger_behavior_any(
     states: list[StateDescription],
 ) -> None:
     """Test that the binary sensor state trigger fires when any binary sensor state changes to a specific state."""
-    await async_setup_component(hass, "binary_sensor", {})
-
     other_entity_ids = set(target_binary_sensors["included"]) - {entity_id}
     excluded_entity_ids = set(target_binary_sensors["excluded"]) - {entity_id}
 
@@ -172,8 +169,6 @@ async def test_binary_sensor_state_attribute_trigger_behavior_first(
     states: list[StateDescription],
 ) -> None:
     """Test that the binary sensor state trigger fires when the first binary sensor state changes to a specific state."""
-    await async_setup_component(hass, "binary_sensor", {})
-
     other_entity_ids = set(target_binary_sensors["included"]) - {entity_id}
     excluded_entity_ids = set(target_binary_sensors["excluded"]) - {entity_id}
 
@@ -242,8 +237,6 @@ async def test_binary_sensor_state_attribute_trigger_behavior_last(
     states: list[StateDescription],
 ) -> None:
     """Test that the binary sensor state trigger fires when the last binary sensor state changes to a specific state."""
-    await async_setup_component(hass, "binary_sensor", {})
-
     other_entity_ids = set(target_binary_sensors["included"]) - {entity_id}
     excluded_entity_ids = set(target_binary_sensors["excluded"]) - {entity_id}
 

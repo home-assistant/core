@@ -72,6 +72,7 @@ if TYPE_CHECKING:
 
 NEVER_TIME = -1200.0
 RESUB_COOLDOWN_SECONDS = 10.0
+WAIT_FOR_GROUPS_TIMEOUT = 30.0
 EVENT_CHARGING = {
     "CHARGING": True,
     "NOT_CHARGING": False,
@@ -690,7 +691,8 @@ class SonosSpeaker:
 
     async def async_offline(self) -> None:
         """Handle removal of speaker when unavailable."""
-        assert self._subscription_lock is not None
+        if not self._subscription_lock:
+            self._subscription_lock = asyncio.Lock()
         async with self._subscription_lock:
             await self._async_offline()
 
@@ -1014,11 +1016,21 @@ class SonosSpeaker:
         speakers: list[SonosSpeaker],
     ) -> None:
         """Form a group with other players."""
+        # When joining multiple speakers, build the group incrementally and
+        # wait for the grouping to complete after each join. This avoids race
+        # conditions in zone topology updates.
         async with config_entry.runtime_data.topology_condition:
-            group: list[SonosSpeaker] = await hass.async_add_executor_job(
-                master.join, speakers
-            )
-            await SonosSpeaker.wait_for_groups(hass, config_entry, [group])
+            join_list: list[SonosSpeaker] = []
+            for speaker in speakers:
+                _LOGGER.debug("Join %s to %s", speaker.zone_name, master.zone_name)
+                join_list.append(speaker)
+                group: list[SonosSpeaker] = await hass.async_add_executor_job(
+                    master.join, join_list
+                )
+                await SonosSpeaker.wait_for_groups(hass, config_entry, [group])
+                _LOGGER.debug(
+                    "Join Complete %s to %s", speaker.zone_name, master.zone_name
+                )
 
     @soco_error()
     def unjoin(self) -> None:
@@ -1048,7 +1060,10 @@ class SonosSpeaker:
         async with config_entry.runtime_data.topology_condition:
             await hass.async_add_executor_job(_unjoin_all, speakers)
             await SonosSpeaker.wait_for_groups(
-                hass, config_entry, [[s] for s in speakers]
+                hass,
+                config_entry,
+                [[s] for s in speakers],
+                action="unjoin",
             )
 
     @soco_error()
@@ -1192,6 +1207,7 @@ class SonosSpeaker:
         hass: HomeAssistant,
         config_entry: SonosConfigEntry,
         groups: list[list[SonosSpeaker]],
+        action: str = "join",
     ) -> None:
         """Wait until all groups are present, or timeout."""
 
@@ -1212,18 +1228,20 @@ class SonosSpeaker:
             return True
 
         try:
-            async with asyncio.timeout(5):
+            async with asyncio.timeout(WAIT_FOR_GROUPS_TIMEOUT):
                 while not _test_groups(groups):
                     await config_entry.runtime_data.topology_condition.wait()
         except TimeoutError:
-            group_description = [
+            group_description = "; ".join(
                 f"{group[0].zone_name}: {', '.join(speaker.zone_name for speaker in group)}"
                 for group in groups
-            ]
+            )
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="timeout_join",
-                translation_placeholders={"group_description": str(group_description)},
+                translation_key=f"timeout_{action}",
+                translation_placeholders={
+                    "group_description": group_description,
+                },
             ) from TimeoutError
         any_speaker = next(iter(config_entry.runtime_data.discovered.values()))
         any_speaker.soco.zone_group_state.clear_cache()
