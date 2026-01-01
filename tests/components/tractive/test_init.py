@@ -220,20 +220,22 @@ async def test_missing_activity_data(
     assert payload[ATTR_MINUTES_ACTIVE] is None
 
 
+@pytest.mark.parametrize("sensor", ["activity_label", "calories", "sleep_label"])
 async def test_remove_unsupported_sensor_entity(
     hass: HomeAssistant,
     mock_tractive_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    sensor: str,
 ) -> None:
     """Test removing unsupported sensor entity."""
-    entity_id = "sensor.test_pet_calories_burned"
+    entity_id = f"sensor.test_pet_{sensor}"
     mock_config_entry.add_to_hass(hass)
 
     entity_registry.async_get_or_create(
         SENSOR_PLATFORM,
         DOMAIN,
-        "pet_id_123_calories",
+        f"pet_id_123_{sensor}",
         suggested_object_id=entity_id.rsplit(".", maxsplit=1)[-1],
         config_entry=mock_config_entry,
     )
