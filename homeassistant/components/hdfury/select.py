@@ -126,13 +126,11 @@ class HDFuryPortSelect(HDFuryEntity, SelectEntity):
     entity_description: HDFurySelectPortEntityDescription
 
     @property
-    def current_option(self) -> str:
+    def current_option(self) -> str | None:
         """Set Current Select Option."""
 
         raw_value = self.coordinator.data["info"].get(self.entity_description.key)
-        return self.entity_description.label_map.get(
-            raw_value, f"Unknown ({raw_value})"
-        )
+        return self.entity_description.label_map.get(raw_value)
 
     async def async_select_option(self, option: str) -> None:
         """Handle Port Select."""
@@ -187,13 +185,11 @@ class HDFuryOpModeSelect(HDFuryEntity, SelectEntity):
     entity_description: HDFurySelectOperationEntityDescription
 
     @property
-    def current_option(self) -> str:
+    def current_option(self) -> str | None:
         """Return the current operation mode."""
 
         raw_value = self.coordinator.data["info"].get(self.entity_description.key)
-        return self.entity_description.label_map.get(
-            raw_value, f"Unknown ({raw_value})"
-        )
+        return self.entity_description.label_map.get(raw_value)
 
     async def async_select_option(self, option: str) -> None:
         """Change the operation mode."""
