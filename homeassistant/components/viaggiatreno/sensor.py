@@ -113,13 +113,20 @@ class ViaggiaTrenoSensor(SensorEntity):
         self._name = name
 
         # API needs midnight
-        today = 1000*int(time.mktime(time.localtime().__replace__(tm_hour=0,
-                                                                 tm_min=0,
-                                                                 tm_sec=0)))
+        now = time.localtime()
+        midnight = time.struct_time(now.tm_year,
+                                    now.tm_mon,
+                                    now.tm_mday,
+                                    0, 0, 0,  # midnight
+                                    now.tm_wday,
+                                    now.tm_yday,
+                                    now.tm_isdst)
+        self._midnight_ms = 1000 * int(time.mktime(midnight))
+        self._today = tuple(now.tm_year, now.tm_mon, now.tm_mday)
         self.uri = VIAGGIATRENO_ENDPOINT.format(
             station_id=self._station_id,
             train_id=self._train_id,
-            timestamp=today)
+            timestamp=self._midnight_ms)
 
     @property
     def name(self):
@@ -174,38 +181,49 @@ class ViaggiaTrenoSensor(SensorEntity):
 
     async def async_update(self) -> None:
         """Update state."""
-        # API needs midnight
-        today = 1000*int(time.mktime(time.localtime().__replace__(tm_hour=0,
-                                                                 tm_min=0,
-                                                                 tm_sec=0)))
+
+        now = time.localtime()
+        today = (now.tm_year, now.tm_mon, now.tm_mday)
+        if today != self._today:
+            midnight = time.struct_time(now.tm_year,
+                                        now.tm_mon,
+                                        now.tm_mday,
+                                        0, 0, 0,  # midnight
+                                        now.tm_wday,
+                                        now.tm_yday,
+                                        now.tm_isdst)
+            self._midnight_ms = 1000 * int(time.mktime(midnight))
+            self._today = today
+
         self.uri = VIAGGIATRENO_ENDPOINT.format(
             station_id=self._station_id,
             train_id=self._train_id,
-            timestamp=today)
+            timestamp=self._midnight_ms)
 
         res = await async_http_request(self.hass, self.uri)
-        if res.get("error", ""):
-            if res["error"] == 204:
-                self._state = NO_INFORMATION_STRING
-                self._unit = None
+        if res is not None:
+            if res.get("error", ""):
+                if res["error"] == 204:
+                    self._state = NO_INFORMATION_STRING
+                    self._unit = None
+                else:
+                    self._state = f"Error: {res['error']}"
+                    self._unit = None
             else:
-                self._state = f"Error: {res['error']}"
-                self._unit = None
-        else:
-            for i in MONITORED_INFO:
-                self._attributes[i] = res[i]
+                for i in MONITORED_INFO:
+                    self._attributes[i] = res[i]
 
-            if self.is_cancelled(res):
-                self._state = CANCELLED_STRING
-                self._icon = "mdi:cancel"
-                self._unit = None
-            elif not self.has_departed(res):
-                self._state = NOT_DEPARTED_STRING
-                self._unit = None
-            elif self.has_arrived(res):
-                self._state = ARRIVED_STRING
-                self._unit = None
-            else:
-                self._state = res.get("ritardo")
-                self._unit = UnitOfTime.MINUTES
-                self._icon = ICON
+                if self.is_cancelled(res):
+                    self._state = CANCELLED_STRING
+                    self._icon = "mdi:cancel"
+                    self._unit = None
+                elif not self.has_departed(res):
+                    self._state = NOT_DEPARTED_STRING
+                    self._unit = None
+                elif self.has_arrived(res):
+                    self._state = ARRIVED_STRING
+                    self._unit = None
+                else:
+                    self._state = res.get("ritardo")
+                    self._unit = UnitOfTime.MINUTES
+                    self._icon = ICON
