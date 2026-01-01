@@ -24,15 +24,12 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
-    ATTR_ACTIVITY_LABEL,
-    ATTR_CALORIES,
     ATTR_DAILY_GOAL,
     ATTR_MINUTES_ACTIVE,
     ATTR_MINUTES_DAY_SLEEP,
     ATTR_MINUTES_NIGHT_SLEEP,
     ATTR_MINUTES_REST,
     ATTR_POWER_SAVING,
-    ATTR_SLEEP_LABEL,
     ATTR_TRACKER_STATE,
     CLIENT_ID,
     RECONNECT_INTERVAL,
@@ -42,7 +39,6 @@ from .const import (
     TRACKER_HEALTH_OVERVIEW_UPDATED,
     TRACKER_POSITION_UPDATED,
     TRACKER_SWITCH_STATUS_UPDATED,
-    TRACKER_WELLNESS_STATUS_UPDATED,
 )
 
 PLATFORMS = [
@@ -242,9 +238,6 @@ class TractiveClient:
                     if event["message"] == "health_overview":
                         self.send_health_overview_update(event)
                         continue
-                    if event["message"] == "wellness_overview":
-                        self._send_wellness_update(event)
-                        continue
                     if (
                         "hardware" in event
                         and self._last_hw_time != event["hardware"]["time"]
@@ -310,26 +303,6 @@ class TractiveClient:
         payload[ATTR_POWER_SAVING] = event.get("tracker_state_reason") == "POWER_SAVING"
         self._dispatch_tracker_event(
             TRACKER_SWITCH_STATUS_UPDATED, event["tracker_id"], payload
-        )
-
-    def _send_wellness_update(self, event: dict[str, Any]) -> None:
-        sleep_day = None
-        sleep_night = None
-        if isinstance(event["sleep"], dict):
-            sleep_day = event["sleep"]["minutes_day_sleep"]
-            sleep_night = event["sleep"]["minutes_night_sleep"]
-        payload = {
-            ATTR_ACTIVITY_LABEL: event["wellness"].get("activity_label"),
-            ATTR_CALORIES: event["activity"]["calories"],
-            ATTR_DAILY_GOAL: event["activity"]["minutes_goal"],
-            ATTR_MINUTES_ACTIVE: event["activity"]["minutes_active"],
-            ATTR_MINUTES_DAY_SLEEP: sleep_day,
-            ATTR_MINUTES_NIGHT_SLEEP: sleep_night,
-            ATTR_MINUTES_REST: event["activity"]["minutes_rest"],
-            ATTR_SLEEP_LABEL: event["wellness"].get("sleep_label"),
-        }
-        self._dispatch_tracker_event(
-            TRACKER_WELLNESS_STATUS_UPDATED, event["pet_id"], payload
         )
 
     def send_health_overview_update(self, event: dict[str, Any]) -> None:
