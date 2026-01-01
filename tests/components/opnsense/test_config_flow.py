@@ -27,7 +27,6 @@ async def test_import(
         context={"source": SOURCE_IMPORT},
         data=CONFIG_DATA_IMPORT,
     )
-    await hass.async_block_till_done()
 
     assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result.get("title") == TITLE
@@ -50,7 +49,6 @@ async def test_user(
         result["flow_id"],
         user_input=CONFIG_DATA,
     )
-    await hass.async_block_till_done()
 
     assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result.get("title") == TITLE
@@ -108,7 +106,6 @@ async def test_on_invalid_interface(
         context={"source": SOURCE_USER},
         data=config_data,
     )
-    await hass.async_block_till_done()
 
     assert result.get("type") == data_entry_flow.FlowResultType.FORM
     assert result.get("errors") == {"base": "invalid_interface"}
@@ -145,7 +142,6 @@ async def test_reconfigure_successful(
         result["flow_id"],
         user_input={CONF_TRACKER_INTERFACES: ["LAN"]},
     )
-    await hass.async_block_till_done()
 
     assert result.get("type") == data_entry_flow.FlowResultType.ABORT
     assert result.get("reason") == "reconfigure_successful"
