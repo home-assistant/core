@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, Final
 
 from hdfury import HDFuryAPI, HDFuryError
 
@@ -16,6 +16,8 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+SCAN_INTERVAL: Final = timedelta(seconds=60)
+
 
 class HDFuryCoordinator(DataUpdateCoordinator):
     """HDFury Device Coordinator Class."""
@@ -28,7 +30,7 @@ class HDFuryCoordinator(DataUpdateCoordinator):
             _LOGGER,
             config_entry=entry,
             name="HDFury",
-            update_interval=timedelta(seconds=60),
+            update_interval=SCAN_INTERVAL,
         )
         self.host: str = entry.data[CONF_HOST]
         self.client: HDFuryAPI = HDFuryAPI(self.host, async_get_clientsession(hass))
