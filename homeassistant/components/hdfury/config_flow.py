@@ -50,7 +50,7 @@ class HDFuryConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _validate_connection(self, host: str) -> bool:
         """Try to fetch data to confirm it's a valid HDFury device."""
 
-        client: HDFuryAPI = HDFuryAPI(host, async_get_clientsession(self.hass))
+        client = HDFuryAPI(host, async_get_clientsession(self.hass))
 
         try:
             await client.get_board()
