@@ -104,6 +104,8 @@ class Elke27ZoneBinarySensor(BinarySensorEntity):
 
 
 def _iter_zones(snapshot: Any) -> list[tuple[int, dict[str, Any]]]:
+    if isinstance(snapshot, dict) and isinstance(snapshot.get("zones"), dict | list | tuple):
+        snapshot = snapshot["zones"]
     if isinstance(snapshot, dict):
         zones: list[tuple[int, dict[str, Any]]] = []
         for key, zone in snapshot.items():
@@ -133,6 +135,8 @@ def _coerce_zone_id(key: Any, zone: dict[str, Any]) -> int | None:
 
 
 def _get_zone(snapshot: Any, zone_id: int) -> dict[str, Any] | None:
+    if isinstance(snapshot, dict) and isinstance(snapshot.get("zones"), dict | list | tuple):
+        snapshot = snapshot["zones"]
     if isinstance(snapshot, dict):
         zone = snapshot.get(zone_id)
         if zone is None:

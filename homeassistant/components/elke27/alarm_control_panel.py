@@ -90,6 +90,8 @@ class Elke27AreaAlarmControlPanel(AlarmControlPanelEntity):
 
 
 def _iter_areas(snapshot: Any) -> list[tuple[int, dict[str, Any]]]:
+    if isinstance(snapshot, dict) and isinstance(snapshot.get("areas"), dict | list | tuple):
+        snapshot = snapshot["areas"]
     if isinstance(snapshot, dict):
         areas: list[tuple[int, dict[str, Any]]] = []
         for key, area in snapshot.items():
@@ -119,6 +121,8 @@ def _coerce_area_id(key: Any, area: dict[str, Any]) -> int | None:
 
 
 def _get_area(snapshot: Any, area_id: int) -> dict[str, Any] | None:
+    if isinstance(snapshot, dict) and isinstance(snapshot.get("areas"), dict | list | tuple):
+        snapshot = snapshot["areas"]
     if isinstance(snapshot, dict):
         area = snapshot.get(area_id)
         if area is None:

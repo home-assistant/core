@@ -100,6 +100,8 @@ class Elke27OutputLight(LightEntity):
 
 
 def _iter_outputs(snapshot: Any) -> list[tuple[int, dict[str, Any]]]:
+    if isinstance(snapshot, dict) and isinstance(snapshot.get("outputs"), dict | list | tuple):
+        snapshot = snapshot["outputs"]
     if isinstance(snapshot, dict):
         outputs: list[tuple[int, dict[str, Any]]] = []
         for key, output in snapshot.items():
@@ -134,6 +136,8 @@ def _coerce_output_id(key: Any, output: dict[str, Any]) -> int | None:
 
 
 def _get_output(snapshot: Any, output_id: int) -> dict[str, Any] | None:
+    if isinstance(snapshot, dict) and isinstance(snapshot.get("outputs"), dict | list | tuple):
+        snapshot = snapshot["outputs"]
     if isinstance(snapshot, dict):
         output = snapshot.get(output_id)
         if output is None:
