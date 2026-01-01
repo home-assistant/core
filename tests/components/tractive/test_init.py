@@ -240,4 +240,4 @@ async def test_remove_unsupported_sensor_entity(
 
     await init_integration(hass, mock_config_entry)
 
-    assert hass.states.get(entity_id) is None
+    assert entity_registry.async_get(entity_id) is None
