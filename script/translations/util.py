@@ -4,10 +4,11 @@ import argparse
 import json
 import os
 import pathlib
+import re
 import subprocess
 from typing import Any
 
-from .error import ExitApp, JSONDecodeErrorWithPath
+from .error import ExitApp, JSONDecodeErrorWithPath, MissingReference
 
 
 def get_base_arg_parser() -> argparse.ArgumentParser:
@@ -89,3 +90,52 @@ def flatten_translations(translations):
                 key_stack.pop()
 
     return flattened_translations
+
+
+def substitute_reference(value: str, flattened_translations: dict[str, str]) -> str:
+    """Substitute localization key references in a translation string."""
+    matches = re.findall(r"\[\%key:([a-z0-9_]+(?:::(?:[a-z0-9-_])+)+)\%\]", value)
+    if not matches:
+        return value
+
+    new = value
+    for key in matches:
+        if key in flattened_translations:
+            # New value can also be a substitution reference
+            substituted = substitute_reference(
+                flattened_translations[key], flattened_translations
+            )
+            new = new.replace(f"[%key:{key}%]", substituted)
+        else:
+            raise MissingReference(key)
+
+    return new
+
+
+def substitute_references(
+    translations: dict[str, Any],
+    substitutions: dict[str, str],
+    *,
+    fail_on_missing: bool,
+) -> dict[str, Any]:
+    """Recursively substitute references for all translation strings."""
+    result = {}
+    for key, value in translations.items():
+        if isinstance(value, dict):
+            sub_dict = substitute_references(
+                value, substitutions, fail_on_missing=fail_on_missing
+            )
+            if sub_dict:
+                result[key] = sub_dict
+        elif isinstance(value, str):
+            try:
+                substituted = substitute_reference(value, substitutions)
+            except MissingReference as err:
+                if fail_on_missing:
+                    raise ExitApp(
+                        f"Missing reference '{err.reference_key}' in translation for key '{key}'"
+                    ) from err
+                continue
+            result[key] = substituted
+
+    return result

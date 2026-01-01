@@ -1,6 +1,6 @@
 """Tests for the AI Task entity model."""
 
-from freezegun import freeze_time
+import pytest
 import voluptuous as vol
 
 from homeassistant.components.ai_task import async_generate_data
@@ -13,7 +13,7 @@ from .conftest import TEST_ENTITY_ID, MockAITaskEntity
 from tests.common import MockConfigEntry
 
 
-@freeze_time("2025-06-08 16:28:13")
+@pytest.mark.freeze_time("2025-06-08 16:28:13")
 async def test_state_generate_data(
     hass: HomeAssistant,
     init_components: None,

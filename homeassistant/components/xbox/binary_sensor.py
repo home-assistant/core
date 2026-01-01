@@ -5,21 +5,28 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
-from functools import partial
+from typing import TYPE_CHECKING, Any
 
-from xbox.webapi.api.provider.people.models import Person
-from yarl import URL
+from pythonxbox.api.provider.people.models import Person
+from pythonxbox.api.provider.titlehub.models import Title
 
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import XboxConfigEntry, XboxUpdateCoordinator
-from .entity import XboxBaseEntity, check_deprecated_entity
+from .coordinator import XboxConfigEntry
+from .entity import (
+    XboxBaseEntity,
+    XboxBaseEntityDescription,
+    check_deprecated_entity,
+    profile_pic,
+)
+
+PARALLEL_UPDATES = 0
 
 
 class XboxBinarySensor(StrEnum):
@@ -33,29 +40,22 @@ class XboxBinarySensor(StrEnum):
 
 
 @dataclass(kw_only=True, frozen=True)
-class XboxBinarySensorEntityDescription(BinarySensorEntityDescription):
+class XboxBinarySensorEntityDescription(
+    XboxBaseEntityDescription, BinarySensorEntityDescription
+):
     """Xbox binary sensor description."""
 
     is_on_fn: Callable[[Person], bool | None]
-    entity_picture_fn: Callable[[Person], str | None] | None = None
-    deprecated: bool | None = None
 
 
-def profile_pic(person: Person) -> str | None:
-    """Return the gamer pic."""
-
-    # Xbox sometimes returns a domain that uses a wrong certificate which
-    # creates issues with loading the image.
-    # The correct domain is images-eds-ssl which can just be replaced
-    # to point to the correct image, with the correct domain and certificate.
-    # We need to also remove the 'mode=Padding' query because with it,
-    # it results in an error 400.
-    url = URL(person.display_pic_raw)
-    if url.host == "images-eds.xboxlive.com":
-        url = url.with_host("images-eds-ssl.xboxlive.com").with_scheme("https")
-    query = dict(url.query)
-    query.pop("mode", None)
-    return str(url.with_query(query))
+def profile_attributes(person: Person, _: Title | None) -> dict[str, Any]:
+    """Attributes for the profile."""
+    attributes: dict[str, Any] = {}
+    attributes["display_name"] = person.display_name
+    attributes["real_name"] = person.real_name or None
+    attributes["bio"] = person.detail.bio if person.detail else None
+    attributes["location"] = person.detail.location if person.detail else None
+    return attributes
 
 
 def in_game(person: Person) -> bool:
@@ -81,6 +81,7 @@ SENSOR_DESCRIPTIONS: tuple[XboxBinarySensorEntityDescription, ...] = (
         is_on_fn=lambda x: x.presence_state == "Online",
         name=None,
         entity_picture_fn=profile_pic,
+        attributes_fn=profile_attributes,
     ),
     XboxBinarySensorEntityDescription(
         key=XboxBinarySensor.IN_PARTY,
@@ -111,15 +112,34 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Xbox Live friends."""
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.status
 
-    update_friends = partial(
-        async_update_friends, hass, coordinator, {}, async_add_entities
+    if TYPE_CHECKING:
+        assert entry.unique_id
+    async_add_entities(
+        [
+            XboxBinarySensorEntity(coordinator, entry.unique_id, description)
+            for description in SENSOR_DESCRIPTIONS
+            if check_deprecated_entity(
+                hass, entry.unique_id, description, BINARY_SENSOR_DOMAIN
+            )
+        ]
     )
 
-    entry.async_on_unload(coordinator.async_add_listener(update_friends))
-
-    update_friends()
+    for subentry_id, subentry in entry.subentries.items():
+        async_add_entities(
+            [
+                XboxBinarySensorEntity(coordinator, subentry.unique_id, description)
+                for description in SENSOR_DESCRIPTIONS
+                if subentry.unique_id
+                and check_deprecated_entity(
+                    hass, subentry.unique_id, description, BINARY_SENSOR_DOMAIN
+                )
+                and subentry.unique_id in coordinator.data.presence
+                and subentry.subentry_type == "friend"
+            ],
+            config_subentry_id=subentry_id,
+        )
 
 
 class XboxBinarySensorEntity(XboxBaseEntity, BinarySensorEntity):
@@ -132,41 +152,3 @@ class XboxBinarySensorEntity(XboxBaseEntity, BinarySensorEntity):
         """Return the status of the requested attribute."""
 
         return self.entity_description.is_on_fn(self.data)
-
-    @property
-    def entity_picture(self) -> str | None:
-        """Return the gamer pic."""
-
-        return (
-            fn(self.data)
-            if (fn := self.entity_description.entity_picture_fn) is not None
-            else super().entity_picture
-        )
-
-
-@callback
-def async_update_friends(
-    hass: HomeAssistant,
-    coordinator: XboxUpdateCoordinator,
-    current: dict[str, list[XboxBinarySensorEntity]],
-    async_add_entities,
-) -> None:
-    """Update friends."""
-    new_ids = set(coordinator.data.presence)
-    current_ids = set(current)
-
-    # Process new favorites, add them to Home Assistant
-    new_entities: list[XboxBinarySensorEntity] = []
-    for xuid in new_ids - current_ids:
-        current[xuid] = []
-        for description in SENSOR_DESCRIPTIONS:
-            entity = XboxBinarySensorEntity(coordinator, xuid, description)
-            if check_deprecated_entity(hass, entity, BINARY_SENSOR_DOMAIN):
-                current[xuid].append(entity)
-        new_entities = new_entities + current[xuid]
-    if new_entities:
-        async_add_entities(new_entities)
-
-    # Process deleted favorites, remove them from Home Assistant
-    for xuid in current_ids - new_ids:
-        del current[xuid]

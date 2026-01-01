@@ -51,6 +51,9 @@ rules:
 - **Missing imports** - We use static analysis tooling to catch that
 - **Code formatting** - We have ruff as a formatting tool that will catch those if needed (unless specifically instructed otherwise in these instructions)
 
+**Git commit practices during review:**
+- **Do NOT amend, squash, or rebase commits after review has started** - Reviewers need to see what changed since their last review
+
 ## Python Requirements
 
 - **Compatibility**: Python 3.13+

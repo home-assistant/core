@@ -189,14 +189,15 @@ class MieleVacuum(MieleEntity, StateVacuumEntity):
         """Send action to the device."""
         try:
             await self.api.send_action(device_id, action)
-        except ClientResponseError as ex:
+        except ClientResponseError as err:
+            _LOGGER.debug("Error setting vacuum state for %s: %s", self.entity_id, err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="set_state_error",
                 translation_placeholders={
                     "entity": self.entity_id,
                 },
-            ) from ex
+            ) from err
 
     async def async_clean_spot(self, **kwargs: Any) -> None:
         """Clean spot."""

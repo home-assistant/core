@@ -9,10 +9,26 @@
         "state_attributes": {
           "preset_mode": {
             "state": {
-              "normal": "mdi:fan",
               "auto": "mdi:auto-mode",
+              "normal": "mdi:fan",
               "pet": "mdi:paw",
               "sleep": "mdi:power-sleep"
+            }
+          }
+        }
+      }
+    },
+    "humidifier": {
+      "evaporative_humidifier": {
+        "state_attributes": {
+          "mode": {
+            "state": {
+              "drying_filter": "mdi:water-remove",
+              "high": "mdi:water-plus",
+              "low": "mdi:water-outline",
+              "medium": "mdi:water",
+              "quiet": "mdi:volume-off",
+              "target_humidity": "mdi:target"
             }
           }
         }
@@ -32,22 +48,6 @@
           "8": "mdi:brightness-5",
           "9": "mdi:brightness-6",
           "10": "mdi:brightness-7"
-        }
-      }
-    },
-    "humidifier": {
-      "evaporative_humidifier": {
-        "state_attributes": {
-          "mode": {
-            "state": {
-              "high": "mdi:water-plus",
-              "medium": "mdi:water",
-              "low": "mdi:water-outline",
-              "quiet": "mdi:volume-off",
-              "target_humidity": "mdi:target",
-              "drying_filter": "mdi:water-remove"
-            }
-          }
         }
       }
     }

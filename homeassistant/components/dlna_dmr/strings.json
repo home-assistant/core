@@ -1,28 +1,5 @@
 {
   "config": {
-    "flow_title": "{name}",
-    "step": {
-      "user": {
-        "title": "Discovered DLNA DMR devices",
-        "description": "Choose a device to configure or leave blank to enter a URL",
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]"
-        }
-      },
-      "manual": {
-        "title": "Manual DLNA DMR device connection",
-        "description": "URL to a device description XML file",
-        "data": {
-          "url": "[%key:common::config_flow::data::url%]"
-        }
-      },
-      "import_turn_on": {
-        "description": "Please turn on the device and select **Submit** to continue migration"
-      },
-      "confirm": {
-        "description": "[%key:common::config_flow::description::confirm_setup%]"
-      }
-    },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "alternative_integration": "Device is better supported by another integration",
@@ -34,22 +11,45 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "not_dmr": "[%key:component::dlna_dmr::config::abort::not_dmr%]"
+    },
+    "flow_title": "{name}",
+    "step": {
+      "confirm": {
+        "description": "[%key:common::config_flow::description::confirm_setup%]"
+      },
+      "import_turn_on": {
+        "description": "Please turn on the device and select **Submit** to continue migration"
+      },
+      "manual": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]"
+        },
+        "description": "URL to a device description XML file",
+        "title": "Manual DLNA DMR device connection"
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "description": "Choose a device to configure or leave blank to enter a URL",
+        "title": "Discovered DLNA DMR devices"
+      }
     }
   },
   "options": {
-    "step": {
-      "init": {
-        "title": "DLNA Digital Media Renderer configuration",
-        "data": {
-          "listen_port": "Event listener port (random if not set)",
-          "callback_url_override": "Event listener callback URL",
-          "poll_availability": "Poll for device availability",
-          "browse_unfiltered": "Show incompatible media when browsing"
-        }
-      }
-    },
     "error": {
       "invalid_url": "Invalid URL"
+    },
+    "step": {
+      "init": {
+        "data": {
+          "browse_unfiltered": "Show incompatible media when browsing",
+          "callback_url_override": "Event listener callback URL",
+          "listen_port": "Event listener port (random if not set)",
+          "poll_availability": "Poll for device availability"
+        },
+        "title": "DLNA Digital Media Renderer configuration"
+      }
     }
   }
 }

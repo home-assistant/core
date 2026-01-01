@@ -1,0 +1,12 @@
+{
+  "domain": "saunum",
+  "name": "Saunum",
+  "codeowners": ["@mettolen"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/saunum",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "loggers": ["pysaunum"],
+  "quality_scale": "silver",
+  "requirements": ["pysaunum==0.1.0"]
+}

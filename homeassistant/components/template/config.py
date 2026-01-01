@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from contextlib import suppress
+import itertools
 import logging
 from typing import Any
 
@@ -47,6 +48,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.condition import async_validate_conditions_config
 from homeassistant.helpers.issue_registry import IssueSeverity
+from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger import async_validate_trigger_config
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_notify_setup_error
@@ -70,12 +72,45 @@ from . import (
     vacuum as vacuum_platform,
     weather as weather_platform,
 )
-from .const import DOMAIN, PLATFORMS, TemplateConfig
-from .helpers import async_get_blueprints, rewrite_legacy_to_modern_configs
+from .const import CONF_DEFAULT_ENTITY_ID, DOMAIN, PLATFORMS, TemplateConfig
+from .helpers import (
+    async_get_blueprints,
+    create_legacy_template_issue,
+    rewrite_legacy_to_modern_configs,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 PACKAGE_MERGE_HINT = "list"
+
+
+def validate_binary_sensor_auto_off_has_trigger(obj: dict) -> dict:
+    """Validate that binary sensors with auto_off have triggers."""
+    if CONF_TRIGGERS not in obj and DOMAIN_BINARY_SENSOR in obj:
+        binary_sensors: list[ConfigType] = obj[DOMAIN_BINARY_SENSOR]
+        for binary_sensor in binary_sensors:
+            if binary_sensor_platform.CONF_AUTO_OFF not in binary_sensor:
+                continue
+
+            identifier = f"{CONF_NAME}: {binary_sensor_platform.DEFAULT_NAME}"
+            if (
+                (name := binary_sensor.get(CONF_NAME))
+                and isinstance(name, Template)
+                and name.template != binary_sensor_platform.DEFAULT_NAME
+            ):
+                identifier = f"{CONF_NAME}: {name.template}"
+            elif default_entity_id := binary_sensor.get(CONF_DEFAULT_ENTITY_ID):
+                identifier = f"{CONF_DEFAULT_ENTITY_ID}: {default_entity_id}"
+            elif unique_id := binary_sensor.get(CONF_UNIQUE_ID):
+                identifier = f"{CONF_UNIQUE_ID}: {unique_id}"
+
+            raise vol.Invalid(
+                f"The auto_off option for template binary sensor: {identifier} "
+                "requires a trigger, remove the auto_off option or rewrite "
+                "configuration to use a trigger"
+            )
+
+    return obj
 
 
 def ensure_domains_do_not_have_trigger_or_action(*keys: str) -> Callable[[dict], dict]:
@@ -211,6 +246,7 @@ CONFIG_SECTION_SCHEMA = vol.All(
     ensure_domains_do_not_have_trigger_or_action(
         DOMAIN_BUTTON,
     ),
+    validate_binary_sensor_auto_off_has_trigger,
 )
 
 TEMPLATE_BLUEPRINT_SCHEMA = vol.All(
@@ -311,12 +347,21 @@ async def async_validate_config_section(
 
 async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> ConfigType:
     """Validate config."""
-    if DOMAIN not in config:
+
+    configs = []
+    for key in config:
+        if DOMAIN not in key:
+            continue
+
+        if key == DOMAIN or (key.startswith(DOMAIN) and len(key.split()) > 1):
+            configs.append(cv.ensure_list(config[key]))
+
+    if not configs:
         return config
 
     config_sections = []
 
-    for cfg in cv.ensure_list(config[DOMAIN]):
+    for cfg in itertools.chain(*configs):
         try:
             template_config: TemplateConfig = await async_validate_config_section(
                 hass, cfg
@@ -355,11 +400,11 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
             definitions = (
                 list(template_config[new_key]) if new_key in template_config else []
             )
-            definitions.extend(
-                rewrite_legacy_to_modern_configs(
-                    hass, new_key, template_config[old_key], legacy_fields
-                )
-            )
+            for definition in rewrite_legacy_to_modern_configs(
+                hass, new_key, template_config[old_key], legacy_fields
+            ):
+                create_legacy_template_issue(hass, definition, new_key)
+                definitions.append(definition)
             template_config = TemplateConfig({**template_config, new_key: definitions})
 
         config_sections.append(template_config)

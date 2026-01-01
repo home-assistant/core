@@ -95,7 +95,7 @@ async def test_config_flow_errors(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     flow_id = result["flow_id"]
 
     mock_homee.get_access_token.side_effect = side_eff
@@ -108,7 +108,7 @@ async def test_config_flow_errors(
         },
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == error
 
     mock_homee.get_access_token.side_effect = None
@@ -122,7 +122,7 @@ async def test_config_flow_errors(
         },
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_homee")
@@ -237,7 +237,7 @@ async def test_zeroconf_confirm_errors(
         },
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == error
 
     mock_homee.get_access_token.side_effect = None
@@ -249,7 +249,7 @@ async def test_zeroconf_confirm_errors(
         },
     )
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_zeroconf_already_configured(

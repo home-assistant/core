@@ -414,7 +414,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1.21814',
+    'state': '1.42403',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se3_off_peak_1_average-entry]
@@ -1255,7 +1255,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '3.82803',
+    'state': '2.30807',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se4_currency-entry]
@@ -1673,7 +1673,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1.40502',
+    'state': '1.64617',
   })
 # ---
 # name: test_sensor[sensor.nord_pool_se4_off_peak_1_average-entry]
@@ -2514,6 +2514,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '4.44274',
+    'state': '2.67764',
   })
 # ---

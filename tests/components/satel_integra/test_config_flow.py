@@ -1,7 +1,7 @@
 """Test the satel integra config flow."""
 
 from typing import Any
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -37,6 +37,7 @@ from . import (
     MOCK_PARTITION_SUBENTRY,
     MOCK_SWITCHABLE_OUTPUT_SUBENTRY,
     MOCK_ZONE_SUBENTRY,
+    setup_integration,
 )
 
 from tests.common import MockConfigEntry
@@ -96,7 +97,7 @@ async def test_setup_connection_failed(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    mock_satel.return_value.connect.return_value = False
+    mock_satel.connect.return_value = False
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -106,7 +107,7 @@ async def test_setup_connection_failed(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
-    mock_satel.return_value.connect.return_value = True
+    mock_satel.connect.return_value = True
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -174,7 +175,7 @@ async def test_import_flow_connection_failure(
 ) -> None:
     """Test the import flow."""
 
-    mock_satel.return_value.connect.return_value = False
+    mock_satel.connect.return_value = False
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -189,25 +190,22 @@ async def test_import_flow_connection_failure(
 @pytest.mark.parametrize(
     ("user_input", "entry_options"),
     [
-        (MOCK_CONFIG_OPTIONS, MOCK_CONFIG_OPTIONS),
+        ({CONF_CODE: "1111"}, {CONF_CODE: "1111"}),
         ({}, {CONF_CODE: None}),
     ],
 )
 async def test_options_flow(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
+    mock_satel: AsyncMock,
+    mock_reload_after_entry_update: MagicMock,
+    mock_config_entry: MockConfigEntry,
     user_input: dict[str, Any],
     entry_options: dict[str, Any],
 ) -> None:
     """Test general options flow."""
+    await setup_integration(hass, mock_config_entry)
 
-    entry = MockConfigEntry(domain=DOMAIN)
-    entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
@@ -217,7 +215,10 @@ async def test_options_flow(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert entry.options == entry_options
+    assert mock_config_entry.options == entry_options
+
+    # Assert the entry is reloaded to use the updated code
+    assert mock_reload_after_entry_update.call_count == 1
 
 
 @pytest.mark.parametrize(
@@ -232,15 +233,13 @@ async def test_options_flow(
 async def test_subentry_creation(
     hass: HomeAssistant,
     mock_satel: AsyncMock,
+    mock_reload_after_entry_update: MagicMock,
     mock_config_entry: MockConfigEntry,
     user_input: dict[str, Any],
     subentry: ConfigSubentry,
 ) -> None:
     """Test partitions options flow."""
-    mock_config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry)
 
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, subentry.subentry_type),
@@ -267,6 +266,9 @@ async def test_subentry_creation(
     assert mock_config_entry.subentries.get(subentry_id) == ConfigSubentry(
         **subentry_result
     )
+
+    # Assert the entry is reloaded to set up the entity
+    assert mock_reload_after_entry_update.call_count == 1
 
 
 @pytest.mark.parametrize(
@@ -311,13 +313,7 @@ async def test_subentry_reconfigure(
     number_property: str,
 ) -> None:
     """Test subentry reconfiguration."""
-
-    mock_config_entry_with_subentries.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(
-        mock_config_entry_with_subentries.entry_id
-    )
-    await hass.async_block_till_done()
+    await setup_integration(hass, mock_config_entry_with_subentries)
 
     result = await hass.config_entries.subentries.async_init(
         (
@@ -371,13 +367,7 @@ async def test_cannot_create_same_subentry(
     error_field: str,
 ) -> None:
     """Test subentry reconfiguration."""
-    mock_config_entry_with_subentries.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(
-        mock_config_entry_with_subentries.entry_id
-    )
-    await hass.async_block_till_done()
-
+    await setup_integration(hass, mock_config_entry_with_subentries)
     mock_setup_entry.reset_mock()
 
     result = await hass.config_entries.subentries.async_init(
@@ -399,7 +389,7 @@ async def test_cannot_create_same_subentry(
     assert len(mock_setup_entry.mock_calls) == 0
 
 
-async def test_one_config_allowed(
+async def test_same_host_config_disallowed(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test that only one Satel Integra configuration is allowed."""
@@ -409,5 +399,14 @@ async def test_one_config_allowed(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        MOCK_CONFIG_DATA,
+    )
+
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
+    assert result["reason"] == "already_configured"

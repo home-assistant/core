@@ -616,12 +616,10 @@ async def test_decorator_errors(
     config_entry.add_to_hass(hass)
 
     mock_available_temps[1] = True
-    connect_legacy.return_value.async_get_bytes_total.return_value = "bad_response"
-    connect_legacy.return_value.async_get_current_transfer_rates.return_value = (
-        "bad_response"
-    )
-    connect_legacy.return_value.async_get_temperature.return_value = "bad_response"
-    connect_legacy.return_value.async_get_loadavg.return_value = "bad_response"
+    connect_legacy.return_value.async_get_bytes_total.return_value = None
+    connect_legacy.return_value.async_get_current_transfer_rates.return_value = None
+    connect_legacy.return_value.async_get_temperature.return_value = None
+    connect_legacy.return_value.async_get_loadavg.return_value = None
 
     # initial devices setup
     assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -631,7 +629,5 @@ async def test_decorator_errors(
     await hass.async_block_till_done()
 
     for sensor_name in sensors:
-        assert (
-            hass.states.get(f"{sensor_prefix}_{slugify(sensor_name)}").state
-            == STATE_UNAVAILABLE
-        )
+        sensor = hass.states.get(f"{sensor_prefix}_{slugify(sensor_name)}")
+        assert sensor and sensor.state == STATE_UNAVAILABLE
