@@ -10,7 +10,6 @@ from waterfurnace.waterfurnace import WaterFurnace, WFCredentialError, WFExcepti
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
@@ -23,40 +22,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_PASSWORD): str,
     }
 )
-
-
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
-    """Validate the user input allows us to connect.
-
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
-    username = data[CONF_USERNAME]
-    password = data[CONF_PASSWORD]
-
-    client = WaterFurnace(username, password)
-
-    try:
-        # Login is a blocking call, run in executor
-        await hass.async_add_executor_job(client.login)
-    except WFCredentialError as err:
-        _LOGGER.error("Invalid credentials for WaterFurnace login")
-        raise InvalidAuth from err
-    except WFException as err:
-        _LOGGER.error("Failed to connect to WaterFurnace service: %s", err)
-        raise CannotConnect from err
-    except Exception as err:
-        _LOGGER.exception("Unexpected error connecting to WaterFurnace")
-        raise CannotConnect from err
-
-    gwid = client.gwid
-    if not gwid:
-        _LOGGER.error("No GWID found for device")
-        raise CannotConnect
-
-    return {
-        "title": f"WaterFurnace {gwid}",
-        "gwid": gwid,
-    }
 
 
 class WaterFurnaceConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -72,22 +37,33 @@ class WaterFurnaceConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            username = user_input[CONF_USERNAME]
+            password = user_input[CONF_PASSWORD]
+
+            client = WaterFurnace(username, password)
+
             try:
-                info = await validate_input(self.hass, user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
+                # Login is a blocking call, run in executor
+                await self.hass.async_add_executor_job(client.login)
+            except WFCredentialError:
                 errors["base"] = "invalid_auth"
+            except WFException:
+                errors["base"] = "cannot_connect"
             except Exception:
-                _LOGGER.exception("Unexpected exception")
+                _LOGGER.exception("Unexpected error connecting to WaterFurnace")
                 errors["base"] = "unknown"
-            else:
+
+            gwid = client.gwid
+            if not gwid:
+                errors["base"] = "cannot_connect"
+
+            if not errors:
                 # Set unique ID based on GWID
-                await self.async_set_unique_id(info["gwid"])
+                await self.async_set_unique_id(gwid)
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title=info["title"],
+                    title=f"WaterFurnace {gwid}",
                     data=user_input,
                 )
 
@@ -99,9 +75,24 @@ class WaterFurnaceConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Handle import from YAML configuration."""
+        username = import_data[CONF_USERNAME]
+        password = import_data[CONF_PASSWORD]
+
+        client = WaterFurnace(username, password)
+
         try:
-            info = await validate_input(self.hass, import_data)
-        except (CannotConnect, InvalidAuth):
+            # Login is a blocking call, run in executor
+            await self.hass.async_add_executor_job(client.login)
+
+            gwid = client.gwid
+            if not gwid:
+                _LOGGER.error(
+                    "Failed to import WaterFurnace configuration from YAML. "
+                    "No GWID found for device. Please set up the integration via the UI"
+                )
+                # This likely indicates a server-side change, or an implementation bug
+                return self.async_abort(reason="unknown")
+        except WFException:
             _LOGGER.error(
                 "Failed to import WaterFurnace configuration from YAML. "
                 "Please verify your credentials and set up the integration via the UI"
@@ -112,11 +103,11 @@ class WaterFurnaceConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="unknown")
 
         # Set unique ID based on GWID
-        await self.async_set_unique_id(info["gwid"])
+        await self.async_set_unique_id(gwid)
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
-            title=info["title"],
+            title=f"WaterFurnace {gwid}",
             data=import_data,
         )
 
