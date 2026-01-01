@@ -117,7 +117,7 @@ async def async_setup_entry(
     if "opmode" in coordinator.data["info"]:
         entities.append(HDFuryOpModeSelect(coordinator, SELECT_OPERATION_MODE))
 
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class HDFuryPortSelect(HDFuryEntity, SelectEntity):
