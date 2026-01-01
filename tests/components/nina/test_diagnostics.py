@@ -16,8 +16,11 @@ from tests.typing import ClientSessionGenerator
 
 ENTRY_DATA: dict[str, Any] = {
     "slots": 5,
-    "corona_filter": True,
     "regions": {"083350000000": "Aach, Stadt"},
+    "filters": {
+        "headline_filter": ".*corona.*",
+        "area_filter": ".*",
+    },
 }
 
 
@@ -33,7 +36,7 @@ async def test_diagnostics(
         wraps=mocked_request_function,
     ):
         config_entry: MockConfigEntry = MockConfigEntry(
-            domain=DOMAIN, title="NINA", data=ENTRY_DATA
+            domain=DOMAIN, title="NINA", data=ENTRY_DATA, version=1, minor_version=3
         )
 
         config_entry.add_to_hass(hass)

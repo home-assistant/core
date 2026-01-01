@@ -17,6 +17,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import (
     _LOGGER,
     CONF_AREA_FILTER,
+    CONF_FILTERS,
     CONF_HEADLINE_FILTER,
     CONF_REGIONS,
     DOMAIN,
@@ -58,8 +59,10 @@ class NINADataUpdateCoordinator(
     ) -> None:
         """Initialize."""
         self._nina: Nina = Nina(async_get_clientsession(hass))
-        self.headline_filter: str = config_entry.data[CONF_HEADLINE_FILTER]
-        self.area_filter: str = config_entry.data[CONF_AREA_FILTER]
+        self.headline_filter: str = config_entry.data[CONF_FILTERS][
+            CONF_HEADLINE_FILTER
+        ]
+        self.area_filter: str = config_entry.data[CONF_FILTERS][CONF_AREA_FILTER]
 
         regions: dict[str, str] = config_entry.data[CONF_REGIONS]
         for region in regions:

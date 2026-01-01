@@ -2,23 +2,16 @@
 
 from unittest.mock import AsyncMock, patch
 
-from telegram import ChatFullInfo, User
+from telegram import AcceptedGiftTypes, ChatFullInfo, User
 from telegram.constants import AccentColor
 from telegram.error import BadRequest, InvalidToken, NetworkError
 
 from homeassistant.components.telegram_bot.const import (
     ATTR_PARSER,
-    BOT_NAME,
-    CONF_ALLOWED_CHAT_IDS,
-    CONF_BOT_COUNT,
     CONF_CHAT_ID,
     CONF_PROXY_URL,
     CONF_TRUSTED_NETWORKS,
     DOMAIN,
-    ERROR_FIELD,
-    ERROR_MESSAGE,
-    ISSUE_DEPRECATED_YAML,
-    ISSUE_DEPRECATED_YAML_IMPORT_ISSUE_ERROR,
     PARSER_MD,
     PARSER_PLAIN_TEXT,
     PLATFORM_BROADCAST,
@@ -26,11 +19,10 @@ from homeassistant.components.telegram_bot.const import (
     SECTION_ADVANCED_SETTINGS,
     SUBENTRY_TYPE_ALLOWED_CHAT_IDS,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER, ConfigSubentry
+from homeassistant.config_entries import SOURCE_USER, ConfigSubentry
 from homeassistant.const import CONF_API_KEY, CONF_PLATFORM, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers.issue_registry import IssueRegistry
 
 from tests.common import MockConfigEntry
 
@@ -50,7 +42,7 @@ async def test_options_flow(
     await hass.async_block_till_done()
 
     assert result["step_id"] == "init"
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     # test: valid input
 
@@ -62,7 +54,7 @@ async def test_options_flow(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][ATTR_PARSER] == PARSER_PLAIN_TEXT
 
 
@@ -390,6 +382,7 @@ async def test_subentry_flow(
             type="PRIVATE",
             max_reaction_count=100,
             accent_color_id=AccentColor.COLOR_000,
+            accepted_gift_types=AcceptedGiftTypes(True, True, True, True),
         ),
     ):
         result = await hass.config_entries.subentries.async_configure(
@@ -458,6 +451,7 @@ async def test_subentry_flow_chat_error(
             type="PRIVATE",
             max_reaction_count=100,
             accent_color_id=AccentColor.COLOR_000,
+            accepted_gift_types=AcceptedGiftTypes(True, True, True, True),
         ),
     ):
         result = await hass.config_entries.subentries.async_configure(
@@ -468,108 +462,6 @@ async def test_subentry_flow_chat_error(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
-
-async def test_import_failed(
-    hass: HomeAssistant, issue_registry: IssueRegistry
-) -> None:
-    """Test import flow failed."""
-
-    with patch(
-        "homeassistant.components.telegram_bot.config_flow.Bot.get_me"
-    ) as mock_bot:
-        mock_bot.side_effect = InvalidToken("mock invalid token error")
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={
-                CONF_PLATFORM: PLATFORM_BROADCAST,
-                CONF_API_KEY: "mock api key",
-                CONF_TRUSTED_NETWORKS: ["149.154.160.0/20"],
-                CONF_BOT_COUNT: 1,
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "import_failed"
-
-    issue = issue_registry.async_get_issue(
-        domain=DOMAIN,
-        issue_id=ISSUE_DEPRECATED_YAML,
-    )
-    assert issue.translation_key == ISSUE_DEPRECATED_YAML_IMPORT_ISSUE_ERROR
-    assert (
-        issue.translation_placeholders[BOT_NAME] == f"{PLATFORM_BROADCAST} Telegram bot"
-    )
-    assert issue.translation_placeholders[ERROR_FIELD] == "API key"
-    assert issue.translation_placeholders[ERROR_MESSAGE] == "mock invalid token error"
-
-
-async def test_import_multiple(
-    hass: HomeAssistant, issue_registry: IssueRegistry
-) -> None:
-    """Test import flow with multiple duplicated entries."""
-
-    data = {
-        CONF_PLATFORM: PLATFORM_BROADCAST,
-        CONF_API_KEY: "mock api key",
-        CONF_TRUSTED_NETWORKS: ["149.154.160.0/20"],
-        CONF_ALLOWED_CHAT_IDS: [3334445550],
-        CONF_BOT_COUNT: 2,
-    }
-
-    with (
-        patch(
-            "homeassistant.components.telegram_bot.config_flow.Bot.get_me",
-            return_value=User(123456, "Testbot", True),
-        ),
-        patch(
-            "homeassistant.components.telegram_bot.config_flow.Bot.get_chat",
-            return_value=ChatFullInfo(
-                id=987654321,
-                title="mock title",
-                first_name="mock first_name",
-                type="PRIVATE",
-                max_reaction_count=100,
-                accent_color_id=AccentColor.COLOR_000,
-            ),
-        ),
-    ):
-        # test: import first entry success
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=data,
-        )
-        await hass.async_block_till_done()
-
-        assert result["type"] is FlowResultType.CREATE_ENTRY
-        assert result["data"][CONF_PLATFORM] == PLATFORM_BROADCAST
-        assert result["data"][CONF_API_KEY] == "mock api key"
-        assert result["options"][ATTR_PARSER] == PARSER_MD
-
-        issue = issue_registry.async_get_issue(
-            domain=DOMAIN,
-            issue_id=ISSUE_DEPRECATED_YAML,
-        )
-        assert (
-            issue.translation_key == "deprecated_yaml_import_issue_has_more_platforms"
-        )
-
-        # test: import 2nd entry failed due to duplicate
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=data,
-        )
-        await hass.async_block_till_done()
-
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "already_configured"
 
 
 async def test_duplicate_entry(hass: HomeAssistant) -> None:

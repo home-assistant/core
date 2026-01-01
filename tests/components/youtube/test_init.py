@@ -12,6 +12,9 @@ from homeassistant.components.youtube.const import CONF_CHANNELS
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
+)
 
 from .conftest import GOOGLE_TOKEN_URI, ComponentSetup
 
@@ -135,3 +138,19 @@ async def test_device_info(
     assert device.identifiers == {(DOMAIN, f"{entry.entry_id}_{channel_id}")}
     assert device.manufacturer == "Google, Inc."
     assert device.name == "Google for Developers"
+
+
+async def test_oauth_implementation_not_available(
+    hass: HomeAssistant, setup_integration: ComponentSetup
+) -> None:
+    """Test that unavailable OAuth implementation raises ConfigEntryNotReady."""
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    with patch(
+        "homeassistant.components.youtube.async_get_config_entry_implementation",
+        side_effect=ImplementationUnavailableError,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY

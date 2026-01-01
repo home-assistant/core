@@ -9,32 +9,32 @@
       "registered_devices": true
     },
     {
-      "macaddress": "18B905*",
-      "hostname": "[ba][lk]*"
+      "hostname": "[ba][lk]*",
+      "macaddress": "18B905*"
     },
     {
-      "macaddress": "249494*",
-      "hostname": "[ba][lk]*"
+      "hostname": "[ba][lk]*",
+      "macaddress": "249494*"
     },
     {
-      "macaddress": "7CB94C*",
-      "hostname": "[ba][lk]*"
+      "hostname": "[ba][lk]*",
+      "macaddress": "7CB94C*"
     },
     {
-      "macaddress": "ACCF23*",
-      "hostname": "[hba][flk]*"
+      "hostname": "[hba][flk]*",
+      "macaddress": "ACCF23*"
     },
     {
-      "macaddress": "B4E842*",
-      "hostname": "[ba][lk]*"
+      "hostname": "[ba][lk]*",
+      "macaddress": "B4E842*"
     },
     {
-      "macaddress": "F0FE6B*",
-      "hostname": "[hba][flk]*"
+      "hostname": "[hba][flk]*",
+      "macaddress": "F0FE6B*"
     },
     {
-      "macaddress": "8CCE4E*",
-      "hostname": "lwip*"
+      "hostname": "lwip*",
+      "macaddress": "8CCE4E*"
     },
     {
       "hostname": "hf-lpb100-zj*"
@@ -46,8 +46,8 @@
       "hostname": "zengge"
     },
     {
-      "macaddress": "C82E47*",
-      "hostname": "sta*"
+      "hostname": "sta*",
+      "macaddress": "C82E47*"
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/flux_led",

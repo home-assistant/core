@@ -3,8 +3,9 @@
   dict({
     'config_entry': dict({
       'data': dict({
-        'host': 'localhost',
+        'host': '1.2.3.4',
         'model_family': 'ET',
+        'port': 8899,
       }),
       'disabled_by': None,
       'discovery_keys': dict({
@@ -21,7 +22,7 @@
       ]),
       'title': 'Mock Title',
       'unique_id': None,
-      'version': 1,
+      'version': 2,
     }),
     'inverter': dict({
       'arm_firmware': 'dummy.arm.version',

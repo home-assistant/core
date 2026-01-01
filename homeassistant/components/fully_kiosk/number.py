@@ -17,7 +17,7 @@ ENTITY_TYPES: tuple[NumberEntityDescription, ...] = (
     NumberEntityDescription(
         key="timeToScreensaverV2",
         translation_key="screensaver_time",
-        native_max_value=9999,
+        native_max_value=86400,
         native_step=1,
         native_min_value=0,
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -34,7 +34,7 @@ ENTITY_TYPES: tuple[NumberEntityDescription, ...] = (
     NumberEntityDescription(
         key="timeToScreenOffV2",
         translation_key="screen_off_time",
-        native_max_value=9999,
+        native_max_value=86400,
         native_step=1,
         native_min_value=0,
         native_unit_of_measurement=UnitOfTime.SECONDS,

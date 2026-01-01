@@ -57,6 +57,64 @@
     'state': '30',
   })
 # ---
+# name: test_numbers[aqara_presence_fp300][number.presence_multi_sensor_fp300_1_hold_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 65534,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.presence_multi_sensor_fp300_1_hold_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Hold time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'hold_time',
+    'unique_id': '00000000000004D2-00000000000000CD-MatterNodeDevice-1-OccupancySensingHoldTime-1030-3',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[aqara_presence_fp300][number.presence_multi_sensor_fp300_1_hold_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Presence Multi-Sensor FP300 1 Hold time',
+      'max': 65534,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.presence_multi_sensor_fp300_1_hold_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10',
+  })
+# ---
 # name: test_numbers[aqara_u200][number.aqara_smart_lock_u200_user_code_temporary_disable_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -575,7 +633,7 @@
     'state': '1.0',
   })
 # ---
-# name: test_numbers[door_lock][number.mock_door_lock_autorelock_time-entry]
+# name: test_numbers[door_lock][number.mock_door_lock_auto_relock_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -593,7 +651,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_door_lock_autorelock_time',
+    'entity_id': 'number.mock_door_lock_auto_relock_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -605,7 +663,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Autorelock time',
+    'original_name': 'Auto-relock time',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -615,10 +673,10 @@
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[door_lock][number.mock_door_lock_autorelock_time-state]
+# name: test_numbers[door_lock][number.mock_door_lock_auto_relock_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock Autorelock time',
+      'friendly_name': 'Mock Door Lock Auto-relock time',
       'max': 65534,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
@@ -626,7 +684,7 @@
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.mock_door_lock_autorelock_time',
+    'entity_id': 'number.mock_door_lock_auto_relock_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -748,7 +806,7 @@
     'state': '3',
   })
 # ---
-# name: test_numbers[door_lock_with_unbolt][number.mock_door_lock_with_unbolt_autorelock_time-entry]
+# name: test_numbers[door_lock_with_unbolt][number.mock_door_lock_with_unbolt_auto_relock_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -766,7 +824,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.mock_door_lock_with_unbolt_autorelock_time',
+    'entity_id': 'number.mock_door_lock_with_unbolt_auto_relock_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -778,7 +836,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Autorelock time',
+    'original_name': 'Auto-relock time',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -788,10 +846,10 @@
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[door_lock_with_unbolt][number.mock_door_lock_with_unbolt_autorelock_time-state]
+# name: test_numbers[door_lock_with_unbolt][number.mock_door_lock_with_unbolt_auto_relock_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock with unbolt Autorelock time',
+      'friendly_name': 'Mock Door Lock with unbolt Auto-relock time',
       'max': 65534,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
@@ -799,7 +857,7 @@
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.mock_door_lock_with_unbolt_autorelock_time',
+    'entity_id': 'number.mock_door_lock_with_unbolt_auto_relock_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1096,73 +1154,16 @@
     'state': '255',
   })
 # ---
-# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_load_control-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 255,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.white_series_onoff_switch_load_control',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Load Control',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'on_level',
-    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-1-on_level-8-17',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_load_control-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'White Series OnOff Switch Load Control',
-      'max': 255,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.white_series_onoff_switch_load_control',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '255',
-  })
-# ---
-# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_load_control_2-entry]
+# name: test_numbers[heiman_motion_sensor_m1][number.smart_motion_sensor_hold_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': dict({
       'max': 65534,
-      'min': 0,
+      'min': 1,
       'mode': <NumberMode.BOX: 'box'>,
-      'step': 0.1,
+      'step': 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1171,7 +1172,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.white_series_onoff_switch_load_control_2',
+    'entity_id': 'number.smart_motion_sensor_hold_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1183,151 +1184,35 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Load Control',
+    'original_name': 'Hold time',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'on_transition_time',
-    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-1-on_transition_time-8-18',
+    'translation_key': 'hold_time',
+    'unique_id': '00000000000004D2-0000000000000058-MatterNodeDevice-1-OccupancySensingHoldTime-1030-3',
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_load_control_2-state]
+# name: test_numbers[heiman_motion_sensor_m1][number.smart_motion_sensor_hold_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'White Series OnOff Switch Load Control',
+      'friendly_name': 'Smart motion sensor Hold time',
       'max': 65534,
-      'min': 0,
+      'min': 1,
       'mode': <NumberMode.BOX: 'box'>,
-      'step': 0.1,
+      'step': 1.0,
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.white_series_onoff_switch_load_control_2',
+    'entity_id': 'number.smart_motion_sensor_hold_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '70',
   })
 # ---
-# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_load_control_3-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 65534,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 0.1,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.white_series_onoff_switch_load_control_3',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Load Control',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'off_transition_time',
-    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-1-off_transition_time-8-19',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-  })
-# ---
-# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_load_control_3-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'White Series OnOff Switch Load Control',
-      'max': 65534,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 0.1,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.white_series_onoff_switch_load_control_3',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_load_control_4-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 65534,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 0.1,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.white_series_onoff_switch_load_control_4',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Load Control',
-    'platform': 'matter',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'on_off_transition_time',
-    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-1-on_off_transition_time-8-16',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-  })
-# ---
-# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_load_control_4-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'White Series OnOff Switch Load Control',
-      'max': 65534,
-      'min': 0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 0.1,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.white_series_onoff_switch_load_control_4',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '0.0',
-  })
-# ---
-# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_load_control_5-entry]
+# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_led_off_intensity_load_control-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1345,7 +1230,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.white_series_onoff_switch_load_control_5',
+    'entity_id': 'number.white_series_onoff_switch_led_off_intensity_load_control',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1357,7 +1242,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Load Control',
+    'original_name': 'LED off intensity (Load Control)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1367,24 +1252,24 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_load_control_5-state]
+# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_led_off_intensity_load_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'White Series OnOff Switch Load Control',
+      'friendly_name': 'White Series OnOff Switch LED off intensity (Load Control)',
       'max': 75,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
       'step': 1,
     }),
     'context': <ANY>,
-    'entity_id': 'number.white_series_onoff_switch_load_control_5',
+    'entity_id': 'number.white_series_onoff_switch_led_off_intensity_load_control',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1',
   })
 # ---
-# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_load_control_6-entry]
+# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_led_on_intensity_load_control-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1402,7 +1287,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.white_series_onoff_switch_load_control_6',
+    'entity_id': 'number.white_series_onoff_switch_led_on_intensity_load_control',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1414,7 +1299,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Load Control',
+    'original_name': 'LED on intensity (Load Control)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1424,24 +1309,82 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_load_control_6-state]
+# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_led_on_intensity_load_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'White Series OnOff Switch Load Control',
+      'friendly_name': 'White Series OnOff Switch LED on intensity (Load Control)',
       'max': 75,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
       'step': 1,
     }),
     'context': <ANY>,
-    'entity_id': 'number.white_series_onoff_switch_load_control_6',
+    'entity_id': 'number.white_series_onoff_switch_led_on_intensity_load_control',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '33',
   })
 # ---
-# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_rgb_indicator-entry]
+# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_off_transition_time_load_control-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 65534,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.white_series_onoff_switch_off_transition_time_load_control',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Off transition time (Load Control)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'off_transition_time',
+    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-1-off_transition_time-8-19',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_off_transition_time_load_control-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'White Series OnOff Switch Off transition time (Load Control)',
+      'max': 65534,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.1,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.white_series_onoff_switch_off_transition_time_load_control',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_on_level_load_control-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1459,7 +1402,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.white_series_onoff_switch_rgb_indicator',
+    'entity_id': 'number.white_series_onoff_switch_on_level_load_control',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1471,7 +1414,64 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'RGB Indicator',
+    'original_name': 'On level (Load Control)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'on_level',
+    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-1-on_level-8-17',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_on_level_load_control-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'White Series OnOff Switch On level (Load Control)',
+      'max': 255,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.white_series_onoff_switch_on_level_load_control',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '255',
+  })
+# ---
+# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_on_level_rgb_indicator-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 255,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.white_series_onoff_switch_on_level_rgb_indicator',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'On level (RGB Indicator)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1481,24 +1481,24 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_rgb_indicator-state]
+# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_on_level_rgb_indicator-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'White Series OnOff Switch RGB Indicator',
+      'friendly_name': 'White Series OnOff Switch On level (RGB Indicator)',
       'max': 255,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
       'step': 1,
     }),
     'context': <ANY>,
-    'entity_id': 'number.white_series_onoff_switch_rgb_indicator',
+    'entity_id': 'number.white_series_onoff_switch_on_level_rgb_indicator',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '255',
   })
 # ---
-# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_rgb_indicator_2-entry]
+# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_on_off_transition_time_load_control-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1516,7 +1516,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.white_series_onoff_switch_rgb_indicator_2',
+    'entity_id': 'number.white_series_onoff_switch_on_off_transition_time_load_control',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1528,7 +1528,65 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'RGB Indicator',
+    'original_name': 'On/Off transition time (Load Control)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'on_off_transition_time',
+    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-1-on_off_transition_time-8-16',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_on_off_transition_time_load_control-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'White Series OnOff Switch On/Off transition time (Load Control)',
+      'max': 65534,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.1,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.white_series_onoff_switch_on_off_transition_time_load_control',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_on_off_transition_time_rgb_indicator-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 65534,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.white_series_onoff_switch_on_off_transition_time_rgb_indicator',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'On/Off transition time (RGB Indicator)',
     'platform': 'matter',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -1538,10 +1596,10 @@
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_rgb_indicator_2-state]
+# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_on_off_transition_time_rgb_indicator-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'White Series OnOff Switch RGB Indicator',
+      'friendly_name': 'White Series OnOff Switch On/Off transition time (RGB Indicator)',
       'max': 65534,
       'min': 0,
       'mode': <NumberMode.BOX: 'box'>,
@@ -1549,11 +1607,69 @@
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'number.white_series_onoff_switch_rgb_indicator_2',
+    'entity_id': 'number.white_series_onoff_switch_on_off_transition_time_rgb_indicator',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
+  })
+# ---
+# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_on_transition_time_load_control-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 65534,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.white_series_onoff_switch_on_transition_time_load_control',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'On transition time (Load Control)',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'on_transition_time',
+    'unique_id': '00000000000004D2-0000000000000100-MatterNodeDevice-1-on_transition_time-8-18',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[inovelli_vtm30][number.white_series_onoff_switch_on_transition_time_load_control-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'White Series OnOff Switch On transition time (Load Control)',
+      'max': 65534,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 0.1,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.white_series_onoff_switch_on_transition_time_load_control',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_numbers[microwave_oven][number.microwave_oven_cooking_time-entry]
@@ -1613,6 +1729,179 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '30',
+  })
+# ---
+# name: test_numbers[mock_lock][number.mock_lock_auto_relock_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 65534,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_lock_auto_relock_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Auto-relock time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'auto_relock_timer',
+    'unique_id': '00000000000004D2-0000000000000097-MatterNodeDevice-1-AutoRelockTimer-257-35',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[mock_lock][number.mock_lock_auto_relock_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Lock Auto-relock time',
+      'max': 65534,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_lock_auto_relock_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '60',
+  })
+# ---
+# name: test_numbers[mock_lock][number.mock_lock_user_code_temporary_disable_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 255,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_lock_user_code_temporary_disable_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'User code temporary disable time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'user_code_temporary_disable_time',
+    'unique_id': '00000000000004D2-0000000000000097-MatterNodeDevice-1-DoorLockUserCodeTemporaryDisableTime-257-49',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[mock_lock][number.mock_lock_user_code_temporary_disable_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Lock User code temporary disable time',
+      'max': 255,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_lock_user_code_temporary_disable_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10',
+  })
+# ---
+# name: test_numbers[mock_lock][number.mock_lock_wrong_code_limit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 255,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.mock_lock_wrong_code_limit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Wrong code limit',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wrong_code_entry_limit',
+    'unique_id': '00000000000004D2-0000000000000097-MatterNodeDevice-1-DoorLockWrongCodeEntryLimit-257-48',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_numbers[mock_lock][number.mock_lock_wrong_code_limit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock Lock Wrong code limit',
+      'max': 255,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_lock_wrong_code_limit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
   })
 # ---
 # name: test_numbers[mounted_dimmable_load_control_fixture][number.mock_mounted_dimmable_load_control_on_level-entry]
@@ -3055,6 +3344,179 @@
     'state': '100.0',
   })
 # ---
+# name: test_numbers[secuyou_smart_lock][number.secuyou_smart_lock_auto_relock_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 65534,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.secuyou_smart_lock_auto_relock_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Auto-relock time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'auto_relock_timer',
+    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-1-AutoRelockTimer-257-35',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[secuyou_smart_lock][number.secuyou_smart_lock_auto_relock_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Secuyou Smart Lock Auto-relock time',
+      'max': 65534,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1.0,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.secuyou_smart_lock_auto_relock_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_numbers[secuyou_smart_lock][number.secuyou_smart_lock_user_code_temporary_disable_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 255,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.secuyou_smart_lock_user_code_temporary_disable_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'User code temporary disable time',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'user_code_temporary_disable_time',
+    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-1-DoorLockUserCodeTemporaryDisableTime-257-49',
+    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+  })
+# ---
+# name: test_numbers[secuyou_smart_lock][number.secuyou_smart_lock_user_code_temporary_disable_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Secuyou Smart Lock User code temporary disable time',
+      'max': 255,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.secuyou_smart_lock_user_code_temporary_disable_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '10',
+  })
+# ---
+# name: test_numbers[secuyou_smart_lock][number.secuyou_smart_lock_wrong_code_limit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 255,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.secuyou_smart_lock_wrong_code_limit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Wrong code limit',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'wrong_code_entry_limit',
+    'unique_id': '00000000000004D2-0000000000000002-MatterNodeDevice-1-DoorLockWrongCodeEntryLimit-257-48',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_numbers[secuyou_smart_lock][number.secuyou_smart_lock_wrong_code_limit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Secuyou Smart Lock Wrong code limit',
+      'max': 255,
+      'min': 1,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.secuyou_smart_lock_wrong_code_limit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3',
+  })
+# ---
 # name: test_numbers[silabs_laundrywasher][number.laundrywasher_temperature_setpoint-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -3227,6 +3689,64 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '4.0',
+  })
+# ---
+# name: test_numbers[speaker][number.mock_speaker_volume-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.mock_speaker_volume',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Volume',
+    'platform': 'matter',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'speaker_setpoint',
+    'unique_id': '00000000000004D2-000000000000006B-MatterNodeDevice-1-speaker_setpoint-8-0',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_numbers[speaker][number.mock_speaker_volume-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Mock speaker Volume',
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.SLIDER: 'slider'>,
+      'step': 1,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.mock_speaker_volume',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '47',
   })
 # ---
 # name: test_numbers[valve][number.valve_default_open_duration-entry]

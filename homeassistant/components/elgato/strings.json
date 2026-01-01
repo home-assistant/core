@@ -1,27 +1,27 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
     "flow_title": "{serial_number}",
     "step": {
       "user": {
-        "description": "Set up your Elgato Light to integrate with Home Assistant.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
           "host": "The hostname or IP address of your Elgato device."
-        }
+        },
+        "description": "Set up your Elgato Light to integrate with Home Assistant."
       },
       "zeroconf_confirm": {
         "description": "Do you want to add the Elgato Light with serial number `{serial_number}` to Home Assistant?",
         "title": "Discovered Elgato Light device"
       }
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   },
   "entity": {
@@ -50,8 +50,8 @@
   },
   "services": {
     "identify": {
-      "name": "Identify",
-      "description": "Identifies an Elgato Light. Blinks the light, which can be useful for, e.g., a visual notification."
+      "description": "Identifies an Elgato Light. Blinks the light, which can be useful for, e.g., a visual notification.",
+      "name": "Identify"
     }
   }
 }

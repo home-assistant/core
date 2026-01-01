@@ -1,5 +1,13 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]"
+    },
     "step": {
       "user": {
         "data": {
@@ -7,18 +15,10 @@
           "url": "[%key:common::config_flow::data::url%]"
         },
         "data_description": {
-          "url": "The full URL, including port, of the SABnzbd server. Example: `{sabnzbd_full_url_local}` or `{sabnzbd_full_url_addon}`, if you are using the add-on.",
-          "api_key": "The API key of the SABnzbd server. This can be found in the SABnzbd web interface under Config cog (top right) > General > Security."
+          "api_key": "The API key of the SABnzbd server. This can be found in the SABnzbd web interface under Config cog (top right) > General > Security.",
+          "url": "The full URL, including port, of the SABnzbd server. Example: `{sabnzbd_full_url_local}` or `{sabnzbd_full_url_addon}`, if you are using the add-on."
         }
       }
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]"
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
   "entity": {
@@ -41,38 +41,38 @@
       }
     },
     "sensor": {
-      "status": {
-        "name": "Status"
-      },
-      "speed": {
-        "name": "Speed"
-      },
-      "queue": {
-        "name": "Queue"
-      },
-      "left": {
-        "name": "Left to download"
-      },
-      "total_disk_space": {
-        "name": "Total disk space"
+      "daily_total": {
+        "name": "Daily total"
       },
       "free_disk_space": {
         "name": "Free disk space"
       },
-      "queue_count": {
-        "name": "Queue count"
-      },
-      "daily_total": {
-        "name": "Daily total"
-      },
-      "weekly_total": {
-        "name": "Weekly total"
+      "left": {
+        "name": "Left to download"
       },
       "monthly_total": {
         "name": "Monthly total"
       },
       "overall_total": {
         "name": "Overall total"
+      },
+      "queue": {
+        "name": "Queue"
+      },
+      "queue_count": {
+        "name": "Queue count"
+      },
+      "speed": {
+        "name": "Speed"
+      },
+      "status": {
+        "name": "Status"
+      },
+      "total_disk_space": {
+        "name": "Total disk space"
+      },
+      "weekly_total": {
+        "name": "Weekly total"
       }
     }
   },
