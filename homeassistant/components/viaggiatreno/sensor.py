@@ -100,6 +100,7 @@ class ViaggiaTrenoSensor(SensorEntity):
     """Implementation of a ViaggiaTreno sensor."""
 
     _attr_attribution = "Powered by ViaggiaTreno Data"
+    _attr_should_poll = True
 
     def __init__(self, train_id, station_id, name):
         """Initialize the sensor."""
@@ -107,12 +108,18 @@ class ViaggiaTrenoSensor(SensorEntity):
         self._attributes = {}
         self._unit = None
         self._icon = ICON
+        self._train_id = train_id
         self._station_id = station_id
         self._name = name
 
+        # API needs midnight
+        today = 1000*int(time.mktime(time.localtime().__replace__(tm_hour=0,
+                                                                 tm_min=0,
+                                                                 tm_sec=0)))
         self.uri = VIAGGIATRENO_ENDPOINT.format(
-            station_id=station_id, train_id=train_id, timestamp=int(time.time()) * 1000
-        )
+            station_id=self._station_id,
+            train_id=self._train_id,
+            timestamp=today)
 
     @property
     def name(self):
@@ -167,8 +174,16 @@ class ViaggiaTrenoSensor(SensorEntity):
 
     async def async_update(self) -> None:
         """Update state."""
-        uri = self.uri
-        res = await async_http_request(self.hass, uri)
+        # API needs midnight
+        today = 1000*int(time.mktime(time.localtime().__replace__(tm_hour=0,
+                                                                 tm_min=0,
+                                                                 tm_sec=0)))
+        self.uri = VIAGGIATRENO_ENDPOINT.format(
+            station_id=self._station_id,
+            train_id=self._train_id,
+            timestamp=today)
+
+        res = await async_http_request(self.hass, self.uri)
         if res.get("error", ""):
             if res["error"] == 204:
                 self._state = NO_INFORMATION_STRING
