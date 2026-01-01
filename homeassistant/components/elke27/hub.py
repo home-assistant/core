@@ -188,15 +188,15 @@ class Elke27Hub:
         """Capture the latest snapshots from the client."""
         panel_info = getattr(self._client, "panel_info", None)
         self.panel_info = _merge_panel_info(panel_info, self._panel)
-        self.table_info = getattr(self._client, "table_info", None)
-        self.areas = getattr(self._client, "areas", None)
-        self.zones = getattr(self._client, "zones", None)
-        self.keypads = getattr(self._client, "keypads", None)
-        self.outputs = getattr(self._client, "outputs", None)
-        self.counters = getattr(self._client, "counters", None)
-        self.settings = getattr(self._client, "settings", None)
-        self.tasks = getattr(self._client, "tasks", None)
-        self.thermostats = getattr(self._client, "thermostats", None)
+        self.table_info = _normalize_snapshot(getattr(self._client, "table_info", None))
+        self.areas = _normalize_snapshot(getattr(self._client, "areas", None))
+        self.zones = _normalize_snapshot(getattr(self._client, "zones", None))
+        self.keypads = _normalize_snapshot(getattr(self._client, "keypads", None))
+        self.outputs = _normalize_snapshot(getattr(self._client, "outputs", None))
+        self.counters = _normalize_snapshot(getattr(self._client, "counters", None))
+        self.settings = _normalize_snapshot(getattr(self._client, "settings", None))
+        self.tasks = _normalize_snapshot(getattr(self._client, "tasks", None))
+        self.thermostats = _normalize_snapshot(getattr(self._client, "thermostats", None))
         self._maybe_log_inventory_ready()
 
     def _maybe_log_inventory_ready(self) -> None:
@@ -222,6 +222,17 @@ def _snapshot_count(snapshot: Any) -> int:
     if isinstance(snapshot, list | tuple):
         return sum(1 for item in snapshot if isinstance(item, dict))
     return 0
+
+
+def _normalize_snapshot(snapshot: Any) -> Any:
+    """Convert dataclass snapshots into dicts for HA consumers."""
+    if is_dataclass(snapshot):
+        return asdict(snapshot)
+    if isinstance(snapshot, dict):
+        return {key: _normalize_snapshot(value) for key, value in snapshot.items()}
+    if isinstance(snapshot, list | tuple):
+        return [_normalize_snapshot(value) for value in snapshot]
+    return snapshot
 
 
 def _merge_panel_info(panel_info: Any, panel: Any | None) -> Any:

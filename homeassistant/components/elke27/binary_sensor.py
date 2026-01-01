@@ -124,7 +124,7 @@ def _iter_zones(snapshot: Any) -> list[tuple[int, dict[str, Any]]]:
 
 
 def _coerce_zone_id(key: Any, zone: dict[str, Any]) -> int | None:
-    for candidate in (zone.get("zone_index"), zone.get("index"), key):
+    for candidate in (zone.get("zone_id"), zone.get("zone_index"), zone.get("index"), key):
         if isinstance(candidate, int):
             return candidate
         if isinstance(candidate, str) and candidate.isdigit():

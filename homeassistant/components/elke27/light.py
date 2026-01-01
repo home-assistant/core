@@ -120,7 +120,12 @@ def _iter_outputs(snapshot: Any) -> list[tuple[int, dict[str, Any]]]:
 
 
 def _coerce_output_id(key: Any, output: dict[str, Any]) -> int | None:
-    for candidate in (output.get("output_index"), output.get("index"), key):
+    for candidate in (
+        output.get("output_id"),
+        output.get("output_index"),
+        output.get("index"),
+        key,
+    ):
         if isinstance(candidate, int):
             return candidate
         if isinstance(candidate, str) and candidate.isdigit():

@@ -110,7 +110,7 @@ def _iter_areas(snapshot: Any) -> list[tuple[int, dict[str, Any]]]:
 
 
 def _coerce_area_id(key: Any, area: dict[str, Any]) -> int | None:
-    for candidate in (area.get("area_index"), area.get("index"), key):
+    for candidate in (area.get("area_id"), area.get("area_index"), area.get("index"), key):
         if isinstance(candidate, int):
             return candidate
         if isinstance(candidate, str) and candidate.isdigit():
