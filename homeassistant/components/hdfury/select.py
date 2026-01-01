@@ -87,9 +87,6 @@ async def async_setup_entry(
 
     coordinator: HDFuryCoordinator = entry.runtime_data
 
-    # Load custom labels if present
-    custom_labels: dict[str, str] = entry.options.get("option_labels", {})
-
     entities: list[HDFuryEntity] = []
 
     # Apply custom labels for port selectors
@@ -97,23 +94,7 @@ async def async_setup_entry(
         if description.key not in coordinator.data["info"]:
             continue
 
-        # Build label maps with custom labels applied
-        label_map = {
-            k: custom_labels.get(v, v) for k, v in description.label_map.items()
-        }
-        reverse_map = {v: k for k, v in label_map.items()}
-
-        # Create a new description object with overridden maps
-        desc = HDFurySelectPortEntityDescription(
-            key=description.key,
-            translation_key=description.translation_key,
-            options=list(label_map.values()),
-            label_map=label_map,
-            reverse_map=reverse_map,
-            set_value_fn=description.set_value_fn,
-        )
-
-        entities.append(HDFuryPortSelect(coordinator, desc))
+        entities.append(HDFuryPortSelect(coordinator, description))
 
     # Add OPMODE select if present
     if "opmode" in coordinator.data["info"]:
