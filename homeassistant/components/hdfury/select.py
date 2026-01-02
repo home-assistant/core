@@ -11,7 +11,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import HDFuryConfigEntry, HDFuryCoordinator
+from .coordinator import HDFuryConfigEntry
 from .entity import HDFuryEntity
 
 
@@ -20,7 +20,6 @@ class HDFurySelectEntityDescription(SelectEntityDescription):
     """Description for HDFury select entities."""
 
     label_map: dict[str, str]
-    reverse_map: dict[str, str]
 
 
 SELECT_PORTS: tuple[HDFurySelectEntityDescription, ...] = (
@@ -30,7 +29,6 @@ SELECT_PORTS: tuple[HDFurySelectEntityDescription, ...] = (
         translation_placeholders={"port": "0"},
         options=list(TX0_INPUT_PORTS.values()),
         label_map=TX0_INPUT_PORTS,
-        reverse_map={v: k for k, v in TX0_INPUT_PORTS.items()},
     ),
     HDFurySelectEntityDescription(
         key="portseltx1",
@@ -38,7 +36,6 @@ SELECT_PORTS: tuple[HDFurySelectEntityDescription, ...] = (
         translation_placeholders={"port": "1"},
         options=list(TX1_INPUT_PORTS.values()),
         label_map=TX1_INPUT_PORTS,
-        reverse_map={v: k for k, v in TX1_INPUT_PORTS.items()},
     ),
 )
 
@@ -48,7 +45,6 @@ SELECT_OPERATION_MODE: HDFurySelectEntityDescription = HDFurySelectEntityDescrip
     translation_key="opmode",
     options=list(OPERATION_MODES.values()),
     label_map=OPERATION_MODES,
-    reverse_map={v: k for k, v in OPERATION_MODES.items()},
 )
 
 
@@ -59,7 +55,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up selects using the platform schema."""
 
-    coordinator: HDFuryCoordinator = entry.runtime_data
+    coordinator = entry.runtime_data
 
     entities: list[HDFuryEntity] = []
 
@@ -91,7 +87,8 @@ class HDFuryBaseSelect(HDFuryEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Update the current option."""
 
-        raw_value = self.entity_description.reverse_map[option]
+        reverse_map = {v: k for k, v in self.entity_description.label_map.items()}
+        raw_value = reverse_map[option]
 
         # Update local data first
         self.coordinator.data.info[self.entity_description.key] = raw_value
