@@ -38,7 +38,7 @@ from .const import (
     STATUS_MAP,
     WARNING_CODE_MAP,
 )
-from .coordinator import NRGkickConfigEntry, NRGkickDataUpdateCoordinator
+from .coordinator import NRGkickConfigEntry, NRGkickData, NRGkickDataUpdateCoordinator
 from .entity import NRGkickEntity
 
 PARALLEL_UPDATES = 0
@@ -787,9 +787,19 @@ class NRGkickSensor(NRGkickEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         data: Any = self.coordinator.data
-        for key in self._value_path:
+        for index, key in enumerate(self._value_path):
             if data is None:
                 return None
+
+            # Coordinator returns a NRGkickData container; the first path segment
+            # is always one of: info/control/values.
+            if index == 0 and isinstance(data, NRGkickData):
+                data = getattr(data, key, None)
+                continue
+
+            if not isinstance(data, dict):
+                return None
+
             data = data.get(key)
 
         if self._value_fn and data is not None:

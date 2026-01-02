@@ -16,6 +16,8 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     coordinator: NRGkickDataUpdateCoordinator = entry.runtime_data
 
+    data = coordinator.data
+
     return {
         "entry": {
             "title": entry.title,
@@ -34,5 +36,9 @@ async def async_get_config_entry_diagnostics(
                 else None
             ),
         },
-        "data": coordinator.data,
+        "data": {
+            "info": data.info if data else {},
+            "control": data.control if data else {},
+            "values": data.values if data else {},
+        },
     }

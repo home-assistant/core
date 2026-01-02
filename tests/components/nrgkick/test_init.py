@@ -134,11 +134,10 @@ async def test_coordinator_update_success(
         await hass.async_block_till_done()
 
         coordinator = mock_config_entry.runtime_data
-        assert coordinator.data == {
-            "info": mock_info_data,
-            "control": mock_control_data,
-            "values": mock_values_data,
-        }
+        assert coordinator.data is not None
+        assert coordinator.data.info == mock_info_data
+        assert coordinator.data.control == mock_control_data
+        assert coordinator.data.values == mock_values_data
 
 
 async def test_coordinator_update_failed(
@@ -200,7 +199,8 @@ async def test_coordinator_async_set_current(
 
         mock_nrgkick_api.set_current.assert_called_once_with(6.7)
         # Verify coordinator data was updated
-        assert coordinator.data["control"]["current_set"] == 6.7
+        assert coordinator.data is not None
+        assert coordinator.data.control["current_set"] == 6.7
 
 
 async def test_coordinator_async_set_charge_pause(
@@ -226,7 +226,8 @@ async def test_coordinator_async_set_charge_pause(
 
         mock_nrgkick_api.set_charge_pause.assert_called_once_with(True)
         # Verify coordinator data was updated
-        assert coordinator.data["control"]["charge_pause"] == 1
+        assert coordinator.data is not None
+        assert coordinator.data.control["charge_pause"] == 1
 
 
 async def test_coordinator_async_set_energy_limit(
@@ -252,7 +253,8 @@ async def test_coordinator_async_set_energy_limit(
 
         mock_nrgkick_api.set_energy_limit.assert_called_once_with(50000)
         # Verify coordinator data was updated
-        assert coordinator.data["control"]["energy_limit"] == 50000
+        assert coordinator.data is not None
+        assert coordinator.data.control["energy_limit"] == 50000
 
 
 async def test_coordinator_async_set_phase_count(
@@ -278,7 +280,8 @@ async def test_coordinator_async_set_phase_count(
 
         mock_nrgkick_api.set_phase_count.assert_called_once_with(1)
         # Verify coordinator data was updated
-        assert coordinator.data["control"]["phase_count"] == 1
+        assert coordinator.data is not None
+        assert coordinator.data.control["phase_count"] == 1
 
 
 async def test_coordinator_command_blocked_by_solar(

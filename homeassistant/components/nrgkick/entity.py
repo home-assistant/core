@@ -8,7 +8,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import NRGkickDataUpdateCoordinator
+from .coordinator import NRGkickData, NRGkickDataUpdateCoordinator
 
 
 class NRGkickEntity(CoordinatorEntity[NRGkickDataUpdateCoordinator]):
@@ -25,8 +25,8 @@ class NRGkickEntity(CoordinatorEntity[NRGkickDataUpdateCoordinator]):
 
     def _setup_device_info(self) -> None:
         """Set up device info and unique ID."""
-        data = self.coordinator.data
-        info_data: dict[str, Any] = data.get("info", {}) if data else {}
+        data: NRGkickData | None = self.coordinator.data
+        info_data: dict[str, Any] = data.info if data else {}
         device_info: dict[str, Any] = info_data.get("general", {})
         serial: str = device_info.get("serial_number", "unknown")
 

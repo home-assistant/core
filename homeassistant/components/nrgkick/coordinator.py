@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable
+from dataclasses import dataclass, replace
 from datetime import timedelta
 import logging
 from typing import Any
@@ -27,7 +28,16 @@ _LOGGER = logging.getLogger(__name__)
 type NRGkickConfigEntry = ConfigEntry[NRGkickDataUpdateCoordinator]
 
 
-class NRGkickDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+@dataclass(slots=True)
+class NRGkickData:
+    """Container for coordinator data."""
+
+    info: dict[str, Any]
+    control: dict[str, Any]
+    values: dict[str, Any]
+
+
+class NRGkickDataUpdateCoordinator(DataUpdateCoordinator[NRGkickData]):
     """Class to manage fetching NRGkick data from the API."""
 
     config_entry: NRGkickConfigEntry
@@ -50,7 +60,7 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             always_update=False,
         )
 
-    async def _async_update_data(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> NRGkickData:
         """Update data via library."""
         try:
             info = await self.api.get_info()
@@ -65,11 +75,7 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_placeholders=err.translation_placeholders,
             ) from err
 
-        return {
-            "info": info,
-            "control": control,
-            "values": values,
-        }
+        return NRGkickData(info=info, control=control, values=values)
 
     async def _async_execute_command_with_verification(
         self,
@@ -148,12 +154,12 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 ) from err
 
             # Update coordinator data immediately with the new value.
-            if "control" not in self.data:
-                self.data["control"] = {}
-            self.data["control"][control_key] = actual_value
+            data = self.data or NRGkickData(info={}, control={}, values={})
+            updated_control = dict(data.control)
+            updated_control[control_key] = actual_value
 
             # Notify all entities that coordinator data has been updated.
-            self.async_set_updated_data(self.data)
+            self.async_set_updated_data(replace(data, control=updated_control))
 
         else:
             # Response doesn't contain expected key - refresh to get current state.
