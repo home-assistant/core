@@ -1367,7 +1367,7 @@ nextcloudmonitor==1.5.1
 nextcord==3.1.0
 
 # homeassistant.components.nextdns
-nextdns==4.1.0
+nextdns==5.0.0
 
 # homeassistant.components.niko_home_control
 nhc==0.7.0
