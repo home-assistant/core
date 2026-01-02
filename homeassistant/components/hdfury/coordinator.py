@@ -45,7 +45,7 @@ class HDFuryCoordinator(DataUpdateCoordinator[HDFuryData]):
             update_interval=SCAN_INTERVAL,
         )
         self.host: str = entry.data[CONF_HOST]
-        self.client: HDFuryAPI = HDFuryAPI(self.host, async_get_clientsession(hass))
+        self.client = HDFuryAPI(self.host, async_get_clientsession(hass))
         self.data = HDFuryData(
             board={},
             info={},
