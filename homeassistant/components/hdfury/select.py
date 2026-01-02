@@ -94,7 +94,6 @@ class HDFuryBaseSelect(HDFuryEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Update the current option."""
 
-        # Map user-friendly label back to raw input value
         raw_value = self.entity_description.reverse_map.get(option)
         if raw_value is None:
             raise HomeAssistantError(
