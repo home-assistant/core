@@ -53,7 +53,7 @@ rules:
   docs-use-cases: todo
   dynamic-devices:
     status: exempt
-    comment: This integration does not support dynamic devices, as it is designed for a single PoolDose device.
+    comment: This integration does not support dynamic device discovery, as each config entry represents a single PoolDose device with all available entities.
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
@@ -66,7 +66,7 @@ rules:
     comment: Currently no user stories are known that would require repair issues for this integration.
   stale-devices:
     status: exempt
-    comment: This integration does not support stale devices, as it is designed for a single PoolDose device with a fixed configuration.
+    comment: This integration manages a single device per config entry, so stale device removal is not applicable.
 
   # Platinum
   async-dependency: done
