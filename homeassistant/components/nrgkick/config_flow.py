@@ -51,9 +51,13 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     if not device_name:
         device_name = "NRGkick"
 
+    serial = info.get("general", {}).get("serial_number")
+    if not serial:
+        raise ValueError
+
     return {
         "title": device_name,
-        "serial": info.get("general", {}).get("serial_number", "Unknown"),
+        "serial": serial,
     }
 
 
@@ -75,6 +79,8 @@ class NRGkickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 info = await validate_input(self.hass, user_input)
+            except ValueError:
+                errors["base"] = "no_serial_number"
             except NRGkickApiClientAuthenticationError:
                 errors["base"] = "invalid_auth"
             except NRGkickApiClientCommunicationError:
@@ -149,6 +155,8 @@ class NRGkickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 info = await validate_input(self.hass, data)
+            except ValueError:
+                errors["base"] = "no_serial_number"
             except NRGkickApiClientAuthenticationError:
                 errors["base"] = "invalid_auth"
             except NRGkickApiClientCommunicationError:
@@ -205,6 +213,8 @@ class NRGkickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 await validate_input(self.hass, data)
+            except ValueError:
+                errors["base"] = "no_serial_number"
             except NRGkickApiClientAuthenticationError:
                 errors["base"] = "invalid_auth"
             except NRGkickApiClientCommunicationError:
@@ -261,6 +271,8 @@ class NRGkickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 await validate_input(self.hass, data)
+            except ValueError:
+                errors["base"] = "no_serial_number"
             except NRGkickApiClientAuthenticationError:
                 errors["base"] = "invalid_auth"
             except NRGkickApiClientCommunicationError:

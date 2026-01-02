@@ -129,6 +129,33 @@ async def test_form_invalid_auth(hass: HomeAssistant, mock_nrgkick_api) -> None:
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
+async def test_form_no_serial_number(hass: HomeAssistant, mock_nrgkick_api) -> None:
+    """Test we handle missing serial number."""
+    result = await hass.config_entries.flow.async_init(
+        "nrgkick", context={"source": config_entries.SOURCE_USER}
+    )
+
+    mock_nrgkick_api.get_info.return_value = {
+        "general": {
+            "device_name": "NRGkick Test",
+            # serial_number missing
+            "rated_current": 32.0,
+        }
+    }
+
+    with patch(
+        "homeassistant.components.nrgkick.config_flow.NRGkickAPI",
+        return_value=mock_nrgkick_api,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "192.168.1.100"},
+        )
+
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["errors"] == {"base": "no_serial_number"}
+
+
 async def test_form_unknown_exception(hass: HomeAssistant, mock_nrgkick_api) -> None:
     """Test we handle unknown exception."""
     result = await hass.config_entries.flow.async_init(

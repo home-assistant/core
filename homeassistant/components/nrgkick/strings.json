@@ -13,6 +13,7 @@
     "error": {
       "cannot_connect": "Cannot connect to the NRGkick device. Test the connection using a browser: http://{device_ip}/info",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "no_serial_number": "Device does not provide a serial number",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
