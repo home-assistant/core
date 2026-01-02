@@ -76,6 +76,9 @@
       "detergent_amount": {
         "default": "mdi:car-coolant-level"
       },
+      "dishwasher_washing_course": {
+        "default": "mdi:dishwasher"
+      },
       "flexible_detergent_amount": {
         "default": "mdi:car-coolant-level"
       },

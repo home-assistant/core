@@ -524,6 +524,73 @@
     'state': 'stop',
   })
 # ---
+# name: test_all_entities[da_wm_dw_000001][select.dishwasher_cycle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'auto',
+        'normal',
+        'heavy',
+        'delicate',
+        'express',
+        'rinse_only',
+        'self_clean',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.dishwasher_cycle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cycle',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'dishwasher_washing_course',
+    'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_samsungce.dishwasherWashingCourse_washingCourse_washingCourse',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_dw_000001][select.dishwasher_cycle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dishwasher Cycle',
+      'options': list([
+        'auto',
+        'normal',
+        'heavy',
+        'delicate',
+        'express',
+        'rinse_only',
+        'self_clean',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.dishwasher_cycle',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'normal',
+  })
+# ---
 # name: test_all_entities[da_wm_dw_01011][select.dishwasher-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -581,6 +648,81 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'stop',
+  })
+# ---
+# name: test_all_entities[da_wm_dw_01011][select.dishwasher_cycle-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'auto',
+        'eco',
+        'intensive',
+        'delicate',
+        'express_0_c',
+        'pre_wash',
+        'extra_silence',
+        'machine_care',
+        'plastics',
+        'babycare',
+        'pots_and_pans',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.dishwasher_cycle',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Cycle',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'dishwasher_washing_course',
+    'unique_id': '7ff318f3-3772-524d-3c9f-72fcd26413ed_main_samsungce.dishwasherWashingCourse_washingCourse_washingCourse',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_wm_dw_01011][select.dishwasher_cycle-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Dishwasher Cycle',
+      'options': list([
+        'auto',
+        'eco',
+        'intensive',
+        'delicate',
+        'express_0_c',
+        'pre_wash',
+        'extra_silence',
+        'machine_care',
+        'plastics',
+        'babycare',
+        'pots_and_pans',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.dishwasher_cycle',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'eco',
   })
 # ---
 # name: test_all_entities[da_wm_sc_000001][select.airdresser-entry]
