@@ -23,18 +23,6 @@ class NRGkickEntity(CoordinatorEntity[NRGkickDataUpdateCoordinator]):
         self._attr_translation_key = key
         self._setup_device_info()
 
-    @property
-    def suggested_object_id(self) -> str | None:
-        """Return the suggested object ID for this entity.
-
-        This ensures entity_ids are always English-based (e.g.,
-        sensor.nrgkick_total_active_power) regardless of the user's
-        language setting, while still allowing translated display names
-        in the UI via translation_key.
-
-        """
-        return self._key
-
     def _setup_device_info(self) -> None:
         """Set up device info and unique ID."""
         data = self.coordinator.data
