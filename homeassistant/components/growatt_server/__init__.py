@@ -16,6 +16,7 @@ from homeassistant.helpers.typing import ConfigType
 from .const import (
     AUTH_API_TOKEN,
     AUTH_PASSWORD,
+    CACHED_API_KEY,
     CONF_AUTH_TYPE,
     CONF_PLANT_ID,
     DEFAULT_PLANT_ID,
@@ -41,6 +42,157 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: GrowattConfigEntry
+) -> bool:
+    """Migrate old config entries.
+
+    Migration from version 1.0 to 1.1:
+    - Resolves DEFAULT_PLANT_ID (legacy value "0") to actual plant_id
+    - Only applies to Classic API (username/password authentication)
+    - Caches the logged-in API instance to avoid growatt server API rate limiting
+
+    Rate Limiting Workaround:
+    The Growatt Classic API rate-limits individual endpoints (login, plant_list,
+    device_list) with 5-minute windows. Without caching, the sequence would be:
+        Migration: login() → plant_list()
+        Setup:     login() → device_list()
+    This results in 2 login() calls within seconds, triggering rate limits.
+
+    By caching the API instance (which contains the authenticated session), we
+    achieve:
+        Migration: login() → plant_list() → [cache API instance]
+        Setup:     [reuse cached API] → device_list()
+    This reduces to just 1 login() call during the migration+setup cycle and prevent account lockout.
+    """
+    _LOGGER.debug(
+        "Migrating config entry from version %s.%s",
+        config_entry.version,
+        config_entry.minor_version,
+    )
+
+    # Migrate from version 1.0 to 1.1
+    if config_entry.version == 1 and config_entry.minor_version < 1:
+        config = config_entry.data
+
+        # First, ensure auth_type field exists (legacy config entry migration)
+        # This handles config entries created before auth_type was introduced
+        if CONF_AUTH_TYPE not in config:
+            new_data = dict(config_entry.data)
+            # Detect auth type based on which fields are present
+            if CONF_TOKEN in config:
+                new_data[CONF_AUTH_TYPE] = AUTH_API_TOKEN
+                hass.config_entries.async_update_entry(config_entry, data=new_data)
+                config = config_entry.data
+                _LOGGER.debug("Added auth_type field to V1 API config entry")
+            elif CONF_USERNAME in config:
+                new_data[CONF_AUTH_TYPE] = AUTH_PASSWORD
+                hass.config_entries.async_update_entry(config_entry, data=new_data)
+                config = config_entry.data
+                _LOGGER.debug("Added auth_type field to Classic API config entry")
+            else:
+                # Config entry has no auth fields - this is invalid but migration
+                # should still succeed. Setup will fail later with a clearer error.
+                _LOGGER.warning(
+                    "Config entry has no authentication fields. "
+                    "Setup will fail until the integration is reconfigured"
+                )
+
+        # Handle DEFAULT_PLANT_ID resolution
+        if config.get(CONF_PLANT_ID) == DEFAULT_PLANT_ID:
+            # V1 API should never have DEFAULT_PLANT_ID (plant selection happens in config flow)
+            # If it does, this indicates a corrupted config entry
+            if config.get(CONF_AUTH_TYPE) == AUTH_API_TOKEN:
+                _LOGGER.error(
+                    "V1 API config entry has DEFAULT_PLANT_ID, which indicates a "
+                    "corrupted configuration. Please reconfigure the integration"
+                )
+                return False
+
+            # Classic API with DEFAULT_PLANT_ID - resolve to actual plant_id
+            if config.get(CONF_AUTH_TYPE) == AUTH_PASSWORD:
+                username = config.get(CONF_USERNAME)
+                password = config.get(CONF_PASSWORD)
+                url = config.get(CONF_URL, DEFAULT_URL)
+
+                if not username or not password:
+                    # Credentials missing - cannot migrate
+                    _LOGGER.error(
+                        "Cannot migrate DEFAULT_PLANT_ID due to missing credentials"
+                    )
+                    return False
+
+                try:
+                    # Create API instance and login
+                    api, login_response = await _create_api_and_login(
+                        hass, username, password, url
+                    )
+
+                    # Resolve DEFAULT_PLANT_ID to actual plant_id
+                    plant_info = await hass.async_add_executor_job(
+                        api.plant_list, login_response["user"]["id"]
+                    )
+                except (ConfigEntryError, RequestException, JSONDecodeError) as ex:
+                    # API failure during migration - return False to retry later
+                    _LOGGER.error(
+                        "Failed to resolve plant_id during migration: %s. "
+                        "Migration will retry on next restart",
+                        ex,
+                    )
+                    return False
+
+                if not plant_info or "data" not in plant_info or not plant_info["data"]:
+                    _LOGGER.error(
+                        "No plants found for this account. "
+                        "Migration will retry on next restart"
+                    )
+                    return False
+
+                first_plant_id = plant_info["data"][0]["plantId"]
+
+                # Update config entry with resolved plant_id
+                new_data = dict(config_entry.data)
+                new_data[CONF_PLANT_ID] = first_plant_id
+                hass.config_entries.async_update_entry(
+                    config_entry, data=new_data, minor_version=1
+                )
+
+                # Cache the logged-in API instance for reuse in async_setup_entry()
+                hass.data.setdefault(DOMAIN, {})
+                hass.data[DOMAIN][f"{CACHED_API_KEY}{config_entry.entry_id}"] = api
+
+                _LOGGER.info(
+                    "Migrated config entry to use specific plant_id '%s'",
+                    first_plant_id,
+                )
+        else:
+            # No DEFAULT_PLANT_ID to resolve, just bump version
+            hass.config_entries.async_update_entry(config_entry, minor_version=1)
+
+        _LOGGER.debug("Migration completed to version %s.%s", config_entry.version, 1)
+
+    return True
+
+
+async def _create_api_and_login(
+    hass: HomeAssistant, username: str, password: str, url: str
+) -> tuple[growattServer.GrowattApi, dict]:
+    """Create API instance and perform login.
+
+    Returns both the API instance (with authenticated session) and the login
+    response (containing user_id needed for subsequent API calls).
+
+    """
+    api = growattServer.GrowattApi(add_random_user_id=True, agent_identifier=username)
+    api.server_url = url
+
+    login_response = await hass.async_add_executor_job(
+        _login_classic_api, api, username, password
+    )
+
+    return api, login_response
+
+
 def _login_classic_api(
     api: growattServer.GrowattApi, username: str, password: str
 ) -> dict:
@@ -60,54 +212,6 @@ def _login_classic_api(
         raise ConfigEntryError(f"Growatt login failed: {msg}")
 
     return login_response
-
-
-def _get_first_plant_id(
-    api: growattServer.GrowattApi, username: str, password: str
-) -> str:
-    """Get the first available plant_id for the authenticated user in Classic API."""
-    login_response = _login_classic_api(api, username, password)
-
-    # Safely extract user_id with validation
-    user_data = login_response.get("user")
-    if not user_data or "id" not in user_data:
-        raise ConfigEntryError("Login response missing required user information.")
-
-    user_id = user_data["id"]
-
-    try:
-        plant_info = api.plant_list(user_id)
-    except (RequestException, JSONDecodeError) as ex:
-        raise ConfigEntryError(
-            f"Error communicating with Growatt API during plant list: {ex}"
-        ) from ex
-
-    if not plant_info or "data" not in plant_info or not plant_info["data"]:
-        raise ConfigEntryError("No plants found for this account.")
-
-    return plant_info["data"][0]["plantId"]
-
-
-def get_device_list_classic(
-    api: growattServer.GrowattApi, config: Mapping[str, str]
-) -> tuple[list[dict[str, str]], str]:
-    """Retrieve the device list for the selected plant."""
-    plant_id = config[CONF_PLANT_ID]
-    username = config[CONF_USERNAME]
-    password = config[CONF_PASSWORD]
-
-    # Login to Classic API
-    _login_classic_api(api, username, password)
-
-    # Get a list of devices for specified plant to add sensors for.
-    try:
-        devices = api.device_list(plant_id)
-    except (RequestException, JSONDecodeError) as ex:
-        raise ConfigEntryError(
-            f"Error communicating with Growatt API during device list: {ex}"
-        ) from ex
-
-    return devices, plant_id
 
 
 def get_device_list_v1(
@@ -147,19 +251,6 @@ def get_device_list_v1(
     return supported_devices, plant_id
 
 
-def get_device_list(
-    api, config: Mapping[str, str], api_version: str
-) -> tuple[list[dict[str, str]], str]:
-    """Dispatch to correct device list logic based on API version."""
-    if api_version == "v1":
-        return get_device_list_v1(api, config)
-    if api_version == "classic":
-        return get_device_list_classic(api, config)
-    # Defensive: api_version is hardcoded in async_setup_entry as "v1" or "classic"
-    # This line is unreachable through normal execution but kept as a safeguard
-    raise ConfigEntryError(f"Unknown API version: {api_version}")  # pragma: no cover
-
-
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: GrowattConfigEntry
 ) -> bool:
@@ -175,71 +266,46 @@ async def async_setup_entry(
         new_data[CONF_URL] = url
         hass.config_entries.async_update_entry(config_entry, data=new_data)
 
-    # Migrate legacy config entries without auth_type field
-    if CONF_AUTH_TYPE not in config:
-        new_data = dict(config_entry.data)
-        # Detect auth type based on which fields are present
-        if CONF_TOKEN in config:
-            new_data[CONF_AUTH_TYPE] = AUTH_API_TOKEN
-        elif CONF_USERNAME in config:
-            new_data[CONF_AUTH_TYPE] = AUTH_PASSWORD
-        else:
-            raise ConfigEntryError(
-                "Unable to determine authentication type from config entry."
-            )
-        hass.config_entries.async_update_entry(config_entry, data=new_data)
-        config = config_entry.data
-
-    # Determine API version
+    # Determine API version and get devices
+    # Note: auth_type field is guaranteed to exist after migration
     if config.get(CONF_AUTH_TYPE) == AUTH_API_TOKEN:
-        api_version = "v1"
+        # V1 API (token-based, no login needed)
         token = config[CONF_TOKEN]
         api = growattServer.OpenApiV1(token=token)
-    elif config.get(CONF_AUTH_TYPE) == AUTH_PASSWORD:
-        api_version = "classic"
-        username = config[CONF_USERNAME]
-        api = growattServer.GrowattApi(
-            add_random_user_id=True, agent_identifier=username
+        devices, plant_id = await hass.async_add_executor_job(
+            get_device_list_v1, api, config
         )
-        api.server_url = url
+    elif config.get(CONF_AUTH_TYPE) == AUTH_PASSWORD:
+        # Classic API (username/password with login)
+        username = config[CONF_USERNAME]
+        password = config[CONF_PASSWORD]
+
+        # Check if migration cached an authenticated API instance for us to reuse.
+        # This avoids calling login() twice (once in migration, once here) which
+        # would trigger rate limiting.
+        cached_api = hass.data.get(DOMAIN, {}).pop(
+            f"{CACHED_API_KEY}{config_entry.entry_id}", None
+        )
+
+        if cached_api:
+            # Reuse the logged-in API instance from migration (rate limit optimization)
+            api = cached_api
+            _LOGGER.debug("Reusing logged-in session from migration")
+        else:
+            # No cached API (normal setup or migration didn't run)
+            # Create new API instance and login
+            api, _ = await _create_api_and_login(hass, username, password, url)
+
+        # Get plant_id and devices using the authenticated session
+        plant_id = config[CONF_PLANT_ID]
+        try:
+            devices = await hass.async_add_executor_job(api.device_list, plant_id)
+        except (RequestException, JSONDecodeError) as ex:
+            raise ConfigEntryError(
+                f"Error communicating with Growatt API during device list: {ex}"
+            ) from ex
     else:
         raise ConfigEntryError("Unknown authentication type in config entry.")
-
-    # Handle migration for entries with DEFAULT_PLANT_ID
-    if config.get(CONF_PLANT_ID) == DEFAULT_PLANT_ID:
-        # Resolve DEFAULT_PLANT_ID to actual plant_id for Classic API
-        if api_version == "classic":
-            try:
-                first_plant_id = await hass.async_add_executor_job(
-                    _get_first_plant_id,
-                    api,
-                    config[CONF_USERNAME],
-                    config[CONF_PASSWORD],
-                )
-            except (RequestException, JSONDecodeError) as ex:
-                raise ConfigEntryError(
-                    f"Error resolving plant_id during migration: {ex}"
-                ) from ex
-
-            # Update config with real plant_id
-            new_data = dict(config_entry.data)
-            new_data[CONF_PLANT_ID] = first_plant_id
-            hass.config_entries.async_update_entry(config_entry, data=new_data)
-            config = config_entry.data  # Refresh config with updated data
-
-            _LOGGER.info(
-                "Migrated config entry to use specific plant_id '%s' instead of default plant selection",
-                first_plant_id,
-            )
-        else:
-            # V1 API should not have DEFAULT_PLANT_ID, but log and continue
-            _LOGGER.warning(
-                "V1 API config entry unexpectedly has DEFAULT_PLANT_ID, this may cause API errors"
-            )
-
-    devices, plant_id = await hass.async_add_executor_job(
-        get_device_list, api, config, api_version
-    )
 
     # Create a coordinator for the total sensors
     total_coordinator = GrowattCoordinator(

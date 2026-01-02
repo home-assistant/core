@@ -155,8 +155,8 @@ def mock_growatt_classic_api():
     Individual tests can override specific return values to test error conditions.
 
     Methods mocked for integration setup:
-    - login: Called during get_device_list_classic to authenticate
-    - plant_list: Called during setup if plant_id is default (to auto-select plant)
+    - login: Called during migration (to resolve DEFAULT_PLANT_ID) or async_setup_entry
+    - plant_list: Called during migration to resolve DEFAULT_PLANT_ID to actual plant_id
     - device_list: Called during async_setup_entry to discover devices
 
     Methods mocked for total coordinator refresh:
