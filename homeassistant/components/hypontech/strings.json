@@ -1,8 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "wrong_account": "You must use the same account that was originally configured."
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -10,18 +9,6 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-      "reauth_confirm": {
-        "data": {
-          "password": "Password",
-          "username": "Username"
-        },
-        "data_description": {
-          "password": "Your Hypontech Cloud account password.",
-          "username": "Your Hypontech Cloud account username."
-        },
-        "description": "The credentials for {username} are no longer valid. Please enter your updated credentials.",
-        "title": "Reauthenticate integration"
-      },
       "user": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
