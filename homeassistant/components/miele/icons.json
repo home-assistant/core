@@ -71,6 +71,9 @@
           "plate_step_warming": "mdi:alpha-w-circle-outline"
         }
       },
+      "power_disk_level": {
+        "default": "mdi:car-coolant-level"
+      },
       "program_id": {
         "default": "mdi:selection-ellipse-arrow-inside"
       },
@@ -83,6 +86,12 @@
       "remaining_time": {
         "default": "mdi:clock-end"
       },
+      "rinse_aid_level": {
+        "default": "mdi:water-opacity"
+      },
+      "salt_level": {
+        "default": "mdi:shaker-outline"
+      },
       "spin_speed": {
         "default": "mdi:sync"
       },
@@ -94,6 +103,12 @@
       },
       "target_temperature": {
         "default": "mdi:thermometer-check"
+      },
+      "twin_dos_1_level": {
+        "default": "mdi:car-coolant-level"
+      },
+      "twin_dos_2_level": {
+        "default": "mdi:car-coolant-level"
       },
       "water_forecast": {
         "default": "mdi:water-outline"
