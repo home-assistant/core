@@ -8,7 +8,8 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import MelCloudConfigEntry, mel_devices_setup
 
-PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.WATER_HEATER]
+# Water heater must be first to register parent ATW device before zone entities
+PLATFORMS = [Platform.WATER_HEATER, Platform.CLIMATE, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: MelCloudConfigEntry) -> bool:
