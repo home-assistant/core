@@ -90,7 +90,7 @@ class VeSyncFlowHandler(ConfigFlow, domain=DOMAIN):
             password = user_input[CONF_PASSWORD]
 
             await self.async_set_unique_id(username)
-            self._abort_if_unique_id_configured(updates={CONF_USERNAME: username})
+            self._async_abort_entries_match({CONF_USERNAME: username})
             time_zone = str(self.hass.config.time_zone)
 
             manager = VeSync(
