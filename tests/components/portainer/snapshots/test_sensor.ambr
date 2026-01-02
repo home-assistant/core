@@ -280,7 +280,15 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'running',
+        'exited',
+        'paused',
+        'restarting',
+        'created',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -298,7 +306,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'State',
     'platform': 'portainer',
@@ -313,7 +321,15 @@
 # name: test_all_entities[sensor.focused_einstein_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'focused_einstein State',
+      'options': list([
+        'running',
+        'exited',
+        'paused',
+        'restarting',
+        'created',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.focused_einstein_state',
@@ -604,7 +620,15 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'running',
+        'exited',
+        'paused',
+        'restarting',
+        'created',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -622,7 +646,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'State',
     'platform': 'portainer',
@@ -637,7 +661,15 @@
 # name: test_all_entities[sensor.funny_chatelet_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'funny_chatelet State',
+      'options': list([
+        'running',
+        'exited',
+        'paused',
+        'restarting',
+        'created',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.funny_chatelet_state',
@@ -1581,7 +1613,15 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'running',
+        'exited',
+        'paused',
+        'restarting',
+        'created',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -1599,7 +1639,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'State',
     'platform': 'portainer',
@@ -1614,7 +1654,15 @@
 # name: test_all_entities[sensor.practical_morse_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'practical_morse State',
+      'options': list([
+        'running',
+        'exited',
+        'paused',
+        'restarting',
+        'created',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.practical_morse_state',
@@ -1905,7 +1953,15 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'running',
+        'exited',
+        'paused',
+        'restarting',
+        'created',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -1923,7 +1979,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'State',
     'platform': 'portainer',
@@ -1938,7 +1994,15 @@
 # name: test_all_entities[sensor.serene_banach_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'serene_banach State',
+      'options': list([
+        'running',
+        'exited',
+        'paused',
+        'restarting',
+        'created',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.serene_banach_state',
@@ -2229,7 +2293,15 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'running',
+        'exited',
+        'paused',
+        'restarting',
+        'created',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -2247,7 +2319,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'State',
     'platform': 'portainer',
@@ -2262,7 +2334,15 @@
 # name: test_all_entities[sensor.stoic_turing_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'stoic_turing State',
+      'options': list([
+        'running',
+        'exited',
+        'paused',
+        'restarting',
+        'created',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.stoic_turing_state',
