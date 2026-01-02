@@ -11,11 +11,11 @@ import pytest
 
 from homeassistant.components.libre_hardware_monitor.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import REAUTH_INPUT, VALID_CONFIG, VALID_CONFIG_WITH_AUTH
+from .conftest import AUTH_INPUT, REAUTH_INPUT, VALID_CONFIG, VALID_CONFIG_WITH_AUTH
 
 from tests.common import MockConfigEntry
 
@@ -56,12 +56,23 @@ async def test_create_entry_with_auth(
     mock_lhm_client: AsyncMock,
 ) -> None:
     """Test that a complete config entry is created with authentication credentials."""
+    mock_lhm_client.get_data.side_effect = LibreHardwareMonitorUnauthorizedError()
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=VALID_CONFIG_WITH_AUTH
+        result["flow_id"], user_input=VALID_CONFIG
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    mock_lhm_client.get_data.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=AUTH_INPUT
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -73,40 +84,10 @@ async def test_create_entry_with_auth(
     assert mock_setup_entry.call_count == 1
 
 
-async def test_error_if_only_username_or_only_password_is_given(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_lhm_client: AsyncMock,
-) -> None:
-    """Test that either both username and password or neither are given."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    config_with_only_username = {**VALID_CONFIG, CONF_USERNAME: "test"}
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=config_with_only_username
-    )
-
-    assert result["errors"] == {"base": "password_missing"}
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-    config_with_only_password = {**VALID_CONFIG, CONF_PASSWORD: "pw123"}
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input=config_with_only_password
-    )
-
-    assert result["errors"] == {"base": "username_missing"}
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-
 @pytest.mark.parametrize(
     ("side_effect", "error_text"),
     [
         (LibreHardwareMonitorConnectionError, "cannot_connect"),
-        (LibreHardwareMonitorUnauthorizedError, "invalid_auth"),
         (LibreHardwareMonitorNoDevicesError, "no_devices"),
     ],
 )
@@ -145,11 +126,36 @@ async def test_errors_and_flow_recovery(
     assert mock_setup_entry.call_count == 1
 
 
-async def test_lhm_server_already_exists(
+async def test_lhm_server_already_exists_without_auth(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test we only allow a single entry per server."""
     mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=VALID_CONFIG
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    assert mock_setup_entry.call_count == 0
+
+
+async def test_lhm_server_already_exists_with_auth(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_auth_config_entry: MockConfigEntry,
+) -> None:
+    """Test auth has no influence on single entry per server."""
+    mock_auth_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -193,16 +199,11 @@ async def test_reauth_no_previous_credentials(
 
 
 async def test_reauth_with_previous_credentials(
-    hass: HomeAssistant, mock_lhm_client: AsyncMock
+    hass: HomeAssistant,
+    mock_auth_config_entry: MockConfigEntry,
+    mock_lhm_client: AsyncMock,
 ) -> None:
     """Test reauth flow when web server credentials changed."""
-    mock_auth_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="192.168.0.20:8085",
-        data=VALID_CONFIG_WITH_AUTH,
-        entry_id="test_entry_id",
-        version=2,
-    )
     mock_auth_config_entry.add_to_hass(hass)
 
     result = await mock_auth_config_entry.start_reauth_flow(hass)

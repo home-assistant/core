@@ -7,9 +7,7 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "no_devices": "[%key:common::config_flow::abort::no_devices_found%]",
-      "password_missing": "Password is missing",
-      "username_missing": "Username is missing"
+      "no_devices": "[%key:common::config_flow::abort::no_devices_found%]"
     },
     "step": {
       "reauth_confirm": {
@@ -21,21 +19,17 @@
           "password": "The password for your Libre Hardware Monitor instance.",
           "username": "The username for your Libre Hardware Monitor instance."
         },
-        "description": "Please update your Libre Hardware Monitor credentials.",
-        "title": "Reauthenticate Libre Hardware Monitor"
+        "description": "Please provide your Libre Hardware Monitor credentials.",
+        "title": "Authenticate Libre Hardware Monitor"
       },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "port": "[%key:common::config_flow::data::port%]",
-          "username": "[%key:common::config_flow::data::username%]"
+          "port": "[%key:common::config_flow::data::port%]"
         },
         "data_description": {
           "host": "The IP address or hostname of the system running Libre Hardware Monitor.",
-          "password": "Leave blank if your system does not need authentication.",
-          "port": "The port of your Libre Hardware Monitor web server. By default 8085.",
-          "username": "Leave blank if your system does not need authentication."
+          "port": "The port of your Libre Hardware Monitor web server. By default 8085."
         }
       }
     }
