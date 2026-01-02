@@ -97,6 +97,10 @@ async def test_form(
     )
     json = await ws_client.receive_json()
 
+    # Check stream_url is absolute (required by HLS player for child playlist URLs)
+    stream_preview_url = json["event"]["attributes"]["stream_url"]
+    assert stream_preview_url.startswith("http")
+
     client = await hass_client()
     still_preview_url = json["event"]["attributes"]["still_url"]
     # Check the preview image works.

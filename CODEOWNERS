@@ -516,6 +516,8 @@ build.json @home-assistant/supervisor
 /tests/components/fireservicerota/ @cyberjunky
 /homeassistant/components/firmata/ @DaAwesomeP
 /tests/components/firmata/ @DaAwesomeP
+/homeassistant/components/fish_audio/ @noambav
+/tests/components/fish_audio/ @noambav
 /homeassistant/components/fitbit/ @allenporter
 /tests/components/fitbit/ @allenporter
 /homeassistant/components/fivem/ @Sander0542
@@ -530,6 +532,8 @@ build.json @home-assistant/supervisor
 /tests/components/flo/ @dmulcahey
 /homeassistant/components/flume/ @ChrisMandich @bdraco @jeeftor
 /tests/components/flume/ @ChrisMandich @bdraco @jeeftor
+/homeassistant/components/fluss/ @fluss
+/tests/components/fluss/ @fluss
 /homeassistant/components/flux_led/ @icemanch
 /tests/components/flux_led/ @icemanch
 /homeassistant/components/forecast_solar/ @klaasnicolaas @frenck
@@ -664,8 +668,8 @@ build.json @home-assistant/supervisor
 /tests/components/heos/ @andrewsayre
 /homeassistant/components/here_travel_time/ @eifinger
 /tests/components/here_travel_time/ @eifinger
-/homeassistant/components/hikvision/ @mezz64
-/tests/components/hikvision/ @mezz64
+/homeassistant/components/hikvision/ @mezz64 @ptarjan
+/tests/components/hikvision/ @mezz64 @ptarjan
 /homeassistant/components/hikvisioncam/ @fbradyirl
 /homeassistant/components/hisense_aehw4a1/ @bannhead
 /tests/components/hisense_aehw4a1/ @bannhead
@@ -794,6 +798,8 @@ build.json @home-assistant/supervisor
 /tests/components/intellifire/ @jeeftor
 /homeassistant/components/intent/ @home-assistant/core @synesthesiam @arturpragacz
 /tests/components/intent/ @home-assistant/core @synesthesiam @arturpragacz
+/homeassistant/components/intent_script/ @arturpragacz
+/tests/components/intent_script/ @arturpragacz
 /homeassistant/components/intesishome/ @jnimmo
 /homeassistant/components/iometer/ @jukrebs
 /tests/components/iometer/ @jukrebs
@@ -1693,8 +1699,8 @@ build.json @home-assistant/supervisor
 /tests/components/trafikverket_train/ @gjohansson-ST
 /homeassistant/components/trafikverket_weatherstation/ @gjohansson-ST
 /tests/components/trafikverket_weatherstation/ @gjohansson-ST
-/homeassistant/components/transmission/ @engrbm87 @JPHutchins
-/tests/components/transmission/ @engrbm87 @JPHutchins
+/homeassistant/components/transmission/ @engrbm87 @JPHutchins @andrew-codechimp
+/tests/components/transmission/ @engrbm87 @JPHutchins @andrew-codechimp
 /homeassistant/components/trend/ @jpbede
 /tests/components/trend/ @jpbede
 /homeassistant/components/triggercmd/ @rvmey
