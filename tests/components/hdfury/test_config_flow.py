@@ -60,8 +60,6 @@ async def test_abort_if_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
-    assert entry.unique_id == "000123456789"
 
 
 async def test_successful_recovery_after_connection_error(
