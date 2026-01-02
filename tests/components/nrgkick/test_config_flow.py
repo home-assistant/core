@@ -645,8 +645,67 @@ async def test_zeroconf_json_api_disabled(hass: HomeAssistant) -> None:
         data=discovery_info,
     )
 
-    assert result["type"] == data_entry_flow.FlowResultType.ABORT
-    assert result["reason"] == "json_api_disabled"
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "zeroconf_enable_json_api"
+    assert result["description_placeholders"] == {
+        "name": "NRGkick Test",
+        "device_ip": "192.168.1.100",
+    }
+
+
+async def test_zeroconf_json_api_disabled_then_enabled(
+    hass: HomeAssistant, mock_nrgkick_api
+) -> None:
+    """Test zeroconf discovery guides user and completes once enabled."""
+    discovery_info = ZeroconfServiceInfo(
+        ip_address=ip_address("192.168.1.100"),
+        ip_addresses=[ip_address("192.168.1.100")],
+        hostname="nrgkick.local.",
+        name="NRGkick Test._nrgkick._tcp.local.",
+        port=80,
+        properties={
+            "serial_number": "TEST123456",
+            "device_name": "NRGkick Test",
+            "json_api_enabled": "0",  # Disabled
+        },
+        type="_nrgkick._tcp.local.",
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        "nrgkick",
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["step_id"] == "zeroconf_enable_json_api"
+
+    with (
+        patch(
+            "homeassistant.components.nrgkick.config_flow.NRGkickAPI",
+            return_value=mock_nrgkick_api,
+        ),
+        patch(
+            "homeassistant.components.nrgkick.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: "test_user",
+                CONF_PASSWORD: "test_pass",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "NRGkick Test"
+    assert result2["data"] == {
+        CONF_HOST: "192.168.1.100",
+        CONF_USERNAME: "test_user",
+        CONF_PASSWORD: "test_pass",
+    }
 
 
 async def test_zeroconf_no_serial_number(hass: HomeAssistant) -> None:

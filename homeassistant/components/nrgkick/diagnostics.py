@@ -6,7 +6,7 @@ from typing import Any
 
 from homeassistant.core import HomeAssistant
 
-from . import NRGkickConfigEntry, NRGkickDataUpdateCoordinator
+from .coordinator import NRGkickConfigEntry, NRGkickDataUpdateCoordinator
 
 
 async def async_get_config_entry_diagnostics(
