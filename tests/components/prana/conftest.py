@@ -21,7 +21,7 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         unique_id=device_info_obj.manufactureId,
         entry_id="0123456789abcdef0123456789abcdef",
-        title="Prana Device",
+        title=device_info_obj.label,
         data={
             CONF_HOST: "127.0.0.1",
         },

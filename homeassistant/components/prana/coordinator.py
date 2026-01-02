@@ -46,15 +46,13 @@ class PranaCoordinator(DataUpdateCoordinator[PranaState]):
         )
 
         self.max_speed: int | None = None
-        host = self.config_entry.data[CONF_HOST]
-        self.api_client = PranaLocalApiClient(host=host, port=80)
-        self.device_info: PranaDeviceInfo
+        self.api_client = PranaLocalApiClient(host=entry.data[CONF_HOST], port=80)
 
     async def _async_setup(self) -> None:
         try:
             self.device_info = await self.api_client.get_device_info()
         except PranaApiCommunicationError as err:
-            _LOGGER.info("Error fetching device info during setup: %s", err)
+            _LOGGER.warning("Error fetching device info during setup: %s", err)
             raise UpdateFailed("Could not fetch device info") from err
 
     async def _async_update_data(self) -> PranaState:

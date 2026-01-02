@@ -58,7 +58,7 @@ async def test_switches_actions(
         entity_registry, mock_config_entry.entry_id
     )
     assert entries
-    target = f"switch.test_ha_2{entity_suffix}"
+    target = f"switch.prana_recuperator{entity_suffix}"
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -93,7 +93,7 @@ async def test_switch_exceptions(
     )
 
     assert entries
-    target = "switch.test_ha_2_bound"
+    target = "switch.prana_recuperator_bound"
 
     mock_prana_api.set_switch.side_effect = RuntimeError("boom")
 

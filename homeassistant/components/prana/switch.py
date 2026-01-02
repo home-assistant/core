@@ -63,7 +63,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up Prana switch entities from a config entry."""
     async_add_entities(
-        PranaSwitch(entry, entity_description) for entity_description in ENTITIES
+        PranaSwitch(entry.runtime_data, entity_description)
+        for entity_description in ENTITIES
     )
 
 

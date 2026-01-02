@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_switches[switch.test_ha_2_auto-entry]
+# name: test_switches[switch.prana_recuperator_auto-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.test_ha_2_auto',
+    'entity_id': 'switch.prana_recuperator_auto',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -34,20 +34,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[switch.test_ha_2_auto-state]
+# name: test_switches[switch.prana_recuperator_auto-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'test ha 2 Auto',
+      'friendly_name': 'PRANA RECUPERATOR Auto',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.test_ha_2_auto',
+    'entity_id': 'switch.prana_recuperator_auto',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_switches[switch.test_ha_2_auto_plus-entry]
+# name: test_switches[switch.prana_recuperator_auto_plus-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -60,7 +60,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.test_ha_2_auto_plus',
+    'entity_id': 'switch.prana_recuperator_auto_plus',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -82,20 +82,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[switch.test_ha_2_auto_plus-state]
+# name: test_switches[switch.prana_recuperator_auto_plus-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'test ha 2 Auto plus',
+      'friendly_name': 'PRANA RECUPERATOR Auto plus',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.test_ha_2_auto_plus',
+    'entity_id': 'switch.prana_recuperator_auto_plus',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_switches[switch.test_ha_2_bound-entry]
+# name: test_switches[switch.prana_recuperator_bound-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -108,7 +108,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.test_ha_2_bound',
+    'entity_id': 'switch.prana_recuperator_bound',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -130,20 +130,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[switch.test_ha_2_bound-state]
+# name: test_switches[switch.prana_recuperator_bound-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'test ha 2 Bound',
+      'friendly_name': 'PRANA RECUPERATOR Bound',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.test_ha_2_bound',
+    'entity_id': 'switch.prana_recuperator_bound',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_switches[switch.test_ha_2_heater-entry]
+# name: test_switches[switch.prana_recuperator_heater-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -156,7 +156,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.test_ha_2_heater',
+    'entity_id': 'switch.prana_recuperator_heater',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -178,20 +178,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[switch.test_ha_2_heater-state]
+# name: test_switches[switch.prana_recuperator_heater-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'test ha 2 Heater',
+      'friendly_name': 'PRANA RECUPERATOR Heater',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.test_ha_2_heater',
+    'entity_id': 'switch.prana_recuperator_heater',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_switches[switch.test_ha_2_winter-entry]
+# name: test_switches[switch.prana_recuperator_winter-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -204,7 +204,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.test_ha_2_winter',
+    'entity_id': 'switch.prana_recuperator_winter',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -226,13 +226,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[switch.test_ha_2_winter-state]
+# name: test_switches[switch.prana_recuperator_winter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'test ha 2 Winter',
+      'friendly_name': 'PRANA RECUPERATOR Winter',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.test_ha_2_winter',
+    'entity_id': 'switch.prana_recuperator_winter',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

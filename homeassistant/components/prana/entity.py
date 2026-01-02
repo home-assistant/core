@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 import logging
+from typing import TYPE_CHECKING
 
 from homeassistant.components.switch import StrEnum
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -9,10 +10,7 @@ from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import (
-    PranaConfigEntry,
-    PranaCoordinator as PranaDataUpdateCoordinator,
-)
+from .coordinator import PranaCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,7 +22,7 @@ class PranaEntityDescription(EntityDescription):
     key: StrEnum
 
 
-class PranaBaseEntity(CoordinatorEntity[PranaDataUpdateCoordinator]):
+class PranaBaseEntity(CoordinatorEntity[PranaCoordinator]):
     """Defines a base Prana entity."""
 
     _attr_has_entity_name = True
@@ -32,14 +30,16 @@ class PranaBaseEntity(CoordinatorEntity[PranaDataUpdateCoordinator]):
 
     def __init__(
         self,
-        entry: PranaConfigEntry,
+        coordinator: PranaCoordinator,
         description: PranaEntityDescription,
     ) -> None:
         """Initialize the Prana entity."""
-        super().__init__(entry.runtime_data)
+        super().__init__(coordinator)
+        if TYPE_CHECKING:
+            assert coordinator.config_entry.unique_id
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.unique_id)},  # type: ignore[arg-type]
+            identifiers={(DOMAIN, coordinator.config_entry.unique_id)},
             manufacturer="Prana",
             name=self.coordinator.device_info.label,
             model=self.coordinator.device_info.pranaModel,
@@ -47,7 +47,7 @@ class PranaBaseEntity(CoordinatorEntity[PranaDataUpdateCoordinator]):
             sw_version=str(self.coordinator.device_info.fwVersion),
         )
 
-        self._entry = entry
-        self._attr_unique_id = f"{entry.entry_id}_{description.key}"
+        self._entry = coordinator.config_entry
+        self._attr_unique_id = f"{self._entry.entry_id}_{description.key}"
 
         self.entity_description = description

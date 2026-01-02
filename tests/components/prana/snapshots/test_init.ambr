@@ -27,7 +27,7 @@
     'manufacturer': 'Prana',
     'model': 'PRANA RECUPERATOR 150',
     'model_id': None,
-    'name': 'test ha 2',
+    'name': 'PRANA RECUPERATOR',
     'name_by_user': None,
     'primary_config_entry': '0123456789abcdef0123456789abcdef',
     'serial_number': 'ECC9FFE0E574',

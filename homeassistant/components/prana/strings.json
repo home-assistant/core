@@ -18,7 +18,7 @@
           "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "host": "The IP address of your Prana device."
+          "host": "The IP address or hostname of your Prana device."
         },
         "title": "Add Prana device by IP"
       }

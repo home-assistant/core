@@ -44,20 +44,15 @@ class PranaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             self._device_info = await self._validate_device()
-        except (PranaApiCommunicationError, ValueError) as err:
+        except ValueError as err:
+            _LOGGER.debug("Error device is invalid %s: %s", self._host, err)
+            return self.async_abort(reason="invalid_device")
+        except PranaApiCommunicationError as err:
             _LOGGER.debug("Error fetching device info from %s: %s", self._host, err)
-            if isinstance(err, ValueError):
-                return self.async_abort(reason="invalid_device")
             return self.async_abort(reason="invalid_device_or_unreachable")
 
         self._set_confirm_only()
-        return self.async_show_form(
-            step_id="confirm",
-            description_placeholders={
-                "name": self._device_info.label,
-                "host": self._host,
-            },
-        )
+        return await self.async_step_confirm()
 
     async def async_step_user(
         self,
@@ -69,19 +64,21 @@ class PranaConfigFlow(ConfigFlow, domain=DOMAIN):
             self._host = user_input[CONF_HOST]
             try:
                 self._device_info = await self._validate_device()
-            except (PranaApiCommunicationError, ValueError) as err:
+            except ValueError as err:
+                _LOGGER.debug("Error device is invalid %s: %s", self._host, err)
+                return self.async_abort(reason="invalid_device")
+            except PranaApiCommunicationError as err:
                 _LOGGER.debug("Error fetching device info from %s: %s", self._host, err)
-                if isinstance(err, ValueError) and str(err) == "invalid_device":
-                    return self.async_abort(reason="invalid_device")
                 return self.async_show_form(
                     step_id="user",
                     data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
                     errors={CONF_BASE: "invalid_device_or_unreachable"},
                 )
-            return self.async_create_entry(
-                title=self._device_info.label,
-                data={CONF_HOST: self._host},
-            )
+            if not errors:
+                return self.async_create_entry(
+                    title=self._device_info.label,
+                    data={CONF_HOST: self._host},
+                )
 
         schema = vol.Schema({vol.Required(CONF_HOST): str})
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
