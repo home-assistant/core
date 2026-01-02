@@ -19,7 +19,7 @@ from homeassistant.components.modbus.const import (
     CONF_STATE_ON,
     CONF_VERIFY,
     CONF_WRITE_TYPE,
-    MODBUS_DOMAIN,
+    DOMAIN,
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
@@ -349,7 +349,7 @@ async def test_switch_service_turn(
     mock_modbus,
 ) -> None:
     """Run test for service turn_on/turn_off."""
-    assert MODBUS_DOMAIN in hass.config.components
+    assert DOMAIN in hass.config.components
 
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
     await hass.services.async_call(
@@ -520,7 +520,7 @@ async def test_no_discovery_info_switch(
     assert await async_setup_component(
         hass,
         SWITCH_DOMAIN,
-        {SWITCH_DOMAIN: {CONF_PLATFORM: MODBUS_DOMAIN}},
+        {SWITCH_DOMAIN: {CONF_PLATFORM: DOMAIN}},
     )
     await hass.async_block_till_done()
     assert SWITCH_DOMAIN in hass.config.components

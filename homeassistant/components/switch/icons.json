@@ -6,16 +6,16 @@
         "off": "mdi:toggle-switch-variant-off"
       }
     },
-    "switch": {
-      "default": "mdi:toggle-switch-variant",
-      "state": {
-        "off": "mdi:toggle-switch-variant-off"
-      }
-    },
     "outlet": {
       "default": "mdi:power-plug",
       "state": {
         "off": "mdi:power-plug-off"
+      }
+    },
+    "switch": {
+      "default": "mdi:toggle-switch-variant",
+      "state": {
+        "off": "mdi:toggle-switch-variant-off"
       }
     }
   },
@@ -28,6 +28,14 @@
     },
     "turn_on": {
       "service": "mdi:toggle-switch-variant"
+    }
+  },
+  "triggers": {
+    "turned_off": {
+      "trigger": "mdi:toggle-switch-variant-off"
+    },
+    "turned_on": {
+      "trigger": "mdi:toggle-switch-variant"
     }
   }
 }

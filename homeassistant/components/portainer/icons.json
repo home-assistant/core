@@ -1,0 +1,68 @@
+{
+  "entity": {
+    "sensor": {
+      "api_version": {
+        "default": "mdi:api"
+      },
+      "architecture": {
+        "default": "mdi:cpu-64-bit"
+      },
+      "containers_count": {
+        "default": "mdi:database"
+      },
+      "containers_paused": {
+        "default": "mdi:pause-circle"
+      },
+      "containers_running": {
+        "default": "mdi:play-circle-outline"
+      },
+      "containers_stopped": {
+        "default": "mdi:stop-circle-outline"
+      },
+      "cpu_total": {
+        "default": "mdi:cpu-64-bit"
+      },
+      "cpu_usage_total": {
+        "default": "mdi:cpu-64-bit"
+      },
+      "docker_version": {
+        "default": "mdi:docker"
+      },
+      "image": {
+        "default": "mdi:docker"
+      },
+      "images_count": {
+        "default": "mdi:image-multiple"
+      },
+      "kernel_version": {
+        "default": "mdi:memory"
+      },
+      "memory_limit": {
+        "default": "mdi:memory"
+      },
+      "memory_total": {
+        "default": "mdi:memory"
+      },
+      "memory_usage": {
+        "default": "mdi:memory"
+      },
+      "memory_usage_percentage": {
+        "default": "mdi:memory"
+      },
+      "operating_system": {
+        "default": "mdi:chip"
+      },
+      "operating_system_version": {
+        "default": "mdi:alpha-v-box"
+      }
+    },
+    "switch": {
+      "container": {
+        "default": "mdi:arrow-down-box",
+        "state": {
+          "on": "mdi:arrow-up-box"
+        }
+      }
+    }
+  }
+}

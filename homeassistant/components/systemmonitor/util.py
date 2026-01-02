@@ -3,7 +3,7 @@
 import logging
 import os
 
-from psutil._common import shwtemp
+from psutil._common import sfan, shwtemp
 import psutil_home_assistant as ha_psutil
 
 from homeassistant.core import HomeAssistant
@@ -89,3 +89,19 @@ def read_cpu_temperature(temps: dict[str, list[shwtemp]]) -> float | None:
                 return round(entry.current, 1)
 
     return None
+
+
+def read_fan_speed(fans: dict[str, list[sfan]]) -> dict[str, int]:
+    """Attempt to read fan speed."""
+    entry: sfan
+
+    _LOGGER.debug("Fan speed: %s", fans)
+    if not fans:
+        return {}
+    sensor_fans: dict[str, int] = {}
+    for name, entries in fans.items():
+        for entry in entries:
+            _label = name if not entry.label else entry.label
+            sensor_fans[_label] = round(entry.current, 0)
+
+    return sensor_fans

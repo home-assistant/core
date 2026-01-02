@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 from pyprobeplus import ProbePlusDevice
 
+from homeassistant.const import CONF_MODEL
 from homeassistant.helpers.device_registry import (
     CONNECTION_BLUETOOTH,
     DeviceInfo,
@@ -40,6 +41,7 @@ class ProbePlusEntity(CoordinatorEntity[ProbePlusDataUpdateCoordinator]):
             name=coordinator.device.name,
             manufacturer="Probe Plus",
             suggested_area="Kitchen",
+            model=coordinator.config_entry.data.get(CONF_MODEL),
             connections={(CONNECTION_BLUETOOTH, coordinator.device.mac)},
         )
 

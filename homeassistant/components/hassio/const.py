@@ -34,8 +34,10 @@ ATTR_ISSUES = "issues"
 ATTR_MESSAGE = "message"
 ATTR_METHOD = "method"
 ATTR_PANELS = "panels"
+ATTR_PARAMS = "params"
 ATTR_PASSWORD = "password"
 ATTR_RESULT = "result"
+ATTR_STARTUP = "startup"
 ATTR_SUGGESTIONS = "suggestions"
 ATTR_SUPPORTED = "supported"
 ATTR_TIMEOUT = "timeout"
@@ -68,8 +70,10 @@ EVENT_HEALTH_CHANGED = "health_changed"
 EVENT_SUPPORTED_CHANGED = "supported_changed"
 EVENT_ISSUE_CHANGED = "issue_changed"
 EVENT_ISSUE_REMOVED = "issue_removed"
+EVENT_JOB = "job"
 
 UPDATE_KEY_SUPERVISOR = "supervisor"
+STARTUP_COMPLETE = "complete"
 
 ADDONS_COORDINATOR = "hassio_addons_coordinator"
 
@@ -107,8 +111,11 @@ DATA_KEY_SUPERVISOR = "supervisor"
 DATA_KEY_CORE = "core"
 DATA_KEY_HOST = "host"
 DATA_KEY_SUPERVISOR_ISSUES = "supervisor_issues"
+DATA_KEY_MOUNTS = "mounts"
 
 PLACEHOLDER_KEY_ADDON = "addon"
+PLACEHOLDER_KEY_ADDON_INFO = "addon_info"
+PLACEHOLDER_KEY_ADDON_DOCUMENTATION = "addon_documentation"
 PLACEHOLDER_KEY_ADDON_URL = "addon_url"
 PLACEHOLDER_KEY_REFERENCE = "reference"
 PLACEHOLDER_KEY_COMPONENTS = "components"
@@ -120,6 +127,9 @@ ISSUE_KEY_ADDON_DETACHED_ADDON_MISSING = "issue_addon_detached_addon_missing"
 ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED = "issue_addon_detached_addon_removed"
 ISSUE_KEY_ADDON_PWNED = "issue_addon_pwned"
 ISSUE_KEY_SYSTEM_FREE_SPACE = "issue_system_free_space"
+ISSUE_KEY_ADDON_DEPRECATED = "issue_addon_deprecated_addon"
+
+ISSUE_MOUNT_MOUNT_FAILED = "issue_mount_mount_failed"
 
 CORE_CONTAINER = "homeassistant"
 SUPERVISOR_CONTAINER = "hassio_supervisor"
@@ -152,10 +162,12 @@ EXTRA_PLACEHOLDERS = {
     ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED: HELP_URLS,
     ISSUE_KEY_SYSTEM_FREE_SPACE: {
         "more_info_free_space": "https://www.home-assistant.io/more-info/free-space",
+        "storage_url": "/config/storage",
     },
     ISSUE_KEY_ADDON_PWNED: {
         "more_info_pwned": "https://www.home-assistant.io/more-info/pwned-passwords",
     },
+    ISSUE_KEY_ADDON_DEPRECATED: HELP_URLS,
 }
 
 
@@ -167,3 +179,4 @@ class SupervisorEntityModel(StrEnum):
     CORE = "Home Assistant Core"
     SUPERVISOR = "Home Assistant Supervisor"
     HOST = "Home Assistant Host"
+    MOUNT = "Home Assistant Mount"

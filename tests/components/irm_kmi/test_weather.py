@@ -37,6 +37,7 @@ async def test_weather_nl(
     "forecast_type",
     ["daily", "hourly"],
 )
+@pytest.mark.freeze_time("2025-09-22T15:30:00+01:00")
 async def test_forecast_service(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,

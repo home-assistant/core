@@ -1,5 +1,4 @@
 {
-  "title": "Person",
   "entity_component": {
     "_": {
       "name": "[%key:component::person::title%]",
@@ -28,8 +27,9 @@
   },
   "services": {
     "reload": {
-      "name": "[%key:common::action::reload%]",
-      "description": "Reloads persons from the YAML-configuration."
+      "description": "Reloads persons from the YAML-configuration.",
+      "name": "[%key:common::action::reload%]"
     }
-  }
+  },
+  "title": "Person"
 }

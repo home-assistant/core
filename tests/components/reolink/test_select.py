@@ -7,7 +7,7 @@ import pytest
 from reolink_aio.api import Chime
 from reolink_aio.exceptions import InvalidParameterError, ReolinkError
 
-from homeassistant.components.reolink import DEVICE_UPDATE_INTERVAL
+from homeassistant.components.reolink import DEVICE_UPDATE_INTERVAL_MIN
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -68,7 +68,7 @@ async def test_floodlight_mode_select(
         )
 
     reolink_host.whiteled_mode.return_value = -99  # invalid value
-    freezer.tick(DEVICE_UPDATE_INTERVAL)
+    freezer.tick(DEVICE_UPDATE_INTERVAL_MIN)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -142,13 +142,14 @@ async def test_host_scene_select(
         )
 
     reolink_host.baichuan.active_scene = "Invalid value"
-    freezer.tick(DEVICE_UPDATE_INTERVAL)
+    freezer.tick(DEVICE_UPDATE_INTERVAL_MIN)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
 
+@pytest.mark.parametrize("channel", [0, None])
 async def test_chime_select(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -156,8 +157,11 @@ async def test_chime_select(
     reolink_host: MagicMock,
     reolink_chime: Chime,
     entity_registry: er.EntityRegistry,
+    channel: int | None,
 ) -> None:
     """Test chime select entity."""
+    reolink_chime.channel = channel
+
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SELECT]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -197,7 +201,8 @@ async def test_chime_select(
 
     # Test unavailable
     reolink_chime.event_info = {}
-    freezer.tick(DEVICE_UPDATE_INTERVAL)
+    reolink_chime.update_enums()
+    freezer.tick(DEVICE_UPDATE_INTERVAL_MIN)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 

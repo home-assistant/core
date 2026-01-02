@@ -3,7 +3,7 @@
 from typing import Any
 from unittest.mock import patch
 
-from aioesphomeapi import APIClient, DeviceInfo, InvalidAuthAPIError
+from aioesphomeapi import APIClient, DeviceInfo, InvalidEncryptionKeyAPIError
 import pytest
 
 from homeassistant.components.esphome import CONF_NOISE_PSK, DOMAIN, dashboard
@@ -194,7 +194,7 @@ async def test_new_dashboard_fix_reauth(
 ) -> None:
     """Test config entries waiting for reauth are triggered."""
     mock_client.device_info.side_effect = (
-        InvalidAuthAPIError,
+        InvalidEncryptionKeyAPIError("Wrong key", "test"),
         DeviceInfo(uses_password=False, name="test", mac_address="11:22:33:44:55:AA"),
     )
 

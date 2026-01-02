@@ -147,13 +147,16 @@ async def test_host_number(
         )
 
 
+@pytest.mark.parametrize("channel", [0, None])
 async def test_chime_number(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     reolink_host: MagicMock,
     reolink_chime: Chime,
+    channel: int | None,
 ) -> None:
     """Test number entity of a chime with chime volume."""
+    reolink_chime.channel = channel
     reolink_chime.volume = 3
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.NUMBER]):

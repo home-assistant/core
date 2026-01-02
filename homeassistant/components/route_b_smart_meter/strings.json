@@ -1,0 +1,42 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "device": "[%key:common::config_flow::data::device%]",
+          "id": "B Route ID",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "device": "[%key:common::config_flow::data::device%]",
+          "id": "B Route ID",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "instantaneous_current_r_phase": {
+        "name": "Instantaneous current R phase"
+      },
+      "instantaneous_current_t_phase": {
+        "name": "Instantaneous current T phase"
+      },
+      "instantaneous_power": {
+        "name": "Instantaneous power"
+      },
+      "total_consumption": {
+        "name": "Total consumption"
+      }
+    }
+  }
+}

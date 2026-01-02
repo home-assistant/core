@@ -18,7 +18,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CHARGEPOINT_SETTINGS,
@@ -29,17 +31,28 @@ from .const import (
     PLUG_AND_CHARGE,
     VALUE,
 )
+from .services import async_setup_services
 
 type BlueCurrentConfigEntry = ConfigEntry[Connector]
 
 PLATFORMS = [Platform.BUTTON, Platform.SENSOR, Platform.SWITCH]
 CHARGE_POINTS = "CHARGE_POINTS"
+CHARGE_CARDS = "CHARGE_CARDS"
 DATA = "data"
 DELAY = 5
 
 GRID = "GRID"
 OBJECT = "object"
 VALUE_TYPES = [CHARGEPOINT_STATUS, CHARGEPOINT_SETTINGS]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up Blue Current."""
+
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(
@@ -87,6 +100,7 @@ class Connector:
         self.client = client
         self.charge_points: dict[str, dict] = {}
         self.grid: dict[str, Any] = {}
+        self.charge_cards: dict[str, dict[str, Any]] = {}
 
     async def on_data(self, message: dict) -> None:
         """Handle received data."""

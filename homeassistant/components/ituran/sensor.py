@@ -6,7 +6,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 
-from propcache.api import cached_property
 from pyituran import Vehicle
 
 from homeassistant.components.sensor import (
@@ -133,7 +132,7 @@ class IturanSensor(IturanBaseEntity, SensorEntity):
         super().__init__(coordinator, license_plate, description.key)
         self.entity_description = description
 
-    @cached_property
+    @property
     def native_value(self) -> StateType | datetime:
         """Return the state of the device."""
         return self.entity_description.value_fn(self.vehicle)
