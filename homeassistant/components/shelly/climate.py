@@ -590,7 +590,7 @@ class BlockSleepingClimate(
             )
         if hvac_mode == HVACMode.HEAT:
             await self.set_state_full_path(
-                target_t_enabled=1, target_t=self._last_target_temp
+                target_t_enabled=1, target_t=f"{self._last_target_temp}"
             )
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
