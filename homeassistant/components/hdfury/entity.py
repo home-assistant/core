@@ -12,6 +12,8 @@ from .coordinator import HDFuryCoordinator
 class HDFuryEntity(CoordinatorEntity[HDFuryCoordinator]):
     """Common elements for all entities."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self, coordinator: HDFuryCoordinator, entity_description: EntityDescription
     ) -> None:
@@ -24,7 +26,6 @@ class HDFuryEntity(CoordinatorEntity[HDFuryCoordinator]):
         self._attr_unique_id = (
             f"{coordinator.data.board['serial']}_{entity_description.key}"
         )
-        self._attr_has_entity_name = True
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.data.board["serial"])},
             name=f"HDFury {coordinator.data.board['hostname']}",
