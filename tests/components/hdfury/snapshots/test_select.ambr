@@ -6,12 +6,12 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'Mode 0 - Splitter TX0/TX1 FRL5 VRR',
-        'Mode 1 - Splitter TX0/TX1 UPSCALE FRL5',
-        'Mode 2 - Matrix TMDS',
-        'Mode 3 - Matrix FRL->TMDS',
-        'Mode 4 - Matrix DOWNSCALE',
-        'Mode 5 - Matrix RX0:FRL5 + RX1-3:TMDS',
+        '0',
+        '1',
+        '2',
+        '3',
+        '4',
+        '5',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -48,12 +48,12 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'HDFury VRROOM-02 Operation mode',
       'options': list([
-        'Mode 0 - Splitter TX0/TX1 FRL5 VRR',
-        'Mode 1 - Splitter TX0/TX1 UPSCALE FRL5',
-        'Mode 2 - Matrix TMDS',
-        'Mode 3 - Matrix FRL->TMDS',
-        'Mode 4 - Matrix DOWNSCALE',
-        'Mode 5 - Matrix RX0:FRL5 + RX1-3:TMDS',
+        '0',
+        '1',
+        '2',
+        '3',
+        '4',
+        '5',
       ]),
     }),
     'context': <ANY>,
@@ -61,7 +61,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'Mode 0 - Splitter TX0/TX1 FRL5 VRR',
+    'state': '0',
   })
 # ---
 # name: test_select_entities[select.hdfury_vrroom_02_port_select_tx0-entry]
@@ -71,11 +71,11 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'Input 0',
-        'Input 1',
-        'Input 2',
-        'Input 3',
-        'Copy TX0',
+        '0',
+        '1',
+        '2',
+        '3',
+        '4',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -102,7 +102,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'portseltx',
+    'translation_key': 'portseltx0',
     'unique_id': '000123456789_portseltx0',
     'unit_of_measurement': None,
   })
@@ -112,11 +112,11 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'HDFury VRROOM-02 Port select TX0',
       'options': list([
-        'Input 0',
-        'Input 1',
-        'Input 2',
-        'Input 3',
-        'Copy TX0',
+        '0',
+        '1',
+        '2',
+        '3',
+        '4',
       ]),
     }),
     'context': <ANY>,
@@ -124,7 +124,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'Input 0',
+    'state': '0',
   })
 # ---
 # name: test_select_entities[select.hdfury_vrroom_02_port_select_tx1-entry]
@@ -134,11 +134,11 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'Input 0',
-        'Input 1',
-        'Input 2',
-        'Input 3',
-        'Copy TX1',
+        '0',
+        '1',
+        '2',
+        '3',
+        '4',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -165,7 +165,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'portseltx',
+    'translation_key': 'portseltx1',
     'unique_id': '000123456789_portseltx1',
     'unit_of_measurement': None,
   })
@@ -175,11 +175,11 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'HDFury VRROOM-02 Port select TX1',
       'options': list([
-        'Input 0',
-        'Input 1',
-        'Input 2',
-        'Input 3',
-        'Copy TX1',
+        '0',
+        '1',
+        '2',
+        '3',
+        '4',
       ]),
     }),
     'context': <ANY>,
@@ -187,6 +187,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'Copy TX1',
+    'state': '4',
   })
 # ---

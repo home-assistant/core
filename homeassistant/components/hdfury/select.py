@@ -25,25 +25,20 @@ from .entity import HDFuryEntity
 class HDFurySelectEntityDescription(SelectEntityDescription):
     """Description for HDFury select entities."""
 
-    label_map: dict[str, str]
     set_value_fn: Callable[[HDFuryAPI, str], Awaitable[None]]
 
 
 SELECT_PORTS: tuple[HDFurySelectEntityDescription, ...] = (
     HDFurySelectEntityDescription(
         key="portseltx0",
-        translation_key="portseltx",
-        translation_placeholders={"port": "0"},
-        options=list(TX0_INPUT_PORTS.values()),
-        label_map=TX0_INPUT_PORTS,
+        translation_key="portseltx0",
+        options=list(TX0_INPUT_PORTS.keys()),
         set_value_fn=lambda coordinator, value: _set_ports(coordinator),
     ),
     HDFurySelectEntityDescription(
         key="portseltx1",
-        translation_key="portseltx",
-        translation_placeholders={"port": "1"},
-        options=list(TX1_INPUT_PORTS.values()),
-        label_map=TX1_INPUT_PORTS,
+        translation_key="portseltx1",
+        options=list(TX1_INPUT_PORTS.keys()),
         set_value_fn=lambda coordinator, value: _set_ports(coordinator),
     ),
 )
@@ -52,8 +47,7 @@ SELECT_PORTS: tuple[HDFurySelectEntityDescription, ...] = (
 SELECT_OPERATION_MODE: HDFurySelectEntityDescription = HDFurySelectEntityDescription(
     key="opmode",
     translation_key="opmode",
-    options=list(OPERATION_MODES.values()),
-    label_map=OPERATION_MODES,
+    options=list(OPERATION_MODES.keys()),
     set_value_fn=lambda coordinator, value: coordinator.client.set_operation_mode(
         value
     ),
@@ -107,21 +101,17 @@ class HDFurySelect(HDFuryEntity, SelectEntity):
     def current_option(self) -> str:
         """Return the current option."""
 
-        raw_value = self.coordinator.data.info[self.entity_description.key]
-        return self.entity_description.label_map[raw_value]
+        return self.coordinator.data.info[self.entity_description.key]
 
     async def async_select_option(self, option: str) -> None:
         """Update the current option."""
 
-        reverse_map = {v: k for k, v in self.entity_description.label_map.items()}
-        raw_value = reverse_map[option]
-
         # Update local data first
-        self.coordinator.data.info[self.entity_description.key] = raw_value
+        self.coordinator.data.info[self.entity_description.key] = option
 
         # Send command to device
         try:
-            await self.entity_description.set_value_fn(self.coordinator, raw_value)
+            await self.entity_description.set_value_fn(self.coordinator, option)
         except HDFuryError as error:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
