@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock
 
+from hdfury import HDFuryError
+
 from homeassistant.components.hdfury.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST
@@ -72,8 +74,8 @@ async def test_successful_recovery_after_connection_error(
         context={"source": SOURCE_USER},
     )
 
-    # Simulate a connection error by raising a TimeoutError
-    mock_hdfury_client.get_board.side_effect = TimeoutError()
+    # Simulate a connection error by raising a HDFuryError
+    mock_hdfury_client.get_board.side_effect = HDFuryError()
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_HOST: "192.168.1.123"},

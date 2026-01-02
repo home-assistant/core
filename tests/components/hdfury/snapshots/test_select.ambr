@@ -33,7 +33,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Operation Mode',
+    'original_name': 'Operation mode',
     'platform': 'hdfury',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -46,7 +46,7 @@
 # name: test_select_entities[select.hdfury_vrroom_02_operation_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 Operation Mode',
+      'friendly_name': 'HDFury VRROOM-02 Operation mode',
       'options': list([
         'Mode 0 - Splitter TX0/TX1 FRL5 VRR',
         'Mode 1 - Splitter TX0/TX1 UPSCALE FRL5',
@@ -97,7 +97,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Port Select TX0',
+    'original_name': 'Port select TX0',
     'platform': 'hdfury',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -110,7 +110,7 @@
 # name: test_select_entities[select.hdfury_vrroom_02_port_select_tx0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 Port Select TX0',
+      'friendly_name': 'HDFury VRROOM-02 Port select TX0',
       'options': list([
         'Input 0',
         'Input 1',
@@ -160,7 +160,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Port Select TX1',
+    'original_name': 'Port select TX1',
     'platform': 'hdfury',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -173,7 +173,7 @@
 # name: test_select_entities[select.hdfury_vrroom_02_port_select_tx1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'HDFury VRROOM-02 Port Select TX1',
+      'friendly_name': 'HDFury VRROOM-02 Port select TX1',
       'options': list([
         'Input 0',
         'Input 1',

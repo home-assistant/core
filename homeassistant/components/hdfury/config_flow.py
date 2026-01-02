@@ -2,7 +2,6 @@
 
 from typing import Any
 
-from aiohttp import ClientError
 from hdfury import HDFuryAPI, HDFuryError
 import voluptuous as vol
 
@@ -49,7 +48,7 @@ class HDFuryConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             data = await client.get_board()
-        except (HDFuryError, TimeoutError, ClientError):
+        except HDFuryError:
             return None
 
         return data["serial"]
