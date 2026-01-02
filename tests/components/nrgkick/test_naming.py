@@ -15,8 +15,9 @@ async def test_device_name_fallback(
     mock_control_data,
     mock_values_data,
 ) -> None:
-    """Test that device name falls back to 'NRGkick' when API returns empty name."""
+    """Test that device name is taken from the entry title."""
     mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, title="NRGkick")
 
     # Set empty device name in API response
     mock_info_data["general"]["device_name"] = ""
@@ -61,8 +62,9 @@ async def test_device_name_custom(
     mock_control_data,
     mock_values_data,
 ) -> None:
-    """Test that custom device name is used when provided by API."""
+    """Test that custom device name is taken from the entry title."""
     mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, title="Garage Charger")
 
     # Set custom device name in API response
     mock_info_data["general"]["device_name"] = "Garage Charger"

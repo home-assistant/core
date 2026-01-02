@@ -36,16 +36,14 @@ class NRGkickEntity(CoordinatorEntity[NRGkickDataUpdateCoordinator]):
             or self.coordinator.config_entry.entry_id
         )
 
-        device_name: str | None = device_info.get("device_name")
-        if not device_name:
-            device_name = "NRGkick"
-
         versions: dict[str, Any] = info_data.get("versions", {})
         self._attr_unique_id = f"{serial}_{self._key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, serial)},
             serial_number=serial,
-            name=device_name,
+            # The config entry title already contains the device name (set in the
+            # config flow), so we can reuse it here.
+            name=self.coordinator.config_entry.title,
             manufacturer="DiniTech",
             model=device_info.get("model_type", "NRGkick Gen2"),
             sw_version=versions.get("sw_sm"),
