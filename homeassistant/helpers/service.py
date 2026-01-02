@@ -906,7 +906,19 @@ async def entity_service_call(
                 "Service call requested response data but did not match any entities"
             )
         return None
-    # Single entity optimization removed
+
+    if len(entities) == 1:
+        # Single entity case avoids creating task
+        entity = entities[0]
+        single_response = await _handle_entity_call(
+            hass, entity, func, data, call.context
+        )
+        if entity.should_poll:
+            # Context expires if the turn on commands took a long time.
+            # Set context again so it's there when we update
+            entity.async_set_context(call.context)
+            await entity.async_update_ha_state(True)
+        return {entity.entity_id: single_response} if return_response else None
 
     response_data: EntityServiceResponse = {}
     # For overrides: each config entry has a handler and set of entities
