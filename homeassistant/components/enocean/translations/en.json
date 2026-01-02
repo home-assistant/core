@@ -86,6 +86,12 @@
             "base_id": {
                 "name": "Base ID"
             },
+            "device_brightness": {
+                "name": "Brightness"
+            },
+            "dimming_range": {
+                "name": "Dimming range"
+            },
             "last_seen": {
                 "name": "Last seen"
             },

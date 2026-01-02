@@ -57,4 +57,6 @@ class EnOceanSelect(EnOceanEntity, SelectEntity):
 
     def select_option(self, option: str) -> None:
         """Change the selected option."""
-        # needs to be implemented
+        self.gateway.select_option(self.enocean_entity_id, option)
+        self._attr_current_option = option
+        self.schedule_update_ha_state()

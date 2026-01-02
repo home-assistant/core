@@ -76,11 +76,7 @@ class EnOceanLight(EnOceanEntity, LightEntity):
 
     @property
     def brightness(self) -> int | None:
-        """Brightness of the light.
-
-        This method is optional. Removing it indicates to Home Assistant
-        that brightness is not supported for this light.
-        """
+        """Brightness of the light."""
         return self._attr_brightness
 
     @property

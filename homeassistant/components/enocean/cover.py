@@ -43,10 +43,6 @@ async def async_setup_entry(
                     gateway=gateway,
                     device_class=gateway.cover_entities[entity_id].device_class,
                 ),
-                # EnOceanBinarySensor(
-                #     entity_id,
-                #     gateway=gateway,
-                #     device_class=)
             ]
         )
 

@@ -58,11 +58,6 @@ class EnOceanBinarySensor(EnOceanEntity, BinarySensorEntity):
         self._attr_device_class = device_class
         self.gateway.register_binary_sensor_callback(entity_id, self.update)
 
-    # @property
-    # def device_class(self) -> BinarySensorDeviceClass | None:
-    #     """Return the class of this sensor."""
-    #     return self._attr_device_class
-
     def update(self, is_on: bool) -> None:
         """Update the binary sensor state."""
         self._attr_is_on = is_on

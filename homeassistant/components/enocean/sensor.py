@@ -9,8 +9,8 @@ from homeassistant_enocean.entity_properties import HomeAssistantEntityPropertie
 from homeassistant_enocean.gateway import EnOceanHomeAssistantGateway
 
 from homeassistant.components.sensor import (
+    RestoreSensor,
     SensorDeviceClass,
-    SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
@@ -102,14 +102,19 @@ async def async_setup_entry(
                     gateway=gateway,
                     device_class=properties.device_class,
                     state_class=properties.state_class,
-                    native_unit_of_measurement=properties.native_unit_of_measurement,
+                    native_unit_of_measurement=properties.native_unit_of_measurement
+                    if properties.device_class != SensorDeviceClass.ENUM
+                    else None,
                     entity_category=properties.entity_category,
+                    options=properties.options
+                    if properties.device_class == SensorDeviceClass.ENUM
+                    else None,
                 )
             ]
         )
 
 
-class EnOceanSensor(EnOceanEntity, SensorEntity):
+class EnOceanSensor(EnOceanEntity, RestoreSensor):
     """Representation of EnOcean switches."""
 
     def __init__(
@@ -120,6 +125,7 @@ class EnOceanSensor(EnOceanEntity, SensorEntity):
         entity_category: str | None = None,
         state_class: SensorStateClass | None = None,
         native_unit_of_measurement: str | None = None,
+        options: list[str] | None = None,
     ) -> None:
         """Initialize the EnOcean switch."""
         super().__init__(
@@ -130,7 +136,15 @@ class EnOceanSensor(EnOceanEntity, SensorEntity):
         )
         self._attr_state_class = state_class
         self._attr_native_unit_of_measurement = native_unit_of_measurement
+        self._attr_options = options
         self.gateway.register_sensor_callback(self.enocean_entity_id, self.update)
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+
+        # if (last_state := await self.async_get_last_sensor_data()) is not None:
+        #   self._attr_native_value = last_state.native_value
 
     def update(self, value: float | datetime) -> None:
         """Update the sensor state."""

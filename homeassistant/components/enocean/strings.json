@@ -151,6 +151,12 @@
       },
       "pairing_timeout": {
         "name": "Pairing mode timeout"
+      },
+      "device_brightness": {
+        "name": "Brightness"
+      },
+      "dimming_range": {
+        "name": "Dimming range"
       }
     },
     "switch": {

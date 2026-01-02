@@ -1,10 +1,10 @@
-"""Support for EnOcean buttons."""
+"""Support for EnOcean numbers."""
 
 from homeassistant_enocean.entity_id import EnOceanEntityID
 from homeassistant_enocean.entity_properties import HomeAssistantEntityProperties
 from homeassistant_enocean.gateway import EnOceanHomeAssistantGateway
 
-from homeassistant.components.number import NumberEntity
+from homeassistant.components.number import RestoreNumber
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -37,7 +37,7 @@ async def async_setup_entry(
         )
 
 
-class EnOceanNumber(EnOceanEntity, NumberEntity):
+class EnOceanNumber(EnOceanEntity, RestoreNumber):
     """Representation of an EnOcean number entity."""
 
     def __init__(
@@ -61,9 +61,18 @@ class EnOceanNumber(EnOceanEntity, NumberEntity):
         self._attr_native_step = native_step or 1.0
         self._attr_native_value = native_value or 0.0
 
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+
+        if (last_state := await self.async_get_last_number_data()) is not None:
+            self.gateway.set_number_value(
+                self.enocean_entity_id, last_state.native_value
+            )
+            self._attr_native_value = last_state.native_value
+
     def set_native_value(self, value: float) -> None:
         """Update the current value."""
-        # needs to be implemented
         self.gateway.set_number_value(self.enocean_entity_id, value)
         self._attr_native_value = value
         self.schedule_update_ha_state()

@@ -7,7 +7,6 @@ from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.cover import CoverDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.switch import SwitchDeviceClass
-from homeassistant.config_entries import _LOGGER
 from homeassistant.const import EntityCategory
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
@@ -49,18 +48,6 @@ class EnOceanEntity(Entity):
         self.__enocean_entity_id: EnOceanEntityID = enocean_entity_id
         self.__gateway: EnOceanHomeAssistantGateway = gateway
 
-    async def async_added_to_hass(self) -> None:
-        """Get gateway ID and register callback."""
-        _LOGGER.warning(
-            "Unique_id: %s, device_id: %s, entity_name: %s, Friendly_name: %s",
-            self.unique_id,
-            self.gateway.get_device_properties(
-                self.enocean_entity_id.device_address
-            ).device_name,
-            self.name,
-            self._friendly_name_internal(),
-        )
-
     @property
     def unique_id(self) -> str:
         """Return a unique ID for this entity."""
@@ -85,7 +72,6 @@ class EnOceanEntity(Entity):
         )
 
         if self.gateway.chip_id == self.enocean_entity_id.device_address:
-            # don't create a device info for the gateway itself
             return DeviceInfo(
                 {
                     "identifiers": {
