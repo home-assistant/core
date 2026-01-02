@@ -17,8 +17,7 @@ from homeassistant.const import UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import HypontechConfigEntry
-from .coordinator import HypontechDataCoordinator
+from .coordinator import HypontechConfigEntry, HypontechDataCoordinator
 from .entity import HypontechEntity
 
 
@@ -88,4 +87,4 @@ class HypontechSensorWithDescription(HypontechEntity, SensorEntity):
     @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(self.coordinator.data.overview_data)
+        return self.entity_description.value_fn(self.coordinator.data)

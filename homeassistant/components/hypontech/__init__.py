@@ -4,17 +4,14 @@ from __future__ import annotations
 
 from hyponcloud import AuthenticationError, HyponCloud
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .coordinator import HypontechData, HypontechDataCoordinator
+from .coordinator import HypontechConfigEntry, HypontechData, HypontechDataCoordinator
 
 _PLATFORMS: list[Platform] = [Platform.SENSOR]
-
-type HypontechConfigEntry = ConfigEntry[HypontechData]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: HypontechConfigEntry) -> bool:
