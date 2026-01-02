@@ -28,14 +28,16 @@ class HDFurySelectEntityDescription(SelectEntityDescription):
 SELECT_PORTS: tuple[HDFurySelectEntityDescription, ...] = (
     HDFurySelectEntityDescription(
         key="portseltx0",
-        translation_key="portseltx0",
+        translation_key="portseltx",
+        translation_placeholders={"port": "0"},
         options=list(TX0_INPUT_PORTS.values()),
         label_map=TX0_INPUT_PORTS,
         reverse_map={v: k for k, v in TX0_INPUT_PORTS.items()},
     ),
     HDFurySelectEntityDescription(
         key="portseltx1",
-        translation_key="portseltx1",
+        translation_key="portseltx",
+        translation_placeholders={"port": "1"},
         options=list(TX1_INPUT_PORTS.values()),
         label_map=TX1_INPUT_PORTS,
         reverse_map={v: k for k, v in TX1_INPUT_PORTS.items()},

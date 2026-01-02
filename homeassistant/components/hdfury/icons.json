@@ -4,10 +4,7 @@
       "opmode": {
         "default": "mdi:cogs"
       },
-      "portseltx0": {
-        "default": "mdi:hdmi-port"
-      },
-      "portseltx1": {
+      "portseltx": {
         "default": "mdi:hdmi-port"
       }
     }

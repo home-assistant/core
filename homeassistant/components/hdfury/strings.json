@@ -24,11 +24,8 @@
       "opmode": {
         "name": "Operation Mode"
       },
-      "portseltx0": {
-        "name": "Port Select TX0"
-      },
-      "portseltx1": {
-        "name": "Port Select TX1"
+      "portseltx": {
+        "name": "Port Select TX{port}"
       }
     }
   },
