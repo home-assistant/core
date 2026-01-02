@@ -1,6 +1,5 @@
 """Config flow for HDFury Integration."""
 
-import logging
 from typing import Any
 
 from aiohttp import ClientError
@@ -12,8 +11,6 @@ from homeassistant.const import CONF_HOST
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class HDFuryConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -52,8 +49,7 @@ class HDFuryConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             data = await client.get_board()
-        except (HDFuryError, TimeoutError, ClientError) as error:
-            _LOGGER.error("%s", error)
+        except (HDFuryError, TimeoutError, ClientError):
             return None
 
         return data["serial"]

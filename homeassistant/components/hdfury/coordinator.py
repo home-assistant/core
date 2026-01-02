@@ -55,7 +55,6 @@ class HDFuryCoordinator(DataUpdateCoordinator[HDFuryData]):
             info = await self.client.get_info()
             config = await self.client.get_config()
         except HDFuryError as error:
-            _LOGGER.error("%s", error)
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="communication_error",

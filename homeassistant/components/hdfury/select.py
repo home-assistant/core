@@ -2,7 +2,6 @@
 
 from abc import abstractmethod
 from dataclasses import dataclass
-import logging
 
 from hdfury import OPERATION_MODES, TX0_INPUT_PORTS, TX1_INPUT_PORTS, HDFuryError
 
@@ -14,8 +13,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DOMAIN
 from .coordinator import HDFuryConfigEntry, HDFuryCoordinator
 from .entity import HDFuryEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -103,7 +100,6 @@ class HDFuryBaseSelect(HDFuryEntity, SelectEntity):
         try:
             await self._set_option(raw_value)
         except HDFuryError as error:
-            _LOGGER.error("%s", error)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
