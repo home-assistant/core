@@ -5,7 +5,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
 from .coordinator import HDFuryCoordinator
 
 
@@ -27,7 +26,6 @@ class HDFuryEntity(CoordinatorEntity[HDFuryCoordinator]):
             f"{coordinator.data.board['serial']}_{entity_description.key}"
         )
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.data.board["serial"])},
             name=f"HDFury {coordinator.data.board['hostname']}",
             manufacturer="HDFury",
             model=coordinator.data.board["hostname"].split("-")[0],
