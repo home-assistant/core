@@ -80,19 +80,14 @@ class SystemNexa2DataUpdateCoordinator(DataUpdateCoordinator[SystemNexa2Data]):
         self._unavailable_logged = False
         self.data = SystemNexa2Data()
 
-    async def async_setup(self, hass: HomeAssistant) -> None:
+    async def async_setup(self) -> None:
         """Set up the coordinator and initialize the device connection."""
         try:
             self.device = await Device.initiate_device(
                 host=self.config_entry.data[CONF_HOST],
                 on_update=self._async_handle_update,
-                session=async_get_clientsession(hass),
+                session=async_get_clientsession(self.hass),
             )
-
-            self.data.available = False
-            self.data.unique_id = self.device.info_data.unique_id
-            self.data.info_data = self.device.info_data
-            self.data.update_settings(self.device.settings)
 
         except DeviceInitializationError as e:
             _LOGGER.error(
@@ -104,6 +99,11 @@ class SystemNexa2DataUpdateCoordinator(DataUpdateCoordinator[SystemNexa2Data]):
                 translation_key="failed_to_initiate_connection",
                 translation_placeholders={CONF_HOST: self.config_entry.data[CONF_HOST]},
             ) from e
+
+        self.data.available = False
+        self.data.unique_id = self.device.info_data.unique_id
+        self.data.info_data = self.device.info_data
+        self.data.update_settings(self.device.settings)
         await self.device.connect()
 
     async def _async_handle_update(self, event: UpdateEvent) -> None:

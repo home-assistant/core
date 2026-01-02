@@ -82,6 +82,37 @@ def mock_system_nexa_2_device_timeout() -> Generator[MagicMock]:
         )
         device.settings = []
         device.get_info = AsyncMock()
+        device.get_info.side_effect = TimeoutError
+        device.connect = AsyncMock()
+        device.disconnect = AsyncMock()
+        mock_device.is_device_supported = MagicMock(return_value=(True, ""))
+        mock_device.initiate_device = AsyncMock(return_value=device)
+
+        yield mock_device
+
+
+@pytest.fixture
+def mock_system_nexa_2_device_unknown_error() -> Generator[MagicMock]:
+    """Mock an System Nexa 2 device with connection issues."""
+    with (
+        patch("homeassistant.components.systemnexa2.coordinator.Device") as mock_device,
+        patch(
+            "homeassistant.components.systemnexa2.config_flow.Device", new=mock_device
+        ),
+    ):
+        device = mock_device.return_value
+        device.info_data = InformationData(
+            name="Test Device",
+            model="Test Model",
+            unique_id="test_device_id",
+            sw_version="Test Model Version",
+            hw_version="Test HW Version",
+            wifi_dbm=-50,
+            wifi_ssid="Test WiFi SSID",
+            dimmable=False,
+        )
+        device.settings = []
+        device.get_info = AsyncMock()
         device.get_info.side_effect = RuntimeError
         device.connect = AsyncMock()
         device.disconnect = AsyncMock()

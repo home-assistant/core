@@ -1,10 +1,7 @@
 """The System Nexa 2 integration."""
 
-import voluptuous as vol
-
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, MANUFACTURER, PLATFORMS
 from .coordinator import (
@@ -13,22 +10,11 @@ from .coordinator import (
     SystemNexa2RuntimeData,
 )
 
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema({})},
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-async def async_setup(hass: HomeAssistant, _config: ConfigType) -> bool:
-    """Set up the component from configuration.yaml."""
-    hass.data.setdefault(DOMAIN, {})
-    return True
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: SystemNexa2ConfigEntry) -> bool:
     """Set up from a config entry."""
     coordinator = SystemNexa2DataUpdateCoordinator(hass, config_entry=entry)
-    await coordinator.async_setup(hass)
+    await coordinator.async_setup()
 
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(

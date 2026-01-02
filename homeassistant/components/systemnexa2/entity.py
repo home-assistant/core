@@ -10,7 +10,6 @@ from .coordinator import SystemNexa2DataUpdateCoordinator
 class SystemNexa2Entity(CoordinatorEntity[SystemNexa2DataUpdateCoordinator]):
     """Base entity class for SystemNexa2 devices."""
 
-    _attr_should_poll = False
     _attr_has_entity_name = True
 
     def __init__(
@@ -39,8 +38,3 @@ class SystemNexa2Entity(CoordinatorEntity[SystemNexa2DataUpdateCoordinator]):
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self.coordinator.data.available
-
-    @property
-    def should_poll(self) -> bool:
-        """Disable polling when using coordinator."""
-        return False
