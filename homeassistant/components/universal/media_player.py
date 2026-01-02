@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from copy import copy
+import datetime
 from typing import Any
 
 import voluptuous as vol
@@ -315,7 +316,15 @@ class UniversalMediaPlayer(MediaPlayerEntity):
     @property
     def assumed_state(self) -> bool:
         """Return True if unable to access real state of the entity."""
-        return self._child_attr(ATTR_ASSUMED_STATE)
+        attr = self._override_or_child_attr(ATTR_ASSUMED_STATE)
+
+        if isinstance(attr, bool):
+            return attr
+
+        if isinstance(attr, str):
+            return attr.lower() == "true"
+
+        return False
 
     @property
     def state(self):
@@ -348,19 +357,22 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         return self._override_or_child_attr(ATTR_MEDIA_VOLUME_MUTED) in [True, STATE_ON]
 
     @property
-    def media_content_id(self):
+    def media_content_id(self) -> str | None:
         """Return the content ID of current playing media."""
-        return self._child_attr(ATTR_MEDIA_CONTENT_ID)
+        return self._override_or_child_attr(ATTR_MEDIA_CONTENT_ID)
 
     @property
-    def media_content_type(self):
+    def media_content_type(self) -> MediaType | str | None:
         """Return the content type of current playing media."""
-        return self._child_attr(ATTR_MEDIA_CONTENT_TYPE)
+        return self._override_or_child_attr(ATTR_MEDIA_CONTENT_TYPE)
 
     @property
-    def media_duration(self):
+    def media_duration(self) -> int | None:
         """Return the duration of current playing media in seconds."""
-        return self._child_attr(ATTR_MEDIA_DURATION)
+        try:
+            return int(self._override_or_child_attr(ATTR_MEDIA_DURATION))
+        except (TypeError, ValueError):
+            return None
 
     @property
     def media_image_url(self):
@@ -378,64 +390,67 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         return self.media_image_url
 
     @property
-    def media_title(self):
+    def media_title(self) -> str | None:
         """Title of current playing media."""
-        return self._child_attr(ATTR_MEDIA_TITLE)
+        return self._override_or_child_attr(ATTR_MEDIA_TITLE)
 
     @property
-    def media_artist(self):
+    def media_artist(self) -> str | None:
         """Artist of current playing media (Music track only)."""
-        return self._child_attr(ATTR_MEDIA_ARTIST)
+        return self._override_or_child_attr(ATTR_MEDIA_ARTIST)
 
     @property
-    def media_album_name(self):
+    def media_album_name(self) -> str | None:
         """Album name of current playing media (Music track only)."""
-        return self._child_attr(ATTR_MEDIA_ALBUM_NAME)
+        return self._override_or_child_attr(ATTR_MEDIA_ALBUM_NAME)
 
     @property
-    def media_album_artist(self):
+    def media_album_artist(self) -> str | None:
         """Album artist of current playing media (Music track only)."""
-        return self._child_attr(ATTR_MEDIA_ALBUM_ARTIST)
+        return self._override_or_child_attr(ATTR_MEDIA_ALBUM_ARTIST)
 
     @property
-    def media_track(self):
+    def media_track(self) -> int | None:
         """Track number of current playing media (Music track only)."""
-        return self._child_attr(ATTR_MEDIA_TRACK)
+        try:
+            return int(self._override_or_child_attr(ATTR_MEDIA_TRACK))
+        except (TypeError, ValueError):
+            return None
 
     @property
-    def media_series_title(self):
+    def media_series_title(self) -> str | None:
         """Return the title of the series of current playing media (TV)."""
-        return self._child_attr(ATTR_MEDIA_SERIES_TITLE)
+        return self._override_or_child_attr(ATTR_MEDIA_SERIES_TITLE)
 
     @property
-    def media_season(self):
+    def media_season(self) -> str | None:
         """Season of current playing media (TV Show only)."""
-        return self._child_attr(ATTR_MEDIA_SEASON)
+        return self._override_or_child_attr(ATTR_MEDIA_SEASON)
 
     @property
-    def media_episode(self):
+    def media_episode(self) -> str | None:
         """Episode of current playing media (TV Show only)."""
-        return self._child_attr(ATTR_MEDIA_EPISODE)
+        return self._override_or_child_attr(ATTR_MEDIA_EPISODE)
 
     @property
-    def media_channel(self):
+    def media_channel(self) -> str | None:
         """Channel currently playing."""
-        return self._child_attr(ATTR_MEDIA_CHANNEL)
+        return self._override_or_child_attr(ATTR_MEDIA_CHANNEL)
 
     @property
-    def media_playlist(self):
+    def media_playlist(self) -> str | None:
         """Title of Playlist currently playing."""
-        return self._child_attr(ATTR_MEDIA_PLAYLIST)
+        return self._override_or_child_attr(ATTR_MEDIA_PLAYLIST)
 
     @property
-    def app_id(self):
+    def app_id(self) -> str | None:
         """ID of the current running app."""
-        return self._child_attr(ATTR_APP_ID)
+        return self._override_or_child_attr(ATTR_APP_ID)
 
     @property
-    def app_name(self):
+    def app_name(self) -> str | None:
         """Name of the current running app."""
-        return self._child_attr(ATTR_APP_NAME)
+        return self._override_or_child_attr(ATTR_APP_NAME)
 
     @property
     def sound_mode(self):
@@ -539,14 +554,34 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         return {ATTR_ACTIVE_CHILD: active_child.entity_id} if active_child else {}
 
     @property
-    def media_position(self):
+    def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
-        return self._child_attr(ATTR_MEDIA_POSITION)
+        try:
+            return int(self._override_or_child_attr(ATTR_MEDIA_POSITION))
+        except (TypeError, ValueError):
+            return None
 
     @property
-    def media_position_updated_at(self):
+    def media_position_updated_at(self) -> datetime.datetime | None:
         """When was the position of the current playing media valid."""
-        return self._child_attr(ATTR_MEDIA_POSITION_UPDATED_AT)
+        attr = self._override_or_child_attr(ATTR_MEDIA_POSITION_UPDATED_AT)
+
+        if isinstance(attr, datetime.datetime):
+            return attr
+
+        if isinstance(attr, str):
+            try:
+                return datetime.datetime.fromisoformat(attr)
+            except ValueError:
+                return None
+
+        if isinstance(attr, (int, float)):
+            try:
+                return datetime.datetime.fromtimestamp(attr)
+            except (OSError, OverflowError, ValueError):
+                return None
+
+        return None
 
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
