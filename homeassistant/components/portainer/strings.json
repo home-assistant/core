@@ -65,9 +65,6 @@
       "images_prune": {
         "name": "Prune unused images"
       },
-      "prune_endpoint": {
-        "name": "Prune endpoint"
-      },
       "restart_container": {
         "name": "Restart container"
       }
