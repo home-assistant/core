@@ -8,14 +8,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import NRGkickAPI
 from .coordinator import NRGkickConfigEntry, NRGkickDataUpdateCoordinator
-from .entity import NRGkickEntity
-
-# Re-export for backward compatibility with other modules.
-__all__ = [
-    "NRGkickConfigEntry",
-    "NRGkickDataUpdateCoordinator",
-    "NRGkickEntity",
-]
 
 PLATFORMS: list[Platform] = [
     Platform.SENSOR,
@@ -39,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NRGkickConfigEntry) -> b
     # Set up platforms.
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # Register update listener for options changes.
+    # Register update listener for config entry changes (e.g., host updates from discovery).
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
     return True

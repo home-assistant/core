@@ -28,7 +28,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import NRGkickConfigEntry, NRGkickDataUpdateCoordinator, NRGkickEntity
 from .const import (
     CELLULAR_MODE_MAP,
     CONNECTOR_TYPE_MAP,
@@ -39,6 +38,8 @@ from .const import (
     STATUS_MAP,
     WARNING_CODE_MAP,
 )
+from .coordinator import NRGkickConfigEntry, NRGkickDataUpdateCoordinator
+from .entity import NRGkickEntity
 
 PARALLEL_UPDATES = 0
 

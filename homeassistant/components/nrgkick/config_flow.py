@@ -19,6 +19,7 @@ from .api import (
     NRGkickAPI,
     NRGkickApiClientAuthenticationError,
     NRGkickApiClientCommunicationError,
+    NRGkickApiClientError,
 )
 from .const import DOMAIN
 
@@ -56,7 +57,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     }
 
 
-# pylint: disable=abstract-method  # is_matching is not required for HA config flows
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for NRGkick."""
 
@@ -66,8 +66,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._discovered_host: str | None = None
         self._discovered_name: str | None = None
-
-    # pylint: disable=unused-argument
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -81,8 +79,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except NRGkickApiClientCommunicationError:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
+            except NRGkickApiClientError:
+                _LOGGER.exception("Unexpected error")
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(info["serial"])
@@ -153,8 +151,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except NRGkickApiClientCommunicationError:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
+            except NRGkickApiClientError:
+                _LOGGER.exception("Unexpected error")
                 errors["base"] = "unknown"
             else:
                 # Create entry directly - HA will show device/area assignment UI.
@@ -178,7 +176,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
+        self, _entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauthentication."""
         return await self.async_step_reauth_confirm()
@@ -209,8 +207,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except NRGkickApiClientCommunicationError:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception during reauthentication")
+            except NRGkickApiClientError:
+                _LOGGER.exception("Unexpected error during reauthentication")
                 errors["base"] = "unknown"
             else:
                 return self.async_update_reload_and_abort(
@@ -261,8 +259,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             except NRGkickApiClientCommunicationError:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception during reconfiguration")
+            except NRGkickApiClientError:
+                _LOGGER.exception("Unexpected error during reconfiguration")
                 errors["base"] = "unknown"
             else:
                 return self.async_update_reload_and_abort(

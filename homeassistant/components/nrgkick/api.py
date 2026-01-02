@@ -10,8 +10,6 @@ import logging
 from typing import Any, TypeVar, cast
 
 import aiohttp
-
-# pylint: disable=import-error
 from nrgkick_api import (
     NRGkickAPI as LibraryAPI,
     NRGkickAuthenticationError,
@@ -21,9 +19,6 @@ from nrgkick_api import (
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
-
-# pylint: enable=import-error
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,7 +80,7 @@ class NRGkickAPI:
     async def _wrap_call(
         self,
         coro: Any,
-        return_type: type[_T],  # pylint: disable=unused-argument
+        return_type: type[_T],
     ) -> _T:
         """Wrap library calls with Home Assistant exception translation.
 
@@ -103,6 +98,12 @@ class NRGkickAPI:
         """
         try:
             result = await coro
+            if not isinstance(result, return_type):
+                _LOGGER.debug(
+                    "Unexpected return type %s (expected %s)",
+                    type(result),
+                    return_type,
+                )
             return cast(_T, result)
         except NRGkickAuthenticationError as err:
             _LOGGER.warning(
@@ -118,6 +119,17 @@ class NRGkickAPI:
         except NRGkickConnectionError as err:
             _LOGGER.error(
                 "Communication error with NRGkick device at %s: %s",
+                self.host,
+                err,
+            )
+            raise NRGkickApiClientCommunicationError(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
+        except (TimeoutError, aiohttp.ClientError, OSError) as err:
+            _LOGGER.error(
+                "Unexpected communication error with NRGkick device at %s: %s",
                 self.host,
                 err,
             )

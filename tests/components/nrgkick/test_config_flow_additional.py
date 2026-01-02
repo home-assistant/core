@@ -6,7 +6,10 @@ from ipaddress import ip_address
 from unittest.mock import patch
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.nrgkick.api import NRGkickApiClientAuthenticationError
+from homeassistant.components.nrgkick.api import (
+    NRGkickApiClientAuthenticationError,
+    NRGkickApiClientError,
+)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -80,7 +83,8 @@ async def test_reauth_flow_unknown_exception(
         data=entry.data,
     )
 
-    mock_nrgkick_api.test_connection.side_effect = Exception("Unexpected error")
+    mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientError
+    mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientError
 
     with patch(
         "homeassistant.components.nrgkick.config_flow.NRGkickAPI",
@@ -170,7 +174,7 @@ async def test_zeroconf_discovery_unknown_exception(
         data=discovery_info,
     )
 
-    mock_nrgkick_api.test_connection.side_effect = Exception("Unexpected error")
+    mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientError
 
     with patch(
         "homeassistant.components.nrgkick.config_flow.NRGkickAPI",

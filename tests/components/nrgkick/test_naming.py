@@ -2,8 +2,8 @@
 
 from unittest.mock import MagicMock, patch
 
-from homeassistant.components.nrgkick import NRGkickEntity
 from homeassistant.components.nrgkick.const import DOMAIN
+from homeassistant.components.nrgkick.entity import NRGkickEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 

@@ -9,6 +9,7 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.nrgkick.api import (
     NRGkickApiClientAuthenticationError,
     NRGkickApiClientCommunicationError,
+    NRGkickApiClientError,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -134,7 +135,7 @@ async def test_form_unknown_exception(hass: HomeAssistant, mock_nrgkick_api) -> 
         "nrgkick", context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_nrgkick_api.test_connection.side_effect = Exception("Unexpected error")
+    mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientError
 
     with patch(
         "homeassistant.components.nrgkick.config_flow.NRGkickAPI",
