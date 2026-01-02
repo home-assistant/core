@@ -4,6 +4,7 @@
   "codeowners": ["@glenndehaan"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/hdfury",
+  "integration_type": "device",
   "iot_class": "local_polling",
   "quality_scale": "bronze",
   "requirements": ["hdfury==1.3.0"]
