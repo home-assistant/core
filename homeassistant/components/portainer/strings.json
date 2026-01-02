@@ -68,6 +68,12 @@
       "architecture": {
         "name": "Architecture"
       },
+      "container_disk_usage_reclaimable": {
+        "name": "Container disk usage reclaimable"
+      },
+      "container_disk_usage_total_size": {
+        "name": "Container disk usage total size"
+      },
       "containers_count": {
         "name": "Container count"
       },
@@ -92,6 +98,12 @@
       "image": {
         "name": "Image"
       },
+      "image_disk_usage_reclaimable": {
+        "name": "Image disk usage reclaimable"
+      },
+      "image_disk_usage_total_size": {
+        "name": "Image disk usage total size"
+      },
       "images_count": {
         "name": "Image count"
       },
@@ -115,6 +127,9 @@
       },
       "operating_system_version": {
         "name": "Operating system version"
+      },
+      "volume_disk_usage_total_size": {
+        "name": "Volume disk usage total size"
       }
     },
     "switch": {
