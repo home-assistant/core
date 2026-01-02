@@ -86,7 +86,6 @@ def api_call[_T: VelbusEntity, **_P](
                 translation_domain=DOMAIN,
                 translation_key="api_call_failed",
                 translation_placeholders={
-                    "service": func.__name__,
                     "entity": entity_name,
                 },
             ) from exc
