@@ -1,5 +1,6 @@
 """Select platform for HDFury Integration."""
 
+from abc import abstractmethod
 from dataclasses import dataclass
 import logging
 
@@ -120,10 +121,9 @@ class HDFuryBaseSelect(HDFuryEntity, SelectEntity):
         # Trigger HA state refresh
         await self.coordinator.async_request_refresh()
 
+    @abstractmethod
     async def _set_option(self, value: str) -> None:
         """Apply value to device."""
-
-        raise NotImplementedError
 
 
 class HDFuryPortSelect(HDFuryBaseSelect):
