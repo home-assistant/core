@@ -5,6 +5,7 @@ import logging
 import socket
 from typing import Any
 
+import aiohttp
 from sn2.device import Device
 import voluptuous as vol
 
@@ -83,30 +84,36 @@ class SystemNexa2ConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             info = await temp_dev.get_info()
-            device_id = info.information.unique_id
-            device_model = info.information.model
-            device_version = info.information.sw_version
-            if device_id is None or device_model is None or device_version is None:
-                return self.async_abort(
-                    reason="unsupported_model",
-                    description_placeholders={
-                        ATTR_MODEL: str(device_model),
-                        ATTR_SW_VERSION: str(device_version),
-                    },
-                )
-
-            self._discovered_device = _DiscoveryInfo(
-                name=info.information.name or "Unknown Name",
-                host=host_or_ip,
-                device_id=device_id,
-                model=device_model,
-                device_version=device_version,
-            )
-        except Exception:  # noqa: BLE001
+        except (TimeoutError, aiohttp.ClientError):
             return self.async_abort(
                 reason="no_connection", description_placeholders={CONF_HOST: host_or_ip}
             )
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return self.async_abort(
+                reason="unknown_connection_error",
+                description_placeholders={CONF_HOST: host_or_ip},
+            )
 
+        device_id = info.information.unique_id
+        device_model = info.information.model
+        device_version = info.information.sw_version
+        if device_id is None or device_model is None or device_version is None:
+            return self.async_abort(
+                reason="unsupported_model",
+                description_placeholders={
+                    ATTR_MODEL: str(device_model),
+                    ATTR_SW_VERSION: str(device_version),
+                },
+            )
+
+        self._discovered_device = _DiscoveryInfo(
+            name=info.information.name or "Unknown Name",
+            host=host_or_ip,
+            device_id=device_id,
+            model=device_model,
+            device_version=device_version,
+        )
         await self._async_validate_discovered_device()
 
         return await self._async_create_device_entry()
@@ -191,53 +198,4 @@ class SystemNexa2ConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_MODEL: self._discovered_device.model,
                 CONF_DEVICE_ID: self._discovered_device.device_id,
             },
-        )
-
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reconfiguration of the integration."""
-        entry = self._get_reconfigure_entry()
-
-        if user_input is not None:
-            host = user_input[CONF_HOST]
-            if not _is_valid_host(host):
-                return self.async_show_form(
-                    step_id="reconfigure",
-                    data_schema=vol.Schema(
-                        {vol.Required(CONF_HOST, default=host): str}
-                    ),
-                    errors={"base": "invalid_host"},
-                )
-
-            try:
-                temp_dev = await Device.initiate_device(
-                    host=host,
-                    session=async_get_clientsession(self.hass),
-                )
-                info = await temp_dev.get_info()
-                device_id = info.information.unique_id
-
-                # Verify it's the same device
-                if device_id != entry.unique_id:
-                    return self.async_abort(reason="wrong_device")
-
-                return self.async_update_reload_and_abort(
-                    entry,
-                    data={**entry.data, CONF_HOST: host},
-                )
-            except Exception:  # noqa: BLE001
-                return self.async_show_form(
-                    step_id="reconfigure",
-                    data_schema=vol.Schema(
-                        {vol.Required(CONF_HOST, default=host): str}
-                    ),
-                    errors={"base": "cannot_connect"},
-                )
-
-        return self.async_show_form(
-            step_id="reconfigure",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_HOST, default=entry.data[CONF_HOST]): str}
-            ),
         )

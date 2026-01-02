@@ -34,7 +34,7 @@ async def test_coordinator_setup_failure(
     coordinator = SystemNexa2DataUpdateCoordinator(hass, mock_config_entry)
 
     with pytest.raises(ConfigEntryNotReady):
-        await coordinator.async_setup(hass)
+        await coordinator.async_setup()
 
 
 @pytest.mark.usefixtures("mock_system_nexa_2_device")
@@ -45,7 +45,7 @@ async def test_coordinator_connection_status(
 ) -> None:
     """Test coordinator handles connection status updates."""
     coordinator = SystemNexa2DataUpdateCoordinator(hass, mock_config_entry)
-    await coordinator.async_setup(hass)
+    await coordinator.async_setup()
 
     # Set up initial data so device can become available
     coordinator.data.on_off_settings = {}
@@ -71,7 +71,7 @@ async def test_coordinator_state_change(
 ) -> None:
     """Test coordinator handles state change updates."""
     coordinator = SystemNexa2DataUpdateCoordinator(hass, mock_config_entry)
-    await coordinator.async_setup(hass)
+    await coordinator.async_setup()
 
     # Simulate state change
     await coordinator._async_handle_update(StateChange(state=0.5))
@@ -86,7 +86,7 @@ async def test_coordinator_settings_update(
 ) -> None:
     """Test coordinator handles settings updates."""
     coordinator = SystemNexa2DataUpdateCoordinator(hass, mock_config_entry)
-    await coordinator.async_setup(hass)
+    await coordinator.async_setup()
 
     # Create a mock OnOffSetting that passes isinstance check
     mock_setting = MagicMock(spec=OnOffSetting)
