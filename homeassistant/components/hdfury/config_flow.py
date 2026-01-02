@@ -52,7 +52,8 @@ class HDFuryConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             data = await client.get_board()
-            return data["serial"]
         except (HDFuryError, TimeoutError, ClientError) as error:
             _LOGGER.error("%s", error)
             return None
+
+        return data["serial"]
