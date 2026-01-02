@@ -129,10 +129,8 @@ class HDFuryPortSelect(HDFuryBaseSelect):
         if tx0 is None or tx1 is None:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="data_error",
-                translation_placeholders={
-                    "error": f"TX states incomplete: tx0={tx0}, tx1={tx1}"
-                },
+                translation_key="tx_state_error",
+                translation_placeholders={"details": f"tx0={tx0}, tx1={tx1}"},
             )
 
         await self.coordinator.client.set_port_selection(tx0, tx1)
