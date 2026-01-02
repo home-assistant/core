@@ -118,7 +118,7 @@ class MelCloudDeviceUpdateCoordinator(DataUpdateCoordinator[MelCloudDevice]):
             config_entry=config_entry,
             name=f"{DOMAIN}_{device.name}",
             update_interval=timedelta(minutes=DEFAULT_UPDATE_INTERVAL),
-            always_update=False,
+            always_update=True,  # Must be True since we return the same wrapper object
             request_refresh_debouncer=Debouncer(
                 hass,
                 _LOGGER,
