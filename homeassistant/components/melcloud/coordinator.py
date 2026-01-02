@@ -15,6 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
@@ -195,6 +196,7 @@ async def mel_devices_setup(
 
     # Create per-device coordinators
     coordinators: dict[str, list[MelCloudDeviceUpdateCoordinator]] = {}
+    device_registry = dr.async_get(hass)
     for device_type, devices in all_devices.items():
         coordinators[device_type] = []
         for device in devices:
@@ -202,5 +204,10 @@ async def mel_devices_setup(
             # Perform initial refresh for this device
             await coordinator.async_config_entry_first_refresh()
             coordinators[device_type].append(coordinator)
+            # Register parent device now so zone entities can reference it via via_device
+            device_registry.async_get_or_create(
+                config_entry_id=config_entry.entry_id,
+                **coordinator.mel_device.device_info,
+            )
 
     return coordinators
