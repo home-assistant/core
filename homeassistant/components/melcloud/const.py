@@ -3,6 +3,11 @@
 DOMAIN = "melcloud"
 
 CONF_POSITION = "position"
+CONF_SCAN_INTERVAL = "scan_interval"
+
+DEFAULT_SCAN_INTERVAL = 5  # minutes - conservative default to avoid rate limiting
+MIN_SCAN_INTERVAL = 1  # minutes
+MAX_SCAN_INTERVAL = 60  # minutes
 
 ATTR_STATUS = "status"
 ATTR_VANE_HORIZONTAL = "vane_horizontal"
