@@ -4,10 +4,10 @@ TO BE DELETED PRIOR TO OPENING PR
 see https://developers.home-assistant.io/docs/core/integration-quality-scale/checklist
 
 ## Bronze
-- [ ] `action-setup` - Service actions are registered in async_setup
-- [ ] `appropriate-polling` - If it's a polling integration, set an appropriate polling interval
+- [x] `action-setup` - Service actions are registered in async_setup
+- [x] `appropriate-polling` - If it's a polling integration, set an appropriate polling interval
 - [x] `brands` - Has branding assets available for the integration
-- [ ] `common-modules` - Place common patterns in common modules
+- [x] `common-modules` - Place common patterns in common modules
 - [ ] `config-flow-test-coverage` - Full test coverage for the config flow
 - [x] `config-flow` - Integration needs to be able to be set up via the UI
     - [x] Uses `data_description` to give context to fields
@@ -26,8 +26,8 @@ see https://developers.home-assistant.io/docs/core/integration-quality-scale/che
 - [x] `unique-config-entry` - Don't allow the same device or service to be able to be set up twice
 
 ## Silver
-- [ ] `action-exceptions` - Service actions raise exceptions when encountering failures
-- [ ] `config-entry-unloading` - Support config entry unloading
+- [x] `action-exceptions` - Service actions raise exceptions when encountering failures
+- [x] `config-entry-unloading` - Support config entry unloading
 - [ ] `docs-configuration-parameters` - The documentation describes all integration configuration options
 - [ ] `docs-installation-parameters` - The documentation describes all integration installation parameters
 - [ ] `entity-unavailable` - Mark entity unavailable if appropriate
