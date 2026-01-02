@@ -578,7 +578,7 @@ class BlockSleepingClimate(
                     UnitOfTemperature.FAHRENHEIT,
                 )
 
-        await self.set_state_full_path(target_t_enabled=1, target_t=f"{target_temp}")
+        await self.set_state_full_path(target_t_enabled=1, target_t=target_temp)
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
@@ -586,11 +586,11 @@ class BlockSleepingClimate(
             if isinstance(self.target_temperature, float):
                 self._last_target_temp = self.target_temperature
             await self.set_state_full_path(
-                target_t_enabled=1, target_t=f"{self._attr_min_temp}"
+                target_t_enabled=1, target_t=self._attr_min_temp
             )
         if hvac_mode == HVACMode.HEAT:
             await self.set_state_full_path(
-                target_t_enabled=1, target_t=f"{self._last_target_temp}"
+                target_t_enabled=1, target_t=self._last_target_temp
             )
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
@@ -600,9 +600,7 @@ class BlockSleepingClimate(
         if preset_index == 0:
             await self.set_state_full_path(schedule=0)
         else:
-            await self.set_state_full_path(
-                schedule=1, schedule_profile=f"{preset_index}"
-            )
+            await self.set_state_full_path(schedule=1, schedule_profile=preset_index)
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
