@@ -62,7 +62,7 @@
           "password": "Password for Basic Auth (optional).",
           "username": "Username for Basic Auth (optional)."
         },
-        "description": "Do you want to add the NRGkick device ({name}) to Home Assistant?"
+        "description": "Do you want to add the NRGkick device ({name}) at {device_ip} to Home Assistant?"
       }
     }
   },
