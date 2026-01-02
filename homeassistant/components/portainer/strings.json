@@ -68,6 +68,9 @@
       "architecture": {
         "name": "Architecture"
       },
+      "container_state": {
+        "name": "State"
+      },
       "containers_count": {
         "name": "Container count"
       },
