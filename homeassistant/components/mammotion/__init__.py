@@ -23,7 +23,6 @@ from pymammotion.http.http import MammotionHTTP
 from pymammotion.http.model.http import LoginResponseData, Response
 from pymammotion.http.model.response_factory import response_factory
 from pymammotion.mammotion.devices.mammotion import ConnectionPreference, Mammotion
-from pymammotion.utility.device_config import DeviceConfig
 from Tea.exceptions import UnretryableException
 
 from homeassistant.components import bluetooth
@@ -161,9 +160,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) ->
 
             await coordinator.async_restore_data()
 
-            device_config = DeviceConfig()
-            device_limits = device_config.get_best_default(device.product_key)
-
             if not use_wifi:
                 mammotion_device.preference = ConnectionPreference.BLUETOOTH
                 if cloud := mammotion_device.cloud:
@@ -176,7 +172,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) ->
                     name=device.device_name,
                     api=api,
                     coordinator=coordinator,
-                    device_limits=device_limits,
                     device=device,
                 )
             )
