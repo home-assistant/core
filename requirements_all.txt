@@ -1572,13 +1572,13 @@ nextcloudmonitor==1.5.1
 nextcord==3.1.0
 
 # homeassistant.components.nextdns
-nextdns==4.1.0
+nextdns==5.0.0
 
 # homeassistant.components.niko_home_control
 nhc==0.7.0
 
 # homeassistant.components.nibe_heatpump
-nibe==2.20.0
+nibe==2.21.0
 
 # homeassistant.components.nice_go
 nice-go==1.0.1
@@ -2318,7 +2318,7 @@ pyplaato==0.0.19
 pypoint==3.0.0
 
 # homeassistant.components.portainer
-pyportainer==1.0.21
+pyportainer==1.0.22
 
 # homeassistant.components.probe_plus
 pyprobeplus==1.1.2
@@ -2657,7 +2657,7 @@ pyvesync==3.3.3
 pyvizio==0.1.61
 
 # homeassistant.components.velux
-pyvlx==0.2.26
+pyvlx==0.2.27
 
 # homeassistant.components.volumio
 pyvolumio==0.1.5
