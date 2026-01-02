@@ -54,7 +54,7 @@ CONTAINER_SENSORS: tuple[PortainerContainerSensorEntityDescription, ...] = (
         translation_key="container_state",
         value_fn=lambda data: data.container.state,
         device_class=SensorDeviceClass.ENUM,
-        options=["running", "exited", "paused", "restarting", "created"],
+        options=["running", "exited", "paused", "restarting", "created", "dead"],
     ),
     PortainerContainerSensorEntityDescription(
         key="memory_limit",
