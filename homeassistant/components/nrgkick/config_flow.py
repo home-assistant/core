@@ -57,7 +57,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     }
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class NRGkickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for NRGkick."""
 
     VERSION = 1
@@ -126,7 +126,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovered_host = discovery_info.host
         # Fallback: device_name -> model_type -> "NRGkick".
         self._discovered_name = device_name or model_type or "NRGkick"
-        self.context["title_placeholders"] = {"name": self._discovered_name}
+        self.context["title_placeholders"] = {
+            "name": self._discovered_name or "NRGkick"
+        }
 
         # Proceed to confirmation step.
         return await self.async_step_zeroconf_confirm()
@@ -241,7 +243,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle reconfiguration confirmation."""
         errors: dict[str, str] = {}
-        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        entry_id = self.context.get("entry_id")
+        if not entry_id:
+            return self.async_abort(reason="reconfigure_failed")
+
+        entry = self.hass.config_entries.async_get_entry(entry_id)
 
         if entry is None:
             return self.async_abort(reason="reconfigure_failed")
