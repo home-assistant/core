@@ -21,10 +21,10 @@
   "entity": {
     "select": {
       "opmode": {
-        "name": "Operation Mode"
+        "name": "Operation mode"
       },
       "portseltx": {
-        "name": "Port Select TX{port}"
+        "name": "Port select TX{port}"
       }
     }
   },
