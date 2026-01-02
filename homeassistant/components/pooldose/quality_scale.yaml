@@ -63,7 +63,7 @@ rules:
   reconfiguration-flow: done
   repair-issues:
     status: exempt
-    comment: This integration does not provide repair issues, as it is designed for a single PoolDose device with a fixed configuration.
+    comment: Currently no user stories are known that would require repair issues for this integration.
   stale-devices:
     status: exempt
     comment: This integration does not support stale devices, as it is designed for a single PoolDose device with a fixed configuration.
