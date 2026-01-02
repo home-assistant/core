@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from typing import Any, cast
 
 from homeassistant.components.sensor import (
@@ -42,6 +42,25 @@ from .coordinator import NRGkickConfigEntry, NRGkickDataUpdateCoordinator
 from .entity import NRGkickEntity
 
 PARALLEL_UPDATES = 0
+
+
+def _map_code_to_translation_key(
+    value: StateType,
+    mapping: Mapping[int, str],
+    *,
+    default: str = "unknown",
+    normalize: Callable[[str], str] = str.lower,
+) -> str:
+    """Map numeric API codes to translation keys.
+
+    The NRGkick API typically returns `int` (including `IntEnum`) values for
+    code-like fields. For forward compatibility, also accept strings and
+    normalize them.
+    """
+    if isinstance(value, int):
+        return mapping.get(value, default)
+
+    return normalize(str(value))
 
 
 async def async_setup_entry(
@@ -88,10 +107,9 @@ async def async_setup_entry(
             device_class=None,
             state_class=None,
             value_path=["info", "connector", "type"],
-            value_fn=lambda x: (
-                CONNECTOR_TYPE_MAP.get(x, "unknown")
-                if isinstance(x, int)
-                else str(x).lower()
+            value_fn=lambda value: _map_code_to_translation_key(
+                value,
+                CONNECTOR_TYPE_MAP,
             ),
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
@@ -130,10 +148,12 @@ async def async_setup_entry(
             device_class=None,
             state_class=None,
             value_path=["info", "grid", "phases"],
-            value_fn=lambda x: (
-                GRID_PHASES_MAP.get(x, "unknown")
-                if isinstance(x, int)
-                else str(x).lower().replace(", ", "_").replace(" ", "_")
+            value_fn=lambda value: _map_code_to_translation_key(
+                value,
+                GRID_PHASES_MAP,
+                normalize=lambda text: text.lower()
+                .replace(", ", "_")
+                .replace(" ", "_"),
             ),
         ),
         # INFO - Network
@@ -181,10 +201,9 @@ async def async_setup_entry(
             device_class=None,
             state_class=None,
             value_path=["info", "cellular", "mode"],
-            value_fn=lambda x: (
-                CELLULAR_MODE_MAP.get(x, "unknown")
-                if isinstance(x, int)
-                else str(x).lower()
+            value_fn=lambda value: _map_code_to_translation_key(
+                value,
+                CELLULAR_MODE_MAP,
             ),
             enabled_default=False,
             entity_category=EntityCategory.DIAGNOSTIC,
@@ -600,8 +619,9 @@ async def async_setup_entry(
             device_class=None,
             state_class=None,
             value_path=["values", "general", "status"],
-            value_fn=lambda x: (
-                STATUS_MAP.get(x, "unknown") if isinstance(x, int) else str(x).lower()
+            value_fn=lambda value: _map_code_to_translation_key(
+                value,
+                STATUS_MAP,
             ),
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
@@ -620,10 +640,12 @@ async def async_setup_entry(
             device_class=None,
             state_class=None,
             value_path=["values", "general", "relay_state"],
-            value_fn=lambda x: (
-                RELAY_STATE_MAP.get(x, "unknown")
-                if isinstance(x, int)
-                else str(x).lower().replace(", ", "_").replace(" ", "_")
+            value_fn=lambda value: _map_code_to_translation_key(
+                value,
+                RELAY_STATE_MAP,
+                normalize=lambda text: text.lower()
+                .replace(", ", "_")
+                .replace(" ", "_"),
             ),
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
@@ -642,10 +664,9 @@ async def async_setup_entry(
             device_class=None,
             state_class=None,
             value_path=["values", "general", "rcd_trigger"],
-            value_fn=lambda x: (
-                RCD_TRIGGER_MAP.get(x, "unknown")
-                if isinstance(x, int)
-                else str(x).lower()
+            value_fn=lambda value: _map_code_to_translation_key(
+                value,
+                RCD_TRIGGER_MAP,
             ),
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
@@ -656,10 +677,9 @@ async def async_setup_entry(
             device_class=None,
             state_class=None,
             value_path=["values", "general", "warning_code"],
-            value_fn=lambda x: (
-                WARNING_CODE_MAP.get(x, "unknown")
-                if isinstance(x, int)
-                else str(x).lower()
+            value_fn=lambda value: _map_code_to_translation_key(
+                value,
+                WARNING_CODE_MAP,
             ),
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
@@ -670,10 +690,9 @@ async def async_setup_entry(
             device_class=None,
             state_class=None,
             value_path=["values", "general", "error_code"],
-            value_fn=lambda x: (
-                ERROR_CODE_MAP.get(x, "unknown")
-                if isinstance(x, int)
-                else str(x).lower()
+            value_fn=lambda value: _map_code_to_translation_key(
+                value,
+                ERROR_CODE_MAP,
             ),
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
@@ -744,7 +763,7 @@ class NRGkickSensor(NRGkickEntity, SensorEntity):
         state_class: SensorStateClass | None,
         value_path: list[str],
         entity_category: EntityCategory | None = None,
-        value_fn: Callable[[Any], Any] | None = None,
+        value_fn: Callable[[StateType], StateType] | None = None,
         precision: int | None = None,
         suggested_unit: str | None = None,
         enabled_default: bool = True,
@@ -774,5 +793,5 @@ class NRGkickSensor(NRGkickEntity, SensorEntity):
             data = data.get(key)
 
         if self._value_fn and data is not None:
-            return cast(StateType, self._value_fn(data))
+            return self._value_fn(cast(StateType, data))
         return cast(StateType, data)
