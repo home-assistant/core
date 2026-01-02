@@ -65,7 +65,6 @@ async def async_setup_entry(
 
     entities: list[HDFuryEntity] = []
 
-    # Apply custom labels for port selectors
     for description in SELECT_PORTS:
         if description.key not in coordinator.data.info:
             continue
