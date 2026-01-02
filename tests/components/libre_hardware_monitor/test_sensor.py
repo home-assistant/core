@@ -10,6 +10,7 @@ from freezegun.api import FrozenDateTimeFactory
 from librehardwaremonitor_api import (
     LibreHardwareMonitorConnectionError,
     LibreHardwareMonitorNoDevicesError,
+    LibreHardwareMonitorUnauthorizedError,
 )
 from librehardwaremonitor_api.model import (
     DeviceId,
@@ -81,6 +82,27 @@ async def test_sensors_go_unavailable_in_case_of_error_and_recover_after_success
 
     recovered_states = hass.states.async_all()
     assert all(state.state != STATE_UNAVAILABLE for state in recovered_states)
+
+
+async def test_sensor_invalid_auth(
+    hass: HomeAssistant,
+    mock_lhm_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid auth during sensor update."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_lhm_client.get_data.side_effect = LibreHardwareMonitorUnauthorizedError
+
+    freezer.tick(timedelta(DEFAULT_SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert "Authentication against LibreHardwareMonitor instance failed" in caplog.text
 
 
 async def test_sensors_are_updated(

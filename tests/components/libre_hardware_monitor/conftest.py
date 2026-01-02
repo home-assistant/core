@@ -7,11 +7,22 @@ from librehardwaremonitor_api.parser import LibreHardwareMonitorParser
 import pytest
 
 from homeassistant.components.libre_hardware_monitor.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
 VALID_CONFIG = {CONF_HOST: "192.168.0.20", CONF_PORT: 8085}
+
+VALID_CONFIG_WITH_AUTH = {
+    **VALID_CONFIG,
+    CONF_USERNAME: "lhm-user",
+    CONF_PASSWORD: "lhm-password",
+}
+
+REAUTH_INPUT = {
+    CONF_USERNAME: "new-username",
+    CONF_PASSWORD: "new-password",
+}
 
 
 @pytest.fixture
