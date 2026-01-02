@@ -11,10 +11,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
 
 from .const import CONF_HOME_ID, DOMAIN
+from .coordinator import ICS200Coordinator
 
 _PLATFORMS: list[Platform] = [Platform.LIGHT, Platform.SWITCH]
 
-type HubConfigEntry = ConfigEntry[Hub]
+type HubConfigEntry = ConfigEntry[ICS200Coordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: HubConfigEntry) -> bool:
@@ -33,7 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HubConfigEntry) -> bool:
             translation_domain=DOMAIN, translation_key="home_id_not_set"
         )
     await hass.async_add_executor_job(hub.get_devices)
-    entry.runtime_data = hub
+    entry.runtime_data = ICS200Coordinator(hass, entry, hub)
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 

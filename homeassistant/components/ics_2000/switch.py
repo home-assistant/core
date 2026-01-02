@@ -8,12 +8,14 @@ from typing import Any
 from ics_2000.entities import switch_device
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import HubConfigEntry
 from .const import DOMAIN
+from .coordinator import ICS200Coordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,23 +29,27 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            Switch(entity, entry.runtime_data.local_address)
-            for entity in entry.runtime_data.devices
+            Switch(entry.runtime_data, entity, entry.runtime_data.hub.local_address)
+            for entity in entry.runtime_data.hub.devices
             if type(entity) is switch_device.SwitchDevice
         ]
     )
 
 
-class Switch(SwitchEntity):
+class Switch(CoordinatorEntity[ICS200Coordinator], SwitchEntity):
     """Representation of an switches light."""
 
     _attr_has_entity_name = True
     _attr_name = None
 
     def __init__(
-        self, switch: switch_device.SwitchDevice, local_address: str | None
+        self,
+        coordinator: ICS200Coordinator,
+        switch: switch_device.SwitchDevice,
+        local_address: str | None,
     ) -> None:
         """Initialize an switch."""
+        super().__init__(coordinator, context=str(switch.entity_id))
         self._switch = switch
         self._state = False
         self._local_address = local_address
@@ -80,6 +86,10 @@ class Switch(SwitchEntity):
             self._switch.turn_off, self._local_address is not None
         )
 
-    async def async_update(self) -> None:
-        """Fetch new state data for this switch."""
-        self._state = await self.hass.async_add_executor_job(self._switch.get_on_status)
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        status = self.coordinator.hub.device_statuses.get(self._switch.entity_id, [])
+        if self._switch.device_config.on_off_function is not None:
+            self._state = status[self._switch.device_config.on_off_function] == 1
+        self.async_write_ha_state()
