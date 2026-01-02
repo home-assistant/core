@@ -20,7 +20,7 @@ from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,33 +28,25 @@ _LOGGER = logging.getLogger(__name__)
 # and avoid race conditions with rapid sequential changes
 REQUEST_REFRESH_DELAY = 1.5
 
+# Default update interval in minutes (matches upstream Throttle value)
+DEFAULT_UPDATE_INTERVAL = 15
+
 
 class MelCloudDevice:
     """MELCloud Device instance."""
 
-    def __init__(self, device: Device) -> None:
+    def __init__(
+        self, device: Device, coordinator: MelCloudDeviceUpdateCoordinator
+    ) -> None:
         """Construct a device wrapper."""
         self.device = device
         self.name = device.name
-        self._available = True
+        self.coordinator = coordinator
 
     @property
-    def device_conf(self) -> dict[str, Any]:
-        """Return device configuration from MELCloud."""
-        device_conf = self.device._device_conf  # noqa: SLF001
-        if device_conf is None:
-            return {}
-        return device_conf.get("Device", {})
-
-    @property
-    def wifi_signal(self) -> int | None:
-        """Return WiFi signal strength."""
-        return self.device_conf.get("WifiSignalStrength")
-
-    @property
-    def has_wifi_signal(self) -> bool:
-        """Return True if WiFi signal is available."""
-        return self.wifi_signal is not None
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self.coordinator.device_available
 
     @property
     def extra_attributes(self) -> dict[str, Any]:
@@ -69,20 +61,6 @@ class MelCloudDevice:
                 data[f"unit_{i}_model"] = unit.get("model")
                 data[f"unit_{i}_serial"] = unit.get("serial")
         return data
-
-    async def async_set(self, properties: dict[str, Any]) -> None:
-        """Write state changes to the MELCloud API."""
-        try:
-            await self.device.set(properties)
-            self._available = True
-        except ClientConnectionError:
-            _LOGGER.warning("Connection failed for %s", self.name)
-            self._available = False
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._available
 
     @property
     def device_id(self) -> str:
@@ -120,25 +98,25 @@ class MelCloudDevice:
         )
 
 
-class MelCloudDataUpdateCoordinator(
-    DataUpdateCoordinator[dict[str, list[MelCloudDevice]]]
-):
-    """Coordinator for MELCloud data updates."""
+class MelCloudDeviceUpdateCoordinator(DataUpdateCoordinator[MelCloudDevice]):
+    """Per-device coordinator for MELCloud data updates."""
 
-    config_entry: ConfigEntry
-
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
-        """Initialize the coordinator."""
-        scan_interval_minutes = config_entry.options.get(
-            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-        )
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        device: Device,
+        config_entry: ConfigEntry,
+    ) -> None:
+        """Initialize the per-device coordinator."""
+        self._device = device
+        self.device_available = True
 
         super().__init__(
             hass,
             _LOGGER,
             config_entry=config_entry,
-            name=DOMAIN,
-            update_interval=timedelta(minutes=scan_interval_minutes),
+            name=f"{DOMAIN}_{device.name}",
+            update_interval=timedelta(minutes=DEFAULT_UPDATE_INTERVAL),
             always_update=False,
             request_refresh_debouncer=Debouncer(
                 hass,
@@ -147,64 +125,82 @@ class MelCloudDataUpdateCoordinator(
                 immediate=False,
             ),
         )
-        self._session = async_get_clientsession(hass)
-        self._devices: dict[str, list[MelCloudDevice]] = {}
 
-    async def _async_setup(self) -> None:
-        """Set up the coordinator by fetching initial device list."""
-        token = self.config_entry.data[CONF_TOKEN]
+        # Create the wrapper after coordinator is initialized
+        self.mel_device = MelCloudDevice(device, self)
+
+    async def _async_update_data(self) -> MelCloudDevice:
+        """Fetch data for this specific device from MELCloud."""
         try:
-            async with asyncio.timeout(10):
-                all_devices = await get_devices(
-                    token,
-                    self._session,
-                    conf_update_interval=timedelta(minutes=30),
-                    device_set_debounce=timedelta(seconds=2),
-                )
+            await self._device.update()
+            self.device_available = True
         except ClientResponseError as ex:
             if ex.status in (401, 403):
                 raise ConfigEntryAuthFailed from ex
             if ex.status == 429:
-                raise UpdateFailed(
-                    "MELCloud rate limit exceeded. Your account may be temporarily "
-                    "blocked. Consider increasing the update interval in integration "
-                    "options (Settings > Devices & Services > MELCloud > Configure)"
-                ) from ex
-            raise UpdateFailed(f"Error communicating with MELCloud: {ex}") from ex
-        except (TimeoutError, ClientConnectionError) as ex:
-            raise UpdateFailed(f"Error communicating with MELCloud: {ex}") from ex
+                _LOGGER.error(
+                    "MELCloud rate limit exceeded for %s. Your account may be "
+                    "temporarily blocked",
+                    self._device.name,
+                )
+            else:
+                _LOGGER.warning("Error updating %s: %s", self._device.name, ex)
+            self.device_available = False
+        except ClientConnectionError as ex:
+            _LOGGER.warning("Connection failed for %s: %s", self._device.name, ex)
+            self.device_available = False
 
-        self._devices = {
-            device_type: [MelCloudDevice(device) for device in devices]
-            for device_type, devices in all_devices.items()
-        }
+        return self.mel_device
 
-    async def _async_update_data(self) -> dict[str, list[MelCloudDevice]]:
-        """Fetch data from MELCloud."""
-        if not self._devices:
-            await self._async_setup()
+    async def async_set(self, properties: dict[str, Any]) -> None:
+        """Write state changes to the MELCloud API."""
+        try:
+            await self._device.set(properties)
+            self.device_available = True
+        except ClientConnectionError:
+            _LOGGER.warning("Connection failed for %s", self._device.name)
+            self.device_available = False
 
-        for devices in self._devices.values():
-            for mel_device in devices:
-                try:
-                    await mel_device.device.update()
-                    mel_device._available = True  # noqa: SLF001
-                except ClientResponseError as ex:
-                    if ex.status in (401, 403):
-                        raise ConfigEntryAuthFailed from ex
-                    if ex.status == 429:
-                        _LOGGER.error(
-                            "MELCloud rate limit exceeded for %s. Your account may be "
-                            "temporarily blocked. Consider increasing the update interval "
-                            "in integration options (Settings > Devices & Services > "
-                            "MELCloud > Configure)",
-                            mel_device.name,
-                        )
-                    else:
-                        _LOGGER.warning("Error updating %s: %s", mel_device.name, ex)
-                    mel_device._available = False  # noqa: SLF001
-                except ClientConnectionError as ex:
-                    _LOGGER.warning("Connection failed for %s: %s", mel_device.name, ex)
-                    mel_device._available = False  # noqa: SLF001
+        await self.async_request_refresh()
 
-        return self._devices
+
+type MelCloudConfigEntry = ConfigEntry[dict[str, list[MelCloudDeviceUpdateCoordinator]]]
+
+
+async def mel_devices_setup(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> dict[str, list[MelCloudDeviceUpdateCoordinator]]:
+    """Set up MELCloud devices and create per-device coordinators."""
+    token = config_entry.data[CONF_TOKEN]
+    session = async_get_clientsession(hass)
+
+    try:
+        async with asyncio.timeout(10):
+            all_devices = await get_devices(
+                token,
+                session,
+                conf_update_interval=timedelta(minutes=30),
+                device_set_debounce=timedelta(seconds=2),
+            )
+    except ClientResponseError as ex:
+        if ex.status in (401, 403):
+            raise ConfigEntryAuthFailed from ex
+        if ex.status == 429:
+            raise UpdateFailed(
+                "MELCloud rate limit exceeded. Your account may be temporarily blocked"
+            ) from ex
+        raise UpdateFailed(f"Error communicating with MELCloud: {ex}") from ex
+    except (TimeoutError, ClientConnectionError) as ex:
+        raise UpdateFailed(f"Error communicating with MELCloud: {ex}") from ex
+
+    # Create per-device coordinators
+    coordinators: dict[str, list[MelCloudDeviceUpdateCoordinator]] = {}
+    for device_type, devices in all_devices.items():
+        coordinators[device_type] = []
+        for device in devices:
+            coordinator = MelCloudDeviceUpdateCoordinator(hass, device, config_entry)
+            # Perform initial refresh for this device
+            await coordinator.async_config_entry_first_refresh()
+            coordinators[device_type].append(coordinator)
+
+    return coordinators

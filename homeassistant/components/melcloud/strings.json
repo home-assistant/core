@@ -60,23 +60,6 @@
       },
       "tank_temperature": {
         "name": "Tank temperature"
-      },
-      "wifi_signal": {
-        "name": "WiFi signal"
-      }
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "scan_interval": "Update interval (minutes)"
-        },
-        "data_description": {
-          "scan_interval": "Enter a value between 1 and 60. Polling too frequently (below 2 minutes) may trigger MELCloud rate limiting, which causes errors and can temporarily lock your account for several hours. Recommended: 5 minutes for responsive control, 15 minutes for stable operation."
-        },
-        "description": "Configure the polling interval for device updates.",
-        "title": "MELCloud Options"
       }
     }
   },
