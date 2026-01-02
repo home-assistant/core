@@ -1578,7 +1578,7 @@ nextdns==4.1.0
 nhc==0.7.0
 
 # homeassistant.components.nibe_heatpump
-nibe==2.20.0
+nibe==2.21.0
 
 # homeassistant.components.nice_go
 nice-go==1.0.1
