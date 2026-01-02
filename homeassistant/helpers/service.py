@@ -731,11 +731,11 @@ def _filter_entities(
     config_entries_with_overrides: set[ConfigEntry],
     domain: str,
     service: str,
-) -> tuple[list[Entity], dict[ConfigEntry, set[Entity]]]:
+) -> tuple[list[Entity], dict[ConfigEntry, list[Entity]]]:
     """Return a list of entities that pass availability, device class, and features."""
     filtered: list[Entity] = []
-    per_entry_entities: dict[ConfigEntry, set[Entity]] = {
-        ce: set() for ce in config_entries_with_overrides
+    per_entry_entities: dict[ConfigEntry, list[Entity]] = {
+        ce: [] for ce in config_entries_with_overrides
     }
 
     for entity in entity_candidates:
@@ -761,7 +761,7 @@ def _filter_entities(
         platform = entity.platform
         ce = platform.config_entry if platform is not None else None
         if ce in config_entries_with_overrides:
-            per_entry_entities[ce].add(entity)
+            per_entry_entities[ce].append(entity)
         else:
             filtered.append(entity)
 
@@ -776,7 +776,7 @@ def _filter_entities(
 async def _service_call_wrapper(
     *,
     hass: HomeAssistant,
-    entities: set[Entity],
+    entities: list[Entity],
     handler: ConfigEntryServiceCallback | str | HassJob,
     config_entry: ConfigEntry | None = None,
     call: ServiceCall,
@@ -913,20 +913,20 @@ async def entity_service_call(
     override_coros = [
         _service_call_wrapper(
             hass=hass,
-            entities=entities_set,
+            entities=entities_list,
             handler=config_overrides[ce],
             config_entry=ce,
             call=call,
             data=data,
         )
-        for ce, entities_set in per_config_entities.items()
+        for ce, entities_list in per_config_entities.items()
     ]
 
     # For normal entities (not overridden)
     normal_coros = [
         _service_call_wrapper(
             hass=hass,
-            entities={entity},
+            entities=[entity],
             handler=func,
             call=call,
             data=data,

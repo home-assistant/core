@@ -127,7 +127,7 @@ BLOCK_LOG_TIMEOUT = 60
 type ServiceResponse = JsonObjectType | None
 type EntityServiceResponse = dict[str, ServiceResponse]
 type ConfigEntryServiceCallback = Callable[
-    [ConfigEntry, set[Entity], ServiceCall],
+    [ConfigEntry, list[Entity], ServiceCall],
     Coroutine[None, None, EntityServiceResponse | None],
 ]
 
