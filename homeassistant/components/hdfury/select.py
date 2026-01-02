@@ -94,15 +94,7 @@ class HDFuryBaseSelect(HDFuryEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Update the current option."""
 
-        raw_value = self.entity_description.reverse_map.get(option)
-        if raw_value is None:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="data_error",
-                translation_placeholders={
-                    "error": str(f"Invalid input option selected: {option}")
-                },
-            )
+        raw_value = self.entity_description.reverse_map[option]
 
         # Update local data first
         self.coordinator.data.info[self.entity_description.key] = raw_value
