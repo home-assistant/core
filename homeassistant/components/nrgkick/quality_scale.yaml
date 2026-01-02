@@ -6,78 +6,42 @@ rules:
       This integration does not provide additional actions.
   appropriate-polling:
     status: done
-    comment: |
-      Coordinator sets update interval in homeassistant/components/nrgkick/coordinator.py
   brands:
     status: done
-    comment: |
-      Integration metadata lives in homeassistant/components/nrgkick/manifest.json
   common-modules:
     status: done
-    comment: |
-      Constants: homeassistant/components/nrgkick/const.py
-      Config flow: homeassistant/components/nrgkick/config_flow.py
-      Coordinator: homeassistant/components/nrgkick/coordinator.py
-      Base entity: homeassistant/components/nrgkick/entity.py
   config-flow-test-coverage:
     status: done
-    comment: |
-      Config flow tests are in tests/components/nrgkick/test_config_flow.py
-      Additional config flow tests are in tests/components/nrgkick/test_config_flow_additional.py
   config-flow:
     status: done
-    comment: |
-      Config flow implementation: homeassistant/components/nrgkick/config_flow.py
   dependency-transparency:
     status: done
-    comment: |
-      Pinned dependency is declared in homeassistant/components/nrgkick/manifest.json
   docs-actions:
     status: exempt
     comment: |
       This integration does not provide additional actions.
   docs-high-level-description:
     status: done
-    comment: |
-      Documentation URL is declared in homeassistant/components/nrgkick/manifest.json
   docs-installation-instructions:
     status: done
-    comment: |
-      Documentation URL is declared in homeassistant/components/nrgkick/manifest.json
   docs-removal-instructions:
     status: done
-    comment: |
-      Documentation URL is declared in homeassistant/components/nrgkick/manifest.json
   entity-event-setup:
     status: exempt
     comment: |
       Entities of this integration use DataUpdateCoordinator and do not explicitly subscribe to events.
   entity-unique-id:
     status: done
-    comment: |
-      Entities set unique_id based on device serial number in homeassistant/components/nrgkick/entity.py
   has-entity-name:
     status: done
-    comment: |
-      Entities set has_entity_name in homeassistant/components/nrgkick/entity.py
   runtime-data:
     status: done
-    comment: |
-      Config entry stores coordinator in entry.runtime_data in homeassistant/components/nrgkick/__init__.py
   test-before-configure:
     status: done
-    comment: |
-      Connection validation happens during config flow in homeassistant/components/nrgkick/config_flow.py
-      Covered by tests/components/nrgkick/test_config_flow.py
   test-before-setup:
     status: done
-    comment: |
-      First refresh is performed during setup in homeassistant/components/nrgkick/__init__.py
-      Coordinator error handling is in homeassistant/components/nrgkick/coordinator.py
   unique-config-entry:
     status: done
-    comment: |
-      Unique ID is set and duplicates are prevented in homeassistant/components/nrgkick/config_flow.py
 
   # Silver
   action-exceptions: todo
