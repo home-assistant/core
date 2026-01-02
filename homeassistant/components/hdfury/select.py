@@ -79,20 +79,20 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class HDFuryPortSelect(HDFuryEntity, SelectEntity):
-    """Class to handle fetching and storing HDFury Port Select data."""
+class HDFuryBaseSelect(HDFuryEntity, SelectEntity):
+    """HDFury Select Class."""
 
     entity_description: HDFurySelectEntityDescription
 
     @property
     def current_option(self) -> str:
-        """Set Current Select Option."""
+        """Return the current option."""
 
         raw_value = self.coordinator.data.info[self.entity_description.key]
         return self.entity_description.label_map[raw_value]
 
     async def async_select_option(self, option: str) -> None:
-        """Handle Port Select."""
+        """Update the current option."""
 
         # Map user-friendly label back to raw input value
         raw_value = self.entity_description.reverse_map.get(option)
@@ -108,23 +108,9 @@ class HDFuryPortSelect(HDFuryEntity, SelectEntity):
         # Update local data first
         self.coordinator.data.info[self.entity_description.key] = raw_value
 
-        # Remap both TX0 and TX1 current selections
-        tx0_raw = self.coordinator.data.info.get("portseltx0")
-        tx1_raw = self.coordinator.data.info.get("portseltx1")
-
-        # If either missing, raise exception to avoid incomplete updates
-        if tx0_raw is None or tx1_raw is None:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="data_error",
-                translation_placeholders={
-                    "error": str(f"TX states incomplete: tx0={tx0_raw}, tx1={tx1_raw}")
-                },
-            )
-
         # Send command to device
         try:
-            await self.coordinator.client.set_port_selection(tx0_raw, tx1_raw)
+            await self._set_option(raw_value)
         except HDFuryError as error:
             _LOGGER.error("%s", error)
             raise HomeAssistantError(
@@ -135,45 +121,37 @@ class HDFuryPortSelect(HDFuryEntity, SelectEntity):
         # Trigger HA state refresh
         await self.coordinator.async_request_refresh()
 
+    async def _set_option(self, value: str) -> None:
+        """Apply value to device."""
 
-class HDFuryOpModeSelect(HDFuryEntity, SelectEntity):
+        raise NotImplementedError
+
+
+class HDFuryPortSelect(HDFuryBaseSelect):
+    """Handle port selection (portseltx)."""
+
+    async def _set_option(self, value: str) -> None:
+        """Apply value to device."""
+
+        tx0 = self.coordinator.data.info.get("portseltx0")
+        tx1 = self.coordinator.data.info.get("portseltx1")
+
+        if tx0 is None or tx1 is None:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="data_error",
+                translation_placeholders={
+                    "error": f"TX states incomplete: tx0={tx0}, tx1={tx1}"
+                },
+            )
+
+        await self.coordinator.client.set_port_selection(tx0, tx1)
+
+
+class HDFuryOpModeSelect(HDFuryBaseSelect):
     """Handle operation mode selection (opmode)."""
 
-    entity_description: HDFurySelectEntityDescription
+    async def _set_option(self, value: str) -> None:
+        """Apply value to device."""
 
-    @property
-    def current_option(self) -> str:
-        """Return the current operation mode."""
-
-        raw_value = self.coordinator.data.info[self.entity_description.key]
-        return self.entity_description.label_map[raw_value]
-
-    async def async_select_option(self, option: str) -> None:
-        """Change the operation mode."""
-
-        # Map user-friendly label back to raw input value
-        raw_value = self.entity_description.reverse_map.get(option)
-        if raw_value is None:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="data_error",
-                translation_placeholders={
-                    "error": str(f"Invalid input option selected: {option}")
-                },
-            )
-
-        # Update local data first
-        self.coordinator.data.info[self.entity_description.key] = raw_value
-
-        # Send command to device
-        try:
-            await self.coordinator.client.set_operation_mode(raw_value)
-        except HDFuryError as error:
-            _LOGGER.error("%s", error)
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="communication_error",
-            ) from error
-
-        # Trigger HA state refresh
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.client.set_operation_mode(value)
