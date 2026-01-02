@@ -6,7 +6,7 @@ from datetime import timedelta
 import logging
 
 import requests
-from starlingbankapi import StarlingAccount
+from starlingbank import StarlingAccount
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -26,11 +26,10 @@ BALANCE_TYPES = ["cleared_balance", "effective_balance"]
 CONF_ACCOUNTS = "accounts"
 CONF_BALANCE_TYPES = "balance_types"
 CONF_SANDBOX = "sandbox"
-CONF_SPACE_NAME = "space_name"
 
 DEFAULT_SANDBOX = False
 DEFAULT_ACCOUNT_NAME = "Starling"
-DEFAULT_SPACE_NAME = ""
+
 
 SCAN_INTERVAL = timedelta(seconds=180)
 
@@ -41,7 +40,6 @@ ACCOUNT_SCHEMA = vol.Schema(
             cv.ensure_list, [vol.In(BALANCE_TYPES)]
         ),
         vol.Optional(CONF_NAME, default=DEFAULT_ACCOUNT_NAME): cv.string,
-        vol.Optional(CONF_SPACE_NAME, default=DEFAULT_SPACE_NAME): cv.string,
         vol.Optional(CONF_SANDBOX, default=DEFAULT_SANDBOX): cv.boolean,
     }
 )
@@ -57,7 +55,7 @@ def setup_platform(
     add_devices: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Starling Bank sensor platform."""
+    """Set up the Sterling Bank sensor platform."""
 
     sensors: list[StarlingBalanceSensor] = []
     for account in config[CONF_ACCOUNTS]:
@@ -67,7 +65,7 @@ def setup_platform(
             )
             sensors.extend(
                 StarlingBalanceSensor(
-                    starling_account, account[CONF_NAME], account[CONF_SPACE_NAME], balance_type
+                    starling_account, account[CONF_NAME], balance_type
                 )
                 for balance_type in account[CONF_BALANCE_TYPES]
             )
@@ -84,22 +82,18 @@ class StarlingBalanceSensor(SensorEntity):
 
     _attr_icon = "mdi:currency-gbp"
 
-    def __init__(self, starling_account, account_name, space_name, balance_data_type):
+    def __init__(self, starling_account, account_name, balance_data_type):
         """Initialize the sensor."""
         self._starling_account = starling_account
         self._balance_data_type = balance_data_type
         self._state = None
         self._account_name = account_name
-        self._space_name = space_name
 
     @property
     def name(self):
         """Return the name of the sensor."""
         balance_data_type = self._balance_data_type.replace("_", " ").capitalize()
-        if not self._space_name:
-            return f"{self._account_name} {balance_data_type}"
-        else:
-            return f"{self._account_name} ({self._space_name}) {balance_data_type}"
+        return f"{self._account_name} {balance_data_type}"
 
     @property
     def native_value(self):
@@ -113,15 +107,8 @@ class StarlingBalanceSensor(SensorEntity):
 
     def update(self) -> None:
         """Fetch new state data for the sensor."""
-        if not self._space_name:
-            self._starling_account.update_balance_data()
-            if self._balance_data_type == "cleared_balance":
-                self._state = self._starling_account.cleared_balance / 100
-            elif self._balance_data_type == "effective_balance":
-                self._state = self._starling_account.effective_balance / 100
-        else:
-            self._starling_account.update_spaces_data()
-            for space in self._starling_account.spaces:
-                if self._starling_account.spaces[space].name == self._space_name:
-                    self._state = self._starling_account.spaces[space].balance / 100
-                    break
+        self._starling_account.update_balance_data()
+        if self._balance_data_type == "cleared_balance":
+            self._state = self._starling_account.cleared_balance / 100
+        elif self._balance_data_type == "effective_balance":
+            self._state = self._starling_account.effective_balance / 100
