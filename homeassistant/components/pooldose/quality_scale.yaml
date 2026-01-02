@@ -63,7 +63,7 @@ rules:
   reconfiguration-flow: done
   repair-issues:
     status: exempt
-    comment: Currently no user stories are known that would require repair issues for this integration.
+    comment: This integration does not have any identified cases where repair issues would be needed.
   stale-devices:
     status: exempt
     comment: This integration manages a single device per config entry, so stale device removal is not applicable.
