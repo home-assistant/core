@@ -36,13 +36,5 @@
     "tx_state_error": {
       "message": "An error occurred while validating TX states: {details}"
     }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "description": "Set user-friendly names for each HDMI input.",
-        "title": "Customize Input Labels"
-      }
-    }
   }
 }
