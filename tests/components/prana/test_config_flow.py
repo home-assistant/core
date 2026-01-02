@@ -3,17 +3,16 @@
 from prana_local_api_client.exceptions import (
     PranaApiCommunicationError as PranaCommunicationError,
 )
-import pytest
 
 from homeassistant.components.prana.config_flow import SERVICE_TYPE
 from homeassistant.components.prana.const import DOMAIN
+from homeassistant.config_entries import SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 
-@pytest.mark.asyncio
 async def test_zeroconf_new_device_and_confirm(
     hass: HomeAssistant, mock_prana_api
 ) -> None:
@@ -29,61 +28,54 @@ async def test_zeroconf_new_device_and_confirm(
     )
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": "zeroconf"}, data=info
+        DOMAIN, context={"source": SOURCE_ZEROCONF}, data=info
     )
 
     device_info = await mock_prana_api.get_device_info()
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert result2["title"] == device_info.label
-    assert result2["result"].unique_id == device_info.manufactureId
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == device_info.label
+    assert result["result"].unique_id == device_info.manufactureId
+    assert result["result"].data == {CONF_HOST: "192.168.1.30"}
 
 
-@pytest.mark.asyncio
 async def test_user_flow_with_manual_entry(hass: HomeAssistant, mock_prana_api) -> None:
     """User flow accepts manual host and creates entry after confirmation."""
-    result_user = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
     )
-    assert result_user["type"] == FlowResultType.FORM
-    assert result_user["step_id"] == "user"
-
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "user"
     device_info = await mock_prana_api.get_device_info()
 
-    result_after_submit = await hass.config_entries.flow.async_configure(
-        result_user["flow_id"], user_input={CONF_HOST: "192.168.1.40"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "192.168.1.40"}
     )
-    assert result_after_submit["type"] == FlowResultType.FORM
-    assert result_after_submit["step_id"] == "confirm"
-
-    result_create = await hass.config_entries.flow.async_configure(
-        result_after_submit["flow_id"], user_input={}
-    )
-    assert result_create["type"] == FlowResultType.CREATE_ENTRY
-    assert result_create["title"] == device_info.label
-    assert result_create["result"].unique_id == device_info.manufactureId
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == device_info.label
+    assert result["result"].unique_id == device_info.manufactureId
+    assert result["result"].data == {CONF_HOST: "192.168.1.40"}
 
 
-@pytest.mark.asyncio
 async def test_confirm_abort_no_devices(hass: HomeAssistant) -> None:
     """Confirm should not proceed when no discovery data exists."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
     )
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=None
     )
-    assert result2["type"] == FlowResultType.FORM
-    assert result2["step_id"] == "user"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
 
 
-@pytest.mark.asyncio
 async def test_communication_error_on_device_info(
     hass: HomeAssistant, mock_prana_api
 ) -> None:
@@ -91,18 +83,30 @@ async def test_communication_error_on_device_info(
     mock_prana_api.get_device_info.side_effect = PranaCommunicationError(
         "Network error"
     )
-    result_user = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
     )
-    assert result_user["type"] == FlowResultType.FORM
-    assert result_user["step_id"] == "user"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
 
-    result_after_submit = await hass.config_entries.flow.async_configure(
-        result_user["flow_id"], user_input={CONF_HOST: "192.168.1.50"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "192.168.1.50"}
     )
-    assert result_after_submit["type"] == FlowResultType.FORM
-    assert result_after_submit["step_id"] == "user"
-    assert "invalid_device_or_unreachable" in result_after_submit["errors"].values()
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert "invalid_device_or_unreachable" in result["errors"].values()
+
+    mock_prana_api.get_device_info.side_effect = None
+    device_info = mock_prana_api.get_device_info.return_value
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "192.168.1.50"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == device_info.label
+    assert result["result"].unique_id == device_info.manufactureId
+    assert result["result"].data == {CONF_HOST: "192.168.1.50"}
 
 
 async def test_configure_two_entries_same_device(
@@ -111,11 +115,11 @@ async def test_configure_two_entries_same_device(
     """Second configuration for the same device should be aborted."""
     await test_user_flow_with_manual_entry(hass, mock_prana_api)
 
-    result2 = await hass.config_entries.flow.async_init(
+    result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "user"}
     )
-    result2_submit = await hass.config_entries.flow.async_configure(
-        result2["flow_id"], user_input={CONF_HOST: "192.168.1.40"}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_HOST: "192.168.1.40"}
     )
-    assert result2_submit["type"] == FlowResultType.ABORT
-    assert result2_submit["reason"] == "already_configured"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"

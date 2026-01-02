@@ -1,12 +1,11 @@
 {
   "config": {
     "abort": {
-      "already_configured": "%key:common.abort.already_configured_device%",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "invalid_device": "The device is invalid",
-      "no_devices_found": "%key:common.abort.no_devices_found%"
+      "invalid_device_or_unreachable": "The device is invalid or unreachable"
     },
     "error": {
-      "cannot_connect": "Cannot connect to the device",
       "invalid_device_or_unreachable": "The device is invalid or unreachable"
     },
     "step": {
@@ -16,12 +15,11 @@
       },
       "user": {
         "data": {
-          "host": "%key:common.data.ip_address%"
+          "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "host": "%key:common.data.ip_address_description%"
+          "host": "The IP address of your Prana device."
         },
-        "description": "Enter the IP address of your Prana device",
         "title": "Add Prana device by IP"
       }
     }

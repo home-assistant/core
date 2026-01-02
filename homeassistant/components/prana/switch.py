@@ -73,15 +73,19 @@ class PranaSwitch(PranaBaseEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return switch on/off state."""
-        value = getattr(self.coordinator.data, self.type_key, False)
+        value = getattr(self.coordinator.data, self.entity_description.key, False)
         return bool(value)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self._entry.runtime_data.api_client.set_switch(self.type_key, True)
+        await self._entry.runtime_data.api_client.set_switch(
+            self.entity_description.key, True
+        )
         await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self._entry.runtime_data.api_client.set_switch(self.type_key, False)
+        await self._entry.runtime_data.api_client.set_switch(
+            self.entity_description.key, False
+        )
         await self.coordinator.async_refresh()

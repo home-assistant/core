@@ -28,7 +28,6 @@ class PranaConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the Prana config flow."""
         self._host: str | None = None
-        self._name: str | None = None
         self._device_info: PranaDeviceInfo | None = None
         self.context = {}
 
@@ -43,7 +42,22 @@ class PranaConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {"name": friendly_name}
         self._host = host
 
-        return await self.async_step_confirm()
+        try:
+            self._device_info = await self._validate_device()
+        except (PranaApiCommunicationError, ValueError) as err:
+            _LOGGER.debug("Error fetching device info from %s: %s", self._host, err)
+            if isinstance(err, ValueError):
+                return self.async_abort(reason="invalid_device")
+            return self.async_abort(reason="invalid_device_or_unreachable")
+
+        self._set_confirm_only()
+        return self.async_show_form(
+            step_id="confirm",
+            description_placeholders={
+                "name": self._device_info.label,
+                "host": self._host,
+            },
+        )
 
     async def async_step_user(
         self,
@@ -53,48 +67,49 @@ class PranaConfigFlow(ConfigFlow, domain=DOMAIN):
         """Manual entry by IP address."""
         if user_input is not None:
             self._host = user_input[CONF_HOST]
-            return await self.async_step_confirm()
+            try:
+                self._device_info = await self._validate_device()
+            except (PranaApiCommunicationError, ValueError) as err:
+                _LOGGER.debug("Error fetching device info from %s: %s", self._host, err)
+                if isinstance(err, ValueError) and str(err) == "invalid_device":
+                    return self.async_abort(reason="invalid_device")
+                return self.async_show_form(
+                    step_id="user",
+                    data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
+                    errors={CONF_BASE: "invalid_device_or_unreachable"},
+                )
+            return self.async_create_entry(
+                title=self._device_info.label,
+                data={CONF_HOST: self._host},
+            )
 
         schema = vol.Schema({vol.Required(CONF_HOST): str})
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
-    async def async_step_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Show confirmation form or create entry when submitted."""
-        if not self._host:
-            return self.async_abort(reason="no_devices_found")
-
-        api_client = PranaLocalApiClient(host=self._host, port=80)
-        try:
-            device_info = await api_client.get_device_info()
-        except PranaApiCommunicationError as err:
-            _LOGGER.debug("Error fetching device info from %s: %s", self._host, err)
-            return await self.async_step_user(
-                errors={CONF_BASE: "invalid_device_or_unreachable"}
+    async def async_step_confirm(self, user_input=None) -> ConfigFlowResult:
+        """Handle the user confirming a discovered Prana device."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title=self._device_info.label,  # type: ignore[union-attr]
+                data={CONF_HOST: self._host},
             )
+        return self.async_show_form(
+            step_id="confirm",
+            description_placeholders={
+                "name": self._device_info.label,  # type: ignore[union-attr]
+                "host": self._host,  # type: ignore[dict-item]
+            },
+        )
+
+    async def _validate_device(self) -> PranaDeviceInfo:
+        """Validate that a Prana device is reachable and valid."""
+        client = PranaLocalApiClient(host=self._host, port=80)
+        device_info = await client.get_device_info()
+
         if not device_info.isValid:
-            return self.async_abort(reason="invalid_device")
+            raise ValueError("invalid_device")
 
         await self.async_set_unique_id(device_info.manufactureId)
         self._abort_if_unique_id_configured()
 
-        if user_input is not None:
-            return self.async_create_entry(
-                title=device_info.label,
-                data={
-                    CONF_HOST: self._host,
-                },
-                description_placeholders={
-                    "name": device_info.label,
-                    "host": self._host,
-                },
-            )
-
-        return self.async_show_form(
-            step_id="confirm",
-            description_placeholders={
-                "name": device_info.label,
-                "host": self._host,
-            },
-        )
+        return device_info

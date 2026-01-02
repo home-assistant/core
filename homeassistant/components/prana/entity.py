@@ -39,24 +39,15 @@ class PranaBaseEntity(CoordinatorEntity[PranaDataUpdateCoordinator]):
         super().__init__(entry.runtime_data)
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
+            identifiers={(DOMAIN, entry.unique_id)},  # type: ignore[arg-type]
             manufacturer="Prana",
-            name=self.coordinator.device_info.label
-            if self.coordinator.device_info
-            else "Prana Device",
-            model=self.coordinator.device_info.pranaModel
-            if self.coordinator.device_info
-            else "Unknown Model",
-            serial_number=self.coordinator.device_info.manufactureId
-            if self.coordinator.device_info
-            else "Unknown ID",
-            sw_version=str(self.coordinator.device_info.fwVersion)
-            if self.coordinator.device_info
-            else "Unknown Version",
+            name=self.coordinator.device_info.label,
+            model=self.coordinator.device_info.pranaModel,
+            serial_number=self.coordinator.device_info.manufactureId,
+            sw_version=str(self.coordinator.device_info.fwVersion),
         )
 
         self._entry = entry
         self._attr_unique_id = f"{entry.entry_id}_{description.key}"
 
         self.entity_description = description
-        self.type_key = description.key

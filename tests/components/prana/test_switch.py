@@ -58,12 +58,7 @@ async def test_switches_actions(
         entity_registry, mock_config_entry.entry_id
     )
     assert entries
-    target = None
-    for entry in entries:
-        if entry.entity_id.endswith(entity_suffix):
-            target = entry.entity_id
-            break
-    assert target is not None, f"Entity for {type_key} not found"
+    target = f"switch.test_ha_2{entity_suffix}"
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -96,8 +91,9 @@ async def test_switch_exceptions(
     entries = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
+
     assert entries
-    target = entries[0].entity_id
+    target = "switch.test_ha_2_bound"
 
     mock_prana_api.set_switch.side_effect = RuntimeError("boom")
 

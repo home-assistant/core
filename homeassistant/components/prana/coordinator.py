@@ -33,6 +33,7 @@ class PranaCoordinator(DataUpdateCoordinator[PranaState]):
     """Universal coordinator for Prana (fan, switch, sensor, light data)."""
 
     config_entry: PranaConfigEntry
+    device_info: PranaDeviceInfo
 
     def __init__(self, hass: HomeAssistant, entry: PranaConfigEntry) -> None:
         """Initialize the Prana data update coordinator."""
@@ -47,7 +48,14 @@ class PranaCoordinator(DataUpdateCoordinator[PranaState]):
         self.max_speed: int | None = None
         host = self.config_entry.data[CONF_HOST]
         self.api_client = PranaLocalApiClient(host=host, port=80)
-        self.device_info: PranaDeviceInfo | None = None
+        self.device_info: PranaDeviceInfo
+
+    async def _async_setup(self) -> None:
+        try:
+            self.device_info = await self.api_client.get_device_info()
+        except PranaApiCommunicationError as err:
+            _LOGGER.info("Error fetching device info during setup: %s", err)
+            raise UpdateFailed("Could not fetch device info") from err
 
     async def _async_update_data(self) -> PranaState:
         """Fetch and normalize device state for all platforms."""
@@ -60,10 +68,3 @@ class PranaCoordinator(DataUpdateCoordinator[PranaState]):
                 f"Network error communicating with device: {err}"
             ) from err
         return state
-
-    async def _async_setup(self) -> None:
-        try:
-            self.device_info = await self.api_client.get_device_info()
-        except PranaApiCommunicationError as err:
-            _LOGGER.info("Error fetching device info during setup: %s", err)
-            raise UpdateFailed("Could not fetch device info") from err
