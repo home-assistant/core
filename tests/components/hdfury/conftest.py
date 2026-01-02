@@ -38,12 +38,19 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture(autouse=True)
 def mock_hdfury_client() -> Generator[AsyncMock]:
     """Mock a HDFury client."""
-    with patch(
-        "homeassistant.components.hdfury.config_flow.HDFuryAPI",
-        autospec=True,
-    ) as mock_client:
-        client = mock_client.return_value
-        client.get_board = AsyncMock(
+    with (
+        patch(
+            "homeassistant.components.hdfury.config_flow.HDFuryAPI",
+            autospec=True,
+        ) as mock_cf_client,
+        patch(
+            "homeassistant.components.hdfury.coordinator.HDFuryAPI",
+            autospec=True,
+        ) as mock_coord_client,
+    ):
+        # Config flow client
+        cf_client = mock_cf_client.return_value
+        cf_client.get_board = AsyncMock(
             return_value={
                 "hostname": "VRROOM-02",
                 "ipaddress": "192.168.1.123",
@@ -52,4 +59,21 @@ def mock_hdfury_client() -> Generator[AsyncMock]:
                 "version": "FW: 0.61",
             }
         )
-        yield client
+
+        # Coordinator client
+        coord_client = mock_coord_client.return_value
+        coord_client.get_board = cf_client.get_board
+        coord_client.get_info = AsyncMock(
+            return_value={
+                "portseltx0": "0",
+                "portseltx1": "4",
+                "opmode": "0",
+            }
+        )
+        coord_client.get_config = AsyncMock(
+            return_value={
+                "macaddr": "c7:1c:df:9d:f6:40",
+            }
+        )
+
+        yield coord_client
