@@ -44,12 +44,8 @@ rules:
   # Gold
   devices: done
   diagnostics: todo
-  discovery-update-info:
-    status: exempt
-    comment: Device does not support discovery.
-  discovery:
-    status: exempt
-    comment: Device does not support discovery.
+  discovery-update-info: todo
+  discovery: todo
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo
