@@ -28,7 +28,13 @@ class NRGkickEntity(CoordinatorEntity[NRGkickDataUpdateCoordinator]):
         data: NRGkickData | None = self.coordinator.data
         info_data: dict[str, Any] = data.info if data else {}
         device_info: dict[str, Any] = info_data.get("general", {})
-        serial: str = device_info.get("serial_number", "unknown")
+
+        # The config flow requires a serial number and sets it as unique_id.
+        # Prefer the configured unique_id to avoid depending on runtime API data.
+        serial: str = (
+            self.coordinator.config_entry.unique_id
+            or self.coordinator.config_entry.entry_id
+        )
 
         device_name: str | None = device_info.get("device_name")
         if not device_name:
@@ -38,6 +44,7 @@ class NRGkickEntity(CoordinatorEntity[NRGkickDataUpdateCoordinator]):
         self._attr_unique_id = f"{serial}_{self._key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, serial)},
+            serial_number=serial,
             name=device_name,
             manufacturer="DiniTech",
             model=device_info.get("model_type", "NRGkick Gen2"),
