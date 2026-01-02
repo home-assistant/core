@@ -109,8 +109,8 @@ class HDFuryBaseSelect(HDFuryEntity, SelectEntity):
                 translation_key="communication_error",
             ) from error
 
-        # Trigger HA state refresh
-        await self.coordinator.async_request_refresh()
+        # Trigger HA state write
+        self.async_write_ha_state()
 
     @abstractmethod
     async def _set_option(self, value: str) -> None:
