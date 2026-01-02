@@ -28,7 +28,6 @@ class HypontechDataCoordinator(DataUpdateCoordinator[OverviewData]):
     """Coordinator used for all sensors."""
 
     config_entry: HypontechConfigEntry
-    api: HyponCloud
 
     def __init__(
         self,
