@@ -4,6 +4,7 @@
   "codeowners": ["@tr4nt0r"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ntfy",
+  "integration_type": "service",
   "iot_class": "cloud_push",
   "loggers": ["aionfty"],
   "quality_scale": "platinum",

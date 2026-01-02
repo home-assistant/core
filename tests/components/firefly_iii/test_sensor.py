@@ -66,5 +66,6 @@ async def test_refresh_exceptions(
     async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.firefly_iii_test_credit_card")
+    state = hass.states.get("sensor.credit_card_account_balance")
+    assert state is not None
     assert state.state == STATE_UNAVAILABLE

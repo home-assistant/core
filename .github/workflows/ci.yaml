@@ -37,12 +37,12 @@ on:
         type: boolean
 
 env:
-  CACHE_VERSION: 8
+  CACHE_VERSION: 2
   UV_CACHE_VERSION: 1
   MYPY_CACHE_VERSION: 1
-  HA_SHORT_VERSION: "2025.11"
-  DEFAULT_PYTHON: "3.13"
-  ALL_PYTHON_VERSIONS: "['3.13']"
+  HA_SHORT_VERSION: "2026.2"
+  DEFAULT_PYTHON: "3.13.11"
+  ALL_PYTHON_VERSIONS: "['3.13.11', '3.14.2']"
   # 10.3 is the oldest supported version
   # - 10.3.32 is the version currently shipped with Synology (as of 17 Feb 2022)
   # 10.6 is the current long-term-support
@@ -99,7 +99,7 @@ jobs:
     steps:
       - &checkout
         name: Check out code from GitHub
-        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
       - name: Generate partial Python venv restore key
         id: generate_python_cache_key
         run: |
@@ -257,13 +257,13 @@ jobs:
       - &setup-python-default
         name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: &actions-setup-python actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+        uses: &actions-setup-python actions/setup-python@83679a892e2d95755f2dac6acb0bfd1e9ac5d548 # v6.1.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
       - name: Restore base Python virtual environment
         id: cache-venv
-        uses: &actions-cache actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        uses: &actions-cache actions/cache@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
         with:
           path: venv
           key: &key-pre-commit-venv >-
@@ -304,7 +304,7 @@ jobs:
       - &cache-restore-pre-commit-venv
         name: Restore base Python virtual environment
         id: cache-venv
-        uses: &actions-cache-restore actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        uses: &actions-cache-restore actions/cache/restore@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
         with:
           path: venv
           fail-on-cache-miss: true
@@ -364,13 +364,13 @@ jobs:
       - name: Run check-json
         run: |
           . venv/bin/activate
-          pre-commit run --hook-stage manual check-json --all-files
+          pre-commit run --hook-stage manual check-json --all-files --show-diff-on-failure
 
       - name: Run prettier (fully)
         if: needs.info.outputs.test_full_suite == 'true'
         run: |
           . venv/bin/activate
-          pre-commit run --hook-stage manual prettier --all-files
+          pre-commit run --hook-stage manual prettier --all-files --show-diff-on-failure
 
       - name: Run prettier (partially)
         if: needs.info.outputs.test_full_suite == 'false'
@@ -378,7 +378,7 @@ jobs:
         run: |
           . venv/bin/activate
           shopt -s globstar
-          pre-commit run --hook-stage manual prettier --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/{*,**/*}
+          pre-commit run --hook-stage manual prettier --show-diff-on-failure --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/{*,**/*}
 
       - name: Register check executables problem matcher
         run: |
@@ -386,7 +386,7 @@ jobs:
       - name: Run executables check
         run: |
           . venv/bin/activate
-          pre-commit run --hook-stage manual check-executables-have-shebangs --all-files
+          pre-commit run --hook-stage manual check-executables-have-shebangs --all-files --show-diff-on-failure
 
       - name: Register codespell problem matcher
         run: |
@@ -428,7 +428,7 @@ jobs:
     timeout-minutes: 60
     strategy:
       matrix:
-        python-version: ${{ fromJSON(needs.info.outputs.python_versions) }}
+        python-version: &matrix-python ${{ fromJson(needs.info.outputs.python_versions) }}
     steps:
       - *checkout
       - &setup-python-matrix
@@ -502,7 +502,6 @@ jobs:
             libavfilter-dev \
             libavformat-dev \
             libavutil-dev \
-            libgammu-dev \
             libswresample-dev \
             libswscale-dev \
             libudev-dev
@@ -512,11 +511,9 @@ jobs:
           fi
       - name: Save apt cache
         if: steps.cache-apt-check.outputs.cache-hit != 'true'
-        uses: &actions-cache-save actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        uses: &actions-cache-save actions/cache/save@9255dc7a253b0ccc959486e2bca901246202afeb # v5.0.1
         with:
-          path: |
-            ${{ env.APT_CACHE_DIR }}
-            ${{ env.APT_LIST_CACHE_DIR }}
+          path: *path-apt-cache
           key: *key-apt-cache
       - name: Create Python virtual environment
         if: steps.cache-venv.outputs.cache-hit != 'true'
@@ -525,7 +522,7 @@ jobs:
           . venv/bin/activate
           python --version
           pip install "$(grep '^uv' < requirements.txt)"
-          uv pip install -U "pip>=21.3.1" setuptools wheel
+          uv pip install -U "pip>=25.2"
           uv pip install -r requirements.txt
           python -m script.gen_requirements_all ci
           uv pip install -r requirements_all_pytest.txt -r requirements_test.txt
@@ -537,7 +534,7 @@ jobs:
           python --version
           uv pip freeze >> pip_freeze.txt
       - name: Upload pip_freeze artifact
-        uses: &actions-upload-artifact actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: &actions-upload-artifact actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
         with:
           name: pip-freeze-${{ matrix.python-version }}
           path: pip_freeze.txt
@@ -625,7 +622,7 @@ jobs:
     steps:
       - *checkout
       - name: Dependency review
-        uses: actions/dependency-review-action@56339e523c0409420f6c2c9a2f4292bbb3c07dd3 # v4.8.0
+        uses: actions/dependency-review-action@3c4e3dcb1aa7874d2c16be7d79418e9b7efd6261 # v4.8.2
         with:
           license-check: false # We use our own license audit checks
 
@@ -641,7 +638,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
+        python-version: *matrix-python
     steps:
       - *checkout
       - *setup-python-matrix
@@ -803,8 +800,7 @@ jobs:
             -o Dir::State::Lists=${{ env.APT_LIST_CACHE_DIR }} \
             bluez \
             ffmpeg \
-            libturbojpeg \
-            libgammu-dev
+            libturbojpeg
       - *checkout
       - *setup-python-default
       - *cache-restore-python-default
@@ -838,8 +834,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
-        group: ${{ fromJson(needs.info.outputs.test_groups) }}
+        python-version: *matrix-python
+        group: &matrix-group ${{ fromJson(needs.info.outputs.test_groups) }}
     steps:
       - *cache-restore-apt
       - name: Install additional OS dependencies
@@ -855,7 +851,6 @@ jobs:
             bluez \
             ffmpeg \
             libturbojpeg \
-            libgammu-dev \
             libxml2-utils
       - *checkout
       - *setup-python-matrix
@@ -869,7 +864,7 @@ jobs:
         run: |
           echo "::add-matcher::.github/workflows/matchers/pytest-slow.json"
       - name: Download pytest_buckets
-        uses: &actions-download-artifact actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        uses: &actions-download-artifact actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
           name: pytest_buckets
       - &compile-english-translations
@@ -964,7 +959,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
+        python-version: *matrix-python
         mariadb-group: ${{ fromJson(needs.info.outputs.mariadb_groups) }}
     steps:
       - *cache-restore-apt
@@ -1081,7 +1076,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
+        python-version: *matrix-python
         postgresql-group: ${{ fromJson(needs.info.outputs.postgresql_groups) }}
     steps:
       - *cache-restore-apt
@@ -1193,7 +1188,7 @@ jobs:
           pattern: coverage-*
       - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'true'
-        uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5.5.1
+        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
         with:
           fail_ci_if_error: true
           flags: full-suite
@@ -1218,8 +1213,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ${{ fromJson(needs.info.outputs.python_versions) }}
-        group: ${{ fromJson(needs.info.outputs.test_groups) }}
+        python-version: *matrix-python
+        group: *matrix-group
     steps:
       - *cache-restore-apt
       - name: Install additional OS dependencies
@@ -1235,7 +1230,6 @@ jobs:
             bluez \
             ffmpeg \
             libturbojpeg \
-            libgammu-dev \
             libxml2-utils
       - *checkout
       - *setup-python-matrix
@@ -1319,7 +1313,7 @@ jobs:
           pattern: coverage-*
       - name: Upload coverage to Codecov
         if: needs.info.outputs.test_full_suite == 'false'
-        uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5.5.1
+        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
         with:
           fail_ci_if_error: true
           token: ${{ secrets.CODECOV_TOKEN }}

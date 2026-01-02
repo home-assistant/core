@@ -562,6 +562,7 @@ async def test_events_during_migration_queue_exhausted(
         (25, False),
         (43, False),
         (48, True),
+        (50, True),
     ],
 )
 async def test_schema_migrate(

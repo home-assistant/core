@@ -1,0 +1,160 @@
+"""Hue BLE light platform."""
+
+from __future__ import annotations
+
+import logging
+from typing import TYPE_CHECKING, Any
+
+from HueBLE import HueBleLight
+
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP_KELVIN,
+    ATTR_XY_COLOR,
+    ColorMode,
+    LightEntity,
+    filter_supported_color_modes,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import color as color_util
+
+_LOGGER = logging.getLogger(__name__)
+
+
+if TYPE_CHECKING:
+    from . import HueBLEConfigEntry
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: HueBLEConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Add light for passed config_entry in HA."""
+
+    light = config_entry.runtime_data
+    async_add_entities([HueBLELight(light)])
+
+
+def get_available_color_modes(api: HueBleLight) -> set[ColorMode]:
+    """Return a set of available color modes."""
+    color_modes = set()
+    if api.supports_colour_xy:
+        color_modes.add(ColorMode.XY)
+    if api.supports_colour_temp:
+        color_modes.add(ColorMode.COLOR_TEMP)
+    if api.supports_brightness:
+        color_modes.add(ColorMode.BRIGHTNESS)
+    if api.supports_on_off:
+        color_modes.add(ColorMode.ONOFF)
+    return filter_supported_color_modes(color_modes)
+
+
+class HueBLELight(LightEntity):
+    """Representation of a light."""
+
+    _attr_has_entity_name = True
+    _attr_name = None
+
+    def __init__(self, light: HueBleLight) -> None:
+        """Initialize the light object. Does not connect."""
+
+        self._api = light
+        self._attr_unique_id = light.address
+        self._attr_min_color_temp_kelvin = (
+            color_util.color_temperature_mired_to_kelvin(light.maximum_mireds)
+            if light.maximum_mireds
+            else None
+        )
+        self._attr_max_color_temp_kelvin = (
+            color_util.color_temperature_mired_to_kelvin(light.minimum_mireds)
+            if light.minimum_mireds
+            else None
+        )
+        self._attr_device_info = DeviceInfo(
+            name=light.name,
+            connections={(CONNECTION_BLUETOOTH, light.address)},
+            manufacturer=light.manufacturer,
+            model_id=light.model,
+            sw_version=light.firmware,
+        )
+        self._attr_supported_color_modes = get_available_color_modes(self._api)
+        self._update_updatable_attributes()
+
+    async def async_added_to_hass(self) -> None:
+        """Run when this Entity has been added to HA."""
+
+        self._api.add_callback_on_state_changed(self._state_change_callback)
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Run when entity will be removed from HA."""
+
+        self._api.remove_callback(self._state_change_callback)
+
+    def _update_updatable_attributes(self) -> None:
+        """Update this entities updatable attrs from the lights state."""
+        self._attr_available = self._api.available
+        self._attr_is_on = self._api.power_state
+        self._attr_brightness = self._api.brightness
+        self._attr_color_temp_kelvin = (
+            color_util.color_temperature_mired_to_kelvin(self._api.colour_temp)
+            if self._api.colour_temp is not None and self._api.colour_temp != 0
+            else None
+        )
+        self._attr_xy_color = self._api.colour_xy
+
+    def _state_change_callback(self) -> None:
+        """Run when light informs of state update. Updates local properties."""
+        _LOGGER.debug("Received state notification from light %s", self.name)
+        self._update_updatable_attributes()
+        self.async_write_ha_state()
+
+    async def async_update(self) -> None:
+        """Fetch latest state from light and make available via properties."""
+        await self._api.poll_state()
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Set properties then turn the light on."""
+
+        _LOGGER.debug("Turning light %s on with args %s", self.name, kwargs)
+
+        if ATTR_BRIGHTNESS in kwargs:
+            brightness = kwargs[ATTR_BRIGHTNESS]
+            _LOGGER.debug("Setting brightness of %s to %s", self.name, brightness)
+            await self._api.set_brightness(brightness)
+
+        if ATTR_COLOR_TEMP_KELVIN in kwargs:
+            color_temp_kelvin = kwargs[ATTR_COLOR_TEMP_KELVIN]
+            mireds = color_util.color_temperature_kelvin_to_mired(color_temp_kelvin)
+            _LOGGER.debug("Setting color temp of %s to %s", self.name, mireds)
+            await self._api.set_colour_temp(mireds)
+
+        if ATTR_XY_COLOR in kwargs:
+            xy_color = kwargs[ATTR_XY_COLOR]
+            _LOGGER.debug("Setting XY color of %s to %s", self.name, xy_color)
+            await self._api.set_colour_xy(xy_color[0], xy_color[1])
+
+        await self._api.set_power(True)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn light off then set properties."""
+
+        _LOGGER.debug("Turning light %s off with args %s", self.name, kwargs)
+        await self._api.set_power(False)
+
+    @property
+    def color_mode(self) -> ColorMode:
+        """Color mode of the light."""
+
+        if self._api.supports_colour_xy and not self._api.colour_temp_mode:
+            return ColorMode.XY
+
+        if self._api.colour_temp_mode:
+            return ColorMode.COLOR_TEMP
+
+        if self._api.supports_brightness:
+            return ColorMode.BRIGHTNESS
+
+        return ColorMode.ONOFF

@@ -35,6 +35,7 @@ from .media_player import MediaPlayerGroup, async_create_preview_media_player
 from .notify import async_create_preview_notify
 from .sensor import async_create_preview_sensor
 from .switch import async_create_preview_switch
+from .valve import async_create_preview_valve
 
 _STATISTIC_MEASURES = [
     "last",
@@ -172,6 +173,7 @@ GROUP_TYPES = [
     "notify",
     "sensor",
     "switch",
+    "valve",
 ]
 
 
@@ -253,6 +255,11 @@ CONFIG_FLOW = {
         preview="group",
         validate_user_input=set_group_type("switch"),
     ),
+    "valve": SchemaFlowFormStep(
+        basic_group_config_schema("valve"),
+        preview="group",
+        validate_user_input=set_group_type("valve"),
+    ),
 }
 
 
@@ -302,6 +309,10 @@ OPTIONS_FLOW = {
         partial(light_switch_options_schema, "switch"),
         preview="group",
     ),
+    "valve": SchemaFlowFormStep(
+        partial(basic_group_options_schema, "valve"),
+        preview="group",
+    ),
 }
 
 PREVIEW_OPTIONS_SCHEMA: dict[str, vol.Schema] = {}
@@ -321,6 +332,7 @@ CREATE_PREVIEW_ENTITY: dict[
     "notify": async_create_preview_notify,
     "sensor": async_create_preview_sensor,
     "switch": async_create_preview_switch,
+    "valve": async_create_preview_valve,
 }
 
 

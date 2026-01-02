@@ -24,7 +24,8 @@ from homeassistant.components.telegram_bot import (
 )
 from homeassistant.const import ATTR_LOCATION
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.reload import setup_reload_service
+from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN, PLATFORMS
@@ -45,14 +46,25 @@ PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_service(
+async def async_get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> TelegramNotificationService:
     """Get the Telegram notification service."""
 
-    setup_reload_service(hass, DOMAIN, PLATFORMS)
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "migrate_notify",
+        breaks_in_ha_version="2026.5.0",
+        is_fixable=False,
+        translation_key="migrate_notify",
+        severity=ir.IssueSeverity.WARNING,
+        learn_more_url="https://www.home-assistant.io/integrations/telegram_bot#notifiers",
+    )
+
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     chat_id = config.get(CONF_CHAT_ID)
     return TelegramNotificationService(hass, chat_id)
 

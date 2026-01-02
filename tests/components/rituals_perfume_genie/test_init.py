@@ -1,10 +1,10 @@
 """Tests for the Rituals Perfume Genie integration."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock
 
 import aiohttp
 
-from homeassistant.components.rituals_perfume_genie.const import DOMAIN
+from homeassistant.components.rituals_perfume_genie.const import ACCOUNT_HASH, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -16,17 +16,39 @@ from .common import (
     mock_diffuser_v1_battery_cartridge,
 )
 
+from tests.common import MockConfigEntry
 
-async def test_config_entry_not_ready(hass: HomeAssistant) -> None:
+
+async def test_migration_v1_to_v2(
+    hass: HomeAssistant,
+    mock_rituals_account: AsyncMock,
+    old_mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test migration from V1 (account_hash) to V2 (credentials)."""
+    old_mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(old_mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert old_mock_config_entry.version == 2
+    assert ACCOUNT_HASH not in old_mock_config_entry.data
+    assert old_mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert len(hass.config_entries.flow.async_progress()) == 1
+
+
+async def test_config_entry_not_ready(
+    hass: HomeAssistant,
+    mock_rituals_account: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
     """Test the Rituals configuration entry setup if connection to Rituals is missing."""
-    config_entry = mock_config_entry(unique_id="id_123_not_ready")
-    config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.rituals_perfume_genie.Account.get_devices",
-        side_effect=aiohttp.ClientError,
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    mock_config_entry.add_to_hass(hass)
+    mock_rituals_account.get_devices.side_effect = aiohttp.ClientError
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_config_entry_unload(hass: HomeAssistant) -> None:

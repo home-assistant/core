@@ -72,6 +72,7 @@ PLATFORMS = [
     Platform.NOTIFY,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.VALVE,
 ]
 
 _LOGGER = logging.getLogger(__name__)

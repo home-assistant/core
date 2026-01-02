@@ -95,7 +95,10 @@ async def test_chat(
     ]
     # AGENT_DETAIL event contains the raw prompt passed to the model
     detail_event = trace_events[1]
-    assert "Current time is" in detail_event["data"]["messages"][0]["content"]
+    assert (
+        "You are a voice assistant for Home Assistant."
+        in detail_event["data"]["messages"][0]["content"]
+    )
 
 
 async def test_chat_stream(
@@ -273,6 +276,14 @@ async def test_template_variables(
         (
             {"domain": "['light']"},
             {"domain": "['light']"},  # Preserve invalid json that can't be parsed
+        ),
+        (
+            {"position": 0},
+            {"position": 0},  # Preserve 0 as a valid value
+        ),
+        (
+            {"enabled": False},
+            {"enabled": False},  # Preserve False as a valid value
         ),
     ],
 )

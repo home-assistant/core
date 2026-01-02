@@ -14,6 +14,7 @@ from homeassistant.components.openai_conversation.config_flow import (
 from homeassistant.components.openai_conversation.const import (
     CONF_CHAT_MODEL,
     CONF_CODE_INTERPRETER,
+    CONF_IMAGE_MODEL,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
     CONF_REASONING_EFFORT,
@@ -25,6 +26,7 @@ from homeassistant.components.openai_conversation.const import (
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_CONTEXT_SIZE,
     CONF_WEB_SEARCH_COUNTRY,
+    CONF_WEB_SEARCH_INLINE_CITATIONS,
     CONF_WEB_SEARCH_REGION,
     CONF_WEB_SEARCH_TIMEZONE,
     CONF_WEB_SEARCH_USER_LOCATION,
@@ -205,7 +207,7 @@ async def test_subentry_unsupported_model(
     subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
         hass, subentry.subentry_id
     )
-    assert subentry_flow["type"] == FlowResultType.FORM
+    assert subentry_flow["type"] is FlowResultType.FORM
     assert subentry_flow["step_id"] == "init"
 
     # Configure initial step
@@ -218,7 +220,7 @@ async def test_subentry_unsupported_model(
         },
     )
     await hass.async_block_till_done()
-    assert subentry_flow["type"] == FlowResultType.FORM
+    assert subentry_flow["type"] is FlowResultType.FORM
     assert subentry_flow["step_id"] == "advanced"
 
     # Configure advanced step
@@ -231,6 +233,114 @@ async def test_subentry_unsupported_model(
     await hass.async_block_till_done()
     assert subentry_flow["type"] is FlowResultType.FORM
     assert subentry_flow["errors"] == {"chat_model": "model_not_supported"}
+
+
+@pytest.mark.parametrize(
+    ("model", "reasoning_effort_options"),
+    [
+        ("o4-mini", ["low", "medium", "high"]),
+        ("gpt-5", ["minimal", "low", "medium", "high"]),
+        ("gpt-5.1", ["none", "low", "medium", "high"]),
+        ("gpt-5.2", ["none", "low", "medium", "high", "xhigh"]),
+        ("gpt-5.2-pro", ["medium", "high", "xhigh"]),
+    ],
+)
+async def test_subentry_reasoning_effort_list(
+    hass: HomeAssistant,
+    mock_config_entry,
+    mock_init_component,
+    model,
+    reasoning_effort_options,
+) -> None:
+    """Test the list reasoning effort options."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    assert subentry_flow["type"] is FlowResultType.FORM
+    assert subentry_flow["step_id"] == "init"
+
+    # Configure initial step
+    subentry_flow = await hass.config_entries.subentries.async_configure(
+        subentry_flow["flow_id"],
+        {
+            CONF_RECOMMENDED: False,
+            CONF_PROMPT: "Speak like a pirate",
+            CONF_LLM_HASS_API: ["assist"],
+        },
+    )
+    assert subentry_flow["type"] is FlowResultType.FORM
+    assert subentry_flow["step_id"] == "advanced"
+
+    # Configure advanced step
+    subentry_flow = await hass.config_entries.subentries.async_configure(
+        subentry_flow["flow_id"],
+        {
+            CONF_CHAT_MODEL: model,
+        },
+    )
+    assert subentry_flow["type"] is FlowResultType.FORM
+    assert subentry_flow["step_id"] == "model"
+    assert (
+        subentry_flow["data_schema"].schema[CONF_REASONING_EFFORT].config["options"]
+        == reasoning_effort_options
+    )
+
+
+async def test_subentry_websearch_unsupported_reasoning_effort(
+    hass: HomeAssistant, mock_config_entry, mock_init_component
+) -> None:
+    """Test the subentry form giving error about unsupported minimal reasoning effort."""
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+    assert subentry_flow["type"] is FlowResultType.FORM
+    assert subentry_flow["step_id"] == "init"
+
+    # Configure initial step
+    subentry_flow = await hass.config_entries.subentries.async_configure(
+        subentry_flow["flow_id"],
+        {
+            CONF_RECOMMENDED: False,
+            CONF_PROMPT: "Speak like a pirate",
+            CONF_LLM_HASS_API: ["assist"],
+        },
+    )
+    assert subentry_flow["type"] is FlowResultType.FORM
+    assert subentry_flow["step_id"] == "advanced"
+
+    # Configure advanced step
+    subentry_flow = await hass.config_entries.subentries.async_configure(
+        subentry_flow["flow_id"],
+        {
+            CONF_CHAT_MODEL: "gpt-5",
+        },
+    )
+    assert subentry_flow["type"] is FlowResultType.FORM
+    assert subentry_flow["step_id"] == "model"
+
+    # Configure model step
+    subentry_flow = await hass.config_entries.subentries.async_configure(
+        subentry_flow["flow_id"],
+        {
+            CONF_REASONING_EFFORT: "minimal",
+            CONF_WEB_SEARCH: True,
+        },
+    )
+    assert subentry_flow["type"] is FlowResultType.FORM
+    assert subentry_flow["errors"] == {"web_search": "web_search_minimal_reasoning"}
+
+    # Reconfigure model step
+    subentry_flow = await hass.config_entries.subentries.async_configure(
+        subentry_flow["flow_id"],
+        {
+            CONF_REASONING_EFFORT: "low",
+            CONF_WEB_SEARCH: True,
+        },
+    )
+    assert subentry_flow["type"] is FlowResultType.ABORT
+    assert subentry_flow["reason"] == "reconfigure_successful"
 
 
 @pytest.mark.parametrize(
@@ -347,6 +457,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                     CONF_WEB_SEARCH: True,
                     CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
                     CONF_WEB_SEARCH_USER_LOCATION: False,
+                    CONF_WEB_SEARCH_INLINE_CITATIONS: True,
                     CONF_CODE_INTERPRETER: False,
                 },
             ),
@@ -360,6 +471,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_WEB_SEARCH: True,
                 CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
                 CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_WEB_SEARCH_INLINE_CITATIONS: True,
                 CONF_CODE_INTERPRETER: False,
             },
         ),
@@ -379,6 +491,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_WEB_SEARCH_REGION: "California",
                 CONF_WEB_SEARCH_COUNTRY: "US",
                 CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
+                CONF_WEB_SEARCH_INLINE_CITATIONS: True,
                 CONF_CODE_INTERPRETER: True,
             },
             (
@@ -396,6 +509,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                     CONF_WEB_SEARCH: True,
                     CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
                     CONF_WEB_SEARCH_USER_LOCATION: False,
+                    CONF_WEB_SEARCH_INLINE_CITATIONS: True,
                     CONF_CODE_INTERPRETER: True,
                 },
             ),
@@ -409,6 +523,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_WEB_SEARCH: True,
                 CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
                 CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_WEB_SEARCH_INLINE_CITATIONS: True,
                 CONF_CODE_INTERPRETER: True,
             },
         ),
@@ -426,6 +541,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
                 CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_WEB_SEARCH_INLINE_CITATIONS: True,
             },
             (
                 {
@@ -445,6 +561,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                     CONF_WEB_SEARCH: False,
                     CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
                     CONF_WEB_SEARCH_USER_LOCATION: False,
+                    CONF_WEB_SEARCH_INLINE_CITATIONS: True,
                 },
             ),
             {
@@ -460,6 +577,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_WEB_SEARCH: False,
                 CONF_WEB_SEARCH_CONTEXT_SIZE: "low",
                 CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_WEB_SEARCH_INLINE_CITATIONS: True,
             },
         ),
         # Test that old options are removed after reconfiguration
@@ -479,6 +597,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_WEB_SEARCH_REGION: "California",
                 CONF_WEB_SEARCH_COUNTRY: "US",
                 CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
+                CONF_WEB_SEARCH_INLINE_CITATIONS: True,
             },
             (
                 {
@@ -534,6 +653,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_WEB_SEARCH_REGION: "California",
                 CONF_WEB_SEARCH_COUNTRY: "US",
                 CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
+                CONF_WEB_SEARCH_INLINE_CITATIONS: True,
                 CONF_CODE_INTERPRETER: True,
             },
             (
@@ -591,6 +711,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                     CONF_WEB_SEARCH: True,
                     CONF_WEB_SEARCH_CONTEXT_SIZE: "high",
                     CONF_WEB_SEARCH_USER_LOCATION: False,
+                    CONF_WEB_SEARCH_INLINE_CITATIONS: True,
                     CONF_CODE_INTERPRETER: False,
                 },
             ),
@@ -604,6 +725,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_WEB_SEARCH: True,
                 CONF_WEB_SEARCH_CONTEXT_SIZE: "high",
                 CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_WEB_SEARCH_INLINE_CITATIONS: True,
                 CONF_CODE_INTERPRETER: False,
             },
         ),
@@ -622,6 +744,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_WEB_SEARCH: True,
                 CONF_WEB_SEARCH_CONTEXT_SIZE: "high",
                 CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_WEB_SEARCH_INLINE_CITATIONS: True,
             },
             (
                 {
@@ -638,6 +761,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                     CONF_WEB_SEARCH: True,
                     CONF_WEB_SEARCH_CONTEXT_SIZE: "high",
                     CONF_WEB_SEARCH_USER_LOCATION: False,
+                    CONF_WEB_SEARCH_INLINE_CITATIONS: True,
                 },
             ),
             {
@@ -651,6 +775,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_WEB_SEARCH: True,
                 CONF_WEB_SEARCH_CONTEXT_SIZE: "high",
                 CONF_WEB_SEARCH_USER_LOCATION: False,
+                CONF_WEB_SEARCH_INLINE_CITATIONS: True,
             },
         ),
     ],
@@ -675,7 +800,7 @@ async def test_subentry_switching(
     assert subentry_flow["step_id"] == "init"
 
     for step_options in new_options:
-        assert subentry_flow["type"] == FlowResultType.FORM
+        assert subentry_flow["type"] is FlowResultType.FORM
 
         # Test that current options are showed as suggested values:
         for key in subentry_flow["data_schema"].schema:
@@ -709,7 +834,7 @@ async def test_subentry_web_search_user_location(
     subentry_flow = await mock_config_entry.start_subentry_reconfigure_flow(
         hass, subentry.subentry_id
     )
-    assert subentry_flow["type"] == FlowResultType.FORM
+    assert subentry_flow["type"] is FlowResultType.FORM
     assert subentry_flow["step_id"] == "init"
 
     # Configure initial step
@@ -720,7 +845,7 @@ async def test_subentry_web_search_user_location(
             CONF_PROMPT: "Speak like a pirate",
         },
     )
-    assert subentry_flow["type"] == FlowResultType.FORM
+    assert subentry_flow["type"] is FlowResultType.FORM
     assert subentry_flow["step_id"] == "advanced"
 
     # Configure advanced step
@@ -734,7 +859,7 @@ async def test_subentry_web_search_user_location(
         },
     )
     await hass.async_block_till_done()
-    assert subentry_flow["type"] == FlowResultType.FORM
+    assert subentry_flow["type"] is FlowResultType.FORM
     assert subentry_flow["step_id"] == "model"
 
     hass.config.country = "US"
@@ -801,6 +926,7 @@ async def test_subentry_web_search_user_location(
         CONF_WEB_SEARCH_REGION: "California",
         CONF_WEB_SEARCH_COUNTRY: "US",
         CONF_WEB_SEARCH_TIMEZONE: "America/Los_Angeles",
+        CONF_WEB_SEARCH_INLINE_CITATIONS: False,
         CONF_CODE_INTERPRETER: False,
     }
 
@@ -917,6 +1043,7 @@ async def test_creating_ai_task_subentry_advanced(
     assert result4.get("data") == {
         CONF_RECOMMENDED: False,
         CONF_CHAT_MODEL: "gpt-4o",
+        CONF_IMAGE_MODEL: "gpt-image-1",
         CONF_MAX_TOKENS: 200,
         CONF_TEMPERATURE: 0.5,
         CONF_TOP_P: 0.9,

@@ -73,6 +73,12 @@
     "pause_watering": {
       "service": "mdi:pause"
     },
+    "push_flow_meter_data": {
+      "service": "mdi:database-arrow-up"
+    },
+    "push_weather_data": {
+      "service": "mdi:database-arrow-up"
+    },
     "restrict_watering": {
       "service": "mdi:cancel"
     },
@@ -93,12 +99,6 @@
     },
     "unpause_watering": {
       "service": "mdi:play-pause"
-    },
-    "push_flow_meter_data": {
-      "service": "mdi:database-arrow-up"
-    },
-    "push_weather_data": {
-      "service": "mdi:database-arrow-up"
     },
     "unrestrict_watering": {
       "service": "mdi:check"

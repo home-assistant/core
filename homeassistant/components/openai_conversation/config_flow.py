@@ -43,6 +43,7 @@ from homeassistant.helpers.typing import VolDictType
 from .const import (
     CONF_CHAT_MODEL,
     CONF_CODE_INTERPRETER,
+    CONF_IMAGE_MODEL,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
     CONF_REASONING_EFFORT,
@@ -54,6 +55,7 @@ from .const import (
     CONF_WEB_SEARCH_CITY,
     CONF_WEB_SEARCH_CONTEXT_SIZE,
     CONF_WEB_SEARCH_COUNTRY,
+    CONF_WEB_SEARCH_INLINE_CITATIONS,
     CONF_WEB_SEARCH_REGION,
     CONF_WEB_SEARCH_TIMEZONE,
     CONF_WEB_SEARCH_USER_LOCATION,
@@ -64,6 +66,7 @@ from .const import (
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_CODE_INTERPRETER,
     RECOMMENDED_CONVERSATION_OPTIONS,
+    RECOMMENDED_IMAGE_MODEL,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_REASONING_EFFORT,
     RECOMMENDED_TEMPERATURE,
@@ -71,7 +74,10 @@ from .const import (
     RECOMMENDED_VERBOSITY,
     RECOMMENDED_WEB_SEARCH,
     RECOMMENDED_WEB_SEARCH_CONTEXT_SIZE,
+    RECOMMENDED_WEB_SEARCH_INLINE_CITATIONS,
     RECOMMENDED_WEB_SEARCH_USER_LOCATION,
+    UNSUPPORTED_CODE_INTERPRETER_MODELS,
+    UNSUPPORTED_IMAGE_MODELS,
     UNSUPPORTED_MODELS,
     UNSUPPORTED_WEB_SEARCH_MODELS,
 )
@@ -320,7 +326,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
 
         model = options[CONF_CHAT_MODEL]
 
-        if not model.startswith(("gpt-5-pro", "gpt-5-codex")):
+        if not model.startswith(tuple(UNSUPPORTED_CODE_INTERPRETER_MODELS)):
             step_schema.update(
                 {
                     vol.Optional(
@@ -332,7 +338,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         elif CONF_CODE_INTERPRETER in options:
             options.pop(CONF_CODE_INTERPRETER)
 
-        if model.startswith(("o", "gpt-5")) and not model.startswith("gpt-5-pro"):
+        if reasoning_options := self._get_reasoning_options(model):
             step_schema.update(
                 {
                     vol.Optional(
@@ -340,9 +346,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                         default=RECOMMENDED_REASONING_EFFORT,
                     ): SelectSelector(
                         SelectSelectorConfig(
-                            options=["low", "medium", "high"]
-                            if model.startswith("o")
-                            else ["minimal", "low", "medium", "high"],
+                            options=reasoning_options,
                             translation_key=CONF_REASONING_EFFORT,
                             mode=SelectSelectorMode.DROPDOWN,
                         )
@@ -393,6 +397,10 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                         CONF_WEB_SEARCH_USER_LOCATION,
                         default=RECOMMENDED_WEB_SEARCH_USER_LOCATION,
                     ): bool,
+                    vol.Optional(
+                        CONF_WEB_SEARCH_INLINE_CITATIONS,
+                        default=RECOMMENDED_WEB_SEARCH_INLINE_CITATIONS,
+                    ): bool,
                 }
             )
         elif CONF_WEB_SEARCH in options:
@@ -408,12 +416,27 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                     CONF_WEB_SEARCH_REGION,
                     CONF_WEB_SEARCH_COUNTRY,
                     CONF_WEB_SEARCH_TIMEZONE,
+                    CONF_WEB_SEARCH_INLINE_CITATIONS,
                 )
             }
 
+        if self._subentry_type == "ai_task_data" and not model.startswith(
+            tuple(UNSUPPORTED_IMAGE_MODELS)
+        ):
+            step_schema[
+                vol.Optional(CONF_IMAGE_MODEL, default=RECOMMENDED_IMAGE_MODEL)
+            ] = SelectSelector(
+                SelectSelectorConfig(
+                    options=["gpt-image-1", "gpt-image-1-mini"],
+                    mode=SelectSelectorMode.DROPDOWN,
+                )
+            )
+
         if user_input is not None:
             if user_input.get(CONF_WEB_SEARCH):
-                if user_input.get(CONF_WEB_SEARCH_USER_LOCATION):
+                if user_input.get(CONF_REASONING_EFFORT) == "minimal":
+                    errors[CONF_WEB_SEARCH] = "web_search_minimal_reasoning"
+                if user_input.get(CONF_WEB_SEARCH_USER_LOCATION) and not errors:
                     user_input.update(await self._get_location_data())
                 else:
                     options.pop(CONF_WEB_SEARCH_CITY, None)
@@ -422,16 +445,17 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                     options.pop(CONF_WEB_SEARCH_TIMEZONE, None)
 
             options.update(user_input)
-            if self._is_new:
-                return self.async_create_entry(
-                    title=options.pop(CONF_NAME),
+            if not errors:
+                if self._is_new:
+                    return self.async_create_entry(
+                        title=options.pop(CONF_NAME),
+                        data=options,
+                    )
+                return self.async_update_and_abort(
+                    self._get_entry(),
+                    self._get_reconfigure_subentry(),
                     data=options,
                 )
-            return self.async_update_and_abort(
-                self._get_entry(),
-                self._get_reconfigure_subentry(),
-                data=options,
-            )
 
         return self.async_show_form(
             step_id="model",
@@ -440,6 +464,24 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             ),
             errors=errors,
         )
+
+    def _get_reasoning_options(self, model: str) -> list[str]:
+        """Get reasoning effort options based on model."""
+        if not model.startswith(("o", "gpt-5")) or model.startswith("gpt-5-pro"):
+            return []
+
+        MODELS_REASONING_MAP = {
+            "gpt-5.2-pro": ["medium", "high", "xhigh"],
+            "gpt-5.2": ["none", "low", "medium", "high", "xhigh"],
+            "gpt-5.1": ["none", "low", "medium", "high"],
+            "gpt-5": ["minimal", "low", "medium", "high"],
+            "": ["low", "medium", "high"],  # The default case
+        }
+
+        for prefix, options in MODELS_REASONING_MAP.items():
+            if model.startswith(prefix):
+                return options
+        return []  # pragma: no cover
 
     async def _get_location_data(self) -> dict[str, str]:
         """Get approximate location data of the user."""

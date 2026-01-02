@@ -587,3 +587,47 @@ async def test_nested_group(hass: HomeAssistant) -> None:
     assert hass.states.get(PERCENTAGE_FULL_FAN_ENTITY_ID).state == STATE_ON
     assert hass.states.get("fan.bedroom_group").state == STATE_ON
     assert hass.states.get("fan.nested_group").state == STATE_ON
+
+
+async def test_assumed_state(hass: HomeAssistant) -> None:
+    """Test assumed_state attribute behavior."""
+    await async_setup_component(
+        hass,
+        FAN_DOMAIN,
+        {
+            FAN_DOMAIN: [
+                {"platform": "demo"},
+                {
+                    "platform": "group",
+                    CONF_ENTITIES: [LIVING_ROOM_FAN_ENTITY_ID, CEILING_FAN_ENTITY_ID],
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    # No members with assumed_state -> group doesn't have assumed_state in attributes
+    hass.states.async_set(LIVING_ROOM_FAN_ENTITY_ID, STATE_ON, {})
+    hass.states.async_set(CEILING_FAN_ENTITY_ID, STATE_OFF, {})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FAN_GROUP)
+    assert ATTR_ASSUMED_STATE not in state.attributes
+
+    # One member with assumed_state=True -> group has assumed_state=True
+    hass.states.async_set(
+        LIVING_ROOM_FAN_ENTITY_ID, STATE_ON, {ATTR_ASSUMED_STATE: True}
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FAN_GROUP)
+    assert state.attributes.get(ATTR_ASSUMED_STATE) is True
+
+    # All members without assumed_state -> group doesn't have assumed_state in attributes
+    hass.states.async_set(LIVING_ROOM_FAN_ENTITY_ID, STATE_ON, {})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(FAN_GROUP)
+    assert ATTR_ASSUMED_STATE not in state.attributes

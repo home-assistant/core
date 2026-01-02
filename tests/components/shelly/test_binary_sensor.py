@@ -3,13 +3,13 @@
 from copy import deepcopy
 from unittest.mock import Mock
 
-from aioshelly.const import MODEL_BLU_GATEWAY_G3, MODEL_MOTION
+from aioshelly.const import MODEL_BLU_GATEWAY_G3, MODEL_MOTION, MODEL_PLUS_SMOKE
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.shelly.const import UPDATE_PERIOD_MULTIPLIER
+from homeassistant.components.shelly.const import DOMAIN, UPDATE_PERIOD_MULTIPLIER
 from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
@@ -22,6 +22,7 @@ from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import (
+    MOCK_MAC,
     init_integration,
     mock_rest_update,
     mutate_rpc_device_status,
@@ -271,6 +272,34 @@ async def test_rpc_binary_sensor(
     assert entry.unique_id == "123456789ABC-cover:0-overpower"
 
 
+async def test_rpc_binary_sensor_input_custom_name(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC binary sensor."""
+    monkeypatch.setitem(
+        mock_rpc_device.config,
+        "input:1",
+        {
+            "id": 1,
+            "type": "switch",
+            "invert": False,
+            "factory_reset": True,
+            "name": "test channel",
+        },
+    )
+    monkeypatch.setitem(
+        mock_rpc_device.status,
+        "input:1",
+        {"id": 1, "state": True},
+    )
+    await init_integration(hass, 2)
+
+    assert (state := hass.states.get(f"{BINARY_SENSOR_DOMAIN}.test_name_test_channel"))
+    assert state.state == STATE_ON
+
+
 async def test_rpc_binary_sensor_removal(
     hass: HomeAssistant,
     mock_rpc_device: Mock,
@@ -330,6 +359,35 @@ async def test_rpc_sleeping_binary_sensor(
         entry := entity_registry.async_get("binary_sensor.test_name_external_power")
     )
     assert entry.unique_id == "123456789ABC-devicepower:0-external_power"
+
+
+async def test_rpc_sleeping_binary_sensor_with_channel_name(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC online sleeping binary sensor with channel name."""
+    entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_test_channel_name_smoke"
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
+    await init_integration(hass, 2, sleep_period=1000, model=MODEL_PLUS_SMOKE)
+
+    # Sensor should be created when device is online
+    assert hass.states.get(entity_id) is None
+
+    # Make device online
+    mock_rpc_device.mock_online()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert (state := hass.states.get(entity_id))
+    assert state.attributes["friendly_name"] == "Test name test channel name smoke"
+    assert state.state == STATE_OFF
+
+    mutate_rpc_device_status(monkeypatch, mock_rpc_device, "smoke:0", "alarm", True)
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
 
 
 async def test_rpc_restored_sleeping_binary_sensor(
@@ -670,3 +728,58 @@ async def test_rpc_presencezone_component(
 
     assert (state := hass.states.get(entity_id))
     assert state.state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    ("old_id", "new_id", "role"),
+    [
+        ("boolean", "boolean_generic", None),
+        ("boolean", "boolean_has_power", "has_power"),
+        ("input", "input", None),  # negative test, input is not a virtual component
+    ],
+)
+@pytest.mark.usefixtures("disable_async_remove_shelly_rpc_entities")
+async def test_migrate_unique_id_virtual_components_roles(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+    monkeypatch: pytest.MonkeyPatch,
+    old_id: str,
+    new_id: str,
+    role: str | None,
+) -> None:
+    """Test migration of unique_id for virtual components to include role."""
+    entry = await init_integration(hass, 3, skip_setup=True)
+    unique_base = f"{MOCK_MAC}-{old_id}:200"
+    old_unique_id = f"{unique_base}-{old_id}"
+    new_unique_id = f"{unique_base}-{new_id}"
+    config = deepcopy(mock_rpc_device.config)
+    if role:
+        config[f"{old_id}:200"] = {
+            "role": role,
+        }
+    else:
+        config[f"{old_id}:200"] = {}
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    entity = entity_registry.async_get_or_create(
+        suggested_object_id="test_name_test_sensor",
+        disabled_by=None,
+        domain=BINARY_SENSOR_DOMAIN,
+        platform=DOMAIN,
+        unique_id=old_unique_id,
+        config_entry=entry,
+    )
+    assert entity.unique_id == old_unique_id
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_entry = entity_registry.async_get("binary_sensor.test_name_test_sensor")
+    assert entity_entry
+    assert entity_entry.unique_id == new_unique_id
+
+    assert (
+        "Migrating unique_id for binary_sensor.test_name_test_sensor" in caplog.text
+    ) == (old_id != new_id)

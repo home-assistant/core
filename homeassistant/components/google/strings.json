@@ -1,46 +1,59 @@
 {
+  "application_credentials": {
+    "description": "Follow the [instructions]({more_info_url}) for [OAuth consent screen]({oauth_consent_url}) to give Home Assistant access to your Google Calendar. You also need to create Application Credentials linked to your account:\n1. Go to [Credentials]({oauth_creds_url}) and select **Create Credentials**.\n1. From the drop-down list select **OAuth client ID**.\n1. Select **Web application** for the Application Type."
+  },
   "config": {
-    "step": {
-      "pick_implementation": {
-        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]",
-        "data": {
-          "implementation": "[%key:common::config_flow::data::implementation%]"
-        },
-        "data_description": {
-          "implementation": "[%key:common::config_flow::description::implementation%]"
-        }
-      },
-      "reauth_confirm": {
-        "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "The Google Calendar integration needs to re-authenticate your account"
-      },
-      "auth": {
-        "title": "Link Google Account"
-      }
-    },
     "abort": {
-      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
-      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
-      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "missing_credentials": "[%key:common::config_flow::abort::oauth2_missing_credentials%]",
-      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
-      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
-      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
-      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
-      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "calendar_api_disabled": "You must [enable the Google Calendar API]({calendar_api_url}) in the Google Cloud Console",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
       "code_expired": "Authentication code expired or credential setup is invalid, please try again.",
-      "calendar_api_disabled": "You must [enable the Google Calendar API]({calendar_api_url}) in the Google Cloud Console"
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "missing_credentials": "[%key:common::config_flow::abort::oauth2_missing_credentials%]",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
+      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]"
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     },
     "progress": {
       "exchange": "To link your Google account, visit the [{url}]({url}) and enter code:\n\n{user_code}"
+    },
+    "step": {
+      "auth": {
+        "title": "Link Google Account"
+      },
+      "pick_implementation": {
+        "data": {
+          "implementation": "[%key:common::config_flow::data::implementation%]"
+        },
+        "data_description": {
+          "implementation": "[%key:common::config_flow::description::implementation%]"
+        },
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "reauth_confirm": {
+        "description": "The Google Calendar integration needs to re-authenticate your account",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      }
+    }
+  },
+  "entity": {
+    "calendar": {
+      "birthdays": {
+        "name": "Birthdays"
+      },
+      "working_location": {
+        "name": "Working location"
+      }
     }
   },
   "options": {
@@ -52,95 +65,82 @@
       }
     }
   },
-  "application_credentials": {
-    "description": "Follow the [instructions]({more_info_url}) for [OAuth consent screen]({oauth_consent_url}) to give Home Assistant access to your Google Calendar. You also need to create Application Credentials linked to your account:\n1. Go to [Credentials]({oauth_creds_url}) and select **Create Credentials**.\n1. From the drop-down list select **OAuth client ID**.\n1. Select **Web application** for the Application Type."
-  },
   "services": {
     "add_event": {
-      "name": "Add event",
       "description": "Adds a new calendar event.",
       "fields": {
         "calendar_id": {
-          "name": "Calendar ID",
-          "description": "The id of the calendar you want."
-        },
-        "summary": {
-          "name": "Summary",
-          "description": "Acts as the title of the event."
+          "description": "The id of the calendar you want.",
+          "name": "Calendar ID"
         },
         "description": {
-          "name": "Description",
-          "description": "The description of the event. Optional."
-        },
-        "start_date_time": {
-          "name": "Start time",
-          "description": "The date and time the event should start."
-        },
-        "end_date_time": {
-          "name": "End time",
-          "description": "The date and time the event should end."
-        },
-        "start_date": {
-          "name": "Start date",
-          "description": "The date the whole day event should start."
+          "description": "The description of the event. Optional.",
+          "name": "Description"
         },
         "end_date": {
-          "name": "End date",
-          "description": "The date the whole day event should end."
+          "description": "The date the whole day event should end.",
+          "name": "End date"
+        },
+        "end_date_time": {
+          "description": "The date and time the event should end.",
+          "name": "End time"
         },
         "in": {
-          "name": "In",
-          "description": "Days or weeks that you want to create the event in."
+          "description": "Days or weeks that you want to create the event in.",
+          "name": "In"
+        },
+        "start_date": {
+          "description": "The date the whole day event should start.",
+          "name": "Start date"
+        },
+        "start_date_time": {
+          "description": "The date and time the event should start.",
+          "name": "Start time"
+        },
+        "summary": {
+          "description": "Acts as the title of the event.",
+          "name": "Summary"
         }
-      }
+      },
+      "name": "Add event"
     },
     "create_event": {
-      "name": "Create event",
       "description": "Adds a new calendar event.",
       "fields": {
-        "summary": {
-          "name": "Summary",
-          "description": "[%key:component::google::services::add_event::fields::summary::description%]"
-        },
         "description": {
-          "name": "Description",
-          "description": "[%key:component::google::services::add_event::fields::description::description%]"
-        },
-        "start_date_time": {
-          "name": "Start time",
-          "description": "The date and time the event should start."
-        },
-        "end_date_time": {
-          "name": "End time",
-          "description": "The date and time the event should end."
-        },
-        "start_date": {
-          "name": "Start date",
-          "description": "[%key:component::google::services::add_event::fields::start_date::description%]"
+          "description": "[%key:component::google::services::add_event::fields::description::description%]",
+          "name": "Description"
         },
         "end_date": {
-          "name": "End date",
-          "description": "[%key:component::google::services::add_event::fields::end_date::description%]"
+          "description": "[%key:component::google::services::add_event::fields::end_date::description%]",
+          "name": "End date"
+        },
+        "end_date_time": {
+          "description": "The date and time the event should end.",
+          "name": "End time"
         },
         "in": {
-          "name": "In",
-          "description": "Days or weeks that you want to create the event in."
+          "description": "Days or weeks that you want to create the event in.",
+          "name": "In"
         },
         "location": {
-          "name": "[%key:common::config_flow::data::location%]",
-          "description": "The location of the event. Optional."
+          "description": "The location of the event. Optional.",
+          "name": "[%key:common::config_flow::data::location%]"
+        },
+        "start_date": {
+          "description": "[%key:component::google::services::add_event::fields::start_date::description%]",
+          "name": "Start date"
+        },
+        "start_date_time": {
+          "description": "The date and time the event should start.",
+          "name": "Start time"
+        },
+        "summary": {
+          "description": "[%key:component::google::services::add_event::fields::summary::description%]",
+          "name": "Summary"
         }
-      }
-    }
-  },
-  "entity": {
-    "calendar": {
-      "working_location": {
-        "name": "Working location"
       },
-      "birthdays": {
-        "name": "Birthdays"
-      }
+      "name": "Create event"
     }
   }
 }

@@ -1,22 +1,22 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "private_registry": "The given domain is registered in a private registry and cannot be monitored",
+      "quota_exceeded": "Your whois quota has been exceeded for this TLD",
+      "unexpected_response": "Unexpected response from whois server",
+      "unknown_date_format": "Unknown date format in whois server response",
+      "unknown_tld": "The given TLD is unknown or not available to this integration",
+      "whois_command_failed": "Whois command failed: could not retrieve whois information"
+    },
     "step": {
       "user": {
         "data": {
           "domain": "Domain name"
         }
       }
-    },
-    "error": {
-      "unexpected_response": "Unexpected response from whois server",
-      "unknown_date_format": "Unknown date format in whois server response",
-      "unknown_tld": "The given TLD is unknown or not available to this integration",
-      "whois_command_failed": "Whois command failed: could not retrieve whois information",
-      "private_registry": "The given domain is registered in a private registry and cannot be monitored",
-      "quota_exceeded": "Your whois quota has been exceeded for this TLD"
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     }
   },
   "entity": {
@@ -51,11 +51,16 @@
       "status": {
         "name": "Status",
         "state": {
+          "active": "Active",
           "add_period": "Add period",
           "auto_renew_period": "Auto-renew period",
+          "client_delete_prohibited": "Client delete prohibited",
+          "client_hold": "Client hold",
+          "client_renew_prohibited": "Client renew prohibited",
+          "client_transfer_prohibited": "Client transfer prohibited",
+          "client_update_prohibited": "Client update prohibited",
           "inactive": "Inactive",
           "ok": "Active",
-          "active": "Active",
           "pending_create": "Pending create",
           "pending_renew": "Pending renew",
           "pending_restore": "Pending restore",
@@ -68,12 +73,7 @@
           "server_renew_prohibited": "Server renew prohibited",
           "server_transfer_prohibited": "Server transfer prohibited",
           "server_update_prohibited": "Server update prohibited",
-          "transfer_period": "Transfer period",
-          "client_delete_prohibited": "Client delete prohibited",
-          "client_hold": "Client hold",
-          "client_renew_prohibited": "Client renew prohibited",
-          "client_transfer_prohibited": "Client transfer prohibited",
-          "client_update_prohibited": "Client update prohibited"
+          "transfer_period": "Transfer period"
         }
       }
     }

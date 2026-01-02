@@ -62,6 +62,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.components.switch import SwitchDeviceClass
+from homeassistant.components.valve import ValveDeviceClass, ValveState
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     ConfigEntry,
@@ -109,6 +110,7 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_OPENING,
     EntityCategory,
+    Platform,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, async_get_hass, callback
@@ -150,6 +152,7 @@ from .const import (
     CONF_ACTION_TOPIC,
     CONF_AVAILABILITY_TEMPLATE,
     CONF_AVAILABILITY_TOPIC,
+    CONF_AVAILABLE_TONES,
     CONF_BIRTH_MESSAGE,
     CONF_BLUE_TEMPLATE,
     CONF_BRIGHTNESS_COMMAND_TEMPLATE,
@@ -237,6 +240,7 @@ from .const import (
     CONF_OSCILLATION_COMMAND_TOPIC,
     CONF_OSCILLATION_STATE_TOPIC,
     CONF_OSCILLATION_VALUE_TEMPLATE,
+    CONF_PATTERN,
     CONF_PAYLOAD_ARM_AWAY,
     CONF_PAYLOAD_ARM_CUSTOM_BYPASS,
     CONF_PAYLOAD_ARM_HOME,
@@ -273,6 +277,7 @@ from .const import (
     CONF_PRESET_MODES_LIST,
     CONF_QOS,
     CONF_RED_TEMPLATE,
+    CONF_REPORTS_POSITION,
     CONF_RETAIN,
     CONF_RGB_COMMAND_TEMPLATE,
     CONF_RGB_COMMAND_TOPIC,
@@ -307,6 +312,8 @@ from .const import (
     CONF_STATE_VALUE_TEMPLATE,
     CONF_STEP,
     CONF_SUGGESTED_DISPLAY_PRECISION,
+    CONF_SUPPORT_DURATION,
+    CONF_SUPPORT_VOLUME_SET,
     CONF_SUPPORTED_COLOR_MODES,
     CONF_SUPPORTED_FEATURES,
     CONF_SWING_HORIZONTAL_MODE_COMMAND_TEMPLATE,
@@ -414,7 +421,6 @@ from .const import (
     TRANSPORT_TCP,
     TRANSPORT_WEBSOCKETS,
     VALUES_ON_COMMAND_TYPE,
-    Platform,
 )
 from .models import MqttAvailabilityData, MqttDeviceData, MqttSubentryData
 from .util import (
@@ -458,8 +464,13 @@ SUBENTRY_PLATFORMS = [
     Platform.LOCK,
     Platform.NOTIFY,
     Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
+    Platform.SIREN,
     Platform.SWITCH,
+    Platform.TEXT,
+    Platform.VALVE,
+    Platform.WATER_HEATER,
 ]
 
 _CODE_VALIDATION_MODE = {
@@ -468,6 +479,29 @@ _CODE_VALIDATION_MODE = {
 }
 EXCLUDE_FROM_CONFIG_IF_NONE = {CONF_ENTITY_CATEGORY}
 PWD_NOT_CHANGED = "__**password_not_changed**__"
+
+DEVELOPER_DOCUMENTATION_URL = "https://developers.home-assistant.io/"
+USER_DOCUMENTATION_URL = "https://www.home-assistant.io/"
+
+INTEGRATION_URL = f"{USER_DOCUMENTATION_URL}integrations/{DOMAIN}/"
+TEMPLATING_URL = f"{USER_DOCUMENTATION_URL}docs/configuration/templating/"
+COMMAND_TEMPLATING_URL = f"{TEMPLATING_URL}#using-command-templates-with-mqtt"
+VALUE_TEMPLATING_URL = f"{TEMPLATING_URL}#using-value-templates-with-mqtt"
+AVAILABLE_STATE_CLASSES_URL = (
+    f"{DEVELOPER_DOCUMENTATION_URL}docs/core/entity/sensor/#available-state-classes"
+)
+NAMING_ENTITIES_URL = f"{INTEGRATION_URL}#naming-of-mqtt-entities"
+REGISTRY_PROPERTIES_URL = (
+    f"{DEVELOPER_DOCUMENTATION_URL}docs/core/entity/#registry-properties"
+)
+
+TRANSLATION_DESCRIPTION_PLACEHOLDERS = {
+    "command_templating_url": COMMAND_TEMPLATING_URL,
+    "value_templating_url": VALUE_TEMPLATING_URL,
+    "available_state_classes_url": AVAILABLE_STATE_CLASSES_URL,
+    "naming_entities_url": NAMING_ENTITIES_URL,
+    "registry_properties_url": REGISTRY_PROPERTIES_URL,
+}
 
 # Common selectors
 BOOLEAN_SELECTOR = BooleanSelector()
@@ -791,15 +825,47 @@ TEMPERATURE_UNIT_SELECTOR = SelectSelector(
         mode=SelectSelectorMode.DROPDOWN,
     )
 )
+TEXT_MODE_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=[TextSelectorType.TEXT.value, TextSelectorType.PASSWORD.value],
+        mode=SelectSelectorMode.DROPDOWN,
+        translation_key="text_mode",
+    )
+)
+TEXT_SIZE_SELECTOR = NumberSelector(
+    NumberSelectorConfig(min=0, max=255, step=1, mode=NumberSelectorMode.BOX)
+)
+VALVE_DEVICE_CLASS_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=[device_class.value for device_class in ValveDeviceClass],
+        mode=SelectSelectorMode.DROPDOWN,
+        translation_key="device_class_valve",
+    )
+)
+VALVE_POSITION_SELECTOR = NumberSelector(
+    NumberSelectorConfig(mode=NumberSelectorMode.BOX, step=1)
+)
+WATER_HEATER_MODE_SELECTOR = SelectSelector(
+    SelectSelectorConfig(
+        options=[
+            "off",
+            "eco",
+            "electric",
+            "gas",
+            "heat_pump",
+            "high_demand",
+            "performance",
+        ],
+        multiple=True,
+        translation_key="water_heater_modes",
+    )
+)
 
 
 @callback
 def configured_target_temperature_feature(config: dict[str, Any]) -> str:
     """Calculate current target temperature feature from config."""
-    if (
-        config == {CONF_PLATFORM: Platform.CLIMATE.value}
-        or CONF_TEMP_COMMAND_TOPIC in config
-    ):
+    if config == {CONF_PLATFORM: Platform.CLIMATE} or CONF_TEMP_COMMAND_TOPIC in config:
         # default to single on initial set
         return "single"
     if CONF_TEMP_HIGH_COMMAND_TOPIC in config:
@@ -1126,23 +1192,54 @@ def validate_sensor_platform_config(
     return errors
 
 
+@callback
+def validate_text_platform_config(
+    config: dict[str, Any],
+) -> dict[str, str]:
+    """Validate the text entity options."""
+    errors: dict[str, str] = {}
+    if (
+        CONF_MIN in config
+        and CONF_MAX in config
+        and config[CONF_MIN] > config[CONF_MAX]
+    ):
+        errors["text_advanced_settings"] = "max_below_min"
+
+    return errors
+
+
+@callback
+def validate_water_heater_platform_config(config: dict[str, Any]) -> dict[str, str]:
+    """Validate the water heater platform options."""
+    errors: dict[str, str] = {}
+    if CONF_TEMP_MIN in config and config[CONF_TEMP_MIN] >= config[CONF_TEMP_MAX]:
+        errors["target_temperature_settings"] = "max_below_min_temperature"
+
+    return errors
+
+
 ENTITY_CONFIG_VALIDATOR: dict[
     str,
     Callable[[dict[str, Any]], dict[str, str]] | None,
 ] = {
     Platform.ALARM_CONTROL_PANEL: None,
-    Platform.BINARY_SENSOR.value: None,
-    Platform.BUTTON.value: None,
-    Platform.CLIMATE.value: validate_climate_platform_config,
-    Platform.COVER.value: validate_cover_platform_config,
-    Platform.FAN.value: validate_fan_platform_config,
-    Platform.IMAGE.value: None,
-    Platform.LIGHT.value: validate_light_platform_config,
-    Platform.LOCK.value: None,
-    Platform.NOTIFY.value: None,
-    Platform.NUMBER.value: validate_number_platform_config,
-    Platform.SENSOR.value: validate_sensor_platform_config,
-    Platform.SWITCH.value: None,
+    Platform.BINARY_SENSOR: None,
+    Platform.BUTTON: None,
+    Platform.CLIMATE: validate_climate_platform_config,
+    Platform.COVER: validate_cover_platform_config,
+    Platform.FAN: validate_fan_platform_config,
+    Platform.IMAGE: None,
+    Platform.LIGHT: validate_light_platform_config,
+    Platform.LOCK: None,
+    Platform.NOTIFY: None,
+    Platform.NUMBER: validate_number_platform_config,
+    Platform.SELECT: None,
+    Platform.SENSOR: validate_sensor_platform_config,
+    Platform.SIREN: None,
+    Platform.SWITCH: None,
+    Platform.TEXT: validate_text_platform_config,
+    Platform.VALVE: None,
+    Platform.WATER_HEATER: validate_water_heater_platform_config,
 }
 
 
@@ -1189,8 +1286,8 @@ SHARED_PLATFORM_ENTITY_FIELDS: dict[str, PlatformField] = {
         default=None,
     ),
 }
-PLATFORM_ENTITY_FIELDS: dict[str, dict[str, PlatformField]] = {
-    Platform.ALARM_CONTROL_PANEL.value: {
+PLATFORM_ENTITY_FIELDS: dict[Platform, dict[str, PlatformField]] = {
+    Platform.ALARM_CONTROL_PANEL: {
         CONF_SUPPORTED_FEATURES: PlatformField(
             selector=ALARM_CONTROL_PANEL_FEATURES_SELECTOR,
             required=True,
@@ -1207,7 +1304,7 @@ PLATFORM_ENTITY_FIELDS: dict[str, dict[str, PlatformField]] = {
             else "local_code",
         ),
     },
-    Platform.BINARY_SENSOR.value: {
+    Platform.BINARY_SENSOR: {
         CONF_DEVICE_CLASS: PlatformField(
             selector=BINARY_SENSOR_DEVICE_CLASS_SELECTOR,
             required=False,
@@ -1218,13 +1315,13 @@ PLATFORM_ENTITY_FIELDS: dict[str, dict[str, PlatformField]] = {
             default=None,
         ),
     },
-    Platform.BUTTON.value: {
+    Platform.BUTTON: {
         CONF_DEVICE_CLASS: PlatformField(
             selector=BUTTON_DEVICE_CLASS_SELECTOR,
             required=False,
         ),
     },
-    Platform.CLIMATE.value: {
+    Platform.CLIMATE: {
         CONF_TEMPERATURE_UNIT: PlatformField(
             selector=TEMPERATURE_UNIT_SELECTOR,
             validator=validate(cv.temperature_unit),
@@ -1296,13 +1393,13 @@ PLATFORM_ENTITY_FIELDS: dict[str, dict[str, PlatformField]] = {
             default=lambda config: bool(config.get(CONF_POWER_COMMAND_TOPIC)),
         ),
     },
-    Platform.COVER.value: {
+    Platform.COVER: {
         CONF_DEVICE_CLASS: PlatformField(
             selector=COVER_DEVICE_CLASS_SELECTOR,
             required=False,
         ),
     },
-    Platform.FAN.value: {
+    Platform.FAN: {
         "fan_feature_speed": PlatformField(
             selector=BOOLEAN_SELECTOR,
             required=False,
@@ -1328,7 +1425,7 @@ PLATFORM_ENTITY_FIELDS: dict[str, dict[str, PlatformField]] = {
             default=lambda config: bool(config.get(CONF_DIRECTION_COMMAND_TOPIC)),
         ),
     },
-    Platform.IMAGE.value: {
+    Platform.IMAGE: {
         "image_processing_mode": PlatformField(
             selector=IMAGE_PROCESSING_MODE_SELECTOR,
             required=True,
@@ -1340,7 +1437,7 @@ PLATFORM_ENTITY_FIELDS: dict[str, dict[str, PlatformField]] = {
             ),
         )
     },
-    Platform.LIGHT.value: {
+    Platform.LIGHT: {
         CONF_SCHEMA: PlatformField(
             selector=LIGHT_SCHEMA_SELECTOR,
             required=True,
@@ -1354,8 +1451,8 @@ PLATFORM_ENTITY_FIELDS: dict[str, dict[str, PlatformField]] = {
             is_schema_default=True,
         ),
     },
-    Platform.LOCK.value: {},
-    Platform.NOTIFY.value: {},
+    Platform.LOCK: {},
+    Platform.NOTIFY: {},
     Platform.NUMBER: {
         CONF_DEVICE_CLASS: PlatformField(
             selector=NUMBER_DEVICE_CLASS_SELECTOR,
@@ -1367,7 +1464,8 @@ PLATFORM_ENTITY_FIELDS: dict[str, dict[str, PlatformField]] = {
             custom_filtering=True,
         ),
     },
-    Platform.SENSOR.value: {
+    Platform.SELECT: {},
+    Platform.SENSOR: {
         CONF_DEVICE_CLASS: PlatformField(
             selector=SENSOR_DEVICE_CLASS_SELECTOR, required=False
         ),
@@ -1396,13 +1494,49 @@ PLATFORM_ENTITY_FIELDS: dict[str, dict[str, PlatformField]] = {
             default=None,
         ),
     },
-    Platform.SWITCH.value: {
+    Platform.SIREN: {},
+    Platform.SWITCH: {
         CONF_DEVICE_CLASS: PlatformField(
             selector=SWITCH_DEVICE_CLASS_SELECTOR, required=False
         ),
     },
+    Platform.TEXT: {},
+    Platform.VALVE: {
+        CONF_DEVICE_CLASS: PlatformField(
+            selector=VALVE_DEVICE_CLASS_SELECTOR, required=False, default=None
+        ),
+        CONF_REPORTS_POSITION: PlatformField(
+            selector=BOOLEAN_SELECTOR,
+            required=True,
+            default=False,
+        ),
+    },
+    Platform.WATER_HEATER: {
+        CONF_TEMPERATURE_UNIT: PlatformField(
+            selector=TEMPERATURE_UNIT_SELECTOR,
+            validator=validate(cv.temperature_unit),
+            required=True,
+            exclude_from_reconfig=True,
+            default=lambda _: "C"
+            if async_get_hass().config.units.temperature_unit
+            is UnitOfTemperature.CELSIUS
+            else "F",
+        ),
+        "water_heater_feature_current_temperature": PlatformField(
+            selector=BOOLEAN_SELECTOR,
+            required=False,
+            exclude_from_config=True,
+            default=lambda config: bool(config.get(CONF_CURRENT_TEMP_TOPIC)),
+        ),
+        "water_heater_feature_power": PlatformField(
+            selector=BOOLEAN_SELECTOR,
+            required=False,
+            exclude_from_config=True,
+            default=lambda config: bool(config.get(CONF_POWER_COMMAND_TOPIC)),
+        ),
+    },
 }
-PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
+PLATFORM_MQTT_FIELDS: dict[Platform, dict[str, PlatformField]] = {
     Platform.ALARM_CONTROL_PANEL: {
         CONF_COMMAND_TOPIC: PlatformField(
             selector=TEXT_SELECTOR,
@@ -1489,7 +1623,7 @@ PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
             section="alarm_control_panel_payload_settings",
         ),
     },
-    Platform.BINARY_SENSOR.value: {
+    Platform.BINARY_SENSOR: {
         CONF_STATE_TOPIC: PlatformField(
             selector=TEXT_SELECTOR,
             required=True,
@@ -1525,7 +1659,7 @@ PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
             section="advanced_settings",
         ),
     },
-    Platform.BUTTON.value: {
+    Platform.BUTTON: {
         CONF_COMMAND_TOPIC: PlatformField(
             selector=TEXT_SELECTOR,
             required=True,
@@ -1545,7 +1679,7 @@ PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
         ),
         CONF_RETAIN: PlatformField(selector=BOOLEAN_SELECTOR, required=False),
     },
-    Platform.CLIMATE.value: {
+    Platform.CLIMATE: {
         # operation mode settings
         CONF_MODE_COMMAND_TOPIC: PlatformField(
             selector=TEXT_SELECTOR,
@@ -2035,7 +2169,7 @@ PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
             conditions=({"climate_feature_swing_horizontal_modes": True},),
         ),
     },
-    Platform.COVER.value: {
+    Platform.COVER: {
         CONF_COMMAND_TOPIC: PlatformField(
             selector=TEXT_SELECTOR,
             required=False,
@@ -2214,7 +2348,7 @@ PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
             section="cover_tilt_settings",
         ),
     },
-    Platform.FAN.value: {
+    Platform.FAN: {
         CONF_COMMAND_TOPIC: PlatformField(
             selector=TEXT_SELECTOR,
             required=True,
@@ -2434,7 +2568,7 @@ PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
             conditions=({"fan_feature_direction": True},),
         ),
     },
-    Platform.IMAGE.value: {
+    Platform.IMAGE: {
         CONF_IMAGE_TOPIC: PlatformField(
             selector=TEXT_SELECTOR,
             required=True,
@@ -2468,7 +2602,7 @@ PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
             error="invalid_template",
         ),
     },
-    Platform.LIGHT.value: {
+    Platform.LIGHT: {
         CONF_COMMAND_TOPIC: PlatformField(
             selector=TEXT_SELECTOR,
             required=True,
@@ -2949,7 +3083,7 @@ PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
             section="advanced_settings",
         ),
     },
-    Platform.LOCK.value: {
+    Platform.LOCK: {
         CONF_COMMAND_TOPIC: PlatformField(
             selector=TEXT_SELECTOR,
             required=True,
@@ -3036,7 +3170,7 @@ PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
         CONF_RETAIN: PlatformField(selector=BOOLEAN_SELECTOR, required=False),
         CONF_OPTIMISTIC: PlatformField(selector=BOOLEAN_SELECTOR, required=False),
     },
-    Platform.NOTIFY.value: {
+    Platform.NOTIFY: {
         CONF_COMMAND_TOPIC: PlatformField(
             selector=TEXT_SELECTOR,
             required=True,
@@ -3051,7 +3185,7 @@ PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
         ),
         CONF_RETAIN: PlatformField(selector=BOOLEAN_SELECTOR, required=False),
     },
-    Platform.NUMBER.value: {
+    Platform.NUMBER: {
         CONF_COMMAND_TOPIC: PlatformField(
             selector=TEXT_SELECTOR,
             required=True,
@@ -3103,7 +3237,35 @@ PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
         ),
         CONF_RETAIN: PlatformField(selector=BOOLEAN_SELECTOR, required=False),
     },
-    Platform.SENSOR.value: {
+    Platform.SELECT: {
+        CONF_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+        ),
+        CONF_COMMAND_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+        ),
+        CONF_STATE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+        ),
+        CONF_VALUE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+        ),
+        CONF_OPTIONS: PlatformField(selector=OPTIONS_SELECTOR, required=True),
+        CONF_RETAIN: PlatformField(selector=BOOLEAN_SELECTOR, required=False),
+    },
+    Platform.SENSOR: {
         CONF_STATE_TOPIC: PlatformField(
             selector=TEXT_SELECTOR,
             required=True,
@@ -3130,7 +3292,72 @@ PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
             section="advanced_settings",
         ),
     },
-    Platform.SWITCH.value: {
+    Platform.SIREN: {
+        CONF_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+        ),
+        CONF_COMMAND_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+        ),
+        CONF_STATE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+        ),
+        CONF_VALUE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+        ),
+        CONF_PAYLOAD_OFF: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            default=DEFAULT_PAYLOAD_OFF,
+        ),
+        CONF_PAYLOAD_ON: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            default=DEFAULT_PAYLOAD_ON,
+        ),
+        CONF_STATE_OFF: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+        ),
+        CONF_STATE_ON: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+        ),
+        CONF_AVAILABLE_TONES: PlatformField(
+            selector=OPTIONS_SELECTOR,
+            required=False,
+        ),
+        CONF_SUPPORT_DURATION: PlatformField(
+            selector=BOOLEAN_SELECTOR,
+            required=False,
+        ),
+        CONF_SUPPORT_VOLUME_SET: PlatformField(
+            selector=BOOLEAN_SELECTOR,
+            required=False,
+        ),
+        CONF_RETAIN: PlatformField(selector=BOOLEAN_SELECTOR, required=False),
+        CONF_OPTIMISTIC: PlatformField(selector=BOOLEAN_SELECTOR, required=False),
+        CONF_COMMAND_OFF_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+            section="siren_advanced_settings",
+        ),
+    },
+    Platform.SWITCH: {
         CONF_COMMAND_TOPIC: PlatformField(
             selector=TEXT_SELECTOR,
             required=True,
@@ -3175,6 +3402,287 @@ PLATFORM_MQTT_FIELDS: dict[str, dict[str, PlatformField]] = {
         ),
         CONF_RETAIN: PlatformField(selector=BOOLEAN_SELECTOR, required=False),
         CONF_OPTIMISTIC: PlatformField(selector=BOOLEAN_SELECTOR, required=False),
+    },
+    Platform.TEXT: {
+        CONF_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+        ),
+        CONF_COMMAND_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+        ),
+        CONF_STATE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+        ),
+        CONF_VALUE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+        ),
+        CONF_RETAIN: PlatformField(selector=BOOLEAN_SELECTOR, required=False),
+        CONF_MIN: PlatformField(
+            selector=TEXT_SIZE_SELECTOR,
+            required=True,
+            default=0,
+            section="text_advanced_settings",
+        ),
+        CONF_MAX: PlatformField(
+            selector=TEXT_SIZE_SELECTOR,
+            required=True,
+            default=255,
+            section="text_advanced_settings",
+        ),
+        CONF_MODE: PlatformField(
+            selector=TEXT_MODE_SELECTOR,
+            required=True,
+            default=TextSelectorType.TEXT.value,
+            section="text_advanced_settings",
+        ),
+        CONF_PATTERN: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=validate(cv.is_regex),
+            error="invalid_regular_expression",
+            section="text_advanced_settings",
+        ),
+    },
+    Platform.VALVE: {
+        CONF_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+        ),
+        CONF_COMMAND_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+        ),
+        CONF_STATE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+        ),
+        CONF_VALUE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+        ),
+        CONF_POSITION_CLOSED: PlatformField(
+            selector=VALVE_POSITION_SELECTOR,
+            required=True,
+            default=DEFAULT_POSITION_CLOSED,
+            conditions=({CONF_REPORTS_POSITION: True},),
+        ),
+        CONF_POSITION_OPEN: PlatformField(
+            selector=VALVE_POSITION_SELECTOR,
+            required=True,
+            default=DEFAULT_POSITION_OPEN,
+            conditions=({CONF_REPORTS_POSITION: True},),
+        ),
+        CONF_PAYLOAD_OPEN: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            default=DEFAULT_PAYLOAD_OPEN,
+            conditions=({CONF_REPORTS_POSITION: False},),
+            section="valve_payload_settings",
+        ),
+        CONF_PAYLOAD_CLOSE: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            default=DEFAULT_PAYLOAD_CLOSE,
+            conditions=({CONF_REPORTS_POSITION: False},),
+            section="valve_payload_settings",
+        ),
+        CONF_PAYLOAD_STOP: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            section="valve_payload_settings",
+        ),
+        CONF_STATE_OPEN: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            default=ValveState.OPEN.value,
+            conditions=({CONF_REPORTS_POSITION: False},),
+            section="valve_payload_settings",
+        ),
+        CONF_STATE_CLOSED: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            default=ValveState.CLOSED.value,
+            conditions=({CONF_REPORTS_POSITION: False},),
+            section="valve_payload_settings",
+        ),
+        CONF_STATE_OPENING: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            default=ValveState.OPENING.value,
+            section="valve_payload_settings",
+        ),
+        CONF_STATE_CLOSING: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            default=ValveState.CLOSING.value,
+            section="valve_payload_settings",
+        ),
+        CONF_RETAIN: PlatformField(selector=BOOLEAN_SELECTOR, required=False),
+        CONF_OPTIMISTIC: PlatformField(selector=BOOLEAN_SELECTOR, required=False),
+    },
+    Platform.WATER_HEATER: {
+        # operation mode settings
+        CONF_MODE_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+        ),
+        CONF_MODE_COMMAND_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+        ),
+        CONF_MODE_STATE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+        ),
+        CONF_MODE_STATE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+        ),
+        CONF_MODE_LIST: PlatformField(
+            selector=WATER_HEATER_MODE_SELECTOR,
+            required=True,
+            default=[],
+            validator=validate(no_empty_list),
+            error="empty_list_not_allowed",
+        ),
+        CONF_RETAIN: PlatformField(
+            selector=BOOLEAN_SELECTOR, required=False, validator=validate(bool)
+        ),
+        CONF_OPTIMISTIC: PlatformField(
+            selector=BOOLEAN_SELECTOR, required=False, validator=validate(bool)
+        ),
+        # target temperature settings
+        CONF_TEMP_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=True,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+            section="target_temperature_settings",
+        ),
+        CONF_TEMP_COMMAND_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+            section="target_temperature_settings",
+        ),
+        CONF_TEMP_STATE_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+            section="target_temperature_settings",
+        ),
+        CONF_TEMP_STATE_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+            section="target_temperature_settings",
+        ),
+        CONF_TEMP_MIN: PlatformField(
+            selector=temperature_selector,
+            custom_filtering=True,
+            required=True,
+            default=temperature_default_from_celsius_to_system_default(43.3),
+            section="target_temperature_settings",
+        ),
+        CONF_TEMP_MAX: PlatformField(
+            selector=temperature_selector,
+            custom_filtering=True,
+            required=True,
+            default=temperature_default_from_celsius_to_system_default(60),
+            section="target_temperature_settings",
+        ),
+        CONF_PRECISION: PlatformField(
+            selector=PRECISION_SELECTOR,
+            required=False,
+            default=default_precision,
+            section="target_temperature_settings",
+        ),
+        CONF_TEMP_INITIAL: PlatformField(
+            selector=temperature_selector,
+            custom_filtering=True,
+            required=False,
+            default=temperature_default_from_celsius_to_system_default(43.3),
+            section="target_temperature_settings",
+        ),
+        # current temperature settings
+        CONF_CURRENT_TEMP_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_subscribe_topic,
+            error="invalid_subscribe_topic",
+            section="current_temperature_settings",
+            conditions=({"water_heater_feature_current_temperature": True},),
+        ),
+        CONF_CURRENT_TEMP_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+            section="current_temperature_settings",
+            conditions=({"water_heater_feature_current_temperature": True},),
+        ),
+        # power on/off support
+        CONF_POWER_COMMAND_TOPIC: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            validator=valid_publish_topic,
+            error="invalid_publish_topic",
+            section="water_heater_power_settings",
+            conditions=({"water_heater_feature_power": True},),
+        ),
+        CONF_POWER_COMMAND_TEMPLATE: PlatformField(
+            selector=TEMPLATE_SELECTOR,
+            required=False,
+            validator=validate(cv.template),
+            error="invalid_template",
+            section="water_heater_power_settings",
+            conditions=({"water_heater_feature_power": True},),
+        ),
+        CONF_PAYLOAD_OFF: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            default=DEFAULT_PAYLOAD_OFF,
+            section="water_heater_power_settings",
+            conditions=({"water_heater_feature_power": True},),
+        ),
+        CONF_PAYLOAD_ON: PlatformField(
+            selector=TEXT_SELECTOR,
+            required=False,
+            default=DEFAULT_PAYLOAD_ON,
+            section="water_heater_power_settings",
+            conditions=({"water_heater_feature_power": True},),
+        ),
     },
 }
 MQTT_DEVICE_PLATFORM_FIELDS = {
@@ -3444,9 +3952,8 @@ REAUTH_SCHEMA = vol.Schema(
 class FlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
-    # Can be bumped to version 2.1 with HA Core 2026.1.0
-    VERSION = CONFIG_ENTRY_VERSION  # 1
-    MINOR_VERSION = CONFIG_ENTRY_MINOR_VERSION  # 2
+    VERSION = CONFIG_ENTRY_VERSION  # 2
+    MINOR_VERSION = CONFIG_ENTRY_MINOR_VERSION  # 1
 
     _hassio_discovery: dict[str, Any] | None = None
     _addon_manager: AddonManager
@@ -3693,9 +4200,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 try_connection,
                 new_entry_data,
             ):
-                return self.async_update_reload_and_abort(
-                    reauth_entry, data=new_entry_data
-                )
+                return self.async_update_and_abort(reauth_entry, data=new_entry_data)
 
             errors["base"] = "invalid_auth"
 
@@ -3741,7 +4246,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
             if can_connect:
                 if is_reconfigure:
-                    return self.async_update_reload_and_abort(
+                    return self.async_update_and_abort(
                         reconfigure_entry,
                         data=validated_user_input,
                     )
@@ -4117,7 +4622,8 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="entity",
             data_schema=data_schema,
-            description_placeholders={
+            description_placeholders=TRANSLATION_DESCRIPTION_PLACEHOLDERS
+            | {
                 "mqtt_device": device_name,
                 "entity_name_label": entity_name_label,
                 "platform_label": platform_label,
@@ -4217,7 +4723,8 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="entity_platform_config",
             data_schema=data_schema,
-            description_placeholders={
+            description_placeholders=TRANSLATION_DESCRIPTION_PLACEHOLDERS
+            | {
                 "mqtt_device": device_name,
                 CONF_PLATFORM: platform,
                 "entity": full_entity_name,
@@ -4270,7 +4777,8 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="mqtt_platform_config",
             data_schema=data_schema,
-            description_placeholders={
+            description_placeholders=TRANSLATION_DESCRIPTION_PLACEHOLDERS
+            | {
                 "mqtt_device": device_name,
                 CONF_PLATFORM: platform,
                 "entity": full_entity_name,
@@ -4486,9 +4994,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             step_id="export_yaml",
             last_step=False,
             data_schema=data_schema,
-            description_placeholders={
-                "url": "https://www.home-assistant.io/integrations/mqtt/"
-            },
+            description_placeholders={"url": INTEGRATION_URL},
         )
 
     async def async_step_export_discovery(
@@ -4540,9 +5046,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             step_id="export_discovery",
             last_step=False,
             data_schema=data_schema,
-            description_placeholders={
-                "url": "https://www.home-assistant.io/integrations/mqtt/"
-            },
+            description_placeholders={"url": INTEGRATION_URL},
         )
 
 

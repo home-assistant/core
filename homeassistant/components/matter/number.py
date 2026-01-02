@@ -44,7 +44,7 @@ async def async_setup_entry(
     matter.register_platform_handler(Platform.NUMBER, async_add_entities)
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, kw_only=True)
 class MatterNumberEntityDescription(NumberEntityDescription, MatterEntityDescription):
     """Describe Matter Number Input entities."""
 
@@ -364,6 +364,31 @@ DISCOVERY_SCHEMAS = [
             clusters.MicrowaveOvenControl.Attributes.CookTime,
             clusters.MicrowaveOvenControl.Attributes.MaxCookTime,
         ),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.NUMBER,
+        entity_description=MatterRangeNumberEntityDescription(
+            key="speaker_setpoint",
+            translation_key="speaker_setpoint",
+            native_unit_of_measurement=PERCENTAGE,
+            command=lambda value: clusters.LevelControl.Commands.MoveToLevel(
+                level=int(value)
+            ),
+            native_min_value=0,
+            native_max_value=100,
+            native_step=1,
+            device_to_ha=lambda x: None if x is None else x,
+            min_attribute=clusters.LevelControl.Attributes.MinLevel,
+            max_attribute=clusters.LevelControl.Attributes.MaxLevel,
+            mode=NumberMode.SLIDER,
+        ),
+        entity_class=MatterRangeNumber,
+        required_attributes=(
+            clusters.LevelControl.Attributes.CurrentLevel,
+            clusters.LevelControl.Attributes.MinLevel,
+            clusters.LevelControl.Attributes.MaxLevel,
+        ),
+        device_type=(device_types.Speaker,),
     ),
     MatterDiscoverySchema(
         platform=Platform.NUMBER,

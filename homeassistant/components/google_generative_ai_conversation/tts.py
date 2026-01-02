@@ -59,6 +59,7 @@ class GoogleGenerativeAITextToSpeechEntity(
         "en-US",
         "es-US",
         "fr-FR",
+        "he-IL",
         "hi-IN",
         "id-ID",
         "it-IT",
