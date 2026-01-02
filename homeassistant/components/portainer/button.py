@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
+import logging
 from typing import Any
 
 from pyportainer import Portainer
@@ -33,11 +34,14 @@ from .coordinator import (
 )
 from .entity import PortainerContainerEntity, PortainerEndpointEntity
 
+_LOGGER = logging.getLogger(__name__)
+
 
 @dataclass(frozen=True, kw_only=True)
 class PortainerButtonDescription(ButtonEntityDescription):
     """Class to describe a Portainer button entity."""
 
+    # Note to reviewer: I am keeping the third argument a str, in order to keep mypy happy :)
     press_action: Callable[
         [Portainer, int, str],
         Coroutine[Any, Any, None],
@@ -127,7 +131,44 @@ async def async_setup_entry(
     )
 
 
-class PortainerEndpointButton(PortainerEndpointEntity, ButtonEntity):
+class PortainerBaseButton(ButtonEntity):
+    """Common base for Portainer buttons. Basically to ensure the async_press logic isn't duplicated."""
+
+    entity_description: PortainerButtonDescription
+    coordinator: PortainerCoordinator
+
+    async def _async_press_call(self) -> None:
+        """Subclasses implement the actual press call, but we still need it here."""
+        raise NotImplementedError
+
+    async def async_press(self) -> None:
+        """Trigger the Portainer button press service."""
+        try:
+            await self._async_press_call()
+        except PortainerConnectionError as err:
+            _LOGGER.exception("Connection error for button: %s", self.entity_id)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"error": "See details in logs"},
+            ) from err
+        except PortainerAuthenticationError as err:
+            _LOGGER.exception("Authentication error for button: %s", self.entity_id)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+                translation_placeholders={"error": "See details in logs"},
+            ) from err
+        except PortainerTimeoutError as err:
+            _LOGGER.exception("Timeout error for button: %s", self.entity_id)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="timeout_connect",
+                translation_placeholders={"error": "See details in logs"},
+            ) from err
+
+
+class PortainerEndpointButton(PortainerEndpointEntity, PortainerBaseButton):
     """Defines a Portainer endpoint button."""
 
     entity_description: PortainerButtonDescription
@@ -144,33 +185,14 @@ class PortainerEndpointButton(PortainerEndpointEntity, ButtonEntity):
 
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{device_info.id}_{entity_description.key}"
 
-    async def async_press(self) -> None:
-        """Trigger the Portainer button press service."""
-        try:
-            await self.entity_description.press_action(
-                self.coordinator.portainer, self.device_id, ""
-            )
-        except PortainerConnectionError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect",
-                translation_placeholders={"error": repr(err)},
-            ) from err
-        except PortainerAuthenticationError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_auth",
-                translation_placeholders={"error": repr(err)},
-            ) from err
-        except PortainerTimeoutError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="timeout_connect",
-                translation_placeholders={"error": repr(err)},
-            ) from err
+    async def _async_press_call(self) -> None:
+        """Call the endpoint button press action."""
+        await self.entity_description.press_action(
+            self.coordinator.portainer, self.device_id, ""
+        )
 
 
-class PortainerContainerButton(PortainerContainerEntity, ButtonEntity):
+class PortainerContainerButton(PortainerContainerEntity, PortainerBaseButton):
     """Defines a Portainer button."""
 
     entity_description: PortainerButtonDescription
@@ -188,27 +210,10 @@ class PortainerContainerButton(PortainerContainerEntity, ButtonEntity):
 
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{self.device_name}_{entity_description.key}"
 
-    async def async_press(self) -> None:
-        """Trigger the Portainer button press service."""
-        try:
-            await self.entity_description.press_action(
-                self.coordinator.portainer, self.endpoint_id, self.device_id
-            )
-        except PortainerConnectionError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect",
-                translation_placeholders={"error": repr(err)},
-            ) from err
-        except PortainerAuthenticationError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_auth",
-                translation_placeholders={"error": repr(err)},
-            ) from err
-        except PortainerTimeoutError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="timeout_connect",
-                translation_placeholders={"error": repr(err)},
-            ) from err
+    async def _async_press_call(self) -> None:
+        """Call the container button press action."""
+        await self.entity_description.press_action(
+            self.coordinator.portainer,
+            self.endpoint_id,
+            self.device_id,
+        )
