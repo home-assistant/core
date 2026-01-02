@@ -119,7 +119,7 @@ async def test_climate_hvac_mode(
         blocking=True,
     )
     mock_block_device.set_thermostat_state.assert_called_once_with(
-        0, {"target_t_enabled": 1, "target_t": 20.0}
+        0, target_t_enabled=1, target_t=20.0
     )
 
     monkeypatch.setattr(mock_block_device.blocks[SENSOR_BLOCK_ID], "targetTemp", 20.0)
@@ -137,7 +137,7 @@ async def test_climate_hvac_mode(
     )
 
     mock_block_device.set_thermostat_state.assert_called_with(
-        0, {"target_t_enabled": 1, "target_t": "4"}
+        0, target_t_enabled=1, target_t="4"
     )
 
     monkeypatch.setattr(mock_block_device.blocks[SENSOR_BLOCK_ID], "targetTemp", 4.0)
@@ -178,7 +178,7 @@ async def test_climate_set_temperature(
     )
 
     mock_block_device.set_thermostat_state.assert_called_once_with(
-        0, {"target_t_enabled": 1, "target_t": "23.0"}
+        0, target_t_enabled=1, target_t="23.0"
     )
     mock_block_device.set_thermostat_state.reset_mock()
 
@@ -201,7 +201,7 @@ async def test_climate_set_temperature(
     )
 
     mock_block_device.set_thermostat_state.assert_called_once_with(
-        0, {"target_t_enabled": 1, "target_t": "68.0"}
+        0, target_t_enabled=1, target_t="68.0"
     )
 
 
@@ -231,7 +231,7 @@ async def test_climate_set_preset_mode(
     )
 
     mock_block_device.set_thermostat_state.assert_called_once_with(
-        0, {"schedule": 1, "schedule_profile": "2"}
+        0, schedule=1, schedule_profile="2"
     )
 
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "mode", 2)
@@ -249,7 +249,7 @@ async def test_climate_set_preset_mode(
     )
 
     assert len(mock_block_device.set_thermostat_state.mock_calls) == 2
-    mock_block_device.set_thermostat_state.assert_called_with(0, {"schedule": 0})
+    mock_block_device.set_thermostat_state.assert_called_with(0, schedule=0)
 
     monkeypatch.setattr(mock_block_device.blocks[DEVICE_BLOCK_ID], "mode", 0)
     mock_block_device.mock_update()
@@ -318,7 +318,7 @@ async def test_block_restored_climate(
         blocking=True,
     )
     mock_block_device.set_thermostat_state.assert_called_once_with(
-        0, {"target_t_enabled": 1, "target_t": 22.0}
+        0, target_t_enabled=1, target_t=22.0
     )
 
     monkeypatch.setattr(mock_block_device.blocks[SENSOR_BLOCK_ID], "targetTemp", 22.0)
@@ -395,7 +395,7 @@ async def test_block_restored_climate_us_customary(
         blocking=True,
     )
     mock_block_device.set_thermostat_state.assert_called_once_with(
-        0, {"target_t_enabled": 1, "target_t": 10.0}
+        0, target_t_enabled=1, target_t=10.0
     )
 
     monkeypatch.setattr(mock_block_device.blocks[SENSOR_BLOCK_ID], "targetTemp", 10.0)

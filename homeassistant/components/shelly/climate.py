@@ -545,7 +545,7 @@ class BlockSleepingClimate(
         try:
             return await self.coordinator.device.set_thermostat_state(
                 self._channel,
-                kwargs,  # type: ignore[call-arg]
+                **kwargs,
             )
         except DeviceConnectionError as err:
             self.coordinator.last_update_success = False
