@@ -6,6 +6,7 @@ import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from tplink_omada_client import OmadaSite
 from tplink_omada_client.clients import (
     OmadaConnectedClient,
     OmadaNetworkClient,
@@ -167,9 +168,9 @@ def mock_omada_client(mock_omada_site_client: AsyncMock) -> Generator[MagicMock]
         client = client_mock.return_value
 
         client.get_site_client.return_value = mock_omada_site_client
-        client.login = AsyncMock(return_value="omada_id")
-        client.get_controller_name = AsyncMock(return_value="OC200")
-        client.get_sites = AsyncMock(return_value=[])
+        client.login.return_value = "12345"
+        client.get_controller_name.return_value = "OC200"
+        client.get_sites.return_value = [OmadaSite("Display Name", "SiteId")]
         yield client
 
 
