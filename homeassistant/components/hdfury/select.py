@@ -1,9 +1,15 @@
 """Select platform for HDFury Integration."""
 
-from abc import abstractmethod
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
-from hdfury import OPERATION_MODES, TX0_INPUT_PORTS, TX1_INPUT_PORTS, HDFuryError
+from hdfury import (
+    OPERATION_MODES,
+    TX0_INPUT_PORTS,
+    TX1_INPUT_PORTS,
+    HDFuryAPI,
+    HDFuryError,
+)
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant
@@ -11,7 +17,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import HDFuryConfigEntry
+from .coordinator import HDFuryConfigEntry, HDFuryCoordinator
 from .entity import HDFuryEntity
 
 
@@ -20,6 +26,7 @@ class HDFurySelectEntityDescription(SelectEntityDescription):
     """Description for HDFury select entities."""
 
     label_map: dict[str, str]
+    set_value_fn: Callable[[HDFuryAPI, str], Awaitable[None]]
 
 
 SELECT_PORTS: tuple[HDFurySelectEntityDescription, ...] = (
@@ -29,6 +36,7 @@ SELECT_PORTS: tuple[HDFurySelectEntityDescription, ...] = (
         translation_placeholders={"port": "0"},
         options=list(TX0_INPUT_PORTS.values()),
         label_map=TX0_INPUT_PORTS,
+        set_value_fn=lambda coordinator, value: _set_ports(coordinator),
     ),
     HDFurySelectEntityDescription(
         key="portseltx1",
@@ -36,6 +44,7 @@ SELECT_PORTS: tuple[HDFurySelectEntityDescription, ...] = (
         translation_placeholders={"port": "1"},
         options=list(TX1_INPUT_PORTS.values()),
         label_map=TX1_INPUT_PORTS,
+        set_value_fn=lambda coordinator, value: _set_ports(coordinator),
     ),
 )
 
@@ -45,7 +54,24 @@ SELECT_OPERATION_MODE: HDFurySelectEntityDescription = HDFurySelectEntityDescrip
     translation_key="opmode",
     options=list(OPERATION_MODES.values()),
     label_map=OPERATION_MODES,
+    set_value_fn=lambda coordinator, value: coordinator.client.set_operation_mode(
+        value
+    ),
 )
+
+
+async def _set_ports(coordinator: HDFuryCoordinator) -> None:
+    tx0 = coordinator.data.info.get("portseltx0")
+    tx1 = coordinator.data.info.get("portseltx1")
+
+    if tx0 is None or tx1 is None:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="tx_state_error",
+            translation_placeholders={"details": f"tx0={tx0}, tx1={tx1}"},
+        )
+
+    await coordinator.client.set_port_selection(tx0, tx1)
 
 
 async def async_setup_entry(
@@ -63,16 +89,16 @@ async def async_setup_entry(
         if description.key not in coordinator.data.info:
             continue
 
-        entities.append(HDFuryPortSelect(coordinator, description))
+        entities.append(HDFurySelect(coordinator, description))
 
     # Add OPMODE select if present
     if "opmode" in coordinator.data.info:
-        entities.append(HDFuryOpModeSelect(coordinator, SELECT_OPERATION_MODE))
+        entities.append(HDFurySelect(coordinator, SELECT_OPERATION_MODE))
 
     async_add_entities(entities)
 
 
-class HDFuryBaseSelect(HDFuryEntity, SelectEntity):
+class HDFurySelect(HDFuryEntity, SelectEntity):
     """HDFury Select Class."""
 
     entity_description: HDFurySelectEntityDescription
@@ -95,7 +121,7 @@ class HDFuryBaseSelect(HDFuryEntity, SelectEntity):
 
         # Send command to device
         try:
-            await self._set_option(raw_value)
+            await self.entity_description.set_value_fn(self.coordinator, raw_value)
         except HDFuryError as error:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -104,35 +130,3 @@ class HDFuryBaseSelect(HDFuryEntity, SelectEntity):
 
         # Trigger HA coordinator refresh
         await self.coordinator.async_request_refresh()
-
-    @abstractmethod
-    async def _set_option(self, value: str) -> None:
-        """Apply value to device."""
-
-
-class HDFuryPortSelect(HDFuryBaseSelect):
-    """Handle port selection (portseltx)."""
-
-    async def _set_option(self, value: str) -> None:
-        """Apply value to device."""
-
-        tx0 = self.coordinator.data.info.get("portseltx0")
-        tx1 = self.coordinator.data.info.get("portseltx1")
-
-        if tx0 is None or tx1 is None:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="tx_state_error",
-                translation_placeholders={"details": f"tx0={tx0}, tx1={tx1}"},
-            )
-
-        await self.coordinator.client.set_port_selection(tx0, tx1)
-
-
-class HDFuryOpModeSelect(HDFuryBaseSelect):
-    """Handle operation mode selection (opmode)."""
-
-    async def _set_option(self, value: str) -> None:
-        """Apply value to device."""
-
-        await self.coordinator.client.set_operation_mode(value)
