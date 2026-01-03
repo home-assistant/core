@@ -20,6 +20,7 @@ from .coordinator import DevialetConfigEntry, DevialetCoordinator
 
 SUPPORT_DEVIALET = (
     MediaPlayerEntityFeature.VOLUME_SET
+    | MediaPlayerEntityFeature.VOLUME_STEP
     | MediaPlayerEntityFeature.VOLUME_MUTE
     | MediaPlayerEntityFeature.TURN_OFF
     | MediaPlayerEntityFeature.SELECT_SOURCE
@@ -150,6 +151,16 @@ class DevialetMediaPlayerEntity(
             if sound_mode == mode:
                 return pretty_name
         return None
+
+    @property
+    def is_volume_muted(self) -> bool | None:
+        """Boolean if volume is currently muted."""
+        return self.coordinator.client.is_volume_muted
+
+    @property
+    def media_image_url(self) -> str | None:
+        """Image url of current playing media."""
+        return self.coordinator.client.media_image_url
 
     async def async_volume_up(self) -> None:
         """Volume up media player."""
