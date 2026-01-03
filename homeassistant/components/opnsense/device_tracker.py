@@ -56,16 +56,6 @@ async def async_setup_entry(
     tracker_mac_addresses = data[CONF_TRACKER_MAC_ADDRESSES]
 
     entity_registry = er.async_get(hass)
-    valid_macs = {
-        format_mac(device["mac"])
-        for device in coordinator.data
-        if (
-            not tracker_interfaces
-            or device.get("intf_description") in tracker_interfaces
-        )
-        and (not tracker_mac_addresses or device["mac"] in tracker_mac_addresses)
-    }
-
     existing_entities_list = [
         entity
         for entity in er.async_entries_for_config_entry(entity_registry, entry.entry_id)
@@ -73,16 +63,8 @@ async def async_setup_entry(
     ]
     existing_entities_set = {entity.unique_id for entity in existing_entities_list}
 
-    removed_entities = existing_entities_set - valid_macs
-    if removed_entities:
-        for entity_entry in existing_entities_list:
-            if entity_entry.unique_id in removed_entities:
-                _LOGGER.debug(
-                    "Removing entity %s (no longer tracked)", entity_entry.entity_id
-                )
-                entity_registry.async_remove(entity_entry.entity_id)
-
     entities = []
+    devices_in_data = {}
     for device in coordinator.data:
         mac = device["mac"]
         if (
@@ -93,33 +75,60 @@ async def async_setup_entry(
         if tracker_mac_addresses and mac not in tracker_mac_addresses:
             continue
         unique_id = format_mac(mac)
-        if unique_id not in existing_entities_set:
-            if deleted_entity_id := entity_registry.async_get_entity_id(
-                "device_tracker", DOMAIN, unique_id
+        devices_in_data[unique_id] = device
+        if deleted_entity_id := entity_registry.async_get_entity_id(
+            "device_tracker", DOMAIN, unique_id
+        ):
+            entity_entry = entity_registry.async_get(deleted_entity_id)
+            if entity_entry and (
+                entity_entry.config_entry_id != entry.entry_id
+                or entity_entry.disabled_by is not None
             ):
-                entity_entry = entity_registry.async_get(deleted_entity_id)
-                if entity_entry and (
-                    entity_entry.config_entry_id != entry.entry_id
-                    or entity_entry.disabled_by is not None
-                ):
-                    _LOGGER.debug(
-                        "Removing orphaned entity %s before recreating",
-                        deleted_entity_id,
-                    )
-                    entity_registry.async_remove(deleted_entity_id)
-
-            entities.append(
-                OPNsenseTrackerEntity(
-                    coordinator, device, tracker_interfaces, tracker_mac_addresses
+                _LOGGER.debug(
+                    "Removing orphaned entity %s before recreating",
+                    deleted_entity_id,
                 )
+                entity_registry.async_remove(deleted_entity_id)
+
+        entities.append(
+            OPNsenseTrackerEntity(
+                coordinator, device, tracker_interfaces, tracker_mac_addresses
             )
+        )
+
+    for entity_entry in existing_entities_list:
+        if entity_entry.unique_id not in devices_in_data:
+            mac = entity_entry.unique_id.replace(":", "").upper()
+            mac_formatted = ":".join(
+                mac[i : i + 2] for i in range(0, len(mac), 2)
+            )
+            should_track = True
+            if tracker_mac_addresses and mac_formatted not in tracker_mac_addresses:
+                should_track = False
+            
+            if should_track:
+                device_data = {
+                    "mac": mac_formatted,
+                    "hostname": entity_entry.original_name or None,
+                    "ip": None,
+                    "intf_description": None,
+                    "manufacturer": None,
+                }
+                entities.append(
+                    OPNsenseTrackerEntity(
+                        coordinator, device_data, tracker_interfaces, tracker_mac_addresses
+                    )
+                )
 
     if entities:
         async_add_entities(entities)
 
+    first_check = True
+
     @callback
     def _async_check_devices() -> None:
         """Check for new/removed devices and update entities."""
+        nonlocal first_check
         new_entities = []
         valid_macs = {
             format_mac(device["mac"])
@@ -167,7 +176,7 @@ async def async_setup_entry(
                 )
 
         removed_entities = existing_entities_set - valid_macs
-        if removed_entities:
+        if removed_entities and not first_check:
             for entity_entry in existing_entities_list:
                 if entity_entry.unique_id in removed_entities:
                     _LOGGER.debug(
@@ -180,7 +189,8 @@ async def async_setup_entry(
             _LOGGER.debug("Adding %d new device tracker entities", len(new_entities))
             async_add_entities(new_entities)
 
-    _async_check_devices()
+        first_check = False
+
     entry.async_on_unload(coordinator.async_add_listener(_async_check_devices))
 
 
