@@ -1,0 +1,11 @@
+send_raw:
+  name: Send Raw Command
+  description: Send a raw ASCII or hex command to the receiver
+  fields:
+    command:
+      name: Command
+      description: Command string (e.g., "PWR01" or "0x21 0x50")
+      required: true
+      example: "PWR01"
+      selector:
+        text:
