@@ -1,5 +1,6 @@
 """Tests for the OPNsense config flow."""
 
+from collections.abc import Iterable
 from unittest.mock import AsyncMock, patch
 
 from pyopnsense.exceptions import APIException
@@ -10,7 +11,12 @@ from homeassistant.components.opnsense.const import (
     DOMAIN,
     OPNSENSE_DATA,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import (
+    SOURCE_IMPORT,
+    SOURCE_USER,
+    ConfigEntry,
+    ConfigSubentryData,
+)
 from homeassistant.core import HomeAssistant
 
 from . import CONFIG_DATA, CONFIG_DATA_IMPORT, TITLE
@@ -52,6 +58,17 @@ async def test_user(
 
     assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result.get("title") == TITLE
+
+    assert result.get("data") == CONFIG_DATA
+
+    assert "result" in result
+    config_entry: ConfigEntry | None = result.get("result")
+    assert config_entry is not None
+    assert config_entry.unique_id == DOMAIN
+
+    subentries: Iterable[ConfigSubentryData] | None = result.get("subentries")
+    assert subentries is not None
+    assert subentries == ()
 
     assert len(mock_setup_entry.mock_calls) == 1
 
