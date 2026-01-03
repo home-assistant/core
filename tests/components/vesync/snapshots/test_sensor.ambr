@@ -812,7 +812,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '82.2222222222222',
   })
 # ---
 # name: test_sensor_state[CS158-AF Air Fryer Cooking][sensor.cs158_af_air_fryer_cooking_cook_set_time]
@@ -826,11 +826,21 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '15',
   })
 # ---
 # name: test_sensor_state[CS158-AF Air Fryer Cooking][sensor.cs158_af_air_fryer_cooking_cook_status]
-  None
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'CS158-AF Air Fryer Cooking Cook status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.cs158_af_air_fryer_cooking_cook_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cooking',
+  })
 # ---
 # name: test_sensor_state[CS158-AF Air Fryer Cooking][sensor.cs158_af_air_fryer_cooking_current_temperature]
   StateSnapshot({
@@ -845,7 +855,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '-8.33333333333333',
   })
 # ---
 # name: test_sensor_state[CS158-AF Air Fryer Cooking][sensor.cs158_af_air_fryer_cooking_remaining_time]
@@ -1105,7 +1115,17 @@
   })
 # ---
 # name: test_sensor_state[CS158-AF Air Fryer Standby][sensor.cs158_af_air_fryer_standby_cook_status]
-  None
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'CS158-AF Air Fryer Standby Cook status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.cs158_af_air_fryer_standby_cook_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'standby',
+  })
 # ---
 # name: test_sensor_state[CS158-AF Air Fryer Standby][sensor.cs158_af_air_fryer_standby_current_temperature]
   StateSnapshot({

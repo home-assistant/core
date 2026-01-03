@@ -80,14 +80,14 @@ DEVICE_FIXTURES: dict[str, list[tuple[str, str, str]]] = {
     "CS158-AF Air Fryer Standby": [
         (
             "post",
-            "/cloud/v2/deviceManaged/bypassV2",
+            "/cloud/v1/deviceManaged/bypass",
             "air-fryer-CS158-AF-detail-standby.json",
         )
     ],
     "CS158-AF Air Fryer Cooking": [
         (
             "post",
-            "/cloud/v2/deviceManaged/bypassV2",
+            "/cloud/v1/deviceManaged/bypass",
             "air-fryer-CS158-AF-detail-cooking.json",
         )
     ],
