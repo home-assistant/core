@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import math
-from typing import Any, Final
+from typing import Any
 
 from propcache.api import cached_property
 from xknx.devices import Fan as XknxFan
@@ -32,11 +32,10 @@ from .storage.const import (
     CONF_GA_OSCILLATION,
     CONF_GA_SPEED,
     CONF_GA_STEP,
+    CONF_GA_SWITCH,
     CONF_SPEED,
 )
 from .storage.util import ConfigExtractor
-
-DEFAULT_PERCENTAGE: Final = 50
 
 
 async def async_setup_entry(
@@ -77,26 +76,24 @@ class _KnxFan(FanEntity):
     _device: XknxFan
     _step_range: tuple[int, int] | None
 
+    def _get_knx_speed(self, percentage: int) -> int:
+        """Convert percentage to KNX speed value."""
+        if self._step_range is not None:
+            return math.ceil(percentage_to_ranged_value(self._step_range, percentage))
+        return percentage
+
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
-        if self._step_range:
-            step = math.ceil(percentage_to_ranged_value(self._step_range, percentage))
-            await self._device.set_speed(step)
-        else:
-            await self._device.set_speed(percentage)
+        await self._device.set_speed(self._get_knx_speed(percentage))
 
     @cached_property
     def supported_features(self) -> FanEntityFeature:
         """Flag supported features."""
-        flags = (
-            FanEntityFeature.SET_SPEED
-            | FanEntityFeature.TURN_ON
-            | FanEntityFeature.TURN_OFF
-        )
-
+        flags = FanEntityFeature.TURN_ON | FanEntityFeature.TURN_OFF
+        if self._device.speed.initialized:
+            flags |= FanEntityFeature.SET_SPEED
         if self._device.supports_oscillation:
             flags |= FanEntityFeature.OSCILLATE
-
         return flags
 
     @property
@@ -118,6 +115,11 @@ class _KnxFan(FanEntity):
             return super().speed_count
         return int_states_in_range(self._step_range)
 
+    @property
+    def is_on(self) -> bool:
+        """Return the current fan state of the device."""
+        return self._device.is_on
+
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -125,14 +127,12 @@ class _KnxFan(FanEntity):
         **kwargs: Any,
     ) -> None:
         """Turn on the fan."""
-        if percentage is None:
-            await self.async_set_percentage(DEFAULT_PERCENTAGE)
-        else:
-            await self.async_set_percentage(percentage)
+        speed = self._get_knx_speed(percentage) if percentage is not None else None
+        await self._device.turn_on(speed)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
-        await self.async_set_percentage(0)
+        await self._device.turn_off()
 
     async def async_oscillate(self, oscillating: bool) -> None:
         """Oscillate the fan."""
@@ -165,7 +165,12 @@ class KnxYamlFan(_KnxFan, KnxYamlEntity):
                 group_address_oscillation_state=config.get(
                     FanSchema.CONF_OSCILLATION_STATE_ADDRESS
                 ),
+                group_address_switch=config.get(FanSchema.CONF_SWITCH_ADDRESS),
+                group_address_switch_state=config.get(
+                    FanSchema.CONF_SWITCH_STATE_ADDRESS
+                ),
                 max_step=max_step,
+                sync_state=config.get(CONF_SYNC_STATE, True),
             ),
         )
         # FanSpeedMode.STEP if max_step is set
@@ -210,6 +215,8 @@ class KnxUiFan(_KnxFan, KnxUiEntity):
             group_address_oscillation_state=knx_conf.get_state_and_passive(
                 CONF_GA_OSCILLATION
             ),
+            group_address_switch=knx_conf.get_write(CONF_GA_SWITCH),
+            group_address_switch_state=knx_conf.get_state_and_passive(CONF_GA_SWITCH),
             max_step=max_step,
             sync_state=knx_conf.get(CONF_SYNC_STATE),
         )

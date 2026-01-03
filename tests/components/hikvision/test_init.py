@@ -89,3 +89,16 @@ async def test_setup_entry_no_device_id(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_entry_nvr_fetches_events(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hik_nvr: MagicMock,
+) -> None:
+    """Test setup fetches NVR events for NVR devices."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    mock_hik_nvr.return_value.get_event_triggers.assert_called_once()
+    mock_hik_nvr.return_value.inject_events.assert_called_once()
