@@ -140,14 +140,26 @@ async def test_zeroconf_discovery_invalid_auth(
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
+            {},
+        )
+
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["step_id"] == "zeroconf_auth"
+
+    with patch(
+        "homeassistant.components.nrgkick.config_flow.NRGkickAPI",
+        return_value=mock_nrgkick_api,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
             {
                 CONF_USERNAME: "wrong_user",
                 CONF_PASSWORD: "wrong_pass",
             },
         )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_auth"}
+    assert result3["type"] == data_entry_flow.FlowResultType.FORM
+    assert result3["errors"] == {"base": "invalid_auth"}
 
 
 async def test_zeroconf_discovery_unknown_exception(

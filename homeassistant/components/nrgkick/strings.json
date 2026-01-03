@@ -43,38 +43,51 @@
       },
       "user": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "username": "[%key:common::config_flow::data::username%]"
+          "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of the NRGkick device.",
-          "password": "Password for Basic Auth (optional).",
-          "username": "Username for Basic Auth (optional)."
+          "host": "The hostname or IP address of the NRGkick device."
         },
         "description": "Set up your NRGkick device. Ensure the device is powered on and reachable on the network."
       },
-      "zeroconf_confirm": {
+      "user_auth": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "password": "Password for Basic Auth (optional).",
-          "username": "Username for Basic Auth (optional)."
+          "password": "Password for Basic Auth.",
+          "username": "Username for Basic Auth."
         },
+        "description": "Authentication is required for {device_ip}."
+      },
+      "zeroconf_auth": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "Password for Basic Auth.",
+          "username": "Username for Basic Auth."
+        },
+        "description": "Authentication is required for {device_ip}."
+      },
+      "zeroconf_confirm": {
         "description": "Do you want to add the NRGkick device ({name}) at {device_ip} to Home Assistant?"
       },
       "zeroconf_enable_json_api": {
+        "description": "The NRGkick device ({name}) at {device_ip} was discovered, but JSON API is disabled.\n\nEnable JSON API in the NRGkick mobile app:\n1. Open the NRGkick mobile app \u2192 Extended \u2192 Local API\n2. Enable JSON API under API Variants\n3. (Optional \u0026 recommended) Enable Authentication (JSON) and set credentials\n\nAfter enabling JSON API, submit this form to continue."
+      },
+      "zeroconf_enable_json_api_auth": {
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
-          "password": "Password for Basic Auth (optional).",
-          "username": "Username for Basic Auth (optional)."
+          "password": "Password for Basic Auth.",
+          "username": "Username for Basic Auth."
         },
-        "description": "The NRGkick device ({name}) at {device_ip} was discovered, but JSON API is disabled.\n\nEnable JSON API in the NRGkick mobile app:\n1. Open the NRGkick mobile app \u2192 Extended \u2192 Local API\n2. Enable JSON API under API Variants\n3. (Optional \u0026 recommended) Enable Authentication (JSON) and set credentials\n\nAfter enabling JSON API, submit this form to continue."
+        "description": "Authentication is required for {device_ip}."
       }
     }
   },

@@ -19,12 +19,14 @@ from . import create_mock_config_entry
 
 
 async def test_form(hass: HomeAssistant, mock_nrgkick_api) -> None:
-    """Test we get the form."""
+    """Test we can setup when authentication is required."""
     result = await hass.config_entries.flow.async_init(
         "nrgkick", context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
+
+    mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientAuthenticationError
 
     with (
         patch(
@@ -38,17 +40,37 @@ async def test_form(hass: HomeAssistant, mock_nrgkick_api) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
+            {CONF_HOST: "192.168.1.100"},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["step_id"] == "user_auth"
+
+    mock_nrgkick_api.test_connection.side_effect = None
+
+    with (
+        patch(
+            "homeassistant.components.nrgkick.config_flow.NRGkickAPI",
+            return_value=mock_nrgkick_api,
+        ),
+        patch(
+            "homeassistant.components.nrgkick.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
             {
-                CONF_HOST: "192.168.1.100",
                 CONF_USERNAME: "test_user",
                 CONF_PASSWORD: "test_pass",
             },
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "NRGkick Test"
-    assert result2["data"] == {
+    assert result3["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result3["title"] == "NRGkick Test"
+    assert result3["data"] == {
         CONF_HOST: "192.168.1.100",
         CONF_USERNAME: "test_user",
         CONF_PASSWORD: "test_pass",
@@ -118,15 +140,26 @@ async def test_form_invalid_auth(hass: HomeAssistant, mock_nrgkick_api) -> None:
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
+            {CONF_HOST: "192.168.1.100"},
+        )
+
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["step_id"] == "user_auth"
+
+    with patch(
+        "homeassistant.components.nrgkick.config_flow.NRGkickAPI",
+        return_value=mock_nrgkick_api,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
             {
-                CONF_HOST: "192.168.1.100",
                 CONF_USERNAME: "test-username",
                 CONF_PASSWORD: "test-password",
             },
         )
 
-    assert result2["type"] == data_entry_flow.FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_auth"}
+    assert result3["type"] == data_entry_flow.FlowResultType.FORM
+    assert result3["errors"] == {"base": "invalid_auth"}
 
 
 async def test_form_no_serial_number(hass: HomeAssistant, mock_nrgkick_api) -> None:
@@ -505,6 +538,8 @@ async def test_zeroconf_discovery(hass: HomeAssistant, mock_nrgkick_api) -> None
         "device_ip": "192.168.1.100",
     }
 
+    mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientAuthenticationError
+
     with (
         patch(
             "homeassistant.components.nrgkick.config_flow.NRGkickAPI",
@@ -517,6 +552,27 @@ async def test_zeroconf_discovery(hass: HomeAssistant, mock_nrgkick_api) -> None
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
+            {},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["step_id"] == "zeroconf_auth"
+
+    mock_nrgkick_api.test_connection.side_effect = None
+
+    with (
+        patch(
+            "homeassistant.components.nrgkick.config_flow.NRGkickAPI",
+            return_value=mock_nrgkick_api,
+        ),
+        patch(
+            "homeassistant.components.nrgkick.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
             {
                 CONF_USERNAME: "test_user",
                 CONF_PASSWORD: "test_pass",
@@ -524,9 +580,9 @@ async def test_zeroconf_discovery(hass: HomeAssistant, mock_nrgkick_api) -> None
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "NRGkick Test"
-    assert result2["data"] == {
+    assert result3["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result3["title"] == "NRGkick Test"
+    assert result3["data"] == {
         CONF_HOST: "192.168.1.100",
         CONF_USERNAME: "test_user",
         CONF_PASSWORD: "test_pass",
@@ -576,12 +632,7 @@ async def test_zeroconf_discovery_without_credentials(
         await hass.async_block_till_done()
 
     assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
-    # When no credentials provided, they are stored as None in the data
-    assert result2["data"] == {
-        CONF_HOST: "192.168.1.100",
-        CONF_USERNAME: None,
-        CONF_PASSWORD: None,
-    }
+    assert result2["data"] == {CONF_HOST: "192.168.1.100"}
 
 
 async def test_zeroconf_already_configured(
@@ -692,20 +743,13 @@ async def test_zeroconf_json_api_disabled_then_enabled(
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_USERNAME: "test_user",
-                CONF_PASSWORD: "test_pass",
-            },
+            {},
         )
         await hass.async_block_till_done()
 
     assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result2["title"] == "NRGkick Test"
-    assert result2["data"] == {
-        CONF_HOST: "192.168.1.100",
-        CONF_USERNAME: "test_user",
-        CONF_PASSWORD: "test_pass",
-    }
+    assert result2["data"] == {CONF_HOST: "192.168.1.100"}
 
 
 async def test_zeroconf_no_serial_number(hass: HomeAssistant) -> None:
