@@ -10,6 +10,3 @@ class APIData(TypedDict):
     api_secret: str
     base_url: str
     verify_cert: bool
-
-
-type Interfaces = list[str]

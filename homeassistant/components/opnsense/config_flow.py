@@ -14,7 +14,7 @@ from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
 from .const import CONF_API_SECRET, CONF_TRACKER_INTERFACES, DOMAIN
-from .types import APIData, Interfaces
+from .types import APIData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize OPNsense config flow."""
-        self.available_interfaces: Interfaces | None = None
+        self.available_interfaces: list[str] | None = None
 
     async def _show_setup_form(
         self,
