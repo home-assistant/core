@@ -20,7 +20,6 @@ class NRGkickEntity(CoordinatorEntity[NRGkickDataUpdateCoordinator]):
         """Initialize the entity."""
         super().__init__(coordinator)
         self._key = key
-        self._attr_translation_key = key
         self._setup_device_info()
 
     def _setup_device_info(self) -> None:
