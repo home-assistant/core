@@ -32,7 +32,7 @@
           "tracker_interfaces": "Interfaces"
         },
         "description": "Select which network interfaces to monitor for device tracking. Only devices connected to selected interfaces will be tracked. Leave empty to track devices on all interfaces.",
-        "title": "Select Interfaces"
+        "title": "Select interfaces"
       },
       "devices": {
         "data": {
