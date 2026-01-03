@@ -7,7 +7,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import cast
 
 from pyportainer import (
     Portainer,
@@ -166,22 +165,34 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                     )
 
                 # Separately fetch stats for running containers
-                running = [c for c in containers if c.state == CONTAINER_STATE_RUNNING]
-                if running:
-                    results = await asyncio.gather(
-                        *[
-                            self.portainer.container_stats(
-                                endpoint_id=endpoint.id,
-                                container_id=c.id,
-                            )
-                            for c in running
-                        ]
+                running_containers = [
+                    container
+                    for container in containers
+                    if container.state == CONTAINER_STATE_RUNNING
+                ]
+                if running_containers:
+                    stats_by_key = dict(
+                        zip(
+                            (
+                                self._get_container_name(container.names[0])
+                                for container in running_containers
+                            ),
+                            await asyncio.gather(
+                                *(
+                                    self.portainer.container_stats(
+                                        endpoint_id=endpoint.id,
+                                        container_id=container.id,
+                                    )
+                                    for container in running_containers
+                                )
+                            ),
+                            strict=False,
+                        )
                     )
 
-                    for container, result in zip(running, results, strict=False):
-                        container_map[
-                            self._get_container_name(container.names[0])
-                        ].stats = cast(DockerContainerStats, result)
+                    # Now assign stats to the containers
+                    for container_name, stats in stats_by_key.items():
+                        container_map[container_name].stats = stats
             except PortainerConnectionError as err:
                 _LOGGER.exception("Connection error")
                 raise UpdateFailed(
