@@ -1,7 +1,9 @@
-"""API for yolink bound to Home Assistant OAuth."""
+"""API for yolink bound to Home Assistant OAuth or UAC."""
 
 from aiohttp import ClientSession
 from yolink.auth_mgr import YoLinkAuthMgr
+from yolink.const import OAUTH2_TOKEN
+from yolink.local_auth_mgr import YoLinkLocalAuthMgr
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -29,3 +31,23 @@ class ConfigEntryAuth(YoLinkAuthMgr):
         """Check the token."""
         await self.oauth_session.async_ensure_token_valid()
         return self.access_token()
+
+
+class UACAuth(YoLinkLocalAuthMgr):
+    """Provide yolink authentication using UAC (User Access Credentials)."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        websession: ClientSession,
+        uaid: str,
+        secret_key: str,
+    ) -> None:
+        """Initialize yolink UAC Auth."""
+        self.hass = hass
+        super().__init__(
+            session=websession,
+            token_url=OAUTH2_TOKEN,
+            client_id=uaid,
+            client_secret=secret_key,
+        )
