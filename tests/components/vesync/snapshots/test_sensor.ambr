@@ -812,7 +812,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '82.2222222222222',
+    'state': '180',
   })
 # ---
 # name: test_sensor_state[CS158-AF Air Fryer Cooking][sensor.cs158_af_air_fryer_cooking_cook_set_time]
@@ -855,7 +855,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '-8.33333333333333',
+    'state': '17',
   })
 # ---
 # name: test_sensor_state[CS158-AF Air Fryer Cooking][sensor.cs158_af_air_fryer_cooking_remaining_time]
@@ -930,9 +930,6 @@
       }),
       'name': None,
       'options': dict({
-        'sensor': dict({
-          'suggested_display_precision': 1,
-        }),
       }),
       'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
       'original_icon': None,
@@ -943,7 +940,7 @@
       'supported_features': 0,
       'translation_key': 'current_temp',
       'unique_id': 'CS158Standby-current_temp',
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
       'aliases': set({
@@ -968,9 +965,6 @@
       }),
       'name': None,
       'options': dict({
-        'sensor': dict({
-          'suggested_display_precision': 1,
-        }),
       }),
       'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
       'original_icon': None,
@@ -981,7 +975,7 @@
       'supported_features': 0,
       'translation_key': 'cook_set_temp',
       'unique_id': 'CS158Standby-cook_set_temp',
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
       'aliases': set({
@@ -1090,7 +1084,6 @@
       'device_class': 'temperature',
       'friendly_name': 'CS158-AF Air Fryer Standby Cook set temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cs158_af_air_fryer_standby_cook_set_temperature',
@@ -1133,7 +1126,6 @@
       'device_class': 'temperature',
       'friendly_name': 'CS158-AF Air Fryer Standby Current temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cs158_af_air_fryer_standby_current_temperature',
