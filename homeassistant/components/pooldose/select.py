@@ -20,6 +20,8 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 1
+
 
 @dataclass(frozen=True, kw_only=True)
 class PooldoseSelectEntityDescription(SelectEntityDescription):
@@ -155,6 +157,9 @@ class PooldoseSelect(PooldoseEntity, SelectEntity):
         else:
             api_value = option
 
-        await self.coordinator.client.set_select(self.entity_description.key, api_value)
+        await self._async_perform_write(
+            self.coordinator.client.set_select, self.entity_description.key, api_value
+        )
+
         self._attr_current_option = option
         self.async_write_ha_state()

@@ -277,6 +277,14 @@ async def test_template_variables(
             {"domain": "['light']"},
             {"domain": "['light']"},  # Preserve invalid json that can't be parsed
         ),
+        (
+            {"position": 0},
+            {"position": 0},  # Preserve 0 as a valid value
+        ),
+        (
+            {"enabled": False},
+            {"enabled": False},  # Preserve False as a valid value
+        ),
     ],
 )
 @patch("homeassistant.components.ollama.entity.llm.AssistAPI._async_get_tools")
