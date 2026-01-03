@@ -171,7 +171,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                     if container.state == CONTAINER_STATE_RUNNING
                 ]
                 if running_containers:
-                    stats_by_key = dict(
+                    container_stats = dict(
                         zip(
                             (
                                 self._get_container_name(container.names[0])
@@ -191,7 +191,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                     )
 
                     # Now assign stats to the containers
-                    for container_name, stats in stats_by_key.items():
+                    for container_name, stats in container_stats.items():
                         container_map[container_name].stats = stats
             except PortainerConnectionError as err:
                 _LOGGER.exception("Connection error")
