@@ -32,6 +32,12 @@ REQUEST_REFRESH_DELAY = 1.5
 # Default update interval in minutes (matches upstream Throttle value)
 DEFAULT_UPDATE_INTERVAL = 15
 
+# Retry interval in seconds for transient failures
+RETRY_INTERVAL_SECONDS = 30
+
+# Number of consecutive failures before marking device unavailable
+MAX_CONSECUTIVE_FAILURES = 3
+
 
 class MelCloudDevice:
     """MELCloud Device instance."""
@@ -111,6 +117,7 @@ class MelCloudDeviceUpdateCoordinator(DataUpdateCoordinator[MelCloudDevice]):
         """Initialize the per-device coordinator."""
         self._device = device
         self.device_available = True
+        self._consecutive_failures = 0
 
         super().__init__(
             hass,
@@ -134,6 +141,15 @@ class MelCloudDeviceUpdateCoordinator(DataUpdateCoordinator[MelCloudDevice]):
         """Fetch data for this specific device from MELCloud."""
         try:
             await self._device.update()
+            # Success - reset failure counter and restore normal interval
+            if self._consecutive_failures > 0:
+                _LOGGER.info(
+                    "Connection restored for %s after %d failed attempt(s)",
+                    self._device.name,
+                    self._consecutive_failures,
+                )
+                self._consecutive_failures = 0
+                self.update_interval = timedelta(minutes=DEFAULT_UPDATE_INTERVAL)
             self.device_available = True
         except ClientResponseError as ex:
             if ex.status in (401, 403):
@@ -144,14 +160,49 @@ class MelCloudDeviceUpdateCoordinator(DataUpdateCoordinator[MelCloudDevice]):
                     "temporarily blocked",
                     self._device.name,
                 )
-            else:
-                _LOGGER.warning("Error updating %s: %s", self._device.name, ex)
-            self.device_available = False
+                # Rate limit - mark unavailable immediately
+                self.device_available = False
+                raise UpdateFailed(
+                    f"Rate limit exceeded for {self._device.name}"
+                ) from ex
+            # Other HTTP errors - use retry logic
+            self._handle_failure(f"Error updating {self._device.name}: {ex}", ex)
         except ClientConnectionError as ex:
-            _LOGGER.warning("Connection failed for %s: %s", self._device.name, ex)
-            self.device_available = False
+            self._handle_failure(f"Connection failed for {self._device.name}: {ex}", ex)
 
         return self.mel_device
+
+    def _handle_failure(self, message: str, exception: Exception | None = None) -> None:
+        """Handle a connection failure with retry logic.
+
+        For transient failures, entities remain available with their last known
+        values for up to MAX_CONSECUTIVE_FAILURES attempts. During retries, the
+        update interval is shortened to RETRY_INTERVAL_SECONDS for faster recovery.
+        After the threshold is reached, entities are marked unavailable.
+        """
+        self._consecutive_failures += 1
+
+        if self._consecutive_failures < MAX_CONSECUTIVE_FAILURES:
+            # Keep entities available with cached data, use shorter retry interval
+            _LOGGER.warning(
+                "%s (attempt %d/%d, retrying in %ds)",
+                message,
+                self._consecutive_failures,
+                MAX_CONSECUTIVE_FAILURES,
+                RETRY_INTERVAL_SECONDS,
+            )
+            self.update_interval = timedelta(seconds=RETRY_INTERVAL_SECONDS)
+        else:
+            # Threshold reached - mark unavailable and restore normal interval
+            _LOGGER.warning(
+                "%s (attempt %d/%d, marking unavailable)",
+                message,
+                self._consecutive_failures,
+                MAX_CONSECUTIVE_FAILURES,
+            )
+            self.device_available = False
+            self.update_interval = timedelta(minutes=DEFAULT_UPDATE_INTERVAL)
+            raise UpdateFailed(message) from exception
 
     async def async_set(self, properties: dict[str, Any]) -> None:
         """Write state changes to the MELCloud API."""
