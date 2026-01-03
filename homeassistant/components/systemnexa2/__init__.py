@@ -4,11 +4,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN, MANUFACTURER, PLATFORMS
-from .coordinator import (
-    SystemNexa2ConfigEntry,
-    SystemNexa2DataUpdateCoordinator,
-    SystemNexa2RuntimeData,
-)
+from .coordinator import SystemNexa2ConfigEntry, SystemNexa2DataUpdateCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SystemNexa2ConfigEntry) -> bool:
@@ -26,7 +22,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SystemNexa2ConfigEntry) 
         sw_version=coordinator.data.info_data.sw_version,
         hw_version=str(coordinator.data.info_data.hw_version),
     )
-    entry.runtime_data = SystemNexa2RuntimeData(coordinator=coordinator)
+    entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -37,6 +33,6 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        await entry.runtime_data.coordinator.device.disconnect()
+        await entry.runtime_data.device.disconnect()
 
     return unload_ok

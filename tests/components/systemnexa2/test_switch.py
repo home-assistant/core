@@ -50,7 +50,7 @@ async def test_switch_turn_on_off_toggle(
     # Get the coordinator and update it with state
     entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
     assert entry
-    coordinator = entry.runtime_data.coordinator
+    coordinator = entry.runtime_data
     await coordinator._async_handle_update(StateChange(state=0.0))
     await hass.async_block_till_done()
 
@@ -95,7 +95,7 @@ async def test_switch_is_on_property(
 
     # Get the coordinator and update it with state
     entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
-    coordinator = entry.runtime_data.coordinator
+    coordinator = entry.runtime_data
 
     # Test with state = 1.0 (on)
     await coordinator._async_handle_update(StateChange(state=1.0))
@@ -142,7 +142,7 @@ async def test_configuration_switches(
 
     # Make coordinator data available
     entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
-    coordinator = entry.runtime_data.coordinator
+    coordinator = entry.runtime_data
     await coordinator._async_handle_update(StateChange(state=1.0))
     await hass.async_block_till_done()
 
