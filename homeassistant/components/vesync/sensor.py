@@ -29,7 +29,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .common import is_humidifier, is_outlet, rgetattr
+from .common import is_air_fryer, is_humidifier, is_outlet, rgetattr
 from .const import VS_DEVICES, VS_DISCOVERY
 from .coordinator import VesyncConfigEntry, VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
@@ -169,7 +169,8 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         key="cook_status",
         translation_key="cook_status",
         value_fn=lambda device: device.state.cook_status,
-        exists_fn=lambda device: rgetattr(device, "state.cook_status") is not None,
+        exists_fn=lambda device: is_air_fryer(device)
+        and rgetattr(device, "state.cook_status") is not None,
     ),
 )
 
