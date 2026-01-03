@@ -154,7 +154,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                 for container in containers:
                     container_name = self._get_container_name(container.names[0])
                     prev_container = (
-                        prev_endpoint.containers.get(container_name)
+                        prev_endpoint.containers[container_name]
                         if prev_endpoint
                         else None
                     )
