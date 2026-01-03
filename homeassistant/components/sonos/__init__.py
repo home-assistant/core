@@ -649,6 +649,26 @@ class SonosDiscoveryManager:
             )
         )
 
+        device_registry = dr.async_get(self.hass)
+        for device in device_registry.devices.values():
+            uid = next(
+                (
+                    identifier[1]
+                    for identifier in device.identifiers
+                    if identifier[0] == DOMAIN
+                ),
+                None,
+            )
+            if not uid:
+                continue
+
+            if not device.configuration_url:
+                continue
+            host = urlparse(device.configuration_url).hostname
+            assert host
+            _LOGGER.debug("Loading existing device %s with host %s", uid, host)
+            await self._async_handle_discovery_message(uid, host, "device registry")
+
 
 async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: SonosConfigEntry, device_entry: dr.DeviceEntry
