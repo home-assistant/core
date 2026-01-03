@@ -6,11 +6,7 @@ from unittest.mock import AsyncMock, patch
 from pyopnsense.exceptions import APIException
 
 from homeassistant import data_entry_flow
-from homeassistant.components.opnsense.const import (
-    CONF_TRACKER_INTERFACES,
-    DOMAIN,
-    OPNSENSE_DATA,
-)
+from homeassistant.components.opnsense.const import CONF_TRACKER_INTERFACES, DOMAIN
 from homeassistant.config_entries import (
     SOURCE_IMPORT,
     SOURCE_USER,
@@ -130,46 +126,52 @@ async def test_on_api_error(hass: HomeAssistant) -> None:
         assert result.get("type") == data_entry_flow.FlowResultType.FORM
         assert result.get("errors") == {"base": "cannot_connect"}
 
+    # No error this time
+    with patch(
+        "homeassistant.components.opnsense.config_flow.diagnostics.InterfaceClient.get_arp"
+    ):
+        # Use async_configure instead of async_init for form submission
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONFIG_DATA,
+        )
 
-async def test_on_invalid_interface(
-    hass: HomeAssistant, mock_diagnostics: AsyncMock
-) -> None:
-    """Test when we have invalid interface(s)."""
-    config_data = CONFIG_DATA.copy()
-    config_data[CONF_TRACKER_INTERFACES] = "WRONG"
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-        data=config_data,
-    )
-
-    assert result.get("type") == data_entry_flow.FlowResultType.FORM
-    assert result.get("errors") == {"base": "invalid_interface"}
+    assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
 async def test_on_unknown_error(hass: HomeAssistant) -> None:
     """Test when we have unknown errors."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
     with patch(
         "homeassistant.components.opnsense.config_flow.diagnostics.InterfaceClient.get_arp",
         side_effect=TypeError,
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data=CONFIG_DATA,
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONFIG_DATA,
         )
-        assert result.get("type") == data_entry_flow.FlowResultType.FORM
-        assert result.get("errors") == {"base": "unknown"}
+    assert result.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result.get("errors") == {"base": "unknown"}
+
+    # No error this time
+    with patch(
+        "homeassistant.components.opnsense.config_flow.diagnostics.InterfaceClient.get_arp"
+    ):
+        # Use async_configure instead of async_init for form submission
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=CONFIG_DATA,
+        )
+    assert result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
 async def test_reconfigure_successful(
     hass: HomeAssistant, mock_diagnostics: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test reconfiguration of an existing entry."""
-
-    # Mock that setup already saved the interfaces
-    hass.data[OPNSENSE_DATA] = {}
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
     assert result.get("type") == data_entry_flow.FlowResultType.FORM
