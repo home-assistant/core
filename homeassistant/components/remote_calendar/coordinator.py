@@ -42,7 +42,7 @@ class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator[Calendar]):
             config_entry=config_entry,
             always_update=True,
         )
-        self._client = get_async_client(hass)
+        self._client = get_async_client(hass, verify_ssl=False)
         self._url = config_entry.data[CONF_URL]
 
     async def _async_update_data(self) -> Calendar:
