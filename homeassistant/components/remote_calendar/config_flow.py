@@ -49,7 +49,7 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
                 "webcal://", "https://", 1
             )
         self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
-        client = get_async_client(self.hass, verify_ssl=False)
+        client = get_async_client(self.hass, verify_ssl=user_input[CONF_VERIFY_SSL])
         try:
             res = await get_calendar(client, user_input[CONF_URL])
             if res.status_code == HTTPStatus.FORBIDDEN:
