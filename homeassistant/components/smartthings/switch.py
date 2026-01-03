@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, cast
 
 from pysmartthings import Attribute, Capability, Command, SmartThings
 
@@ -14,6 +15,7 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -47,10 +49,13 @@ class SmartThingsSwitchEntityDescription(SwitchEntityDescription):
     """Describe a SmartThings switch entity."""
 
     status_attribute: Attribute
+    status_fn: Callable[[Any], str | bool] = lambda value: value
     component_translation_key: dict[str, str] | None = None
-    on_key: str = "on"
+    on_key: str | bool = "on"
     on_command: Command = Command.ON
     off_command: Command = Command.OFF
+    requires_remote_control_status: bool = False
+    requires_dishwasher_machine_state: set[str] | None = None
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -58,6 +63,7 @@ class SmartThingsCommandSwitchEntityDescription(SmartThingsSwitchEntityDescripti
     """Describe a SmartThings switch entity."""
 
     command: Command
+    off_key: str | bool = "off"
 
 
 SWITCH = SmartThingsSwitchEntityDescription(
@@ -151,6 +157,164 @@ CAPABILITY_TO_SWITCHES: dict[Capability | str, SmartThingsSwitchEntityDescriptio
         entity_category=EntityCategory.CONFIG,
     ),
 }
+DISHWASHER_WASHING_OPTIONS_TO_SWITCHES: dict[
+    Attribute | str, SmartThingsSwitchEntityDescription
+] = {
+    Attribute.ADD_RINSE: SmartThingsCommandSwitchEntityDescription(
+        key=Attribute.ADD_RINSE,
+        translation_key="add_rinse",
+        status_attribute=Attribute.ADD_RINSE,
+        status_fn=lambda value: value["value"],
+        command=Command.SET_ADD_RINSE,
+        on_key=True,
+        off_key=False,
+        requires_remote_control_status=True,
+        requires_dishwasher_machine_state={"stop"},
+    ),
+    Attribute.DRY_PLUS: SmartThingsCommandSwitchEntityDescription(
+        key=Attribute.DRY_PLUS,
+        translation_key="dry_plus",
+        status_attribute=Attribute.DRY_PLUS,
+        status_fn=lambda value: value["value"],
+        command=Command.SET_DRY_PLUS,
+        on_key=True,
+        off_key=False,
+        requires_remote_control_status=True,
+        requires_dishwasher_machine_state={"stop"},
+    ),
+    Attribute.HEATED_DRY: SmartThingsCommandSwitchEntityDescription(
+        key=Attribute.HEATED_DRY,
+        translation_key="heated_dry",
+        status_attribute=Attribute.HEATED_DRY,
+        status_fn=lambda value: value["value"],
+        command=Command.SET_HEATED_DRY,
+        on_key=True,
+        off_key=False,
+        requires_remote_control_status=True,
+        requires_dishwasher_machine_state={"stop"},
+    ),
+    Attribute.HIGH_TEMP_WASH: SmartThingsCommandSwitchEntityDescription(
+        key=Attribute.HIGH_TEMP_WASH,
+        translation_key="high_temp_wash",
+        status_attribute=Attribute.HIGH_TEMP_WASH,
+        status_fn=lambda value: value["value"],
+        command=Command.SET_HIGH_TEMP_WASH,
+        on_key=True,
+        off_key=False,
+        requires_remote_control_status=True,
+        requires_dishwasher_machine_state={"stop"},
+    ),
+    Attribute.HOT_AIR_DRY: SmartThingsCommandSwitchEntityDescription(
+        key=Attribute.HOT_AIR_DRY,
+        translation_key="hot_air_dry",
+        status_attribute=Attribute.HOT_AIR_DRY,
+        status_fn=lambda value: value["value"],
+        command=Command.SET_HOT_AIR_DRY,
+        on_key=True,
+        off_key=False,
+        requires_remote_control_status=True,
+        requires_dishwasher_machine_state={"stop"},
+    ),
+    Attribute.MULTI_TAB: SmartThingsCommandSwitchEntityDescription(
+        key=Attribute.MULTI_TAB,
+        translation_key="multi_tab",
+        status_attribute=Attribute.MULTI_TAB,
+        status_fn=lambda value: value["value"],
+        command=Command.SET_MULTI_TAB,
+        on_key=True,
+        off_key=False,
+        requires_remote_control_status=True,
+        requires_dishwasher_machine_state={"stop"},
+    ),
+    Attribute.RINSE_PLUS: SmartThingsCommandSwitchEntityDescription(
+        key=Attribute.RINSE_PLUS,
+        translation_key="rinse_plus",
+        status_attribute=Attribute.RINSE_PLUS,
+        status_fn=lambda value: value["value"],
+        command=Command.SET_RINSE_PLUS,
+        on_key=True,
+        off_key=False,
+        requires_remote_control_status=True,
+        requires_dishwasher_machine_state={"stop"},
+    ),
+    Attribute.SANITIZE: SmartThingsCommandSwitchEntityDescription(
+        key=Attribute.SANITIZE,
+        translation_key="sanitize",
+        status_attribute=Attribute.SANITIZE,
+        status_fn=lambda value: value["value"],
+        command=Command.SET_SANITIZE,
+        on_key=True,
+        off_key=False,
+        requires_remote_control_status=True,
+        requires_dishwasher_machine_state={"stop"},
+    ),
+    Attribute.SANITIZING_WASH: SmartThingsCommandSwitchEntityDescription(
+        key=Attribute.SANITIZING_WASH,
+        translation_key="sanitizing_wash",
+        status_attribute=Attribute.SANITIZING_WASH,
+        status_fn=lambda value: value["value"],
+        command=Command.SET_SANITIZING_WASH,
+        on_key=True,
+        off_key=False,
+        requires_remote_control_status=True,
+        requires_dishwasher_machine_state={"stop"},
+    ),
+    Attribute.SELECTED_ZONE: SmartThingsCommandSwitchEntityDescription(
+        key=Attribute.SELECTED_ZONE,
+        translation_key="selected_zone",
+        status_attribute=Attribute.SELECTED_ZONE,
+        status_fn=lambda value: value["value"],
+        command=Command.SET_SELECTED_ZONE,
+        on_key="lower",
+        off_key="all",
+        requires_remote_control_status=True,
+        requires_dishwasher_machine_state={"stop"},
+    ),
+    Attribute.SPEED_BOOSTER: SmartThingsCommandSwitchEntityDescription(
+        key=Attribute.SPEED_BOOSTER,
+        translation_key="speed_booster",
+        status_attribute=Attribute.SPEED_BOOSTER,
+        status_fn=lambda value: value["value"],
+        command=Command.SET_SPEED_BOOSTER,
+        on_key=True,
+        off_key=False,
+        requires_remote_control_status=True,
+        requires_dishwasher_machine_state={"stop"},
+    ),
+    Attribute.STEAM_SOAK: SmartThingsCommandSwitchEntityDescription(
+        key=Attribute.STEAM_SOAK,
+        translation_key="steam_soak",
+        status_attribute=Attribute.STEAM_SOAK,
+        status_fn=lambda value: value["value"],
+        command=Command.SET_STEAM_SOAK,
+        on_key=True,
+        off_key=False,
+        requires_remote_control_status=True,
+        requires_dishwasher_machine_state={"stop"},
+    ),
+    Attribute.STORM_WASH: SmartThingsCommandSwitchEntityDescription(
+        key=Attribute.STORM_WASH,
+        translation_key="storm_wash",
+        status_attribute=Attribute.STORM_WASH,
+        status_fn=lambda value: value["value"],
+        command=Command.SET_STORM_WASH,
+        on_key=True,
+        off_key=False,
+        requires_remote_control_status=True,
+        requires_dishwasher_machine_state={"stop"},
+    ),
+    Attribute.ZONE_BOOSTER: SmartThingsCommandSwitchEntityDescription(
+        key=Attribute.ZONE_BOOSTER,
+        translation_key="zone_booster",
+        status_attribute=Attribute.ZONE_BOOSTER,
+        status_fn=lambda value: value["value"],
+        command=Command.SET_ZONE_BOOSTER,
+        on_key="left",
+        off_key="none",
+        requires_remote_control_status=True,
+        requires_dishwasher_machine_state={"stop"},
+    ),
+}
 
 
 async def async_setup_entry(
@@ -190,6 +354,26 @@ async def async_setup_entry(
                 and component in description.component_translation_key
             )
         )
+    )
+    entities.extend(
+        SmartThingsCommandSwitch(
+            entry_data.client,
+            device,
+            DISHWASHER_WASHING_OPTIONS_TO_SWITCHES[attribute],
+            Capability.SAMSUNG_CE_DISHWASHER_WASHING_OPTIONS,
+            component,
+        )
+        for device in entry_data.devices.values()
+        for component in device.status
+        if component == MAIN
+        and Capability.SAMSUNG_CE_DISHWASHER_WASHING_OPTIONS in device.status[component]
+        for attribute in cast(
+            list[str],
+            device.status[component][Capability.SAMSUNG_CE_DISHWASHER_WASHING_OPTIONS][
+                Attribute.SUPPORTED_LIST
+            ].value,
+        )
+        if attribute in DISHWASHER_WASHING_OPTIONS_TO_SWITCHES
     )
     entity_registry = er.async_get(hass)
     for device in entry_data.devices.values():
@@ -263,7 +447,12 @@ class SmartThingsSwitch(SmartThingsEntity, SwitchEntity):
         component: str = MAIN,
     ) -> None:
         """Initialize the switch."""
-        super().__init__(client, device, {capability}, component=component)
+        capabilities = {capability}
+        if entity_description.requires_remote_control_status:
+            capabilities.add(Capability.REMOTE_CONTROL_STATUS)
+        if entity_description.requires_dishwasher_machine_state:
+            capabilities.add(Capability.DISHWASHER_OPERATING_STATE)
+        super().__init__(client, device, capabilities, component=component)
         self.entity_description = entity_description
         self.switch_capability = capability
         self._attr_unique_id = f"{device.device.device_id}_{component}_{capability}_{entity_description.status_attribute}_{entity_description.status_attribute}"
@@ -276,6 +465,7 @@ class SmartThingsSwitch(SmartThingsEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
+        self._validate_before_execute()
         await self.execute_device_command(
             self.switch_capability,
             self.entity_description.off_command,
@@ -283,19 +473,46 @@ class SmartThingsSwitch(SmartThingsEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
+        self._validate_before_execute()
         await self.execute_device_command(
             self.switch_capability,
             self.entity_description.on_command,
         )
 
+    def _validate_before_execute(self) -> None:
+        """Validate that the switch command can be executed."""
+        if (
+            self.entity_description.requires_remote_control_status
+            and self.get_attribute_value(
+                Capability.REMOTE_CONTROL_STATUS, Attribute.REMOTE_CONTROL_ENABLED
+            )
+            == "false"
+        ):
+            raise ServiceValidationError(
+                "Can only be updated when remote control is enabled"
+            )
+        if (
+            self.entity_description.requires_dishwasher_machine_state
+            and self.get_attribute_value(
+                Capability.DISHWASHER_OPERATING_STATE, Attribute.MACHINE_STATE
+            )
+            not in self.entity_description.requires_dishwasher_machine_state
+        ):
+            state_list = " or ".join(
+                self.entity_description.requires_dishwasher_machine_state
+            )
+            raise ServiceValidationError(
+                f"Can only be updated when dishwasher machine state is {state_list}"
+            )
+
     @property
     def is_on(self) -> bool:
         """Return true if switch is on."""
+        status = self.get_attribute_value(
+            self.switch_capability, self.entity_description.status_attribute
+        )
         return (
-            self.get_attribute_value(
-                self.switch_capability, self.entity_description.status_attribute
-            )
-            == self.entity_description.on_key
+            self.entity_description.status_fn(status) == self.entity_description.on_key
         )
 
 
@@ -306,16 +523,18 @@ class SmartThingsCommandSwitch(SmartThingsSwitch):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
+        self._validate_before_execute()
         await self.execute_device_command(
             self.switch_capability,
             self.entity_description.command,
-            "off",
+            self.entity_description.off_key,
         )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
+        self._validate_before_execute()
         await self.execute_device_command(
             self.switch_capability,
             self.entity_description.command,
-            "on",
+            self.entity_description.on_key,
         )

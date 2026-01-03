@@ -139,6 +139,9 @@
       }
     },
     "switch": {
+      "add_rinse": {
+        "default": "mdi:water-plus"
+      },
       "auto_cycle_link": {
         "default": "mdi:link-off",
         "state": {
@@ -158,11 +161,26 @@
           "on": "mdi:lightbulb-on"
         }
       },
+      "dry_plus": {
+        "default": "mdi:heat-wave"
+      },
+      "heated_dry": {
+        "default": "mdi:heat-wave"
+      },
+      "high_temp_wash": {
+        "default": "mdi:thermometer-plus"
+      },
+      "hot_air_dry": {
+        "default": "mdi:heat-wave"
+      },
       "ice_maker": {
         "default": "mdi:delete-variant"
       },
       "keep_fresh_mode": {
         "default": "mdi:creation"
+      },
+      "multi_tab": {
+        "default": "mdi:pill-multiple"
       },
       "power_cool": {
         "default": "mdi:snowflake-alert"
@@ -170,8 +188,17 @@
       "power_freeze": {
         "default": "mdi:snowflake"
       },
+      "rinse_plus": {
+        "default": "mdi:water-plus"
+      },
       "sanitize": {
         "default": "mdi:lotion"
+      },
+      "sanitizing_wash": {
+        "default": "mdi:lotion"
+      },
+      "selected_zone": {
+        "default": "mdi:dock-bottom"
       },
       "sound_effect": {
         "default": "mdi:volume-high",
@@ -180,11 +207,23 @@
           "on": "mdi:volume-high"
         }
       },
+      "speed_booster": {
+        "default": "mdi:fast-forward"
+      },
+      "steam_soak": {
+        "default": "mdi:weather-windy"
+      },
+      "storm_wash": {
+        "default": "mdi:weather-dust"
+      },
       "wrinkle_prevent": {
         "default": "mdi:tumble-dryer",
         "state": {
           "off": "mdi:tumble-dryer-off"
         }
+      },
+      "zone_booster": {
+        "default": "mdi:dock-left"
       }
     }
   }
