@@ -78,13 +78,33 @@ async def test_abort_if_already_setup(
 ) -> None:
     """Test we abort if component is already setup."""
 
+    # Pretend we already set up a config entry.
+    hass.config.components.add(DOMAIN)
+    mock_config_entry.add_to_hass(hass)
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data=CONFIG_DATA,
+    )
+    assert result.get("type") == data_entry_flow.FlowResultType.FORM
+    assert result.get("step_id") == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=CONFIG_DATA,
     )
     assert result.get("type") == data_entry_flow.FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
+
+
+async def test_abort_import_if_already_setup(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test we abort if component is already setup."""
+
+    # Pretend we already set up a config entry.
+    hass.config.components.add(DOMAIN)
+    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
