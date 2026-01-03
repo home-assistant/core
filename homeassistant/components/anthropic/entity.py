@@ -583,7 +583,7 @@ class AnthropicBaseLLMEntity(Entity):
             identifiers={(DOMAIN, subentry.subentry_id)},
             name=subentry.title,
             manufacturer="Anthropic",
-            model="Claude",
+            model=subentry.data.get(CONF_CHAT_MODEL, DEFAULT[CONF_CHAT_MODEL]),
             entry_type=dr.DeviceEntryType.SERVICE,
         )
 

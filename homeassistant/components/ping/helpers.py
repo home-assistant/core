@@ -64,10 +64,11 @@ class PingDataICMPLib(PingData):
             return
 
         _LOGGER.debug(
-            "async_ping returned: reachable=%s sent=%i received=%s",
+            "async_ping returned: reachable=%s sent=%i received=%s loss=%s",
             data.is_alive,
             data.packets_sent,
             data.packets_received,
+            data.packet_loss * 100,
         )
 
         self.is_alive = data.is_alive
@@ -80,6 +81,7 @@ class PingDataICMPLib(PingData):
             "max": data.max_rtt,
             "avg": data.avg_rtt,
             "jitter": data.jitter,
+            "loss": data.packet_loss * 100,
         }
 
 

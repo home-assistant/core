@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Final, cast
+from typing import TYPE_CHECKING, Final, cast
 
 from aioshelly.block_device import Block
 from aioshelly.const import RPC_GENERATIONS
@@ -34,6 +34,7 @@ from .const import (
     MODEL_LINKEDGO_ST1820_THERMOSTAT,
     MODEL_TOP_EV_CHARGER_EVE01,
     ROLE_GENERIC,
+    TRV_CHANNEL,
     VIRTUAL_NUMBER_MODE_MAP,
 )
 from .coordinator import ShellyBlockCoordinator, ShellyConfigEntry, ShellyRpcCoordinator
@@ -42,7 +43,7 @@ from .entity import (
     RpcEntityDescription,
     ShellyRpcAttributeEntity,
     ShellySleepingBlockAttributeEntity,
-    async_setup_entry_attribute_entities,
+    async_setup_entry_block,
     async_setup_entry_rpc,
     rpc_call,
 )
@@ -61,9 +62,6 @@ PARALLEL_UPDATES = 0
 @dataclass(frozen=True, kw_only=True)
 class BlockNumberDescription(BlockEntityDescription, NumberEntityDescription):
     """Class to describe a BLOCK sensor."""
-
-    rest_path: str = ""
-    rest_arg: str = ""
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -178,7 +176,7 @@ class RpcBluTrvExtTempNumber(RpcBluTrvNumber):
         self.async_write_ha_state()
 
 
-NUMBERS: dict[tuple[str, str], BlockNumberDescription] = {
+BLOCK_NUMBERS: dict[tuple[str, str], BlockNumberDescription] = {
     ("device", "valvePos"): BlockNumberDescription(
         key="device|valvepos",
         translation_key="valve_position",
@@ -189,8 +187,6 @@ NUMBERS: dict[tuple[str, str], BlockNumberDescription] = {
         native_max_value=100,
         native_step=1,
         mode=NumberMode.SLIDER,
-        rest_path="thermostat/0",
-        rest_arg="pos",
     ),
 }
 
@@ -353,11 +349,11 @@ def _async_setup_block_entry(
 ) -> None:
     """Set up entities for BLOCK device."""
     if config_entry.data[CONF_SLEEP_PERIOD]:
-        async_setup_entry_attribute_entities(
+        async_setup_entry_block(
             hass,
             config_entry,
             async_add_entities,
-            NUMBERS,
+            BLOCK_NUMBERS,
             BlockSleepingNumber,
         )
 
@@ -426,18 +422,11 @@ class BlockSleepingNumber(ShellySleepingBlockAttributeEntity, RestoreNumber):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set value."""
-        # Example for Shelly Valve: http://192.168.188.187/thermostat/0?pos=13.0
-        await self._set_state_full_path(
-            self.entity_description.rest_path,
-            {self.entity_description.rest_arg: value},
+        LOGGER.debug(
+            "Setting thermostat position for entity %s to %s", self.name, value
         )
-        self.async_write_ha_state()
-
-    async def _set_state_full_path(self, path: str, params: Any) -> Any:
-        """Set block state (HTTP request)."""
-        LOGGER.debug("Setting state for entity %s, state: %s", self.name, params)
         try:
-            return await self.coordinator.device.http_request("get", path, params)
+            await self.coordinator.device.set_thermostat_state(TRV_CHANNEL, pos=value)
         except DeviceConnectionError as err:
             self.coordinator.last_update_success = False
             raise HomeAssistantError(
@@ -450,3 +439,4 @@ class BlockSleepingNumber(ShellySleepingBlockAttributeEntity, RestoreNumber):
             ) from err
         except InvalidAuthError:
             await self.coordinator.async_shutdown_device_and_start_reauth()
+        self.async_write_ha_state()
