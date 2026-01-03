@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Final
 
-from bsblan import BSBLANError
+from bsblan import BSBLANError, get_hvac_action_category
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -13,6 +13,7 @@ from homeassistant.components.climate import (
     PRESET_NONE,
     ClimateEntity,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE
@@ -121,6 +122,20 @@ class BSBLANClimate(BSBLanEntity, ClimateEntity):
         if isinstance(hvac_mode_value, int):
             return BSBLAN_TO_HA_HVAC_MODE.get(hvac_mode_value)
         return try_parse_enum(HVACMode, hvac_mode_value)
+
+    @property
+    def hvac_action(self) -> HVACAction | None:
+        """Return the current running hvac action."""
+        action = self.coordinator.data.state.hvac_action
+        if action is None or action.value in (None, ""):
+            return None
+
+        status_code = action.value
+        if not isinstance(status_code, int):
+            return None
+
+        category = get_hvac_action_category(status_code)
+        return HVACAction(category.name.lower())
 
     @property
     def preset_mode(self) -> str | None:
