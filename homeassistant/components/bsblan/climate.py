@@ -126,11 +126,11 @@ class BSBLANClimate(BSBLanEntity, ClimateEntity):
     @property
     def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac action."""
+        action = self.coordinator.data.state.hvac_action
         if not action or not isinstance(action.value, int):
-        return None
-
-    	category = get_hvac_action_category(action.value)
-    	return HVACAction(category.name.lower())
+            return None
+        category = get_hvac_action_category(action.value)
+        return HVACAction(category.name.lower())
 
     @property
     def preset_mode(self) -> str | None:
