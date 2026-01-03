@@ -7,11 +7,13 @@ import logging
 from typing import Any
 
 import voluptuous as vol
+import yarl
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
@@ -25,9 +27,33 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+
+def _normalize_host(value: str) -> str:
+    """Normalize user input to host[:port] (no scheme/path).
+
+    Accepts either a plain host/IP (optionally with a port) or a full URL.
+    If a URL is provided, we strip the scheme.
+    """
+
+    value = value.strip()
+    if not value:
+        raise vol.Invalid("host is required")
+    if "://" in value:
+        url = yarl.URL(cv.url(value))
+        if not url.host:
+            raise vol.Invalid("invalid url")
+        if url.port is not None:
+            return f"{url.host}:{url.port}"
+        return url.host
+    return value.strip("/").split("/", 1)[0]
+
+
+HOST_SCHEMA = vol.All(cv.string, _normalize_host)
+
+
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST): str,
+        vol.Required(CONF_HOST): HOST_SCHEMA,
         vol.Optional(CONF_USERNAME): str,
         vol.Optional(CONF_PASSWORD): str,
     }
@@ -37,8 +63,9 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
     session = async_get_clientsession(hass)
+    host = data[CONF_HOST]
     api = NRGkickAPI(
-        host=data[CONF_HOST],
+        host=host,
         username=data.get(CONF_USERNAME),
         password=data.get(CONF_PASSWORD),
         session=session,
@@ -98,7 +125,7 @@ class NRGkickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
             description_placeholders={
-                "device_ip": user_input[CONF_HOST] if user_input else ""
+                "device_ip": user_input[CONF_HOST] if user_input else "",
             },
         )
 
@@ -147,7 +174,7 @@ class NRGkickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             data = {
-                CONF_HOST: self._discovered_host,
+                CONF_HOST: _normalize_host(self._discovered_host or ""),
                 CONF_USERNAME: user_input.get(CONF_USERNAME),
                 CONF_PASSWORD: user_input.get(CONF_PASSWORD),
             }
@@ -176,7 +203,7 @@ class NRGkickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             description_placeholders={
                 "name": self._discovered_name or "NRGkick",
-                "device_ip": self._discovered_host or "",
+                "device_ip": _normalize_host(self._discovered_host or ""),
             },
             errors=errors,
         )
@@ -190,7 +217,7 @@ class NRGkickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             # Build the connection data.
             data = {
-                CONF_HOST: self._discovered_host,
+                CONF_HOST: _normalize_host(self._discovered_host or ""),
                 CONF_USERNAME: user_input.get(CONF_USERNAME),
                 CONF_PASSWORD: user_input.get(CONF_PASSWORD),
             }
@@ -222,7 +249,7 @@ class NRGkickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
             description_placeholders={
                 "name": self._discovered_name or "NRGkick",
-                "device_ip": self._discovered_host or "",
+                "device_ip": _normalize_host(self._discovered_host or ""),
             },
             errors=errors,
         )
@@ -280,7 +307,7 @@ class NRGkickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders={
                 "host": entry.data[CONF_HOST],
-                "device_ip": entry.data[CONF_HOST],
+                "device_ip": _normalize_host(entry.data[CONF_HOST]),
             },
         )
 
@@ -335,7 +362,7 @@ class NRGkickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="reconfigure_confirm",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_HOST, default=host): str,
+                    vol.Required(CONF_HOST, default=host): HOST_SCHEMA,
                     vol.Optional(CONF_USERNAME, default=username): str,
                     vol.Optional(CONF_PASSWORD, default=password): str,
                 }
