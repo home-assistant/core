@@ -415,7 +415,7 @@
       'identifiers': set({
         tuple(
           'vesync',
-          '##_REDACTED_##',
+          'CS158Cooking',
         ),
       }),
       'labels': set({
@@ -452,7 +452,7 @@
       'identifiers': set({
         tuple(
           'vesync',
-          '##_REDACTED_##',
+          'CS158Standby',
         ),
       }),
       'labels': set({

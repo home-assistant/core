@@ -603,7 +603,7 @@
       'identifiers': set({
         tuple(
           'vesync',
-          '##_REDACTED_##',
+          'CS158Cooking',
         ),
       }),
       'labels': set({
@@ -657,7 +657,7 @@
       'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'current_temp',
-      'unique_id': '##_REDACTED_##-current_temp',
+      'unique_id': 'CS158Cooking-current_temp',
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     EntityRegistryEntrySnapshot({
@@ -695,7 +695,7 @@
       'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'cook_set_temp',
-      'unique_id': '##_REDACTED_##-cook_set_temp',
+      'unique_id': 'CS158Cooking-cook_set_temp',
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     EntityRegistryEntrySnapshot({
@@ -728,7 +728,7 @@
       'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'cook_set_time',
-      'unique_id': '##_REDACTED_##-cook_set_time',
+      'unique_id': 'CS158Cooking-cook_set_time',
       'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
@@ -761,7 +761,7 @@
       'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'remaining_time',
-      'unique_id': '##_REDACTED_##-remaining_time',
+      'unique_id': 'CS158Cooking-remaining_time',
       'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
@@ -794,7 +794,7 @@
       'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'cook_status',
-      'unique_id': '##_REDACTED_##-cook_status',
+      'unique_id': 'CS158Cooking-cook_status',
       'unit_of_measurement': None,
     }),
   ])
@@ -878,7 +878,7 @@
       'identifiers': set({
         tuple(
           'vesync',
-          '##_REDACTED_##',
+          'CS158Standby',
         ),
       }),
       'labels': set({
@@ -932,7 +932,7 @@
       'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'current_temp',
-      'unique_id': '##_REDACTED_##-current_temp',
+      'unique_id': 'CS158Standby-current_temp',
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     EntityRegistryEntrySnapshot({
@@ -970,7 +970,7 @@
       'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'cook_set_temp',
-      'unique_id': '##_REDACTED_##-cook_set_temp',
+      'unique_id': 'CS158Standby-cook_set_temp',
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     EntityRegistryEntrySnapshot({
@@ -1003,7 +1003,7 @@
       'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'cook_set_time',
-      'unique_id': '##_REDACTED_##-cook_set_time',
+      'unique_id': 'CS158Standby-cook_set_time',
       'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
@@ -1036,7 +1036,7 @@
       'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'remaining_time',
-      'unique_id': '##_REDACTED_##-remaining_time',
+      'unique_id': 'CS158Standby-remaining_time',
       'unit_of_measurement': None,
     }),
     EntityRegistryEntrySnapshot({
@@ -1069,7 +1069,7 @@
       'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': 'cook_status',
-      'unique_id': '##_REDACTED_##-cook_status',
+      'unique_id': 'CS158Standby-cook_status',
       'unit_of_measurement': None,
     }),
   ])

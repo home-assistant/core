@@ -399,7 +399,7 @@
       'identifiers': set({
         tuple(
           'vesync',
-          '##_REDACTED_##',
+          'CS158Cooking',
         ),
       }),
       'labels': set({
@@ -448,7 +448,7 @@
       'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': None,
-      'unique_id': '##_REDACTED_##',
+      'unique_id': 'CS158Cooking',
       'unit_of_measurement': None,
     }),
   ])
@@ -495,7 +495,7 @@
       'identifiers': set({
         tuple(
           'vesync',
-          '##_REDACTED_##',
+          'CS158Standby',
         ),
       }),
       'labels': set({
@@ -544,7 +544,7 @@
       'suggested_object_id': None,
       'supported_features': 0,
       'translation_key': None,
-      'unique_id': '##_REDACTED_##',
+      'unique_id': 'CS158Standby',
       'unit_of_measurement': None,
     }),
   ])
