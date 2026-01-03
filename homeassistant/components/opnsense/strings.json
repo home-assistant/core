@@ -16,7 +16,7 @@
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
-          "api_secret": "API Secret",
+          "api_secret": "API secret",
           "url": "[%key:common::config_flow::data::url%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
@@ -32,14 +32,14 @@
           "tracker_interfaces": "Interfaces"
         },
         "description": "Select which network interfaces to monitor for device tracking. Only devices connected to selected interfaces will be tracked. Leave empty to track devices on all interfaces.",
-        "title": "Select Interfaces"
+        "title": "Select interfaces"
       },
       "devices": {
         "data": {
           "tracker_mac_addresses": "Devices"
         },
         "description": "Select specific devices to track by their MAC address. {device_count} device(s) available based on selected interfaces. Leave empty to track all devices found on the selected interfaces.",
-        "title": "Select Devices"
+        "title": "Select devices"
       },
       "reconfigure": {
         "description": "Reconfigure OPNsense integration settings",
@@ -50,7 +50,7 @@
           "tracker_interfaces": "Interfaces"
         },
         "description": "Select which network interfaces to monitor for device tracking. Only devices connected to selected interfaces will be tracked. Leave empty to track devices on all interfaces.",
-        "title": "Reconfigure Interfaces"
+        "title": "Reconfigure interfaces"
       },
       "reconfigure_devices": {
         "data": {
