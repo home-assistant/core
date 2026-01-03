@@ -6,8 +6,10 @@ adding Home Assistant-specific exception handling with translation support.
 
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
+from functools import wraps
 import logging
-from typing import Any, TypeVar, cast
+from typing import Any, Concatenate, ParamSpec, TypeVar
 
 import aiohttp
 from nrgkick_api import (
@@ -22,7 +24,54 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-_T = TypeVar("_T")
+_P = ParamSpec("_P")
+_R = TypeVar("_R")
+
+
+def _wrap_api_errors(
+    func: Callable[Concatenate[NRGkickAPI, _P], Awaitable[_R]],
+) -> Callable[Concatenate[NRGkickAPI, _P], Awaitable[_R]]:
+    """Wrap API calls with Home Assistant exception translation."""
+
+    @wraps(func)
+    async def wrapper(self: NRGkickAPI, *args: _P.args, **kwargs: _P.kwargs) -> _R:
+        try:
+            return await func(self, *args, **kwargs)
+        except NRGkickAuthenticationError as err:
+            _LOGGER.warning(
+                "Authentication failed for NRGkick device at %s: %s",
+                self.host,
+                err,
+            )
+            raise NRGkickApiClientAuthenticationError(
+                translation_domain=DOMAIN,
+                translation_key="authentication_error",
+                translation_placeholders={"host": self.host},
+            ) from err
+        except NRGkickConnectionError as err:
+            _LOGGER.error(
+                "Communication error with NRGkick device at %s: %s",
+                self.host,
+                err,
+            )
+            raise NRGkickApiClientCommunicationError(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
+        except (TimeoutError, aiohttp.ClientError, OSError) as err:
+            _LOGGER.error(
+                "Unexpected communication error with NRGkick device at %s: %s",
+                self.host,
+                err,
+            )
+            raise NRGkickApiClientCommunicationError(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
+
+    return wrapper
 
 
 class NRGkickApiClientError(HomeAssistantError):
@@ -77,68 +126,7 @@ class NRGkickAPI:
             session=session,
         )
 
-    async def _wrap_call(
-        self,
-        coro: Any,
-        return_type: type[_T],
-    ) -> _T:
-        """Wrap library calls with Home Assistant exception translation.
-
-        Args:
-            coro: Coroutine from the library API.
-            return_type: Expected return type for type safety (used by mypy).
-
-        Returns:
-            Result from the library call, cast to expected type.
-
-        Raises:
-            NRGkickApiClientAuthenticationError: If authentication fails.
-            NRGkickApiClientCommunicationError: If communication fails.
-
-        """
-        try:
-            result = await coro
-            if not isinstance(result, return_type):
-                _LOGGER.debug(
-                    "Unexpected return type %s (expected %s)",
-                    type(result),
-                    return_type,
-                )
-            return cast(_T, result)
-        except NRGkickAuthenticationError as err:
-            _LOGGER.warning(
-                "Authentication failed for NRGkick device at %s: %s",
-                self.host,
-                err,
-            )
-            raise NRGkickApiClientAuthenticationError(
-                translation_domain=DOMAIN,
-                translation_key="authentication_error",
-                translation_placeholders={"host": self.host},
-            ) from err
-        except NRGkickConnectionError as err:
-            _LOGGER.error(
-                "Communication error with NRGkick device at %s: %s",
-                self.host,
-                err,
-            )
-            raise NRGkickApiClientCommunicationError(
-                translation_domain=DOMAIN,
-                translation_key="communication_error",
-                translation_placeholders={"error": str(err)},
-            ) from err
-        except (TimeoutError, aiohttp.ClientError, OSError) as err:
-            _LOGGER.error(
-                "Unexpected communication error with NRGkick device at %s: %s",
-                self.host,
-                err,
-            )
-            raise NRGkickApiClientCommunicationError(
-                translation_domain=DOMAIN,
-                translation_key="communication_error",
-                translation_placeholders={"error": str(err)},
-            ) from err
-
+    @_wrap_api_errors
     async def get_info(
         self,
         sections: list[str] | None = None,
@@ -157,8 +145,9 @@ class NRGkickAPI:
             Device information dictionary.
 
         """
-        return await self._wrap_call(self._api.get_info(sections, raw=raw), dict)
+        return await self._api.get_info(sections, raw=raw)
 
+    @_wrap_api_errors
     async def get_control(self) -> dict[str, Any]:
         """Get current control parameters.
 
@@ -166,8 +155,9 @@ class NRGkickAPI:
             Control parameters dictionary.
 
         """
-        return await self._wrap_call(self._api.get_control(), dict)
+        return await self._api.get_control()
 
+    @_wrap_api_errors
     async def get_values(
         self,
         sections: list[str] | None = None,
@@ -186,8 +176,9 @@ class NRGkickAPI:
             Current values dictionary.
 
         """
-        return await self._wrap_call(self._api.get_values(sections, raw=raw), dict)
+        return await self._api.get_values(sections, raw=raw)
 
+    @_wrap_api_errors
     async def set_current(self, current: float) -> dict[str, Any]:
         """Set charging current.
 
@@ -198,8 +189,9 @@ class NRGkickAPI:
             Response dictionary with confirmed value.
 
         """
-        return await self._wrap_call(self._api.set_current(current), dict)
+        return await self._api.set_current(current)
 
+    @_wrap_api_errors
     async def set_charge_pause(self, pause: bool) -> dict[str, Any]:
         """Set charge pause state.
 
@@ -210,8 +202,9 @@ class NRGkickAPI:
             Response dictionary with confirmed value.
 
         """
-        return await self._wrap_call(self._api.set_charge_pause(pause), dict)
+        return await self._api.set_charge_pause(pause)
 
+    @_wrap_api_errors
     async def set_energy_limit(self, limit: int) -> dict[str, Any]:
         """Set energy limit in Wh (0 = no limit).
 
@@ -222,8 +215,9 @@ class NRGkickAPI:
             Response dictionary with confirmed value.
 
         """
-        return await self._wrap_call(self._api.set_energy_limit(limit), dict)
+        return await self._api.set_energy_limit(limit)
 
+    @_wrap_api_errors
     async def set_phase_count(self, phases: int) -> dict[str, Any]:
         """Set phase count (1-3).
 
@@ -234,8 +228,9 @@ class NRGkickAPI:
             Response dictionary with confirmed value.
 
         """
-        return await self._wrap_call(self._api.set_phase_count(phases), dict)
+        return await self._api.set_phase_count(phases)
 
+    @_wrap_api_errors
     async def test_connection(self) -> bool:
         """Test if we can connect to the device.
 
@@ -243,4 +238,4 @@ class NRGkickAPI:
             True if connection successful.
 
         """
-        return await self._wrap_call(self._api.test_connection(), bool)
+        return await self._api.test_connection()
