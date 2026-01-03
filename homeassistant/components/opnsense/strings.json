@@ -39,7 +39,7 @@
           "tracker_mac_addresses": "Devices"
         },
         "description": "Select specific devices to track by their MAC address. {device_count} device(s) available based on selected interfaces. Leave empty to track all devices found on the selected interfaces.",
-        "title": "Select Devices"
+        "title": "Select devices"
       },
       "reconfigure": {
         "description": "Reconfigure OPNsense integration settings",
