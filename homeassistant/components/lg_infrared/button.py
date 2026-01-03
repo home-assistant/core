@@ -10,7 +10,6 @@ from homeassistant.components.infrared import (
     DATA_COMPONENT,
     InfraredEntity,
     NECInfraredCommand,
-    NECInfraredProtocol,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_UNAVAILABLE
@@ -29,8 +28,6 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-
-LG_PROTOCOL = NECInfraredProtocol()
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -271,7 +268,6 @@ class LgIrButton(ButtonEntity):
         command = NECInfraredCommand(
             address=LG_ADDRESS,
             command=self._description.command_code,
-            protocol=LG_PROTOCOL,
             repeat_count=1,
         )
         await entity.async_send_command(command)

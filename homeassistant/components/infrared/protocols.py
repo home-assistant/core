@@ -96,27 +96,32 @@ class SamsungInfraredProtocol(InfraredProtocol):
 
 
 @dataclass(frozen=True, slots=True)
-class InfraredCommand[P: InfraredProtocol]:
+class InfraredCommand:
     """Base class for IR commands."""
 
-    protocol: P
     repeat_count: int
 
 
 @dataclass(frozen=True, slots=True)
-class PulseWidthInfraredCommand(InfraredCommand[PulseWidthIRProtocol]):
+class PulseWidthInfraredCommand(InfraredCommand):
     """IR command with a numeric code for pulse-width protocols."""
 
+    protocol: PulseWidthIRProtocol
     code: int
     length_in_bits: int
 
 
 @dataclass(frozen=True, slots=True)
-class NECInfraredCommand(InfraredCommand[NECInfraredProtocol]):
+class NECInfraredCommand(InfraredCommand):
     """NEC IR command."""
 
     address: int
     command: int
+
+    @property
+    def protocol(self) -> NECInfraredProtocol:
+        """Return the NEC protocol."""
+        return NECInfraredProtocol()
 
     def get_pulse_width_compat_code(self) -> int:
         """Return the code in pulse-width compatible 32-bit format."""
@@ -126,11 +131,16 @@ class NECInfraredCommand(InfraredCommand[NECInfraredProtocol]):
 
 
 @dataclass(frozen=True, slots=True)
-class SamsungInfraredCommand(InfraredCommand[SamsungInfraredProtocol]):
+class SamsungInfraredCommand(InfraredCommand):
     """Samsung IR command."""
 
     code: int
     length_in_bits: int = 32
+
+    @property
+    def protocol(self) -> SamsungInfraredProtocol:
+        """Return the Samsung protocol."""
+        return SamsungInfraredProtocol()
 
     def get_pulse_width_compat_code(self) -> int:
         """Return the code in pulse-width compatible format.

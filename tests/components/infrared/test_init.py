@@ -6,7 +6,6 @@ from homeassistant.components.infrared import (
     InfraredEntityFeature,
     InfraredProtocolType,
     NECInfraredCommand,
-    NECInfraredProtocol,
     async_get_entities,
 )
 from homeassistant.core import HomeAssistant
@@ -71,7 +70,6 @@ async def test_infrared_entity_send_command(
 
     # Create a test command
     command = NECInfraredCommand(
-        protocol=NECInfraredProtocol(),
         repeat_count=1,
         address=0x04FB,
         command=0x08F7,

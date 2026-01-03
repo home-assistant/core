@@ -49,7 +49,6 @@ def test_samsung_protocol_pulse_width_compat() -> None:
 def test_nec_command_pulse_width_compat_code() -> None:
     """Test NEC command code conversion to pulse-width format."""
     command = NECInfraredCommand(
-        protocol=NECInfraredProtocol(),
         repeat_count=1,
         address=0x04FB,  # 16-bit address
         command=0x08F7,  # 16-bit command
@@ -63,7 +62,6 @@ def test_nec_command_pulse_width_compat_code() -> None:
 def test_samsung_command_pulse_width_compat_code() -> None:
     """Test Samsung command code conversion (should be passthrough)."""
     command = SamsungInfraredCommand(
-        protocol=SamsungInfraredProtocol(),
         repeat_count=1,
         code=0xE0E040BF,
         length_in_bits=32,
@@ -84,7 +82,6 @@ def test_ir_timing_frozen() -> None:
 def test_nec_command_frozen() -> None:
     """Test that NECIRCommand is immutable."""
     command = NECInfraredCommand(
-        protocol=NECInfraredProtocol(),
         repeat_count=1,
         address=0x04FB,
         command=0x08F7,

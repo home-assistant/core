@@ -17,11 +17,9 @@ from homeassistant.components.infrared import (
     InfraredProtocolType,
     IRTiming,
     NECInfraredCommand,
-    NECInfraredProtocol,
     PulseWidthInfraredCommand,
     PulseWidthIRProtocol,
     SamsungInfraredCommand,
-    SamsungInfraredProtocol,
     async_get_entities,
 )
 from homeassistant.const import STATE_UNAVAILABLE
@@ -161,7 +159,6 @@ async def test_receive_event(
     [
         (
             NECInfraredCommand(
-                protocol=NECInfraredProtocol(),
                 repeat_count=1,
                 address=0x10,
                 command=0x20,
@@ -170,7 +167,6 @@ async def test_receive_event(
         ),
         (
             SamsungInfraredCommand(
-                protocol=SamsungInfraredProtocol(),
                 repeat_count=2,
                 code=0xE0E040BF,
                 length_in_bits=32,
@@ -271,9 +267,7 @@ async def test_send_command_no_transmitter(
     assert len(entities) == 1
     entity = entities[0]
 
-    command = NECInfraredCommand(
-        protocol=NECInfraredProtocol(), repeat_count=1, address=0x04, command=0x08
-    )
+    command = NECInfraredCommand(repeat_count=1, address=0x04, command=0x08)
 
     with pytest.raises(HomeAssistantError):
         await entity.async_send_command(command)
