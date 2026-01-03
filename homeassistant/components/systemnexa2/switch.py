@@ -55,10 +55,10 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switch and configuration options based on a config entry."""
-    coordinator = entry.runtime_data.coordinator
+    coordinator = entry.runtime_data
     entities: list[SystemNexa2Entity] = [
         SystemNexa2ConfigurationSwitch(coordinator, switch_type, setting)
-        for setting_name, setting in entry.runtime_data.coordinator.data.on_off_settings.items()
+        for setting_name, setting in coordinator.data.on_off_settings.items()
         for switch_type in SWITCH_TYPES
         if switch_type.key == setting_name
     ]

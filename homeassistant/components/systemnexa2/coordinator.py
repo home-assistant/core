@@ -1,6 +1,5 @@
 """Data coordinator for System Nexa 2 integration."""
 
-from dataclasses import dataclass
 import logging
 
 from sn2 import (
@@ -25,7 +24,7 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-type SystemNexa2ConfigEntry = ConfigEntry[SystemNexa2RuntimeData]
+type SystemNexa2ConfigEntry = ConfigEntry[SystemNexa2DataUpdateCoordinator]
 
 
 class SystemNexa2Data:
@@ -138,10 +137,3 @@ class SystemNexa2DataUpdateCoordinator(DataUpdateCoordinator[SystemNexa2Data]):
             self._unavailable_logged = False
 
         self.async_set_updated_data(data)
-
-
-@dataclass
-class SystemNexa2RuntimeData:
-    """Storage runtime data for nexasystem2 config entries."""
-
-    coordinator: SystemNexa2DataUpdateCoordinator
