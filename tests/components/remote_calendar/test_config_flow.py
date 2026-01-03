@@ -262,7 +262,7 @@ async def test_no_valid_calendar(hass: HomeAssistant, ics_content: str) -> None:
         {
             CONF_CALENDAR_NAME: CALENDAR_NAME,
             CONF_URL: CALENDER_URL,
-            CONF_VERIFY_SSL: True,
+            CONF_VERIFY_SSL: False,
         },
     )
     assert result3["type"] is FlowResultType.CREATE_ENTRY
@@ -270,7 +270,7 @@ async def test_no_valid_calendar(hass: HomeAssistant, ics_content: str) -> None:
     assert result3["data"] == {
         CONF_CALENDAR_NAME: CALENDAR_NAME,
         CONF_URL: CALENDER_URL,
-        CONF_VERIFY_SSL: True,
+        CONF_VERIFY_SSL: False,
     }
 
 
