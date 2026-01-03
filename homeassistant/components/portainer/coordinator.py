@@ -7,6 +7,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import cast
 
 from pyportainer import (
     Portainer,
@@ -50,7 +51,7 @@ class PortainerContainerData:
     """Container data held by the Portainer coordinator."""
 
     container: DockerContainer
-    stats: DockerContainerStats
+    stats: DockerContainerStats | None
     stats_pre: DockerContainerStats | None
 
 
@@ -147,47 +148,40 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
                 docker_version = await self.portainer.docker_version(endpoint.id)
                 docker_info = await self.portainer.docker_info(endpoint.id)
 
+                prev_endpoint = self.data.get(endpoint.id) if self.data else None
                 container_map: dict[str, PortainerContainerData] = {}
 
-                container_stats_task = [
-                    (
-                        container,
-                        self.portainer.container_stats(
-                            endpoint_id=endpoint.id,
-                            container_id=container.id,
-                        ),
+                # Map containers, started and stopped
+                for container in containers:
+                    container_name = self._get_container_name(container.names[0])
+                    prev_container = (
+                        prev_endpoint.containers.get(container_name)
+                        if prev_endpoint
+                        else None
                     )
-                    for container in containers
-                    if container.state == CONTAINER_STATE_RUNNING
-                ]
-
-                container_stats_gather = await asyncio.gather(
-                    *[task for _, task in container_stats_task]
-                )
-                for (container, _), container_stats in zip(
-                    container_stats_task, container_stats_gather, strict=False
-                ):
-                    container_name = container.names[0].replace("/", " ").strip()
-
-                    # Store previous stats if available. This is used to calculate deltas for CPU and network usage
-                    # In the first call it will be None, since it has nothing to compare with
-                    # Added a walrus pattern to check if not None on prev_container, to keep mypy happy. :)
                     container_map[container_name] = PortainerContainerData(
                         container=container,
-                        stats=container_stats,
-                        stats_pre=(
-                            prev_container.stats
-                            if self.data
-                            and (prev_data := self.data.get(endpoint.id)) is not None
-                            and (
-                                prev_container := prev_data.containers.get(
-                                    container_name
-                                )
-                            )
-                            is not None
-                            else None
-                        ),
+                        stats=None,
+                        stats_pre=prev_container.stats if prev_container else None,
                     )
+
+                # Separately fetch stats for running containers
+                running = [c for c in containers if c.state == CONTAINER_STATE_RUNNING]
+                if running:
+                    results = await asyncio.gather(
+                        *[
+                            self.portainer.container_stats(
+                                endpoint_id=endpoint.id,
+                                container_id=c.id,
+                            )
+                            for c in running
+                        ]
+                    )
+
+                    for container, result in zip(running, results, strict=False):
+                        container_map[
+                            self._get_container_name(container.names[0])
+                        ].stats = cast(DockerContainerStats, result)
             except PortainerConnectionError as err:
                 _LOGGER.exception("Connection error")
                 raise UpdateFailed(
@@ -236,3 +230,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
         if new_containers:
             _LOGGER.debug("New containers found: %s", new_containers)
             self.known_containers.update(new_containers)
+
+    def _get_container_name(self, container_name: str) -> str:
+        """Sanitize to get a proper container name."""
+        return container_name.replace("/", " ").strip()
