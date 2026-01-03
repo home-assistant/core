@@ -233,7 +233,7 @@ class PortainerCoordinator(DataUpdateCoordinator[dict[int, PortainerCoordinatorD
 
         # Surprise, we also handle containers here :)
         current_containers = {
-            (endpoint.id, container.container.id)
+            (endpoint.id, self._get_container_name(container.container.names[0]))
             for endpoint in mapped_endpoints.values()
             for container in endpoint.containers.values()
         }
