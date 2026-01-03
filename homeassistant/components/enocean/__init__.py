@@ -8,6 +8,7 @@ from homeassistant_enocean.gateway import EnOceanHomeAssistantGateway
 
 from homeassistant.const import CONF_DEVICE
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import device_registry as dr
 
 from .config_entry import EnOceanConfigEntry, EnOceanConfigRuntimeData
@@ -28,8 +29,14 @@ async def async_setup_entry(
     config_entry: EnOceanConfigEntry,
 ) -> bool:
     """Set up an EnOcean gateway for the given config entry."""
-    gateway = EnOceanHomeAssistantGateway(config_entry.data[CONF_DEVICE])
-    await gateway.start()
+
+    gateway: EnOceanHomeAssistantGateway | None = None
+
+    try:
+        gateway = EnOceanHomeAssistantGateway(config_entry.data[CONF_DEVICE])
+        await gateway.start()
+    except Exception as ex:
+        raise ConfigEntryError from ex
 
     config_entry.runtime_data = EnOceanConfigRuntimeData(gateway=gateway)
 
