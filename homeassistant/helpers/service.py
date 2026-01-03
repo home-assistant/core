@@ -939,7 +939,6 @@ async def entity_service_call(
             await entity.async_update_ha_state(force_refresh=True)
         return override_response if return_response else None
 
-    response_data: EntityServiceResponse = {}
     # For overrides: each config entry has a handler and set of entities
     override_coros = [
         _service_call_wrapper(
@@ -969,12 +968,21 @@ async def entity_service_call(
         *override_coros, *normal_coros, return_exceptions=True
     )
 
+    merged_results: EntityServiceResponse = {}
     # Merge results into a single dict
     for result in all_results:
         if isinstance(result, BaseException):
             raise result from None
-        response_data.update(result)
-        tasks: list[asyncio.Task[None]] = []
+        merged_results.update(result)
+
+    # reorder results based upon original entity order
+    response_data: EntityServiceResponse = {
+        entity.entity_id: merged_results[entity.entity_id]
+        for entity in entity_candidates
+        if entity.entity_id in merged_results
+    }
+
+    tasks: list[asyncio.Task[None]] = []
 
     for entity in entities:
         if not entity.should_poll:
