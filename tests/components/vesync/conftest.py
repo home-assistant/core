@@ -88,6 +88,8 @@ def config_entry_fixture(hass: HomeAssistant, config) -> ConfigEntry:
         title="VeSync",
         domain=DOMAIN,
         data=config[DOMAIN],
+        version=2,
+        minor_version=2,
     )
     entry.add_to_hass(hass)
     return entry
@@ -271,6 +273,8 @@ async def humidifier_config_entry(
         title="VeSync",
         domain=DOMAIN,
         data=config[DOMAIN],
+        version=2,
+        minor_version=2,
     )
     entry.add_to_hass(hass)
 
@@ -306,6 +310,8 @@ async def fan_config_entry(
         title="VeSync",
         domain=DOMAIN,
         data=config[DOMAIN],
+        version=2,
+        minor_version=2,
     )
     entry.add_to_hass(hass)
 

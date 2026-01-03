@@ -2,7 +2,8 @@
   "config": {
     "abort": {
       "already_configured": "VeSync account is already configured",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "wrong_account": "The account you are trying to re-authenticate is different from the one configured"
     },
     "error": {
       "api_response_error": "API response error",

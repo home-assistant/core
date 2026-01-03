@@ -150,6 +150,8 @@ async def test_migrate_config_entry(
         e for e in entity_registry.entities.values() if e.domain == "humidifier"
     ]
     assert len(humidifier_entities) == 2
+    assert switch_old_id_config_entry.version == 2
+    assert switch_old_id_config_entry.unique_id == "TESTACCOUNTID"
 
 
 async def test_async_remove_config_entry_device_positive(

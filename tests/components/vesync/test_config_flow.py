@@ -1,6 +1,6 @@
 """Test for vesync config flow."""
 
-from unittest.mock import patch
+from unittest.mock import PropertyMock, patch
 
 from pyvesync.utils.errors import VeSyncLoginError
 
@@ -17,7 +17,7 @@ async def test_abort_duplicate_unique_id(hass: HomeAssistant) -> None:
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
         title="user@user.com",
-        unique_id="user@user.com",
+        unique_id="account_id",
         data={CONF_USERNAME: "user@user.com", CONF_PASSWORD: "pass"},
     )
     mock_entry.add_to_hass(hass)
@@ -27,7 +27,13 @@ async def test_abort_duplicate_unique_id(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.FORM
 
-    with patch("pyvesync.vesync.VeSync.login"):
+    with (
+        patch("pyvesync.vesync.VeSync.login"),
+        patch(
+            "pyvesync.vesync.VeSync.account_id", new_callable=PropertyMock
+        ) as mock_account_id,
+    ):
+        mock_account_id.return_value = "account_id"
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_USERNAME: "user@user.com", CONF_PASSWORD: "pass"},
@@ -79,7 +85,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
     """Test a successful reauth flow."""
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="test-username",
+        unique_id="account_id",
     )
     mock_entry.add_to_hass(hass)
 
@@ -87,7 +93,15 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
 
     assert result["step_id"] == "reauth_confirm"
     assert result["type"] is FlowResultType.FORM
-    with patch("pyvesync.vesync.VeSync.login"):
+    with (
+        patch("pyvesync.vesync.VeSync") as mock_vesync,
+        patch(
+            "pyvesync.auth.VeSyncAuth._account_id", new_callable=PropertyMock
+        ) as mock_account_id,
+    ):
+        instance = mock_vesync.return_value
+        instance.login.return_value = None
+        mock_account_id.return_value = "account_id"
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_USERNAME: "new-username", CONF_PASSWORD: "new-password"},
@@ -106,7 +120,7 @@ async def test_reauth_flow_invalid_auth(hass: HomeAssistant) -> None:
 
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="test-username",
+        unique_id="account_id",
     )
     mock_entry.add_to_hass(hass)
 
@@ -124,7 +138,15 @@ async def test_reauth_flow_invalid_auth(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    with patch("pyvesync.vesync.VeSync.login"):
+    with (
+        patch("pyvesync.vesync.VeSync") as mock_vesync,
+        patch(
+            "pyvesync.auth.VeSyncAuth._account_id", new_callable=PropertyMock
+        ) as mock_account_id,
+    ):
+        instance = mock_vesync.return_value
+        instance.login.return_value = None
+        mock_account_id.return_value = "account_id"
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_USERNAME: "new-username", CONF_PASSWORD: "new-password"},
