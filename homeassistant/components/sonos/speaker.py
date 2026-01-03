@@ -40,6 +40,7 @@ from .const import (
     AVAILABILITY_TIMEOUT,
     BATTERY_SCAN_INTERVAL,
     DOMAIN,
+    LONG_SERVICE_TIMEOUT,
     SCAN_INTERVAL,
     SONOS_CHECK_ACTIVITY,
     SONOS_CREATE_ALARM,
@@ -1067,7 +1068,7 @@ class SonosSpeaker:
         """Unjoin the player from a group."""
         if self.sonos_group == [self]:
             return
-        self.soco.unjoin()
+        self.soco.unjoin(timeout=LONG_SERVICE_TIMEOUT)
 
     @staticmethod
     async def unjoin_multi(
