@@ -108,7 +108,7 @@
           "preheatend": "Preheating finished",
           "preheatstop": "Preheating stopped",
           "pullout": "Drawer pulled out",
-          "standby": "Standby"
+          "standby": "[%key:common::state::standby%]"
         }
       },
       "current_power": {
