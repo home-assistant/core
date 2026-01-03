@@ -101,13 +101,13 @@
       "cook_status": {
         "name": "Cook status",
         "state": {
-          "cookend": "Cook Finished",
+          "cookend": "Cooking finished",
           "cooking": "Cooking",
-          "cookstop": "Cook Stopped",
+          "cookstop": "Cooking stopped",
           "heating": "Heating",
-          "preheatend": "Preheat Finished",
-          "preheatstop": "Preheat Stopped",
-          "pullout": "Drawer Pulled Out",
+          "preheatend": "Preheating finished",
+          "preheatstop": "Preheating stopped",
+          "pullout": "Drawer pulled out",
           "standby": "Standby"
         }
       },
