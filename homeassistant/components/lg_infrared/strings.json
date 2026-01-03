@@ -1,15 +1,16 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This LG TV has already been configured with this transmitter.",
+      "already_configured": "This LG device has already been configured with this transmitter.",
       "no_emitters": "No infrared transmitter entities found. Please set up an infrared device first."
     },
     "step": {
       "user": {
         "data": {
+          "device_type": "Device type",
           "infrared_entity_id": "Infrared transmitter"
         },
-        "description": "Select the infrared transmitter entity to use for controlling your LG TV.",
+        "description": "Select the device type and the infrared transmitter entity to use for controlling your LG device.",
         "title": "Set up LG IR Remote"
       }
     }
@@ -99,6 +100,14 @@
       },
       "up": {
         "name": "Up"
+      }
+    }
+  },
+  "selector": {
+    "device_type": {
+      "options": {
+        "hifi": "Hi-Fi",
+        "tv": "TV"
       }
     }
   }

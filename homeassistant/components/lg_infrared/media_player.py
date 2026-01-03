@@ -23,7 +23,14 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 
-from .const import CONF_INFRARED_ENTITY_ID, DOMAIN, LG_ADDRESS, LGCommand
+from .const import (
+    CONF_DEVICE_TYPE,
+    CONF_INFRARED_ENTITY_ID,
+    DOMAIN,
+    LG_ADDRESS,
+    LGDeviceType,
+    LGTVCommand,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,10 +44,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up LG IR media player from config entry."""
     infrared_entity_id = entry.data[CONF_INFRARED_ENTITY_ID]
-    async_add_entities([LgIrMediaPlayer(entry, infrared_entity_id)])
+    device_type = entry.data.get(CONF_DEVICE_TYPE, LGDeviceType.TV)
+    if device_type == LGDeviceType.TV:
+        async_add_entities([LgIrTvMediaPlayer(entry, infrared_entity_id)])
 
 
-class LgIrMediaPlayer(MediaPlayerEntity):
+class LgIrTvMediaPlayer(MediaPlayerEntity):
     """LG IR media player entity."""
 
     _attr_has_entity_name = True
@@ -66,10 +75,7 @@ class LgIrMediaPlayer(MediaPlayerEntity):
         self._attr_unique_id = f"{entry.entry_id}_media_player"
         self._attr_state = MediaPlayerState.ON
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
-            name="LG TV",
-            manufacturer="LG",
-            model="IR Remote",
+            identifiers={(DOMAIN, entry.entry_id)}, name="LG TV", manufacturer="LG"
         )
 
     async def async_added_to_hass(self) -> None:
@@ -121,40 +127,40 @@ class LgIrMediaPlayer(MediaPlayerEntity):
 
     async def async_turn_on(self) -> None:
         """Turn on the TV."""
-        await self._send_command(LGCommand.POWER)
+        await self._send_command(LGTVCommand.POWER)
 
     async def async_turn_off(self) -> None:
         """Turn off the TV."""
-        await self._send_command(LGCommand.POWER)
+        await self._send_command(LGTVCommand.POWER)
 
     async def async_volume_up(self) -> None:
         """Send volume up command."""
-        await self._send_command(LGCommand.VOLUME_UP)
+        await self._send_command(LGTVCommand.VOLUME_UP)
 
     async def async_volume_down(self) -> None:
         """Send volume down command."""
-        await self._send_command(LGCommand.VOLUME_DOWN)
+        await self._send_command(LGTVCommand.VOLUME_DOWN)
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command."""
-        await self._send_command(LGCommand.MUTE)
+        await self._send_command(LGTVCommand.MUTE)
 
     async def async_media_next_track(self) -> None:
         """Send channel up command."""
-        await self._send_command(LGCommand.CHANNEL_UP)
+        await self._send_command(LGTVCommand.CHANNEL_UP)
 
     async def async_media_previous_track(self) -> None:
         """Send channel down command."""
-        await self._send_command(LGCommand.CHANNEL_DOWN)
+        await self._send_command(LGTVCommand.CHANNEL_DOWN)
 
     async def async_media_play(self) -> None:
         """Send play command."""
-        await self._send_command(LGCommand.PLAY)
+        await self._send_command(LGTVCommand.PLAY)
 
     async def async_media_pause(self) -> None:
         """Send pause command."""
-        await self._send_command(LGCommand.PAUSE)
+        await self._send_command(LGTVCommand.PAUSE)
 
     async def async_media_stop(self) -> None:
         """Send stop command."""
-        await self._send_command(LGCommand.STOP)
+        await self._send_command(LGTVCommand.STOP)
