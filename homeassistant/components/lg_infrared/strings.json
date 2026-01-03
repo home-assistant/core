@@ -4,9 +4,6 @@
       "already_configured": "This LG TV has already been configured with this transmitter.",
       "no_emitters": "No infrared transmitter entities found. Please set up an infrared device first."
     },
-    "error": {
-      "invalid_emitter": "The selected infrared transmitter is not available."
-    },
     "step": {
       "user": {
         "data": {
