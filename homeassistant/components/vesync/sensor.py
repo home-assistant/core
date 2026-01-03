@@ -169,8 +169,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         key="cook_status",
         translation_key="cook_status",
         value_fn=lambda device: device.state.cook_status.lower(),
-        exists_fn=lambda device: is_air_fryer(device)
-        and rgetattr(device, "state.cook_status") is not None,
+        exists_fn=is_air_fryer,
     ),
     VeSyncSensorEntityDescription(
         key="current_temp",
