@@ -3555,8 +3555,8 @@
         }
       }
     },
-    "lg_ir": {
-      "name": "LG IR Remote",
+    "lg_infrared": {
+      "name": "LG Infrared",
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"

@@ -1,6 +1,6 @@
 """Constants for the LG IR integration."""
 
-DOMAIN = "lg_ir"
+DOMAIN = "lg_infrared"
 CONF_INFRARED_ENTITY_ID = "infrared_entity_id"
 
 LG_ADDRESS = 0xFB04
