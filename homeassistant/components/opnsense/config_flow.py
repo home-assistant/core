@@ -84,28 +84,18 @@ class OPNsenseConfigFlow(ConfigFlow, domain=DOMAIN):
             "verify_cert": user_input[CONF_VERIFY_SSL],
         }
 
-        try:
-            await asyncio.gather(
-                self._async_check_connection(api_data),
-                self._async_get_available_interfaces(api_data),
-            )
-            if tracker_interfaces and self.available_interfaces:
-                # Verify that specified tracker interfaces are valid
-                for interface in tracker_interfaces:
-                    if interface not in self.available_interfaces:
-                        errors["base"] = "invalid_interface"
-                        return await self._show_setup_form(user_input, errors)
+        await asyncio.gather(
+            self._async_check_connection(api_data),
+            self._async_get_available_interfaces(api_data),
+        )
+        if tracker_interfaces and self.available_interfaces:
+            # Verify that specified tracker interfaces are valid
+            for interface in tracker_interfaces:
+                if interface not in self.available_interfaces:
+                    errors["base"] = "invalid_interface"
+                    return await self._show_setup_form(user_input, errors)
 
-            return self.async_create_entry(title="OPNsense", data=user_input)
-
-        except (APIException, requestsConnectionError):
-            errors["base"] = "cannot_connect"
-
-        except Exception:
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
-
-        return await self._show_setup_form(user_input, errors)
+        return self.async_create_entry(title="OPNsense", data=user_input)
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
