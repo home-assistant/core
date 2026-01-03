@@ -53,4 +53,3 @@ def setup_mock_diagnostics(mock_diagnostics):
     network_insight_client = MagicMock()
     mock_diagnostics.NetworkInsightClient.return_value = network_insight_client
     network_insight_client.get_interfaces.return_value = INTERFACES
-
