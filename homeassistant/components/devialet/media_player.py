@@ -75,6 +75,7 @@ class DevialetMediaPlayerEntity(
             return
 
         self._attr_volume_level = self.coordinator.client.volume_level
+        self._attr_volume_step = self.coordinator.client.volume_step
         self._attr_is_volume_muted = self.coordinator.client.is_volume_muted
         self._attr_source_list = self.coordinator.client.source_list
         self._attr_sound_mode_list = sorted(SOUND_MODES)
@@ -151,16 +152,6 @@ class DevialetMediaPlayerEntity(
             if sound_mode == mode:
                 return pretty_name
         return None
-
-    @property
-    def is_volume_muted(self) -> bool | None:
-        """Boolean if volume is currently muted."""
-        return self.coordinator.client.is_volume_muted
-
-    @property
-    def media_image_url(self) -> str | None:
-        """Image url of current playing media."""
-        return self.coordinator.client.media_image_url
 
     async def async_volume_up(self) -> None:
         """Volume up media player."""
