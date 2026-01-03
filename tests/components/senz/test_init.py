@@ -4,8 +4,8 @@ from http import HTTPStatus
 import time
 from unittest.mock import MagicMock, Mock, patch
 
-from aiosenz import TOKEN_ENDPOINT
 from httpx import HTTPStatusError, RequestError
+from pysenz import TOKEN_ENDPOINT
 import pytest
 
 from homeassistant.components.senz.const import DOMAIN
