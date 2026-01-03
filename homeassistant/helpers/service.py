@@ -907,7 +907,7 @@ async def entity_service_call(
             )
         return None
 
-    if len(entities) == 1:
+    if len(entities) == 1 and not per_config_entities:
         # Single entity case avoids creating task
         entity = entities[0]
         single_response = await _handle_entity_call(
@@ -919,6 +919,25 @@ async def entity_service_call(
             entity.async_set_context(call.context)
             await entity.async_update_ha_state(True)
         return {entity.entity_id: single_response} if return_response else None
+
+    if not entities and len(per_config_entities) == 1:
+        # Single override case
+        ((config_entry, entities_list),) = per_config_entities.items()
+
+        override_response = await _service_call_wrapper(
+            hass=hass,
+            entities=entities_list,
+            config_entry=config_entry,
+            handler=config_overrides[config_entry],
+            call=call,
+            data=data,
+        )
+        for entity in entities_list:
+            if not entity.should_poll:
+                continue
+            entity.async_set_context(call.context)
+            await entity.async_update_ha_state(force_refresh=True)
+        return override_response if return_response else None
 
     response_data: EntityServiceResponse = {}
     # For overrides: each config entry has a handler and set of entities
