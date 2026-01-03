@@ -35,6 +35,51 @@ class LgIrButtonEntityDescription(ButtonEntityDescription):
 
 BUTTON_DESCRIPTIONS: tuple[LgIrButtonEntityDescription, ...] = (
     LgIrButtonEntityDescription(
+        key="power_on",
+        translation_key="power_on",
+        command_code=LGCommand.POWER_ON,
+    ),
+    LgIrButtonEntityDescription(
+        key="power_off",
+        translation_key="power_off",
+        command_code=LGCommand.POWER_OFF,
+    ),
+    LgIrButtonEntityDescription(
+        key="hdmi_1",
+        translation_key="hdmi_1",
+        command_code=LGCommand.HDMI_1,
+    ),
+    LgIrButtonEntityDescription(
+        key="hdmi_2",
+        translation_key="hdmi_2",
+        command_code=LGCommand.HDMI_2,
+    ),
+    LgIrButtonEntityDescription(
+        key="hdmi_3",
+        translation_key="hdmi_3",
+        command_code=LGCommand.HDMI_3,
+    ),
+    LgIrButtonEntityDescription(
+        key="hdmi_4",
+        translation_key="hdmi_4",
+        command_code=LGCommand.HDMI_4,
+    ),
+    LgIrButtonEntityDescription(
+        key="exit",
+        translation_key="exit",
+        command_code=LGCommand.EXIT,
+    ),
+    LgIrButtonEntityDescription(
+        key="info",
+        translation_key="info",
+        command_code=LGCommand.INFO,
+    ),
+    LgIrButtonEntityDescription(
+        key="guide",
+        translation_key="guide",
+        command_code=LGCommand.GUIDE,
+    ),
+    LgIrButtonEntityDescription(
         key="up",
         translation_key="up",
         command_code=LGCommand.NAV_UP,

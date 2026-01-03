@@ -25,8 +25,29 @@
       "down": {
         "name": "Down"
       },
+      "exit": {
+        "name": "Exit"
+      },
+      "guide": {
+        "name": "Guide"
+      },
+      "hdmi_1": {
+        "name": "HDMI 1"
+      },
+      "hdmi_2": {
+        "name": "HDMI 2"
+      },
+      "hdmi_3": {
+        "name": "HDMI 3"
+      },
+      "hdmi_4": {
+        "name": "HDMI 4"
+      },
       "home": {
         "name": "Home"
+      },
+      "info": {
+        "name": "Info"
       },
       "input": {
         "name": "Input"
@@ -69,6 +90,12 @@
       },
       "ok": {
         "name": "OK"
+      },
+      "power_off": {
+        "name": "Power off"
+      },
+      "power_on": {
+        "name": "Power on"
       },
       "right": {
         "name": "Right"

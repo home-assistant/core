@@ -54,6 +54,9 @@ class LgIrMediaPlayer(MediaPlayerEntity):
         | MediaPlayerEntityFeature.VOLUME_MUTE
         | MediaPlayerEntityFeature.NEXT_TRACK
         | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.PLAY
+        | MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.STOP
     )
 
     def __init__(self, entry: ConfigEntry, infrared_entity_id: str) -> None:
@@ -143,3 +146,15 @@ class LgIrMediaPlayer(MediaPlayerEntity):
     async def async_media_previous_track(self) -> None:
         """Send channel down command."""
         await self._send_command(LGCommand.CHANNEL_DOWN)
+
+    async def async_media_play(self) -> None:
+        """Send play command."""
+        await self._send_command(LGCommand.PLAY)
+
+    async def async_media_pause(self) -> None:
+        """Send pause command."""
+        await self._send_command(LGCommand.PAUSE)
+
+    async def async_media_stop(self) -> None:
+        """Send stop command."""
+        await self._send_command(LGCommand.STOP)
