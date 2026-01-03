@@ -30,7 +30,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .common import is_air_fryer, is_humidifier, is_outlet, rgetattr
-from .const import VS_DEVICES, VS_DISCOVERY
+from .const import DYNAMIC_UNIT, VS_DEVICES, VS_DISCOVERY
 from .coordinator import VesyncConfigEntry, VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
 
@@ -172,6 +172,38 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         exists_fn=lambda device: is_air_fryer(device)
         and rgetattr(device, "state.cook_status") is not None,
     ),
+    VeSyncSensorEntityDescription(
+        key="current_temp",
+        translation_key="current_temp",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda device: device.state.current_temp,
+        exists_fn=is_air_fryer,
+    ),
+    VeSyncSensorEntityDescription(
+        key="cook_set_temp",
+        translation_key="cook_set_temp",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda device: device.state.cook_set_temp,
+        exists_fn=is_air_fryer,
+    ),
+    VeSyncSensorEntityDescription(
+        key="cook_set_time",
+        translation_key="cook_set_time",
+        device_class=SensorDeviceClass.DURATION,
+        value_fn=lambda device: device.state.cook_set_time,
+        exists_fn=is_air_fryer,
+    ),
+    VeSyncSensorEntityDescription(
+        key="remaining_time",
+        translation_key="remaining_time",
+        device_class=SensorDeviceClass.DURATION,
+        value_fn=lambda device: device.state.remaining_time,
+        exists_fn=is_air_fryer,
+    ),
 )
 
 
@@ -237,3 +269,14 @@ class VeSyncSensorEntity(VeSyncBaseEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.device)
+
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the unit the value was reported in by the sensor."""
+        if (
+            self.entity_description.native_unit_of_measurement == DYNAMIC_UNIT
+            and self.entity_description.device_class == SensorDeviceClass.TEMPERATURE
+        ):
+            return self.device.temp_unit
+
+        return self.entity_description.native_unit_of_measurement

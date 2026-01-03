@@ -587,7 +587,7 @@
     'state': '5',
   })
 # ---
-# name: test_sensor_state[CS158-AF Air Fryer][devices]
+# name: test_sensor_state[CS158-AF Air Fryer Cooking][devices]
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
@@ -611,7 +611,7 @@
       'manufacturer': 'VeSync',
       'model': 'CS158-AF',
       'model_id': None,
-      'name': 'CS158-AF Air Fryer',
+      'name': 'CS158-AF Air Fryer Cooking',
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
@@ -620,9 +620,450 @@
     }),
   ])
 # ---
-# name: test_sensor_state[CS158-AF Air Fryer][entities]
+# name: test_sensor_state[CS158-AF Air Fryer Cooking][entities]
   list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.cs158_af_air_fryer_cooking_cook_set_temperature',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+        'sensor': dict({
+          'suggested_display_precision': 1,
+        }),
+      }),
+      'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+      'original_icon': None,
+      'original_name': 'Cook set temperature',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'cook_set_temp',
+      'unique_id': '##_REDACTED_##-cook_set_temp',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.cs158_af_air_fryer_cooking_cook_set_time',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+      'original_icon': None,
+      'original_name': 'Cook set time',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'cook_set_time',
+      'unique_id': '##_REDACTED_##-cook_set_time',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.cs158_af_air_fryer_cooking_remaining_time',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+      'original_icon': None,
+      'original_name': 'Remaining time',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'remaining_time',
+      'unique_id': '##_REDACTED_##-remaining_time',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.cs158_af_air_fryer_cooking_current_temperature',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+        'sensor': dict({
+          'suggested_display_precision': 1,
+        }),
+      }),
+      'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+      'original_icon': None,
+      'original_name': 'Current temperature',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'current_temp',
+      'unique_id': '##_REDACTED_##-current_temp',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
   ])
+# ---
+# name: test_sensor_state[CS158-AF Air Fryer Cooking][sensor.cs158_af_air_fryer_cooking_cook_set_temperature]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'CS158-AF Air Fryer Cooking Cook set temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.cs158_af_air_fryer_cooking_cook_set_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_state[CS158-AF Air Fryer Cooking][sensor.cs158_af_air_fryer_cooking_cook_set_time]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'CS158-AF Air Fryer Cooking Cook set time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.cs158_af_air_fryer_cooking_cook_set_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_state[CS158-AF Air Fryer Cooking][sensor.cs158_af_air_fryer_cooking_current_temperature]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'CS158-AF Air Fryer Cooking Current temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.cs158_af_air_fryer_cooking_current_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_state[CS158-AF Air Fryer Cooking][sensor.cs158_af_air_fryer_cooking_remaining_time]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'CS158-AF Air Fryer Cooking Remaining time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.cs158_af_air_fryer_cooking_remaining_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
+# name: test_sensor_state[CS158-AF Air Fryer Standby][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          '##_REDACTED_##',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'CS158-AF',
+      'model_id': None,
+      'name': 'CS158-AF Air Fryer Standby',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_sensor_state[CS158-AF Air Fryer Standby][entities]
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.cs158_af_air_fryer_standby_cook_set_temperature',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+        'sensor': dict({
+          'suggested_display_precision': 1,
+        }),
+      }),
+      'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+      'original_icon': None,
+      'original_name': 'Cook set temperature',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'cook_set_temp',
+      'unique_id': '##_REDACTED_##-cook_set_temp',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.cs158_af_air_fryer_standby_cook_set_time',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+      'original_icon': None,
+      'original_name': 'Cook set time',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'cook_set_time',
+      'unique_id': '##_REDACTED_##-cook_set_time',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.cs158_af_air_fryer_standby_remaining_time',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+      'original_icon': None,
+      'original_name': 'Remaining time',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'remaining_time',
+      'unique_id': '##_REDACTED_##-remaining_time',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': None,
+      'entity_id': 'sensor.cs158_af_air_fryer_standby_current_temperature',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+        'sensor': dict({
+          'suggested_display_precision': 1,
+        }),
+      }),
+      'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+      'original_icon': None,
+      'original_name': 'Current temperature',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'current_temp',
+      'unique_id': '##_REDACTED_##-current_temp',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+  ])
+# ---
+# name: test_sensor_state[CS158-AF Air Fryer Standby][sensor.cs158_af_air_fryer_standby_cook_set_temperature]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'CS158-AF Air Fryer Standby Cook set temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.cs158_af_air_fryer_standby_cook_set_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_state[CS158-AF Air Fryer Standby][sensor.cs158_af_air_fryer_standby_cook_set_time]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'CS158-AF Air Fryer Standby Cook set time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.cs158_af_air_fryer_standby_cook_set_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_state[CS158-AF Air Fryer Standby][sensor.cs158_af_air_fryer_standby_current_temperature]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'CS158-AF Air Fryer Standby Current temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.cs158_af_air_fryer_standby_current_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor_state[CS158-AF Air Fryer Standby][sensor.cs158_af_air_fryer_standby_remaining_time]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'CS158-AF Air Fryer Standby Remaining time',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.cs158_af_air_fryer_standby_remaining_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
 # ---
 # name: test_sensor_state[Dimmable Light][devices]
   list([

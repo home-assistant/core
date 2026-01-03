@@ -1,0 +1,19 @@
+{
+  "traceId": "1767462360",
+  "code": 0,
+  "msg": "request success",
+  "module": null,
+  "stacktrace": null,
+  "result": {
+    "returnStatus": {
+      "curentTemp": 17,
+      "cookSetTemp": 180,
+      "mode": "manual",
+      "cookSetTime": 15,
+      "cookLastTime": 15,
+      "cookStatus": "cooking",
+      "tempUnit": "celsius",
+      "accountId": ""
+    }
+  }
+}

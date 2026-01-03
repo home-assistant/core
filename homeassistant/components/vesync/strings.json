@@ -92,6 +92,12 @@
       "air_quality": {
         "name": "Air quality"
       },
+      "cook_set_temp": {
+        "name": "Cook set temperature"
+      },
+      "cook_set_time": {
+        "name": "Cook set time"
+      },
       "cook_status": {
         "name": "Cook status",
         "state": {
@@ -107,6 +113,9 @@
       },
       "current_power": {
         "name": "Current power"
+      },
+      "current_temp": {
+        "name": "Current temperature"
       },
       "current_voltage": {
         "name": "Current voltage"
@@ -125,6 +134,9 @@
       },
       "filter_life": {
         "name": "Filter lifetime"
+      },
+      "remaining_time": {
+        "name": "Remaining time"
       }
     },
     "switch": {
