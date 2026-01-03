@@ -399,6 +399,43 @@
     'state': 'on',
   })
 # ---
+# name: test_fan_state[CS158-AF Air Fryer][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          '##_REDACTED_##',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'CS158-AF',
+      'model_id': None,
+      'name': 'CS158-AF Air Fryer',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_fan_state[CS158-AF Air Fryer][entities]
+  list([
+  ])
+# ---
 # name: test_fan_state[Dimmable Light][devices]
   list([
     DeviceRegistryEntrySnapshot({

@@ -165,6 +165,12 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         exists_fn=lambda device: is_humidifier(device)
         and device.state.temperature is not None,
     ),
+    VeSyncSensorEntityDescription(
+        key="cook_status",
+        translation_key="cook_status",
+        value_fn=lambda device: device.state.cook_status,
+        exists_fn=lambda device: rgetattr(device, "state.cook_status") is not None,
+    ),
 )
 
 

@@ -92,6 +92,19 @@
       "air_quality": {
         "name": "Air quality"
       },
+      "cook_status": {
+        "name": "Cook status",
+        "state": {
+          "cookend": "Cook Finished",
+          "cooking": "Cooking",
+          "cookstop": "Cook Stopped",
+          "heating": "Heating",
+          "preheatend": "Preheat Finished",
+          "preheatstop": "Preheat Stopped",
+          "pullout": "Drawer Pulled Out",
+          "standby": "Standby"
+        }
+      },
       "current_power": {
         "name": "Current power"
       },
