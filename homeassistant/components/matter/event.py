@@ -36,6 +36,12 @@ EVENT_TYPES_MAP = {
     6: "multi_press_complete",  # clusters.Switch.Events.MultiPressComplete
 }
 
+MULTI_PRESS_COUNT_TO_NAME = {
+    1: "single",
+    2: "double",
+    3: "triple",
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -111,15 +117,10 @@ class MatterEventEntity(MatterEntity, EventEntity):
             return
         event_type = EVENT_TYPES_MAP[data.event_id]
 
-        if event_type == "multi_press_complete":
-            if data.data:
-                presses = data.data.get("totalNumberOfPressesCounted", 1)
-                if presses == 1:
-                    data.data["event_type_extra"] = "single"
-                elif presses == 2:
-                    data.data["event_type_extra"] = "double"
-                elif presses == 3:
-                    data.data["event_type_extra"] = "triple"
+        if event_type == "multi_press_complete" and data.data:
+            presses = data.data.get("totalNumberOfPressesCounted", 1)
+            if presses in MULTI_PRESS_COUNT_TO_NAME:
+                data.data["event_type_extra"] = MULTI_PRESS_COUNT_TO_NAME[presses]
 
         if event_type not in self.event_types:
             # this should not happen, but guard for bad things
