@@ -1758,8 +1758,6 @@ async def async_setup_entry(
         """Discover and add a discovered Tuya sensor."""
         entities: list[TuyaSensorEntity] = []
         for device_id in device_ids:
-            if device_id not in manager.device_map:
-                continue
             device = manager.device_map[device_id]
             if descriptions := SENSORS.get(device.category):
                 entities.extend(

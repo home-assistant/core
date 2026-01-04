@@ -277,8 +277,6 @@ async def async_setup_entry(
         """Discover and add a discovered Tuya climate."""
         entities: list[TuyaClimateEntity] = []
         for device_id in device_ids:
-            if device_id not in manager.device_map:
-                continue
             device = manager.device_map[device_id]
             if device and device.category in CLIMATE_DESCRIPTIONS:
                 temperature_wrappers = _get_temperature_wrappers(

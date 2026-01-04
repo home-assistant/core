@@ -90,8 +90,6 @@ async def async_setup_entry(
         """Discover and add a discovered Tuya (de)humidifier."""
         entities: list[TuyaHumidifierEntity] = []
         for device_id in device_ids:
-            if device_id not in manager.device_map:
-                continue
             device = manager.device_map[device_id]
             if (
                 description := HUMIDIFIERS.get(device.category)
