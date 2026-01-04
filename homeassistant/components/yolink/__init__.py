@@ -157,7 +157,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # OAuth2 authentication (existing behavior)
         try:
             implementation = await async_get_config_entry_implementation(hass, entry)
-        except (ImplementationUnavailableError, ValueError) as err:
+        except ImplementationUnavailableError as err:
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="oauth2_implementation_unavailable",

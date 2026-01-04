@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from aiohttp import ClientSession
+from aiohttp import ClientError, ClientSession
 from yolink.auth_mgr import YoLinkAuthMgr
 from yolink.const import OAUTH2_TOKEN
 from yolink.exception import YoLinkAuthFailError, YoLinkClientError
@@ -131,6 +131,6 @@ class UACAuth(YoLinkAuthMgr):
         except YoLinkClientError:
             _LOGGER.error("Client error during token fetch")
             raise
-        except Exception as err:
-            _LOGGER.exception("Unexpected error during token fetch: %s", err)
+        except ClientError as err:
+            _LOGGER.error("Network error during token fetch: %s", err)
             raise YoLinkClientError(f"Failed to fetch token: {err}") from err
