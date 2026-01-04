@@ -49,8 +49,6 @@ _elke27_lib_errors.Elke27LinkRequiredError = Elke27LinkRequiredError
 class FakeClientConfig:
     """Minimal config stub."""
 
-    tcp_discover_before_hello: bool = False
-
 
 @dataclass(frozen=True, slots=True)
 class FakeLinkKeys:

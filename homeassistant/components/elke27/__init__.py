@@ -52,6 +52,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry,
             data={**entry.data, CONF_INTEGRATION_SERIAL: integration_serial},
         )
+    if panel_name:
+        _LOGGER.debug("Discovered panel name: %s", panel_name)
     hub = Elke27Hub(hass, host, port, link_keys_json, pin, panel_name)
     try:
         await hub.async_start()
