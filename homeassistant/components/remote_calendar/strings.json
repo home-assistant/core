@@ -13,11 +13,13 @@
       "user": {
         "data": {
           "calendar_name": "Calendar name",
-          "url": "Calendar URL"
+          "url": "Calendar URL",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
           "calendar_name": "The name of the calendar shown in the UI.",
-          "url": "The URL of the remote calendar."
+          "url": "The URL of the remote calendar.",
+          "verify_ssl": "Enable SSL certificate verification for secure connections."
         },
         "description": "Please choose a name for the calendar to be imported"
       }
