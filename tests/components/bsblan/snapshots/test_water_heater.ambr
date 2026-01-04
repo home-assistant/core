@@ -9,7 +9,7 @@
       'min_temp': 35.0,
       'operation_list': list([
         'off',
-        'on',
+        'performance',
         'eco',
       ]),
     }),
@@ -51,10 +51,10 @@
       'min_temp': 35.0,
       'operation_list': list([
         'off',
-        'on',
+        'performance',
         'eco',
       ]),
-      'operation_mode': 'on',
+      'operation_mode': 'performance',
       'supported_features': <WaterHeaterEntityFeature: 11>,
       'target_temp_high': None,
       'target_temp_low': None,
@@ -65,6 +65,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'performance',
   })
 # ---

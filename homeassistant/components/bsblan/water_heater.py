@@ -9,10 +9,11 @@ from bsblan import BSBLANError, SetHotWaterParam
 from homeassistant.components.water_heater import (
     STATE_ECO,
     STATE_OFF,
+    STATE_PERFORMANCE,
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
 )
-from homeassistant.const import ATTR_TEMPERATURE, STATE_ON
+from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import format_mac
@@ -27,7 +28,7 @@ PARALLEL_UPDATES = 1
 # Mapping between BSBLan operating mode values and HA operation modes
 BSBLAN_TO_HA_OPERATION_MODE: dict[int, str] = {
     0: STATE_OFF,  # Protection mode
-    1: STATE_ON,  # Continuous comfort mode
+    1: STATE_PERFORMANCE,  # Continuous comfort mode
     2: STATE_ECO,  # Eco/automatic mode
 }
 
@@ -171,7 +172,7 @@ class BSBLANWaterHeater(BSBLanDualCoordinatorEntity, WaterHeaterEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the water heater on."""
-        await self.async_set_operation_mode(STATE_ON)
+        await self.async_set_operation_mode(STATE_PERFORMANCE)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the water heater off."""
