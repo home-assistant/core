@@ -125,7 +125,7 @@ class Elke27Hub:
     async def async_start(self) -> None:
         """Connect the client, then await readiness."""
         link_keys = LinkKeys.from_json(self._link_keys_json)
-        client = Elke27Client(ClientConfig())
+        client = Elke27Client(ClientConfig(tcp_discover_before_hello=True))
         self._client = client
         try:
             await client.async_connect(self._host, self._port, link_keys)

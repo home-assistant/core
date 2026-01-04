@@ -75,6 +75,8 @@ class FakeLinkKeys:
 class FakeClientConfig:
     """Minimal config stub."""
 
+    tcp_discover_before_hello: bool = False
+
 
 _elke27_lib.ClientConfig = FakeClientConfig
 _elke27_lib.LinkKeys = FakeLinkKeys
