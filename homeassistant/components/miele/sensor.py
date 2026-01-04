@@ -38,7 +38,6 @@ from .const import (
     DOMAIN,
     PROGRAM_IDS,
     PROGRAM_PHASE,
-    STATE_STATUS_TAGS,
     MieleAppliance,
     PlatePowerStep,
     StateDryingStep,
@@ -195,7 +194,7 @@ SENSOR_TYPES: Final[tuple[MieleSensorDefinition, ...]] = (
             translation_key="status",
             value_fn=lambda value: value.state_status,
             device_class=SensorDeviceClass.ENUM,
-            options=sorted(set(STATE_STATUS_TAGS.values())),
+            options=sorted(set(StateStatus.keys())),
         ),
     ),
     MieleSensorDefinition(
@@ -930,7 +929,7 @@ class MieleStatusSensor(MieleSensor):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return STATE_STATUS_TAGS.get(StateStatus(self.device.state_status))
+        return StateStatus(self.device.state_status).name
 
     @property
     def available(self) -> bool:
@@ -998,11 +997,11 @@ class MieleTimeSensor(MieleRestorableSensor):
         """Update the last value of the sensor."""
 
         current_value = self.entity_description.value_fn(self.device)
-        current_status = StateStatus(self.device.state_status)
+        current_status = StateStatus(self.device.state_status).name
 
         # report end-specific value when program ends (some devices are immediately reporting 0...)
         if (
-            current_status == StateStatus.PROGRAM_ENDED
+            current_status == StateStatus.program_ended.name
             and self.entity_description.end_value_fn is not None
         ):
             self._attr_native_value = self.entity_description.end_value_fn(
@@ -1010,11 +1009,15 @@ class MieleTimeSensor(MieleRestorableSensor):
             )
 
         # keep value when program ends if no function is specified
-        elif current_status == StateStatus.PROGRAM_ENDED:
+        elif current_status == StateStatus.program_ended.name:
             pass
 
         # force unknown when appliance is not working (some devices are keeping last value until a new cycle starts)
-        elif current_status in (StateStatus.OFF, StateStatus.ON, StateStatus.IDLE):
+        elif current_status in (
+            StateStatus.off.name,
+            StateStatus.on.name,
+            StateStatus.idle.name,
+        ):
             self._attr_native_value = None
 
         # otherwise, cache value and return it
@@ -1030,7 +1033,7 @@ class MieleAbsoluteTimeSensor(MieleRestorableSensor):
     def _update_native_value(self) -> None:
         """Update the last value of the sensor."""
         current_value = self.entity_description.value_fn(self.device)
-        current_status = StateStatus(self.device.state_status)
+        current_status = StateStatus(self.device.state_status).name
 
         # The API reports with minute precision, to avoid changing
         # the value too often, we keep the cached value if it differs
@@ -1043,11 +1046,15 @@ class MieleAbsoluteTimeSensor(MieleRestorableSensor):
                 < current_value
                 < self._previous_value + timedelta(seconds=90)
             )
-        ) or current_status == StateStatus.PROGRAM_ENDED:
+        ) or current_status == StateStatus.program_ended.name:
             return
 
         # force unknown when appliance is not working (some devices are keeping last value until a new cycle starts)
-        if current_status in (StateStatus.OFF, StateStatus.ON, StateStatus.IDLE):
+        if current_status in (
+            StateStatus.off.name,
+            StateStatus.on.name,
+            StateStatus.idle.name,
+        ):
             self._attr_native_value = None
 
         # otherwise, cache value and return it
@@ -1064,7 +1071,7 @@ class MieleConsumptionSensor(MieleRestorableSensor):
     def _update_native_value(self) -> None:
         """Update the last value of the sensor."""
         current_value = self.entity_description.value_fn(self.device)
-        current_status = StateStatus(self.device.state_status)
+        current_status = StateStatus(self.device.state_status).name
         # Guard for corrupt restored value
         restored_value = (
             self._attr_native_value
@@ -1079,12 +1086,12 @@ class MieleConsumptionSensor(MieleRestorableSensor):
 
         # Force unknown when appliance is not able to report consumption
         if current_status in (
-            StateStatus.ON,
-            StateStatus.OFF,
-            StateStatus.PROGRAMMED,
-            StateStatus.WAITING_TO_START,
-            StateStatus.IDLE,
-            StateStatus.SERVICE,
+            StateStatus.on.name,
+            StateStatus.off.name,
+            StateStatus.programmed.name,
+            StateStatus.waiting_to_start.name,
+            StateStatus.idle.name,
+            StateStatus.service.name,
         ):
             self._is_reporting = False
             self._attr_native_value = None
@@ -1093,7 +1100,7 @@ class MieleConsumptionSensor(MieleRestorableSensor):
         # only after a while, so it is necessary to force 0 until we see the 0 value coming from API, unless
         # we already saw a valid value in this cycle from cache
         elif (
-            current_status in (StateStatus.IN_USE, StateStatus.PAUSE)
+            current_status in (StateStatus.in_use.name, StateStatus.pause.name)
             and not self._is_reporting
             and last_value > 0
         ):
@@ -1101,7 +1108,7 @@ class MieleConsumptionSensor(MieleRestorableSensor):
             self._is_reporting = True
 
         elif (
-            current_status in (StateStatus.IN_USE, StateStatus.PAUSE)
+            current_status in (StateStatus.in_use.name, StateStatus.pause.name)
             and not self._is_reporting
             and current_value is not None
             and cast(int, current_value) > 0
@@ -1109,7 +1116,7 @@ class MieleConsumptionSensor(MieleRestorableSensor):
             self._attr_native_value = 0
 
         # keep value when program ends
-        elif current_status == StateStatus.PROGRAM_ENDED:
+        elif current_status == StateStatus.program_ended.name:
             pass
 
         else:

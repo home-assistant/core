@@ -96,18 +96,19 @@ class _AlarmActionWrapper(DPCodeEnumWrapper):
         "trigger": "sos",
     }
 
-    def supports_action(self, action: str) -> bool:
-        """Return if action is supported."""
-        return (
-            mapped_value := self._ACTION_MAPPINGS.get(action)
-        ) is not None and mapped_value in self.type_information.range
+    def __init__(self, dpcode: str, type_information: EnumTypeInformation) -> None:
+        """Init _AlarmActionWrapper."""
+        super().__init__(dpcode, type_information)
+        self.options = [
+            ha_action
+            for ha_action, tuya_action in self._ACTION_MAPPINGS.items()
+            if tuya_action in type_information.range
+        ]
 
     def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
         """Convert value to raw value."""
-        if (
-            mapped_value := self._ACTION_MAPPINGS.get(value)
-        ) is not None and mapped_value in self.type_information.range:
-            return mapped_value
+        if value in self.options:
+            return self._ACTION_MAPPINGS[value]
         raise ValueError(f"Unsupported value {value} for {self.dpcode}")
 
 
@@ -182,12 +183,13 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
         self._state_wrapper = state_wrapper
 
         # Determine supported modes
-        if action_wrapper.supports_action("arm_home"):
-            self._attr_supported_features |= AlarmControlPanelEntityFeature.ARM_HOME
-        if action_wrapper.supports_action("arm_away"):
-            self._attr_supported_features |= AlarmControlPanelEntityFeature.ARM_AWAY
-        if action_wrapper.supports_action("trigger"):
-            self._attr_supported_features |= AlarmControlPanelEntityFeature.TRIGGER
+        if action_wrapper.options:
+            if "arm_home" in action_wrapper.options:
+                self._attr_supported_features |= AlarmControlPanelEntityFeature.ARM_HOME
+            if "arm_away" in action_wrapper.options:
+                self._attr_supported_features |= AlarmControlPanelEntityFeature.ARM_AWAY
+            if "trigger" in action_wrapper.options:
+                self._attr_supported_features |= AlarmControlPanelEntityFeature.TRIGGER
 
     @property
     def alarm_state(self) -> AlarmControlPanelState | None:

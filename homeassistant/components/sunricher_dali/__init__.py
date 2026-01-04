@@ -18,6 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 from .const import CONF_SERIAL_NUMBER, DOMAIN, MANUFACTURER
 from .types import DaliCenterConfigEntry, DaliCenterData
@@ -58,6 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaliCenterConfigEntry) -
     dev_reg = dr.async_get(hass)
     dev_reg.async_get_or_create(
         config_entry_id=entry.entry_id,
+        connections={(CONNECTION_NETWORK_MAC, gw_sn)},
         identifiers={(DOMAIN, gw_sn)},
         manufacturer=MANUFACTURER,
         name=gateway.name,
