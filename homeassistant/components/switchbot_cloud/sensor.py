@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from switchbot_api import Device, Remote, SwitchBotAPI
+from switchbot_api.models import BatteryLevel
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -82,9 +83,8 @@ HUMIDITY_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
 
 BATTERY_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
     key=SENSOR_TYPE_BATTERY,
-    device_class=SensorDeviceClass.BATTERY,
-    state_class=SensorStateClass.MEASUREMENT,
-    native_unit_of_measurement=PERCENTAGE,
+    translation_key=SENSOR_TYPE_BATTERY,
+    value_fn=lambda value: BatteryLevel.get_battery_level(value).value,
 )
 
 POWER_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
