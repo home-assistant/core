@@ -96,6 +96,7 @@ class UACAuth(YoLinkAuthMgr):
         """Return a valid access token."""
         if self._access_token is None:
             await self._fetch_token()
+        assert self._access_token is not None
         return self._access_token
 
     async def _fetch_token(self) -> None:
