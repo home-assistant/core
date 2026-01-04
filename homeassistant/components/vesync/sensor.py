@@ -23,6 +23,7 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfPower,
     UnitOfTemperature,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -193,6 +194,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         key="cook_set_time",
         translation_key="cook_set_time",
         device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         value_fn=lambda device: device.state.cook_set_time,
         exists_fn=is_air_fryer,
     ),
@@ -200,6 +202,7 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         key="remaining_time",
         translation_key="remaining_time",
         device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         value_fn=lambda device: device.state.remaining_time,
         exists_fn=is_air_fryer,
     ),

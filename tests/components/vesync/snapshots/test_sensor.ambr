@@ -719,6 +719,9 @@
       }),
       'name': None,
       'options': dict({
+        'sensor': dict({
+          'suggested_display_precision': 2,
+        }),
       }),
       'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
       'original_icon': None,
@@ -729,7 +732,7 @@
       'supported_features': 0,
       'translation_key': 'cook_set_time',
       'unique_id': 'CS158Cooking-cook_set_time',
-      'unit_of_measurement': None,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     EntityRegistryEntrySnapshot({
       'aliases': set({
@@ -752,6 +755,9 @@
       }),
       'name': None,
       'options': dict({
+        'sensor': dict({
+          'suggested_display_precision': 2,
+        }),
       }),
       'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
       'original_icon': None,
@@ -762,7 +768,7 @@
       'supported_features': 0,
       'translation_key': 'remaining_time',
       'unique_id': 'CS158Cooking-remaining_time',
-      'unit_of_measurement': None,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     EntityRegistryEntrySnapshot({
       'aliases': set({
@@ -820,6 +826,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'CS158-AF Air Fryer Cooking Cook set time',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cs158_af_air_fryer_cooking_cook_set_time',
@@ -863,6 +870,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'CS158-AF Air Fryer Cooking Remaining time',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cs158_af_air_fryer_cooking_remaining_time',
@@ -998,6 +1006,9 @@
       }),
       'name': None,
       'options': dict({
+        'sensor': dict({
+          'suggested_display_precision': 2,
+        }),
       }),
       'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
       'original_icon': None,
@@ -1008,7 +1019,7 @@
       'supported_features': 0,
       'translation_key': 'cook_set_time',
       'unique_id': 'CS158Standby-cook_set_time',
-      'unit_of_measurement': None,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     EntityRegistryEntrySnapshot({
       'aliases': set({
@@ -1031,6 +1042,9 @@
       }),
       'name': None,
       'options': dict({
+        'sensor': dict({
+          'suggested_display_precision': 2,
+        }),
       }),
       'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
       'original_icon': None,
@@ -1041,7 +1055,7 @@
       'supported_features': 0,
       'translation_key': 'remaining_time',
       'unique_id': 'CS158Standby-remaining_time',
-      'unit_of_measurement': None,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     EntityRegistryEntrySnapshot({
       'aliases': set({
@@ -1098,6 +1112,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'CS158-AF Air Fryer Standby Cook set time',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cs158_af_air_fryer_standby_cook_set_time',
@@ -1140,6 +1155,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'CS158-AF Air Fryer Standby Remaining time',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.cs158_af_air_fryer_standby_remaining_time',
