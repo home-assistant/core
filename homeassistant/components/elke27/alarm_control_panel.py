@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, Iterable
+
+from elke27_lib import ArmMode
+from elke27_lib.errors import Elke27PinRequiredError
 
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
@@ -12,6 +15,7 @@ from homeassistant.components.alarm_control_panel import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
@@ -32,8 +36,14 @@ async def async_setup_entry(
 
     @callback
     def _async_add_areas() -> None:
+        snapshot = hub.snapshot
+        if snapshot is None:
+            return
         entities: list[Elke27AreaAlarmControlPanel] = []
-        for area_id, area in _iter_areas(hub.areas):
+        for area in _iter_areas(snapshot):
+            area_id = getattr(area, "area_id", None)
+            if not isinstance(area_id, int):
+                continue
             if area_id in known_ids:
                 continue
             known_ids.add(area_id)
@@ -50,18 +60,23 @@ class Elke27AreaAlarmControlPanel(AlarmControlPanelEntity):
     """Representation of an Elke27 area."""
 
     _attr_has_entity_name = True
-    _attr_supported_features = AlarmControlPanelEntityFeature(0)
+    _attr_supported_features = (
+        AlarmControlPanelEntityFeature.ARM_AWAY
+        | AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_NIGHT
+    )
 
     def __init__(
-        self, hub: Elke27Hub, entry: ConfigEntry, area_id: int, area: dict[str, Any]
+        self, hub: Elke27Hub, entry: ConfigEntry, area_id: int, area: Any
     ) -> None:
         """Initialize the area entity."""
         self._hub = hub
         self._entry = entry
         self._area_id = area_id
-        self._attr_name = area.get("name") or f"Area {area_id}"
+        self._attr_name = getattr(area, "name", None) or f"Area {area_id}"
         self._attr_unique_id = f"{unique_base(hub, entry)}_area_{area_id}"
         self._attr_device_info = device_info_for_entry(hub, entry)
+        self._missing_logged = False
 
     async def async_added_to_hass(self) -> None:
         """Register for hub updates."""
@@ -75,77 +90,95 @@ class Elke27AreaAlarmControlPanel(AlarmControlPanelEntity):
     @property
     def state(self) -> AlarmControlPanelState | None:
         """Return the current state."""
-        area = _get_area(self._hub.areas, self._area_id)
-        if not area:
+        area = _get_area(self._hub.snapshot, self._area_id)
+        if area is None:
+            self._log_missing()
             return None
-        state = area.get("state") or area.get("status")
-        if not state:
-            return None
-        return _map_state(str(state))
+        return _area_state_to_ha(area)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Return additional state attributes."""
+        area = _get_area(self._hub.snapshot, self._area_id)
+        if area is None:
+            return {}
+        return {
+            "ready": getattr(area, "ready", None),
+            "trouble": getattr(area, "trouble", None),
+        }
 
     @property
     def available(self) -> bool:
         """Return if the entity is available."""
-        return self._hub.is_ready and _get_area(self._hub.areas, self._area_id) is not None
+        return self._hub.is_ready and _get_area(self._hub.snapshot, self._area_id) is not None
+
+    async def async_alarm_arm_away(self, code: str | None = None) -> None:
+        """Arm the area in away mode."""
+        await self._async_arm(ArmMode.AWAY, code)
+
+    async def async_alarm_arm_home(self, code: str | None = None) -> None:
+        """Arm the area in home mode."""
+        await self._async_arm(ArmMode.STAY, code)
+
+    async def async_alarm_arm_night(self, code: str | None = None) -> None:
+        """Arm the area in night mode."""
+        await self._async_arm(ArmMode.NIGHT, code)
+
+    async def async_alarm_disarm(self, code: str | None = None) -> None:
+        """Disarm the area."""
+        try:
+            await self._hub.async_disarm_area(self._area_id, code)
+        except Elke27PinRequiredError as err:
+            raise HomeAssistantError("PIN required to perform this action.") from err
+
+    async def _async_arm(self, mode: ArmMode, code: str | None) -> None:
+        """Arm the area using the requested mode."""
+        try:
+            await self._hub.async_arm_area(self._area_id, mode, code)
+        except Elke27PinRequiredError as err:
+            raise HomeAssistantError("PIN required to perform this action.") from err
+
+    def _log_missing(self) -> None:
+        """Log when the area snapshot is missing."""
+        if self._missing_logged:
+            return
+        self._missing_logged = True
+        _LOGGER.debug("Area %s missing from snapshot", self._area_id)
 
 
-def _iter_areas(snapshot: Any) -> list[tuple[int, dict[str, Any]]]:
-    if isinstance(snapshot, dict) and isinstance(snapshot.get("areas"), dict | list | tuple):
-        snapshot = snapshot["areas"]
-    if isinstance(snapshot, dict):
-        areas: list[tuple[int, dict[str, Any]]] = []
-        for key, area in snapshot.items():
-            if not isinstance(area, dict):
-                continue
-            area_id = _coerce_area_id(key, area)
-            if area_id is None:
-                continue
-            areas.append((area_id, area))
+def _iter_areas(snapshot: Any) -> Iterable[Any]:
+    areas = getattr(snapshot, "areas", None)
+    if areas is None:
+        return []
+    if isinstance(areas, dict):
+        return list(areas.values())
+    if isinstance(areas, list | tuple):
         return areas
-    if isinstance(snapshot, list | tuple):
-        return [
-            (index + 1, area)
-            for index, area in enumerate(snapshot)
-            if isinstance(area, dict)
-        ]
     return []
 
 
-def _coerce_area_id(key: Any, area: dict[str, Any]) -> int | None:
-    for candidate in (area.get("area_id"), area.get("area_index"), area.get("index"), key):
-        if isinstance(candidate, int):
-            return candidate
-        if isinstance(candidate, str) and candidate.isdigit():
-            return int(candidate)
+def _get_area(snapshot: Any, area_id: int) -> Any | None:
+    for area in _iter_areas(snapshot):
+        if getattr(area, "area_id", None) == area_id:
+            return area
     return None
 
 
-def _get_area(snapshot: Any, area_id: int) -> dict[str, Any] | None:
-    if isinstance(snapshot, dict) and isinstance(snapshot.get("areas"), dict | list | tuple):
-        snapshot = snapshot["areas"]
-    if isinstance(snapshot, dict):
-        area = snapshot.get(area_id)
-        if area is None:
-            area = snapshot.get(str(area_id))
-        return area if isinstance(area, dict) else None
-    if isinstance(snapshot, list | tuple):
-        index = area_id - 1
-        if 0 <= index < len(snapshot):
-            area = snapshot[index]
-            return area if isinstance(area, dict) else None
-    return None
-
-
-def _map_state(state: str) -> AlarmControlPanelState | None:
-    normalized = state.lower().replace(" ", "_")
-    return {
-        "disarmed": AlarmControlPanelState.DISARMED,
-        "armed_home": AlarmControlPanelState.ARMED_HOME,
-        "armed_away": AlarmControlPanelState.ARMED_AWAY,
-        "armed_night": AlarmControlPanelState.ARMED_NIGHT,
-        "armed_vacation": AlarmControlPanelState.ARMED_VACATION,
-        "armed_custom_bypass": AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
-        "arming": AlarmControlPanelState.ARMING,
-        "pending": AlarmControlPanelState.PENDING,
-        "triggered": AlarmControlPanelState.TRIGGERED,
-    }.get(normalized)
+def _area_state_to_ha(area: Any) -> AlarmControlPanelState:
+    if getattr(area, "alarm_active", False):
+        return AlarmControlPanelState.TRIGGERED
+    if getattr(area, "armed", False):
+        arm_mode = getattr(area, "arm_mode", None)
+        if arm_mode is None:
+            return AlarmControlPanelState.ARMED_AWAY
+        mode_value = (
+            arm_mode.name if isinstance(arm_mode, ArmMode) else str(arm_mode)
+        ).lower()
+        if mode_value in {"stay", "home"}:
+            return AlarmControlPanelState.ARMED_HOME
+        if mode_value == "night":
+            return AlarmControlPanelState.ARMED_NIGHT
+        if mode_value in {"away", "vacation", "instant"}:
+            return AlarmControlPanelState.ARMED_AWAY
+        return AlarmControlPanelState.ARMED_AWAY
+    return AlarmControlPanelState.DISARMED

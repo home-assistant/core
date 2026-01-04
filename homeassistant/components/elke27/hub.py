@@ -2,285 +2,261 @@
 
 from __future__ import annotations
 
-import asyncio
-from dataclasses import asdict, is_dataclass
-from functools import partial
+import contextlib
 import inspect
 import logging
 from typing import Any, Callable
 
-from elke27_lib.client import E27Identity, E27LinkKeys, Elke27Client, Result
+from elke27_lib import ClientConfig, Elke27Client, LinkKeys
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import MANUFACTURER_NUMBER, READY_TIMEOUT
+from .const import READY_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
+
+_SYSTEM_EVENT_TYPES = {"SYSTEM", "PANEL_INFO", "TABLE_INFO"}
 
 
 class Elke27Hub:
     """Manage a single Elke27 client instance and its snapshots."""
 
     def __init__(
-        self,
-        hass: HomeAssistant,
-        host: str,
-        port: int,
-        link_keys: Any,
-        panel: Any | None,
-        integration_serial: str,
+        self, hass: HomeAssistant, host: str, port: int, link_keys_json: str
     ) -> None:
         """Initialize the hub wrapper."""
         self._hass = hass
-        self._client = Elke27Client()
         self._host = host
         self._port = port
-        self._link_keys = link_keys
-        self._panel = panel
-        self._integration_serial = integration_serial
-        self._last_result: Result | None = None
+        self._link_keys_json = link_keys_json
+        self._client: Elke27Client | None = None
+        self._unsubscribe: Callable[[], None] | None = None
         self._listeners: list[Callable[[], None]] = []
-        self._areas_logged = False
-        self._zones_logged = False
-        self.panel_info: Any | None = None
-        self.table_info: Any | None = None
-        self.areas: Any | None = None
-        self.zones: Any | None = None
-        self.keypads: Any | None = None
-        self.outputs: Any | None = None
-        self.counters: Any | None = None
-        self.settings: Any | None = None
-        self.tasks: Any | None = None
-        self.thermostats: Any | None = None
+        self._area_listeners: list[Callable[[], None]] = []
+        self._zone_listeners: list[Callable[[], None]] = []
+        self._output_listeners: list[Callable[[], None]] = []
+        self._system_listeners: list[Callable[[], None]] = []
+        self.snapshot: Any | None = None
 
     @property
-    def client(self) -> Elke27Client:
+    def client(self) -> Elke27Client | None:
         """Return the underlying client."""
         return self._client
 
     @property
     def is_ready(self) -> bool:
         """Return if the client is ready."""
-        return self._client.is_ready
+        if self._client is None:
+            return False
+        return bool(getattr(self._client, "is_ready", False))
+
+    @property
+    def panel_info(self) -> Any | None:
+        """Return the latest panel info snapshot."""
+        snapshot = self.snapshot
+        return getattr(snapshot, "panel_info", None) if snapshot is not None else None
+
+    @property
+    def table_info(self) -> Any | None:
+        """Return the latest table info snapshot."""
+        snapshot = self.snapshot
+        return getattr(snapshot, "table_info", None) if snapshot is not None else None
+
+    @property
+    def areas(self) -> Any | None:
+        """Return the latest areas snapshot."""
+        snapshot = self.snapshot
+        return getattr(snapshot, "areas", None) if snapshot is not None else None
+
+    @property
+    def zones(self) -> Any | None:
+        """Return the latest zones snapshot."""
+        snapshot = self.snapshot
+        return getattr(snapshot, "zones", None) if snapshot is not None else None
+
+    @property
+    def outputs(self) -> Any | None:
+        """Return the latest outputs snapshot."""
+        snapshot = self.snapshot
+        return getattr(snapshot, "outputs", None) if snapshot is not None else None
 
     @callback
     def async_add_listener(self, listener: Callable[[], None]) -> Callable[[], None]:
-        """Register a listener for hub updates."""
-        self._listeners.append(listener)
-
-        def _remove() -> None:
-            if listener in self._listeners:
-                self._listeners.remove(listener)
-
-        return _remove
+        """Register a listener for any hub updates."""
+        return self._add_listener(self._listeners, listener)
 
     @callback
     def async_add_area_listener(self, listener: Callable[[], None]) -> Callable[[], None]:
         """Register a listener for area updates."""
-        return self.async_add_listener(listener)
+        return self._add_listener(self._area_listeners, listener)
 
     @callback
     def async_add_zone_listener(self, listener: Callable[[], None]) -> Callable[[], None]:
         """Register a listener for zone updates."""
-        return self.async_add_listener(listener)
+        return self._add_listener(self._zone_listeners, listener)
 
     @callback
     def async_add_output_listener(self, listener: Callable[[], None]) -> Callable[[], None]:
         """Register a listener for output updates."""
-        return self.async_add_listener(listener)
+        return self._add_listener(self._output_listeners, listener)
+
+    @callback
+    def async_add_system_listener(self, listener: Callable[[], None]) -> Callable[[], None]:
+        """Register a listener for system updates."""
+        return self._add_listener(self._system_listeners, listener)
 
     async def async_start(self) -> None:
         """Connect the client, then await readiness."""
-        panel = self._panel or {"panel_host": self._host, "port": self._port}
-        link_keys = _link_keys_from_data(self._link_keys)
-        client_identity = _client_identity(self._integration_serial)
-        self._client.subscribe(self._handle_event)
+        link_keys = LinkKeys.from_json(self._link_keys_json)
+        client = Elke27Client(ClientConfig())
+        self._client = client
         try:
-            result = await self._client.connect(
-                link_keys,
-                panel=panel,
-                client_identity=client_identity,
-            )
-            if not result.ok:
-                if isinstance(result.error, Exception):
-                    raise result.error
-                raise RuntimeError(result.error or "Connect failed")
-        except Exception:
-            self._client.unsubscribe(self._handle_event)
-            raise
-
-        if not self._client.is_ready:
-            ready = await asyncio.to_thread(
-                self._client.wait_ready, timeout_s=READY_TIMEOUT
-            )
+            await client.async_connect(self._host, self._port, link_keys)
+            ready = await client.wait_ready(timeout_s=READY_TIMEOUT)
             if not ready:
-                raise TimeoutError("Client did not become ready before timeout")
-        if not self._client.is_ready:
-            raise TimeoutError("Client did not become ready before timeout")
-        self._refresh_snapshots()
+                raise ConfigEntryNotReady(
+                    "The client did not become ready before timeout"
+                )
+            self._unsubscribe = client.subscribe(self._handle_event)
+            self.snapshot = client.snapshot
+        except Exception:
+            with contextlib.suppress(Exception):
+                await client.async_disconnect()
+            self._client = None
+            raise
 
     async def async_stop(self) -> None:
         """Disconnect the client and unregister event handlers."""
-        self._client.unsubscribe(self._handle_event)
-        await self._client.disconnect()
+        if self._unsubscribe is not None:
+            self._unsubscribe()
+            self._unsubscribe = None
+        if self._client is not None:
+            await self._client.async_disconnect()
+        self._client = None
+        self.snapshot = None
 
-    async def async_refresh_inventory(self) -> None:
-        """Request the latest inventory from the panel."""
-        if not self._client.is_ready:
-            _LOGGER.debug("Refresh requested while client is not ready")
-            return
+    async def async_refresh_inventory(self) -> bool:
+        """Request the latest inventory from the panel if supported."""
+        client = self._client
+        if client is None:
+            return False
 
-        requests: list[Callable[[], Result]] = [
-            partial(self._client.request, ("area", "get_table_info")),
-            partial(self._client.request, ("zone", "get_table_info")),
-            partial(self._client.request, ("output", "get_table_info")),
-            partial(self._client.request, ("tstat", "get_table_info")),
-            partial(self._client.request, ("area", "get_configured"), block_id=1),
-            partial(self._client.request, ("zone", "get_configured"), block_id=1),
-        ]
-        results = await asyncio.gather(
-            *[self._hass.async_add_executor_job(req) for req in requests]
-        )
-        for result in results:
-            if isinstance(result, Result) and not result.ok:
-                _LOGGER.debug(
-                    "Inventory refresh request failed: %s",
-                    result.error or "unknown error",
-                )
+        method = getattr(client, "async_refresh_inventory", None)
+        if method is None:
+            method = getattr(client, "refresh_inventory", None)
+        if method is None:
+            _LOGGER.debug("Refresh inventory is not supported by the client")
+            return False
+        if inspect.iscoroutinefunction(method):
+            await method()
+        else:
+            await self._hass.async_add_executor_job(method)
+        return True
 
     async def async_set_output(self, output_id: int, state: bool) -> bool:
         """Request an output state change if supported."""
-        method = None
-        if hasattr(self._client, "set_output"):
-            method = self._client.set_output
-        elif hasattr(self._client, "set_output_state"):
-            method = self._client.set_output_state
+        client = self._client
+        if client is None:
+            return False
 
+        method = getattr(client, "async_set_output", None)
+        if method is None:
+            method = getattr(client, "set_output", None)
         if method is None:
             _LOGGER.warning(
                 "Output control is not supported by the client for output %s",
                 output_id,
             )
             return False
-
         if inspect.iscoroutinefunction(method):
             result = await method(output_id, state)
         else:
-            result = await asyncio.to_thread(method, output_id, state)
+            result = await self._hass.async_add_executor_job(method, output_id, state)
+        return bool(result) if isinstance(result, bool) else True
 
-        if isinstance(result, Result):
-            if not result.ok:
-                _LOGGER.warning(
-                    "Output %s state change failed: %s",
-                    output_id,
-                    result.error or "unknown error",
-                )
-                return False
-            return True
-        if isinstance(result, bool):
-            return result
-        return True
+    async def async_arm_area(
+        self, area_id: int, mode: Any, pin: str | None
+    ) -> bool:
+        """Request an area arming change if supported."""
+        client = self._client
+        if client is None:
+            return False
 
-    def _handle_event(self, result: Result) -> None:
-        """Handle semantic events from the client."""
-        self._last_result = result
-        self._refresh_snapshots()
-        for listener in list(self._listeners):
+        method = getattr(client, "async_arm_area", None)
+        if method is None:
+            method = getattr(client, "arm_area", None)
+        if method is None:
+            _LOGGER.warning("Area arming is not supported for area %s", area_id)
+            return False
+        if inspect.iscoroutinefunction(method):
+            result = await method(area_id, mode=mode, pin=pin)
+        else:
+            result = await self._hass.async_add_executor_job(
+                method, area_id, mode=mode, pin=pin
+            )
+        return bool(result) if isinstance(result, bool) else True
+
+    async def async_disarm_area(self, area_id: int, pin: str | None) -> bool:
+        """Request an area disarming change if supported."""
+        client = self._client
+        if client is None:
+            return False
+
+        method = getattr(client, "async_disarm_area", None)
+        if method is None:
+            method = getattr(client, "disarm_area", None)
+        if method is None:
+            _LOGGER.warning("Area disarm is not supported for area %s", area_id)
+            return False
+        if inspect.iscoroutinefunction(method):
+            result = await method(area_id, pin=pin)
+        else:
+            result = await self._hass.async_add_executor_job(method, area_id, pin=pin)
+        return bool(result) if isinstance(result, bool) else True
+
+    def _handle_event(self, event: Any) -> None:
+        """Handle events from the client."""
+        if self._client is None:
+            return
+        self.snapshot = self._client.snapshot
+        event_type = _event_type(event)
+        self._dispatch(self._listeners)
+        if event_type == "AREA":
+            self._dispatch(self._area_listeners)
+        elif event_type == "ZONE":
+            self._dispatch(self._zone_listeners)
+        elif event_type == "OUTPUT":
+            self._dispatch(self._output_listeners)
+        elif event_type in _SYSTEM_EVENT_TYPES:
+            self._dispatch(self._system_listeners)
+
+    @callback
+    def _dispatch(self, listeners: list[Callable[[], None]]) -> None:
+        """Schedule listener callbacks without blocking."""
+        for listener in list(listeners):
             self._hass.loop.call_soon_threadsafe(listener)
 
-    def _refresh_snapshots(self) -> None:
-        """Capture the latest snapshots from the client."""
-        panel_info = getattr(self._client, "panel_info", None)
-        self.panel_info = _merge_panel_info(panel_info, self._panel)
-        self.table_info = _normalize_snapshot(getattr(self._client, "table_info", None))
-        self.areas = _normalize_snapshot(getattr(self._client, "areas", None))
-        self.zones = _normalize_snapshot(getattr(self._client, "zones", None))
-        self.keypads = _normalize_snapshot(getattr(self._client, "keypads", None))
-        self.outputs = _normalize_snapshot(getattr(self._client, "outputs", None))
-        self.counters = _normalize_snapshot(getattr(self._client, "counters", None))
-        self.settings = _normalize_snapshot(getattr(self._client, "settings", None))
-        self.tasks = _normalize_snapshot(getattr(self._client, "tasks", None))
-        self.thermostats = _normalize_snapshot(getattr(self._client, "thermostats", None))
-        self._maybe_log_inventory_ready()
+    @callback
+    def _add_listener(
+        self, listeners: list[Callable[[], None]], listener: Callable[[], None]
+    ) -> Callable[[], None]:
+        """Add a listener and return its unsubscribe callback."""
+        listeners.append(listener)
 
-    def _maybe_log_inventory_ready(self) -> None:
-        if not self._areas_logged and _snapshot_count(self.areas) > 0:
-            self._areas_logged = True
-            self._schedule_log("areas", self.areas)
-        if not self._zones_logged and _snapshot_count(self.zones) > 0:
-            self._zones_logged = True
-            self._schedule_log("zones", self.zones)
+        def _remove() -> None:
+            if listener in listeners:
+                listeners.remove(listener)
 
-    def _schedule_log(self, label: str, snapshot: Any) -> None:
-        count = _snapshot_count(snapshot)
-
-        def _log() -> None:
-            _LOGGER.debug("Elke27 %s inventory now available (%s)", label, count)
-
-        self._hass.loop.call_soon_threadsafe(_log)
+        return _remove
 
 
-def _snapshot_count(snapshot: Any) -> int:
-    if isinstance(snapshot, dict):
-        return sum(1 for item in snapshot.values() if isinstance(item, dict))
-    if isinstance(snapshot, list | tuple):
-        return sum(1 for item in snapshot if isinstance(item, dict))
-    return 0
-
-
-def _normalize_snapshot(snapshot: Any) -> Any:
-    """Convert dataclass snapshots into dicts for HA consumers."""
-    if is_dataclass(snapshot):
-        return asdict(snapshot)
-    if isinstance(snapshot, dict):
-        return {key: _normalize_snapshot(value) for key, value in snapshot.items()}
-    if isinstance(snapshot, list | tuple):
-        return [_normalize_snapshot(value) for value in snapshot]
-    return snapshot
-
-
-def _merge_panel_info(panel_info: Any, panel: Any | None) -> Any:
-    """Merge discovery panel name into panel info when missing."""
-    if panel is None:
-        return panel_info
-    panel_dict = panel if isinstance(panel, dict) else {}
-    panel_name = panel_dict.get("panel_name")
-    if not panel_name:
-        return panel_info
-    if isinstance(panel_info, dict):
-        if panel_info.get("panel_name"):
-            return panel_info
-        merged = dict(panel_info)
-        merged["panel_name"] = panel_name
-        return merged
-    return panel_info
-
-
-def _client_identity(integration_serial: str) -> E27Identity:
-    """Build the client identity for connect."""
-    return E27Identity(
-        mn=str(MANUFACTURER_NUMBER),
-        sn=integration_serial,
-        fwver="0",
-        hwver="0",
-        osver="0",
-    )
-
-
-def _link_keys_from_data(data: Any) -> E27LinkKeys:
-    """Normalize link keys from stored entry data."""
-    if isinstance(data, E27LinkKeys):
-        return data
-    if is_dataclass(data):
-        data = asdict(data)
-    if isinstance(data, dict):
-        tempkey = data.get("tempkey_hex") or data.get("temp_key") or data.get("tempkey")
-        linkkey = data.get("linkkey_hex") or data.get("link_key") or data.get("linkkey")
-        linkhmac = data.get("linkhmac_hex") or data.get("link_hmac") or data.get("linkhmac")
-        if tempkey and linkkey and linkhmac:
-            return E27LinkKeys(
-                tempkey_hex=str(tempkey),
-                linkkey_hex=str(linkkey),
-                linkhmac_hex=str(linkhmac),
-            )
-    raise ValueError("Link keys are missing required fields")
+def _event_type(event: Any) -> str | None:
+    if isinstance(event, dict):
+        value = event.get("type") or event.get("event_type") or event.get("domain")
+        return str(value).upper() if value else None
+    for attr in ("type", "event_type", "domain", "kind", "category"):
+        value = getattr(event, attr, None)
+        if value:
+            return str(value).upper()
+    return None

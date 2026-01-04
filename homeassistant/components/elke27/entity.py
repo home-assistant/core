@@ -6,38 +6,52 @@ from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 
-from .const import DOMAIN
+from .const import CONF_INTEGRATION_SERIAL, DOMAIN, MANUFACTURER_NUMBER
 from .hub import Elke27Hub
 
 
 def get_panel_field(hub: Elke27Hub, field: str) -> Any:
     """Return a field from the current panel snapshot."""
     panel_info = hub.panel_info
-    if isinstance(panel_info, dict):
-        return panel_info.get(field)
+    if panel_info is None:
+        return None
     return getattr(panel_info, field, None)
 
 
 def device_info_for_entry(hub: Elke27Hub, entry: ConfigEntry) -> DeviceInfo:
     """Build device info for entities tied to a config entry."""
-    panel_name = get_panel_field(hub, "panel_name") or entry.title
-    mac = get_panel_field(hub, "panel_mac")
-    panel_serial = get_panel_field(hub, "panel_serial")
-    identifiers = {(DOMAIN, mac)} if mac else {(DOMAIN, entry.entry_id)}
+    panel_name = get_panel_field(hub, "name") or entry.title
+    mac = get_panel_field(hub, "mac")
+    panel_serial = get_panel_field(hub, "serial")
+    model = get_panel_field(hub, "model")
+    firmware = get_panel_field(hub, "firmware")
+    integration_serial = entry.data.get(CONF_INTEGRATION_SERIAL)
+    identifier = (
+        f"{MANUFACTURER_NUMBER}-{integration_serial}"
+        if integration_serial
+        else entry.entry_id
+    )
+    identifiers = {(DOMAIN, identifier)}
     return DeviceInfo(
+        connections={(CONNECTION_NETWORK_MAC, mac)} if mac else None,
         identifiers=identifiers,
         name=panel_name,
+        model=model,
+        sw_version=firmware,
         serial_number=panel_serial,
     )
 
 
 def unique_base(hub: Elke27Hub, entry: ConfigEntry) -> str:
     """Return the stable unique ID base for this config entry."""
-    mac = get_panel_field(hub, "panel_mac")
+    mac = get_panel_field(hub, "mac")
     if mac:
         return str(mac)
+    integration_serial = entry.data.get(CONF_INTEGRATION_SERIAL)
+    if integration_serial:
+        return str(integration_serial)
     if entry.unique_id:
         return entry.unique_id
     return entry.data[CONF_HOST]

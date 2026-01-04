@@ -3,65 +3,146 @@
 from __future__ import annotations
 
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
+from enum import Enum
 from types import ModuleType
 from unittest.mock import AsyncMock, patch
 
-_client_module = ModuleType("elke27_lib.client")
+import pytest
+
+_elke27_lib = ModuleType("elke27_lib")
+_elke27_lib_errors = ModuleType("elke27_lib.errors")
 
 
-@dataclass(frozen=True, slots=True)
-class FakeIdentity:
-    """Minimal identity stub."""
+class Elke27Error(Exception):
+    """Base Elke27 error."""
 
-    mn: str
-    sn: str
-    fwver: str
-    hwver: str
-    osver: str
+
+class Elke27ConnectionError(Elke27Error):
+    """Connection error stub."""
+
+
+class Elke27AuthError(Elke27Error):
+    """Auth error stub."""
+
+
+class Elke27TimeoutError(Elke27Error):
+    """Timeout error stub."""
+
+
+class Elke27DisconnectedError(Elke27Error):
+    """Disconnected error stub."""
+
+
+class Elke27LinkRequiredError(Elke27Error):
+    """Link required stub."""
+
+
+class Elke27PinRequiredError(Elke27Error):
+    """PIN required stub."""
+
+
+_elke27_lib_errors.Elke27Error = Elke27Error
+_elke27_lib_errors.Elke27ConnectionError = Elke27ConnectionError
+_elke27_lib_errors.Elke27AuthError = Elke27AuthError
+_elke27_lib_errors.Elke27TimeoutError = Elke27TimeoutError
+_elke27_lib_errors.Elke27DisconnectedError = Elke27DisconnectedError
+_elke27_lib_errors.Elke27LinkRequiredError = Elke27LinkRequiredError
+_elke27_lib_errors.Elke27PinRequiredError = Elke27PinRequiredError
+
+
+class ArmMode(Enum):
+    """Stub arm modes."""
+
+    AWAY = "away"
+    STAY = "stay"
+    NIGHT = "night"
+    VACATION = "vacation"
+    INSTANT = "instant"
 
 
 @dataclass(frozen=True, slots=True)
 class FakeLinkKeys:
     """Minimal link keys stub."""
 
-    tempkey_hex: str
-    linkkey_hex: str
-    linkhmac_hex: str
+    payload: str
+
+    @classmethod
+    def from_json(cls, payload: str) -> "FakeLinkKeys":
+        """Return stub link keys from JSON."""
+        return cls(payload)
 
 
-_client_module.Elke27Client = object
-_client_module.Result = object
-_client_module.E27Identity = FakeIdentity
-_client_module.E27LinkKeys = FakeLinkKeys
-_package_module = ModuleType("elke27_lib")
-_package_module.client = _client_module
-sys.modules.setdefault("elke27_lib", _package_module)
-sys.modules.setdefault("elke27_lib.client", _client_module)
+@dataclass(frozen=True, slots=True)
+class FakeClientConfig:
+    """Minimal config stub."""
 
+
+_elke27_lib.ClientConfig = FakeClientConfig
+_elke27_lib.LinkKeys = FakeLinkKeys
+_elke27_lib.Elke27Client = object
+_elke27_lib.DiscoveredPanel = object
+_elke27_lib.ArmMode = ArmMode
+
+sys.modules["elke27_lib"] = _elke27_lib
+sys.modules["elke27_lib.errors"] = _elke27_lib_errors
+
+from homeassistant.components.elke27 import light as light_module
 from homeassistant.components.elke27.const import (
     CONF_INTEGRATION_SERIAL,
-    CONF_LINK_KEYS,
+    CONF_LINK_KEYS_JSON,
     DOMAIN,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
+
+
+@dataclass(frozen=True, slots=True)
+class PanelInfo:
+    """Panel info snapshot stub."""
+
+    mac: str
+    name: str
+    serial: str
+
+
+@dataclass(frozen=True, slots=True)
+class OutputState:
+    """Output state stub."""
+
+    output_id: int
+    name: str
+    is_on: bool
+
+
+@dataclass(frozen=True, slots=True)
+class Snapshot:
+    """Snapshot stub."""
+
+    panel_info: PanelInfo
+    outputs: list[OutputState]
 
 
 class FakeHub:
     """Minimal hub stub for output tests."""
 
     def __init__(self) -> None:
-        self.panel_info = {"panel_name": "Panel A", "panel_mac": "aa:bb:cc:dd:ee:ff"}
-        self.table_info = {"outputs": 2}
+        self.snapshot = Snapshot(
+            panel_info=PanelInfo(
+                mac="aa:bb:cc:dd:ee:ff",
+                name="Panel A",
+                serial="1234",
+            ),
+            outputs=[
+                OutputState(output_id=1, name="Output 1", is_on=False),
+                OutputState(output_id=2, name="Output 2", is_on=True),
+            ],
+        )
         self.is_ready = True
-        self.outputs = [
-            {"name": "Output 1", "state": False},
-            {"name": "Output 2", "state": True},
-        ]
         self._listeners: list[callable] = []
         self.async_set_output = AsyncMock(return_value=True)
 
@@ -83,6 +164,17 @@ class FakeHub:
     def async_add_output_listener(self, listener):
         return self.async_add_listener(listener)
 
+    def async_add_area_listener(self, listener):
+        return self.async_add_listener(listener)
+
+    def async_add_zone_listener(self, listener):
+        return self.async_add_listener(listener)
+
+    @property
+    def panel_info(self) -> PanelInfo:
+        """Return panel info from the snapshot."""
+        return self.snapshot.panel_info
+
     def fire_update(self) -> None:
         for listener in list(self._listeners):
             listener()
@@ -99,7 +191,7 @@ async def test_output_entities_updates_and_actions(hass: HomeAssistant) -> None:
         data={
             CONF_HOST: "192.168.1.60",
             CONF_PORT: 2101,
-            CONF_LINK_KEYS: {
+            CONF_LINK_KEYS_JSON: {
                 "tempkey_hex": "tk",
                 "linkkey_hex": "lk",
                 "linkhmac_hex": "lh",
@@ -139,12 +231,53 @@ async def test_output_entities_updates_and_actions(hass: HomeAssistant) -> None:
         blocking=True,
     )
     hub.async_set_output.assert_awaited_once_with(1, True)
-    assert hub.outputs[0]["state"] is False
+    assert hub.snapshot.outputs[0].is_on is False
 
-    hub.outputs[0]["state"] = True
+    updated = replace(hub.snapshot.outputs[0], is_on=True)
+    hub.snapshot = replace(
+        hub.snapshot, outputs=[updated, hub.snapshot.outputs[1]]
+    )
     hub.fire_update()
     await hass.async_block_till_done()
 
     state = hass.states.get(output_1.entity_id)
     assert state is not None
     assert state.state == "on"
+
+
+async def test_output_pin_required(hass: HomeAssistant) -> None:
+    """Test PIN-required error surfaces as HomeAssistantError."""
+    hub = FakeHub()
+    hub.async_start = AsyncMock()
+    hub.async_stop = AsyncMock()
+    hub.async_set_output.side_effect = light_module.Elke27PinRequiredError
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.61",
+            CONF_PORT: 2101,
+            CONF_LINK_KEYS_JSON: {"tempkey_hex": "tk"},
+            CONF_INTEGRATION_SERIAL: "112233445566",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.elke27.Elke27Hub", return_value=hub):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    registry = er.async_get(hass)
+    output_1 = next(
+        entry
+        for entry in registry.entities.values()
+        if entry.unique_id == "aa:bb:cc:dd:ee:ff_output_1"
+    )
+
+    with pytest.raises(HomeAssistantError, match="PIN required to perform this action."):
+        await hass.services.async_call(
+            "light",
+            "turn_on",
+            {"entity_id": output_1.entity_id},
+            blocking=True,
+        )

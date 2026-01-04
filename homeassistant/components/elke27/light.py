@@ -2,16 +2,22 @@
 
 from __future__ import annotations
 
-from typing import Any
+import logging
+from typing import Any, Iterable
+
+from elke27_lib.errors import Elke27PinRequiredError
 
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .entity import device_info_for_entry, unique_base
 from .hub import Elke27Hub
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -21,11 +27,27 @@ async def async_setup_entry(
 ) -> None:
     """Set up Elke27 output lights from a config entry."""
     hub: Elke27Hub = hass.data[DOMAIN][entry.entry_id]
-    outputs = _iter_outputs(hub.outputs)
-    async_add_entities(
-        Elke27OutputLight(hub, entry, output_id, output)
-        for output_id, output in outputs
-    )
+    known_ids: set[int] = set()
+
+    @callback
+    def _async_add_outputs() -> None:
+        snapshot = hub.snapshot
+        if snapshot is None:
+            return
+        entities: list[Elke27OutputLight] = []
+        for output in _iter_outputs(snapshot):
+            output_id = getattr(output, "output_id", None)
+            if not isinstance(output_id, int):
+                continue
+            if output_id in known_ids:
+                continue
+            known_ids.add(output_id)
+            entities.append(Elke27OutputLight(hub, entry, output_id, output))
+        if entities:
+            async_add_entities(entities)
+
+    _async_add_outputs()
+    entry.async_on_unload(hub.async_add_output_listener(_async_add_outputs))
 
 
 class Elke27OutputLight(LightEntity):
@@ -41,15 +63,16 @@ class Elke27OutputLight(LightEntity):
         hub: Elke27Hub,
         entry: ConfigEntry,
         output_id: int,
-        output: dict[str, Any],
+        output: Any,
     ) -> None:
         """Initialize the output entity."""
         self._hub = hub
         self._entry = entry
         self._output_id = output_id
-        self._attr_name = output.get("name") or f"Output {output_id}"
+        self._attr_name = getattr(output, "name", None) or f"Output {output_id}"
         self._attr_unique_id = f"{unique_base(hub, entry)}_output_{output_id}"
         self._attr_device_info = device_info_for_entry(hub, entry)
+        self._missing_logged = False
 
     async def async_added_to_hass(self) -> None:
         """Register for hub updates."""
@@ -63,89 +86,56 @@ class Elke27OutputLight(LightEntity):
     @property
     def is_on(self) -> bool | None:
         """Return if the output is on."""
-        output = _get_output(self._hub.outputs, self._output_id)
-        if not output:
+        output = _get_output(self._hub.snapshot, self._output_id)
+        if output is None:
+            self._log_missing()
             return None
-        if isinstance(output.get("is_on"), bool):
-            return output["is_on"]
-        if isinstance(output.get("state"), bool):
-            return output["state"]
-        if isinstance(output.get("on"), bool):
-            return output["on"]
-        state = output.get("status")
-        if state is None:
-            return None
-        normalized = str(state).lower().replace(" ", "_")
-        if normalized in {"on", "enabled", "active", "true"}:
-            return True
-        if normalized in {"off", "disabled", "inactive", "false"}:
-            return False
-        return None
+        is_on = getattr(output, "is_on", None)
+        return bool(is_on) if isinstance(is_on, bool) else None
 
     @property
     def available(self) -> bool:
         """Return if the entity is available."""
         return (
             self._hub.is_ready
-            and _get_output(self._hub.outputs, self._output_id) is not None
+            and _get_output(self._hub.snapshot, self._output_id) is not None
         )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the output on if supported by the client."""
-        await self._hub.async_set_output(self._output_id, True)
+        try:
+            await self._hub.async_set_output(self._output_id, True)
+        except Elke27PinRequiredError as err:
+            raise HomeAssistantError("PIN required to perform this action.") from err
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the output off if supported by the client."""
-        await self._hub.async_set_output(self._output_id, False)
+        try:
+            await self._hub.async_set_output(self._output_id, False)
+        except Elke27PinRequiredError as err:
+            raise HomeAssistantError("PIN required to perform this action.") from err
+
+    def _log_missing(self) -> None:
+        """Log when the output snapshot is missing."""
+        if self._missing_logged:
+            return
+        self._missing_logged = True
+        _LOGGER.debug("Output %s missing from snapshot", self._output_id)
 
 
-def _iter_outputs(snapshot: Any) -> list[tuple[int, dict[str, Any]]]:
-    if isinstance(snapshot, dict) and isinstance(snapshot.get("outputs"), dict | list | tuple):
-        snapshot = snapshot["outputs"]
-    if isinstance(snapshot, dict):
-        outputs: list[tuple[int, dict[str, Any]]] = []
-        for key, output in snapshot.items():
-            if not isinstance(output, dict):
-                continue
-            output_id = _coerce_output_id(key, output)
-            if output_id is None:
-                continue
-            outputs.append((output_id, output))
+def _iter_outputs(snapshot: Any) -> Iterable[Any]:
+    outputs = getattr(snapshot, "outputs", None)
+    if outputs is None:
+        return []
+    if isinstance(outputs, dict):
+        return list(outputs.values())
+    if isinstance(outputs, list | tuple):
         return outputs
-    if isinstance(snapshot, list | tuple):
-        return [
-            (index + 1, output)
-            for index, output in enumerate(snapshot)
-            if isinstance(output, dict)
-        ]
     return []
 
 
-def _coerce_output_id(key: Any, output: dict[str, Any]) -> int | None:
-    for candidate in (
-        output.get("output_id"),
-        output.get("output_index"),
-        output.get("index"),
-        key,
-    ):
-        if isinstance(candidate, int):
-            return candidate
-        if isinstance(candidate, str) and candidate.isdigit():
-            return int(candidate)
-    return None
-
-
-def _get_output(snapshot: Any, output_id: int) -> dict[str, Any] | None:
-    if isinstance(snapshot, dict) and isinstance(snapshot.get("outputs"), dict | list | tuple):
-        snapshot = snapshot["outputs"]
-    if isinstance(snapshot, dict):
-        output = snapshot.get(output_id)
-        if output is None:
-            output = snapshot.get(str(output_id))
-        return output if isinstance(output, dict) else None
-    if isinstance(snapshot, list | tuple):
-        index = output_id - 1
-        if 0 <= index < len(snapshot):
-            output = snapshot[index]
-            return output if isinstance(output, dict) else None
+def _get_output(snapshot: Any, output_id: int) -> Any | None:
+    for output in _iter_outputs(snapshot):
+        if getattr(output, "output_id", None) == output_id:
+            return output
     return None

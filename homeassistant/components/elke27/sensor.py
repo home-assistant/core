@@ -32,7 +32,7 @@ SENSORS: tuple[Elke27SensorDescription, ...] = (
     Elke27SensorDescription(
         key="panel_name",
         translation_key="panel_name",
-        value_fn=lambda hub: get_panel_field(hub, "panel_name"),
+        value_fn=lambda hub: get_panel_field(hub, "name"),
     ),
     Elke27SensorDescription(
         key="panel_ready",

@@ -5,12 +5,19 @@ from __future__ import annotations
 import contextlib
 import logging
 
+from elke27_lib.errors import (
+    Elke27ConnectionError,
+    Elke27DisconnectedError,
+    Elke27LinkRequiredError,
+    Elke27TimeoutError,
+)
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-from .const import CONF_INTEGRATION_SERIAL, CONF_LINK_KEYS, CONF_PANEL, DOMAIN
+from .const import CONF_INTEGRATION_SERIAL, CONF_LINK_KEYS_JSON, DOMAIN
 from .hub import Elke27Hub
 from .identity import async_get_integration_serial
 
@@ -29,8 +36,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Elke27 from a config entry."""
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
-    link_keys = entry.data.get(CONF_LINK_KEYS)
-    if not link_keys:
+    link_keys_json = entry.data.get(CONF_LINK_KEYS_JSON)
+    if not link_keys_json:
         raise ConfigEntryAuthFailed("Link keys are missing; relink required")
     if not entry.data.get(CONF_INTEGRATION_SERIAL):
         integration_serial = await async_get_integration_serial(hass, host)
@@ -38,21 +45,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry,
             data={**entry.data, CONF_INTEGRATION_SERIAL: integration_serial},
         )
-    integration_serial = entry.data[CONF_INTEGRATION_SERIAL]
-    panel = entry.data.get(CONF_PANEL)
-    hub = Elke27Hub(hass, host, port, link_keys, panel, integration_serial)
+    hub = Elke27Hub(hass, host, port, link_keys_json)
     try:
         await hub.async_start()
-    except Exception as err:
-        if err.__class__.__name__ in {"InvalidLinkKeys", "InvalidCredentials"} or (
-            isinstance(err, ValueError) and "Link keys" in str(err)
-        ):
-            raise ConfigEntryAuthFailed(
-                "Linking credentials are invalid; relink required"
-            ) from err
-        _LOGGER.exception(
-            "Failed to set up connection to %s:%s", host, port, exc_info=err
-        )
+    except Elke27LinkRequiredError as err:
+        raise ConfigEntryAuthFailed(
+            "Linking credentials are invalid; relink required"
+        ) from err
+    except (Elke27ConnectionError, Elke27TimeoutError, Elke27DisconnectedError) as err:
+        _LOGGER.exception("Failed to set up connection to %s:%s", host, port)
         with contextlib.suppress(Exception):
             await hub.async_stop()
         raise ConfigEntryNotReady(

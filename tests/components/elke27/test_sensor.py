@@ -4,12 +4,13 @@ from __future__ import annotations
 
 import sys
 from dataclasses import dataclass
+from enum import Enum
 from types import ModuleType
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.elke27.const import (
     CONF_INTEGRATION_SERIAL,
-    CONF_LINK_KEYS,
+    CONF_LINK_KEYS_JSON,
     DOMAIN,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -18,44 +19,111 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
-_client_module = ModuleType("elke27_lib.client")
+_elke27_lib = ModuleType("elke27_lib")
+_elke27_lib_errors = ModuleType("elke27_lib.errors")
 
 
-@dataclass(frozen=True, slots=True)
-class FakeIdentity:
-    """Minimal identity stub."""
+class Elke27Error(Exception):
+    """Base Elke27 error."""
 
-    mn: str
-    sn: str
-    fwver: str
-    hwver: str
-    osver: str
+
+class Elke27ConnectionError(Elke27Error):
+    """Connection error stub."""
+
+
+class Elke27AuthError(Elke27Error):
+    """Auth error stub."""
+
+
+class Elke27TimeoutError(Elke27Error):
+    """Timeout error stub."""
+
+
+class Elke27DisconnectedError(Elke27Error):
+    """Disconnected error stub."""
+
+
+class Elke27LinkRequiredError(Elke27Error):
+    """Link required stub."""
+
+
+class Elke27PinRequiredError(Elke27Error):
+    """PIN required stub."""
+
+
+_elke27_lib_errors.Elke27Error = Elke27Error
+_elke27_lib_errors.Elke27ConnectionError = Elke27ConnectionError
+_elke27_lib_errors.Elke27AuthError = Elke27AuthError
+_elke27_lib_errors.Elke27TimeoutError = Elke27TimeoutError
+_elke27_lib_errors.Elke27DisconnectedError = Elke27DisconnectedError
+_elke27_lib_errors.Elke27LinkRequiredError = Elke27LinkRequiredError
+_elke27_lib_errors.Elke27PinRequiredError = Elke27PinRequiredError
+
+
+class ArmMode(Enum):
+    """Stub arm modes."""
+
+    AWAY = "away"
+    STAY = "stay"
+    NIGHT = "night"
+    VACATION = "vacation"
+    INSTANT = "instant"
 
 
 @dataclass(frozen=True, slots=True)
 class FakeLinkKeys:
     """Minimal link keys stub."""
 
-    tempkey_hex: str
-    linkkey_hex: str
-    linkhmac_hex: str
+    payload: str
+
+    @classmethod
+    def from_json(cls, payload: str) -> "FakeLinkKeys":
+        """Return stub link keys from JSON."""
+        return cls(payload)
 
 
-_client_module.Elke27Client = object
-_client_module.Result = object
-_client_module.E27Identity = FakeIdentity
-_client_module.E27LinkKeys = FakeLinkKeys
-_package_module = ModuleType("elke27_lib")
-_package_module.client = _client_module
-sys.modules.setdefault("elke27_lib", _package_module)
-sys.modules.setdefault("elke27_lib.client", _client_module)
+@dataclass(frozen=True, slots=True)
+class FakeClientConfig:
+    """Minimal config stub."""
+
+
+_elke27_lib.ClientConfig = FakeClientConfig
+_elke27_lib.LinkKeys = FakeLinkKeys
+_elke27_lib.Elke27Client = object
+_elke27_lib.DiscoveredPanel = object
+_elke27_lib.ArmMode = ArmMode
+
+sys.modules["elke27_lib"] = _elke27_lib
+sys.modules["elke27_lib.errors"] = _elke27_lib_errors
+
+
+@dataclass(frozen=True, slots=True)
+class PanelInfo:
+    """Panel info snapshot stub."""
+
+    mac: str
+    name: str
+    serial: str
+
+
+@dataclass(frozen=True, slots=True)
+class Snapshot:
+    """Snapshot stub."""
+
+    panel_info: PanelInfo
 
 
 class FakeHub:
     """Minimal hub stub for sensor tests."""
 
     def __init__(self) -> None:
-        self.panel_info = {"panel_name": "Panel A", "panel_mac": "aa:bb:cc:dd:ee:ff"}
+        self.snapshot = Snapshot(
+            panel_info=PanelInfo(
+                mac="aa:bb:cc:dd:ee:ff",
+                name="Panel A",
+                serial="1234",
+            )
+        )
         self.table_info = {"zones": 2}
         self.is_ready = True
         self._listeners: list[callable] = []
@@ -75,9 +143,23 @@ class FakeHub:
 
         return _remove
 
+    def async_add_area_listener(self, listener):
+        return self.async_add_listener(listener)
+
+    def async_add_zone_listener(self, listener):
+        return self.async_add_listener(listener)
+
+    def async_add_output_listener(self, listener):
+        return self.async_add_listener(listener)
+
     def fire_update(self) -> None:
         for listener in list(self._listeners):
             listener()
+
+    @property
+    def panel_info(self) -> PanelInfo:
+        """Return panel info from the snapshot."""
+        return self.snapshot.panel_info
 
 
 async def test_sensor_updates_from_hub(hass: HomeAssistant) -> None:
@@ -91,7 +173,7 @@ async def test_sensor_updates_from_hub(hass: HomeAssistant) -> None:
         data={
             CONF_HOST: "192.168.1.60",
             CONF_PORT: 2101,
-            CONF_LINK_KEYS: {
+            CONF_LINK_KEYS_JSON: {
                 "tempkey_hex": "tk",
                 "linkkey_hex": "lk",
                 "linkhmac_hex": "lh",
@@ -111,7 +193,13 @@ async def test_sensor_updates_from_hub(hass: HomeAssistant) -> None:
     assert len(states) == 2
     assert {"Panel A", "ready"} == {state.state for state in states}
 
-    hub.panel_info["panel_name"] = "Panel B"
+    hub.snapshot = Snapshot(
+        panel_info=PanelInfo(
+            mac="aa:bb:cc:dd:ee:ff",
+            name="Panel B",
+            serial="1234",
+        )
+    )
     hub.is_ready = False
     hub.fire_update()
     await hass.async_block_till_done()

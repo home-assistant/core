@@ -3,22 +3,22 @@
 from __future__ import annotations
 
 from dataclasses import asdict, is_dataclass
+from enum import Enum
 from typing import Any, Mapping
 
+from elke27_lib import redact_for_diagnostics
+
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.redact import async_redact_data
 
-from .const import CONF_LINK_KEYS, DOMAIN
+from .const import (
+    CONF_INTEGRATION_SERIAL,
+    CONF_LINK_KEYS_JSON,
+    DOMAIN,
+    MANUFACTURER_NUMBER,
+)
 from .hub import Elke27Hub
-
-TO_REDACT = {
-    CONF_LINK_KEYS,
-    "link_keys",
-    "panel_mac",
-    "panel_serial",
-    "panel_host",
-}
 
 
 async def async_get_config_entry_diagnostics(
@@ -26,28 +26,42 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     hub: Elke27Hub | None = hass.data.get(DOMAIN, {}).get(entry.entry_id)
-    panel_info = entry.options.get("panel_info") or getattr(hub, "panel_info", None)
-    table_info = entry.options.get("table_info") or getattr(hub, "table_info", None)
-    ready = bool(hub and hub.is_ready)
+    snapshot = hub.snapshot if hub is not None else None
+    snapshot_dict = _to_jsonable(snapshot)
+    redacted_snapshot = redact_for_diagnostics(snapshot_dict)
 
-    panel_info = _as_dict(panel_info)
-    table_info = _as_dict(table_info)
+    snapshot_meta = {
+        "version": getattr(snapshot, "version", None),
+        "updated_at": getattr(snapshot, "updated_at", None),
+    }
 
     return {
-        "entry_data": async_redact_data(entry.data, TO_REDACT),
-        "entry_options": async_redact_data(entry.options, TO_REDACT),
-        "panel_info": async_redact_data(panel_info, TO_REDACT),
-        "table_info": async_redact_data(table_info, TO_REDACT),
-        "ready": ready,
+        "entry_id": entry.entry_id,
+        "host": entry.data.get(CONF_HOST),
+        "port": entry.data.get(CONF_PORT),
+        "manufacturer_number": MANUFACTURER_NUMBER,
+        "integration_serial": entry.data.get(CONF_INTEGRATION_SERIAL),
+        "link_keys_present": CONF_LINK_KEYS_JSON in entry.data,
+        "snapshot_available": snapshot is not None,
+        "snapshot_meta": snapshot_meta,
+        "snapshot": redacted_snapshot,
     }
 
 
-def _as_dict(value: Any) -> dict[str, Any]:
-    """Normalize snapshots to dict."""
+def _to_jsonable(value: Any) -> Any:
+    """Normalize snapshots to JSON-safe types."""
     if value is None:
-        return {}
-    if isinstance(value, Mapping):
-        return dict(value)
+        return None
     if is_dataclass(value):
-        return asdict(value)
-    return {"value": value}
+        return _to_jsonable(asdict(value))
+    if isinstance(value, Mapping):
+        return {str(key): _to_jsonable(val) for key, val in value.items()}
+    if isinstance(value, list | tuple | set):
+        return [_to_jsonable(item) for item in value]
+    if isinstance(value, bytes | bytearray | memoryview):
+        return f"<{len(value)} bytes>"
+    if isinstance(value, Enum):
+        return value.name
+    if isinstance(value, (str, int, float, bool)):
+        return value
+    return str(value)

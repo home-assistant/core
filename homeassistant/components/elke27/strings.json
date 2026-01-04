@@ -1,15 +1,13 @@
 {
   "config": {
     "abort": {
+      "missing_context": "Panel details are missing. Restart the flow.",
       "reauth_successful": "Linking was updated successfully."
     },
     "error": {
-      "authorization_required": "Authorization is required before the panel can be used. Check the access code and passphrase, then try again.",
       "cannot_connect": "Unable to connect to the panel. Confirm the host is reachable and the panel is online.",
-      "invalid_credentials": "The access code or passphrase is invalid.",
-      "invalid_link_keys": "Stored link keys are invalid. Relink the panel with the access code and passphrase.",
-      "missing_context": "Panel details are missing. Run discovery again or enter the host manually.",
-      "not_ready": "Connected, but the panel did not finish initializing. Wait a moment and try again.",
+      "invalid_auth": "The access code or passphrase is invalid.",
+      "link_required": "The panel requires linking. Enter the access code and passphrase again.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
@@ -25,27 +23,25 @@
       },
       "manual": {
         "title": "Manual connection",
-        "description": "Enter the host, access code, and passphrase.",
+        "description": "Enter the host and port.",
         "data": {
           "host": "Host",
-          "access_code": "Access code",
-          "passphrase": "Passphrase"
+          "port": "Port"
         },
         "data_description": {
           "host": "The panel host name or IP address.",
-          "access_code": "The panel access code used during linking.",
-          "passphrase": "The passphrase used during linking."
+          "port": "The panel port, usually 2101."
         }
       },
-      "credentials": {
+      "link": {
         "title": "Link credentials",
         "description": "Enter the access code and passphrase to link the panel.",
         "data": {
-          "access_code": "Access code",
+          "access_code": "Access code (used for linking, NOT a PIN)",
           "passphrase": "Passphrase"
         },
         "data_description": {
-          "access_code": "The panel access code used during linking.",
+          "access_code": "The panel access code used during linking. It is not a PIN.",
           "passphrase": "The passphrase used during linking."
         }
       },
@@ -53,11 +49,11 @@
         "title": "Relink panel",
         "description": "Enter the access code and passphrase to relink the panel.",
         "data": {
-          "access_code": "Access code",
+          "access_code": "Access code (used for linking, NOT a PIN)",
           "passphrase": "Passphrase"
         },
         "data_description": {
-          "access_code": "The panel access code used during linking.",
+          "access_code": "The panel access code used during linking. It is not a PIN.",
           "passphrase": "The passphrase used during linking."
         }
       }
