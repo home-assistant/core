@@ -2,21 +2,18 @@
   "config": {
     "abort": {
       "already_configured": "This charger is already configured",
-      "missing_host": "Host is not available"
+      "unavailable_host": "Unable to connect to host"
     },
     "error": {
       "cannot_connect": "Unable to connect"
     },
     "step": {
-      "import": {
-        "data": {
-          "host": "Host"
-        },
-        "title": "OpenEVSE Import"
-      },
       "user": {
         "data": {
-          "host": "Host"
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "Enter the IP Address of your openevse. Should match the address you used to set it up."
         }
       }
     }

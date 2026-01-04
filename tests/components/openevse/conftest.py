@@ -5,18 +5,20 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+from homeassistant.components.openevse.const import DOMAIN
 from homeassistant.const import CONF_HOST
 
 from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_charger():
+def mock_charger() -> Generator[MagicMock]:
     """Create a mock OpenEVSE charger."""
     with patch(
-        "homeassistant.components.openevse.config_flow.openevsewifi.Charger"
+        "openevsewifi.Charger",
+        autospec=True,
     ) as mock:
-        charger = MagicMock()
+        charger = mock.return_value
         charger.getStatus.return_value = "Charging"
         charger.getChargeTimeElapsed.return_value = 3600  # 60 minutes in seconds
         charger.getAmbientTemperature.return_value = 25.5
@@ -25,31 +27,6 @@ def mock_charger():
         charger.getUsageSession.return_value = 15000  # 15 kWh in Wh
         charger.getUsageTotal.return_value = 500000  # 500 kWh in Wh
         charger.charging_current = 32.0
-        mock.return_value = charger
-        yield charger
-
-
-@pytest.fixture
-def mock_bad_charger():
-    """Create a mock OpenEVSE charger."""
-    with patch(
-        "homeassistant.components.openevse.config_flow.openevsewifi.Charger"
-    ) as mock:
-        charger = MagicMock()
-        charger.getStatus.side_effect = AttributeError
-        mock.return_value = charger
-        yield charger
-
-
-@pytest.fixture
-def mock_flaky_charger():
-    """Create a mock OpenEVSE charger."""
-    with patch(
-        "homeassistant.components.openevse.config_flow.openevsewifi.Charger"
-    ) as mock:
-        charger = MagicMock()
-        charger.getStatus.side_effect = [AttributeError, "Charging"]
-        mock.return_value = charger
         yield charger
 
 
@@ -63,10 +40,8 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_config_entry():
+def mock_config_entry() -> MockConfigEntry:
     """Create a mock config entry."""
     return MockConfigEntry(
-        domain="openevse",
-        data={CONF_HOST: "192.168.1.100"},
-        unique_id="192.168.1.100",
+        domain=DOMAIN, data={CONF_HOST: "192.168.1.100"}, entry_id="FAKE"
     )

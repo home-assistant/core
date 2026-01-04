@@ -9,6 +9,7 @@ from requests import RequestException
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
@@ -135,7 +136,7 @@ async def async_setup_platform(
 
     ir.async_create_issue(
         hass,
-        DOMAIN,
+        HOMEASSISTANT_DOMAIN,
         "deprecated_yaml",
         breaks_in_ha_version="2026.7.0",
         is_fixable=False,
@@ -156,7 +157,7 @@ async def async_setup_entry(
 ) -> None:
     """Add sensors for passed config_entry in HA."""
     async_add_entities(
-        [
+        (
             OpenEVSESensor(
                 config_entry.data[CONF_HOST],
                 config_entry.runtime_data,
@@ -164,7 +165,7 @@ async def async_setup_entry(
                 description,
             )
             for description in SENSOR_TYPES
-        ],
+        ),
         True,
     )
 
