@@ -44,7 +44,7 @@ def _create_numeric_value(xknx: XKNX, config: ConfigType) -> NumericValue:
     """Return a KNX NumericValue to be used within XKNX."""
     return NumericValue(
         xknx,
-        name=config[CONF_NAME],
+        name=config.get(CONF_NAME, ""),
         group_address=config[KNX_ADDRESS],
         group_address_state=config.get(CONF_STATE_ADDRESS),
         respond_to_read=config[CONF_RESPOND_TO_READ],
@@ -59,9 +59,12 @@ class KNXNumber(KnxYamlEntity, RestoreNumber):
 
     def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize a KNX number."""
+        self._device = _create_numeric_value(knx_module.xknx, config)
         super().__init__(
             knx_module=knx_module,
-            device=_create_numeric_value(knx_module.xknx, config),
+            unique_id=str(self._device.sensor_value.group_address),
+            name=config.get(CONF_NAME),
+            entity_category=config.get(CONF_ENTITY_CATEGORY),
         )
         self._attr_native_max_value = config.get(
             NumberSchema.CONF_MAX,
@@ -76,8 +79,6 @@ class KNXNumber(KnxYamlEntity, RestoreNumber):
             NumberSchema.CONF_STEP,
             self._device.sensor_value.dpt_class.resolution,
         )
-        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
-        self._attr_unique_id = str(self._device.sensor_value.group_address)
         self._attr_native_unit_of_measurement = self._device.unit_of_measurement()
         self._device.sensor_value.value = max(0, self._attr_native_min_value)
 

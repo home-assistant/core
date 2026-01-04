@@ -83,18 +83,19 @@ class KnxYamlScene(_KnxScene, KnxYamlEntity):
 
     def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize KNX scene."""
+        self._device = XknxScene(
+            xknx=knx_module.xknx,
+            name=config.get(CONF_NAME, ""),
+            group_address=config[KNX_ADDRESS],
+            scene_number=config[SceneSchema.CONF_SCENE_NUMBER],
+        )
         super().__init__(
             knx_module=knx_module,
-            device=XknxScene(
-                xknx=knx_module.xknx,
-                name=config[CONF_NAME],
-                group_address=config[KNX_ADDRESS],
-                scene_number=config[SceneSchema.CONF_SCENE_NUMBER],
+            unique_id=(
+                f"{self._device.scene_value.group_address}_{self._device.scene_number}"
             ),
-        )
-        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
-        self._attr_unique_id = (
-            f"{self._device.scene_value.group_address}_{self._device.scene_number}"
+            name=config.get(CONF_NAME),
+            entity_category=config.get(CONF_ENTITY_CATEGORY),
         )
 
 

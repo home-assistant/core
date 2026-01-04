@@ -119,11 +119,11 @@ async def async_setup_entry(
         async_add_entities(entities)
 
 
-def _create_climate(xknx: XKNX, config: ConfigType) -> XknxClimate:
+def _create_climate_yaml(xknx: XKNX, config: ConfigType) -> XknxClimate:
     """Return a KNX Climate device to be used within XKNX."""
     climate_mode = XknxClimateMode(
         xknx,
-        name=f"{config[CONF_NAME]} Mode",
+        name=f"{config.get(CONF_NAME, '')} Mode",
         group_address_operation_mode=config.get(
             ClimateSchema.CONF_OPERATION_MODE_ADDRESS
         ),
@@ -164,7 +164,7 @@ def _create_climate(xknx: XKNX, config: ConfigType) -> XknxClimate:
 
     return XknxClimate(
         xknx,
-        name=config[CONF_NAME],
+        name=config.get(CONF_NAME, ""),
         group_address_temperature=config[ClimateSchema.CONF_TEMPERATURE_ADDRESS],
         group_address_target_temperature=config.get(
             ClimateSchema.CONF_TARGET_TEMPERATURE_ADDRESS
@@ -647,9 +647,17 @@ class KnxYamlClimate(_KnxClimate, KnxYamlEntity):
 
     def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize of a KNX climate device."""
+        self._device = _create_climate_yaml(knx_module.xknx, config)
         super().__init__(
             knx_module=knx_module,
-            device=_create_climate(knx_module.xknx, config),
+            unique_id=(
+                f"{self._device.temperature.group_address_state}_"
+                f"{self._device.target_temperature.group_address_state}_"
+                f"{self._device.target_temperature.group_address}_"
+                f"{self._device._setpoint_shift.group_address}"  # noqa: SLF001
+            ),
+            name=config.get(CONF_NAME),
+            entity_category=config.get(CONF_ENTITY_CATEGORY),
         )
         default_hvac_mode: HVACMode = config[ClimateConf.DEFAULT_CONTROLLER_MODE]
         fan_max_step = config[ClimateConf.FAN_MAX_STEP]
@@ -659,14 +667,6 @@ class KnxYamlClimate(_KnxClimate, KnxYamlEntity):
             default_hvac_mode=default_hvac_mode,
             fan_max_step=fan_max_step,
             fan_zero_mode=fan_zero_mode,
-        )
-
-        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
-        self._attr_unique_id = (
-            f"{self._device.temperature.group_address_state}_"
-            f"{self._device.target_temperature.group_address_state}_"
-            f"{self._device.target_temperature.group_address}_"
-            f"{self._device._setpoint_shift.group_address}"  # noqa: SLF001
         )
 
 

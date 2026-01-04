@@ -191,36 +191,34 @@ class KnxYamlCover(_KnxCover, KnxYamlEntity):
 
     def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize the cover."""
+        self._device = XknxCover(
+            xknx=knx_module.xknx,
+            name=config.get(CONF_NAME, ""),
+            group_address_long=config.get(CoverSchema.CONF_MOVE_LONG_ADDRESS),
+            group_address_short=config.get(CoverSchema.CONF_MOVE_SHORT_ADDRESS),
+            group_address_stop=config.get(CoverSchema.CONF_STOP_ADDRESS),
+            group_address_position_state=config.get(
+                CoverSchema.CONF_POSITION_STATE_ADDRESS
+            ),
+            group_address_angle=config.get(CoverSchema.CONF_ANGLE_ADDRESS),
+            group_address_angle_state=config.get(CoverSchema.CONF_ANGLE_STATE_ADDRESS),
+            group_address_position=config.get(CoverSchema.CONF_POSITION_ADDRESS),
+            travel_time_down=config[CoverConf.TRAVELLING_TIME_DOWN],
+            travel_time_up=config[CoverConf.TRAVELLING_TIME_UP],
+            invert_updown=config[CoverConf.INVERT_UPDOWN],
+            invert_position=config[CoverConf.INVERT_POSITION],
+            invert_angle=config[CoverConf.INVERT_ANGLE],
+        )
         super().__init__(
             knx_module=knx_module,
-            device=XknxCover(
-                xknx=knx_module.xknx,
-                name=config[CONF_NAME],
-                group_address_long=config.get(CoverSchema.CONF_MOVE_LONG_ADDRESS),
-                group_address_short=config.get(CoverSchema.CONF_MOVE_SHORT_ADDRESS),
-                group_address_stop=config.get(CoverSchema.CONF_STOP_ADDRESS),
-                group_address_position_state=config.get(
-                    CoverSchema.CONF_POSITION_STATE_ADDRESS
-                ),
-                group_address_angle=config.get(CoverSchema.CONF_ANGLE_ADDRESS),
-                group_address_angle_state=config.get(
-                    CoverSchema.CONF_ANGLE_STATE_ADDRESS
-                ),
-                group_address_position=config.get(CoverSchema.CONF_POSITION_ADDRESS),
-                travel_time_down=config[CoverConf.TRAVELLING_TIME_DOWN],
-                travel_time_up=config[CoverConf.TRAVELLING_TIME_UP],
-                invert_updown=config[CoverConf.INVERT_UPDOWN],
-                invert_position=config[CoverConf.INVERT_POSITION],
-                invert_angle=config[CoverConf.INVERT_ANGLE],
+            unique_id=(
+                f"{self._device.updown.group_address}_"
+                f"{self._device.position_target.group_address}"
             ),
+            name=config.get(CONF_NAME),
+            entity_category=config.get(CONF_ENTITY_CATEGORY),
         )
         self.init_base()
-
-        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
-        self._attr_unique_id = (
-            f"{self._device.updown.group_address}_"
-            f"{self._device.position_target.group_address}"
-        )
         if custom_device_class := config.get(CONF_DEVICE_CLASS):
             self._attr_device_class = custom_device_class
 

@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any
 
 from xknx.devices import Device as XknxDevice
 
-from homeassistant.const import CONF_ENTITY_CATEGORY, EntityCategory
+from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, EntityCategory
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import EntityPlatform
@@ -52,13 +52,10 @@ class _KnxEntityBase(Entity):
     """Representation of a KNX entity."""
 
     _attr_should_poll = False
+
+    _attr_unique_id: str
     _knx_module: KNXModule
     _device: XknxDevice
-
-    @property
-    def name(self) -> str:
-        """Return the name of the KNX device."""
-        return self._device.name
 
     @property
     def available(self) -> bool:
@@ -100,16 +97,23 @@ class _KnxEntityBase(Entity):
 class KnxYamlEntity(_KnxEntityBase):
     """Representation of a KNX entity configured from YAML."""
 
-    def __init__(self, knx_module: KNXModule, device: XknxDevice) -> None:
+    def __init__(
+        self,
+        knx_module: KNXModule,
+        unique_id: str,
+        name: str | None,
+        entity_category: EntityCategory | None,
+    ) -> None:
         """Initialize the YAML entity."""
         self._knx_module = knx_module
-        self._device = device
+        self._attr_name = name
+        self._attr_unique_id = unique_id
+        self._attr_entity_category = entity_category
 
 
 class KnxUiEntity(_KnxEntityBase):
     """Representation of a KNX UI entity."""
 
-    _attr_unique_id: str
     _attr_has_entity_name = True
 
     def __init__(
@@ -117,6 +121,8 @@ class KnxUiEntity(_KnxEntityBase):
     ) -> None:
         """Initialize the UI entity."""
         self._knx_module = knx_module
+
+        self._attr_name = entity_config[CONF_NAME]
         self._attr_unique_id = unique_id
         if entity_category := entity_config.get(CONF_ENTITY_CATEGORY):
             self._attr_entity_category = EntityCategory(entity_category)
