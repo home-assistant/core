@@ -112,10 +112,11 @@ class ZoneState:
 
     zone_id: int
     name: str
-    is_open: bool
+    open: bool
     bypassed: bool | None = None
     trouble: bool | None = None
     zone_type: str | None = None
+    definition: str | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -137,8 +138,8 @@ class FakeHub:
                 serial="1234",
             ),
             zones=[
-                ZoneState(zone_id=1, name="Front Door", is_open=True, zone_type="door"),
-                ZoneState(zone_id=2, name="Garage", is_open=False),
+                ZoneState(zone_id=1, name="Front Door", open=True, zone_type="door"),
+                ZoneState(zone_id=2, name="Garage", open=False),
             ],
         )
         self.is_ready = True
@@ -222,7 +223,7 @@ async def test_zone_entities_and_updates(hass: HomeAssistant) -> None:
         if entry.unique_id == "aa:bb:cc:dd:ee:ff_zone_1"
     )
 
-    updated = replace(hub.snapshot.zones[0], is_open=False)
+    updated = replace(hub.snapshot.zones[0], open=False)
     hub.snapshot = replace(
         hub.snapshot, zones=[updated, hub.snapshot.zones[1]]
     )
@@ -232,3 +233,73 @@ async def test_zone_entities_and_updates(hass: HomeAssistant) -> None:
     state = hass.states.get(zone_1.entity_id)
     assert state is not None
     assert state.state == "off"
+
+
+async def test_zone_entities_skip_undefined_definition(hass: HomeAssistant) -> None:
+    """Test zones with definition UNDEFINED are skipped."""
+    hub = FakeHub()
+    hub.snapshot = replace(
+        hub.snapshot,
+        zones=[
+            ZoneState(
+                zone_id=1,
+                name="Configured",
+                open=True,
+                definition="BURG PERIM INST",
+            ),
+            ZoneState(
+                zone_id=2,
+                name="Unused",
+                open=False,
+                definition="UNDEFINED",
+            ),
+        ],
+    )
+    hub.async_start = AsyncMock()
+    hub.async_stop = AsyncMock()
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.60",
+            CONF_PORT: 2101,
+            CONF_LINK_KEYS_JSON: {
+                "tempkey_hex": "tk",
+                "linkkey_hex": "lk",
+                "linkhmac_hex": "lh",
+            },
+            CONF_INTEGRATION_SERIAL: "112233445566",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.elke27.Elke27Hub", return_value=hub
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    registry = er.async_get(hass)
+    unique_ids = {
+        entry.unique_id
+        for entry in registry.entities.values()
+        if entry.domain == "binary_sensor"
+    }
+    assert unique_ids == {"aa:bb:cc:dd:ee:ff_zone_1"}
+
+    hub.snapshot = replace(
+        hub.snapshot,
+        zones=[
+            hub.snapshot.zones[0],
+            replace(hub.snapshot.zones[1], open=True),
+        ],
+    )
+    hub.fire_update()
+    await hass.async_block_till_done()
+
+    unique_ids_after = {
+        entry.unique_id
+        for entry in registry.entities.values()
+        if entry.domain == "binary_sensor"
+    }
+    assert unique_ids_after == {"aa:bb:cc:dd:ee:ff_zone_1"}

@@ -42,8 +42,25 @@ async def async_setup_entry(
             _LOGGER.debug("No zones available for entity creation")
             return
         for zone in zones:
+            definition = (
+                zone.get("definition")
+                if isinstance(zone, Mapping)
+                else getattr(zone, "definition", None)
+            )
             zone_id = getattr(zone, "zone_id", None)
             if not isinstance(zone_id, int):
+                continue
+            if definition == "UNDEFINED":
+                zone_name = (
+                    zone.get("name")
+                    if isinstance(zone, Mapping)
+                    else getattr(zone, "name", None)
+                )
+                _LOGGER.debug(
+                    "Skipping zone entity %s (%s): definition=UNDEFINED",
+                    zone_id,
+                    zone_name,
+                )
                 continue
             if zone_id in known_ids:
                 continue
