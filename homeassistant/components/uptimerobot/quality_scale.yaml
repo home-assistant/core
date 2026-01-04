@@ -57,9 +57,7 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
-  dynamic-devices:
-    status: todo
-    comment: create entities on runtime instead of triggering a reload
+  dynamic-devices: done
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default:
@@ -68,9 +66,7 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow:
-    status: todo
-    comment: handle API key change/update
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: no known use cases for repair issues or flows, yet

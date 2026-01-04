@@ -110,9 +110,7 @@ SUNDAY_WEEKDAY = 6
 DAYS_IN_WEEK = 7
 
 
-def execute(
-    qry: Query, to_native: bool = False, validate_entity_ids: bool = True
-) -> list[Row]:
+def execute(qry: Query) -> list[Row]:
     """Query the database and convert the objects to HA native form.
 
     This method also retries a few times in the case of stale connections.
@@ -122,33 +120,15 @@ def execute(
         try:
             if debug:
                 timer_start = time.perf_counter()
-
-            if to_native:
-                result = [
-                    row
-                    for row in (
-                        row.to_native(validate_entity_id=validate_entity_ids)
-                        for row in qry
-                    )
-                    if row is not None
-                ]
-            else:
-                result = qry.all()
+            result = qry.all()
 
             if debug:
                 elapsed = time.perf_counter() - timer_start
-                if to_native:
-                    _LOGGER.debug(
-                        "converting %d rows to native objects took %fs",
-                        len(result),
-                        elapsed,
-                    )
-                else:
-                    _LOGGER.debug(
-                        "querying %d rows took %fs",
-                        len(result),
-                        elapsed,
-                    )
+                _LOGGER.debug(
+                    "querying %d rows took %fs",
+                    len(result),
+                    elapsed,
+                )
 
         except SQLAlchemyError as err:
             _LOGGER.error("Error executing query: %s", err)

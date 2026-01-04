@@ -1,9 +1,10 @@
 """Tests for the lifx integration config flow."""
 
+from collections.abc import Generator
 from ipaddress import ip_address
 import socket
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -42,6 +43,15 @@ from . import (
 )
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture(autouse=True)
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.lifx.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
 
 
 async def test_discovery(hass: HomeAssistant) -> None:
@@ -143,7 +153,11 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant) -> No
     )
     config_entry.add_to_hass(hass)
 
-    with _patch_discovery(), _patch_config_flow_try_connect(no_device=True):
+    with (
+        _patch_device(),
+        _patch_discovery(),
+        _patch_config_flow_try_connect(no_device=True),
+    ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -587,6 +601,7 @@ async def test_refuse_relays(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
+@pytest.mark.parametrize("mock_setup_entry", [None])  # Disable the autouse fixture
 async def test_suggested_area(
     hass: HomeAssistant,
     area_registry: ar.AreaRegistry,

@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 import logging
+from random import uniform
 from time import time
 from typing import Any
 
@@ -25,7 +26,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -34,6 +35,7 @@ from .const import (
     BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL,
     CONF_BC_ONLY,
     CONF_BC_PORT,
+    CONF_FIRMWARE_CHECK_TIME,
     CONF_SUPPORTS_PRIVACY_MODE,
     CONF_USE_HTTPS,
     DOMAIN,
@@ -58,7 +60,8 @@ PLATFORMS = [
     Platform.SWITCH,
     Platform.UPDATE,
 ]
-DEVICE_UPDATE_INTERVAL = timedelta(seconds=60)
+DEVICE_UPDATE_INTERVAL_MIN = timedelta(seconds=60)
+DEVICE_UPDATE_INTERVAL_PER_CAM = timedelta(seconds=10)
 FIRMWARE_UPDATE_INTERVAL = timedelta(hours=24)
 NUM_CRED_ERRORS = 3
 
@@ -137,9 +140,12 @@ async def async_setup_entry(
         }
         hass.config_entries.async_update_entry(config_entry, data=data)
 
+    min_timeout = host.api.timeout * (RETRY_ATTEMPTS + 2)
+    update_timeout = max(min_timeout, min_timeout * host.api.num_cameras / 10)
+
     async def async_device_config_update() -> None:
         """Update the host state cache and renew the ONVIF-subscription."""
-        async with asyncio.timeout(host.api.timeout * (RETRY_ATTEMPTS + 2)):
+        async with asyncio.timeout(update_timeout):
             try:
                 await host.update_states()
             except CredentialsInvalidError as err:
@@ -156,7 +162,7 @@ async def async_setup_entry(
 
         host.credential_errors = 0
 
-        async with asyncio.timeout(host.api.timeout * (RETRY_ATTEMPTS + 2)):
+        async with asyncio.timeout(min_timeout):
             await host.renew()
 
         if host.api.new_devices and config_entry.state == ConfigEntryState.LOADED:
@@ -171,7 +177,7 @@ async def async_setup_entry(
 
     async def async_check_firmware_update() -> None:
         """Check for firmware updates."""
-        async with asyncio.timeout(host.api.timeout * (RETRY_ATTEMPTS + 2)):
+        async with asyncio.timeout(min_timeout):
             try:
                 await host.api.check_new_firmware(host.firmware_ch_list)
             except ReolinkError as err:
@@ -197,7 +203,10 @@ async def async_setup_entry(
         config_entry=config_entry,
         name=f"reolink.{host.api.nvr_name}",
         update_method=async_device_config_update,
-        update_interval=DEVICE_UPDATE_INTERVAL,
+        update_interval=max(
+            DEVICE_UPDATE_INTERVAL_MIN,
+            DEVICE_UPDATE_INTERVAL_PER_CAM * host.api.num_cameras,
+        ),
     )
     firmware_coordinator = DataUpdateCoordinator(
         hass,
@@ -205,15 +214,41 @@ async def async_setup_entry(
         config_entry=config_entry,
         name=f"reolink.{host.api.nvr_name}.firmware",
         update_method=async_check_firmware_update,
-        update_interval=FIRMWARE_UPDATE_INTERVAL,
+        update_interval=None,  # Do not fetch data automatically, resume 24h schedule
     )
 
+    async def first_firmware_check(*args: Any) -> None:
+        """Start first firmware check delayed to continue 24h schedule."""
+        firmware_coordinator.update_interval = FIRMWARE_UPDATE_INTERVAL
+        await firmware_coordinator.async_refresh()
+        host.cancel_first_firmware_check = None
+
+    # get update time from config entry
+    check_time_sec = config_entry.data.get(CONF_FIRMWARE_CHECK_TIME)
+    if check_time_sec is None:
+        check_time_sec = uniform(0, 86400)
+        data = {
+            **config_entry.data,
+            CONF_FIRMWARE_CHECK_TIME: check_time_sec,
+        }
+        hass.config_entries.async_update_entry(config_entry, data=data)
+
     # If camera WAN blocked, firmware check fails and takes long, do not prevent setup
-    config_entry.async_create_background_task(
-        hass,
-        firmware_coordinator.async_refresh(),
-        f"Reolink firmware check {config_entry.entry_id}",
+    now = datetime.now(UTC)
+    check_time = timedelta(seconds=check_time_sec)
+    delta_midnight = now - now.replace(hour=0, minute=0, second=0, microsecond=0)
+    firmware_check_delay = check_time - delta_midnight
+    if firmware_check_delay < timedelta(0):
+        firmware_check_delay += timedelta(days=1)
+    _LOGGER.debug(
+        "Scheduling first Reolink %s firmware check in %s",
+        host.api.nvr_name,
+        firmware_check_delay,
     )
+    host.cancel_first_firmware_check = async_call_later(
+        hass, firmware_check_delay, first_firmware_check
+    )
+
     # Fetch initial data so we have data when entities subscribe
     try:
         await device_coordinator.async_config_entry_first_refresh()
@@ -305,6 +340,8 @@ async def async_unload_entry(
             host.api.baichuan.unregister_callback(f"camera_{channel}_wake")
     if host.cancel_refresh_privacy_mode is not None:
         host.cancel_refresh_privacy_mode()
+    if host.cancel_first_firmware_check is not None:
+        host.cancel_first_firmware_check()
 
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
@@ -322,7 +359,7 @@ async def async_remove_config_entry_device(
 ) -> bool:
     """Remove a device from a config entry."""
     host: ReolinkHost = config_entry.runtime_data.host
-    (device_uid, ch, is_chime) = get_device_uid_and_ch(device, host)
+    (_device_uid, ch, is_chime) = get_device_uid_and_ch(device, host)
 
     if is_chime:
         await host.api.get_state(cmd="GetDingDongList")
@@ -431,7 +468,9 @@ def migrate_entity_ids(
         if (DOMAIN, host.unique_id) in device.identifiers:
             remove_ids = True  # NVR/Hub in identifiers, keep that one, remove others
         for old_id in device.identifiers:
-            (old_device_uid, old_ch, old_is_chime) = get_device_uid_and_ch(old_id, host)
+            (old_device_uid, _old_ch, _old_is_chime) = get_device_uid_and_ch(
+                old_id, host
+            )
             if (
                 not old_device_uid
                 or old_device_uid[0] != host.unique_id
@@ -495,16 +534,6 @@ def migrate_entity_ids(
     entity_reg = er.async_get(hass)
     entities = er.async_entries_for_config_entry(entity_reg, config_entry_id)
     for entity in entities:
-        # Can be removed in HA 2025.1.0
-        if entity.domain == "update" and entity.unique_id in [
-            host.unique_id,
-            format_mac(host.api.mac_address),
-        ]:
-            entity_reg.async_update_entity(
-                entity.entity_id, new_unique_id=f"{host.unique_id}_firmware"
-            )
-            continue
-
         if host.api.supported(None, "UID") and not entity.unique_id.startswith(
             host.unique_id
         ):

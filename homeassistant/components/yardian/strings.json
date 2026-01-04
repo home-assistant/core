@@ -1,35 +1,51 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "access_token": "[%key:common::config_flow::data::access_token%]"
-        },
-        "data_description": {
-          "host": "Hostname or IP address of your Yardian Smart Sprinkler Controller. You can find it in the Yardian app."
-        }
-      }
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    "step": {
+      "user": {
+        "data": {
+          "access_token": "[%key:common::config_flow::data::access_token%]",
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of your Yardian Smart Sprinkler Controller. You can find it in the Yardian app."
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "freeze_prevent": {
+        "name": "Freeze prevent"
+      },
+      "standby": {
+        "name": "Standby"
+      },
+      "watering_running": {
+        "name": "Watering running"
+      },
+      "zone_enabled": {
+        "name": "Zone {zone} enabled"
+      }
     }
   },
   "services": {
     "start_irrigation": {
-      "name": "Start irrigation",
       "description": "Starts the irrigation.",
       "fields": {
         "duration": {
-          "name": "Duration",
-          "description": "Duration for the target to be turned on."
+          "description": "Duration for the target to be turned on.",
+          "name": "Duration"
         }
-      }
+      },
+      "name": "Start irrigation"
     }
   }
 }

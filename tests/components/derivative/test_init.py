@@ -5,7 +5,6 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import derivative
-from homeassistant.components.derivative.config_flow import ConfigFlowHandler
 from homeassistant.components.derivative.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import Event, HomeAssistant, callback
@@ -13,69 +12,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
 
 from tests.common import MockConfigEntry
-
-
-@pytest.fixture
-def sensor_config_entry(hass: HomeAssistant) -> er.RegistryEntry:
-    """Fixture to create a sensor config entry."""
-    sensor_config_entry = MockConfigEntry()
-    sensor_config_entry.add_to_hass(hass)
-    return sensor_config_entry
-
-
-@pytest.fixture
-def sensor_device(
-    device_registry: dr.DeviceRegistry, sensor_config_entry: ConfigEntry
-) -> dr.DeviceEntry:
-    """Fixture to create a sensor device."""
-    return device_registry.async_get_or_create(
-        config_entry_id=sensor_config_entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
-    )
-
-
-@pytest.fixture
-def sensor_entity_entry(
-    entity_registry: er.EntityRegistry,
-    sensor_config_entry: ConfigEntry,
-    sensor_device: dr.DeviceEntry,
-) -> er.RegistryEntry:
-    """Fixture to create a sensor entity entry."""
-    return entity_registry.async_get_or_create(
-        "sensor",
-        "test",
-        "unique",
-        config_entry=sensor_config_entry,
-        device_id=sensor_device.id,
-        original_name="ABC",
-    )
-
-
-@pytest.fixture
-def derivative_config_entry(
-    hass: HomeAssistant,
-    sensor_entity_entry: er.RegistryEntry,
-) -> MockConfigEntry:
-    """Fixture to create a derivative config entry."""
-    config_entry = MockConfigEntry(
-        data={},
-        domain=DOMAIN,
-        options={
-            "name": "My derivative",
-            "round": 1.0,
-            "source": sensor_entity_entry.entity_id,
-            "time_window": {"seconds": 0.0},
-            "unit_prefix": "k",
-            "unit_time": "min",
-        },
-        title="My derivative",
-        version=ConfigFlowHandler.VERSION,
-        minor_version=ConfigFlowHandler.MINOR_VERSION,
-    )
-
-    config_entry.add_to_hass(hass)
-
-    return config_entry
 
 
 def track_entity_registry_actions(hass: HomeAssistant, entity_id: str) -> list[str]:
@@ -100,7 +36,9 @@ async def test_setup_and_remove_config_entry(
     input_sensor_entity_id = "sensor.input"
     derivative_entity_id = "sensor.my_derivative"
 
-    hass.states.async_set(input_sensor_entity_id, "10.0", {})
+    hass.states.async_set(
+        input_sensor_entity_id, "10.0", {"unit_of_measurement": "dog"}
+    )
     await hass.async_block_till_done()
 
     # Setup the config entry
@@ -127,7 +65,7 @@ async def test_setup_and_remove_config_entry(
     # Check the platform is setup correctly
     state = hass.states.get(derivative_entity_id)
     assert state.state == "0.0"
-    assert "unit_of_measurement" not in state.attributes
+    assert state.attributes["unit_of_measurement"] == "kdog/min"
     assert state.attributes["source"] == "sensor.input"
 
     hass.states.async_set(input_sensor_entity_id, 10, {"unit_of_measurement": "dog"})

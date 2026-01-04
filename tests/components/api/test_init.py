@@ -338,7 +338,7 @@ async def test_api_get_services(
     assert data == snapshot
 
     # Set up an integration with legacy translations in services.yaml
-    def _load_services_file(hass: HomeAssistant, integration: Integration) -> JSON_TYPE:
+    def _load_services_file(integration: Integration) -> JSON_TYPE:
         return {
             "set_default_level": {
                 "description": "Translated description",
@@ -374,10 +374,6 @@ async def test_api_get_services(
         patch(
             "homeassistant.helpers.service._load_services_file",
             side_effect=_load_services_file,
-        ),
-        patch(
-            "homeassistant.helpers.service.translation.async_get_translations",
-            return_value={},
         ),
     ):
         resp = await mock_api_client.get(const.URL_API_SERVICES)

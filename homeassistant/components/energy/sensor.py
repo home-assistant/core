@@ -16,7 +16,9 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.components.sensor.recorder import reset_detected
+from homeassistant.components.sensor.recorder import (  # pylint: disable=hass-component-root-import
+    reset_detected,
+)
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, UnitOfEnergy, UnitOfVolume
 from homeassistant.core import (
     HomeAssistant,
@@ -78,7 +80,7 @@ class SourceAdapter:
     """Adapter to allow sources and their flows to be used as sensors."""
 
     source_type: Literal["grid", "gas", "water"]
-    flow_type: Literal["flow_from", "flow_to", None]
+    flow_type: Literal["flow_from", "flow_to"] | None
     stat_energy_key: Literal["stat_energy_from", "stat_energy_to"]
     total_money_key: Literal["stat_cost", "stat_compensation"]
     name_suffix: str

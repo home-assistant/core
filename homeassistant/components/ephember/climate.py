@@ -3,14 +3,15 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from enum import IntEnum
 import logging
 from typing import Any
 
 from pyephember2.pyephember2 import (
     EphEmber,
     ZoneMode,
+    boiler_state,
     zone_current_temperature,
-    zone_is_active,
     zone_is_hotwater,
     zone_mode,
     zone_name,
@@ -52,6 +53,15 @@ EPH_TO_HA_STATE = {
     "ON": HVACMode.HEAT,
     "OFF": HVACMode.OFF,
 }
+
+
+class EPHBoilerStates(IntEnum):
+    """Boiler states for a zone given by the api."""
+
+    FIXME = 0
+    OFF = 1
+    ON = 2
+
 
 HA_STATE_TO_EPH = {value: key for key, value in EPH_TO_HA_STATE.items()}
 
@@ -123,7 +133,7 @@ class EphEmberThermostat(ClimateEntity):
     @property
     def hvac_action(self) -> HVACAction:
         """Return current HVAC action."""
-        if zone_is_active(self._zone):
+        if boiler_state(self._zone) == EPHBoilerStates.ON:
             return HVACAction.HEATING
 
         return HVACAction.IDLE

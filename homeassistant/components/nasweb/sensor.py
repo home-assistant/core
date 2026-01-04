@@ -6,6 +6,13 @@ import logging
 import time
 
 from webio_api import Input as NASwebInput, TempSensor
+from webio_api.const import (
+    STATE_INPUT_ACTIVE,
+    STATE_INPUT_NORMAL,
+    STATE_INPUT_PROBLEM,
+    STATE_INPUT_TAMPER,
+    STATE_INPUT_UNDEFINED,
+)
 
 from homeassistant.components.sensor import (
     DOMAIN as DOMAIN_SENSOR,
@@ -28,11 +35,6 @@ from . import NASwebConfigEntry
 from .const import DOMAIN, KEY_TEMP_SENSOR, STATUS_UPDATE_MAX_TIME_INTERVAL
 
 SENSOR_INPUT_TRANSLATION_KEY = "sensor_input"
-STATE_UNDEFINED = "undefined"
-STATE_TAMPER = "tamper"
-STATE_ACTIVE = "active"
-STATE_NORMAL = "normal"
-STATE_PROBLEM = "problem"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -122,11 +124,11 @@ class InputStateSensor(BaseSensorEntity):
 
     _attr_device_class = SensorDeviceClass.ENUM
     _attr_options: list[str] = [
-        STATE_UNDEFINED,
-        STATE_TAMPER,
-        STATE_ACTIVE,
-        STATE_NORMAL,
-        STATE_PROBLEM,
+        STATE_INPUT_ACTIVE,
+        STATE_INPUT_NORMAL,
+        STATE_INPUT_PROBLEM,
+        STATE_INPUT_TAMPER,
+        STATE_INPUT_UNDEFINED,
     ]
     _attr_translation_key = SENSOR_INPUT_TRANSLATION_KEY
 

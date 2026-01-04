@@ -1,8 +1,8 @@
 {
   "services": {
     "reload": {
-      "name": "[%key:common::action::reload%]",
-      "description": "Reloads REST entities from the YAML-configuration."
+      "description": "Reloads REST entities from the YAML-configuration.",
+      "name": "[%key:common::action::reload%]"
     }
   }
 }

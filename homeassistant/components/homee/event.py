@@ -1,7 +1,7 @@
 """The homee event platform."""
 
 from pyHomee.const import AttributeType, NodeProfile
-from pyHomee.model import HomeeAttribute
+from pyHomee.model import HomeeAttribute, HomeeNode
 
 from homeassistant.components.event import (
     EventDeviceClass,
@@ -13,6 +13,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import HomeeConfigEntry
 from .entity import HomeeEntity
+from .helpers import setup_homee_platform
 
 PARALLEL_UPDATES = 0
 
@@ -49,6 +50,22 @@ EVENT_DESCRIPTIONS: dict[AttributeType, EventEntityDescription] = {
 }
 
 
+async def add_event_entities(
+    config_entry: HomeeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    nodes: list[HomeeNode],
+) -> None:
+    """Add homee event entities."""
+    async_add_entities(
+        HomeeEvent(attribute, config_entry, EVENT_DESCRIPTIONS[attribute.type])
+        for node in nodes
+        for attribute in node.attributes
+        if attribute.type in EVENT_DESCRIPTIONS
+        and node.profile in REMOTE_PROFILES
+        and not attribute.editable
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: HomeeConfigEntry,
@@ -56,14 +73,7 @@ async def async_setup_entry(
 ) -> None:
     """Add event entities for homee."""
 
-    async_add_entities(
-        HomeeEvent(attribute, config_entry, EVENT_DESCRIPTIONS[attribute.type])
-        for node in config_entry.runtime_data.nodes
-        for attribute in node.attributes
-        if attribute.type in EVENT_DESCRIPTIONS
-        and node.profile in REMOTE_PROFILES
-        and not attribute.editable
-    )
+    await setup_homee_platform(add_event_entities, async_add_entities, config_entry)
 
 
 class HomeeEvent(HomeeEntity, EventEntity):

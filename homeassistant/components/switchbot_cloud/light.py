@@ -4,6 +4,7 @@ import asyncio
 from typing import Any
 
 from switchbot_api import (
+    CeilingLightCommands,
     CommonCommands,
     Device,
     Remote,
@@ -27,6 +28,11 @@ def value_map_brightness(value: int) -> int:
     return int(value / 255 * 100)
 
 
+def brightness_map_value(value: int) -> int:
+    """Return brightness from map value."""
+    return int(value * 255 / 100)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config: ConfigEntry,
@@ -48,17 +54,28 @@ class SwitchBotCloudLight(SwitchBotCloudEntity, LightEntity):
 
     _attr_color_mode = ColorMode.UNKNOWN
 
+    def _get_default_color_mode(self) -> ColorMode:
+        """Return the default color mode."""
+        if not self.supported_color_modes:
+            return ColorMode.UNKNOWN
+        if ColorMode.RGB in self.supported_color_modes:
+            return ColorMode.RGB
+        if ColorMode.COLOR_TEMP in self.supported_color_modes:
+            return ColorMode.COLOR_TEMP
+        return ColorMode.UNKNOWN
+
     def _set_attributes(self) -> None:
         """Set attributes from coordinator data."""
         if self.coordinator.data is None:
             return
-
         power: str | None = self.coordinator.data.get("power")
         brightness: int | None = self.coordinator.data.get("brightness")
         color: str | None = self.coordinator.data.get("color")
         color_temperature: int | None = self.coordinator.data.get("colorTemperature")
         self._attr_is_on = power == "on" if power else None
-        self._attr_brightness: int | None = brightness if brightness else None
+        self._attr_brightness: int | None = (
+            brightness_map_value(brightness) if brightness else None
+        )
         self._attr_rgb_color: tuple | None = (
             (tuple(int(i) for i in color.split(":"))) if color else None
         )
@@ -77,8 +94,9 @@ class SwitchBotCloudLight(SwitchBotCloudEntity, LightEntity):
         brightness: int | None = kwargs.get("brightness")
         rgb_color: tuple[int, int, int] | None = kwargs.get("rgb_color")
         color_temp_kelvin: int | None = kwargs.get("color_temp_kelvin")
+
         if brightness is not None:
-            self._attr_color_mode = ColorMode.RGB
+            self._attr_color_mode = self._get_default_color_mode()
             await self._send_brightness_command(brightness)
         elif rgb_color is not None:
             self._attr_color_mode = ColorMode.RGB
@@ -87,7 +105,7 @@ class SwitchBotCloudLight(SwitchBotCloudEntity, LightEntity):
             self._attr_color_mode = ColorMode.COLOR_TEMP
             await self._send_color_temperature_command(color_temp_kelvin)
         else:
-            self._attr_color_mode = ColorMode.RGB
+            self._attr_color_mode = self._get_default_color_mode()
             await self.send_api_command(CommonCommands.ON)
         await asyncio.sleep(AFTER_COMMAND_REFRESH)
         await self.coordinator.async_request_refresh()
@@ -143,11 +161,36 @@ class SwitchBotCloudRGBWWLight(SwitchBotCloudLight):
         )
 
 
+class SwitchBotCloudCeilingLight(SwitchBotCloudLight):
+    """Representation of SwitchBot Ceiling Light."""
+
+    _attr_max_color_temp_kelvin = 6500
+    _attr_min_color_temp_kelvin = 2700
+
+    _attr_supported_color_modes = {ColorMode.COLOR_TEMP}
+
+    async def _send_brightness_command(self, brightness: int) -> None:
+        """Send a brightness command."""
+        await self.send_api_command(
+            CeilingLightCommands.SET_BRIGHTNESS,
+            parameters=str(value_map_brightness(brightness)),
+        )
+
+    async def _send_color_temperature_command(self, color_temp_kelvin: int) -> None:
+        """Send a color temperature command."""
+        await self.send_api_command(
+            CeilingLightCommands.SET_COLOR_TEMPERATURE,
+            parameters=str(color_temp_kelvin),
+        )
+
+
 @callback
 def _async_make_entity(
     api: SwitchBotAPI, device: Device | Remote, coordinator: SwitchBotCoordinator
-) -> SwitchBotCloudStripLight | SwitchBotCloudRGBWWLight:
+) -> SwitchBotCloudStripLight | SwitchBotCloudRGBWWLight | SwitchBotCloudCeilingLight:
     """Make a SwitchBotCloudLight."""
     if device.device_type == "Strip Light":
         return SwitchBotCloudStripLight(api, device, coordinator)
+    if device.device_type in ["Ceiling Light", "Ceiling Light Pro"]:
+        return SwitchBotCloudCeilingLight(api, device, coordinator)
     return SwitchBotCloudRGBWWLight(api, device, coordinator)

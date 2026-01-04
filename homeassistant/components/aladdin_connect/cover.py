@@ -49,7 +49,9 @@ class AladdinCoverEntity(AladdinConnectEntity, CoverEntity):
     @property
     def is_closed(self) -> bool | None:
         """Update is closed attribute."""
-        return self.coordinator.data.status == "closed"
+        if (status := self.coordinator.data.status) is None:
+            return None
+        return status == "closed"
 
     @property
     def is_closing(self) -> bool | None:

@@ -1445,7 +1445,7 @@ class MqttEntity(
                     },
                     translation_key="deprecated_object_id",
                 )
-            else:
+            elif CONF_DEFAULT_ENTITY_ID not in self._config:
                 if CONF_ORIGIN in self._config:
                     origin_name = self._config[CONF_ORIGIN][CONF_NAME]
                     url = self._config[CONF_ORIGIN].get(CONF_URL)
@@ -1486,6 +1486,7 @@ class MqttEntity(
             entity_registry.async_update_entity(
                 self.entity_id, new_entity_id=self._update_registry_entity_id
             )
+            self._update_registry_entity_id = None
 
         await super().async_added_to_hass()
         self._subscriptions = {}

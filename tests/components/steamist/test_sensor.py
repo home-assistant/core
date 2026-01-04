@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import pytest
+
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
 
@@ -12,6 +14,7 @@ from . import (
 )
 
 
+@pytest.mark.usefixtures("mock_aio_discovery")
 async def test_steam_active(hass: HomeAssistant) -> None:
     """Test that the sensors are setup with the expected values when steam is active."""
     await _async_setup_entry_with_status(hass, MOCK_ASYNC_GET_STATUS_ACTIVE)
@@ -23,6 +26,7 @@ async def test_steam_active(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfTime.MINUTES
 
 
+@pytest.mark.usefixtures("mock_aio_discovery")
 async def test_steam_inactive(hass: HomeAssistant) -> None:
     """Test that the sensors are setup with the expected values when steam is not active."""
     await _async_setup_entry_with_status(hass, MOCK_ASYNC_GET_STATUS_INACTIVE)

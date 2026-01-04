@@ -1,15 +1,14 @@
 {
-  "title": "Times of the Day Sensor",
   "config": {
     "step": {
       "user": {
-        "title": "Create Times of the Day Sensor",
-        "description": "Create a binary sensor that turns on or off depending on the time.",
         "data": {
           "after_time": "On time",
           "before_time": "Off time",
           "name": "[%key:common::config_flow::data::name%]"
-        }
+        },
+        "description": "Create a binary sensor that turns on or off depending on the time.",
+        "title": "Create Times of the Day Sensor"
       }
     }
   },
@@ -22,5 +21,6 @@
         }
       }
     }
-  }
+  },
+  "title": "Times of the Day Sensor"
 }

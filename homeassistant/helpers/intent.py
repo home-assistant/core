@@ -33,6 +33,7 @@ from . import (
     entity_registry,
     floor_registry,
 )
+from .deprecation import EnumWithDeprecatedMembers
 from .typing import VolSchemaType
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,6 +48,7 @@ INTENT_TOGGLE = "HassToggle"
 INTENT_GET_STATE = "HassGetState"
 INTENT_NEVERMIND = "HassNevermind"
 INTENT_SET_POSITION = "HassSetPosition"
+INTENT_STOP_MOVING = "HassStopMoving"
 INTENT_START_TIMER = "HassStartTimer"
 INTENT_CANCEL_TIMER = "HassCancelTimer"
 INTENT_CANCEL_ALL_TIMERS = "HassCancelAllTimers"
@@ -114,6 +116,7 @@ async def async_handle(
     language: str | None = None,
     assistant: str | None = None,
     device_id: str | None = None,
+    satellite_id: str | None = None,
     conversation_agent_id: str | None = None,
 ) -> IntentResponse:
     """Handle an intent."""
@@ -138,6 +141,7 @@ async def async_handle(
         language=language,
         assistant=assistant,
         device_id=device_id,
+        satellite_id=satellite_id,
         conversation_agent_id=conversation_agent_id,
     )
 
@@ -1276,6 +1280,7 @@ class Intent:
         "intent_type",
         "language",
         "platform",
+        "satellite_id",
         "slots",
         "text_input",
     ]
@@ -1291,6 +1296,7 @@ class Intent:
         language: str,
         assistant: str | None = None,
         device_id: str | None = None,
+        satellite_id: str | None = None,
         conversation_agent_id: str | None = None,
     ) -> None:
         """Initialize an intent."""
@@ -1303,6 +1309,7 @@ class Intent:
         self.language = language
         self.assistant = assistant
         self.device_id = device_id
+        self.satellite_id = satellite_id
         self.conversation_agent_id = conversation_agent_id
 
     @callback
@@ -1311,14 +1318,23 @@ class Intent:
         return IntentResponse(language=self.language, intent=self)
 
 
-class IntentResponseType(Enum):
+class IntentResponseType(
+    Enum,
+    metaclass=EnumWithDeprecatedMembers,
+    deprecated={
+        "PARTIAL_ACTION_DONE": (
+            "IntentResponseType.ACTION_DONE or IntentResponseType.ERROR",
+            "2026.3.0",
+        ),
+    },
+):
     """Type of the intent response."""
 
     ACTION_DONE = "action_done"
     """Intent caused an action to occur"""
 
     PARTIAL_ACTION_DONE = "partial_action_done"
-    """Intent caused an action, but it could only be partially done"""
+    """Deprecated. Intent caused an action, but it could only be partially done"""
 
     QUERY_ANSWER = "query_answer"
     """Response is an answer to a query"""

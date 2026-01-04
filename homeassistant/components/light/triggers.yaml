@@ -1,0 +1,60 @@
+.trigger_common: &trigger_common
+  target: &trigger_light_target
+    entity:
+      domain: light
+  fields:
+    behavior: &trigger_behavior
+      required: true
+      default: any
+      selector:
+        select:
+          options:
+            - first
+            - last
+            - any
+          translation_key: trigger_behavior
+
+.number_or_entity: &number_or_entity
+  required: false
+  selector:
+    choose:
+      choices:
+        entity:
+          selector:
+            entity:
+              filter:
+                domain:
+                  - input_number
+                  - number
+                  - sensor
+        number:
+          selector:
+            number:
+              mode: box
+      translation_key: number_or_entity
+
+turned_on: *trigger_common
+turned_off: *trigger_common
+
+brightness_changed:
+  target: *trigger_light_target
+  fields:
+    above: *number_or_entity
+    below: *number_or_entity
+
+brightness_crossed_threshold:
+  target: *trigger_light_target
+  fields:
+    behavior: *trigger_behavior
+    threshold_type:
+      required: true
+      selector:
+        select:
+          options:
+            - above
+            - below
+            - between
+            - outside
+          translation_key: trigger_threshold_type
+    lower_limit: *number_or_entity
+    upper_limit: *number_or_entity

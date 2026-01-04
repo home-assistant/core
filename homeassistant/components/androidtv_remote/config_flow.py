@@ -37,9 +37,14 @@ from .helpers import AndroidTVRemoteConfigEntry, create_api, get_enable_ime
 
 _LOGGER = logging.getLogger(__name__)
 
-APPS_NEW_ID = "NewApp"
+APPS_NEW_ID = "add_new"
 CONF_APP_DELETE = "app_delete"
 CONF_APP_ID = "app_id"
+
+_EXAMPLE_APP_ID = "com.plexapp.android"
+_EXAMPLE_APP_PLAY_STORE_URL = (
+    f"https://play.google.com/store/apps/details?id={_EXAMPLE_APP_ID}"
+)
 
 STEP_PAIR_DATA_SCHEMA = vol.Schema(
     {
@@ -287,7 +292,9 @@ class AndroidTVRemoteOptionsFlowHandler(OptionsFlowWithReload):
                 {
                     vol.Optional(CONF_APPS): SelectSelector(
                         SelectSelectorConfig(
-                            options=apps, mode=SelectSelectorMode.DROPDOWN
+                            options=apps,
+                            mode=SelectSelectorMode.DROPDOWN,
+                            translation_key="apps",
                         )
                     ),
                     vol.Required(
@@ -353,5 +360,7 @@ class AndroidTVRemoteOptionsFlowHandler(OptionsFlowWithReload):
             data_schema=data_schema,
             description_placeholders={
                 "app_id": f"`{app_id}`" if app_id != APPS_NEW_ID else "",
+                "example_app_id": _EXAMPLE_APP_ID,
+                "example_app_play_store_url": _EXAMPLE_APP_PLAY_STORE_URL,
             },
         )

@@ -35,12 +35,6 @@ send_message:
     disable_web_page_preview:
       selector:
         boolean:
-    timeout:
-      selector:
-        number:
-          min: 1
-          max: 3600
-          unit_of_measurement: seconds
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
@@ -66,6 +60,38 @@ send_message:
         number:
           mode: box
 
+send_chat_action:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: telegram_bot
+    chat_action:
+      selector:
+        select:
+          options:
+            - "typing"
+            - "upload_photo"
+            - "record_video"
+            - "upload_video"
+            - "record_voice"
+            - "upload_voice"
+            - "upload_document"
+            - "choose_sticker"
+            - "find_location"
+            - "record_video_note"
+            - "upload_video_note"
+          translation_key: "chat_action"
+    target:
+      example: "[12345, 67890] or 12345"
+      selector:
+        text:
+          multiple: true
+    message_thread_id:
+      selector:
+        number:
+          mode: box
+
 send_photo:
   fields:
     config_entry_id:
@@ -76,6 +102,30 @@ send_photo:
       example: "http://example.org/path/to/the/image.png"
       selector:
         text:
+    url_options:
+      collapsed: true
+      fields:
+        verify_ssl:
+          default: true
+          selector:
+            boolean:
+        authentication:
+          selector:
+            select:
+              options:
+                - "basic"
+                - "digest"
+                - "bearer_token"
+              translation_key: "authentication"
+        username:
+          example: myuser
+          selector:
+            text:
+        password:
+          example: myuser_pwd
+          selector:
+            text:
+              type: password
     file:
       example: "/path/to/the/image.png"
       selector:
@@ -84,23 +134,6 @@ send_photo:
       example: "My image"
       selector:
         text:
-    authentication:
-      selector:
-        select:
-          options:
-            - "basic"
-            - "digest"
-            - "bearer_token"
-          translation_key: "authentication"
-    username:
-      example: myuser
-      selector:
-        text:
-    password:
-      example: myuser_pwd
-      selector:
-        text:
-          type: password
     target:
       example: "[12345, 67890] or 12345"
       selector:
@@ -118,15 +151,6 @@ send_photo:
     disable_notification:
       selector:
         boolean:
-    verify_ssl:
-      selector:
-        boolean:
-    timeout:
-      selector:
-        number:
-          min: 1
-          max: 3600
-          unit_of_measurement: seconds
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
@@ -161,6 +185,30 @@ send_sticker:
       example: "http://example.org/path/to/the/sticker.webp"
       selector:
         text:
+    url_options:
+      collapsed: true
+      fields:
+        verify_ssl:
+          default: true
+          selector:
+            boolean:
+        authentication:
+          selector:
+            select:
+              options:
+                - "basic"
+                - "digest"
+                - "bearer_token"
+              translation_key: "authentication"
+        username:
+          example: myuser
+          selector:
+            text:
+        password:
+          example: myuser_pwd
+          selector:
+            text:
+              type: password
     file:
       example: "/path/to/the/sticker.webp"
       selector:
@@ -169,23 +217,6 @@ send_sticker:
       example: CAACAgIAAxkBAAEDDldhZD-hqWclr6krLq-FWSfCrGNmOQAC9gAD9HsZAAFeYY-ltPYnrCEE
       selector:
         text:
-    authentication:
-      selector:
-        select:
-          options:
-            - "basic"
-            - "digest"
-            - "bearer_token"
-          translation_key: "authentication"
-    username:
-      example: myuser
-      selector:
-        text:
-    password:
-      example: myuser_pwd
-      selector:
-        text:
-          type: password
     target:
       example: "[12345, 67890] or 12345"
       selector:
@@ -194,15 +225,6 @@ send_sticker:
     disable_notification:
       selector:
         boolean:
-    verify_ssl:
-      selector:
-        boolean:
-    timeout:
-      selector:
-        number:
-          min: 1
-          max: 3600
-          unit_of_measurement: seconds
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
@@ -237,6 +259,30 @@ send_animation:
       example: "http://example.org/path/to/the/animation.gif"
       selector:
         text:
+    url_options:
+      collapsed: true
+      fields:
+        verify_ssl:
+          default: true
+          selector:
+            boolean:
+        authentication:
+          selector:
+            select:
+              options:
+                - "basic"
+                - "digest"
+                - "bearer_token"
+              translation_key: "authentication"
+        username:
+          example: myuser
+          selector:
+            text:
+        password:
+          example: myuser_pwd
+          selector:
+            text:
+              type: password
     file:
       example: "/path/to/the/animation.gif"
       selector:
@@ -245,23 +291,6 @@ send_animation:
       example: "My animation"
       selector:
         text:
-    authentication:
-      selector:
-        select:
-          options:
-            - "basic"
-            - "digest"
-            - "bearer_token"
-          translation_key: "authentication"
-    username:
-      example: myuser
-      selector:
-        text:
-    password:
-      example: myuser_pwd
-      selector:
-        text:
-          type: password
     target:
       example: "[12345, 67890] or 12345"
       selector:
@@ -279,15 +308,6 @@ send_animation:
     disable_notification:
       selector:
         boolean:
-    verify_ssl:
-      selector:
-        boolean:
-    timeout:
-      selector:
-        number:
-          min: 1
-          max: 3600
-          unit_of_measurement: seconds
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
@@ -322,6 +342,30 @@ send_video:
       example: "http://example.org/path/to/the/video.mp4"
       selector:
         text:
+    url_options:
+      collapsed: true
+      fields:
+        verify_ssl:
+          default: true
+          selector:
+            boolean:
+        authentication:
+          selector:
+            select:
+              options:
+                - "basic"
+                - "digest"
+                - "bearer_token"
+              translation_key: "authentication"
+        username:
+          example: myuser
+          selector:
+            text:
+        password:
+          example: myuser_pwd
+          selector:
+            text:
+              type: password
     file:
       example: "/path/to/the/video.mp4"
       selector:
@@ -330,23 +374,6 @@ send_video:
       example: "My video"
       selector:
         text:
-    authentication:
-      selector:
-        select:
-          options:
-            - "basic"
-            - "digest"
-            - "bearer_token"
-          translation_key: "authentication"
-    username:
-      example: myuser
-      selector:
-        text:
-    password:
-      example: myuser_pwd
-      selector:
-        text:
-          type: password
     target:
       example: "[12345, 67890] or 12345"
       selector:
@@ -364,15 +391,6 @@ send_video:
     disable_notification:
       selector:
         boolean:
-    verify_ssl:
-      selector:
-        boolean:
-    timeout:
-      selector:
-        number:
-          min: 1
-          max: 3600
-          unit_of_measurement: seconds
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
@@ -407,6 +425,30 @@ send_voice:
       example: "http://example.org/path/to/the/voice.opus"
       selector:
         text:
+    url_options:
+      collapsed: true
+      fields:
+        verify_ssl:
+          default: true
+          selector:
+            boolean:
+        authentication:
+          selector:
+            select:
+              options:
+                - "basic"
+                - "digest"
+                - "bearer_token"
+              translation_key: "authentication"
+        username:
+          example: myuser
+          selector:
+            text:
+        password:
+          example: myuser_pwd
+          selector:
+            text:
+              type: password
     file:
       example: "/path/to/the/voice.opus"
       selector:
@@ -415,23 +457,6 @@ send_voice:
       example: "My microphone recording"
       selector:
         text:
-    authentication:
-      selector:
-        select:
-          options:
-            - "basic"
-            - "digest"
-            - "bearer_token"
-          translation_key: "authentication"
-    username:
-      example: myuser
-      selector:
-        text:
-    password:
-      example: myuser_pwd
-      selector:
-        text:
-          type: password
     target:
       example: "[12345, 67890] or 12345"
       selector:
@@ -440,15 +465,6 @@ send_voice:
     disable_notification:
       selector:
         boolean:
-    verify_ssl:
-      selector:
-        boolean:
-    timeout:
-      selector:
-        number:
-          min: 1
-          max: 3600
-          unit_of_measurement: seconds
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
@@ -483,6 +499,30 @@ send_document:
       example: "http://example.org/path/to/the/document.odf"
       selector:
         text:
+    url_options:
+      collapsed: true
+      fields:
+        verify_ssl:
+          default: true
+          selector:
+            boolean:
+        authentication:
+          selector:
+            select:
+              options:
+                - "basic"
+                - "digest"
+                - "bearer_token"
+              translation_key: "authentication"
+        username:
+          example: myuser
+          selector:
+            text:
+        password:
+          example: myuser_pwd
+          selector:
+            text:
+              type: password
     file:
       example: "/tmp/whatever.odf"
       selector:
@@ -491,23 +531,6 @@ send_document:
       example: Document Title xy
       selector:
         text:
-    authentication:
-      selector:
-        select:
-          options:
-            - "basic"
-            - "digest"
-            - "bearer_token"
-          translation_key: "authentication"
-    username:
-      example: myuser
-      selector:
-        text:
-    password:
-      example: myuser_pwd
-      selector:
-        text:
-          type: password
     target:
       example: "[12345, 67890] or 12345"
       selector:
@@ -525,15 +548,6 @@ send_document:
     disable_notification:
       selector:
         boolean:
-    verify_ssl:
-      selector:
-        boolean:
-    timeout:
-      selector:
-        number:
-          min: 1
-          max: 3600
-          unit_of_measurement: seconds
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
@@ -588,12 +602,6 @@ send_location:
     disable_notification:
       selector:
         boolean:
-    timeout:
-      selector:
-        number:
-          min: 1
-          max: 3600
-          unit_of_measurement: seconds
     keyboard:
       example: '["/command1, /command2", "/command3"]'
       selector:
@@ -634,10 +642,13 @@ send_poll:
       selector:
         text:
     options:
+      example: '["Option 1", "Option 2", "Option 3"]'
       required: true
       selector:
-        object:
+        text:
+          multiple: true
     is_anonymous:
+      default: true
       selector:
         boolean:
     allows_multiple_answers:
@@ -652,16 +663,6 @@ send_poll:
     disable_notification:
       selector:
         boolean:
-    timeout:
-      selector:
-        number:
-          min: 1
-          max: 3600
-          unit_of_measurement: seconds
-    message_tag:
-      example: "msg_to_edit"
-      selector:
-        text:
     reply_to_message_id:
       selector:
         number:
@@ -707,6 +708,75 @@ edit_message:
     disable_web_page_preview:
       selector:
         boolean:
+    inline_keyboard:
+      example:
+        '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"],
+        ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+      selector:
+        object:
+
+edit_message_media:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: telegram_bot
+    message_id:
+      required: true
+      example: "{{ trigger.event.data.message.message_id }}"
+      selector:
+        text:
+    chat_id:
+      required: true
+      example: 12345
+      selector:
+        text:
+    media_type:
+      selector:
+        select:
+          options:
+            - "animation"
+            - "audio"
+            - "document"
+            - "photo"
+            - "video"
+          translation_key: "media_type"
+    url:
+      example: "http://example.org/path/to/the/image.png"
+      selector:
+        text:
+    url_options:
+      collapsed: true
+      fields:
+        verify_ssl:
+          default: true
+          selector:
+            boolean:
+        authentication:
+          selector:
+            select:
+              options:
+                - "basic"
+                - "digest"
+                - "bearer_token"
+              translation_key: "authentication"
+        username:
+          example: myuser
+          selector:
+            text:
+        password:
+          example: myuser_pwd
+          selector:
+            text:
+              type: password
+    file:
+      example: "/path/to/the/image.png"
+      selector:
+        text:
+    caption:
+      example: Document Title xy
+      selector:
+        text:
     inline_keyboard:
       example:
         '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"],
@@ -786,12 +856,6 @@ answer_callback_query:
       required: true
       selector:
         boolean:
-    timeout:
-      selector:
-        number:
-          min: 1
-          max: 3600
-          unit_of_measurement: seconds
 
 delete_message:
   fields:
@@ -847,3 +911,25 @@ set_message_reaction:
       required: false
       selector:
         boolean:
+
+download_file:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: telegram_bot
+    file_id:
+      required: true
+      example: "ABCD1234Efgh5678Ijkl90mnopQRStuvwx"
+      selector:
+        text:
+    directory_path:
+      required: false
+      default: "/config/telegram_bot"
+      selector:
+        text:
+    file_name:
+      required: false
+      example: "my_downloaded_file"
+      selector:
+        text:

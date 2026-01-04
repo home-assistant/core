@@ -174,7 +174,7 @@ def test_sending_insecure_files_fails(
         patch("email.utils.make_msgid", return_value=sample_email),
         pytest.raises(ServiceValidationError) as exc,
     ):
-        result, _ = message.send_message(message_data, data=data)
+        _result, _ = message.send_message(message_data, data=data)
     assert exc.value.translation_key == "remote_path_not_allowed"
     assert exc.value.translation_domain == DOMAIN
     assert (

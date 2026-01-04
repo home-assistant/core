@@ -21,6 +21,13 @@ class VeSyncBaseEntity(CoordinatorEntity[VeSyncDataCoordinator]):
         super().__init__(coordinator)
         self.device = device
         self._attr_unique_id = self.base_unique_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.base_unique_id)},
+            name=self.device.device_name,
+            model=self.device.device_type,
+            manufacturer="VeSync",
+            sw_version=self.device.current_firm_version,
+        )
 
     @property
     def base_unique_id(self):
@@ -36,14 +43,3 @@ class VeSyncBaseEntity(CoordinatorEntity[VeSyncDataCoordinator]):
     def available(self) -> bool:
         """Return True if device is available."""
         return self.device.state.connection_status == "online"
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.base_unique_id)},
-            name=self.device.device_name,
-            model=self.device.device_type,
-            manufacturer="VeSync",
-            sw_version=self.device.current_firm_version,
-        )

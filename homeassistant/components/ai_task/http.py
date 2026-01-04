@@ -37,6 +37,7 @@ def websocket_get_preferences(
     {
         vol.Required("type"): "ai_task/preferences/set",
         vol.Optional("gen_data_entity_id"): vol.Any(str, None),
+        vol.Optional("gen_image_entity_id"): vol.Any(str, None),
     }
 )
 @websocket_api.require_admin

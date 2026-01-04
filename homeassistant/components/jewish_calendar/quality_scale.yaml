@@ -1,0 +1,100 @@
+rules:
+  # Bronze
+  action-setup: done
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure:
+    status: exempt
+    comment: Local calculation does not require configuration.
+  test-before-setup:
+    status: exempt
+    comment: Local calculation does not require setup.
+  unique-config-entry:
+    status: done
+    comment: >-
+      The multiple config entry was removed due to multiple bugs in the
+      integration and low ROI.
+      We might consider revisiting this as an additional feature in the future
+      to allow supportong multiple languages for states, multiple locations and maybe
+      use it as a solution for multiple Zmanim configurations.
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable:
+    status: exempt
+    comment: This integration cannot be unavailable since it's a local calculation.
+  integration-owner: done
+  log-when-unavailable:
+    status: exempt
+    comment: This integration cannot be unavailable since it's a local calculation.
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: This integration does not require reauthentication, since it is a local calculation.
+  test-coverage:
+    status: todo
+    comment: |-
+      The following points should be addressed:
+
+      * Don't use if-statements in tests (test_jewish_calendar_sensor, test_shabbat_times_sensor)
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery-update-info:
+    status: exempt
+    comment: This is a local calculation and does not require discovery.
+  discovery:
+    status: exempt
+    comment: This is a local calculation and does not require discovery.
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations:
+    status: exempt
+    comment: No known limitations.
+  docs-supported-devices:
+    status: exempt
+    comment: This integration does not support physical devices.
+  docs-supported-functions: done
+  docs-troubleshooting:
+    status: exempt
+    comment: There are no more detailed troubleshooting instructions available.
+  docs-use-cases: todo
+  dynamic-devices:
+    status: exempt
+    comment: This integration does not have physical devices.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: done
+  repair-issues:
+    status: exempt
+    comment: There are no issues that can be repaired.
+  stale-devices:
+    status: exempt
+    comment: This integration does not have physical devices.
+
+  # Platinum
+  async-dependency: todo
+  inject-websession:
+    status: exempt
+    comment: This integration does not require a web session.
+  strict-typing: done

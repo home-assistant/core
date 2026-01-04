@@ -3,17 +3,9 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from functools import partial
 from typing import TYPE_CHECKING, Final
 
-from .helpers.deprecation import (
-    DeprecatedConstant,
-    DeprecatedConstantEnum,
-    EnumWithDeprecatedMembers,
-    all_with_deprecated_constants,
-    check_if_deprecated_constant,
-    dir_with_deprecated_constants,
-)
+from .generated.entity_platforms import EntityPlatforms
 from .util.event_type import EventType
 from .util.hass_dict import HassKey
 from .util.signal_type import SignalType
@@ -23,8 +15,8 @@ if TYPE_CHECKING:
     from .helpers.typing import NoEventData
 
 APPLICATION_NAME: Final = "HomeAssistant"
-MAJOR_VERSION: Final = 2025
-MINOR_VERSION: Final = 10
+MAJOR_VERSION: Final = 2026
+MINOR_VERSION: Final = 2
 PATCH_VERSION: Final = "0.dev0"
 __short_version__: Final = f"{MAJOR_VERSION}.{MINOR_VERSION}"
 __version__: Final = f"{__short_version__}.{PATCH_VERSION}"
@@ -36,54 +28,8 @@ REQUIRED_NEXT_PYTHON_HA_RELEASE: Final = ""
 # Format for platform files
 PLATFORM_FORMAT: Final = "{platform}.{domain}"
 
-
-class Platform(StrEnum):
-    """Available entity platforms."""
-
-    AI_TASK = "ai_task"
-    AIR_QUALITY = "air_quality"
-    ALARM_CONTROL_PANEL = "alarm_control_panel"
-    ASSIST_SATELLITE = "assist_satellite"
-    BINARY_SENSOR = "binary_sensor"
-    BUTTON = "button"
-    CALENDAR = "calendar"
-    CAMERA = "camera"
-    CLIMATE = "climate"
-    CONVERSATION = "conversation"
-    COVER = "cover"
-    DATE = "date"
-    DATETIME = "datetime"
-    DEVICE_TRACKER = "device_tracker"
-    EVENT = "event"
-    FAN = "fan"
-    GEO_LOCATION = "geo_location"
-    HUMIDIFIER = "humidifier"
-    IMAGE = "image"
-    IMAGE_PROCESSING = "image_processing"
-    LAWN_MOWER = "lawn_mower"
-    LIGHT = "light"
-    LOCK = "lock"
-    MEDIA_PLAYER = "media_player"
-    NOTIFY = "notify"
-    NUMBER = "number"
-    REMOTE = "remote"
-    SCENE = "scene"
-    SELECT = "select"
-    SENSOR = "sensor"
-    SIREN = "siren"
-    STT = "stt"
-    SWITCH = "switch"
-    TEXT = "text"
-    TIME = "time"
-    TODO = "todo"
-    TTS = "tts"
-    UPDATE = "update"
-    VACUUM = "vacuum"
-    VALVE = "valve"
-    WAKE_WORD = "wake_word"
-    WATER_HEATER = "water_heater"
-    WEATHER = "weather"
-
+# Explicit reexport to allow other modules to import Platform directly from const
+Platform = EntityPlatforms
 
 BASE_PLATFORMS: Final = {platform.value for platform in Platform}
 
@@ -231,6 +177,7 @@ CONF_MONITORED_VARIABLES: Final = "monitored_variables"
 CONF_NAME: Final = "name"
 CONF_OFFSET: Final = "offset"
 CONF_OPTIMISTIC: Final = "optimistic"
+CONF_OPTIONS: Final = "options"
 CONF_PACKAGES: Final = "packages"
 CONF_PARALLEL: Final = "parallel"
 CONF_PARAMS: Final = "params"
@@ -324,6 +271,7 @@ EVENT_HOMEASSISTANT_STOP: EventType[NoEventData] = EventType("homeassistant_stop
 EVENT_HOMEASSISTANT_FINAL_WRITE: EventType[NoEventData] = EventType(
     "homeassistant_final_write"
 )
+EVENT_LABS_UPDATED: Final = "labs_updated"
 EVENT_LOGBOOK_ENTRY: Final = "logbook_entry"
 EVENT_LOGGING_CHANGED: Final = "logging_changed"
 EVENT_SERVICE_REGISTERED: Final = "service_registered"
@@ -359,88 +307,6 @@ STATE_UNAVAILABLE: Final = "unavailable"
 STATE_OK: Final = "ok"
 STATE_PROBLEM: Final = "problem"
 
-# #### LOCK STATES ####
-# STATE_* below are deprecated as of 2024.10
-# use the LockState enum instead.
-_DEPRECATED_STATE_LOCKED: Final = DeprecatedConstant(
-    "locked",
-    "LockState.LOCKED",
-    "2025.10",
-)
-_DEPRECATED_STATE_UNLOCKED: Final = DeprecatedConstant(
-    "unlocked",
-    "LockState.UNLOCKED",
-    "2025.10",
-)
-_DEPRECATED_STATE_LOCKING: Final = DeprecatedConstant(
-    "locking",
-    "LockState.LOCKING",
-    "2025.10",
-)
-_DEPRECATED_STATE_UNLOCKING: Final = DeprecatedConstant(
-    "unlocking",
-    "LockState.UNLOCKING",
-    "2025.10",
-)
-_DEPRECATED_STATE_JAMMED: Final = DeprecatedConstant(
-    "jammed",
-    "LockState.JAMMED",
-    "2025.10",
-)
-
-# #### ALARM CONTROL PANEL STATES ####
-# STATE_ALARM_* below are deprecated as of 2024.11
-# use the AlarmControlPanelState enum instead.
-_DEPRECATED_STATE_ALARM_DISARMED: Final = DeprecatedConstant(
-    "disarmed",
-    "AlarmControlPanelState.DISARMED",
-    "2025.11",
-)
-_DEPRECATED_STATE_ALARM_ARMED_HOME: Final = DeprecatedConstant(
-    "armed_home",
-    "AlarmControlPanelState.ARMED_HOME",
-    "2025.11",
-)
-_DEPRECATED_STATE_ALARM_ARMED_AWAY: Final = DeprecatedConstant(
-    "armed_away",
-    "AlarmControlPanelState.ARMED_AWAY",
-    "2025.11",
-)
-_DEPRECATED_STATE_ALARM_ARMED_NIGHT: Final = DeprecatedConstant(
-    "armed_night",
-    "AlarmControlPanelState.ARMED_NIGHT",
-    "2025.11",
-)
-_DEPRECATED_STATE_ALARM_ARMED_VACATION: Final = DeprecatedConstant(
-    "armed_vacation",
-    "AlarmControlPanelState.ARMED_VACATION",
-    "2025.11",
-)
-_DEPRECATED_STATE_ALARM_ARMED_CUSTOM_BYPASS: Final = DeprecatedConstant(
-    "armed_custom_bypass",
-    "AlarmControlPanelState.ARMED_CUSTOM_BYPASS",
-    "2025.11",
-)
-_DEPRECATED_STATE_ALARM_PENDING: Final = DeprecatedConstant(
-    "pending",
-    "AlarmControlPanelState.PENDING",
-    "2025.11",
-)
-_DEPRECATED_STATE_ALARM_ARMING: Final = DeprecatedConstant(
-    "arming",
-    "AlarmControlPanelState.ARMING",
-    "2025.11",
-)
-_DEPRECATED_STATE_ALARM_DISARMING: Final = DeprecatedConstant(
-    "disarming",
-    "AlarmControlPanelState.DISARMING",
-    "2025.11",
-)
-_DEPRECATED_STATE_ALARM_TRIGGERED: Final = DeprecatedConstant(
-    "triggered",
-    "AlarmControlPanelState.TRIGGERED",
-    "2025.11",
-)
 
 # #### STATE AND EVENT ATTRIBUTES ####
 # Attribution
@@ -615,13 +481,6 @@ class UnitOfReactivePower(StrEnum):
     KILO_VOLT_AMPERE_REACTIVE = "kvar"
 
 
-_DEPRECATED_POWER_VOLT_AMPERE_REACTIVE: Final = DeprecatedConstantEnum(
-    UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
-    "2025.9",
-)
-"""Deprecated: please use UnitOfReactivePower.VOLT_AMPERE_REACTIVE."""
-
-
 # Energy units
 class UnitOfEnergy(StrEnum):
     """Energy units."""
@@ -741,6 +600,7 @@ class UnitOfFrequency(StrEnum):
 class UnitOfPressure(StrEnum):
     """Pressure units."""
 
+    MILLIPASCAL = "mPa"
     PA = "Pa"
     HPA = "hPa"
     KPA = "kPa"
@@ -749,6 +609,7 @@ class UnitOfPressure(StrEnum):
     MBAR = "mbar"
     MMHG = "mmHg"
     INHG = "inHg"
+    INH2O = "inH₂O"
     PSI = "psi"
 
 
@@ -791,7 +652,9 @@ class UnitOfVolumeFlowRate(StrEnum):
     LITERS_PER_HOUR = "L/h"
     LITERS_PER_MINUTE = "L/min"
     LITERS_PER_SECOND = "L/s"
+    GALLONS_PER_HOUR = "gal/h"
     GALLONS_PER_MINUTE = "gal/min"
+    GALLONS_PER_DAY = "gal/d"
     MILLILITERS_PER_SECOND = "mL/s"
 
 
@@ -810,13 +673,6 @@ class UnitOfArea(StrEnum):
     HECTARES = "ha"
 
 
-_DEPRECATED_AREA_SQUARE_METERS: Final = DeprecatedConstantEnum(
-    UnitOfArea.SQUARE_METERS,
-    "2025.12",
-)
-"""Deprecated: please use UnitOfArea.SQUARE_METERS"""
-
-
 # Mass units
 class UnitOfMass(StrEnum):
     """Mass units."""
@@ -830,35 +686,13 @@ class UnitOfMass(StrEnum):
     STONES = "st"
 
 
-class UnitOfConductivity(
-    StrEnum,
-    metaclass=EnumWithDeprecatedMembers,
-    deprecated={
-        "SIEMENS": ("UnitOfConductivity.SIEMENS_PER_CM", "2025.11.0"),
-        "MICROSIEMENS": ("UnitOfConductivity.MICROSIEMENS_PER_CM", "2025.11.0"),
-        "MILLISIEMENS": ("UnitOfConductivity.MILLISIEMENS_PER_CM", "2025.11.0"),
-    },
-):
+class UnitOfConductivity(StrEnum):
     """Conductivity units."""
 
     SIEMENS_PER_CM = "S/cm"
     MICROSIEMENS_PER_CM = "μS/cm"
     MILLISIEMENS_PER_CM = "mS/cm"
 
-    # Deprecated aliases
-    SIEMENS = "S/cm"
-    """Deprecated: Please use UnitOfConductivity.SIEMENS_PER_CM"""
-    MICROSIEMENS = "μS/cm"
-    """Deprecated: Please use UnitOfConductivity.MICROSIEMENS_PER_CM"""
-    MILLISIEMENS = "mS/cm"
-    """Deprecated: Please use UnitOfConductivity.MILLISIEMENS_PER_CM"""
-
-
-_DEPRECATED_CONDUCTIVITY: Final = DeprecatedConstantEnum(
-    UnitOfConductivity.MICROSIEMENS_PER_CM,
-    "2025.11",
-)
-"""Deprecated: please use UnitOfConductivity.MICROSIEMENS_PER_CM"""
 
 # Light units
 LIGHT_LUX: Final = "lx"
@@ -942,6 +776,7 @@ class UnitOfSpeed(StrEnum):
     BEAUFORT = "Beaufort"
     FEET_PER_SECOND = "ft/s"
     INCHES_PER_SECOND = "in/s"
+    METERS_PER_MINUTE = "m/min"
     METERS_PER_SECOND = "m/s"
     KILOMETERS_PER_HOUR = "km/h"
     KNOTS = "kn"
@@ -1160,10 +995,3 @@ FORMAT_DATETIME: Final = f"{FORMAT_DATE} {FORMAT_TIME}"
 # This is not a hard limit, but caches and other
 # data structures will be pre-allocated to this size
 MAX_EXPECTED_ENTITY_IDS: Final = 16384
-
-# These can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(
-    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
-)
-__all__ = all_with_deprecated_constants(globals())

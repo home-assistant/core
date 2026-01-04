@@ -60,6 +60,15 @@
         }
       },
 
+      "precip_analysis_type_yesterday": {
+        "default": "mdi:radar",
+        "state": {
+          "lightning": "mdi:weather-lightning-rainy",
+          "rain": "mdi:weather-rainy",
+          "rain_snow": "mdi:weather-snoy-rainy",
+          "snow": "mdi:weather-snowy"
+        }
+      },
       "precip_minutes_local_day": {
         "default": "mdi:umbrella-closed",
         "range": {
@@ -79,15 +88,6 @@
         }
       },
 
-      "precip_analysis_type_yesterday": {
-        "default": "mdi:radar",
-        "state": {
-          "rain": "mdi:weather-rainy",
-          "snow": "mdi:weather-snowy",
-          "rain_snow": "mdi:weather-snoy-rainy",
-          "lightning": "mdi:weather-lightning-rainy"
-        }
-      },
       "sea_level_pressure": {
         "default": "mdi:gauge"
       },

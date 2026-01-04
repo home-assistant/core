@@ -54,7 +54,7 @@ rules:
   docs-supported-functions: todo
   docs-troubleshooting: done
   docs-use-cases: todo
-  dynamic-devices: todo
+  dynamic-devices: done
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
@@ -63,7 +63,7 @@ rules:
   icon-translations: done
   reconfiguration-flow: done
   repair-issues: todo
-  stale-devices: todo
+  stale-devices: done
 
   # Platinum
   async-dependency: todo

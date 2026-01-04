@@ -112,7 +112,7 @@ class AutomowerButtonEntity(AutomowerControlEntity, ButtonEntity):
             self.mower_attributes
         )
 
-    @handle_sending_exception()
+    @handle_sending_exception
     async def async_press(self) -> None:
         """Send a command to the mower."""
         await self.entity_description.press_fn(self.coordinator.api, self.mower_id)

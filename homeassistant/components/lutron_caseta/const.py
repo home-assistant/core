@@ -29,6 +29,7 @@ ATTR_DEVICE_NAME = "device_name"
 ATTR_AREA_NAME = "area_name"
 ATTR_ACTION = "action"
 
+ACTION_MULTITAP = "multi_tap"
 ACTION_PRESS = "press"
 ACTION_RELEASE = "release"
 

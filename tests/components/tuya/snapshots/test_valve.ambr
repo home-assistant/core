@@ -1,4 +1,104 @@
 # serializer version: 1
+# name: test_platform_setup_and_discovery[valve.balkonbewasserung_valve-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'valve',
+    'entity_category': None,
+    'entity_id': 'valve.balkonbewasserung_valve',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <ValveDeviceClass.WATER: 'water'>,
+    'original_icon': None,
+    'original_name': 'Valve',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ValveEntityFeature: 3>,
+    'translation_key': 'valve',
+    'unique_id': 'tuya.73ov8i8iedtylkzrqzkfsswitch',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[valve.balkonbewasserung_valve-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'water',
+      'friendly_name': 'balkonbewässerung Valve',
+      'supported_features': <ValveEntityFeature: 3>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'valve.balkonbewasserung_valve',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_platform_setup_and_discovery[valve.garden_valve_yard_valve-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'valve',
+    'entity_category': None,
+    'entity_id': 'valve.garden_valve_yard_valve',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <ValveDeviceClass.WATER: 'water'>,
+    'original_icon': None,
+    'original_name': 'Valve',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ValveEntityFeature: 3>,
+    'translation_key': 'valve',
+    'unique_id': 'tuya.ggimpv4dqzkfsswitch',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[valve.garden_valve_yard_valve-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'water',
+      'friendly_name': 'Garden Valve Yard Valve',
+      'supported_features': <ValveEntityFeature: 3>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'valve.garden_valve_yard_valve',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
 # name: test_platform_setup_and_discovery[valve.jie_hashui_fa_valve_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -397,5 +497,155 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'closed',
+  })
+# ---
+# name: test_platform_setup_and_discovery[valve.smart_water_timer_valve-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'valve',
+    'entity_category': None,
+    'entity_id': 'valve.smart_water_timer_valve',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <ValveDeviceClass.WATER: 'water'>,
+    'original_icon': None,
+    'original_name': 'Valve',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ValveEntityFeature: 3>,
+    'translation_key': 'valve',
+    'unique_id': 'tuya.bl5cuqxnqzkfsswitch',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[valve.smart_water_timer_valve-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'water',
+      'friendly_name': 'Smart Water Timer Valve',
+      'supported_features': <ValveEntityFeature: 3>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'valve.smart_water_timer_valve',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_platform_setup_and_discovery[valve.sprinkler_cesare_valve-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'valve',
+    'entity_category': None,
+    'entity_id': 'valve.sprinkler_cesare_valve',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <ValveDeviceClass.WATER: 'water'>,
+    'original_icon': None,
+    'original_name': 'Valve',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ValveEntityFeature: 3>,
+    'translation_key': 'valve',
+    'unique_id': 'tuya.tskafaotnfigad6oqzkfsswitch',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[valve.sprinkler_cesare_valve-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'water',
+      'friendly_name': 'Sprinkler Cesare Valve',
+      'supported_features': <ValveEntityFeature: 3>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'valve.sprinkler_cesare_valve',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'closed',
+  })
+# ---
+# name: test_platform_setup_and_discovery[valve.valve_controller_2_valve-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'valve',
+    'entity_category': None,
+    'entity_id': 'valve.valve_controller_2_valve',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <ValveDeviceClass.WATER: 'water'>,
+    'original_icon': None,
+    'original_name': 'Valve',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ValveEntityFeature: 3>,
+    'translation_key': 'valve',
+    'unique_id': 'tuya.kx8dncf1qzkfsswitch',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[valve.valve_controller_2_valve-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'water',
+      'friendly_name': 'Valve Controller 2 Valve',
+      'supported_features': <ValveEntityFeature: 3>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'valve.valve_controller_2_valve',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
   })
 # ---

@@ -1,0 +1,15 @@
+{
+  "entity": {
+    "sensor": {
+      "current_flow_rate": {
+        "default": "mdi:chart-line"
+      },
+      "server_connectivity": {
+        "default": "mdi:web"
+      },
+      "signal_quality": {
+        "default": "mdi:waveform"
+      }
+    }
+  }
+}

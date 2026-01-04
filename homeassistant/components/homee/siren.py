@@ -3,6 +3,7 @@
 from typing import Any
 
 from pyHomee.const import AttributeType
+from pyHomee.model import HomeeNode
 
 from homeassistant.components.siren import SirenEntity, SirenEntityFeature
 from homeassistant.core import HomeAssistant
@@ -10,23 +11,33 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import HomeeConfigEntry
 from .entity import HomeeEntity
+from .helpers import setup_homee_platform
 
 PARALLEL_UPDATES = 0
+
+
+async def add_siren_entities(
+    config_entry: HomeeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    nodes: list[HomeeNode],
+) -> None:
+    """Add homee siren entities."""
+    async_add_entities(
+        HomeeSiren(attribute, config_entry)
+        for node in nodes
+        for attribute in node.attributes
+        if attribute.type == AttributeType.SIREN
+    )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: HomeeConfigEntry,
-    async_add_devices: AddConfigEntryEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add siren entities for homee."""
 
-    async_add_devices(
-        HomeeSiren(attribute, config_entry)
-        for node in config_entry.runtime_data.nodes
-        for attribute in node.attributes
-        if attribute.type == AttributeType.SIREN
-    )
+    await setup_homee_platform(add_siren_entities, async_add_entities, config_entry)
 
 
 class HomeeSiren(HomeeEntity, SirenEntity):
