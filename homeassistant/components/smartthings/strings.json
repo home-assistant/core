@@ -74,11 +74,26 @@
       }
     },
     "button": {
+      "cancel": {
+        "name": "Cancel"
+      },
+      "cancel_and_drain": {
+        "name": "Cancel and drain"
+      },
+      "pause": {
+        "name": "[%key:common::action::pause%]"
+      },
       "reset_hood_filter": {
         "name": "Reset filter"
       },
       "reset_water_filter": {
         "name": "Reset water filter"
+      },
+      "resume": {
+        "name": "Resume"
+      },
+      "start": {
+        "name": "[%key:common::action::start%]"
       },
       "stop": {
         "name": "[%key:common::action::stop%]"
