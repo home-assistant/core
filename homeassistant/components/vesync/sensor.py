@@ -293,4 +293,4 @@ class VeSyncSensorEntity(VeSyncBaseEntity, SensorEntity):
                 return UnitOfTemperature.FAHRENHEIT
             return None
 
-        return self.entity_description.native_unit_of_measurement
+        return super().native_unit_of_measurement
