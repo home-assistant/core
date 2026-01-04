@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from typing import Any
 
 from aiohttp.client_exceptions import ClientError
@@ -42,6 +43,24 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
+def _extract_error_message(err: Exception) -> str:
+    """Extract a clean error message from a pyControl4 exception.
+
+    The pyControl4 library returns errors as JSON strings like:
+    {"C4ErrorResponse": {"code":401,"message":"Permission denied",...}}
+
+    This function extracts just the human-readable message.
+    """
+    error_str = str(err)
+    try:
+        error_data = json.loads(error_str)
+        if "C4ErrorResponse" in error_data:
+            return error_data["C4ErrorResponse"].get("message", error_str)
+    except (json.JSONDecodeError, TypeError, KeyError):
+        pass
+    return error_str
+
+
 class Control4ConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Control4."""
 
@@ -73,15 +92,15 @@ class Control4ConfigFlow(ConfigFlow, domain=DOMAIN):
             )["token"]
         except BadCredentials as err:
             errors["base"] = "credentials_invalid"
-            description_placeholders["error"] = str(err)
+            description_placeholders["error"] = _extract_error_message(err)
             return errors, data, description_placeholders
         except Unauthorized as err:
             errors["base"] = "api_auth_failed"
-            description_placeholders["error"] = str(err)
+            description_placeholders["error"] = _extract_error_message(err)
             return errors, data, description_placeholders
         except NotFound as err:
             errors["base"] = "controller_not_found"
-            description_placeholders["error"] = str(err)
+            description_placeholders["error"] = _extract_error_message(err)
             return errors, data, description_placeholders
         except (KeyError, AttributeError) as err:
             errors["base"] = "unknown"
@@ -101,7 +120,7 @@ class Control4ConfigFlow(ConfigFlow, domain=DOMAIN):
             await director.getAllItemInfo()
         except Unauthorized as err:
             errors["base"] = "director_auth_failed"
-            description_placeholders["error"] = str(err)
+            description_placeholders["error"] = _extract_error_message(err)
             return errors, data, description_placeholders
         except (ClientError, TimeoutError) as err:
             errors["base"] = "cannot_connect"
