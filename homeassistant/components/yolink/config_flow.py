@@ -8,8 +8,10 @@ import logging
 from typing import Any
 
 import voluptuous as vol
+from yolink.device import YoLinkDevice
 from yolink.exception import YoLinkAuthFailError, YoLinkClientError
 from yolink.home_manager import YoLinkHome
+from yolink.message_listener import MessageListener
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
@@ -26,6 +28,14 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class _NoOpMessageListener(MessageListener):
+    """No-op message listener for config flow validation."""
+
+    def on_message(self, device: YoLinkDevice, msg_data: dict[str, Any]) -> None:
+        """Do nothing with messages during validation."""
+
 
 UAC_SCHEMA = vol.Schema(
     {
@@ -79,9 +89,14 @@ class OAuth2FlowHandler(
                     user_input[CONF_UAID],
                     user_input[CONF_SECRET_KEY],
                 )
-            except YoLinkAuthFailError:
+            except YoLinkAuthFailError as err:
+                _LOGGER.error("UAC auth failed: %s", err)
                 errors["base"] = "invalid_auth"
-            except (YoLinkClientError, TimeoutError):
+            except YoLinkClientError as err:
+                _LOGGER.error("UAC client error: %s", err)
+                errors["base"] = "cannot_connect"
+            except TimeoutError:
+                _LOGGER.error("UAC validation timed out")
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception during UAC validation")
@@ -127,14 +142,18 @@ class OAuth2FlowHandler(
         self, uaid: str, secret_key: str
     ) -> dict[str, Any]:
         """Validate UAC credentials and return home info."""
+        _LOGGER.debug("Starting UAC validation for UAID: %s...", uaid[:8])
         websession = aiohttp_client.async_get_clientsession(self.hass)
         auth_mgr = UACAuth(self.hass, websession, uaid, secret_key)
 
         yolink_home = YoLinkHome()
         async with asyncio.timeout(10):
-            # Pass None for message_listener during validation
-            await yolink_home.async_setup(auth_mgr, None)
+            _LOGGER.debug("Calling yolink_home.async_setup...")
+            # Use no-op listener for validation
+            await yolink_home.async_setup(auth_mgr, _NoOpMessageListener())
+            _LOGGER.debug("async_setup completed, getting home info...")
             home_info = await yolink_home.async_get_home_info()
+            _LOGGER.debug("Got home info: %s", home_info.data)
             await yolink_home.async_unload()
 
         return home_info.data

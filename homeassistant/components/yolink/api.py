@@ -1,12 +1,18 @@
-"""API for yolink bound to Home Assistant OAuth or UAC."""
+"""API for yolink."""
+
+from __future__ import annotations
+
+import logging
 
 from aiohttp import ClientSession
 from yolink.auth_mgr import YoLinkAuthMgr
 from yolink.const import OAUTH2_TOKEN
-from yolink.local_auth_mgr import YoLinkLocalAuthMgr
+from yolink.exception import YoLinkAuthFailError, YoLinkClientError
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class ConfigEntryAuth(YoLinkAuthMgr):
@@ -16,25 +22,30 @@ class ConfigEntryAuth(YoLinkAuthMgr):
         self,
         hass: HomeAssistant,
         websession: ClientSession,
-        oauth2Session: config_entry_oauth2_flow.OAuth2Session,
+        oauth_session: OAuth2Session,
     ) -> None:
         """Initialize yolink Auth."""
         self.hass = hass
-        self.oauth_session = oauth2Session
-        super().__init__(websession)
+        self._oauth_session = oauth_session
+        self._session = websession
+        self._token_url = OAUTH2_TOKEN
 
-    def access_token(self) -> str:
-        """Return the access token."""
-        return self.oauth_session.token["access_token"]
+    async def async_get_access_token(self) -> str:
+        """Return a valid access token."""
+        await self._oauth_session.async_ensure_token_valid()
+        return self._oauth_session.token["access_token"]
 
-    async def check_and_refresh_token(self) -> str:
-        """Check the token."""
-        await self.oauth_session.async_ensure_token_valid()
-        return self.access_token()
+    def access_token(self) -> str | None:
+        """Return the current access token."""
+        return self._oauth_session.token.get("access_token")
+
+    async def check_and_refresh_token(self) -> None:
+        """Check and refresh the token if needed."""
+        await self._oauth_session.async_ensure_token_valid()
 
 
-class UACAuth(YoLinkLocalAuthMgr):
-    """Provide yolink authentication using UAC (User Access Credentials)."""
+class UACAuth(YoLinkAuthMgr):
+    """Provide yolink authentication using UAC credentials."""
 
     def __init__(
         self,
@@ -45,9 +56,58 @@ class UACAuth(YoLinkLocalAuthMgr):
     ) -> None:
         """Initialize yolink UAC Auth."""
         self.hass = hass
-        super().__init__(
-            session=websession,
-            token_url=OAUTH2_TOKEN,
-            client_id=uaid,
-            client_secret=secret_key,
-        )
+        self._uaid = uaid
+        self._secret_key = secret_key
+        self._access_token: str | None = None
+        self._session = websession
+        self._token_url = OAUTH2_TOKEN
+
+    def access_token(self) -> str | None:
+        """Return the current access token."""
+        return self._access_token
+
+    async def check_and_refresh_token(self) -> None:
+        """Check and refresh the token if needed."""
+        await self._fetch_token()
+
+    async def async_get_access_token(self) -> str:
+        """Return a valid access token."""
+        if self._access_token is None:
+            await self._fetch_token()
+        return self._access_token
+
+    async def _fetch_token(self) -> None:
+        """Fetch a new access token."""
+        _LOGGER.debug("Fetching UAC token from %s", self._token_url)
+        try:
+            async with self._session.post(
+                self._token_url,
+                data={
+                    "grant_type": "client_credentials",
+                    "client_id": self._uaid,
+                    "client_secret": self._secret_key,
+                },
+            ) as resp:
+                _LOGGER.debug("Token response status: %s", resp.status)
+                if resp.status in (401, 403):
+                    raise YoLinkAuthFailError("Invalid UAC credentials")
+                if resp.status != 200:
+                    raise YoLinkClientError(
+                        f"Token request failed with status {resp.status}"
+                    )
+
+                result = await resp.json()
+                _LOGGER.debug("Token response keys: %s", list(result.keys()))
+                if "access_token" not in result:
+                    raise YoLinkAuthFailError("No access_token in response")
+                self._access_token = result["access_token"]
+                _LOGGER.debug("Successfully fetched access token")
+        except YoLinkAuthFailError:
+            _LOGGER.error("Auth failure during token fetch")
+            raise
+        except YoLinkClientError:
+            _LOGGER.error("Client error during token fetch")
+            raise
+        except Exception as err:
+            _LOGGER.exception("Unexpected error during token fetch: %s", err)
+            raise YoLinkClientError(f"Failed to fetch token: {err}") from err

@@ -23,10 +23,17 @@ from homeassistant.helpers import (
     device_registry as dr,
 )
 from homeassistant.helpers.config_entry_oauth2_flow import (
-    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
+
+# Compatibility for older HA versions
+try:
+    from homeassistant.helpers.config_entry_oauth2_flow import (
+        ImplementationUnavailableError,
+    )
+except ImportError:
+    ImplementationUnavailableError = ValueError
 from homeassistant.helpers.typing import ConfigType
 
 from . import api
@@ -150,7 +157,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # OAuth2 authentication (existing behavior)
         try:
             implementation = await async_get_config_entry_implementation(hass, entry)
-        except ImplementationUnavailableError as err:
+        except (ImplementationUnavailableError, ValueError) as err:
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="oauth2_implementation_unavailable",
