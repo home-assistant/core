@@ -84,7 +84,9 @@ HUMIDITY_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
 BATTERY_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
     key=SENSOR_TYPE_BATTERY,
     translation_key=SENSOR_TYPE_BATTERY,
-    value_fn=lambda value: BatteryLevel.get_battery_level(value).value,
+    value_fn=lambda value: BatteryLevel.get_battery_level(value).value
+    if value
+    else BatteryLevel.Unknown,
 )
 
 POWER_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
