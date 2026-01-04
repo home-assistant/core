@@ -151,12 +151,8 @@ class BSBLANWaterHeater(BSBLanDualCoordinatorEntity, WaterHeaterEntity):
 
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
-        bsblan_mode = HA_TO_BSBLAN_OPERATION_MODE.get(operation_mode)
-        if bsblan_mode is None:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="set_operation_mode_error",
-            )
+        # Base class validates operation_mode is in operation_list before calling
+        bsblan_mode = HA_TO_BSBLAN_OPERATION_MODE[operation_mode]
         try:
             # Send numeric value as string - BSB-LAN API expects numeric mode values
             await self.coordinator.client.set_hot_water(
