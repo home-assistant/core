@@ -20,7 +20,11 @@ from homeassistant.components.sonos.const import (
 from homeassistant.components.sonos.exception import SonosUpdateError
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.setup import async_setup_component
@@ -556,3 +560,99 @@ async def test_ipv6_not_supported(
         await hass.async_block_till_done()
     assert "invalid ip_address received" in caplog.text
     assert "2001:db8:3333:4444:5555:6666:7777:8888" in caplog.text
+
+
+async def test_setup_from_device_registry(
+    hass: HomeAssistant,
+    async_setup_sonos,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    soco_factory: SoCoMockFactory,
+) -> None:
+    """Test devices can be setup from device registry."""
+    soco = soco_factory.cache_mock(MockSoCo(), "10.10.10.1", "Bedroom")
+
+    config_entry.add_to_hass(hass)
+    _ = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(sonos.DOMAIN, soco.uid)},
+        manufacturer="Sonos",
+        name=soco.player_name,
+        configuration_url=f"http://{soco.ip_address}:1400/xml/device_description.xml",
+    )
+    await async_setup_sonos()
+    assert "media_player.bedroom" in entity_registry.entities
+
+
+async def test_setup_from_device_registry_no_config_url(
+    hass: HomeAssistant,
+    async_setup_sonos,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    soco_factory: SoCoMockFactory,
+) -> None:
+    """Test devices without configuration_url are skipped."""
+    soco = soco_factory.cache_mock(MockSoCo(), "10.10.10.1", "Bedroom")
+
+    config_entry.add_to_hass(hass)
+    _ = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(sonos.DOMAIN, soco.uid)},
+        manufacturer="Sonos",
+        name=soco.player_name,
+        configuration_url=None,
+    )
+    await async_setup_sonos()
+    # Device should not be loaded without configuration_url
+    assert "media_player.bedroom" not in entity_registry.entities
+
+
+async def test_setup_from_device_registry_no_sonos_identifier(
+    hass: HomeAssistant,
+    async_setup_sonos,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test devices without Sonos identifier are skipped."""
+    config_entry.add_to_hass(hass)
+    _ = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("other_domain", "some_id")},
+        manufacturer="Sonos",
+        name="Test Device",
+        configuration_url="http://192.168.1.100:1400/support/review",
+    )
+    await async_setup_sonos()
+    # Device should not be loaded without Sonos identifier
+    assert len(entity_registry.entities) == 0
+
+
+async def test_setup_from_device_registry_invalid_url(
+    hass: HomeAssistant,
+    async_setup_sonos,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    soco_factory: SoCoMockFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test devices with invalid URL that has no hostname are skipped."""
+    soco = soco_factory.cache_mock(MockSoCo(), "10.10.10.1", "Bedroom")
+
+    config_entry.add_to_hass(hass)
+    _ = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(sonos.DOMAIN, soco.uid)},
+        manufacturer="Sonos",
+        name=soco.player_name,
+        configuration_url="not-a-valid-url",
+    )
+
+    with caplog.at_level(logging.DEBUG):
+        await async_setup_sonos()
+
+    # Device should not be loaded with invalid URL
+    assert "media_player.bedroom" not in entity_registry.entities

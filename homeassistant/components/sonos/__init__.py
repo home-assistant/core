@@ -649,8 +649,22 @@ class SonosDiscoveryManager:
             )
         )
 
+        await self._async_load_from_device_registry()
+
+    async def _async_load_from_device_registry(self) -> None:
+        """Load existing devices from device registry."""
+
         device_registry = dr.async_get(self.hass)
-        for device in device_registry.devices.values():
+        devices = device_registry.devices.get_devices_for_config_entry_id(
+            self.entry.entry_id
+        )
+        for device in devices:
+            if not device.configuration_url:
+                _LOGGER.debug(
+                    "Skipping device %s without configuration URL", device.name
+                )
+                continue
+
             uid = next(
                 (
                     identifier[1]
@@ -660,13 +674,18 @@ class SonosDiscoveryManager:
                 None,
             )
             if not uid:
+                _LOGGER.debug("Skipping device %s without uid", device.name)
                 continue
 
-            if not device.configuration_url:
-                continue
             host = urlparse(device.configuration_url).hostname
-            assert host
-            _LOGGER.debug("Loading existing device %s with host %s", uid, host)
+            if not host:
+                _LOGGER.debug(
+                    "Skipping device %s without valid host in configuration URL",
+                    device.name,
+                )
+                continue
+
+            _LOGGER.debug("Loading device %s with host %s", uid, host)
             await self._async_handle_discovery_message(uid, host, "device registry")
 
 
