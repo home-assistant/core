@@ -1,0 +1,361 @@
+# serializer version: 1
+# name: test_entities[select.air_conditioning_schedule_days-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'one_day',
+        'three_day',
+        'seven_day',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.air_conditioning_schedule_days',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Schedule Days',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Schedule Days',
+    'platform': 'tado',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'timetable',
+    'unique_id': '3 1 timetable',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[select.air_conditioning_schedule_days-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Air Conditioning Schedule Days',
+      'options': list([
+        'one_day',
+        'three_day',
+        'seven_day',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.air_conditioning_schedule_days',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'seven_day',
+  })
+# ---
+# name: test_entities[select.air_conditioning_with_fanlevel_schedule_days-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'one_day',
+        'three_day',
+        'seven_day',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.air_conditioning_with_fanlevel_schedule_days',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Schedule Days',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Schedule Days',
+    'platform': 'tado',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'timetable',
+    'unique_id': '6 1 timetable',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[select.air_conditioning_with_fanlevel_schedule_days-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Air Conditioning with fanlevel Schedule Days',
+      'options': list([
+        'one_day',
+        'three_day',
+        'seven_day',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.air_conditioning_with_fanlevel_schedule_days',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'seven_day',
+  })
+# ---
+# name: test_entities[select.air_conditioning_with_swing_schedule_days-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'one_day',
+        'three_day',
+        'seven_day',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.air_conditioning_with_swing_schedule_days',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Schedule Days',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Schedule Days',
+    'platform': 'tado',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'timetable',
+    'unique_id': '5 1 timetable',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[select.air_conditioning_with_swing_schedule_days-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Air Conditioning with swing Schedule Days',
+      'options': list([
+        'one_day',
+        'three_day',
+        'seven_day',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.air_conditioning_with_swing_schedule_days',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'seven_day',
+  })
+# ---
+# name: test_entities[select.baseboard_heater_schedule_days-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'one_day',
+        'three_day',
+        'seven_day',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.baseboard_heater_schedule_days',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Schedule Days',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Schedule Days',
+    'platform': 'tado',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'timetable',
+    'unique_id': '1 1 timetable',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[select.baseboard_heater_schedule_days-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Baseboard Heater Schedule Days',
+      'options': list([
+        'one_day',
+        'three_day',
+        'seven_day',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.baseboard_heater_schedule_days',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'seven_day',
+  })
+# ---
+# name: test_entities[select.second_water_heater_schedule_days-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'one_day',
+        'three_day',
+        'seven_day',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.second_water_heater_schedule_days',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Schedule Days',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Schedule Days',
+    'platform': 'tado',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'timetable',
+    'unique_id': '4 1 timetable',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[select.second_water_heater_schedule_days-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Second Water Heater Schedule Days',
+      'options': list([
+        'one_day',
+        'three_day',
+        'seven_day',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.second_water_heater_schedule_days',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'seven_day',
+  })
+# ---
+# name: test_entities[select.water_heater_schedule_days-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'one_day',
+        'three_day',
+        'seven_day',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.water_heater_schedule_days',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Schedule Days',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Schedule Days',
+    'platform': 'tado',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'timetable',
+    'unique_id': '2 1 timetable',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[select.water_heater_schedule_days-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Water Heater Schedule Days',
+      'options': list([
+        'one_day',
+        'three_day',
+        'seven_day',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.water_heater_schedule_days',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'seven_day',
+  })
+# ---

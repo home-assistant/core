@@ -65,6 +65,7 @@ async def init_integration(hass: HomeAssistant):
     home_state_fixture = "home_state.json"
     zones_fixture = "zones.json"
     zone_states_fixture = "zone_states.json"
+    zone_timetable_fixture = "zone_timetable.json"
 
     # WR1 Device
     device_wr1_fixture = "device_wr1.json"
@@ -219,6 +220,30 @@ async def init_integration(hass: HomeAssistant):
         m.get(
             "https://my.tado.com/api/v2/homes/1/zones/1/state",
             text=await async_load_fixture(hass, zone_1_state_fixture, DOMAIN),
+        )
+        m.get(
+            "https://my.tado.com/api/v2/homes/1/zones/1/schedule/activeTimetable",
+            text=await async_load_fixture(hass, zone_timetable_fixture, DOMAIN),
+        )
+        m.get(
+            "https://my.tado.com/api/v2/homes/1/zones/2/schedule/activeTimetable",
+            text=await async_load_fixture(hass, zone_timetable_fixture, DOMAIN),
+        )
+        m.get(
+            "https://my.tado.com/api/v2/homes/1/zones/3/schedule/activeTimetable",
+            text=await async_load_fixture(hass, zone_timetable_fixture, DOMAIN),
+        )
+        m.get(
+            "https://my.tado.com/api/v2/homes/1/zones/4/schedule/activeTimetable",
+            text=await async_load_fixture(hass, zone_timetable_fixture, DOMAIN),
+        )
+        m.get(
+            "https://my.tado.com/api/v2/homes/1/zones/5/schedule/activeTimetable",
+            text=await async_load_fixture(hass, zone_timetable_fixture, DOMAIN),
+        )
+        m.get(
+            "https://my.tado.com/api/v2/homes/1/zones/6/schedule/activeTimetable",
+            text=await async_load_fixture(hass, zone_timetable_fixture, DOMAIN),
         )
         m.post(
             "https://login.tado.com/oauth2/token",
