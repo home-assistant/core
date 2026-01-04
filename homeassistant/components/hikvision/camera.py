@@ -31,7 +31,22 @@ PARALLEL_UPDATES = 0
 SNAPSHOT_TIMEOUT = 10
 
 # Default RTSP port for Hikvision devices
+# TODO(pyHik): This should be fetched from device capabilities via ISAPI
 DEFAULT_RTSP_PORT = 554
+
+
+def get_stream_id(device_type: str, channel: int, stream_type: int = 1) -> int:
+    """Get the Hikvision stream ID for a channel.
+
+    For NVRs: channel 1 main stream = 101, channel 1 sub stream = 102, etc.
+    For cameras: main stream = 1, sub stream = 2, etc.
+
+    TODO(pyHik): This logic should be moved to the pyHik library as it's
+    Hikvision-specific URL formatting that the library should handle.
+    """
+    if device_type == "NVR":
+        return channel * 100 + stream_type
+    return stream_type
 
 
 async def async_setup_entry(
@@ -106,29 +121,22 @@ class HikvisionCamera(Camera):
         )
 
     def _get_snapshot_url(self) -> str:
-        """Get the snapshot URL for the channel."""
-        # Hikvision ISAPI snapshot URL format
-        # For NVRs: channel 1 = 101, channel 2 = 201, etc.
-        # For cameras: channel 1 = 1
-        if self._data.device_type == "NVR":
-            stream_channel = self._channel * 100 + 1  # Main stream
-        else:
-            stream_channel = 1
+        """Get the snapshot URL for the channel.
 
+        TODO(pyHik): This URL construction should be a property on HikCamera.
+        """
+        stream_id = get_stream_id(self._data.device_type, self._channel)
         return (
             f"{self._protocol}://{self._host}:{self._port}"
-            f"/ISAPI/Streaming/channels/{stream_channel}/picture"
+            f"/ISAPI/Streaming/channels/{stream_id}/picture"
         )
 
     def _get_rtsp_url(self) -> str:
-        """Get the RTSP stream URL for the channel."""
-        # Hikvision RTSP URL format
-        # For NVRs: channel 1 main = 101, channel 1 sub = 102
-        # For cameras: main = 1, sub = 2
-        if self._data.device_type == "NVR":
-            stream_channel = self._channel * 100 + 1  # Main stream
-        else:
-            stream_channel = 1
+        """Get the RTSP stream URL for the channel.
+
+        TODO(pyHik): This URL construction should be a property on HikCamera.
+        """
+        stream_id = get_stream_id(self._data.device_type, self._channel)
 
         # URL-encode credentials for safety
         username = quote(self._username, safe="")
@@ -136,7 +144,7 @@ class HikvisionCamera(Camera):
 
         return (
             f"rtsp://{username}:{password}"
-            f"@{self._host}:{DEFAULT_RTSP_PORT}/Streaming/Channels/{stream_channel}"
+            f"@{self._host}:{DEFAULT_RTSP_PORT}/Streaming/Channels/{stream_id}"
         )
 
     async def async_camera_image(
