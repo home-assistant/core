@@ -49,7 +49,7 @@ def _normalize_host(value: str) -> str:
     return value.strip("/").split("/", 1)[0]
 
 
-HOST_SCHEMA = vol.All(cv.string, _normalize_host)
+HOST_SCHEMA = cv.string
 
 STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): HOST_SCHEMA})
 
@@ -111,28 +111,31 @@ class NRGkickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            host = user_input[CONF_HOST]
-
             try:
-                info = await validate_input(self.hass, host)
-            except NRGkickApiClientApiDisabledError:
-                errors["base"] = "json_api_disabled"
-            except ValueError:
-                errors["base"] = "no_serial_number"
-            except NRGkickApiClientAuthenticationError:
-                self._pending_host = host
-                return await self.async_step_user_auth()
-            except NRGkickApiClientCommunicationError:
+                host = _normalize_host(user_input[CONF_HOST])
+            except vol.Invalid:
                 errors["base"] = "cannot_connect"
-            except NRGkickApiClientError:
-                _LOGGER.exception("Unexpected error")
-                errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(info["serial"])
-                self._abort_if_unique_id_configured()
-                return self.async_create_entry(
-                    title=info["title"], data={CONF_HOST: host}
-                )
+                try:
+                    info = await validate_input(self.hass, host)
+                except NRGkickApiClientApiDisabledError:
+                    errors["base"] = "json_api_disabled"
+                except ValueError:
+                    errors["base"] = "no_serial_number"
+                except NRGkickApiClientAuthenticationError:
+                    self._pending_host = host
+                    return await self.async_step_user_auth()
+                except NRGkickApiClientCommunicationError:
+                    errors["base"] = "cannot_connect"
+                except NRGkickApiClientError:
+                    _LOGGER.exception("Unexpected error")
+                    errors["base"] = "unknown"
+                else:
+                    await self.async_set_unique_id(info["serial"])
+                    self._abort_if_unique_id_configured()
+                    return self.async_create_entry(
+                        title=info["title"], data={CONF_HOST: host}
+                    )
 
         return self.async_show_form(
             step_id="user",
@@ -495,34 +498,39 @@ class NRGkickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="reconfigure_failed")
 
         if user_input is not None:
-            data = {
-                CONF_HOST: user_input[CONF_HOST],
-                CONF_USERNAME: user_input.get(CONF_USERNAME),
-                CONF_PASSWORD: user_input.get(CONF_PASSWORD),
-            }
-
             try:
-                await validate_input(
-                    self.hass,
-                    data[CONF_HOST],
-                    username=data.get(CONF_USERNAME),
-                    password=data.get(CONF_PASSWORD),
-                )
-            except NRGkickApiClientApiDisabledError:
-                errors["base"] = "json_api_disabled"
-            except ValueError:
-                errors["base"] = "no_serial_number"
-            except NRGkickApiClientAuthenticationError:
-                errors["base"] = "invalid_auth"
-            except NRGkickApiClientCommunicationError:
+                host = _normalize_host(user_input[CONF_HOST])
+            except vol.Invalid:
                 errors["base"] = "cannot_connect"
-            except NRGkickApiClientError:
-                _LOGGER.exception("Unexpected error during reconfiguration")
-                errors["base"] = "unknown"
             else:
-                return self.async_update_reload_and_abort(
-                    entry, data=data, reason="reconfigure_successful"
-                )
+                data = {
+                    CONF_HOST: host,
+                    CONF_USERNAME: user_input.get(CONF_USERNAME),
+                    CONF_PASSWORD: user_input.get(CONF_PASSWORD),
+                }
+
+                try:
+                    await validate_input(
+                        self.hass,
+                        host,
+                        username=data.get(CONF_USERNAME),
+                        password=data.get(CONF_PASSWORD),
+                    )
+                except NRGkickApiClientApiDisabledError:
+                    errors["base"] = "json_api_disabled"
+                except ValueError:
+                    errors["base"] = "no_serial_number"
+                except NRGkickApiClientAuthenticationError:
+                    errors["base"] = "invalid_auth"
+                except NRGkickApiClientCommunicationError:
+                    errors["base"] = "cannot_connect"
+                except NRGkickApiClientError:
+                    _LOGGER.exception("Unexpected error during reconfiguration")
+                    errors["base"] = "unknown"
+                else:
+                    return self.async_update_reload_and_abort(
+                        entry, data=data, reason="reconfigure_successful"
+                    )
 
         host = entry.data.get(CONF_HOST, "")
         username = entry.data.get(CONF_USERNAME) or ""
