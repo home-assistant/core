@@ -35,19 +35,18 @@ class KNXButton(KnxYamlEntity, ButtonEntity):
 
     def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize a KNX button."""
-        super().__init__(
-            knx_module=knx_module,
-            device=XknxRawValue(
-                xknx=knx_module.xknx,
-                name=config[CONF_NAME],
-                payload_length=config[CONF_PAYLOAD_LENGTH],
-                group_address=config[KNX_ADDRESS],
-            ),
+        self._device = XknxRawValue(
+            xknx=knx_module.xknx,
+            name=config.get(CONF_NAME, ""),
+            payload_length=config[CONF_PAYLOAD_LENGTH],
+            group_address=config[KNX_ADDRESS],
         )
         self._payload = config[CONF_PAYLOAD]
-        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
-        self._attr_unique_id = (
-            f"{self._device.remote_value.group_address}_{self._payload}"
+        super().__init__(
+            knx_module=knx_module,
+            unique_id=f"{self._device.remote_value.group_address}_{self._payload}",
+            name=config.get(CONF_NAME),
+            entity_category=config.get(CONF_ENTITY_CATEGORY),
         )
 
     async def async_press(self) -> None:

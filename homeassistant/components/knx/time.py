@@ -105,20 +105,21 @@ class KnxYamlTime(_KNXTime, KnxYamlEntity):
 
     def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize a KNX time."""
+        self._device = XknxTimeDevice(
+            knx_module.xknx,
+            name=config.get(CONF_NAME, ""),
+            localtime=False,
+            group_address=config[KNX_ADDRESS],
+            group_address_state=config.get(CONF_STATE_ADDRESS),
+            respond_to_read=config[CONF_RESPOND_TO_READ],
+            sync_state=config[CONF_SYNC_STATE],
+        )
         super().__init__(
             knx_module=knx_module,
-            device=XknxTimeDevice(
-                knx_module.xknx,
-                name=config[CONF_NAME],
-                localtime=False,
-                group_address=config[KNX_ADDRESS],
-                group_address_state=config.get(CONF_STATE_ADDRESS),
-                respond_to_read=config[CONF_RESPOND_TO_READ],
-                sync_state=config[CONF_SYNC_STATE],
-            ),
+            unique_id=str(self._device.remote_value.group_address),
+            name=config.get(CONF_NAME),
+            entity_category=config.get(CONF_ENTITY_CATEGORY),
         )
-        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
-        self._attr_unique_id = str(self._device.remote_value.group_address)
 
 
 class KnxUiTime(_KNXTime, KnxUiEntity):
