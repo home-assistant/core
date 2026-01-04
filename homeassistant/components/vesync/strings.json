@@ -104,7 +104,7 @@
           "cookend": "Cooking finished",
           "cooking": "Cooking",
           "cookstop": "Cooking stopped",
-          "heating": "Heating",
+          "heating": "Prheating",
           "preheatend": "Preheating finished",
           "preheatstop": "Preheating stopped",
           "pullout": "Drawer pulled out",
@@ -134,6 +134,9 @@
       },
       "filter_life": {
         "name": "Filter lifetime"
+      },
+      "preheat_set_time": {
+        "name": "Preheat set time"
       },
       "remaining_time": {
         "name": "Remaining time"

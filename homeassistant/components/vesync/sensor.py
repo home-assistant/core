@@ -206,6 +206,14 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         value_fn=lambda device: device.state.remaining_time,
         exists_fn=is_air_fryer,
     ),
+    VeSyncSensorEntityDescription(
+        key="preheat_set_time",
+        translation_key="preheat_set_time",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        value_fn=lambda device: device.state.preheat_set_time,
+        exists_fn=is_air_fryer,
+    ),
 )
 
 
