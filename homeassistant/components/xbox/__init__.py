@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 
 from httpx import HTTPStatusError, RequestError, TimeoutException
@@ -63,10 +64,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: XboxConfigEntry) -> bool
     await consoles.async_config_entry_first_refresh()
 
     status = XboxConsoleStatusCoordinator(hass, entry, client, consoles.data)
-    await status.async_config_entry_first_refresh()
-
     presence = XboxPresenceCoordinator(hass, entry, client)
-    await presence.async_config_entry_first_refresh()
+    await asyncio.gather(
+        status.async_config_entry_first_refresh(),
+        presence.async_config_entry_first_refresh(),
+    )
 
     entry.runtime_data = XboxCoordinators(consoles, status, presence)
 
