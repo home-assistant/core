@@ -9,6 +9,7 @@ import pytest
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.nrgkick.api import (
+    NRGkickApiClientApiDisabledError,
     NRGkickApiClientAuthenticationError,
     NRGkickApiClientCommunicationError,
     NRGkickApiClientError,
@@ -479,6 +480,45 @@ async def test_zeroconf_json_api_disabled_no_serial_number(
 
     assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"base": "no_serial_number"}
+
+
+async def test_zeroconf_json_api_still_disabled_reports_error(
+    hass: HomeAssistant, mock_nrgkick_api
+) -> None:
+    """Test JSON API disabled flow reports json_api_disabled when still off."""
+    discovery_info = ZeroconfServiceInfo(
+        ip_address=ip_address("192.168.1.100"),
+        ip_addresses=[ip_address("192.168.1.100")],
+        hostname="nrgkick.local.",
+        name="NRGkick Test._nrgkick._tcp.local.",
+        port=80,
+        properties={
+            "serial_number": "TEST123456",
+            "device_name": "NRGkick Test",
+            "json_api_enabled": "0",
+        },
+        type="_nrgkick._tcp.local.",
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        "nrgkick",
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+    assert result["step_id"] == "zeroconf_enable_json_api"
+
+    mock_nrgkick_api.test_connection.side_effect = None
+    mock_nrgkick_api.get_info.side_effect = NRGkickApiClientApiDisabledError
+
+    with patch(
+        "custom_components.nrgkick.config_flow.NRGkickAPI",
+        return_value=mock_nrgkick_api,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["step_id"] == "zeroconf_enable_json_api"
+    assert result2["errors"] == {"base": "json_api_disabled"}
 
 
 @pytest.mark.parametrize(

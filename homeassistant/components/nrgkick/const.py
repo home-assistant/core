@@ -58,7 +58,9 @@ WARNING_CODE_MAP: Final[dict[int, str]] = {
     WarningCode.INCREASED_TEMPERATURE: "increased_temperature",
     WarningCode.INCREASED_HOUSING_TEMPERATURE: "increased_housing_temperature",
     WarningCode.INCREASED_ATTACHMENT_TEMPERATURE: "increased_attachment_temperature",
-    WarningCode.INCREASED_DOMESTIC_PLUG_TEMPERATURE: "increased_domestic_plug_temperature",
+    WarningCode.INCREASED_DOMESTIC_PLUG_TEMPERATURE: (
+        "increased_domestic_plug_temperature"
+    ),
 }
 
 

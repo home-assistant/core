@@ -16,6 +16,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .api import (
     NRGkickAPI,
+    NRGkickApiClientApiDisabledError,
     NRGkickApiClientAuthenticationError,
     NRGkickApiClientCommunicationError,
     NRGkickApiClientError,
@@ -68,6 +69,12 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator[NRGkickData]):
             values = await self.api.get_values()
         except NRGkickApiClientAuthenticationError as err:
             raise ConfigEntryAuthFailed from err
+        except NRGkickApiClientApiDisabledError as err:
+            raise UpdateFailed(
+                translation_domain=err.translation_domain,
+                translation_key=err.translation_key,
+                translation_placeholders=err.translation_placeholders,
+            ) from err
         except NRGkickApiClientCommunicationError as err:
             raise UpdateFailed(
                 translation_domain=err.translation_domain,

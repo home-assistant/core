@@ -9,11 +9,12 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 from functools import wraps
 import logging
-from typing import Any, Concatenate, ParamSpec, TypeVar
+from typing import TYPE_CHECKING, Any, Concatenate, ParamSpec, TypeVar, cast
 
 import aiohttp
 from nrgkick_api import (
     NRGkickAPI as LibraryAPI,
+    NRGkickAPIDisabledError,
     NRGkickAuthenticationError,
     NRGkickConnectionError,
 )
@@ -48,6 +49,16 @@ def _wrap_api_errors(
                 translation_key="authentication_error",
                 translation_placeholders={"host": self.host},
             ) from err
+        except NRGkickAPIDisabledError as err:
+            _LOGGER.info(
+                "JSON API is disabled for NRGkick device at %s",
+                self.host,
+            )
+            raise NRGkickApiClientApiDisabledError(
+                translation_domain=DOMAIN,
+                translation_key="json_api_disabled",
+                translation_placeholders={"host": self.host},
+            ) from err
         except NRGkickConnectionError as err:
             _LOGGER.error(
                 "Communication error with NRGkick device at %s: %s",
@@ -71,7 +82,11 @@ def _wrap_api_errors(
                 translation_placeholders={"error": str(err)},
             ) from err
 
-    return wrapper
+    return (
+        cast(Callable[Concatenate[NRGkickAPI, _P], Awaitable[_R]], wrapper)
+        if TYPE_CHECKING
+        else wrapper
+    )
 
 
 class NRGkickApiClientError(HomeAssistantError):
@@ -93,6 +108,13 @@ class NRGkickApiClientAuthenticationError(NRGkickApiClientError):
 
     translation_domain = DOMAIN
     translation_key = "authentication_error"
+
+
+class NRGkickApiClientApiDisabledError(NRGkickApiClientError):
+    """Exception for disabled NRGkick JSON API."""
+
+    translation_domain = DOMAIN
+    translation_key = "json_api_disabled"
 
 
 class NRGkickAPI:

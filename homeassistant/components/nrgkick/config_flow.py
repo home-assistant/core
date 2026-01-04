@@ -19,6 +19,7 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .api import (
     NRGkickAPI,
+    NRGkickApiClientApiDisabledError,
     NRGkickApiClientAuthenticationError,
     NRGkickApiClientCommunicationError,
     NRGkickApiClientError,
@@ -114,6 +115,8 @@ class NRGkickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 info = await validate_input(self.hass, host)
+            except NRGkickApiClientApiDisabledError:
+                errors["base"] = "json_api_disabled"
             except ValueError:
                 errors["base"] = "no_serial_number"
             except NRGkickApiClientAuthenticationError:
@@ -160,6 +163,8 @@ class NRGkickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     username=username,
                     password=password,
                 )
+            except NRGkickApiClientApiDisabledError:
+                errors["base"] = "json_api_disabled"
             except ValueError:
                 errors["base"] = "no_serial_number"
             except NRGkickApiClientAuthenticationError:
@@ -238,6 +243,8 @@ class NRGkickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 info = await validate_input(self.hass, host)
+            except NRGkickApiClientApiDisabledError:
+                errors["base"] = "json_api_disabled"
             except ValueError:
                 errors["base"] = "no_serial_number"
             except NRGkickApiClientAuthenticationError:
@@ -283,6 +290,8 @@ class NRGkickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     username=username,
                     password=password,
                 )
+            except NRGkickApiClientApiDisabledError:
+                errors["base"] = "json_api_disabled"
             except ValueError:
                 errors["base"] = "no_serial_number"
             except NRGkickApiClientAuthenticationError:
@@ -323,6 +332,8 @@ class NRGkickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 info = await validate_input(self.hass, host)
+            except NRGkickApiClientApiDisabledError:
+                errors["base"] = "json_api_disabled"
             except ValueError:
                 errors["base"] = "no_serial_number"
             except NRGkickApiClientAuthenticationError:
@@ -368,6 +379,8 @@ class NRGkickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     username=username,
                     password=password,
                 )
+            except NRGkickApiClientApiDisabledError:
+                errors["base"] = "json_api_disabled"
             except ValueError:
                 errors["base"] = "no_serial_number"
             except NRGkickApiClientAuthenticationError:
@@ -430,6 +443,8 @@ class NRGkickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     username=data.get(CONF_USERNAME),
                     password=data.get(CONF_PASSWORD),
                 )
+            except NRGkickApiClientApiDisabledError:
+                errors["base"] = "json_api_disabled"
             except ValueError:
                 errors["base"] = "no_serial_number"
             except NRGkickApiClientAuthenticationError:
@@ -493,6 +508,8 @@ class NRGkickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     username=data.get(CONF_USERNAME),
                     password=data.get(CONF_PASSWORD),
                 )
+            except NRGkickApiClientApiDisabledError:
+                errors["base"] = "json_api_disabled"
             except ValueError:
                 errors["base"] = "no_serial_number"
             except NRGkickApiClientAuthenticationError:

@@ -46,12 +46,31 @@ from .entity import NRGkickEntity
 PARALLEL_UPDATES = 0
 
 
-@dataclass(frozen=True, kw_only=True)
+@dataclass(frozen=True, kw_only=True, init=False)
 class NRGkickSensorEntityDescription(SensorEntityDescription):
     """Class describing NRGkick sensor entities."""
 
     value_path: tuple[str, ...]
     value_fn: Callable[[StateType], StateType] | None = None
+
+    def __init__(
+        self,
+        *,
+        value_path: tuple[str, ...],
+        value_fn: Callable[[StateType], StateType] | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Initialize the entity description.
+
+        Args:
+            value_path: Path segments to traverse inside coordinator data.
+            value_fn: Optional value transform.
+            **kwargs: Forwarded to Home Assistant's SensorEntityDescription.
+
+        """
+        super().__init__(**kwargs)
+        object.__setattr__(self, "value_path", value_path)
+        object.__setattr__(self, "value_fn", value_fn)
 
 
 def _map_code_to_translation_key(
@@ -66,6 +85,7 @@ def _map_code_to_translation_key(
     The NRGkick API typically returns `int` (including `IntEnum`) values for
     code-like fields. For forward compatibility, also accept strings and
     normalize them.
+
     """
     if isinstance(value, int):
         return mapping.get(value, default)
