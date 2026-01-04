@@ -129,6 +129,9 @@ multidict>=6.0.2
 # Version 2.0 added typing, prevent accidental fallbacks
 backoff>=2.0
 
+# Brotli 1.2.0 fixes CVE and is required for aiohttp 3.13.3 compatibility
+Brotli>=1.2.0
+
 # ensure pydantic version does not float since it might have breaking changes
 pydantic==2.12.2
 
