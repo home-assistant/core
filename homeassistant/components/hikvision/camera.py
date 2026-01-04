@@ -31,7 +31,6 @@ PARALLEL_UPDATES = 0
 SNAPSHOT_TIMEOUT = 10
 
 # Default RTSP port for Hikvision devices
-# TODO(pyHik): This should be fetched from device capabilities via ISAPI
 DEFAULT_RTSP_PORT = 554
 
 
