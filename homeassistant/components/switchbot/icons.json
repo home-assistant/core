@@ -1,5 +1,18 @@
 {
   "entity": {
+    "climate": {
+      "climate": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "manual": "mdi:hand-back-right",
+              "off": "mdi:hvac-off",
+              "schedule": "mdi:calendar-clock"
+            }
+          }
+        }
+      }
+    },
     "fan": {
       "air_purifier": {
         "default": "mdi:air-purifier",

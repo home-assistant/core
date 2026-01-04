@@ -14,7 +14,6 @@ from homeassistant.components.homeassistant_hardware.update import (
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
-    ResetTarget,
 )
 from homeassistant.components.update import UpdateDeviceClass
 from homeassistant.const import EntityCategory
@@ -24,6 +23,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import HomeAssistantConnectZBT2ConfigEntry
+from .config_flow import ZBT2FirmwareMixin
 from .const import DOMAIN, FIRMWARE, FIRMWARE_VERSION, HARDWARE_NAME, SERIAL_NUMBER
 
 _LOGGER = logging.getLogger(__name__)
@@ -134,7 +134,8 @@ async def async_setup_entry(
 class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
     """Connect ZBT-2 firmware update entity."""
 
-    bootloader_reset_methods = [ResetTarget.RTS_DTR]
+    BOOTLOADER_RESET_METHODS = ZBT2FirmwareMixin.BOOTLOADER_RESET_METHODS
+    APPLICATION_PROBE_METHODS = ZBT2FirmwareMixin.APPLICATION_PROBE_METHODS
 
     def __init__(
         self,

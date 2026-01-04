@@ -208,6 +208,11 @@ SELECTS: dict[DeviceCategory, tuple[SelectEntityDescription, ...]] = {
     ),
     DeviceCategory.SGBJ: (
         SelectEntityDescription(
+            key=DPCode.ALARM_STATE,
+            translation_key="siren_mode",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SelectEntityDescription(
             key=DPCode.ALARM_VOLUME,
             translation_key="volume",
             entity_category=EntityCategory.CONFIG,
@@ -395,13 +400,13 @@ class TuyaSelectEntity(TuyaEntity, SelectEntity):
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
         self._dpcode_wrapper = dpcode_wrapper
-        self._attr_options = dpcode_wrapper.enum_type_information.range
+        self._attr_options = dpcode_wrapper.options
 
     @property
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
-        return self._dpcode_wrapper.read_device_status(self.device)
+        return self._read_wrapper(self._dpcode_wrapper)
 
-    def select_option(self, option: str) -> None:
+    async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        self._send_command([{"code": self._dpcode_wrapper.dpcode, "value": option}])
+        await self._async_send_wrapper_updates(self._dpcode_wrapper, option)

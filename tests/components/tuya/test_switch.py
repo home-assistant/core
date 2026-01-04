@@ -95,43 +95,28 @@ async def test_sfkzq_deprecated_switch(
     "mock_device_code",
     ["cz_PGEkBctAbtzKOZng"],
 )
-async def test_turn_on(
-    hass: HomeAssistant,
-    mock_manager: Manager,
-    mock_config_entry: MockConfigEntry,
-    mock_device: CustomerDevice,
-) -> None:
-    """Test turning on a switch."""
-    entity_id = "switch.din_socket"
-    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
-
-    state = hass.states.get(entity_id)
-    assert state is not None, f"{entity_id} does not exist"
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {
-            ATTR_ENTITY_ID: entity_id,
-        },
-        blocking=True,
-    )
-    mock_manager.send_commands.assert_called_once_with(
-        mock_device.id, [{"code": "switch", "value": True}]
-    )
-
-
-@patch("homeassistant.components.tuya.PLATFORMS", [Platform.SWITCH])
 @pytest.mark.parametrize(
-    "mock_device_code",
-    ["cz_PGEkBctAbtzKOZng"],
+    ("service", "expected_commands"),
+    [
+        (
+            SERVICE_TURN_ON,
+            [{"code": "switch", "value": True}],
+        ),
+        (
+            SERVICE_TURN_OFF,
+            [{"code": "switch", "value": False}],
+        ),
+    ],
 )
-async def test_turn_off(
+async def test_action(
     hass: HomeAssistant,
     mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
+    service: str,
+    expected_commands: list[dict[str, Any]],
 ) -> None:
-    """Test turning off a switch."""
+    """Test switch action."""
     entity_id = "switch.din_socket"
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
 
@@ -139,14 +124,14 @@ async def test_turn_off(
     assert state is not None, f"{entity_id} does not exist"
     await hass.services.async_call(
         SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
+        service,
         {
             ATTR_ENTITY_ID: entity_id,
         },
         blocking=True,
     )
     mock_manager.send_commands.assert_called_once_with(
-        mock_device.id, [{"code": "switch", "value": False}]
+        mock_device.id, expected_commands
     )
 
 

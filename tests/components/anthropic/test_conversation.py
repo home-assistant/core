@@ -1,38 +1,15 @@
 """Tests for the Anthropic integration."""
 
-from collections.abc import AsyncGenerator
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from anthropic import RateLimitError
 from anthropic.types import (
-    CitationsDelta,
     CitationsWebSearchResultLocation,
     CitationWebSearchResultLocationParam,
-    InputJSONDelta,
-    Message,
-    MessageDeltaUsage,
-    RawContentBlockDeltaEvent,
-    RawContentBlockStartEvent,
-    RawContentBlockStopEvent,
-    RawMessageDeltaEvent,
-    RawMessageStartEvent,
-    RawMessageStopEvent,
-    RawMessageStreamEvent,
-    RedactedThinkingBlock,
-    ServerToolUseBlock,
-    SignatureDelta,
-    TextBlock,
-    TextCitation,
-    TextDelta,
     ThinkingBlock,
-    ThinkingDelta,
-    ToolUseBlock,
-    Usage,
     WebSearchResultBlock,
-    WebSearchToolResultBlock,
 )
-from anthropic.types.raw_message_delta_event import Delta
 from freezegun import freeze_time
 from httpx import URL, Request, Response
 import pytest
@@ -48,194 +25,20 @@ from homeassistant.helpers import chat_session, intent, llm
 from homeassistant.setup import async_setup_component
 from homeassistant.util import ulid as ulid_util
 
+from . import (
+    create_content_block,
+    create_redacted_thinking_block,
+    create_thinking_block,
+    create_tool_use_block,
+    create_web_search_block,
+    create_web_search_result_block,
+)
+
 from tests.common import MockConfigEntry
 
 
-async def stream_generator(
-    responses: list[RawMessageStreamEvent],
-) -> AsyncGenerator[RawMessageStreamEvent]:
-    """Generate a response from the assistant."""
-    for msg in responses:
-        yield msg
-
-
-def create_messages(
-    content_blocks: list[RawMessageStreamEvent], stop_reason="end_turn"
-) -> list[RawMessageStreamEvent]:
-    """Create a stream of messages with the specified content blocks."""
-    return [
-        RawMessageStartEvent(
-            message=Message(
-                type="message",
-                id="msg_1234567890ABCDEFGHIJKLMN",
-                content=[],
-                role="assistant",
-                model="claude-3-5-sonnet-20240620",
-                usage=Usage(input_tokens=0, output_tokens=0),
-            ),
-            type="message_start",
-        ),
-        *content_blocks,
-        RawMessageDeltaEvent(
-            type="message_delta",
-            delta=Delta(stop_reason=stop_reason, stop_sequence=""),
-            usage=MessageDeltaUsage(output_tokens=0),
-        ),
-        RawMessageStopEvent(type="message_stop"),
-    ]
-
-
-def create_content_block(
-    index: int, text_parts: list[str], citations: list[TextCitation] | None = None
-) -> list[RawMessageStreamEvent]:
-    """Create a text content block with the specified deltas."""
-    return [
-        RawContentBlockStartEvent(
-            type="content_block_start",
-            content_block=TextBlock(
-                text="", type="text", citations=[] if citations else None
-            ),
-            index=index,
-        ),
-        *[
-            RawContentBlockDeltaEvent(
-                delta=CitationsDelta(citation=citation, type="citations_delta"),
-                index=index,
-                type="content_block_delta",
-            )
-            for citation in (citations or [])
-        ],
-        *[
-            RawContentBlockDeltaEvent(
-                delta=TextDelta(text=text_part, type="text_delta"),
-                index=index,
-                type="content_block_delta",
-            )
-            for text_part in text_parts
-        ],
-        RawContentBlockStopEvent(index=index, type="content_block_stop"),
-    ]
-
-
-def create_thinking_block(
-    index: int, thinking_parts: list[str]
-) -> list[RawMessageStreamEvent]:
-    """Create a thinking block with the specified deltas."""
-    return [
-        RawContentBlockStartEvent(
-            type="content_block_start",
-            content_block=ThinkingBlock(signature="", thinking="", type="thinking"),
-            index=index,
-        ),
-        *[
-            RawContentBlockDeltaEvent(
-                delta=ThinkingDelta(thinking=thinking_part, type="thinking_delta"),
-                index=index,
-                type="content_block_delta",
-            )
-            for thinking_part in thinking_parts
-        ],
-        RawContentBlockDeltaEvent(
-            delta=SignatureDelta(
-                signature="ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/N"
-                "oB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ"
-                "4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo"
-                "21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==",
-                type="signature_delta",
-            ),
-            index=index,
-            type="content_block_delta",
-        ),
-        RawContentBlockStopEvent(index=index, type="content_block_stop"),
-    ]
-
-
-def create_redacted_thinking_block(index: int) -> list[RawMessageStreamEvent]:
-    """Create a redacted thinking block."""
-    return [
-        RawContentBlockStartEvent(
-            type="content_block_start",
-            content_block=RedactedThinkingBlock(
-                data="EroBCkYIARgCKkBJDytPJhw//4vy3t7aE+LfIkxvkAh51cBPrAvBCo6AjgI57Zt9K"
-                "WPnUVV50OQJ0KZzUFoGZG5sxg95zx4qMwkoEgz43Su3myJKckvj03waDBZLIBSeoAeRUeV"
-                "sJCIwQ5edQN0sa+HNeB/KUBkoMUwV+IT0eIhcpFxnILdvxUAKM4R1o4KG3x+yO0eo/kyOK"
-                "iKfrCPFQhvBVmTZPFhgA2Ow8L9gGDVipcz6x3Uu9YETGEny",
-                type="redacted_thinking",
-            ),
-            index=index,
-        ),
-        RawContentBlockStopEvent(index=index, type="content_block_stop"),
-    ]
-
-
-def create_tool_use_block(
-    index: int, tool_id: str, tool_name: str, json_parts: list[str]
-) -> list[RawMessageStreamEvent]:
-    """Create a tool use content block with the specified deltas."""
-    return [
-        RawContentBlockStartEvent(
-            type="content_block_start",
-            content_block=ToolUseBlock(
-                id=tool_id, name=tool_name, input={}, type="tool_use"
-            ),
-            index=index,
-        ),
-        *[
-            RawContentBlockDeltaEvent(
-                delta=InputJSONDelta(partial_json=json_part, type="input_json_delta"),
-                index=index,
-                type="content_block_delta",
-            )
-            for json_part in json_parts
-        ],
-        RawContentBlockStopEvent(index=index, type="content_block_stop"),
-    ]
-
-
-def create_web_search_block(
-    index: int, id: str, query_parts: list[str]
-) -> list[RawMessageStreamEvent]:
-    """Create a server tool use block for web search."""
-    return [
-        RawContentBlockStartEvent(
-            type="content_block_start",
-            content_block=ServerToolUseBlock(
-                type="server_tool_use", id=id, input={}, name="web_search"
-            ),
-            index=index,
-        ),
-        *[
-            RawContentBlockDeltaEvent(
-                delta=InputJSONDelta(type="input_json_delta", partial_json=query_part),
-                index=index,
-                type="content_block_delta",
-            )
-            for query_part in query_parts
-        ],
-        RawContentBlockStopEvent(index=index, type="content_block_stop"),
-    ]
-
-
-def create_web_search_result_block(
-    index: int, id: str, results: list[WebSearchResultBlock]
-) -> list[RawMessageStreamEvent]:
-    """Create a server tool result block for web search results."""
-    return [
-        RawContentBlockStartEvent(
-            type="content_block_start",
-            content_block=WebSearchToolResultBlock(
-                type="web_search_tool_result", tool_use_id=id, content=results
-            ),
-            index=index,
-        ),
-        RawContentBlockStopEvent(index=index, type="content_block_stop"),
-    ]
-
-
 async def test_entity(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_init_component,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_init_component
 ) -> None:
     """Test entity properties."""
     state = hass.states.get("conversation.claude_conversation")
@@ -263,30 +66,29 @@ async def test_entity(
 
 
 async def test_error_handling(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_init_component
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream: AsyncMock,
 ) -> None:
     """Test that the default prompt works."""
-    with patch(
-        "anthropic.resources.messages.AsyncMessages.create",
-        new_callable=AsyncMock,
-        side_effect=RateLimitError(
-            message=None,
-            response=Response(
-                status_code=429, request=Request(method="POST", url=URL())
-            ),
-            body=None,
-        ),
-    ):
-        result = await conversation.async_converse(
-            hass, "hello", None, Context(), agent_id="conversation.claude_conversation"
-        )
+    mock_create_stream.side_effect = RateLimitError(
+        message=None,
+        response=Response(status_code=429, request=Request(method="POST", url=URL())),
+        body=None,
+    )
+
+    result = await conversation.async_converse(
+        hass, "hello", None, Context(), agent_id="conversation.claude_conversation"
+    )
 
     assert result.response.response_type == intent.IntentResponseType.ERROR
     assert result.response.error_code == "unknown", result
 
 
 async def test_template_error(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that template error handling works."""
     subentry = next(iter(mock_config_entry.subentries.values()))
@@ -297,24 +99,22 @@ async def test_template_error(
             "prompt": "talk like a {% if True %}smarthome{% else %}pirate please.",
         },
     )
-    with (
-        patch("anthropic.resources.models.AsyncModels.retrieve"),
-        patch(
-            "anthropic.resources.messages.AsyncMessages.create", new_callable=AsyncMock
-        ),
-    ):
+    with patch("anthropic.resources.models.AsyncModels.list", new_callable=AsyncMock):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
-        result = await conversation.async_converse(
-            hass, "hello", None, Context(), agent_id="conversation.claude_conversation"
-        )
+
+    result = await conversation.async_converse(
+        hass, "hello", None, Context(), agent_id="conversation.claude_conversation"
+    )
 
     assert result.response.response_type == intent.IntentResponseType.ERROR
     assert result.response.error_code == "unknown", result
 
 
 async def test_template_variables(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_create_stream: AsyncMock,
 ) -> None:
     """Test that template variables work."""
     context = Context(user_id="12345")
@@ -333,20 +133,14 @@ async def test_template_variables(
             ),
         },
     )
+
+    mock_create_stream.return_value = [
+        create_content_block(0, ["Okay, let", " me take care of that for you", "."])
+    ]
     with (
-        patch("anthropic.resources.models.AsyncModels.retrieve"),
-        patch(
-            "anthropic.resources.messages.AsyncMessages.create", new_callable=AsyncMock
-        ) as mock_create,
+        patch("anthropic.resources.models.AsyncModels.list", new_callable=AsyncMock),
         patch("homeassistant.auth.AuthManager.async_get_user", return_value=mock_user),
     ):
-        mock_create.return_value = stream_generator(
-            create_messages(
-                create_content_block(
-                    0, ["Okay, let", " me take care of that for you", "."]
-                )
-            )
-        )
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
         result = await conversation.async_converse(
@@ -358,14 +152,14 @@ async def test_template_variables(
         result.response.speech["plain"]["speech"]
         == "Okay, let me take care of that for you."
     )
-    assert "The user name is Test User." in mock_create.call_args.kwargs["system"]
-    assert "The user id is 12345." in mock_create.call_args.kwargs["system"]
+    assert (
+        "The user name is Test User." in mock_create_stream.call_args.kwargs["system"]
+    )
+    assert "The user id is 12345." in mock_create_stream.call_args.kwargs["system"]
 
 
 async def test_conversation_agent(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_init_component,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_init_component
 ) -> None:
     """Test Anthropic Agent."""
     agent = conversation.agent_manager.async_get_agent(
@@ -394,6 +188,7 @@ async def test_function_call(
     hass: HomeAssistant,
     mock_config_entry_with_assist: MockConfigEntry,
     mock_init_component,
+    mock_create_stream: AsyncMock,
     tool_call_json_parts: list[str],
     expected_call_tool_args: dict[str, Any],
 ) -> None:
@@ -411,41 +206,20 @@ async def test_function_call(
 
     mock_get_tools.return_value = [mock_tool]
 
-    def completion_result(*args, messages, **kwargs):
-        for message in messages:
-            for content in message["content"]:
-                if not isinstance(content, str) and content["type"] == "tool_use":
-                    return stream_generator(
-                        create_messages(
-                            create_content_block(
-                                0, ["I have ", "successfully called ", "the function"]
-                            ),
-                        )
-                    )
+    mock_create_stream.return_value = [
+        (
+            *create_content_block(0, ["Certainly, calling it now!"]),
+            *create_tool_use_block(
+                1,
+                "toolu_0123456789AbCdEfGhIjKlM",
+                "test_tool",
+                tool_call_json_parts,
+            ),
+        ),
+        create_content_block(0, ["I have ", "successfully called ", "the function"]),
+    ]
 
-        return stream_generator(
-            create_messages(
-                [
-                    *create_content_block(0, ["Certainly, calling it now!"]),
-                    *create_tool_use_block(
-                        1,
-                        "toolu_0123456789AbCdEfGhIjKlM",
-                        "test_tool",
-                        tool_call_json_parts,
-                    ),
-                ],
-                stop_reason="tool_use",
-            )
-        )
-
-    with (
-        patch(
-            "anthropic.resources.messages.AsyncMessages.create",
-            new_callable=AsyncMock,
-            side_effect=completion_result,
-        ) as mock_create,
-        freeze_time("2024-06-03 23:00:00"),
-    ):
+    with freeze_time("2024-06-03 23:00:00"):
         result = await conversation.async_converse(
             hass,
             "Please call the test function",
@@ -456,7 +230,7 @@ async def test_function_call(
 
     assert (
         "You are a voice assistant for Home Assistant."
-        in mock_create.mock_calls[1][2]["system"]
+        in mock_create_stream.mock_calls[1][2]["system"]
     )
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
@@ -464,7 +238,7 @@ async def test_function_call(
         result.response.speech["plain"]["speech"]
         == "I have successfully called the function"
     )
-    assert mock_create.mock_calls[1][2]["messages"][2] == {
+    assert mock_create_stream.mock_calls[1][2]["messages"][2] == {
         "role": "user",
         "content": [
             {
@@ -497,6 +271,7 @@ async def test_function_exception(
     hass: HomeAssistant,
     mock_config_entry_with_assist: MockConfigEntry,
     mock_init_component,
+    mock_create_stream: AsyncMock,
 ) -> None:
     """Test function call with exception."""
     agent_id = "conversation.claude_conversation"
@@ -512,53 +287,33 @@ async def test_function_exception(
 
     mock_get_tools.return_value = [mock_tool]
 
-    def completion_result(*args, messages, **kwargs):
-        for message in messages:
-            for content in message["content"]:
-                if not isinstance(content, str) and content["type"] == "tool_use":
-                    return stream_generator(
-                        create_messages(
-                            create_content_block(
-                                0,
-                                ["There was an error calling the function"],
-                            )
-                        )
-                    )
+    mock_create_stream.return_value = [
+        (
+            *create_content_block(0, ["Certainly, calling it now!"]),
+            *create_tool_use_block(
+                1,
+                "toolu_0123456789AbCdEfGhIjKlM",
+                "test_tool",
+                ['{"param1": "test_value"}'],
+            ),
+        ),
+        create_content_block(0, ["There was an error calling the function"]),
+    ]
 
-        return stream_generator(
-            create_messages(
-                [
-                    *create_content_block(0, ["Certainly, calling it now!"]),
-                    *create_tool_use_block(
-                        1,
-                        "toolu_0123456789AbCdEfGhIjKlM",
-                        "test_tool",
-                        ['{"param1": "test_value"}'],
-                    ),
-                ],
-                stop_reason="tool_use",
-            )
-        )
-
-    with patch(
-        "anthropic.resources.messages.AsyncMessages.create",
-        new_callable=AsyncMock,
-        side_effect=completion_result,
-    ) as mock_create:
-        result = await conversation.async_converse(
-            hass,
-            "Please call the test function",
-            None,
-            context,
-            agent_id=agent_id,
-        )
+    result = await conversation.async_converse(
+        hass,
+        "Please call the test function",
+        None,
+        context,
+        agent_id=agent_id,
+    )
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert (
         result.response.speech["plain"]["speech"]
         == "There was an error calling the function"
     )
-    assert mock_create.mock_calls[1][2]["messages"][2] == {
+    assert mock_create_stream.mock_calls[1][2]["messages"][2] == {
         "role": "user",
         "content": [
             {
@@ -589,6 +344,7 @@ async def test_assist_api_tools_conversion(
     hass: HomeAssistant,
     mock_config_entry_with_assist: MockConfigEntry,
     mock_init_component,
+    mock_create_stream: AsyncMock,
 ) -> None:
     """Test that we are able to convert actual tools from Assist API."""
     for component in (
@@ -606,20 +362,14 @@ async def test_assist_api_tools_conversion(
         assert await async_setup_component(hass, component, {})
 
     agent_id = "conversation.claude_conversation"
-    with patch(
-        "anthropic.resources.messages.AsyncMessages.create",
-        new_callable=AsyncMock,
-        return_value=stream_generator(
-            create_messages(
-                create_content_block(0, ["Hello, how can I help you?"]),
-            ),
-        ),
-    ) as mock_create:
-        await conversation.async_converse(
-            hass, "hello", None, Context(), agent_id=agent_id
-        )
 
-    tools = mock_create.mock_calls[0][2]["tools"]
+    mock_create_stream.return_value = [
+        create_content_block(0, ["Hello, how can I help you?"])
+    ]
+
+    await conversation.async_converse(hass, "hello", None, Context(), agent_id=agent_id)
+
+    tools = mock_create_stream.mock_calls[0][2]["tools"]
     assert tools
 
 
@@ -652,89 +402,74 @@ async def test_conversation_id(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_init_component,
+    mock_create_stream: AsyncMock,
 ) -> None:
     """Test conversation ID is honored."""
 
-    def create_stream_generator(*args, **kwargs) -> Any:
-        return stream_generator(
-            create_messages(
-                create_content_block(0, ["Hello, how can I help you?"]),
-            ),
-        )
+    mock_create_stream.return_value = [
+        create_content_block(0, ["Hello, how can I help you?"])
+    ] * 5
 
-    with patch(
-        "anthropic.resources.messages.AsyncMessages.create",
-        new_callable=AsyncMock,
-        side_effect=create_stream_generator,
-    ):
-        result = await conversation.async_converse(
-            hass,
-            "hello",
-            "1234",
-            Context(),
-            agent_id="conversation.claude_conversation",
-        )
+    result = await conversation.async_converse(
+        hass,
+        "hello",
+        "1234",
+        Context(),
+        agent_id="conversation.claude_conversation",
+    )
 
-        result = await conversation.async_converse(
-            hass, "hello", None, None, agent_id="conversation.claude_conversation"
-        )
+    result = await conversation.async_converse(
+        hass, "hello", None, None, agent_id="conversation.claude_conversation"
+    )
 
-        conversation_id = result.conversation_id
+    conversation_id = result.conversation_id
 
-        result = await conversation.async_converse(
-            hass,
-            "hello",
-            conversation_id,
-            None,
-            agent_id="conversation.claude_conversation",
-        )
+    result = await conversation.async_converse(
+        hass,
+        "hello",
+        conversation_id,
+        None,
+        agent_id="conversation.claude_conversation",
+    )
 
-        assert result.conversation_id == conversation_id
+    assert result.conversation_id == conversation_id
 
-        unknown_id = ulid_util.ulid()
+    unknown_id = ulid_util.ulid()
 
-        result = await conversation.async_converse(
-            hass, "hello", unknown_id, None, agent_id="conversation.claude_conversation"
-        )
+    result = await conversation.async_converse(
+        hass, "hello", unknown_id, None, agent_id="conversation.claude_conversation"
+    )
 
-        assert result.conversation_id != unknown_id
+    assert result.conversation_id != unknown_id
 
-        result = await conversation.async_converse(
-            hass, "hello", "koala", None, agent_id="conversation.claude_conversation"
-        )
+    result = await conversation.async_converse(
+        hass, "hello", "koala", None, agent_id="conversation.claude_conversation"
+    )
 
-        assert result.conversation_id == "koala"
+    assert result.conversation_id == "koala"
 
 
 async def test_refusal(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_init_component,
+    mock_create_stream: AsyncMock,
 ) -> None:
     """Test refusal due to potential policy violation."""
-    with patch(
-        "anthropic.resources.messages.AsyncMessages.create",
-        new_callable=AsyncMock,
-        return_value=stream_generator(
-            create_messages(
-                [
-                    *create_content_block(
-                        0,
-                        ["Certainly! To take over the world you need just a simple "],
-                    ),
-                ],
-                stop_reason="refusal",
-            ),
-        ),
-    ):
-        result = await conversation.async_converse(
-            hass,
-            "ANTHROPIC_MAGIC_STRING_TRIGGER_REFUSAL_1FAEFB6177B4672DEE07F9D3AFC62588CCD"
-            "2631EDCF22E8CCC1FB35B501C9C86",
-            None,
-            Context(),
-            agent_id="conversation.claude_conversation",
+    mock_create_stream.return_value = [
+        create_content_block(
+            0, ["Certainly! To take over the world you need just a simple "]
         )
+    ]
+
+    result = await conversation.async_converse(
+        hass,
+        "ANTHROPIC_MAGIC_STRING_TRIGGER_REFUSAL_1FAEFB6177B4672DEE07F9D3AFC62588CCD2631"
+        "EDCF22E8CCC1FB35B501C9C86",
+        None,
+        Context(),
+        agent_id="conversation.claude_conversation",
+    )
 
     assert result.response.response_type == intent.IntentResponseType.ERROR
     assert result.response.error_code == "unknown"
@@ -748,34 +483,30 @@ async def test_extended_thinking(
     hass: HomeAssistant,
     mock_config_entry_with_extended_thinking: MockConfigEntry,
     mock_init_component,
+    mock_create_stream: AsyncMock,
 ) -> None:
     """Test extended thinking support."""
-    with patch(
-        "anthropic.resources.messages.AsyncMessages.create",
-        new_callable=AsyncMock,
-        return_value=stream_generator(
-            create_messages(
+    mock_create_stream.return_value = [
+        (
+            *create_thinking_block(
+                0,
                 [
-                    *create_thinking_block(
-                        0,
-                        [
-                            "The user has just",
-                            ' greeted me with "Hi".',
-                            " This is a simple greeting an",
-                            "d doesn't require any Home Assistant function",
-                            " calls. I should respond with",
-                            " a friendly greeting and let them know I'm available",
-                            " to help with their smart home.",
-                        ],
-                    ),
-                    *create_content_block(1, ["Hello, how can I help you today?"]),
-                ]
+                    "The user has just",
+                    ' greeted me with "Hi".',
+                    " This is a simple greeting an",
+                    "d doesn't require any Home Assistant function",
+                    " calls. I should respond with",
+                    " a friendly greeting and let them know I'm available",
+                    " to help with their smart home.",
+                ],
             ),
-        ),
-    ):
-        result = await conversation.async_converse(
-            hass, "hello", None, Context(), agent_id="conversation.claude_conversation"
+            *create_content_block(1, ["Hello, how can I help you today?"]),
         )
+    ]
+
+    result = await conversation.async_converse(
+        hass, "hello", None, Context(), agent_id="conversation.claude_conversation"
+    )
 
     chat_log = hass.data.get(conversation.chat_log.DATA_CHAT_LOGS).get(
         result.conversation_id
@@ -785,35 +516,32 @@ async def test_extended_thinking(
     assert chat_log.content[2].content == "Hello, how can I help you today?"
 
 
+@freeze_time("2024-05-24 12:00:00")
 async def test_redacted_thinking(
     hass: HomeAssistant,
     mock_config_entry_with_extended_thinking: MockConfigEntry,
     mock_init_component,
+    mock_create_stream: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test extended thinking with redacted thinking blocks."""
-    with patch(
-        "anthropic.resources.messages.AsyncMessages.create",
-        new_callable=AsyncMock,
-        return_value=stream_generator(
-            create_messages(
-                [
-                    *create_redacted_thinking_block(0),
-                    *create_redacted_thinking_block(1),
-                    *create_redacted_thinking_block(2),
-                    *create_content_block(3, ["How can I help you today?"]),
-                ]
-            ),
-        ),
-    ):
-        result = await conversation.async_converse(
-            hass,
-            "ANTHROPIC_MAGIC_STRING_TRIGGER_REDACTED_THINKING_46C9A13E193C177646C7398A9"
-            "8432ECCCE4C1253D5E2D82641AC0E52CC2876CB",
-            None,
-            Context(),
-            agent_id="conversation.claude_conversation",
+    mock_create_stream.return_value = [
+        (
+            *create_redacted_thinking_block(0),
+            *create_redacted_thinking_block(1),
+            *create_redacted_thinking_block(2),
+            *create_content_block(3, ["How can I help you today?"]),
         )
+    ]
+
+    result = await conversation.async_converse(
+        hass,
+        "ANTHROPIC_MAGIC_STRING_TRIGGER_REDACTED_THINKING_46C9A13E193C177646C7398A98432"
+        "ECCCE4C1253D5E2D82641AC0E52CC2876CB",
+        None,
+        Context(),
+        agent_id="conversation.claude_conversation",
+    )
 
     chat_log = hass.data.get(conversation.chat_log.DATA_CHAT_LOGS).get(
         result.conversation_id
@@ -828,6 +556,7 @@ async def test_extended_thinking_tool_call(
     hass: HomeAssistant,
     mock_config_entry_with_extended_thinking: MockConfigEntry,
     mock_init_component,
+    mock_create_stream: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test that thinking blocks and their order are preserved in with tool calls."""
@@ -844,57 +573,36 @@ async def test_extended_thinking_tool_call(
 
     mock_get_tools.return_value = [mock_tool]
 
-    def completion_result(*args, messages, **kwargs):
-        for message in messages:
-            for content in message["content"]:
-                if not isinstance(content, str) and content["type"] == "tool_use":
-                    return stream_generator(
-                        create_messages(
-                            create_content_block(
-                                0, ["I have ", "successfully called ", "the function"]
-                            ),
-                        )
-                    )
-
-        return stream_generator(
-            create_messages(
+    mock_create_stream.return_value = [
+        (
+            *create_thinking_block(
+                0,
                 [
-                    *create_thinking_block(
-                        0,
-                        [
-                            "The user asked me to",
-                            " call a test function.",
-                            "Is it a test? What",
-                            " would the function",
-                            " do? Would it violate",
-                            " any privacy or security",
-                            " policies?",
-                        ],
-                    ),
-                    *create_redacted_thinking_block(1),
-                    *create_thinking_block(
-                        2, ["Okay, let's give it a shot.", " Will I pass the test?"]
-                    ),
-                    *create_content_block(3, ["Certainly, calling it now!"]),
-                    *create_tool_use_block(
-                        1,
-                        "toolu_0123456789AbCdEfGhIjKlM",
-                        "test_tool",
-                        ['{"para', 'm1": "test_valu', 'e"}'],
-                    ),
+                    "The user asked me to",
+                    " call a test function.",
+                    "Is it a test? What",
+                    " would the function",
+                    " do? Would it violate",
+                    " any privacy or security",
+                    " policies?",
                 ],
-                stop_reason="tool_use",
-            )
-        )
+            ),
+            *create_redacted_thinking_block(1),
+            *create_thinking_block(
+                2, ["Okay, let's give it a shot.", " Will I pass the test?"]
+            ),
+            *create_content_block(3, ["Certainly, calling it now!"]),
+            *create_tool_use_block(
+                1,
+                "toolu_0123456789AbCdEfGhIjKlM",
+                "test_tool",
+                ['{"para', 'm1": "test_valu', 'e"}'],
+            ),
+        ),
+        create_content_block(0, ["I have ", "successfully called ", "the function"]),
+    ]
 
-    with (
-        patch(
-            "anthropic.resources.messages.AsyncMessages.create",
-            new_callable=AsyncMock,
-            side_effect=completion_result,
-        ) as mock_create,
-        freeze_time("2024-06-03 23:00:00"),
-    ):
+    with freeze_time("2024-06-03 23:00:00"):
         result = await conversation.async_converse(
             hass,
             "Please call the test function",
@@ -908,13 +616,15 @@ async def test_extended_thinking_tool_call(
     )
 
     assert chat_log.content == snapshot
-    assert mock_create.mock_calls[1][2]["messages"] == snapshot
+    assert mock_create_stream.mock_calls[1][2]["messages"] == snapshot
 
 
+@freeze_time("2025-10-31 12:00:00")
 async def test_web_search(
     hass: HomeAssistant,
     mock_config_entry_with_web_search: MockConfigEntry,
     mock_init_component,
+    mock_create_stream: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test web search."""
@@ -934,88 +644,81 @@ async def test_web_search(
             encrypted_content="ABCDEFG",
         ),
     ]
-    with patch(
-        "anthropic.resources.messages.AsyncMessages.create",
-        new_callable=AsyncMock,
-        return_value=stream_generator(
-            create_messages(
+    mock_create_stream.return_value = [
+        (
+            *create_thinking_block(
+                0,
                 [
-                    *create_thinking_block(
-                        0,
-                        [
-                            "The user is",
-                            " asking about today's news, which",
-                            " requires current, real-time information",
-                            ". This is clearly something that requires recent",
-                            " information beyond my knowledge cutoff.",
-                            " I should use the web",
-                            "_search tool to fin",
-                            "d today's news.",
-                        ],
-                    ),
-                    *create_content_block(
-                        1, ["To get today's news, I'll perform a web search"]
-                    ),
-                    *create_web_search_block(
-                        2,
-                        "srvtoolu_12345ABC",
-                        ["", '{"que', 'ry"', ": \"today's", ' news"}'],
-                    ),
-                    *create_web_search_result_block(
-                        3, "srvtoolu_12345ABC", web_search_results
-                    ),
-                    *create_content_block(
-                        4,
-                        ["Here's what I found on the web about today's news:\n", "1. "],
-                    ),
-                    *create_content_block(
-                        5,
-                        ["New Home Assistant release"],
-                        citations=[
-                            CitationsWebSearchResultLocation(
-                                type="web_search_result_location",
-                                cited_text="This release iterates on some of the features we introduced in the last couple of releases, but also...",
-                                encrypted_index="AAA==",
-                                title="Home Assistant Release",
-                                url="https://www.example.com/todays-news",
-                            )
-                        ],
-                    ),
-                    *create_content_block(6, ["\n2. "]),
-                    *create_content_block(
-                        7,
-                        ["Something incredible happened"],
-                        citations=[
-                            CitationsWebSearchResultLocation(
-                                type="web_search_result_location",
-                                cited_text="Breaking news from around the world today includes major events in technology, politics, and culture...",
-                                encrypted_index="AQE=",
-                                title="Breaking News",
-                                url="https://www.newssite.com/breaking-news",
-                            ),
-                            CitationsWebSearchResultLocation(
-                                type="web_search_result_location",
-                                cited_text="Well, this happened...",
-                                encrypted_index="AgI=",
-                                title="Breaking News",
-                                url="https://www.newssite.com/breaking-news",
-                            ),
-                        ],
-                    ),
-                    *create_content_block(
-                        8, ["\nThose are the main headlines making news today."]
-                    ),
-                ]
+                    "The user is",
+                    " asking about today's news, which",
+                    " requires current, real-time information",
+                    ". This is clearly something that requires recent",
+                    " information beyond my knowledge cutoff.",
+                    " I should use the web",
+                    "_search tool to fin",
+                    "d today's news.",
+                ],
             ),
-        ),
-    ):
-        result = await conversation.async_converse(
-            hass,
-            "What's on the news today?",
-            None,
-            Context(),
-            agent_id="conversation.claude_conversation",
+            *create_content_block(
+                1, ["To get today's news, I'll perform a web search"]
+            ),
+            *create_web_search_block(
+                2,
+                "srvtoolu_12345ABC",
+                ["", '{"que', 'ry"', ": \"today's", ' news"}'],
+            ),
+            *create_web_search_result_block(3, "srvtoolu_12345ABC", web_search_results),
+            *create_content_block(
+                4,
+                ["Here's what I found on the web about today's news:\n", "1. "],
+            ),
+            *create_content_block(
+                5,
+                ["New Home Assistant release"],
+                citations=[
+                    CitationsWebSearchResultLocation(
+                        type="web_search_result_location",
+                        cited_text="This release iterates on some of the features we introduced in the last couple of releases, but also...",
+                        encrypted_index="AAA==",
+                        title="Home Assistant Release",
+                        url="https://www.example.com/todays-news",
+                    )
+                ],
+            ),
+            *create_content_block(6, ["\n2. "]),
+            *create_content_block(
+                7,
+                ["Something incredible happened"],
+                citations=[
+                    CitationsWebSearchResultLocation(
+                        type="web_search_result_location",
+                        cited_text="Breaking news from around the world today includes major events in technology, politics, and culture...",
+                        encrypted_index="AQE=",
+                        title="Breaking News",
+                        url="https://www.newssite.com/breaking-news",
+                    ),
+                    CitationsWebSearchResultLocation(
+                        type="web_search_result_location",
+                        cited_text="Well, this happened...",
+                        encrypted_index="AgI=",
+                        title="Breaking News",
+                        url="https://www.newssite.com/breaking-news",
+                    ),
+                ],
+            ),
+            *create_content_block(
+                8, ["\nThose are the main headlines making news today."]
+            ),
         )
+    ]
+
+    result = await conversation.async_converse(
+        hass,
+        "What's on the news today?",
+        None,
+        Context(),
+        agent_id="conversation.claude_conversation",
+    )
 
     chat_log = hass.data.get(conversation.chat_log.DATA_CHAT_LOGS).get(
         result.conversation_id
@@ -1196,25 +899,16 @@ async def test_history_conversion(
     hass: HomeAssistant,
     mock_config_entry_with_assist: MockConfigEntry,
     mock_init_component,
+    mock_create_stream: AsyncMock,
     snapshot: SnapshotAssertion,
     content: list[conversation.chat_log.Content],
 ) -> None:
     """Test conversion of chat_log entries into API parameters."""
     conversation_id = "conversation_id"
+    mock_create_stream.return_value = [create_content_block(0, ["Yes, I am sure!"])]
     with (
         chat_session.async_get_chat_session(hass, conversation_id) as session,
         conversation.async_get_chat_log(hass, session) as chat_log,
-        patch(
-            "anthropic.resources.messages.AsyncMessages.create",
-            new_callable=AsyncMock,
-            return_value=stream_generator(
-                create_messages(
-                    [
-                        *create_content_block(0, ["Yes, I am sure!"]),
-                    ]
-                ),
-            ),
-        ) as mock_create,
     ):
         chat_log.content = content
 
@@ -1226,4 +920,4 @@ async def test_history_conversion(
             agent_id="conversation.claude_conversation",
         )
 
-        assert mock_create.mock_calls[0][2]["messages"] == snapshot
+        assert mock_create_stream.mock_calls[0][2]["messages"] == snapshot

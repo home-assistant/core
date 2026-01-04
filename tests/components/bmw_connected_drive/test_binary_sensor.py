@@ -2,7 +2,6 @@
 
 from unittest.mock import patch
 
-from freezegun import freeze_time
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -15,7 +14,7 @@ from . import setup_mocked_integration
 from tests.common import snapshot_platform
 
 
-@freeze_time("2023-06-22 10:30:00+00:00")
+@pytest.mark.freeze_time("2023-06-22 10:30:00+00:00")
 @pytest.mark.usefixtures("bmw_fixture")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_entity_state_attrs(

@@ -84,7 +84,8 @@ class XboxBaseEntity(CoordinatorEntity[XboxUpdateCoordinator]):
 
         return (
             entity_picture
-            if (fn := self.entity_description.entity_picture_fn) is not None
+            if self.available
+            and (fn := self.entity_description.entity_picture_fn) is not None
             and (entity_picture := fn(self.data, self.title_info)) is not None
             else super().entity_picture
         )
@@ -94,10 +95,15 @@ class XboxBaseEntity(CoordinatorEntity[XboxUpdateCoordinator]):
         """Return entity specific state attributes."""
         return (
             fn(self.data, self.title_info)
-            if hasattr(self.entity_description, "attributes_fn")
-            and (fn := self.entity_description.attributes_fn)
+            if (fn := self.entity_description.attributes_fn)
             else super().extra_state_attributes
         )
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+
+        return super().available and self.xuid in self.coordinator.data.presence
 
 
 class XboxConsoleBaseEntity(CoordinatorEntity[XboxUpdateCoordinator]):
@@ -122,7 +128,7 @@ class XboxConsoleBaseEntity(CoordinatorEntity[XboxUpdateCoordinator]):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, console.id)},
             manufacturer="Microsoft",
-            model=MAP_MODEL.get(self._console.console_type, "Unknown"),
+            model=MAP_MODEL.get(self._console.console_type),
             name=console.name,
         )
 
@@ -135,11 +141,11 @@ class XboxConsoleBaseEntity(CoordinatorEntity[XboxUpdateCoordinator]):
 def check_deprecated_entity(
     hass: HomeAssistant,
     xuid: str,
-    entity_description: EntityDescription,
+    entity_description: XboxBaseEntityDescription,
     entity_domain: str,
 ) -> bool:
     """Check for deprecated entity and remove it."""
-    if not getattr(entity_description, "deprecated", False):
+    if not entity_description.deprecated:
         return True
     ent_reg = er.async_get(hass)
     if entity_id := ent_reg.async_get_entity_id(
@@ -152,7 +158,16 @@ def check_deprecated_entity(
     return False
 
 
-def profile_pic(person: Person, _: Title | None) -> str | None:
+def to_https(image_url: str) -> str:
+    """Convert image URLs to secure URLs."""
+
+    url = URL(image_url)
+    if url.host == "images-eds.xboxlive.com":
+        url = url.with_host("images-eds-ssl.xboxlive.com")
+    return str(url.with_scheme("https"))
+
+
+def profile_pic(person: Person, _: Title | None = None) -> str | None:
     """Return the gamer pic."""
 
     # Xbox sometimes returns a domain that uses a wrong certificate which
@@ -161,9 +176,4 @@ def profile_pic(person: Person, _: Title | None) -> str | None:
     # to point to the correct image, with the correct domain and certificate.
     # We need to also remove the 'mode=Padding' query because with it,
     # it results in an error 400.
-    url = URL(person.display_pic_raw)
-    if url.host == "images-eds.xboxlive.com":
-        url = url.with_host("images-eds-ssl.xboxlive.com").with_scheme("https")
-    query = dict(url.query)
-    query.pop("mode", None)
-    return str(url.with_query(query))
+    return str(URL(to_https(person.display_pic_raw)).without_query_params("mode"))

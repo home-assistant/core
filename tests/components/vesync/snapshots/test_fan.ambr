@@ -78,7 +78,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'active_time': 0,
-      'child_lock': False,
       'display_status': 'on',
       'friendly_name': 'Air Purifier 131s',
       'mode': 'sleep',
@@ -663,7 +662,7 @@
       'area_id': None,
       'capabilities': dict({
         'preset_modes': list([
-          'advancedSleep',
+          'advanced_sleep',
           'auto',
           'normal',
           'turbo',
@@ -711,7 +710,7 @@
       'percentage_step': 8.333333333333334,
       'preset_mode': 'normal',
       'preset_modes': list([
-        'advancedSleep',
+        'advanced_sleep',
         'auto',
         'normal',
         'turbo',
