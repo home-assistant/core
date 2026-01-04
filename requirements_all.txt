@@ -1391,7 +1391,7 @@ libpyfoscamcgi==0.0.9
 libpyvivotek==0.6.1
 
 # homeassistant.components.libre_hardware_monitor
-librehardwaremonitor-api==1.7.2
+librehardwaremonitor-api==1.8.4
 
 # homeassistant.components.mikrotik
 librouteros==3.2.0
