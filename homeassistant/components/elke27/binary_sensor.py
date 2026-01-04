@@ -37,7 +37,15 @@ async def async_setup_entry(
             _LOGGER.debug("Zone entities skipped because snapshot is unavailable")
             return
         entities: list[Elke27ZoneBinarySensor] = []
-        zones = list(_iter_zones(snapshot))
+        client = hub.client
+        zones_by_id = None
+        if client is not None:
+            zones_by_id = getattr(getattr(client, "state", None), "zones", None)
+        zones = (
+            list(zones_by_id.values())
+            if isinstance(zones_by_id, Mapping)
+            else list(_iter_zones(snapshot))
+        )
         if not zones:
             _LOGGER.debug("No zones available for entity creation")
             return

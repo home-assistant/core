@@ -127,21 +127,37 @@ class Snapshot:
     zones: list[ZoneState]
 
 
+@dataclass(slots=True)
+class ClientState:
+    """Client state stub."""
+
+    zones: dict[int, ZoneState]
+
+
+@dataclass(slots=True)
+class FakeClient:
+    """Client stub."""
+
+    state: ClientState
+
+
 class FakeHub:
     """Minimal hub stub for zone tests."""
 
     def __init__(self) -> None:
+        zones = [
+            ZoneState(zone_id=1, name="Front Door", open=True, zone_type="door"),
+            ZoneState(zone_id=2, name="Garage", open=False),
+        ]
         self.snapshot = Snapshot(
             panel_info=PanelInfo(
                 mac="aa:bb:cc:dd:ee:ff",
                 name="Panel A",
                 serial="1234",
             ),
-            zones=[
-                ZoneState(zone_id=1, name="Front Door", open=True, zone_type="door"),
-                ZoneState(zone_id=2, name="Garage", open=False),
-            ],
+            zones=list(zones),
         )
+        self.client = FakeClient(state=ClientState(zones={z.zone_id: z for z in zones}))
         self.is_ready = True
         self._listeners: list[callable] = []
 
@@ -238,23 +254,22 @@ async def test_zone_entities_and_updates(hass: HomeAssistant) -> None:
 async def test_zone_entities_skip_undefined_definition(hass: HomeAssistant) -> None:
     """Test zones with definition UNDEFINED are skipped."""
     hub = FakeHub()
-    hub.snapshot = replace(
-        hub.snapshot,
-        zones=[
-            ZoneState(
-                zone_id=1,
-                name="Configured",
-                open=True,
-                definition="BURG PERIM INST",
-            ),
-            ZoneState(
-                zone_id=2,
-                name="Unused",
-                open=False,
-                definition="UNDEFINED",
-            ),
-        ],
-    )
+    zones = [
+        ZoneState(
+            zone_id=1,
+            name="Configured",
+            open=True,
+            definition="BURG PERIM INST",
+        ),
+        ZoneState(
+            zone_id=2,
+            name="Unused",
+            open=False,
+            definition="UNDEFINED",
+        ),
+    ]
+    hub.snapshot = replace(hub.snapshot, zones=list(zones))
+    hub.client.state.zones = {zone.zone_id: zone for zone in zones}
     hub.async_start = AsyncMock()
     hub.async_stop = AsyncMock()
 
@@ -287,13 +302,12 @@ async def test_zone_entities_skip_undefined_definition(hass: HomeAssistant) -> N
     }
     assert unique_ids == {"aa:bb:cc:dd:ee:ff_zone_1"}
 
-    hub.snapshot = replace(
-        hub.snapshot,
-        zones=[
-            hub.snapshot.zones[0],
-            replace(hub.snapshot.zones[1], open=True),
-        ],
-    )
+    zones = [
+        hub.snapshot.zones[0],
+        replace(hub.snapshot.zones[1], open=True),
+    ]
+    hub.snapshot = replace(hub.snapshot, zones=list(zones))
+    hub.client.state.zones = {zone.zone_id: zone for zone in zones}
     hub.fire_update()
     await hass.async_block_till_done()
 
