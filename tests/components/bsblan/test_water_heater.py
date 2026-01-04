@@ -17,7 +17,7 @@ from homeassistant.components.water_heater import (
     SERVICE_TURN_ON,
     STATE_ECO,
     STATE_OFF,
-    STATE_ON,
+    STATE_PERFORMANCE,
 )
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
 from homeassistant.core import HomeAssistant
@@ -137,7 +137,7 @@ async def test_water_heater_entity_properties(
     [
         (STATE_ECO, "2"),  # Eco maps to numeric value 2
         (STATE_OFF, "0"),  # Off maps to numeric value 0
-        (STATE_ON, "1"),  # On maps to numeric value 1
+        (STATE_PERFORMANCE, "1"),  # Performance/comfort maps to numeric value 1
     ],
 )
 async def test_set_operation_mode(
@@ -179,7 +179,7 @@ async def test_set_invalid_operation_mode(
 
     with pytest.raises(
         HomeAssistantError,
-        match=r"Operation mode invalid_mode is not valid for water_heater\.bsb_lan\. Valid operation modes are: off, on, eco",
+        match=r"Operation mode invalid_mode is not valid for water_heater\.bsb_lan\. Valid operation modes are: off, performance, eco",
     ):
         await hass.services.async_call(
             domain=WATER_HEATER_DOMAIN,
@@ -381,7 +381,9 @@ async def test_turn_on(
     )
 
     mock_bsblan.set_hot_water.assert_called_once_with(
-        SetHotWaterParam(operating_mode="1")  # On maps to numeric value 1
+        SetHotWaterParam(
+            operating_mode="1"
+        )  # Performance/comfort maps to numeric value 1
     )
 
 
