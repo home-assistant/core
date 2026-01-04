@@ -8,7 +8,7 @@ from typing import Any
 
 import voluptuous as vol
 
-from elke27_lib import ClientConfig, DiscoveredPanel, Elke27Client
+from elke27_lib import ClientConfig, DiscoveredPanel, Elke27Client, LinkKeys
 from elke27_lib.errors import (
     Elke27AuthError,
     Elke27ConnectionError,
@@ -220,6 +220,9 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
             entry.data.get(CONF_INTEGRATION_SERIAL) if entry is not None else None,
         )
         client = _create_client()
+        link_keys: LinkKeys | None = None
+        panel_info: dict[str, Any] = {}
+        table_info: dict[str, Any] = {}
         try:
             link_keys = await client.async_link(
                 host=host,
@@ -248,46 +251,55 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "link_required"
         except Elke27Error:
             errors["base"] = "unknown"
-        else:
-            link_keys_json = link_keys.to_json()
-            data: dict[str, Any] = {
-                CONF_HOST: host,
-                CONF_PORT: port,
-                CONF_LINK_KEYS_JSON: link_keys_json,
-                CONF_INTEGRATION_SERIAL: integration_serial,
-            }
+        finally:
+            await client.async_disconnect()
 
-            panel = self._selected_panel
-            if panel is not None:
-                data[CONF_PANEL] = _panel_to_dict(panel)
+        if errors or link_keys is None:
+            return self.async_show_form(
+                step_id=step_id,
+                data_schema=STEP_LINK_DATA_SCHEMA,
+                errors=errors,
+            )
 
-            options: dict[str, Any] = {
-                CONF_PANEL_INFO: panel_info,
-                CONF_TABLE_INFO: table_info,
-            }
+        link_keys_json = link_keys.to_json()
+        data: dict[str, Any] = {
+            CONF_HOST: host,
+            CONF_PORT: port,
+            CONF_LINK_KEYS_JSON: link_keys_json,
+            CONF_INTEGRATION_SERIAL: integration_serial,
+        }
 
-            unique_id = _panel_mac(panel_info) or integration_serial
-            if unique_id:
-                await self.async_set_unique_id(unique_id)
-                if entry is None:
-                    self._abort_if_unique_id_configured(
-                        updates={CONF_HOST: host, CONF_PORT: port}
-                    )
+        panel = self._selected_panel
+        if panel is not None:
+            data[CONF_PANEL] = _panel_to_dict(panel)
 
-            title = _panel_name(panel_info) or host
-            if entry is not None:
-                self.hass.config_entries.async_update_entry(
-                    entry,
-                    data={**entry.data, **data},
-                    options={**entry.options, **options},
+        options: dict[str, Any] = {
+            CONF_PANEL_INFO: panel_info,
+            CONF_TABLE_INFO: table_info,
+        }
+
+        unique_id = _panel_mac(panel_info) or integration_serial
+        if unique_id:
+            await self.async_set_unique_id(unique_id)
+            if entry is None:
+                self._abort_if_unique_id_configured(
+                    updates={CONF_HOST: host, CONF_PORT: port}
                 )
-                await self.hass.config_entries.async_reload(entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
 
-            result = self.async_create_entry(title=title, data=data, options=options)
-            if "title" not in result:
-                result["title"] = title
-            return result
+        title = _panel_name(panel_info) or host
+        if entry is not None:
+            self.hass.config_entries.async_update_entry(
+                entry,
+                data={**entry.data, **data},
+                options={**entry.options, **options},
+            )
+            await self.hass.config_entries.async_reload(entry.entry_id)
+            return self.async_abort(reason="reauth_successful")
+
+        result = self.async_create_entry(title=title, data=data, options=options)
+        if "title" not in result:
+            result["title"] = title
+        return result
 
         return self.async_show_form(
             step_id=step_id,

@@ -186,6 +186,7 @@ async def test_manual_link_creates_entry(hass: HomeAssistant) -> None:
     )
     link_client.async_connect = AsyncMock(return_value=None)
     link_client.wait_ready = AsyncMock(return_value=True)
+    link_client.async_disconnect = AsyncMock(return_value=None)
     link_client.snapshot = FakeSnapshot(
         panel_info=FakePanelInfo(
             panel_name="Test Panel",
@@ -236,6 +237,7 @@ async def test_manual_link_creates_entry(hass: HomeAssistant) -> None:
         assert result3["data"][CONF_INTEGRATION_SERIAL] == "112233445566"
         assert "panel_info" in result3["options"]
         assert "table_info" in result3["options"]
+        link_client.async_disconnect.assert_awaited_once()
 
 
 async def test_discovery_selection_creates_entry(hass: HomeAssistant) -> None:
@@ -256,6 +258,7 @@ async def test_discovery_selection_creates_entry(hass: HomeAssistant) -> None:
     )
     link_client.async_connect = AsyncMock(return_value=None)
     link_client.wait_ready = AsyncMock(return_value=True)
+    link_client.async_disconnect = AsyncMock(return_value=None)
     link_client.snapshot = FakeSnapshot(
         panel_info=FakePanelInfo(
             panel_name="Panel A",
@@ -302,6 +305,7 @@ async def test_discovery_selection_creates_entry(hass: HomeAssistant) -> None:
         assert "access_code" not in result3["data"]
         assert "passphrase" not in result3["data"]
         assert result3["data"][CONF_INTEGRATION_SERIAL] == "112233445566"
+        link_client.async_disconnect.assert_awaited_once()
 
 
 async def test_invalid_auth_returns_error(hass: HomeAssistant) -> None:
@@ -311,6 +315,7 @@ async def test_invalid_auth_returns_error(hass: HomeAssistant) -> None:
 
     link_client = AsyncMock()
     link_client.async_link = AsyncMock(side_effect=Elke27AuthError())
+    link_client.async_disconnect = AsyncMock(return_value=None)
 
     with patch(
         "homeassistant.components.elke27.config_flow.Elke27Client",
@@ -339,6 +344,7 @@ async def test_invalid_auth_returns_error(hass: HomeAssistant) -> None:
 
         assert result3["type"] is FlowResultType.FORM
         assert result3["errors"]["base"] == "invalid_auth"
+        link_client.async_disconnect.assert_awaited_once()
 
 
 async def test_cannot_connect_returns_error(hass: HomeAssistant) -> None:
@@ -351,6 +357,7 @@ async def test_cannot_connect_returns_error(hass: HomeAssistant) -> None:
         return_value=FakeLinkKeys("tk", "lk", "lh")
     )
     link_client.async_connect = AsyncMock(side_effect=Elke27TimeoutError())
+    link_client.async_disconnect = AsyncMock(return_value=None)
 
     with patch(
         "homeassistant.components.elke27.config_flow.Elke27Client",
@@ -379,6 +386,7 @@ async def test_cannot_connect_returns_error(hass: HomeAssistant) -> None:
 
         assert result3["type"] is FlowResultType.FORM
         assert result3["errors"]["base"] == "cannot_connect"
+        link_client.async_disconnect.assert_awaited_once()
 
 
 async def test_relink_updates_entry(hass: HomeAssistant) -> None:
@@ -399,6 +407,7 @@ async def test_relink_updates_entry(hass: HomeAssistant) -> None:
         return_value=FakeLinkKeys("newt", "new", "newh")
     )
     link_client_error.async_connect = AsyncMock(side_effect=Elke27LinkRequiredError())
+    link_client_error.async_disconnect = AsyncMock(return_value=None)
 
     link_client_ok = AsyncMock()
     link_client_ok.async_link = AsyncMock(
@@ -406,6 +415,7 @@ async def test_relink_updates_entry(hass: HomeAssistant) -> None:
     )
     link_client_ok.async_connect = AsyncMock(return_value=None)
     link_client_ok.wait_ready = AsyncMock(return_value=True)
+    link_client_ok.async_disconnect = AsyncMock(return_value=None)
     link_client_ok.snapshot = FakeSnapshot(
         panel_info=FakePanelInfo(
             panel_name="Panel",
@@ -455,6 +465,8 @@ async def test_relink_updates_entry(hass: HomeAssistant) -> None:
         )
         assert "access_code" not in entry.data
         assert "passphrase" not in entry.data
+        link_client_error.async_disconnect.assert_awaited_once()
+        link_client_ok.async_disconnect.assert_awaited_once()
 
 
 async def test_relink_missing_link_keys_updates_entry(hass: HomeAssistant) -> None:
@@ -476,6 +488,7 @@ async def test_relink_missing_link_keys_updates_entry(hass: HomeAssistant) -> No
     )
     link_client.async_connect = AsyncMock(return_value=None)
     link_client.wait_ready = AsyncMock(return_value=True)
+    link_client.async_disconnect = AsyncMock(return_value=None)
     link_client.snapshot = FakeSnapshot(
         panel_info=FakePanelInfo(
             panel_name="Panel",
@@ -517,3 +530,4 @@ async def test_relink_missing_link_keys_updates_entry(hass: HomeAssistant) -> No
         )
         assert "access_code" not in entry.data
         assert "passphrase" not in entry.data
+        link_client.async_disconnect.assert_awaited_once()

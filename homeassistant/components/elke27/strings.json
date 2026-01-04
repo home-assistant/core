@@ -70,11 +70,6 @@
         "name": "Output"
       }
     },
-    "button": {
-      "refresh_inventory": {
-        "name": "Refresh inventory"
-      }
-    },
     "sensor": {
       "panel_name": {
         "name": "Panel name"

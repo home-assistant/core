@@ -136,24 +136,6 @@ class Elke27Hub:
         self._client = None
         self.snapshot = None
 
-    async def async_refresh_inventory(self) -> bool:
-        """Request the latest inventory from the panel if supported."""
-        client = self._client
-        if client is None:
-            return False
-
-        method = getattr(client, "async_refresh_inventory", None)
-        if method is None:
-            method = getattr(client, "refresh_inventory", None)
-        if method is None:
-            _LOGGER.debug("Refresh inventory is not supported by the client")
-            return False
-        if inspect.iscoroutinefunction(method):
-            await method()
-        else:
-            await self._hass.async_add_executor_job(method)
-        return True
-
     async def async_set_output(self, output_id: int, state: bool) -> bool:
         """Request an output state change if supported."""
         client = self._client
