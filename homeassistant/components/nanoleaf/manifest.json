@@ -5,7 +5,20 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/nanoleaf",
   "homekit": {
-    "models": ["NL29", "NL42", "NL47", "NL48", "NL52", "NL59", "NL69", "NL81"]
+    "models": [
+      "NL29",
+      "NL42",
+      "NL47",
+      "NL48",
+      "NL52",
+      "NL59",
+      "NL69",
+      "NL81",
+      "NL71",
+      "NL72",
+      "NL73",
+      "NL75"
+    ]
   },
   "integration_type": "device",
   "iot_class": "local_push",
@@ -29,6 +42,18 @@
     },
     {
       "st": "inanoleaf:nl81"
+    },
+    {
+      "st": "nanoleaf:nl71"
+    },
+    {
+      "st": "nanoleaf:nl72"
+    },
+    {
+      "st": "nanoleaf:nl73"
+    },
+    {
+      "st": "nanoleaf:nl75"
     }
   ],
   "zeroconf": ["_nanoleafms._tcp.local.", "_nanoleafapi._tcp.local."]
