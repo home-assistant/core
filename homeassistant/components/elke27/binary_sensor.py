@@ -41,6 +41,8 @@ async def async_setup_entry(
         if not zones:
             _LOGGER.debug("No zones available for entity creation")
             return
+        added = 0
+        skipped = 0
         for zone in zones:
             definition = (
                 zone.get("definition")
@@ -61,13 +63,20 @@ async def async_setup_entry(
                     zone_id,
                     zone_name,
                 )
+                skipped += 1
+                known_ids.add(zone_id)
                 continue
             if zone_id in known_ids:
                 continue
             known_ids.add(zone_id)
             entities.append(Elke27ZoneBinarySensor(hub, entry, zone_id, zone))
+            added += 1
+        _LOGGER.debug(
+            "Adding %s zone entities (skipped %s UNDEFINED)",
+            added,
+            skipped,
+        )
         if entities:
-            _LOGGER.debug("Adding %s zone entities", len(entities))
             async_add_entities(entities)
 
     _async_add_zones()
