@@ -118,7 +118,7 @@ async def test_import_flow_bad(
         DOMAIN, context={"source": SOURCE_IMPORT}, data={CONF_HOST: "10.0.0.131"}
     )
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "missing_host"
+    assert result["reason"] == "unavailable_host"
 
 
 async def test_import_flow_duplicate(
