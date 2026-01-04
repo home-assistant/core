@@ -245,6 +245,9 @@ def _async_make_entity(
         return SwitchBotCloudVacuumV2(api, device, coordinator)
     if device.device_type == "Robot Vacuum Cleaner K10+ Pro Combo":
         return SwitchBotCloudVacuumK10PlusProCombo(api, device, coordinator)
-    if device.device_type in VacuumCleanerV3Commands.get_supported_devices():
+    if (
+        device.device_type in VacuumCleanerV3Commands.get_supported_devices()
+        or device.device_type == "Robot Vacuum Cleaner S20"
+    ):
         return SwitchBotCloudVacuumV3(api, device, coordinator)
     return SwitchBotCloudVacuum(api, device, coordinator)
