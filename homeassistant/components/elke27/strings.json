@@ -7,24 +7,25 @@
     "error": {
       "cannot_connect": "Unable to connect to the panel. Confirm the host is reachable and the panel is online.",
       "invalid_auth": "The access code or passphrase is invalid.",
+      "invalid_pin": "The user PIN is invalid.",
       "link_required": "The panel requires linking. Enter the access code and passphrase again.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "user": {
         "title": "Set up Elke27",
-        "description": "Enter the panel address and linking credentials.",
+        "description": "Enter the panel address, linking credentials, and user PIN.",
         "data": {
           "host": "Address",
-          "port": "Port",
           "access_code": "Access code (used for linking, NOT a PIN)",
-          "passphrase": "Passphrase"
+          "passphrase": "Passphrase",
+          "pin": "User PIN"
         },
         "data_description": {
           "host": "The panel host name or IP address.",
-          "port": "The panel port, usually 2101.",
           "access_code": "The panel access code used during linking. It is not a PIN.",
-          "passphrase": "The passphrase used during linking."
+          "passphrase": "The passphrase used during linking.",
+          "pin": "Your user PIN required to access user details."
         }
       },
       "manual": {
@@ -53,14 +54,16 @@
       },
       "relink": {
         "title": "Relink panel",
-        "description": "Enter the access code and passphrase to relink the panel.",
+        "description": "Enter the access code, passphrase, and user PIN to relink the panel.",
         "data": {
           "access_code": "Access code (used for linking, NOT a PIN)",
-          "passphrase": "Passphrase"
+          "passphrase": "Passphrase",
+          "pin": "User PIN"
         },
         "data_description": {
           "access_code": "The panel access code used during linking. It is not a PIN.",
-          "passphrase": "The passphrase used during linking."
+          "passphrase": "The passphrase used during linking.",
+          "pin": "Your user PIN required to access user details."
         }
       }
     }

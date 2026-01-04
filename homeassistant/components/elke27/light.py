@@ -90,7 +90,7 @@ class Elke27OutputLight(LightEntity):
         if output is None:
             self._log_missing()
             return None
-        is_on = getattr(output, "is_on", None)
+        is_on = getattr(output, "state", None)
         return bool(is_on) if isinstance(is_on, bool) else None
 
     @property

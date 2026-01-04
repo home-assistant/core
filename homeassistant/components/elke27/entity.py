@@ -17,6 +17,14 @@ def get_panel_field(hub: Elke27Hub, field: str) -> Any:
     panel_info = hub.panel_info
     if panel_info is None:
         return None
+    if isinstance(panel_info, dict):
+        if field == "name":
+            return panel_info.get("name") or panel_info.get("panel_name")
+        if field == "mac":
+            return panel_info.get("mac") or panel_info.get("panel_mac")
+        if field == "serial":
+            return panel_info.get("serial") or panel_info.get("panel_serial")
+        return panel_info.get(field)
     return getattr(panel_info, field, None)
 
 

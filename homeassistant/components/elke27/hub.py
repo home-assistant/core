@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import contextlib
+from enum import Enum
 import inspect
 import logging
 from typing import Any, Callable
@@ -10,26 +11,32 @@ from typing import Any, Callable
 from elke27_lib import ClientConfig, Elke27Client, LinkKeys
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import READY_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
-_SYSTEM_EVENT_TYPES = {"SYSTEM", "PANEL_INFO", "TABLE_INFO"}
+_SYSTEM_EVENT_TYPES = {"SYSTEM", "PANEL", "PANEL_INFO", "TABLE_INFO"}
 
 
 class Elke27Hub:
     """Manage a single Elke27 client instance and its snapshots."""
 
     def __init__(
-        self, hass: HomeAssistant, host: str, port: int, link_keys_json: str
+        self,
+        hass: HomeAssistant,
+        host: str,
+        port: int,
+        link_keys_json: str,
+        pin: str | None,
     ) -> None:
         """Initialize the hub wrapper."""
         self._hass = hass
         self._host = host
         self._port = port
         self._link_keys_json = link_keys_json
+        self._pin = pin
         self._client: Elke27Client | None = None
         self._unsubscribe: Callable[[], None] | None = None
         self._listeners: list[Callable[[], None]] = []
@@ -55,7 +62,9 @@ class Elke27Hub:
     def panel_info(self) -> Any | None:
         """Return the latest panel info snapshot."""
         snapshot = self.snapshot
-        return getattr(snapshot, "panel_info", None) if snapshot is not None else None
+        if snapshot is None:
+            return None
+        return getattr(snapshot, "panel_info", None) or getattr(snapshot, "panel", None)
 
     @property
     def table_info(self) -> Any | None:
@@ -113,6 +122,14 @@ class Elke27Hub:
         self._client = client
         try:
             await client.async_connect(self._host, self._port, link_keys)
+            if self._pin:
+                auth_result = await client.async_execute(
+                    "control_authenticate", pin=self._pin
+                )
+                if not getattr(auth_result, "ok", False):
+                    error = getattr(auth_result, "error", None)
+                    message = str(error) if error is not None else "Invalid PIN"
+                    raise ConfigEntryAuthFailed(message)
             ready = await client.wait_ready(timeout_s=READY_TIMEOUT)
             if not ready:
                 raise ConfigEntryNotReady(
@@ -151,10 +168,17 @@ class Elke27Hub:
                 output_id,
             )
             return False
-        if inspect.iscoroutinefunction(method):
-            result = await method(output_id, state)
+        params = inspect.signature(method).parameters
+        if "on" in params:
+            args = (output_id,)
+            kwargs = {"on": state}
         else:
-            result = await self._hass.async_add_executor_job(method, output_id, state)
+            args = (output_id, state)
+            kwargs = {}
+        if inspect.iscoroutinefunction(method):
+            result = await method(*args, **kwargs)
+        else:
+            result = await self._hass.async_add_executor_job(method, *args, **kwargs)
         return bool(result) if isinstance(result, bool) else True
 
     async def async_arm_area(
@@ -236,9 +260,13 @@ class Elke27Hub:
 def _event_type(event: Any) -> str | None:
     if isinstance(event, dict):
         value = event.get("type") or event.get("event_type") or event.get("domain")
+        if isinstance(value, Enum):
+            return str(value.value).upper()
         return str(value).upper() if value else None
     for attr in ("type", "event_type", "domain", "kind", "category"):
         value = getattr(event, attr, None)
         if value:
+            if isinstance(value, Enum):
+                return str(value.value).upper()
             return str(value).upper()
     return None

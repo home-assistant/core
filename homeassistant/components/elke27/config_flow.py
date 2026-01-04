@@ -9,12 +9,18 @@ import voluptuous as vol
 
 from elke27_lib import ClientConfig, Elke27Client, LinkKeys
 from elke27_lib.errors import (
+    AuthorizationRequired,
     Elke27AuthError,
     Elke27ConnectionError,
     Elke27DisconnectedError,
     Elke27Error,
     Elke27LinkRequiredError,
+    Elke27PermissionError,
+    Elke27PinRequiredError,
     Elke27TimeoutError,
+    InvalidPin,
+    InvalidPinError,
+    MissingPinError,
 )
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -26,6 +32,7 @@ from .const import (
     CONF_INTEGRATION_SERIAL,
     CONF_LINK_KEYS_JSON,
     CONF_PANEL,
+    CONF_PIN,
     DEFAULT_PORT,
     DOMAIN,
     READY_TIMEOUT,
@@ -40,9 +47,9 @@ CONF_TABLE_INFO = "table_info"
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Required(CONF_ACCESS_CODE): selector({"text": {"type": "password"}}),
         vol.Required(CONF_PASSPHRASE): selector({"text": {"type": "password"}}),
+        vol.Required(CONF_PIN): selector({"text": {"type": "password"}}),
     }
 )
 
@@ -51,6 +58,10 @@ STEP_LINK_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_ACCESS_CODE): selector({"text": {"type": "password"}}),
         vol.Required(CONF_PASSPHRASE): selector({"text": {"type": "password"}}),
     }
+)
+
+STEP_REAUTH_DATA_SCHEMA = STEP_LINK_DATA_SCHEMA.extend(
+    {vol.Required(CONF_PIN): selector({"text": {"type": "password"}})}
 )
 
 
@@ -74,7 +85,7 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             host = user_input[CONF_HOST]
-            port = user_input.get(CONF_PORT, DEFAULT_PORT)
+            port = DEFAULT_PORT
             self._selected_host = host
             self._selected_port = port
             self._selected_panel = None
@@ -82,6 +93,7 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self._async_link_and_create_entry(
                 access_code=user_input[CONF_ACCESS_CODE],
                 passphrase=user_input[CONF_PASSPHRASE],
+                pin=user_input[CONF_PIN],
                 errors=errors,
                 step_id="user",
                 data_schema=STEP_USER_DATA_SCHEMA,
@@ -117,21 +129,23 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
 
             access_code = user_input[CONF_ACCESS_CODE]
             passphrase = user_input[CONF_PASSPHRASE]
+            pin = user_input[CONF_PIN]
             self._selected_host = entry.data.get(CONF_HOST)
             self._selected_port = entry.data.get(CONF_PORT)
             self._selected_panel = entry.data.get(CONF_PANEL)
             return await self._async_link_and_create_entry(
                 access_code=access_code,
                 passphrase=passphrase,
+                pin=pin,
                 errors=errors,
                 step_id="relink",
-                data_schema=STEP_LINK_DATA_SCHEMA,
+                data_schema=STEP_REAUTH_DATA_SCHEMA,
                 entry=entry,
             )
 
         return self.async_show_form(
             step_id="relink",
-            data_schema=STEP_LINK_DATA_SCHEMA,
+            data_schema=STEP_REAUTH_DATA_SCHEMA,
             errors=errors,
         )
 
@@ -139,6 +153,7 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
         self,
         access_code: str,
         passphrase: str,
+        pin: str | None,
         errors: dict[str, str],
         step_id: str,
         data_schema: vol.Schema,
@@ -172,6 +187,17 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
                 passphrase=passphrase,
             )
             await client.async_connect(host=host, port=port, link_keys=link_keys)
+            if pin:
+                auth_error = _validate_auth_result(
+                    await client.async_execute("control_authenticate", pin=pin)
+                )
+                if auth_error is not None:
+                    errors["base"] = auth_error
+                    return self.async_show_form(
+                        step_id=step_id,
+                        data_schema=data_schema,
+                        errors=errors,
+                    )
             ready = await client.wait_ready(timeout_s=READY_TIMEOUT)
             if not ready:
                 errors["base"] = "cannot_connect"
@@ -182,7 +208,9 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
             snapshot = client.snapshot
-            panel_info = _snapshot_to_dict(getattr(snapshot, "panel_info", None))
+            panel_info = _snapshot_to_dict(
+                getattr(snapshot, "panel_info", None) or getattr(snapshot, "panel", None)
+            )
             table_info = _snapshot_to_dict(getattr(snapshot, "table_info", None))
         except Elke27AuthError:
             errors["base"] = "invalid_auth"
@@ -190,6 +218,10 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
         except Elke27LinkRequiredError:
             errors["base"] = "link_required"
+        except Elke27PinRequiredError:
+            errors["base"] = "invalid_pin"
+        except Elke27PermissionError:
+            errors["base"] = "invalid_pin"
         except Elke27Error:
             errors["base"] = "unknown"
         finally:
@@ -208,6 +240,7 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_PORT: port,
             CONF_LINK_KEYS_JSON: link_keys_json,
             CONF_INTEGRATION_SERIAL: integration_serial,
+            CONF_PIN: pin,
         }
 
         panel = self._selected_panel
@@ -248,6 +281,26 @@ def _create_client() -> Elke27Client:
     return Elke27Client(ClientConfig())
 
 
+def _validate_auth_result(result: Any) -> str | None:
+    """Return a config flow error key for a failed auth result."""
+    if getattr(result, "ok", False):
+        return None
+    error = getattr(result, "error", None)
+    if isinstance(
+        error,
+        (
+            AuthorizationRequired,
+            InvalidPin,
+            InvalidPinError,
+            MissingPinError,
+            Elke27PinRequiredError,
+            Elke27PermissionError,
+        ),
+    ):
+        return "invalid_pin"
+    return "unknown"
+
+
 def _panel_to_dict(panel: Any | None) -> dict[str, Any]:
     """Normalize a discovered panel entry into a dict."""
     if panel is None:
@@ -284,7 +337,12 @@ def _panel_mac(panel_info: dict[str, Any]) -> str | None:
 
 
 def _panel_name(panel_info: dict[str, Any]) -> str | None:
-    return panel_info.get("panel_name") or panel_info.get("name")
+    return (
+        panel_info.get("panel_name")
+        or panel_info.get("name")
+        or panel_info.get("serial")
+        or panel_info.get("panel_serial")
+    )
 
 
 def _snapshot_to_dict(snapshot: Any) -> dict[str, Any]:

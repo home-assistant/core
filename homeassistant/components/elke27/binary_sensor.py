@@ -85,7 +85,7 @@ class Elke27ZoneBinarySensor(BinarySensorEntity):
         if zone is None:
             self._log_missing()
             return None
-        is_open = getattr(zone, "is_open", None)
+        is_open = getattr(zone, "open", None)
         return bool(is_open) if isinstance(is_open, bool) else None
 
     @property

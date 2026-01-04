@@ -63,7 +63,6 @@ class Elke27AreaAlarmControlPanel(AlarmControlPanelEntity):
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_AWAY
         | AlarmControlPanelEntityFeature.ARM_HOME
-        | AlarmControlPanelEntityFeature.ARM_NIGHT
     )
 
     def __init__(
@@ -114,15 +113,15 @@ class Elke27AreaAlarmControlPanel(AlarmControlPanelEntity):
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Arm the area in away mode."""
-        await self._async_arm(ArmMode.AWAY, code)
+        await self._async_arm(ArmMode.ARMED_AWAY, code)
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Arm the area in home mode."""
-        await self._async_arm(ArmMode.STAY, code)
+        await self._async_arm(ArmMode.ARMED_STAY, code)
 
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Arm the area in night mode."""
-        await self._async_arm(ArmMode.NIGHT, code)
+        await self._async_arm(ArmMode.ARMED_NIGHT, code)
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Disarm the area."""
@@ -167,18 +166,26 @@ def _get_area(snapshot: Any, area_id: int) -> Any | None:
 def _area_state_to_ha(area: Any) -> AlarmControlPanelState:
     if getattr(area, "alarm_active", False):
         return AlarmControlPanelState.TRIGGERED
-    if getattr(area, "armed", False):
-        arm_mode = getattr(area, "arm_mode", None)
-        if arm_mode is None:
-            return AlarmControlPanelState.ARMED_AWAY
-        mode_value = (
-            arm_mode.name if isinstance(arm_mode, ArmMode) else str(arm_mode)
-        ).lower()
-        if mode_value in {"stay", "home"}:
+    arm_mode = getattr(area, "arm_mode", None)
+    if arm_mode is None:
+        return AlarmControlPanelState.DISARMED
+    if isinstance(arm_mode, ArmMode):
+        if arm_mode is ArmMode.DISARMED:
+            return AlarmControlPanelState.DISARMED
+        if arm_mode is ArmMode.ARMED_STAY:
             return AlarmControlPanelState.ARMED_HOME
-        if mode_value == "night":
+        if arm_mode is ArmMode.ARMED_NIGHT:
             return AlarmControlPanelState.ARMED_NIGHT
-        if mode_value in {"away", "vacation", "instant"}:
+        if arm_mode is ArmMode.ARMED_AWAY:
             return AlarmControlPanelState.ARMED_AWAY
+    mode_value = str(arm_mode).lower()
+    if mode_value in {"disarmed", "disarm"}:
+        return AlarmControlPanelState.DISARMED
+    if "stay" in mode_value:
+        return AlarmControlPanelState.ARMED_HOME
+    if "night" in mode_value:
+        return AlarmControlPanelState.ARMED_NIGHT
+    if "away" in mode_value:
         return AlarmControlPanelState.ARMED_AWAY
+    return AlarmControlPanelState.ARMED_AWAY
     return AlarmControlPanelState.DISARMED

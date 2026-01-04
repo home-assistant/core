@@ -17,7 +17,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-from .const import CONF_INTEGRATION_SERIAL, CONF_LINK_KEYS_JSON, DOMAIN
+from .const import CONF_INTEGRATION_SERIAL, CONF_LINK_KEYS_JSON, CONF_PIN, DOMAIN
 from .hub import Elke27Hub
 from .identity import async_get_integration_serial
 
@@ -36,6 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
     link_keys_json = entry.data.get(CONF_LINK_KEYS_JSON)
+    pin = entry.data.get(CONF_PIN)
     if not link_keys_json:
         raise ConfigEntryAuthFailed("Link keys are missing; relink required")
     if not entry.data.get(CONF_INTEGRATION_SERIAL):
@@ -44,7 +45,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry,
             data={**entry.data, CONF_INTEGRATION_SERIAL: integration_serial},
         )
-    hub = Elke27Hub(hass, host, port, link_keys_json)
+    hub = Elke27Hub(hass, host, port, link_keys_json, pin)
     try:
         await hub.async_start()
     except Elke27LinkRequiredError as err:
