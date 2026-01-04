@@ -6,9 +6,9 @@
     'area_id': None,
     'capabilities': dict({
       'fan_modes': list([
-        'Auto',
-        'On',
-        'Circulate',
+        'auto',
+        'on',
+        'circulate',
       ]),
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
@@ -43,7 +43,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 395>,
-    'translation_key': None,
+    'translation_key': 'thermostat',
     'unique_id': '123',
     'unit_of_measurement': None,
   })
@@ -53,11 +53,11 @@
     'attributes': ReadOnlyDict({
       'current_humidity': 45,
       'current_temperature': 72,
-      'fan_mode': 'Auto',
+      'fan_mode': 'auto',
       'fan_modes': list([
-        'Auto',
-        'On',
-        'Circulate',
+        'auto',
+        'on',
+        'circulate',
       ]),
       'friendly_name': 'Test Controller Residential Thermostat V2',
       'hvac_action': <HVACAction.IDLE: 'idle'>,

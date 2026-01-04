@@ -156,6 +156,7 @@ class Control4Climate(Control4Entity, ClimateEntity):
 
     _attr_has_entity_name = True
     _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
+    _attr_translation_key = "thermostat"
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT, HVACMode.COOL, HVACMode.HEAT_COOL]
 
     def __init__(
@@ -288,7 +289,10 @@ class Control4Climate(Control4Entity, ClimateEntity):
         data = self._thermostat_data
         if data is None:
             return None
-        return data.get(CONTROL4_FAN_MODE)
+        c4_fan_mode = data.get(CONTROL4_FAN_MODE)
+        if c4_fan_mode is None:
+            return None
+        return c4_fan_mode.lower()
 
     @property
     def fan_modes(self) -> list[str] | None:
@@ -301,8 +305,12 @@ class Control4Climate(Control4Entity, ClimateEntity):
             return None
         # Handle both string (comma-separated) and list formats
         if isinstance(modes, str):
-            return [m.strip() for m in modes.split(",") if m.strip()]
-        return list(modes) if modes else None
+            c4_modes = [m.strip() for m in modes.split(",") if m.strip()]
+        else:
+            c4_modes = list(modes)
+        if not c4_modes:
+            return None
+        return [m.lower() for m in c4_modes]
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target HVAC mode."""
@@ -336,5 +344,5 @@ class Control4Climate(Control4Entity, ClimateEntity):
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         c4_climate = self._create_api_object()
-        await c4_climate.setFanMode(fan_mode)
+        await c4_climate.setFanMode(fan_mode.title())
         await self.coordinator.async_request_refresh()

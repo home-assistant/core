@@ -406,8 +406,8 @@ async def test_fan_mode_states(
     """Test fan mode properties."""
     state = hass.states.get(ENTITY_ID)
     assert state is not None
-    assert state.attributes.get("fan_mode") == "Auto"
-    assert state.attributes.get("fan_modes") == ["Auto", "On", "Circulate"]
+    assert state.attributes.get("fan_mode") == "auto"
+    assert state.attributes.get("fan_modes") == ["auto", "on", "circulate"]
     assert state.attributes.get("supported_features") & ClimateEntityFeature.FAN_MODE
 
 
@@ -426,9 +426,10 @@ async def test_set_fan_mode(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: "On"},
+        {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: "on"},
         blocking=True,
     )
+    # Verify the Control4 API is called with the C4 format ("On" not "on")
     mock_c4_climate.setFanMode.assert_called_once_with("On")
 
 
