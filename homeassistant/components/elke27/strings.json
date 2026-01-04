@@ -13,12 +13,18 @@
     "step": {
       "user": {
         "title": "Set up Elke27",
-        "description": "Choose a discovered panel or select manual entry to continue.",
+        "description": "Enter the panel address and linking credentials.",
         "data": {
-          "device": "Panel"
+          "host": "Address",
+          "port": "Port",
+          "access_code": "Access code (used for linking, NOT a PIN)",
+          "passphrase": "Passphrase"
         },
         "data_description": {
-          "device": "Select a discovered panel or manual entry."
+          "host": "The panel host name or IP address.",
+          "port": "The panel port, usually 2101.",
+          "access_code": "The panel access code used during linking. It is not a PIN.",
+          "passphrase": "The passphrase used during linking."
         }
       },
       "manual": {

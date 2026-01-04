@@ -3,12 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import asdict, is_dataclass
-import logging
 from typing import Any
 
 import voluptuous as vol
 
-from elke27_lib import ClientConfig, DiscoveredPanel, Elke27Client, LinkKeys
+from elke27_lib import ClientConfig, Elke27Client, LinkKeys
 from elke27_lib.errors import (
     Elke27AuthError,
     Elke27ConnectionError,
@@ -33,28 +32,23 @@ from .const import (
 )
 from .identity import async_get_integration_serial
 
-_LOGGER = logging.getLogger(__name__)
-
-CONF_DEVICE = "device"
 CONF_ACCESS_CODE = "access_code"
 CONF_PASSPHRASE = "passphrase"
 CONF_PANEL_INFO = "panel_info"
 CONF_TABLE_INFO = "table_info"
 
-MANUAL_ENTRY = "manual_entry"
-
-DISCOVERY_TIMEOUT = 5
-
-STEP_MANUAL_DATA_SCHEMA = vol.Schema(
+STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Required(CONF_ACCESS_CODE): selector({"text": {"type": "password"}}),
+        vol.Required(CONF_PASSPHRASE): selector({"text": {"type": "password"}}),
     }
 )
 
 STEP_LINK_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_ACCESS_CODE): cv.string,
+        vol.Required(CONF_ACCESS_CODE): selector({"text": {"type": "password"}}),
         vol.Required(CONF_PASSPHRASE): selector({"text": {"type": "password"}}),
     }
 )
@@ -68,8 +62,7 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the flow."""
-        self._discovered_panels: dict[str, DiscoveredPanel] = {}
-        self._selected_panel: DiscoveredPanel | None = None
+        self._selected_panel: Any | None = None
         self._selected_host: str | None = None
         self._selected_port: int | None = None
         self._reauth_entry: Any | None = None
@@ -78,45 +71,6 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        if user_input is not None:
-            selection = user_input[CONF_DEVICE]
-            if selection == MANUAL_ENTRY:
-                return await self.async_step_manual()
-
-            panel = self._discovered_panels.get(selection)
-            if panel is None:
-                return await self.async_step_manual()
-
-            panel_info = _panel_to_dict(panel)
-            self._selected_host = _panel_host(panel_info)
-            self._selected_port = _panel_port(panel_info)
-            self._selected_panel = panel
-            if not self._selected_host:
-                return await self.async_step_manual()
-            self._async_abort_entries_match(
-                {CONF_HOST: self._selected_host, CONF_PORT: self._selected_port}
-            )
-            return await self.async_step_link()
-
-        panels = await self._async_discover()
-        if panels:
-            self._discovered_panels = panels
-            options = {
-                panel_id: _panel_label(_panel_to_dict(panel))
-                for panel_id, panel in panels.items()
-            }
-            options[MANUAL_ENTRY] = "Manual entry"
-            return self.async_show_form(
-                step_id="user",
-                data_schema=vol.Schema({vol.Required(CONF_DEVICE): vol.In(options)}),
-            )
-
-        return await self.async_step_manual()
-
-    async def async_step_manual(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle manual host/port entry."""
         errors: dict[str, str] = {}
         if user_input is not None:
             host = user_input[CONF_HOST]
@@ -125,32 +79,17 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
             self._selected_port = port
             self._selected_panel = None
             self._async_abort_entries_match({CONF_HOST: host, CONF_PORT: port})
-            return await self.async_step_link()
-
-        return self.async_show_form(
-            step_id="manual",
-            data_schema=STEP_MANUAL_DATA_SCHEMA,
-            errors=errors,
-        )
-
-    async def async_step_link(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle access code and passphrase entry."""
-        errors: dict[str, str] = {}
-        if user_input is not None:
-            access_code = user_input[CONF_ACCESS_CODE]
-            passphrase = user_input[CONF_PASSPHRASE]
             return await self._async_link_and_create_entry(
-                access_code=access_code,
-                passphrase=passphrase,
+                access_code=user_input[CONF_ACCESS_CODE],
+                passphrase=user_input[CONF_PASSPHRASE],
                 errors=errors,
-                step_id="link",
+                step_id="user",
+                data_schema=STEP_USER_DATA_SCHEMA,
             )
 
         return self.async_show_form(
-            step_id="link",
-            data_schema=STEP_LINK_DATA_SCHEMA,
+            step_id="user",
+            data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
         )
 
@@ -186,6 +125,7 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
                 passphrase=passphrase,
                 errors=errors,
                 step_id="relink",
+                data_schema=STEP_LINK_DATA_SCHEMA,
                 entry=entry,
             )
 
@@ -201,6 +141,7 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
         passphrase: str,
         errors: dict[str, str],
         step_id: str,
+        data_schema: vol.Schema,
         entry: Any | None = None,
     ) -> ConfigFlowResult:
         """Link, connect, fetch snapshots, and create/update the entry."""
@@ -210,7 +151,7 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
             return self.async_show_form(
                 step_id=step_id,
-                data_schema=STEP_LINK_DATA_SCHEMA,
+                data_schema=data_schema,
                 errors=errors,
             )
 
@@ -236,7 +177,7 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
                 return self.async_show_form(
                     step_id=step_id,
-                    data_schema=STEP_LINK_DATA_SCHEMA,
+                    data_schema=data_schema,
                     errors=errors,
                 )
 
@@ -257,7 +198,7 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
         if errors or link_keys is None:
             return self.async_show_form(
                 step_id=step_id,
-                data_schema=STEP_LINK_DATA_SCHEMA,
+                data_schema=data_schema,
                 errors=errors,
             )
 
@@ -301,40 +242,13 @@ class Elke27ConfigFlow(ConfigFlow, domain=DOMAIN):
             result["title"] = title
         return result
 
-        return self.async_show_form(
-            step_id=step_id,
-            data_schema=STEP_LINK_DATA_SCHEMA,
-            errors=errors,
-        )
-
-    async def _async_discover(self) -> dict[str, DiscoveredPanel]:
-        """Discover panels via the client."""
-        client = _create_client()
-        try:
-            panels = await client.async_discover(timeout_s=DISCOVERY_TIMEOUT)
-        except Elke27Error as err:
-            _LOGGER.debug("Discovery failed: %s", err)
-            return {}
-
-        discovered: dict[str, DiscoveredPanel] = {}
-        for panel in panels or []:
-            panel_id = _panel_id(panel)
-            if panel_id:
-                discovered[panel_id] = panel
-        return discovered
-
 
 def _create_client() -> Elke27Client:
     """Create a configured client instance."""
     return Elke27Client(ClientConfig())
 
 
-def _panel_id(panel: DiscoveredPanel) -> str | None:
-    panel_dict = _panel_to_dict(panel)
-    return panel_dict.get("mac") or panel_dict.get("host")
-
-
-def _panel_to_dict(panel: DiscoveredPanel | dict[str, Any] | None) -> dict[str, Any]:
+def _panel_to_dict(panel: Any | None) -> dict[str, Any]:
     """Normalize a discovered panel entry into a dict."""
     if panel is None:
         return {}
@@ -363,29 +277,6 @@ def _normalize_panel_keys(panel: dict[str, Any]) -> dict[str, Any]:
     if "model" not in normalized and "panel_model" in normalized:
         normalized["model"] = normalized.get("panel_model")
     return normalized
-
-
-def _panel_label(panel: dict[str, Any]) -> str:
-    """Build a display label for a panel."""
-    host = panel.get("host")
-    port = panel.get("port")
-    host_label = f"{host}:{port}" if host and port else host or "Unknown host"
-    extras = [
-        value
-        for value in (panel.get("name"), panel.get("model"), panel.get("mac"))
-        if value
-    ]
-    if extras:
-        return f"{host_label} ({' - '.join(extras)})"
-    return host_label
-
-
-def _panel_host(panel: dict[str, Any]) -> str | None:
-    return panel.get("host")
-
-
-def _panel_port(panel: dict[str, Any]) -> int:
-    return int(panel.get("port") or DEFAULT_PORT)
 
 
 def _panel_mac(panel_info: dict[str, Any]) -> str | None:
