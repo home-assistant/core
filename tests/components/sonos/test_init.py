@@ -585,74 +585,49 @@ async def test_setup_from_device_registry(
     assert "media_player.bedroom" in entity_registry.entities
 
 
-async def test_setup_from_device_registry_no_config_url(
+@pytest.mark.parametrize(
+    ("identifiers", "config_url", "device_name"),
+    [
+        pytest.param(
+            {(sonos.DOMAIN, "RINCON_test123")},
+            None,
+            "Bedroom",
+            id="no_config_url",
+        ),
+        pytest.param(
+            {("other_domain", "some_id")},
+            "http://192.168.1.100:1400/support/review",
+            "Test Device",
+            id="no_sonos_identifier",
+        ),
+    ],
+)
+async def test_setup_from_device_registry_skipped_devices(
     hass: HomeAssistant,
     async_setup_sonos,
     config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
-    soco_factory: SoCoMockFactory,
-) -> None:
-    """Test devices without configuration_url are skipped."""
-    soco = soco_factory.cache_mock(MockSoCo(), "10.10.10.1", "Bedroom")
-
-    config_entry.add_to_hass(hass)
-    _ = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(sonos.DOMAIN, soco.uid)},
-        manufacturer="Sonos",
-        name=soco.player_name,
-        configuration_url=None,
-    )
-    await async_setup_sonos()
-    # Device should not be loaded without configuration_url
-    assert "media_player.bedroom" not in entity_registry.entities
-
-
-async def test_setup_from_device_registry_no_sonos_identifier(
-    hass: HomeAssistant,
-    async_setup_sonos,
-    config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test devices without Sonos identifier are skipped."""
-    config_entry.add_to_hass(hass)
-    _ = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={("other_domain", "some_id")},
-        manufacturer="Sonos",
-        name="Test Device",
-        configuration_url="http://192.168.1.100:1400/support/review",
-    )
-    await async_setup_sonos()
-    # Device should not be loaded without Sonos identifier
-    assert len(entity_registry.entities) == 0
-
-
-async def test_setup_from_device_registry_invalid_url(
-    hass: HomeAssistant,
-    async_setup_sonos,
-    config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
-    soco_factory: SoCoMockFactory,
     caplog: pytest.LogCaptureFixture,
+    identifiers: set[tuple[str, str]],
+    config_url: str | None,
+    device_name: str,
 ) -> None:
-    """Test devices with invalid URL that has no hostname are skipped."""
-    soco = soco_factory.cache_mock(MockSoCo(), "10.10.10.1", "Bedroom")
-
+    """Test devices are skipped when missing required data."""
     config_entry.add_to_hass(hass)
-    _ = device_registry.async_get_or_create(
+    device = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        identifiers={(sonos.DOMAIN, soco.uid)},
+        identifiers=identifiers,
         manufacturer="Sonos",
-        name=soco.player_name,
-        configuration_url="not-a-valid-url",
+        name=device_name,
+        configuration_url=config_url,
     )
 
     with caplog.at_level(logging.DEBUG):
         await async_setup_sonos()
 
-    # Device should not be loaded with invalid URL
-    assert "media_player.bedroom" not in entity_registry.entities
+    # Device should not have any entities created for it
+    device_entities = er.async_entries_for_device(
+        entity_registry, device.id, include_disabled_entities=True
+    )
+    assert len(device_entities) == 0

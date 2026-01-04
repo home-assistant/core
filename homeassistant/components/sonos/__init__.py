@@ -678,13 +678,7 @@ class SonosDiscoveryManager:
                 continue
 
             host = urlparse(device.configuration_url).hostname
-            if not host:
-                _LOGGER.debug(
-                    "Skipping device %s without valid host in configuration URL",
-                    device.name,
-                )
-                continue
-
+            assert host  # Device registry validates configuration_url has valid host
             _LOGGER.debug("Loading device %s with host %s", uid, host)
             await self._async_handle_discovery_message(uid, host, "device registry")
 
