@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import sys
 from dataclasses import dataclass
-from types import ModuleType
+from types import ModuleType, SimpleNamespace
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -89,6 +89,9 @@ async def test_start_connects_and_subscribes(hass: HomeAssistant) -> None:
     """Test hub start connects, waits, and subscribes."""
     client = AsyncMock()
     client.async_connect = AsyncMock(return_value=None)
+    client.async_discover = AsyncMock(
+        return_value=[SimpleNamespace(panel_name="Panel A")]
+    )
     client.wait_ready = AsyncMock(return_value=True)
     client.async_disconnect = AsyncMock(return_value=None)
     client.snapshot = object()
@@ -116,6 +119,7 @@ async def test_start_wait_ready_false_disconnects(hass: HomeAssistant) -> None:
     """Test hub start disconnects when ready is false."""
     client = AsyncMock()
     client.async_connect = AsyncMock(return_value=None)
+    client.async_discover = AsyncMock(return_value=[])
     client.wait_ready = AsyncMock(return_value=False)
     client.async_disconnect = AsyncMock(return_value=None)
 
@@ -134,6 +138,7 @@ async def test_event_routing_updates_snapshot(hass: HomeAssistant) -> None:
     """Test event routing updates snapshot and notifies listeners."""
     client = AsyncMock()
     client.async_connect = AsyncMock(return_value=None)
+    client.async_discover = AsyncMock(return_value=[])
     client.wait_ready = AsyncMock(return_value=True)
     client.async_disconnect = AsyncMock(return_value=None)
     first_snapshot = object()

@@ -113,6 +113,7 @@ async def test_setup_unload_calls_connect_disconnect_and_subscribe(
     """Test client connect/disconnect and event subscription lifecycle."""
     client = AsyncMock()
     client.async_connect = AsyncMock(return_value=None)
+    client.async_discover = AsyncMock(return_value=[])
     client.wait_ready = AsyncMock(return_value=True)
     unsubscribe = Mock()
     client.subscribe = Mock(return_value=unsubscribe)

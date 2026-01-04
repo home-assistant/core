@@ -129,6 +129,11 @@ class Elke27Hub:
         self._client = client
         try:
             await client.async_connect(self._host, self._port, link_keys)
+            if self._panel_name is None:
+                panel_name = await self._async_discover_panel_name(client)
+                if panel_name:
+                    self._panel_name = panel_name
+                    _LOGGER.debug("Discovered panel name: %s", panel_name)
             if self._pin:
                 auth_result = await client.async_execute(
                     "control_authenticate", pin=self._pin
@@ -159,6 +164,14 @@ class Elke27Hub:
             await self._client.async_disconnect()
         self._client = None
         self.snapshot = None
+
+    async def _async_discover_panel_name(self, client: Elke27Client) -> str | None:
+        """Return the panel name from discovery if available."""
+        panels = await client.async_discover(timeout_s=5, address=self._host)
+        if not panels:
+            return None
+        panel = panels[0]
+        return getattr(panel, "panel_name", None)
 
     async def async_set_output(self, output_id: int, state: bool) -> bool:
         """Request an output state change if supported."""
