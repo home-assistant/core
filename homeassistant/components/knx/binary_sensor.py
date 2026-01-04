@@ -114,24 +114,26 @@ class KnxYamlBinarySensor(_KnxBinarySensor, KnxYamlEntity):
 
     def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize of KNX binary sensor."""
+        self._device = XknxBinarySensor(
+            xknx=knx_module.xknx,
+            name=config.get(CONF_NAME, ""),
+            group_address_state=config[CONF_STATE_ADDRESS],
+            invert=config[CONF_INVERT],
+            sync_state=config[CONF_SYNC_STATE],
+            ignore_internal_state=config[CONF_IGNORE_INTERNAL_STATE],
+            context_timeout=config.get(CONF_CONTEXT_TIMEOUT),
+            reset_after=config.get(CONF_RESET_AFTER),
+            always_callback=True,
+        )
         super().__init__(
             knx_module=knx_module,
-            device=XknxBinarySensor(
-                xknx=knx_module.xknx,
-                name=config[CONF_NAME],
-                group_address_state=config[CONF_STATE_ADDRESS],
-                invert=config[CONF_INVERT],
-                sync_state=config[CONF_SYNC_STATE],
-                ignore_internal_state=config[CONF_IGNORE_INTERNAL_STATE],
-                context_timeout=config.get(CONF_CONTEXT_TIMEOUT),
-                reset_after=config.get(CONF_RESET_AFTER),
-                always_callback=True,
-            ),
+            unique_id=str(self._device.remote_value.group_address_state),
+            name=config.get(CONF_NAME),
+            entity_category=config.get(CONF_ENTITY_CATEGORY),
         )
-        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
+
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_force_update = self._device.ignore_internal_state
-        self._attr_unique_id = str(self._device.remote_value.group_address_state)
 
 
 class KnxUiBinarySensor(_KnxBinarySensor, KnxUiEntity):

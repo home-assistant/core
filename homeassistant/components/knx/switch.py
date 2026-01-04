@@ -107,20 +107,21 @@ class KnxYamlSwitch(_KnxSwitch, KnxYamlEntity):
 
     def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize of KNX switch."""
+        self._device = XknxSwitch(
+            xknx=knx_module.xknx,
+            name=config.get(CONF_NAME, ""),
+            group_address=config[KNX_ADDRESS],
+            group_address_state=config.get(SwitchSchema.CONF_STATE_ADDRESS),
+            respond_to_read=config[CONF_RESPOND_TO_READ],
+            invert=config[SwitchSchema.CONF_INVERT],
+        )
         super().__init__(
             knx_module=knx_module,
-            device=XknxSwitch(
-                xknx=knx_module.xknx,
-                name=config[CONF_NAME],
-                group_address=config[KNX_ADDRESS],
-                group_address_state=config.get(SwitchSchema.CONF_STATE_ADDRESS),
-                respond_to_read=config[CONF_RESPOND_TO_READ],
-                invert=config[SwitchSchema.CONF_INVERT],
-            ),
+            unique_id=str(self._device.switch.group_address),
+            name=config.get(CONF_NAME),
+            entity_category=config.get(CONF_ENTITY_CATEGORY),
         )
-        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
-        self._attr_unique_id = str(self._device.switch.group_address)
 
 
 class KnxUiSwitch(_KnxSwitch, KnxUiEntity):

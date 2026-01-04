@@ -121,7 +121,7 @@ def _create_yaml_light(xknx: XKNX, config: ConfigType) -> XknxLight:
 
     return XknxLight(
         xknx,
-        name=config[CONF_NAME],
+        name=config.get(CONF_NAME, ""),
         group_address_switch=config.get(KNX_ADDRESS),
         group_address_switch_state=config.get(LightSchema.CONF_STATE_ADDRESS),
         group_address_brightness=config.get(LightSchema.CONF_BRIGHTNESS_ADDRESS),
@@ -558,15 +558,16 @@ class KnxYamlLight(_KnxLight, KnxYamlEntity):
 
     def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize of KNX light."""
+        self._device = _create_yaml_light(knx_module.xknx, config)
         super().__init__(
             knx_module=knx_module,
-            device=_create_yaml_light(knx_module.xknx, config),
+            unique_id=self._device_unique_id(),
+            name=config.get(CONF_NAME),
+            entity_category=config.get(CONF_ENTITY_CATEGORY),
         )
         self._attr_color_mode = next(iter(self.supported_color_modes))
         self._attr_max_color_temp_kelvin: int = config[LightSchema.CONF_MAX_KELVIN]
         self._attr_min_color_temp_kelvin: int = config[LightSchema.CONF_MIN_KELVIN]
-        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
-        self._attr_unique_id = self._device_unique_id()
 
     def _device_unique_id(self) -> str:
         """Return unique id for this device."""
