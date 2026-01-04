@@ -39,4 +39,5 @@ class HypontechPlantEntity(CoordinatorEntity[HypontechDataCoordinator]):
             identifiers={(DOMAIN, plant_id)},
             name=plant.plant_name,
             manufacturer="Hypontech",
+            model="Plant",
         )
