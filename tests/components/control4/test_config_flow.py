@@ -120,9 +120,13 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
+    # Use realistic JSON error format that pyControl4 returns
+    json_error = (
+        '{"C4ErrorResponse": {"code":401,"message":"Permission denied","subCode":0}}'
+    )
     with patch(
         "homeassistant.components.control4.config_flow.C4Account",
-        side_effect=Unauthorized("message"),
+        side_effect=Unauthorized(json_error),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -135,6 +139,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "api_auth_failed"}
+    assert result2["description_placeholders"]["error"] == "Permission denied"
 
 
 async def test_form_controller_not_found(hass: HomeAssistant) -> None:
@@ -169,6 +174,33 @@ async def test_form_unexpected_exception(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.control4.config_flow.C4Account",
         side_effect=ValueError("message"),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: MOCK_HOST,
+                CONF_USERNAME: MOCK_USERNAME,
+                CONF_PASSWORD: MOCK_PASSWORD,
+            },
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "unknown"}
+
+
+async def test_form_api_missing_controller_key(hass: HomeAssistant) -> None:
+    """Test we handle missing controller key in API response."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    # Mock account that returns response missing "controllerCommonName"
+    c4_account = AsyncMock(C4Account)
+    c4_account.getAccountControllers.return_value = {"unexpected": "data"}
+
+    with patch(
+        "homeassistant.components.control4.config_flow.C4Account",
+        return_value=c4_account,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -271,6 +303,36 @@ async def test_form_cannot_connect_timeout(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_director_unexpected_exception(hass: HomeAssistant) -> None:
+    """Test we handle unexpected exception from director."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    c4_account = _get_mock_c4_account()
+    with (
+        patch(
+            "homeassistant.components.control4.config_flow.C4Account",
+            return_value=c4_account,
+        ),
+        patch(
+            "homeassistant.components.control4.config_flow.C4Director",
+            side_effect=RuntimeError("Unexpected error"),
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: MOCK_HOST,
+                CONF_USERNAME: MOCK_USERNAME,
+                CONF_PASSWORD: MOCK_PASSWORD,
+            },
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "unknown"}
 
 
 async def test_option_flow(hass: HomeAssistant) -> None:
