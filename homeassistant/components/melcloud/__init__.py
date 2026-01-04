@@ -58,7 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MelCloudConfigEntry) -> 
             # Register parent device now so zone entities can reference it via via_device
             device_registry.async_get_or_create(
                 config_entry_id=entry.entry_id,
-                **coordinator.mel_device.device_info,
+                **coordinator.device_info,
             )
 
     entry.runtime_data = coordinators

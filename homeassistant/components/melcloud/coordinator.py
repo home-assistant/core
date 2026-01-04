@@ -35,21 +35,34 @@ RETRY_INTERVAL_SECONDS = 30
 MAX_CONSECUTIVE_FAILURES = 3
 
 
-class MelCloudDevice:
-    """MELCloud Device instance."""
+class MelCloudDeviceUpdateCoordinator(DataUpdateCoordinator[None]):
+    """Per-device coordinator for MELCloud data updates."""
 
     def __init__(
-        self, device: Device, coordinator: MelCloudDeviceUpdateCoordinator
+        self,
+        hass: HomeAssistant,
+        device: Device,
+        config_entry: ConfigEntry,
     ) -> None:
-        """Construct a device wrapper."""
+        """Initialize the per-device coordinator."""
         self.device = device
-        self.name = device.name
-        self.coordinator = coordinator
+        self.device_available = True
+        self._consecutive_failures = 0
 
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.coordinator.device_available
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=f"{DOMAIN}_{device.name}",
+            update_interval=timedelta(minutes=DEFAULT_UPDATE_INTERVAL),
+            always_update=True,
+            request_refresh_debouncer=Debouncer(
+                hass,
+                _LOGGER,
+                cooldown=REQUEST_REFRESH_DELAY,
+                immediate=False,
+            ),
+        )
 
     @property
     def extra_attributes(self) -> dict[str, Any]:
@@ -86,7 +99,7 @@ class MelCloudDevice:
             identifiers={(DOMAIN, f"{self.device.mac}-{self.device.serial}")},
             manufacturer="Mitsubishi Electric",
             model=model,
-            name=self.name,
+            name=self.device.name,
         )
 
     def zone_device_info(self, zone: Zone) -> DeviceInfo:
@@ -96,52 +109,19 @@ class MelCloudDevice:
             identifiers={(DOMAIN, f"{dev.mac}-{dev.serial}-{zone.zone_index}")},
             manufacturer="Mitsubishi Electric",
             model="ATW zone device",
-            name=f"{self.name} {zone.name}",
+            name=f"{self.device.name} {zone.name}",
             via_device=(DOMAIN, f"{dev.mac}-{dev.serial}"),
         )
 
-
-class MelCloudDeviceUpdateCoordinator(DataUpdateCoordinator[MelCloudDevice]):
-    """Per-device coordinator for MELCloud data updates."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        device: Device,
-        config_entry: ConfigEntry,
-    ) -> None:
-        """Initialize the per-device coordinator."""
-        self._device = device
-        self.device_available = True
-        self._consecutive_failures = 0
-
-        super().__init__(
-            hass,
-            _LOGGER,
-            config_entry=config_entry,
-            name=f"{DOMAIN}_{device.name}",
-            update_interval=timedelta(minutes=DEFAULT_UPDATE_INTERVAL),
-            always_update=True,  # Must be True since we return the same wrapper object
-            request_refresh_debouncer=Debouncer(
-                hass,
-                _LOGGER,
-                cooldown=REQUEST_REFRESH_DELAY,
-                immediate=False,
-            ),
-        )
-
-        # Create the wrapper after coordinator is initialized
-        self.mel_device = MelCloudDevice(device, self)
-
-    async def _async_update_data(self) -> MelCloudDevice:
+    async def _async_update_data(self) -> None:
         """Fetch data for this specific device from MELCloud."""
         try:
-            await self._device.update()
+            await self.device.update()
             # Success - reset failure counter and restore normal interval
             if self._consecutive_failures > 0:
                 _LOGGER.info(
                     "Connection restored for %s after %d failed attempt(s)",
-                    self._device.name,
+                    self.device.name,
                     self._consecutive_failures,
                 )
                 self._consecutive_failures = 0
@@ -154,19 +134,17 @@ class MelCloudDeviceUpdateCoordinator(DataUpdateCoordinator[MelCloudDevice]):
                 _LOGGER.error(
                     "MELCloud rate limit exceeded for %s. Your account may be "
                     "temporarily blocked",
-                    self._device.name,
+                    self.device.name,
                 )
                 # Rate limit - mark unavailable immediately
                 self.device_available = False
                 raise UpdateFailed(
-                    f"Rate limit exceeded for {self._device.name}"
+                    f"Rate limit exceeded for {self.device.name}"
                 ) from ex
             # Other HTTP errors - use retry logic
-            self._handle_failure(f"Error updating {self._device.name}: {ex}", ex)
+            self._handle_failure(f"Error updating {self.device.name}: {ex}", ex)
         except ClientConnectionError as ex:
-            self._handle_failure(f"Connection failed for {self._device.name}: {ex}", ex)
-
-        return self.mel_device
+            self._handle_failure(f"Connection failed for {self.device.name}: {ex}", ex)
 
     def _handle_failure(self, message: str, exception: Exception | None = None) -> None:
         """Handle a connection failure with retry logic.
@@ -203,10 +181,10 @@ class MelCloudDeviceUpdateCoordinator(DataUpdateCoordinator[MelCloudDevice]):
     async def async_set(self, properties: dict[str, Any]) -> None:
         """Write state changes to the MELCloud API."""
         try:
-            await self._device.set(properties)
+            await self.device.set(properties)
             self.device_available = True
         except ClientConnectionError:
-            _LOGGER.warning("Connection failed for %s", self._device.name)
+            _LOGGER.warning("Connection failed for %s", self.device.name)
             self.device_available = False
 
         await self.async_request_refresh()

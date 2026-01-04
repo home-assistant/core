@@ -38,7 +38,7 @@ from .const import (
     SERVICE_SET_VANE_HORIZONTAL,
     SERVICE_SET_VANE_VERTICAL,
 )
-from .coordinator import MelCloudConfigEntry, MelCloudDevice
+from .coordinator import MelCloudConfigEntry, MelCloudDeviceUpdateCoordinator
 from .entity import MelCloudEntity
 
 ATA_HVAC_MODE_LOOKUP = {
@@ -78,16 +78,14 @@ async def async_setup_entry(
     """Set up MelCloud device climate based on config_entry."""
     coordinators = entry.runtime_data
     entities: list[AtaDeviceClimate | AtwDeviceZoneClimate] = [
-        AtaDeviceClimate(coordinator.mel_device, coordinator.mel_device.device)
+        AtaDeviceClimate(coordinator, coordinator.device)
         for coordinator in coordinators.get(DEVICE_TYPE_ATA, [])
     ]
     entities.extend(
         [
-            AtwDeviceZoneClimate(
-                coordinator.mel_device, coordinator.mel_device.device, zone
-            )
+            AtwDeviceZoneClimate(coordinator, coordinator.device, zone)
             for coordinator in coordinators.get(DEVICE_TYPE_ATW, [])
-            for zone in coordinator.mel_device.device.zones
+            for zone in coordinator.device.zones
         ]
     )
     async_add_entities(entities)
@@ -113,11 +111,11 @@ class MelCloudClimate(MelCloudEntity, ClimateEntity):
 
     def __init__(
         self,
-        device: MelCloudDevice,
+        coordinator: MelCloudDeviceUpdateCoordinator,
     ) -> None:
         """Initialize the climate."""
-        super().__init__(device)
-        self._base_device = self._api.device
+        super().__init__(coordinator)
+        self._base_device = self.coordinator.device
 
     @property
     def target_temperature_step(self) -> float | None:
@@ -138,15 +136,17 @@ class AtaDeviceClimate(MelCloudClimate):
 
     def __init__(
         self,
-        device: MelCloudDevice,
+        coordinator: MelCloudDeviceUpdateCoordinator,
         ata_device: AtaDevice,
     ) -> None:
         """Initialize the climate."""
-        super().__init__(device)
+        super().__init__(coordinator)
         self._device = ata_device
 
-        self._attr_unique_id = f"{self._api.device.serial}-{self._api.device.mac}"
-        self._attr_device_info = self._api.device_info
+        self._attr_unique_id = (
+            f"{self.coordinator.device.serial}-{self.coordinator.device.mac}"
+        )
+        self._attr_device_info = self.coordinator.device_info
 
         # Add horizontal swing if device supports it
         if self._device.vane_horizontal:
@@ -156,7 +156,7 @@ class AtaDeviceClimate(MelCloudClimate):
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the optional state attributes with device specific additions."""
         attr: dict[str, Any] = {}
-        attr.update(self._api.extra_attributes)
+        attr.update(self.coordinator.extra_attributes)
 
         if vane_horizontal := self._device.vane_horizontal:
             attr.update(
@@ -203,7 +203,7 @@ class AtaDeviceClimate(MelCloudClimate):
         """Set new target hvac mode."""
         set_dict: dict[str, Any] = {}
         self._apply_set_hvac_mode(hvac_mode, set_dict)
-        await self._api.coordinator.async_set(set_dict)
+        await self.coordinator.async_set(set_dict)
 
     @property
     def hvac_modes(self) -> list[HVACMode]:
@@ -236,7 +236,7 @@ class AtaDeviceClimate(MelCloudClimate):
             set_dict["target_temperature"] = kwargs.get(ATTR_TEMPERATURE)
 
         if set_dict:
-            await self._api.coordinator.async_set(set_dict)
+            await self.coordinator.async_set(set_dict)
 
     @property
     def fan_mode(self) -> str | None:
@@ -245,7 +245,7 @@ class AtaDeviceClimate(MelCloudClimate):
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        await self._api.coordinator.async_set({"fan_speed": fan_mode})
+        await self.coordinator.async_set({"fan_speed": fan_mode})
 
     @property
     def fan_modes(self) -> list[str] | None:
@@ -259,7 +259,7 @@ class AtaDeviceClimate(MelCloudClimate):
                 f"Invalid horizontal vane position {position}. Valid positions:"
                 f" [{self._device.vane_horizontal_positions}]."
             )
-        await self._api.coordinator.async_set({ata.PROPERTY_VANE_HORIZONTAL: position})
+        await self.coordinator.async_set({ata.PROPERTY_VANE_HORIZONTAL: position})
 
     async def async_set_vane_vertical(self, position: str) -> None:
         """Set vertical vane position."""
@@ -268,7 +268,7 @@ class AtaDeviceClimate(MelCloudClimate):
                 f"Invalid vertical vane position {position}. Valid positions:"
                 f" [{self._device.vane_vertical_positions}]."
             )
-        await self._api.coordinator.async_set({ata.PROPERTY_VANE_VERTICAL: position})
+        await self.coordinator.async_set({ata.PROPERTY_VANE_VERTICAL: position})
 
     @property
     def swing_mode(self) -> str | None:
@@ -300,11 +300,11 @@ class AtaDeviceClimate(MelCloudClimate):
 
     async def async_turn_on(self) -> None:
         """Turn the entity on."""
-        await self._api.coordinator.async_set({"power": True})
+        await self.coordinator.async_set({"power": True})
 
     async def async_turn_off(self) -> None:
         """Turn the entity off."""
-        await self._api.coordinator.async_set({"power": False})
+        await self.coordinator.async_set({"power": False})
 
     @property
     def min_temp(self) -> float:
@@ -334,17 +334,17 @@ class AtwDeviceZoneClimate(MelCloudClimate):
 
     def __init__(
         self,
-        device: MelCloudDevice,
+        coordinator: MelCloudDeviceUpdateCoordinator,
         atw_device: AtwDevice,
         atw_zone: Zone,
     ) -> None:
         """Initialize the climate."""
-        super().__init__(device)
+        super().__init__(coordinator)
         self._device = atw_device
         self._zone = atw_zone
 
-        self._attr_unique_id = f"{self._api.device.serial}-{atw_zone.zone_index}"
-        self._attr_device_info = self._api.zone_device_info(atw_zone)
+        self._attr_unique_id = f"{self.coordinator.device.serial}-{atw_zone.zone_index}"
+        self._attr_device_info = self.coordinator.zone_device_info(atw_zone)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
@@ -367,7 +367,7 @@ class AtwDeviceZoneClimate(MelCloudClimate):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if hvac_mode == HVACMode.OFF:
-            await self._api.coordinator.async_set({"power": False})
+            await self.coordinator.async_set({"power": False})
             return
 
         operation_mode = ATW_ZONE_HVAC_MODE_REVERSE_LOOKUP.get(hvac_mode)
@@ -380,7 +380,7 @@ class AtwDeviceZoneClimate(MelCloudClimate):
             props = {PROPERTY_ZONE_2_OPERATION_MODE: operation_mode}
         if self.hvac_mode == HVACMode.OFF:
             props["power"] = True
-        await self._api.coordinator.async_set(props)
+        await self.coordinator.async_set(props)
 
     @property
     def hvac_modes(self) -> list[HVACMode]:
@@ -409,4 +409,4 @@ class AtwDeviceZoneClimate(MelCloudClimate):
         await self._zone.set_target_temperature(
             kwargs.get(ATTR_TEMPERATURE, self.target_temperature)
         )
-        await self._api.coordinator.async_request_refresh()
+        await self.coordinator.async_request_refresh()
