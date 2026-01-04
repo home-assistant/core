@@ -171,6 +171,7 @@ async def make_device_data(
         "K20+ Pro",
         "Robot Vacuum Cleaner K10+ Pro Combo",
         "Robot Vacuum Cleaner S10",
+        "Robot Vacuum Cleaner S20",
         "S20",
         "Robot Vacuum Cleaner K11 Plus",
     ]:
