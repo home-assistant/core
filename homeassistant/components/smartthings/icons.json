@@ -24,8 +24,23 @@
       }
     },
     "button": {
+      "cancel": {
+        "default": "mdi:stop"
+      },
+      "cancel_and_drain": {
+        "default": "mdi:stop"
+      },
+      "pause": {
+        "default": "mdi:pause"
+      },
       "reset_water_filter": {
         "default": "mdi:reload"
+      },
+      "resume": {
+        "default": "mdi:play"
+      },
+      "start": {
+        "default": "mdi:play"
       },
       "stop": {
         "default": "mdi:stop"
