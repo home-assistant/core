@@ -511,7 +511,7 @@ async def test_zeroconf_json_api_still_disabled_reports_error(
     mock_nrgkick_api.get_info.side_effect = NRGkickApiClientApiDisabledError
 
     with patch(
-        "custom_components.nrgkick.config_flow.NRGkickAPI",
+        "homeassistant.components.nrgkick.config_flow.NRGkickAPI",
         return_value=mock_nrgkick_api,
     ):
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
