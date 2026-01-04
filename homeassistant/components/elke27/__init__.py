@@ -17,7 +17,13 @@ from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-from .const import CONF_INTEGRATION_SERIAL, CONF_LINK_KEYS_JSON, CONF_PIN, DOMAIN
+from .const import (
+    CONF_INTEGRATION_SERIAL,
+    CONF_LINK_KEYS_JSON,
+    CONF_PANEL,
+    CONF_PIN,
+    DOMAIN,
+)
 from .hub import Elke27Hub
 from .identity import async_get_integration_serial
 
@@ -37,6 +43,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     port = entry.data[CONF_PORT]
     link_keys_json = entry.data.get(CONF_LINK_KEYS_JSON)
     pin = entry.data.get(CONF_PIN)
+    panel_name = _panel_name_from_entry(entry.data.get(CONF_PANEL))
     if not link_keys_json:
         raise ConfigEntryAuthFailed("Link keys are missing; relink required")
     if not entry.data.get(CONF_INTEGRATION_SERIAL):
@@ -45,7 +52,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry,
             data={**entry.data, CONF_INTEGRATION_SERIAL: integration_serial},
         )
-    hub = Elke27Hub(hass, host, port, link_keys_json, pin)
+    if panel_name:
+        _LOGGER.debug("Discovered panel name: %s", panel_name)
+    hub = Elke27Hub(hass, host, port, link_keys_json, pin, panel_name)
     try:
         await hub.async_start()
     except Elke27LinkRequiredError as err:
@@ -72,3 +81,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if hub is not None:
         await hub.async_stop()
     return unload_ok
+
+
+def _panel_name_from_entry(panel: object | None) -> str | None:
+    if isinstance(panel, dict):
+        return panel.get("panel_name") or panel.get("name")
+    return None

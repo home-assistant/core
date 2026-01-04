@@ -14,6 +14,8 @@ from .hub import Elke27Hub
 
 def get_panel_field(hub: Elke27Hub, field: str) -> Any:
     """Return a field from the current panel snapshot."""
+    if field == "name" and hub.panel_name:
+        return hub.panel_name
     panel_info = hub.panel_info
     if panel_info is None:
         return None

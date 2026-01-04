@@ -99,7 +99,7 @@ async def test_start_connects_and_subscribes(hass: HomeAssistant) -> None:
         "homeassistant.components.elke27.hub.Elke27Client",
         side_effect=_client_factory(client),
     ):
-        hub = Elke27Hub(hass, "192.168.1.70", 2101, "link-keys-json")
+        hub = Elke27Hub(hass, "192.168.1.70", 2101, "link-keys-json", None, None)
         await hub.async_start()
 
     client.async_connect.assert_awaited_once()
@@ -123,7 +123,7 @@ async def test_start_wait_ready_false_disconnects(hass: HomeAssistant) -> None:
         "homeassistant.components.elke27.hub.Elke27Client",
         side_effect=_client_factory(client),
     ):
-        hub = Elke27Hub(hass, "192.168.1.71", 2101, "link-keys-json")
+        hub = Elke27Hub(hass, "192.168.1.71", 2101, "link-keys-json", None, None)
         with pytest.raises(ConfigEntryNotReady):
             await hub.async_start()
 
@@ -145,7 +145,7 @@ async def test_event_routing_updates_snapshot(hass: HomeAssistant) -> None:
         "homeassistant.components.elke27.hub.Elke27Client",
         side_effect=_client_factory(client),
     ):
-        hub = Elke27Hub(hass, "192.168.1.72", 2101, "link-keys-json")
+        hub = Elke27Hub(hass, "192.168.1.72", 2101, "link-keys-json", None, None)
         await hub.async_start()
 
     general_calls: list[str] = []

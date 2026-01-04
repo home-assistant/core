@@ -30,6 +30,7 @@ class Elke27Hub:
         port: int,
         link_keys_json: str,
         pin: str | None,
+        panel_name: str | None,
     ) -> None:
         """Initialize the hub wrapper."""
         self._hass = hass
@@ -37,6 +38,7 @@ class Elke27Hub:
         self._port = port
         self._link_keys_json = link_keys_json
         self._pin = pin
+        self._panel_name = panel_name
         self._client: Elke27Client | None = None
         self._unsubscribe: Callable[[], None] | None = None
         self._listeners: list[Callable[[], None]] = []
@@ -65,6 +67,11 @@ class Elke27Hub:
         if snapshot is None:
             return None
         return getattr(snapshot, "panel_info", None) or getattr(snapshot, "panel", None)
+
+    @property
+    def panel_name(self) -> str | None:
+        """Return the discovered panel name if available."""
+        return self._panel_name
 
     @property
     def table_info(self) -> Any | None:
