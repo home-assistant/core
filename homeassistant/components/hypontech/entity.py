@@ -23,3 +23,20 @@ class HypontechEntity(CoordinatorEntity[HypontechDataCoordinator]):
             manufacturer="Hypontech",
             model="Overview",
         )
+
+
+class HypontechPlantEntity(CoordinatorEntity[HypontechDataCoordinator]):
+    """Base entity for Hypontech Cloud plant."""
+
+    _attr_has_entity_name = True
+
+    def __init__(self, coordinator: HypontechDataCoordinator, plant_id: str) -> None:
+        """Initialize the entity."""
+        super().__init__(coordinator)
+        self.plant_id = plant_id
+        plant = coordinator.data.plants[plant_id]
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, plant_id)},
+            name=plant.plant_name,
+            manufacturer="Hypontech",
+        )

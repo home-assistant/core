@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
-from hyponcloud import AuthenticationError, ConnectionError as HyponConnectionError
+from hyponcloud import AuthenticationError, RequestError
 import pytest
 
 from homeassistant.components.hypontech.const import DOMAIN
@@ -73,7 +73,7 @@ async def test_setup_entry_connection_error(hass: HomeAssistant) -> None:
         ),
         patch(
             "homeassistant.components.hypontech.coordinator.HyponCloud.get_overview",
-            side_effect=HyponConnectionError,
+            side_effect=RequestError,
         ),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -134,6 +134,10 @@ def mock_hyponcloud():
         patch(
             "homeassistant.components.hypontech.coordinator.HyponCloud.get_overview",
         ) as mock_get_overview,
+        patch(
+            "homeassistant.components.hypontech.coordinator.HyponCloud.get_list",
+        ) as mock_get_list,
     ):
         mock_get_overview.return_value = AsyncMock()
+        mock_get_list.return_value = []
         yield mock_get_overview
