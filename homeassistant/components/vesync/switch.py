@@ -6,21 +6,21 @@ import logging
 from typing import Any, Final
 
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
+from pyvesync.device_container import DeviceContainer
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import is_outlet, is_wall_switch, rgetattr
-from .const import DOMAIN, VS_COORDINATOR, VS_DEVICES, VS_DISCOVERY, VS_MANAGER
-from .coordinator import VeSyncDataCoordinator
+from .const import VS_DEVICES, VS_DISCOVERY
+from .coordinator import VesyncConfigEntry, VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -64,17 +64,27 @@ SENSOR_DESCRIPTIONS: Final[tuple[VeSyncSwitchEntityDescription, ...]] = (
         on_fn=lambda device: device.toggle_child_lock(True),
         off_fn=lambda device: device.toggle_child_lock(False),
     ),
+    VeSyncSwitchEntityDescription(
+        key="auto_off_config",
+        is_on=lambda device: device.state.automatic_stop_config,
+        exists_fn=(
+            lambda device: rgetattr(device, "state.automatic_stop_config") is not None
+        ),
+        translation_key="auto_off_config",
+        on_fn=lambda device: device.toggle_automatic_stop(True),
+        off_fn=lambda device: device.toggle_automatic_stop(False),
+    ),
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: VesyncConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switch platform."""
 
-    coordinator = hass.data[DOMAIN][VS_COORDINATOR]
+    coordinator = config_entry.runtime_data
 
     @callback
     def discover(devices: list[VeSyncBaseDevice]) -> None:
@@ -86,13 +96,13 @@ async def async_setup_entry(
     )
 
     _setup_entities(
-        hass.data[DOMAIN][VS_MANAGER].devices, async_add_entities, coordinator
+        config_entry.runtime_data.manager.devices, async_add_entities, coordinator
     )
 
 
 @callback
 def _setup_entities(
-    devices: list[VeSyncBaseDevice],
+    devices: DeviceContainer | list[VeSyncBaseDevice],
     async_add_entities: AddConfigEntryEntitiesCallback,
     coordinator: VeSyncDataCoordinator,
 ) -> None:
