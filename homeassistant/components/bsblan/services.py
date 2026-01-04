@@ -13,9 +13,9 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
+from .helpers import async_sync_device_time
 
 if TYPE_CHECKING:
     from . import BSBLanConfigEntry
@@ -245,25 +245,7 @@ async def async_sync_time(service_call: ServiceCall) -> None:
         )
 
     client = entry.runtime_data.client
-
-    try:
-        # Get current device time
-        device_time = await client.time()
-        current_time = dt_util.now()
-        current_time_str = current_time.strftime("%d.%m.%Y %H:%M:%S")
-
-        # Only sync if device time differs from HA time
-        if device_time.time.value != current_time_str:
-            await client.set_time(current_time_str)
-    except BSBLANError as err:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="sync_time_failed",
-            translation_placeholders={
-                "device_name": device_entry.name or device_id,
-                "error": str(err),
-            },
-        ) from err
+    await async_sync_device_time(client, device_entry.name or device_id)
 
 
 SYNC_TIME_SCHEMA = vol.Schema(

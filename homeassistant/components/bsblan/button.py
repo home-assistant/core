@@ -2,19 +2,15 @@
 
 from __future__ import annotations
 
-from bsblan import BSBLANError
-
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util import dt as dt_util
 
 from . import BSBLanConfigEntry, BSBLanData
-from .const import DOMAIN
 from .coordinator import BSBLanFastCoordinator
 from .entity import BSBLanEntity
+from .helpers import async_sync_device_time
 
 PARALLEL_UPDATES = 1
 
@@ -61,27 +57,7 @@ class BSBLanButtonEntity(BSBLanEntity, ButtonEntity):
     async def async_press(self) -> None:
         """Handle the button press."""
         if self.entity_description.key == "sync_time":
-            await self._async_sync_time()
-
-    async def _async_sync_time(self) -> None:
-        """Synchronize BSB-LAN device time with Home Assistant."""
-        try:
-            device_time = await self._client.time()
-            current_time = dt_util.now()
-            current_time_str = current_time.strftime("%d.%m.%Y %H:%M:%S")
-
-            # Only sync if device time differs from HA time
-            if device_time.time.value != current_time_str:
-                await self._client.set_time(current_time_str)
-        except BSBLANError as err:
             device_name = "Unknown"
             if self._attr_device_info:
                 device_name = str(self._attr_device_info.get("name", "Unknown"))
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="sync_time_failed",
-                translation_placeholders={
-                    "device_name": device_name,
-                    "error": str(err),
-                },
-            ) from err
+            await async_sync_device_time(self._client, device_name)
