@@ -30,7 +30,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up WLED update based on a config entry."""
-    async_add_entities([WLEDUpdateEntity(entry.runtime_data, hass.data[WLED_KEY])])
+    async_add_entities([WLEDUpdateEntity(entry.runtime_data, hass.data[WLED_KEY], entry)])
 
 
 class WLEDUpdateEntity(WLEDEntity, UpdateEntity):
@@ -46,10 +46,12 @@ class WLEDUpdateEntity(WLEDEntity, UpdateEntity):
         self,
         coordinator: WLEDDataUpdateCoordinator,
         releases_coordinator: WLEDReleasesDataUpdateCoordinator,
+        entry: WLEDConfigEntry,
     ) -> None:
         """Initialize the update entity."""
         super().__init__(coordinator=coordinator)
         self.releases_coordinator = releases_coordinator
+        self.entry = entry
         self._attr_unique_id = coordinator.data.info.mac_address
 
     async def async_added_to_hass(self) -> None:
@@ -77,6 +79,11 @@ class WLEDUpdateEntity(WLEDEntity, UpdateEntity):
         return str(version)
 
     @property
+    def _exclude_nightly(self) -> bool:
+        """Check if nightly versions should be excluded."""
+        return self.entry.options.get("exclude_nightly", True)
+
+    @property
     def latest_version(self) -> str | None:
         """Latest version available for install."""
         # If we already run a pre-release, we consider being on the beta channel.
@@ -90,10 +97,17 @@ class WLEDUpdateEntity(WLEDEntity, UpdateEntity):
                 or (stable is not None and stable < beta and current > stable)
             )
         ):
-            return str(beta)
+            beta_str = str(beta)
+            # Check if beta is nightly and should be excluded
+            if not (self._exclude_nightly and beta_str.lower() == "nightly"):
+                return beta_str
 
         if (stable := self.releases_coordinator.data.stable) is not None:
-            return str(stable)
+            stable_str = str(stable)
+            # Check if stable is nightly and should be excluded
+            if self._exclude_nightly and stable_str.lower() == "nightly":
+                return None
+            return stable_str
 
         return None
 
@@ -102,6 +116,9 @@ class WLEDUpdateEntity(WLEDEntity, UpdateEntity):
         """URL to the full release notes of the latest version available."""
         if (version := self.latest_version) is None:
             return None
+        # Don't add 'v' prefix for nightly versions
+        if version.lower() == "nightly":
+            return f"https://github.com/wled/WLED/releases/tag/{version}"
         return f"https://github.com/wled/WLED/releases/tag/v{version}"
 
     @wled_exception_handler
