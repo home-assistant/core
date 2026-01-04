@@ -5,9 +5,7 @@
         "state_attributes": {
           "fan_mode": {
             "state": {
-              "auto": "mdi:fan-auto",
-              "circulate": "mdi:fan-clock",
-              "on": "mdi:fan"
+              "circulate": "mdi:fan-clock"
             }
           }
         }
