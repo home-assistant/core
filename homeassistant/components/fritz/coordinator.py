@@ -118,7 +118,9 @@ class FritzConnectionCached(FritzConnection):  # type: ignore[misc]
         if not hasattr(self, "_call_cache"):
             self._call_cache = {}
 
-        cache_key = slugify(f"{service_name}:{action_name}:{arguments}")
+        kwargs_key = ",".join(f"{k}={v!r}" for k, v in sorted(kwargs.items()))
+
+        cache_key = slugify(f"{service_name}:{action_name}:{arguments}:{kwargs_key}")
         if (result := self._call_cache.get(cache_key)) is not None:
             _LOGGER.debug("Using cached result for %s %s", service_name, action_name)
             return result
