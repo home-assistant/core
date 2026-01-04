@@ -133,6 +133,8 @@ async def async_setup_entry(
         """Discover and add a discovered tuya fan."""
         entities: list[TuyaFanEntity] = []
         for device_id in device_ids:
+            if device_id not in manager.device_map:
+                continue
             device = manager.device_map[device_id]
             if device.category in TUYA_SUPPORT_TYPE and _has_a_valid_dpcode(device):
                 entities.append(
