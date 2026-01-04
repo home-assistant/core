@@ -4,11 +4,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "Configuration is already in progress",
       "json_api_disabled": "JSON API is disabled on the device",
-      "no_serial_number": "Device does not provide a serial number",
-      "reauth_failed": "Re-authentication failed",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reconfigure_failed": "Reconfiguration failed",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "no_serial_number": "Device does not provide a serial number"
     },
     "error": {
       "cannot_connect": "Cannot connect to the NRGkick device. Test the connection using a browser: http://{device_ip}/info",
@@ -18,30 +14,6 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-      "reauth_confirm": {
-        "data": {
-          "password": "[%key:common::config_flow::data::password%]",
-          "username": "[%key:common::config_flow::data::username%]"
-        },
-        "data_description": {
-          "password": "Password for Basic Auth.",
-          "username": "Username for Basic Auth."
-        },
-        "description": "Please update your credentials for {host}."
-      },
-      "reconfigure_confirm": {
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "username": "[%key:common::config_flow::data::username%]"
-        },
-        "data_description": {
-          "host": "The hostname or IP address of the NRGkick device.",
-          "password": "Password for Basic Auth (optional).",
-          "username": "Username for Basic Auth (optional)."
-        },
-        "description": "Update configuration for {host}."
-      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
@@ -437,15 +409,6 @@
     },
     "http_error": {
       "message": "Device returned HTTP error {status_code} ({status_message}). URL: {url}"
-    },
-    "set_failed": {
-      "message": "Failed to set {target} to {value}. {error}"
-    },
-    "set_failed_invalid_value": {
-      "message": "Failed to set {target} to {value}. Device returned invalid value."
-    },
-    "set_failed_unexpected_value": {
-      "message": "Failed to set {target} to {value}. Device returned unexpected value: {actual} (expected {expected})."
     },
     "unknown_error": {
       "message": "An unknown error occurred."

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -406,148 +405,9 @@ class NRGkickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="zeroconf_auth",
             data_schema=STEP_AUTH_DATA_SCHEMA,
+            errors=errors,
             description_placeholders={
                 "name": self._discovered_name or "NRGkick",
                 "device_ip": self._pending_host,
-            },
-            errors=errors,
-        )
-
-    async def async_step_reauth(
-        self, _entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Handle reauthentication."""
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reauthentication confirmation."""
-        errors: dict[str, str] = {}
-        entry_id = self.context.get("entry_id")
-        if not entry_id:
-            return self.async_abort(reason="reauth_failed")
-
-        entry = self.hass.config_entries.async_get_entry(entry_id)
-        if entry is None:
-            return self.async_abort(reason="reauth_failed")
-
-        if user_input is not None:
-            data = {
-                CONF_HOST: entry.data[CONF_HOST],
-                CONF_USERNAME: user_input.get(CONF_USERNAME),
-                CONF_PASSWORD: user_input.get(CONF_PASSWORD),
-            }
-
-            try:
-                await validate_input(
-                    self.hass,
-                    data[CONF_HOST],
-                    username=data.get(CONF_USERNAME),
-                    password=data.get(CONF_PASSWORD),
-                )
-            except NRGkickApiClientApiDisabledError:
-                errors["base"] = "json_api_disabled"
-            except ValueError:
-                errors["base"] = "no_serial_number"
-            except NRGkickApiClientAuthenticationError:
-                errors["base"] = "invalid_auth"
-            except NRGkickApiClientCommunicationError:
-                errors["base"] = "cannot_connect"
-            except NRGkickApiClientError:
-                _LOGGER.exception("Unexpected error during reauthentication")
-                errors["base"] = "unknown"
-            else:
-                return self.async_update_reload_and_abort(
-                    entry, data=data, reason="reauth_successful"
-                )
-
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=vol.Schema(
-                {
-                    vol.Optional(CONF_USERNAME): str,
-                    vol.Optional(CONF_PASSWORD): str,
-                }
-            ),
-            errors=errors,
-            description_placeholders={
-                "host": entry.data[CONF_HOST],
-                "device_ip": _normalize_host(entry.data[CONF_HOST]),
-            },
-        )
-
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reconfiguration."""
-        return await self.async_step_reconfigure_confirm(user_input)
-
-    async def async_step_reconfigure_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reconfiguration confirmation."""
-        errors: dict[str, str] = {}
-        entry_id = self.context.get("entry_id")
-        if not entry_id:
-            return self.async_abort(reason="reconfigure_failed")
-
-        entry = self.hass.config_entries.async_get_entry(entry_id)
-
-        if entry is None:
-            return self.async_abort(reason="reconfigure_failed")
-
-        if user_input is not None:
-            try:
-                host = _normalize_host(user_input[CONF_HOST])
-            except vol.Invalid:
-                errors["base"] = "cannot_connect"
-            else:
-                data = {
-                    CONF_HOST: host,
-                    CONF_USERNAME: user_input.get(CONF_USERNAME),
-                    CONF_PASSWORD: user_input.get(CONF_PASSWORD),
-                }
-
-                try:
-                    await validate_input(
-                        self.hass,
-                        host,
-                        username=data.get(CONF_USERNAME),
-                        password=data.get(CONF_PASSWORD),
-                    )
-                except NRGkickApiClientApiDisabledError:
-                    errors["base"] = "json_api_disabled"
-                except ValueError:
-                    errors["base"] = "no_serial_number"
-                except NRGkickApiClientAuthenticationError:
-                    errors["base"] = "invalid_auth"
-                except NRGkickApiClientCommunicationError:
-                    errors["base"] = "cannot_connect"
-                except NRGkickApiClientError:
-                    _LOGGER.exception("Unexpected error during reconfiguration")
-                    errors["base"] = "unknown"
-                else:
-                    return self.async_update_reload_and_abort(
-                        entry, data=data, reason="reconfigure_successful"
-                    )
-
-        host = entry.data.get(CONF_HOST, "")
-        username = entry.data.get(CONF_USERNAME) or ""
-        password = entry.data.get(CONF_PASSWORD) or ""
-
-        return self.async_show_form(
-            step_id="reconfigure_confirm",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_HOST, default=host): HOST_SCHEMA,
-                    vol.Optional(CONF_USERNAME, default=username): str,
-                    vol.Optional(CONF_PASSWORD, default=password): str,
-                }
-            ),
-            errors=errors,
-            description_placeholders={
-                "host": host,
-                "device_ip": user_input[CONF_HOST] if user_input else host,
             },
         )

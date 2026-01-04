@@ -7,17 +7,13 @@ from unittest.mock import ANY, AsyncMock, patch
 import pytest
 import voluptuous as vol
 
-from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.nrgkick.api import NRGkickApiClientCommunicationError
+from homeassistant import data_entry_flow
 from homeassistant.components.nrgkick.config_flow import (
     NRGkickConfigFlow,
     _normalize_host,
     validate_input,
 )
-from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
@@ -115,73 +111,3 @@ async def test_flow_guards_and_fallbacks(hass: HomeAssistant) -> None:
     result = await flow.async_step_user_auth()
     assert result.get("type") == data_entry_flow.FlowResultType.FORM
     assert result.get("step_id") == "user"
-
-    # reauth_confirm without entry_id aborts
-    flow.context = {"source": config_entries.SOURCE_REAUTH}
-    result = await flow.async_step_reauth_confirm()
-    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
-    assert result.get("reason") == "reauth_failed"
-
-    # reauth_confirm with missing entry aborts
-    flow.context = {
-        "source": config_entries.SOURCE_REAUTH,
-        "entry_id": "does-not-exist",
-    }
-    result = await flow.async_step_reauth_confirm()
-    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
-    assert result.get("reason") == "reauth_failed"
-
-    # reconfigure_confirm without entry_id aborts
-    flow.context = {"source": config_entries.SOURCE_RECONFIGURE}
-    result = await flow.async_step_reconfigure_confirm()
-    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
-    assert result.get("reason") == "reconfigure_failed"
-
-
-async def test_reauth_confirm_shows_form_and_placeholders(hass: HomeAssistant) -> None:
-    """Test reauth confirm form placeholders."""
-    entry = MockConfigEntry(domain="nrgkick", data={CONF_HOST: "http://example.com"})
-    entry.add_to_hass(hass)
-
-    flow = NRGkickConfigFlow()
-    flow.hass = hass
-    flow.context = {"source": config_entries.SOURCE_REAUTH, "entry_id": entry.entry_id}
-
-    result = await flow.async_step_reauth_confirm()
-    assert result.get("type") == data_entry_flow.FlowResultType.FORM
-    assert result.get("step_id") == "reauth_confirm"
-    placeholders = result.get("description_placeholders")
-    assert placeholders is not None
-    assert placeholders["host"] == "http://example.com"
-    assert placeholders["device_ip"] == "example.com:80"
-
-
-async def test_reconfigure_confirm_error_uses_user_input_device_ip(
-    hass: HomeAssistant, mock_nrgkick_api
-) -> None:
-    """Test reconfigure_confirm placeholder uses submitted host on error."""
-    entry = MockConfigEntry(domain="nrgkick", data={CONF_HOST: "192.168.1.1"})
-    entry.add_to_hass(hass)
-
-    flow = NRGkickConfigFlow()
-    flow.hass = hass
-    flow.context = {
-        "source": config_entries.SOURCE_RECONFIGURE,
-        "entry_id": entry.entry_id,
-    }
-
-    mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientCommunicationError
-
-    with patch(
-        "homeassistant.components.nrgkick.config_flow.NRGkickAPI",
-        return_value=mock_nrgkick_api,
-    ):
-        result = await flow.async_step_reconfigure_confirm({CONF_HOST: "192.168.1.200"})
-
-    assert result.get("type") == data_entry_flow.FlowResultType.FORM
-    assert result.get("step_id") == "reconfigure_confirm"
-    assert result.get("errors") == {"base": "cannot_connect"}
-    assert result.get("description_placeholders") == {
-        "host": "192.168.1.1",
-        "device_ip": "192.168.1.200",
-    }
