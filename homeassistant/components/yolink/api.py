@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import time
 
 from aiohttp import ClientError, ClientSession
 from yolink.auth_mgr import YoLinkAuthMgr
@@ -69,6 +70,9 @@ class UACAuth(YoLinkAuthMgr):
     - Update to use super().__init__() with token_url, client_id, client_secret
     """
 
+    # Token buffer: refresh 5 minutes before expiration
+    TOKEN_EXPIRY_BUFFER = 300
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -81,6 +85,7 @@ class UACAuth(YoLinkAuthMgr):
         self._uaid = uaid
         self._secret_key = secret_key
         self._access_token: str | None = None
+        self._token_expiry: float = 0  # Unix timestamp when token expires
         self._session = websession
         self._token_url = OAUTH2_TOKEN
 
@@ -88,13 +93,21 @@ class UACAuth(YoLinkAuthMgr):
         """Return the current access token."""
         return self._access_token
 
+    def _is_token_valid(self) -> bool:
+        """Check if the current token is still valid."""
+        if self._access_token is None:
+            return False
+        # Refresh if token expires within buffer time
+        return time.time() < (self._token_expiry - self.TOKEN_EXPIRY_BUFFER)
+
     async def check_and_refresh_token(self) -> None:
         """Check and refresh the token if needed."""
-        await self._fetch_token()
+        if not self._is_token_valid():
+            await self._fetch_token()
 
     async def async_get_access_token(self) -> str:
         """Return a valid access token."""
-        if self._access_token is None:
+        if not self._is_token_valid():
             await self._fetch_token()
         assert self._access_token is not None
         return self._access_token
@@ -123,8 +136,15 @@ class UACAuth(YoLinkAuthMgr):
                 _LOGGER.debug("Token response keys: %s", list(result.keys()))
                 if "access_token" not in result:
                     raise YoLinkAuthFailError("No access_token in response")
+
                 self._access_token = result["access_token"]
-                _LOGGER.debug("Successfully fetched access token")
+                # Calculate expiry: use expires_in from response, default to 2 hours
+                expires_in = result.get("expires_in", 7200)
+                self._token_expiry = time.time() + expires_in
+                _LOGGER.debug(
+                    "Successfully fetched access token, expires in %s seconds",
+                    expires_in,
+                )
         except YoLinkAuthFailError:
             _LOGGER.error("Auth failure during token fetch")
             raise
