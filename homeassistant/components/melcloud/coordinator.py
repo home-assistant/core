@@ -2,21 +2,17 @@
 
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 import logging
 from typing import Any
 
 from aiohttp import ClientConnectionError, ClientResponseError
-from pymelcloud import Device, get_devices
+from pymelcloud import Device
 from pymelcloud.atw_device import Zone
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -217,48 +213,3 @@ class MelCloudDeviceUpdateCoordinator(DataUpdateCoordinator[MelCloudDevice]):
 
 
 type MelCloudConfigEntry = ConfigEntry[dict[str, list[MelCloudDeviceUpdateCoordinator]]]
-
-
-async def mel_devices_setup(
-    hass: HomeAssistant, config_entry: ConfigEntry
-) -> dict[str, list[MelCloudDeviceUpdateCoordinator]]:
-    """Set up MELCloud devices and create per-device coordinators."""
-    token = config_entry.data[CONF_TOKEN]
-    session = async_get_clientsession(hass)
-
-    try:
-        async with asyncio.timeout(10):
-            all_devices = await get_devices(
-                token,
-                session,
-                conf_update_interval=timedelta(minutes=30),
-                device_set_debounce=timedelta(seconds=2),
-            )
-    except ClientResponseError as ex:
-        if ex.status in (401, 403):
-            raise ConfigEntryAuthFailed from ex
-        if ex.status == 429:
-            raise UpdateFailed(
-                "MELCloud rate limit exceeded. Your account may be temporarily blocked"
-            ) from ex
-        raise UpdateFailed(f"Error communicating with MELCloud: {ex}") from ex
-    except (TimeoutError, ClientConnectionError) as ex:
-        raise UpdateFailed(f"Error communicating with MELCloud: {ex}") from ex
-
-    # Create per-device coordinators
-    coordinators: dict[str, list[MelCloudDeviceUpdateCoordinator]] = {}
-    device_registry = dr.async_get(hass)
-    for device_type, devices in all_devices.items():
-        coordinators[device_type] = []
-        for device in devices:
-            coordinator = MelCloudDeviceUpdateCoordinator(hass, device, config_entry)
-            # Perform initial refresh for this device
-            await coordinator.async_config_entry_first_refresh()
-            coordinators[device_type].append(coordinator)
-            # Register parent device now so zone entities can reference it via via_device
-            device_registry.async_get_or_create(
-                config_entry_id=config_entry.entry_id,
-                **coordinator.mel_device.device_info,
-            )
-
-    return coordinators
