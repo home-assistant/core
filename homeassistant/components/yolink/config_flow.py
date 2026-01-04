@@ -153,7 +153,11 @@ class OAuth2FlowHandler(
             await yolink_home.async_setup(auth_mgr, _NoOpMessageListener())
             _LOGGER.debug("async_setup completed, getting home info...")
             home_info = await yolink_home.async_get_home_info()
-            _LOGGER.debug("Got home info: %s", home_info.data)
+            _LOGGER.debug(
+                "Got home info: id=%s, name=%s",
+                home_info.data.get("id"),
+                home_info.data.get("name"),
+            )
             await yolink_home.async_unload()
 
         return home_info.data

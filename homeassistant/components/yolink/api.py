@@ -16,7 +16,14 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class ConfigEntryAuth(YoLinkAuthMgr):
-    """Provide yolink authentication tied to an OAuth2 based config entry."""
+    """Provide yolink authentication tied to an OAuth2 based config entry.
+
+    Implementation Notes (yolink-api 0.5.9):
+    - Uses YoLinkAuthMgr base class for OAuth2 token management.
+    - Token refresh is handled by Home Assistant's OAuth2Session.
+    - access_token() must be a method (not property) because the library
+      calls it as self.access_token() in http_auth_header().
+    """
 
     def __init__(
         self,
@@ -45,7 +52,22 @@ class ConfigEntryAuth(YoLinkAuthMgr):
 
 
 class UACAuth(YoLinkAuthMgr):
-    """Provide yolink authentication using UAC credentials."""
+    """Provide yolink authentication using UAC credentials.
+
+    Implementation Notes (yolink-api 0.5.9):
+    - Uses YoLinkAuthMgr base class because YoLinkLocalAuthMgr is not available
+      in yolink-api 0.5.9. Future versions may have YoLinkLocalAuthMgr which
+      handles token fetching automatically.
+    - access_token() must be a method (not property) because the library calls
+      it as self.access_token() in http_auth_header().
+    - Token fetching is implemented manually via _fetch_token() using the
+      client_credentials OAuth2 grant type.
+
+    For yolink-api >= 0.6.0 (if YoLinkLocalAuthMgr becomes available):
+    - Consider switching to YoLinkLocalAuthMgr as base class
+    - Remove manual token fetching logic
+    - Update to use super().__init__() with token_url, client_id, client_secret
+    """
 
     def __init__(
         self,
