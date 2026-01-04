@@ -1,7 +1,7 @@
 {
   "config": {
     "abort": {
-      "already_configured": "Sequence account is already configured.",
+      "already_configured": "An account with this name is already configured.",
       "reauth_successful": "Reauthentication successful."
     },
     "error": {
@@ -22,32 +22,15 @@
       },
       "user": {
         "data": {
-          "access_token": "Access Token"
+          "access_token": "Access Token",
+          "name": "Name"
         },
         "data_description": {
-          "access_token": "Your Sequence API access token from the developer dashboard"
+          "access_token": "Your Sequence API access token from the developer dashboard",
+          "name": "A name to identify this Sequence account (e.g., Personal, Business)"
         },
         "description": "Enter your Sequence API access token to connect your account.",
         "title": "Set up Sequence"
-      }
-    }
-  },
-  "options": {
-    "error": {
-      "cannot_connect": "Cannot connect to Sequence API. Please check your network and credentials."
-    },
-    "step": {
-      "init": {
-        "data": {
-          "investment_accounts": "Investment Accounts",
-          "liability_accounts": "Liability Accounts"
-        },
-        "data_description": {
-          "investment_accounts": "Select accounts that represent investments (brokerage, retirement, savings). Choose 'None' if you have no investments.",
-          "liability_accounts": "Select accounts that represent liabilities (debts, loans, credit cards). Choose 'None' if you have no liabilities."
-        },
-        "description": "Select which external accounts should be categorized as liabilities or investments. Found {account_count} external accounts. Select 'None' if you have no accounts of that type.",
-        "title": "Configure Account Types"
       }
     }
   }

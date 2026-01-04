@@ -14,30 +14,19 @@ from GetSequenceIoApiClient import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
-from homeassistant.const import CONF_ACCESS_TOKEN
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import (
-    ACCOUNT_TYPE_ACCOUNT,
-    CONF_INVESTMENT_ACCOUNTS,
-    CONF_LIABILITY_ACCOUNTS,
-    CONF_LIABILITY_CONFIGURED,
-    DOMAIN,
-)
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ACCESS_TOKEN): str,
+        vol.Required(CONF_NAME, default="Sequence"): str,
     }
 )
 
@@ -50,30 +39,14 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     session = async_get_clientsession(hass)
     client = SequenceApiClient(session, data[CONF_ACCESS_TOKEN])
 
-    # Test the connection and get account info for unique ID
-    accounts_data = await client.async_get_accounts()
+    # Test the connection
+    await client.async_get_accounts()
 
-    # We'll use the first pod account ID as unique identifier, or fallback to a hash of token
-    pod_accounts = client.get_pod_accounts(accounts_data)
-    if pod_accounts:
-        unique_id = str(pod_accounts[0]["id"])
-        title = f"Sequence ({len(pod_accounts)} pods)"
-    else:
-        # Fallback if no pods exist yet
-        unique_id = data[CONF_ACCESS_TOKEN][-8:]  # Last 8 chars of token
-        title = "Sequence"
-
-    return {"title": title, "unique_id": unique_id}
+    return {"title": data[CONF_NAME]}
 
 
 class SequenceConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Sequence."""
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> SequenceOptionsFlow:
-        """Get the options flow for this handler."""
-        return SequenceOptionsFlow()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -82,6 +55,9 @@ class SequenceConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            # Check for duplicate names
+            self._async_abort_entries_match({CONF_NAME: user_input[CONF_NAME]})
+
             try:
                 info = await validate_input(self.hass, user_input)
             except SequenceAuthError:
@@ -94,8 +70,6 @@ class SequenceConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(info["unique_id"])
-                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=info["title"],
                     data=user_input,
@@ -135,96 +109,12 @@ class SequenceConfigFlow(ConfigFlow, domain=DOMAIN):
                 reauth_entry = self._get_reauth_entry()
                 return self.async_update_reload_and_abort(
                     reauth_entry,
-                    data_updates=user_input,
+                    data_updates={CONF_ACCESS_TOKEN: user_input[CONF_ACCESS_TOKEN]},
                 )
 
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=STEP_USER_DATA_SCHEMA,
+            data_schema=vol.Schema({vol.Required(CONF_ACCESS_TOKEN): str}),
             errors=errors,
             description_placeholders={"account": self._get_reauth_entry().title},
-        )
-
-
-class SequenceOptionsFlow(OptionsFlow):
-    """Handle options flow for Sequence integration."""
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manage the options."""
-        errors: dict[str, str] = {}
-
-        if user_input is not None:
-            # Filter out 'none' selections and mark liability configuration as completed
-            filtered_input: dict[str, Any] = {}
-            for key, value in user_input.items():
-                if isinstance(value, list):
-                    # Remove 'none' from lists
-                    filtered_value = [v for v in value if v != "none"]
-                    filtered_input[key] = filtered_value
-                else:
-                    filtered_input[key] = value
-
-            # Mark liability configuration as completed
-            filtered_input[CONF_LIABILITY_CONFIGURED] = True
-            return self.async_create_entry(title="", data=filtered_input)
-
-        # Get current account information to show available accounts
-        session = async_get_clientsession(self.hass)
-        client = SequenceApiClient(session, self.config_entry.data[CONF_ACCESS_TOKEN])
-
-        try:
-            accounts_data = await client.async_get_accounts()
-            # Get all "Account" type accounts (external accounts)
-            all_accounts = accounts_data.get("data", {}).get("accounts", [])
-            external_accounts = [
-                acc for acc in all_accounts if acc.get("type") == ACCOUNT_TYPE_ACCOUNT
-            ]
-
-            # Create choices for multi-select
-            account_choices = {
-                str(acc["id"]): f"{acc['name']} (ID: {acc['id']})"
-                for acc in external_accounts
-            }
-
-        except Exception:
-            _LOGGER.exception("Error fetching accounts for options")
-            errors["base"] = "cannot_connect"
-            account_choices = {}
-
-        # Current settings
-        current_liability_accounts = self.config_entry.options.get(
-            CONF_LIABILITY_ACCOUNTS, []
-        )
-        current_investment_accounts = self.config_entry.options.get(
-            CONF_INVESTMENT_ACCOUNTS, []
-        )
-
-        # Add 'None' option to account choices
-        account_choices_with_none = {
-            "none": "None - No liabilities/investments",
-            **account_choices,
-        }
-
-        options_schema = vol.Schema(
-            {
-                vol.Optional(
-                    CONF_LIABILITY_ACCOUNTS,
-                    default=current_liability_accounts,
-                ): cv.multi_select(account_choices_with_none),
-                vol.Optional(
-                    CONF_INVESTMENT_ACCOUNTS,
-                    default=current_investment_accounts,
-                ): cv.multi_select(account_choices_with_none),
-            }
-        )
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=options_schema,
-            errors=errors,
-            description_placeholders={
-                "account_count": str(len(account_choices)),
-            },
         )
