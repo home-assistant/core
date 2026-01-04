@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Mapping
 from typing import Any, Iterable
 
 from elke27_lib import ArmMode
@@ -38,9 +39,14 @@ async def async_setup_entry(
     def _async_add_areas() -> None:
         snapshot = hub.snapshot
         if snapshot is None:
+            _LOGGER.debug("Area entities skipped because snapshot is unavailable")
             return
         entities: list[Elke27AreaAlarmControlPanel] = []
-        for area in _iter_areas(snapshot):
+        areas = list(_iter_areas(snapshot))
+        if not areas:
+            _LOGGER.debug("No areas available for entity creation")
+            return
+        for area in areas:
             area_id = getattr(area, "area_id", None)
             if not isinstance(area_id, int):
                 continue
@@ -149,7 +155,7 @@ def _iter_areas(snapshot: Any) -> Iterable[Any]:
     areas = getattr(snapshot, "areas", None)
     if areas is None:
         return []
-    if isinstance(areas, dict):
+    if isinstance(areas, Mapping):
         return list(areas.values())
     if isinstance(areas, list | tuple):
         return areas

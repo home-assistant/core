@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Mapping
 from typing import Any, Iterable
 
 from homeassistant.components.binary_sensor import (
@@ -33,9 +34,14 @@ async def async_setup_entry(
     def _async_add_zones() -> None:
         snapshot = hub.snapshot
         if snapshot is None:
+            _LOGGER.debug("Zone entities skipped because snapshot is unavailable")
             return
         entities: list[Elke27ZoneBinarySensor] = []
-        for zone in _iter_zones(snapshot):
+        zones = list(_iter_zones(snapshot))
+        if not zones:
+            _LOGGER.debug("No zones available for entity creation")
+            return
+        for zone in zones:
             zone_id = getattr(zone, "zone_id", None)
             if not isinstance(zone_id, int):
                 continue
@@ -116,7 +122,7 @@ def _iter_zones(snapshot: Any) -> Iterable[Any]:
     zones = getattr(snapshot, "zones", None)
     if zones is None:
         return []
-    if isinstance(zones, dict):
+    if isinstance(zones, Mapping):
         return list(zones.values())
     if isinstance(zones, list | tuple):
         return zones

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Mapping
 from typing import Any, Iterable
 
 from elke27_lib.errors import Elke27PinRequiredError
@@ -33,9 +34,14 @@ async def async_setup_entry(
     def _async_add_outputs() -> None:
         snapshot = hub.snapshot
         if snapshot is None:
+            _LOGGER.debug("Output entities skipped because snapshot is unavailable")
             return
         entities: list[Elke27OutputLight] = []
-        for output in _iter_outputs(snapshot):
+        outputs = list(_iter_outputs(snapshot))
+        if not outputs:
+            _LOGGER.debug("No outputs available for entity creation")
+            return
+        for output in outputs:
             output_id = getattr(output, "output_id", None)
             if not isinstance(output_id, int):
                 continue
@@ -127,7 +133,7 @@ def _iter_outputs(snapshot: Any) -> Iterable[Any]:
     outputs = getattr(snapshot, "outputs", None)
     if outputs is None:
         return []
-    if isinstance(outputs, dict):
+    if isinstance(outputs, Mapping):
         return list(outputs.values())
     if isinstance(outputs, list | tuple):
         return outputs
