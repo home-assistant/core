@@ -7,6 +7,7 @@ import logging
 from typing import Any
 
 from PyTado.interface import Tado
+from PyTado.interface.api.my_tado import Timetable
 from requests import RequestException
 
 from homeassistant.components.climate import PRESET_AWAY, PRESET_HOME
@@ -71,6 +72,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             "device": {},
             "weather": {},
             "geofence": {},
+            "timetable": {},
             "zone": {},
         }
 
@@ -99,10 +101,12 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
 
         devices = await self._async_update_devices()
         zones = await self._async_update_zones()
+        timetables = await self._async_update_timetables(zones)
         home = await self._async_update_home()
 
         self.data["device"] = devices
         self.data["zone"] = zones
+        self.data["timetable"] = timetables
         self.data["weather"] = home["weather"]
         self.data["geofence"] = home["geofence"]
 
@@ -182,6 +186,24 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             mapped_zones[int(zone)] = await self._update_zone(int(zone))
 
         return mapped_zones
+
+    async def _async_update_timetables(
+        self, zones: dict[int, dict]
+    ) -> dict[int, Timetable]:
+        """Update the timetable data from Tado."""
+        try:
+            return await self.hass.async_add_executor_job(
+                self._load_timetables, list(zones.keys())
+            )
+        except RequestException as err:
+            _LOGGER.error("Error updating Tado timetables: %s", err)
+            raise UpdateFailed(f"Error updating Tado timetables: {err}") from err
+
+    def _load_timetables(self, zone_ids: list[int]) -> dict[int, Timetable]:
+        timetables: dict[int, Timetable] = {}
+        for zone_id in zone_ids:
+            timetables[zone_id] = self._tado.get_timetable(zone_id)
+        return timetables
 
     async def _update_zone(self, zone_id: int) -> dict[str, str]:
         """Update the internal data of a zone."""
@@ -362,3 +384,17 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
             )
         except RequestException as exc:
             raise HomeAssistantError(f"Error setting Tado child lock: {exc}") from exc
+
+    async def set_timetable(self, zone_id: int, timetable: Timetable) -> None:
+        """Set timetable of a zone."""
+        self.data["timetable"][zone_id] = timetable
+        try:
+            await self.hass.async_add_executor_job(
+                self._tado.set_timetable,
+                zone_id,
+                timetable,
+            )
+        except RequestException as exc:
+            raise HomeAssistantError(
+                f"Error setting Tado timetable {timetable} for zone {zone_id}: {exc}"
+            ) from exc
