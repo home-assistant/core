@@ -110,14 +110,16 @@ class FritzConnectionCached(FritzConnection):  # type: ignore[misc]
         **kwargs: Any,
     ) -> dict[str, Any]:
         """Call action with cached services. Only get actions are cached."""
+        if not action_name.lower().startswith("get"):
+            return super().call_action(  # type: ignore[no-any-return]
+                service_name, action_name, arguments=arguments, **kwargs
+            )
+
         if not hasattr(self, "_call_cache"):
             self._call_cache = {}
 
         cache_key = slugify(f"{service_name}:{action_name}:{arguments}")
-        if (
-            action_name.lower().startswith("get")
-            and (result := self._call_cache.get(cache_key)) is not None
-        ):
+        if (result := self._call_cache.get(cache_key)) is not None:
             _LOGGER.debug("Using cached result for %s %s", service_name, action_name)
             return result
 
