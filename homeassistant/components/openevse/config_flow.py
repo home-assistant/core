@@ -10,7 +10,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.service_info import zeroconf
 
-from .const import CONF_SERIAL, DOMAIN
+from .const import CONF_ID, DOMAIN
 
 
 class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -83,11 +83,11 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match({CONF_HOST: discovery_info.host})
 
         # Validate discovery entry
-        if CONF_SERIAL not in discovery_info.properties:
+        if CONF_ID not in discovery_info.properties:
             return self.async_abort(reason="invalid_discovery_parameters")
 
         host = discovery_info.host
-        serial = discovery_info.properties[CONF_SERIAL]
+        serial = discovery_info.properties[CONF_ID]
         name = f"OpenEVSE {discovery_info.name.split('.')[0]}"
         self.discovery_info.update(
             {

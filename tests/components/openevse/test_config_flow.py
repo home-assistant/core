@@ -10,6 +10,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+from tests.common import MockConfigEntry
 
 
 async def test_user_flow(
@@ -145,11 +146,16 @@ async def test_import_flow_duplicate(
 async def test_zeroconf_already_configured_unique_id(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_config_entry: MagicMock,
+    mock_charger: MagicMock,
 ):
     """Test zeroconf discovery updates info if unique_id is already configured."""
     # Create an existing entry with the same unique_id but different IP
-    mock_config_entry.add_to_hass(hass)
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="1234",
+        data={CONF_HOST: "10.0.0.100"},
+    )
+    config_entry.add_to_hass(hass)
 
     discovery_info = ZeroconfServiceInfo(
         ip_address=ip_address("192.168.1.123"),
@@ -161,22 +167,22 @@ async def test_zeroconf_already_configured_unique_id(
         type="_openevse._tcp.local.",
     )
 
-    with patch("openevse.config_flow.check_status", return_value=True):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_ZEROCONF},
-            data=discovery_info,
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
 
-        # Should abort because unique_id matches, but it updates the config entry
-        assert result["type"] == FlowResultType.ABORT
-        assert result["reason"] == "already_configured"
+    # Should abort because unique_id matches, but it updates the config entry
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
-        # Verify the entry IP was updated to the new discovery IP
-        assert mock_config_entry.data["host"] == "192.168.1.123"
+    # Verify the entry IP was updated to the new discovery IP
+    assert config_entry.data["host"] == "192.168.1.123"
 
 
-async def test_zeroconf_discovery(hass: HomeAssistant, mock_setup_entry: AsyncMock):
+async def test_zeroconf_discovery(hass: HomeAssistant, mock_setup_entry: AsyncMock, 
+    mock_charger: MagicMock):
     """Test zeroconf discovery."""
     # Simulate a Zeroconf discovery packet
     discovery_info = ZeroconfServiceInfo(
@@ -199,7 +205,7 @@ async def test_zeroconf_discovery(hass: HomeAssistant, mock_setup_entry: AsyncMo
     # Should present a confirmation form
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
-    assert result["description_placeholders"] == {"name": "OpenEVSE: openevse-1234"}
+    assert result["description_placeholders"] == {"name": "OpenEVSE openevse-1234"}
 
     # Confirm the discovery
     result = await hass.config_entries.flow.async_configure(
@@ -208,11 +214,12 @@ async def test_zeroconf_discovery(hass: HomeAssistant, mock_setup_entry: AsyncMo
 
     # Should create the entry
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "OpenEVSE: openevse-1234"
+    assert result["title"] == "OpenEVSE openevse-1234"
     assert result["data"][CONF_HOST] == "192.168.1.123"
 
 
-async def test_zeroconf_no_serial(hass: HomeAssistant):
+async def test_zeroconf_no_serial(hass: HomeAssistant, mock_setup_entry: AsyncMock, 
+    mock_charger: MagicMock):
     """Test zeroconf discovery with missing serial number."""
     discovery_info = ZeroconfServiceInfo(
         ip_address=ip_address("192.168.1.123"),
@@ -234,8 +241,9 @@ async def test_zeroconf_no_serial(hass: HomeAssistant):
     assert result["reason"] == "invalid_discovery_parameters"
 
 
-async def test_zeroconf_connection_error(hass: HomeAssistant):
+async def test_zeroconf_connection_error(hass: HomeAssistant, mock_charger: MagicMock):
     """Test zeroconf discovery with connection failure."""
+    mock_charger.getStatus.side_effect = AttributeError
     discovery_info = ZeroconfServiceInfo(
         ip_address=ip_address("192.168.1.123"),
         ip_addresses=[ip_address("192.168.1.123"), ip_address("2001:db8::1")],
@@ -246,22 +254,28 @@ async def test_zeroconf_connection_error(hass: HomeAssistant):
         type="_openevse._tcp.local.",
     )
 
-    # Mock update to raise an exception (simulating connection failure)
-    with patch("openevse.config_flow.check_status", return_value=False):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_ZEROCONF},
-            data=discovery_info,
-        )
+    
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
 
-        assert result["type"] == FlowResultType.ABORT
-        assert result["reason"] == "unknown_error"
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
 
 
 async def test_zeroconf_already_configured_host(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ):
     """Test zeroconf discovery aborts if host is already configured."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="1234",
+        data={CONF_HOST: "192.168.1.100"},
+    )
+    config_entry.add_to_hass(hass)
+
     discovery_info = ZeroconfServiceInfo(
         ip_address=ip_address("192.168.1.100"),
         ip_addresses=[ip_address("192.168.1.100"), ip_address("2001:db8::1")],
