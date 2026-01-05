@@ -21,7 +21,9 @@ from .type_information import (
 class DeviceWrapper[T]:
     """Base device wrapper."""
 
+    native_unit: str | None = None
     options: list[str] | None = None
+    suggested_unit: str | None = None
 
     def read_device_status(self, device: CustomerDevice) -> T | None:
         """Read device status and convert to a Home Assistant value."""
@@ -40,9 +42,6 @@ class DPCodeWrapper(DeviceWrapper):
     Used as a common interface for referring to a DPCode, and
     access read conversion routines.
     """
-
-    native_unit: str | None = None
-    suggested_unit: str | None = None
 
     def __init__(self, dpcode: str) -> None:
         """Init DPCodeWrapper."""
