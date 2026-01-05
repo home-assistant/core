@@ -68,6 +68,17 @@
       "architecture": {
         "name": "Architecture"
       },
+      "container_state": {
+        "name": "State",
+        "state": {
+          "created": "Created",
+          "dead": "Dead",
+          "exited": "Exited",
+          "paused": "Paused",
+          "restarting": "Restarting",
+          "running": "Running"
+        }
+      },
       "containers_count": {
         "name": "Container count"
       },
