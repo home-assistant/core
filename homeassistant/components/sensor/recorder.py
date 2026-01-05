@@ -721,7 +721,7 @@ def compile_statistics(  # noqa: C901
                             fstate,
                         )
                     else:
-                        _LOGGER.info(
+                        _LOGGER.debug(
                             (
                                 "Detected new cycle for %s, last_reset set to %s (old"
                                 " last_reset %s)"
