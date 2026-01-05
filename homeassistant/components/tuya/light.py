@@ -676,7 +676,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         *,
         brightness_wrapper: DeviceWrapper[int] | None,
         color_data_wrapper: DeviceWrapper[tuple[float, float, float]] | None,
-        color_mode_wrapper: DPCodeEnumWrapper | None,
+        color_mode_wrapper: DeviceWrapper[str] | None,
         color_temp_wrapper: DeviceWrapper[int] | None,
         switch_wrapper: DeviceWrapper[bool],
     ) -> None:
@@ -706,6 +706,7 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         elif (
             color_supported(color_modes)
             and color_mode_wrapper is not None
+            and color_mode_wrapper.options
             and WorkMode.WHITE in color_mode_wrapper.options
         ):
             color_modes.add(ColorMode.WHITE)

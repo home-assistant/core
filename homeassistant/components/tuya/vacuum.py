@@ -199,9 +199,9 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
         device: CustomerDevice,
         device_manager: Manager,
         *,
-        action_wrapper: _VacuumActionWrapper | None,
-        activity_wrapper: _VacuumActivityWrapper | None,
-        fan_speed_wrapper: DPCodeEnumWrapper | None,
+        action_wrapper: DeviceWrapper[str] | None,
+        activity_wrapper: DeviceWrapper[VacuumActivity] | None,
+        fan_speed_wrapper: DeviceWrapper[str] | None,
     ) -> None:
         """Init Tuya vacuum."""
         super().__init__(device, device_manager)
@@ -227,7 +227,7 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
         if activity_wrapper:
             self._attr_supported_features |= VacuumEntityFeature.STATE
 
-        if fan_speed_wrapper:
+        if fan_speed_wrapper and fan_speed_wrapper.options:
             self._attr_fan_speed_list = fan_speed_wrapper.options
             self._attr_supported_features |= VacuumEntityFeature.FAN_SPEED
 
