@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
@@ -12,16 +13,26 @@ from .const import CONF_INTEGRATION_SERIAL, DOMAIN, MANUFACTURER_NUMBER
 from .hub import Elke27Hub
 
 
+_NAME_SAFE_RE = re.compile(r"[^A-Za-z0-9 _-]")
+
+
+def sanitize_name(name: str | None) -> str | None:
+    """Normalize entity names to Home Assistant-safe characters."""
+    if name is None:
+        return None
+    return _NAME_SAFE_RE.sub("_", name)
+
+
 def get_panel_field(hub: Elke27Hub, field: str) -> Any:
     """Return a field from the current panel snapshot."""
     if field == "name" and hub.panel_name:
-        return hub.panel_name
+        return sanitize_name(hub.panel_name)
     panel_info = hub.panel_info
     if panel_info is None:
         return None
     if isinstance(panel_info, dict):
         if field == "name":
-            return panel_info.get("name") or panel_info.get("panel_name")
+            return sanitize_name(panel_info.get("name") or panel_info.get("panel_name"))
         if field == "mac":
             return panel_info.get("mac") or panel_info.get("panel_mac")
         if field == "serial":

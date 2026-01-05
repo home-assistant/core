@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .entity import device_info_for_entry, unique_base
+from .entity import device_info_for_entry, sanitize_name, unique_base
 from .hub import Elke27Hub
 
 _LOGGER = logging.getLogger(__name__)
@@ -103,7 +103,7 @@ class Elke27ZoneBinarySensor(BinarySensorEntity):
         self._hub = hub
         self._entry = entry
         self._zone_id = zone_id
-        self._attr_name = getattr(zone, "name", None) or f"Zone {zone_id}"
+        self._attr_name = sanitize_name(getattr(zone, "name", None)) or f"Zone {zone_id}"
         self._attr_unique_id = f"{unique_base(hub, entry)}_zone_{zone_id}"
         self._attr_device_info = device_info_for_entry(hub, entry)
         self._missing_logged = False

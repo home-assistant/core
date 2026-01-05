@@ -15,7 +15,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .entity import device_info_for_entry, unique_base
+from .entity import device_info_for_entry, sanitize_name, unique_base
 from .hub import Elke27Hub
 
 _LOGGER = logging.getLogger(__name__)
@@ -75,7 +75,9 @@ class Elke27OutputLight(LightEntity):
         self._hub = hub
         self._entry = entry
         self._output_id = output_id
-        self._attr_name = getattr(output, "name", None) or f"Output {output_id}"
+        self._attr_name = (
+            sanitize_name(getattr(output, "name", None)) or f"Output {output_id}"
+        )
         self._attr_unique_id = f"{unique_base(hub, entry)}_output_{output_id}"
         self._attr_device_info = device_info_for_entry(hub, entry)
         self._missing_logged = False

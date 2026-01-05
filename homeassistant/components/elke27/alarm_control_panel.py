@@ -20,7 +20,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .entity import device_info_for_entry, unique_base
+from .entity import device_info_for_entry, sanitize_name, unique_base
 from .hub import Elke27Hub
 
 _LOGGER = logging.getLogger(__name__)
@@ -78,7 +78,7 @@ class Elke27AreaAlarmControlPanel(AlarmControlPanelEntity):
         self._hub = hub
         self._entry = entry
         self._area_id = area_id
-        self._attr_name = getattr(area, "name", None) or f"Area {area_id}"
+        self._attr_name = sanitize_name(getattr(area, "name", None)) or f"Area {area_id}"
         self._attr_unique_id = f"{unique_base(hub, entry)}_area_{area_id}"
         self._attr_device_info = device_info_for_entry(hub, entry)
         self._missing_logged = False
