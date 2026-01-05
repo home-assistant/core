@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Self
+from typing import TYPE_CHECKING, Any, Self
 
 from tuya_sharing import CustomerDevice, Manager
 
@@ -336,10 +336,10 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         current_temperature_wrapper: DeviceWrapper[float] | None,
         fan_mode_wrapper: DeviceWrapper[str] | None,
         hvac_mode_wrapper: DeviceWrapper[str] | None,
-        set_temperature_wrapper: DPCodeIntegerWrapper | None,
+        set_temperature_wrapper: DeviceWrapper[float] | None,
         swing_wrapper: DeviceWrapper[str] | None,
         switch_wrapper: DeviceWrapper[bool] | None,
-        target_humidity_wrapper: _RoundedIntegerWrapper | None,
+        target_humidity_wrapper: DeviceWrapper[int] | None,
         temperature_unit: UnitOfTemperature,
     ) -> None:
         """Determine which values to use."""
@@ -359,11 +359,15 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
         # Get integer type data for the dpcode to set temperature, use
         # it to define min, max & step temperatures
-        if self._set_temperature:
+        if set_temperature_wrapper:
+            if TYPE_CHECKING:
+                assert set_temperature_wrapper.max_value is not None
+                assert set_temperature_wrapper.min_value is not None
+                assert set_temperature_wrapper.value_step is not None
             self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
-            self._attr_max_temp = self._set_temperature.max_value
-            self._attr_min_temp = self._set_temperature.min_value
-            self._attr_target_temperature_step = self._set_temperature.value_step
+            self._attr_max_temp = set_temperature_wrapper.max_value
+            self._attr_min_temp = set_temperature_wrapper.min_value
+            self._attr_target_temperature_step = set_temperature_wrapper.value_step
 
         # Determine HVAC modes
         self._attr_hvac_modes: list[HVACMode] = []
@@ -391,6 +395,9 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
         # Determine dpcode to use for setting the humidity
         if target_humidity_wrapper:
+            if TYPE_CHECKING:
+                assert target_humidity_wrapper.max_value is not None
+                assert target_humidity_wrapper.min_value is not None
             self._attr_supported_features |= ClimateEntityFeature.TARGET_HUMIDITY
             self._attr_min_humidity = round(target_humidity_wrapper.min_value)
             self._attr_max_humidity = round(target_humidity_wrapper.max_value)
