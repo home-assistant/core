@@ -49,9 +49,6 @@ DUMMY_DATA: dict[str, Any] = {
 DUMMY_RESPONSE_REGIONS: dict[str, Any] = json.loads(
     load_fixture("sample_regions.json", "nina")
 )
-DUMMY_RESPONSE_WARNINGS: dict[str, Any] = json.loads(
-    load_fixture("sample_warnings.json", "nina")
-)
 
 OPTIONS_ENTRY_DATA: dict[str, Any] = {
     CONF_FILTERS: deepcopy(DUMMY_DATA[CONF_FILTERS]),
