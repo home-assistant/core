@@ -2,14 +2,14 @@
 
 from typing import Any
 
-from switchbot_api import BotCommands, Device, Remote, SwitchBotAPI
+from switchbot_api import BotCommands
 
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SwitchbotCloudData, SwitchBotCoordinator
+from . import SwitchbotCloudData
 from .const import DOMAIN
 from .entity import SwitchBotCloudEntity
 
@@ -22,7 +22,7 @@ async def async_setup_entry(
     """Set up SwitchBot Cloud entry."""
     data: SwitchbotCloudData = hass.data[DOMAIN][config.entry_id]
     async_add_entities(
-        _async_make_entity(data.api, device, coordinator)
+        SwitchBotCloudBot(data.api, device, coordinator)
         for device, coordinator in data.devices.buttons
     )
 
@@ -78,14 +78,3 @@ class SwitchBotCloudBot(SwitchBotCloudEntity, ButtonEntity):
     async def async_press(self, **kwargs: Any) -> None:
         """Bot press command."""
         await self.send_api_command(BotCommands.PRESS)
-
-
-@callback
-def _async_make_entity(
-    api: SwitchBotAPI, device: Device | Remote, coordinator: SwitchBotCoordinator
-) -> SwitchBotCloudBot:
-    """Make a SwitchBotCloud button entity."""
-    if device.device_type == "Bot":
-        return SwitchBotCloudBot(api, device, coordinator)
-
-    raise NotImplementedError(device.device_type)
