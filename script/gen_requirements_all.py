@@ -217,6 +217,9 @@ gql<4.0.0
 
 # Pin pytest-rerunfailures to prevent accidental breaks
 pytest-rerunfailures==16.0.1
+
+# py-vapid 1.9.3 contains an invalid symlink that causes issues with uv
+py-vapid==1.9.2
 """
 
 GENERATED_MESSAGE = (
