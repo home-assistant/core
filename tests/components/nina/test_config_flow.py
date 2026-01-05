@@ -139,13 +139,22 @@ async def test_step_user_no_selection(hass: HomeAssistant) -> None:
 
 async def test_step_user_already_configured(hass: HomeAssistant) -> None:
     """Test starting a flow by user, but it was already configured."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="NINA",
+        data=deepcopy(OPTIONS_ENTRY_DATA),
+        version=1,
+        minor_version=3,
+    )
+    config_entry.add_to_hass(hass)
+
     with patch(
         "pynina.baseApi.BaseAPI._makeRequest",
         wraps=mocked_request_function,
     ):
-        await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=deepcopy(DUMMY_DATA)
-        )
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=deepcopy(DUMMY_DATA)
