@@ -18,7 +18,14 @@ from systembridgeconnector.models.open_path import OpenPath
 from systembridgeconnector.models.open_url import OpenUrl
 import voluptuous as vol
 
-from homeassistant.const import CONF_COMMAND, CONF_ID, CONF_NAME, CONF_PATH, CONF_URL
+from homeassistant.const import (
+    CONF_COMMAND,
+    CONF_HOST,
+    CONF_ID,
+    CONF_NAME,
+    CONF_PATH,
+    CONF_URL,
+)
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -40,6 +47,7 @@ CONF_KEY = "key"
 CONF_TEXT = "text"
 
 SERVICE_EXECUTE_COMMAND = "execute_command"
+SERVICE_GET_COMMANDS = "get_commands"
 SERVICE_GET_PROCESS_BY_ID = "get_process_by_id"
 SERVICE_GET_PROCESSES_BY_NAME = "get_processes_by_name"
 SERVICE_OPEN_PATH = "open_path"
@@ -104,6 +112,37 @@ async def _handle_get_process_by_id(service_call: ServiceCall) -> ServiceRespons
             translation_key="process_not_found",
             translation_placeholders={"id": service_call.data[CONF_ID]},
         ) from exception
+
+
+async def _handle_get_commands(service_call: ServiceCall) -> ServiceResponse:
+    """Handle the get commands service call."""
+    _LOGGER.debug("Get commands: %s", service_call.data)
+    coordinator: SystemBridgeDataUpdateCoordinator = service_call.hass.data[DOMAIN][
+        service_call.data[CONF_BRIDGE]
+    ]
+
+    try:
+        commands = await coordinator.websocket_client.get_commands()
+
+        return {
+            "count": len(commands.allowlist),
+            "commands": [asdict(command) for command in commands.allowlist],
+        }
+    except ConnectionErrorException as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="connection_failed",
+            translation_placeholders={
+                "title": coordinator.title,
+                "host": coordinator.config_entry.data[CONF_HOST],
+            },
+        ) from err
+    except Exception as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="command_execution_failed",
+            translation_placeholders={"error": str(err)},
+        ) from err
 
 
 async def _handle_get_processes_by_name(
@@ -270,6 +309,18 @@ def async_setup_services(hass: HomeAssistant) -> None:
             {
                 vol.Required(CONF_BRIDGE): valid_device,
                 vol.Required(CONF_NAME): cv.string,
+            },
+        ),
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GET_COMMANDS,
+        _handle_get_commands,
+        schema=vol.Schema(
+            {
+                vol.Required(CONF_BRIDGE): valid_device,
             },
         ),
         supports_response=SupportsResponse.ONLY,

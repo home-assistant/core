@@ -155,6 +155,16 @@
       },
       "name": "Execute command"
     },
+    "get_commands": {
+      "description": "Gets the list of available commands from the command allowlist.",
+      "fields": {
+        "bridge": {
+          "description": "[%key:component::system_bridge::services::open_path::fields::bridge::description%]",
+          "name": "[%key:component::system_bridge::services::open_path::fields::bridge::name%]"
+        }
+      },
+      "name": "Get commands"
+    },
     "get_process_by_id": {
       "description": "Gets a process by the ID.",
       "fields": {

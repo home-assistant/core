@@ -34,6 +34,7 @@ from .const import DATA_WAIT_TIMEOUT, DOMAIN, MODULES
 from .coordinator import SystemBridgeDataUpdateCoordinator
 from .services import (
     SERVICE_EXECUTE_COMMAND,
+    SERVICE_GET_COMMANDS,
     SERVICE_GET_PROCESS_BY_ID,
     SERVICE_GET_PROCESSES_BY_NAME,
     SERVICE_OPEN_PATH,
@@ -216,6 +217,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if not hass.data[DOMAIN]:
         hass.services.async_remove(DOMAIN, SERVICE_EXECUTE_COMMAND)
+        hass.services.async_remove(DOMAIN, SERVICE_GET_COMMANDS)
         hass.services.async_remove(DOMAIN, SERVICE_GET_PROCESS_BY_ID)
         hass.services.async_remove(DOMAIN, SERVICE_GET_PROCESSES_BY_NAME)
         hass.services.async_remove(DOMAIN, SERVICE_OPEN_PATH)
