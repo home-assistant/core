@@ -308,9 +308,9 @@ async def make_device_data(
         coordinator = await coordinator_for_device(
             hass, entry, api, device, coordinators_by_id
         )
+        devices_data.buttons.append((device, coordinator))
         devices_data.binary_sensors.append((device, coordinator))
         devices_data.sensors.append((device, coordinator))
-        devices_data.buttons.append((device, coordinator))
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

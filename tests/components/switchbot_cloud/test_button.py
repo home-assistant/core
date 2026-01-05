@@ -65,3 +65,26 @@ async def test_switchmode_bot_no_button_entity(
     entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
     assert not hass.states.async_entity_ids(BUTTON_DOMAIN)
+
+
+async def test_load_ai_art_frame(
+    hass: HomeAssistant, mock_list_devices, mock_get_status
+) -> None:
+    """Test press."""
+    mock_list_devices.return_value = [
+        Device(
+            version="V1.0",
+            deviceId="ai-art-frame-id-1",
+            deviceName="ai-art-frame-1",
+            deviceType="AI Art Frame",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+
+    mock_get_status.return_value = {
+        "deviceType": "AI Art Frame",
+        "displayMode": 1,
+    }
+
+    entry = await configure_integration(hass)
+    assert entry.state is ConfigEntryState.LOADED

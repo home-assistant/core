@@ -112,6 +112,7 @@ def _async_make_entity(
     description: ButtonEntityDescription | None = None,
 ) -> SwitchBotCloudBot:
     """Make a button entity."""
+
     if device.device_type == "AI Art Frame":
         assert description is not None
         return SwitchBotCloudAiArtFrame(api, device, coordinator, description)
