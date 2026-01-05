@@ -25,7 +25,7 @@ def platforms() -> list[Platform]:
     return [Platform.BUTTON]
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+@pytest.mark.usefixtures("init_integration")
 async def test_buttons(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -36,7 +36,7 @@ async def test_buttons(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+@pytest.mark.usefixtures("init_integration")
 async def test_restart_button(
     hass: HomeAssistant,
     mock_airobot_client: AsyncMock,
@@ -52,7 +52,7 @@ async def test_restart_button(
     mock_airobot_client.reboot_thermostat.assert_called_once()
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+@pytest.mark.usefixtures("init_integration")
 async def test_restart_button_error(
     hass: HomeAssistant,
     mock_airobot_client: AsyncMock,
@@ -71,7 +71,7 @@ async def test_restart_button_error(
     mock_airobot_client.reboot_thermostat.assert_called_once()
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+@pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
     "exception",
     [AirobotConnectionError("Connection lost"), AirobotTimeoutError("Timeout")],
