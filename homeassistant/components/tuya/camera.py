@@ -13,7 +13,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .models import DPCodeBooleanWrapper
+from .models import DeviceWrapper, DPCodeBooleanWrapper
 
 CAMERAS: tuple[DeviceCategory, ...] = (
     DeviceCategory.DGHSXJ,
@@ -70,8 +70,8 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
         device: CustomerDevice,
         device_manager: Manager,
         *,
-        motion_detection_switch: DPCodeBooleanWrapper | None = None,
-        recording_status: DPCodeBooleanWrapper | None = None,
+        motion_detection_switch: DeviceWrapper[bool] | None = None,
+        recording_status: DeviceWrapper[bool] | None = None,
     ) -> None:
         """Init Tuya Camera."""
         super().__init__(device, device_manager)

@@ -340,11 +340,11 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         device_manager: Manager,
         description: TuyaCoverEntityDescription,
         *,
-        current_position: _DPCodePercentageMappingWrapper | None,
+        current_position: DeviceWrapper[int] | None,
         current_state_wrapper: _IsClosedWrapper | None,
-        instruction_wrapper: DeviceWrapper | None,
-        set_position: _DPCodePercentageMappingWrapper | None,
-        tilt_position: _DPCodePercentageMappingWrapper | None,
+        instruction_wrapper: DeviceWrapper[str] | None,
+        set_position: DeviceWrapper[int] | None,
+        tilt_position: DeviceWrapper[int] | None,
     ) -> None:
         """Init Tuya Cover."""
         super().__init__(device, device_manager)
@@ -358,7 +358,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         self._set_position = set_position
         self._tilt_position = tilt_position
 
-        if instruction_wrapper and instruction_wrapper.options is not None:
+        if instruction_wrapper and instruction_wrapper.options:
             if "open" in instruction_wrapper.options:
                 self._attr_supported_features |= CoverEntityFeature.OPEN
             if "close" in instruction_wrapper.options:
