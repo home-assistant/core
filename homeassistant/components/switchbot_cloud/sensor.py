@@ -172,7 +172,7 @@ BATTERY_LEVELS_DESCRIPTION = SwitchbotCloudSensorEntityDescription(
     translation_key="battery_levels",
     value_fn=lambda value: BatteryLevel.get_battery_level(value).value
     if value is not None
-    else BatteryLevel.Unknown,
+    else BatteryLevel.Unknown.value,
 )
 
 SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
