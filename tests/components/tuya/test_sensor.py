@@ -10,13 +10,18 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from tuya_sharing import CustomerDevice, Manager
 
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.components.sensor import SensorStateClass
+from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 
 from . import MockDeviceListener, check_selective_state_update, initialize_entry
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    mock_restore_cache_with_extra_data,
+    snapshot_platform,
+)
 
 
 @patch("homeassistant.components.tuya.PLATFORMS", [Platform.SENSOR])
@@ -81,3 +86,183 @@ async def test_selective_state_update(
         expected_state=expected_state,
         last_reported=last_reported,
     )
+
+
+@patch("homeassistant.components.tuya.PLATFORMS", [Platform.SENSOR])
+@pytest.mark.parametrize("mock_device_code", ["cz_guitoc9iylae4axs"])
+async def test_delta_report_sensor_initial_state(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+) -> None:
+    """Test delta report sensor initializes with device status value."""
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    # The entity_id is generated based on device name and dpcode translation key
+    state = hass.states.get("sensor.ha_socket_delta_test_total_energy")
+
+    assert state is not None
+    # Initial value is 100 from fixture, scaled by 1000 (scale=3) = 0.1
+    assert state.state == "0.1"
+    assert state.attributes["state_class"] == SensorStateClass.TOTAL_INCREASING
+
+
+@patch("homeassistant.components.tuya.PLATFORMS", [Platform.SENSOR])
+@pytest.mark.parametrize("mock_device_code", ["cz_guitoc9iylae4axs"])
+async def test_delta_report_sensor_accumulates_values(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    mock_listener: MockDeviceListener,
+) -> None:
+    """Test delta report sensor accumulates incremental values."""
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    # Initial state from fixture
+    state = hass.states.get("sensor.ha_socket_delta_test_total_energy")
+    assert state is not None
+    initial_value = float(state.state)
+
+    # Send delta update: device reports 200 (0.2 kWh after scaling)
+    await mock_listener.async_send_device_update(
+        hass,
+        mock_device,
+        {"add_ele": 200},
+        {"add_ele": 1000},  # timestamp
+    )
+
+    state = hass.states.get("sensor.ha_socket_delta_test_total_energy")
+    # Should accumulate: 0.1 + 0.2 = 0.3
+    assert float(state.state) == pytest.approx(initial_value + 0.2)
+
+    # Send another delta update: device reports 300 (0.3 kWh after scaling)
+    await mock_listener.async_send_device_update(
+        hass,
+        mock_device,
+        {"add_ele": 300},
+        {"add_ele": 2000},  # new timestamp
+    )
+
+    state = hass.states.get("sensor.ha_socket_delta_test_total_energy")
+    # Should accumulate: 0.3 + 0.3 = 0.6
+    assert float(state.state) == pytest.approx(initial_value + 0.2 + 0.3)
+
+
+@patch("homeassistant.components.tuya.PLATFORMS", [Platform.SENSOR])
+@pytest.mark.parametrize("mock_device_code", ["cz_guitoc9iylae4axs"])
+async def test_delta_report_sensor_skips_duplicate_timestamp(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    mock_listener: MockDeviceListener,
+) -> None:
+    """Test delta report sensor skips updates with duplicate timestamps."""
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    state = hass.states.get("sensor.ha_socket_delta_test_total_energy")
+    initial_value = float(state.state)
+
+    # First update
+    await mock_listener.async_send_device_update(
+        hass,
+        mock_device,
+        {"add_ele": 200},
+        {"add_ele": 1000},
+    )
+
+    state = hass.states.get("sensor.ha_socket_delta_test_total_energy")
+    value_after_first = float(state.state)
+    assert value_after_first == pytest.approx(initial_value + 0.2)
+
+    # Duplicate timestamp - should be ignored
+    await mock_listener.async_send_device_update(
+        hass,
+        mock_device,
+        {"add_ele": 500},
+        {"add_ele": 1000},  # Same timestamp
+    )
+
+    state = hass.states.get("sensor.ha_socket_delta_test_total_energy")
+    # Value should remain unchanged
+    assert float(state.state) == pytest.approx(value_after_first)
+
+
+@patch("homeassistant.components.tuya.PLATFORMS", [Platform.SENSOR])
+@pytest.mark.parametrize("mock_device_code", ["cz_guitoc9iylae4axs"])
+async def test_delta_report_sensor_restore_state(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+) -> None:
+    """Test delta report sensor restores accumulated value from previous state."""
+    entity_id = "sensor.ha_socket_delta_test_total_energy"
+    restored_value = 123.456
+
+    # Set up restore cache before initialization
+    mock_restore_cache_with_extra_data(
+        hass,
+        (
+            (
+                State(entity_id, STATE_UNKNOWN),
+                {
+                    "native_value": restored_value,
+                    "native_unit_of_measurement": "kWh",
+                },
+            ),
+        ),
+    )
+
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    # Should restore to previous accumulated value
+    assert float(state.state) == restored_value
+
+
+@patch("homeassistant.components.tuya.PLATFORMS", [Platform.SENSOR])
+@pytest.mark.parametrize("mock_device_code", ["cz_guitoc9iylae4axs"])
+async def test_delta_report_sensor_restore_and_accumulate(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    mock_listener: MockDeviceListener,
+) -> None:
+    """Test delta report sensor accumulates on top of restored value."""
+    entity_id = "sensor.ha_socket_delta_test_total_energy"
+    restored_value = 100.0
+
+    mock_restore_cache_with_extra_data(
+        hass,
+        (
+            (
+                State(entity_id, STATE_UNKNOWN),
+                {
+                    "native_value": restored_value,
+                    "native_unit_of_measurement": "kWh",
+                },
+            ),
+        ),
+    )
+
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    state = hass.states.get(entity_id)
+    assert float(state.state) == restored_value
+
+    # Send delta update
+    await mock_listener.async_send_device_update(
+        hass,
+        mock_device,
+        {"add_ele": 500},  # 0.5 kWh after scaling
+        {"add_ele": 1000},
+    )
+
+    state = hass.states.get(entity_id)
+    # Should accumulate on top of restored: 100.0 + 0.5 = 100.5
+    assert float(state.state) == restored_value + 0.5

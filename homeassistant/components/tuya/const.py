@@ -1188,3 +1188,19 @@ for uom in UNITS:
         DEVICE_CLASS_UNITS.setdefault(device_class, {})[uom.unit] = uom
         for unit_alias in uom.aliases:
             DEVICE_CLASS_UNITS[device_class][unit_alias] = uom
+
+# Device categories that should apply report_type based state_class.
+# Add device categories here to enable dynamic state_class based on API report_type.
+# - "sum": Delta/incremental reports, accumulated locally to form a total
+# - "minux": Cumulative total that only increases
+# - "un_known": Unknown type, preserves the original state_class
+REPORT_TYPE_ENABLED_CATEGORIES: set[DeviceCategory] = {
+    DeviceCategory.CZ,
+    DeviceCategory.XNYJCN,
+    DeviceCategory.ZNDB,
+    DeviceCategory.DLQ,
+    DeviceCategory.TDQ,
+    DeviceCategory.KG,
+    DeviceCategory.PC,
+    DeviceCategory.SFKZQ,
+}
