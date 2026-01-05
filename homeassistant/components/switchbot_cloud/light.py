@@ -132,14 +132,28 @@ class SwitchBotCloudLight(SwitchBotCloudEntity, LightEntity):
         )
 
 
+class SwitchBotCloudCandleWarmerLamp(SwitchBotCloudLight):
+    """Representation of a SwitchBotCloud CandleWarmerLamp."""
+
+    # Brightness adjustment
+
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+
+
 class SwitchBotCloudStripLight(SwitchBotCloudLight):
     """Representation of a SwitchBot Strip Light."""
+
+    # Brightness adjustment
+    # RGB color control
 
     _attr_supported_color_modes = {ColorMode.RGB}
 
 
 class SwitchBotCloudRGBICLight(SwitchBotCloudLight):
     """Representation of a SwitchBotCloudRGBICLight."""
+
+    # Brightness adjustment
+    # RGB color control
 
     _attr_supported_color_modes = {ColorMode.RGB}
 
@@ -153,6 +167,10 @@ class SwitchBotCloudRGBICLight(SwitchBotCloudLight):
 
 class SwitchBotCloudRGBWWLight(SwitchBotCloudLight):
     """Representation of SwitchBot |Strip Light|Floor Lamp|Color Bulb."""
+
+    # Brightness adjustment
+    # RGB color control
+    # Color temperature control
 
     _attr_max_color_temp_kelvin = 6500
     _attr_min_color_temp_kelvin = 2700
@@ -176,6 +194,9 @@ class SwitchBotCloudRGBWWLight(SwitchBotCloudLight):
 
 class SwitchBotCloudCeilingLight(SwitchBotCloudLight):
     """Representation of SwitchBot Ceiling Light."""
+
+    # Brightness adjustment
+    # Color temperature control
 
     _attr_max_color_temp_kelvin = 6500
     _attr_min_color_temp_kelvin = 2700
@@ -206,6 +227,8 @@ def _async_make_entity(
         return SwitchBotCloudStripLight(api, device, coordinator)
     if device.device_type in ["Ceiling Light", "Ceiling Light Pro"]:
         return SwitchBotCloudCeilingLight(api, device, coordinator)
+    if device.device_type == "Candle Warmer Lamp":
+        return SwitchBotCloudCandleWarmerLamp(api, device, coordinator)
     if device.device_type in ["RGBIC Neon Rope Light", "RGBIC Neon Wire Rope Light"]:
         return SwitchBotCloudRGBICLight(api, device, coordinator)
     return SwitchBotCloudRGBWWLight(api, device, coordinator)
