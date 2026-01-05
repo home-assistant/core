@@ -14,10 +14,20 @@ from tests.common import MockConfigEntry
 @pytest.fixture
 def mock_charger() -> Generator[MagicMock]:
     """Create a mock OpenEVSE charger."""
-    with patch(
-        "openevsewifi.Charger",
-        autospec=True,
-    ) as mock:
+    with (
+        patch(
+            "homeassistant.components.openevse.openevsewifi.Charger",
+            autospec=True,
+        ) as mock,
+        patch(
+            "homeassistant.components.openevse.config_flow.openevsewifi.Charger",
+            new=mock,
+        ),
+        patch(
+            "homeassistant.components.openevse.sensor.openevsewifi.Charger",
+            new=mock,
+        ),
+    ):
         charger = mock.return_value
         charger.getStatus.return_value = "Charging"
         charger.getChargeTimeElapsed.return_value = 3600  # 60 minutes in seconds
