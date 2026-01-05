@@ -25,6 +25,10 @@ class DeviceWrapper[T]:
     options: list[str] | None = None
     suggested_unit: str | None = None
 
+    max_value: float
+    min_value: float
+    value_step: float
+
     def read_device_status(self, device: CustomerDevice) -> T | None:
         """Read device status and convert to a Home Assistant value."""
         raise NotImplementedError
