@@ -1,5 +1,10 @@
 {
   "entity": {
+    "binary_sensor": {
+      "art_frame_mode": {
+        "default": "mdi:microsoft-dynamics-365"
+      }
+    },
     "fan": {
       "air_purifier": {
         "default": "mdi:air-purifier",

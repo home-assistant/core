@@ -74,6 +74,12 @@ OPEN_DESCRIPTION = SwitchBotCloudBinarySensorEntityDescription(
     value_fn=lambda data: data.get("openState") in ("open", "timeOutNotClose"),
 )
 
+AI_ART_FRAME_MODE_DESCRIPTION = SwitchBotCloudBinarySensorEntityDescription(
+    key="displayMode",
+    translation_key="art_frame_mode",
+    value_fn=lambda data: data.get("displayMode") == 1,
+)
+
 
 BINARY_SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     "Smart Lock": (
@@ -110,6 +116,7 @@ BINARY_SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
         MOVE_DETECTED_DESCRIPTION,
     ),
     "Presence Sensor": (MOVE_DETECTED_DESCRIPTION,),
+    "AI Art Frame": (AI_ART_FRAME_MODE_DESCRIPTION,),
 }
 
 
