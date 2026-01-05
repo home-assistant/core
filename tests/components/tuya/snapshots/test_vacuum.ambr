@@ -28,7 +28,7 @@
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <VacuumEntityFeature: 13080>,
+    'supported_features': <VacuumEntityFeature: 8984>,
     'translation_key': None,
     'unique_id': 'tuya.mwsaod7fa3gjyh6ids',
     'unit_of_measurement': None,
@@ -38,7 +38,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Hoover',
-      'supported_features': <VacuumEntityFeature: 13080>,
+      'supported_features': <VacuumEntityFeature: 8984>,
     }),
     'context': <ANY>,
     'entity_id': 'vacuum.hoover',
