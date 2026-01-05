@@ -3,7 +3,7 @@
 from collections.abc import Iterable
 from enum import StrEnum
 import itertools
-from typing import TypedDict
+from typing import Any, TypedDict
 
 from homeassistant.const import (
     ATTR_AREA_ID,
@@ -167,12 +167,13 @@ class StateDescription(TypedDict):
 def parametrize_trigger_states(
     *,
     trigger: str,
+    trigger_options: dict[str, Any] | None = None,
     target_states: list[str | None | tuple[str | None, dict]],
     other_states: list[str | None | tuple[str | None, dict]],
     additional_attributes: dict | None = None,
     trigger_from_none: bool = True,
     retrigger_on_target_state: bool = False,
-) -> list[tuple[str, list[StateDescription]]]:
+) -> list[tuple[str, dict[str, Any], list[StateDescription]]]:
     """Parametrize states and expected service call counts.
 
     The target_states and other_states iterables are either iterables of
@@ -189,6 +190,7 @@ def parametrize_trigger_states(
     """
 
     additional_attributes = additional_attributes or {}
+    trigger_options = trigger_options or {}
 
     def state_with_attributes(
         state: str | None | tuple[str | None, dict], count: int
@@ -222,6 +224,7 @@ def parametrize_trigger_states(
         # Initial state None
         (
             trigger,
+            trigger_options,
             list(
                 itertools.chain.from_iterable(
                     (
@@ -240,6 +243,7 @@ def parametrize_trigger_states(
         # Initial state different from target state
         (
             trigger,
+            trigger_options,
             # other_state,
             list(
                 itertools.chain.from_iterable(
@@ -257,6 +261,7 @@ def parametrize_trigger_states(
         # Initial state same as target state
         (
             trigger,
+            trigger_options,
             list(
                 itertools.chain.from_iterable(
                     (
@@ -276,6 +281,7 @@ def parametrize_trigger_states(
         # Initial state unavailable / unknown
         (
             trigger,
+            trigger_options,
             list(
                 itertools.chain.from_iterable(
                     (
@@ -291,6 +297,7 @@ def parametrize_trigger_states(
         ),
         (
             trigger,
+            trigger_options,
             list(
                 itertools.chain.from_iterable(
                     (
@@ -311,6 +318,7 @@ def parametrize_trigger_states(
         tests.append(
             (
                 trigger,
+                trigger_options,
                 list(
                     itertools.chain.from_iterable(
                         (
@@ -338,7 +346,7 @@ def parametrize_trigger_states(
 async def arm_trigger(
     hass: HomeAssistant,
     trigger: str,
-    trigger_options: dict | None,
+    trigger_options: dict[str, Any] | None,
     trigger_target: dict,
 ) -> None:
     """Arm the specified trigger, call service test.automation when it triggers."""

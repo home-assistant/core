@@ -76,37 +76,12 @@ async def test_light_triggers_gated_by_labs_flag(
     ) in caplog.text
 
 
-def parametrize_light_trigger_states(
-    *,
-    trigger: str,
-    trigger_options: dict | None = None,
-    target_states: list[str | None | tuple[str | None, dict]],
-    other_states: list[str | None | tuple[str | None, dict]],
-    additional_attributes: dict | None = None,
-    trigger_from_none: bool = True,
-    retrigger_on_target_state: bool = False,
-) -> list[tuple[str, dict[str, Any], list[StateDescription]]]:
-    """Parametrize states and expected service call counts."""
-    trigger_options = trigger_options or {}
-    return [
-        (s[0], trigger_options, *s[1:])
-        for s in parametrize_trigger_states(
-            trigger=trigger,
-            target_states=target_states,
-            other_states=other_states,
-            additional_attributes=additional_attributes,
-            trigger_from_none=trigger_from_none,
-            retrigger_on_target_state=retrigger_on_target_state,
-        )
-    ]
-
-
 def parametrize_xxx_changed_trigger_states(
     trigger: str, attribute: str
 ) -> list[tuple[str, dict[str, Any], list[StateDescription]]]:
     """Parametrize states and expected service call counts for xxx_changed triggers."""
     return [
-        *parametrize_light_trigger_states(
+        *parametrize_trigger_states(
             trigger=trigger,
             target_states=[
                 (STATE_ON, {attribute: 0}),
@@ -116,7 +91,7 @@ def parametrize_xxx_changed_trigger_states(
             other_states=[(STATE_ON, {attribute: None})],
             retrigger_on_target_state=True,
         ),
-        *parametrize_light_trigger_states(
+        *parametrize_trigger_states(
             trigger=trigger,
             trigger_options={CONF_ABOVE: 10},
             target_states=[
@@ -129,7 +104,7 @@ def parametrize_xxx_changed_trigger_states(
             ],
             retrigger_on_target_state=True,
         ),
-        *parametrize_light_trigger_states(
+        *parametrize_trigger_states(
             trigger=trigger,
             trigger_options={CONF_BELOW: 90},
             target_states=[
@@ -150,7 +125,7 @@ def parametrize_xxx_crossed_threshold_trigger_states(
 ) -> list[tuple[str, dict[str, Any], list[StateDescription]]]:
     """Parametrize states and expected service call counts for xxx_crossed_threshold triggers."""
     return [
-        *parametrize_light_trigger_states(
+        *parametrize_trigger_states(
             trigger=trigger,
             trigger_options={
                 CONF_THRESHOLD_TYPE: ThresholdType.BETWEEN,
@@ -167,7 +142,7 @@ def parametrize_xxx_crossed_threshold_trigger_states(
                 (STATE_ON, {attribute: 100}),
             ],
         ),
-        *parametrize_light_trigger_states(
+        *parametrize_trigger_states(
             trigger=trigger,
             trigger_options={
                 CONF_THRESHOLD_TYPE: ThresholdType.OUTSIDE,
@@ -184,7 +159,7 @@ def parametrize_xxx_crossed_threshold_trigger_states(
                 (STATE_ON, {attribute: 60}),
             ],
         ),
-        *parametrize_light_trigger_states(
+        *parametrize_trigger_states(
             trigger=trigger,
             trigger_options={
                 CONF_THRESHOLD_TYPE: ThresholdType.ABOVE,
@@ -199,7 +174,7 @@ def parametrize_xxx_crossed_threshold_trigger_states(
                 (STATE_ON, {attribute: 0}),
             ],
         ),
-        *parametrize_light_trigger_states(
+        *parametrize_trigger_states(
             trigger=trigger,
             trigger_options={
                 CONF_THRESHOLD_TYPE: ThresholdType.BELOW,
@@ -223,7 +198,7 @@ def parametrize_xxx_crossed_threshold_trigger_states(
     parametrize_target_entities("light"),
 )
 @pytest.mark.parametrize(
-    ("trigger", "states"),
+    ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
             trigger="light.turned_on",
@@ -245,6 +220,7 @@ async def test_light_state_trigger_behavior_any(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
+    trigger_options: dict[str, Any],
     states: list[StateDescription],
 ) -> None:
     """Test that the light state trigger fires when any light state changes to a specific state."""
@@ -334,7 +310,7 @@ async def test_light_state_attribute_trigger_behavior_any(
     parametrize_target_entities("light"),
 )
 @pytest.mark.parametrize(
-    ("trigger", "states"),
+    ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
             trigger="light.turned_on",
@@ -356,6 +332,7 @@ async def test_light_state_trigger_behavior_first(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
+    trigger_options: dict[str, Any],
     states: list[StateDescription],
 ) -> None:
     """Test that the light state trigger fires when the first light changes to a specific state."""
@@ -442,7 +419,7 @@ async def test_light_state_attribute_trigger_behavior_first(
     parametrize_target_entities("light"),
 )
 @pytest.mark.parametrize(
-    ("trigger", "states"),
+    ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
             trigger="light.turned_on",
@@ -464,6 +441,7 @@ async def test_light_state_trigger_behavior_last(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
+    trigger_options: dict[str, Any],
     states: list[StateDescription],
 ) -> None:
     """Test that the light state trigger fires when the last light changes to a specific state."""

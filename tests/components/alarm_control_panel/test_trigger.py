@@ -1,6 +1,7 @@
 """Test alarm control panel triggers."""
 
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -75,7 +76,7 @@ async def test_alarm_control_panel_triggers_gated_by_labs_flag(
     parametrize_target_entities("alarm_control_panel"),
 )
 @pytest.mark.parametrize(
-    ("trigger", "states"),
+    ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
             trigger="alarm_control_panel.armed",
@@ -150,6 +151,7 @@ async def test_alarm_control_panel_state_trigger_behavior_any(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
+    trigger_options: dict[str, Any],
     states: list[StateDescription],
 ) -> None:
     """Test that the alarm control panel state trigger fires when any alarm control panel state changes to a specific state."""
@@ -185,7 +187,7 @@ async def test_alarm_control_panel_state_trigger_behavior_any(
     parametrize_target_entities("alarm_control_panel"),
 )
 @pytest.mark.parametrize(
-    ("trigger", "states"),
+    ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
             trigger="alarm_control_panel.armed",
@@ -260,6 +262,7 @@ async def test_alarm_control_panel_state_trigger_behavior_first(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
+    trigger_options: dict[str, Any],
     states: list[StateDescription],
 ) -> None:
     """Test that the alarm control panel state trigger fires when the first alarm control panel changes to a specific state."""
@@ -294,7 +297,7 @@ async def test_alarm_control_panel_state_trigger_behavior_first(
     parametrize_target_entities("alarm_control_panel"),
 )
 @pytest.mark.parametrize(
-    ("trigger", "states"),
+    ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
             trigger="alarm_control_panel.armed",
@@ -369,6 +372,7 @@ async def test_alarm_control_panel_state_trigger_behavior_last(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
+    trigger_options: dict[str, Any],
     states: list[StateDescription],
 ) -> None:
     """Test that the alarm_control_panel state trigger fires when the last alarm_control_panel changes to a specific state."""
