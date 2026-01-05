@@ -161,7 +161,6 @@ async def async_setup_entry(
             OpenEVSESensor(
                 config_entry.data[CONF_HOST],
                 config_entry.runtime_data,
-                config_entry.entry_id,
                 description,
             )
             for description in SENSOR_TYPES
@@ -177,11 +176,9 @@ class OpenEVSESensor(SensorEntity):
         self,
         host: str,
         charger: openevsewifi.Charger,
-        entry_id: str,
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        self._attr_unique_id = f"{entry_id}-{description.key}"
         self.entity_description = description
         self.host = host
         self.charger = charger
