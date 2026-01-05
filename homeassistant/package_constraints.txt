@@ -6,7 +6,7 @@ aiodns==3.6.1
 aiohasupervisor==0.3.3
 aiohttp-asyncmdnsresolver==0.1.1
 aiohttp-fast-zlib==0.3.0
-aiohttp==3.13.2
+aiohttp==3.13.3
 aiohttp_cors==0.8.1
 aiousbwatcher==1.1.1
 aiozoneinfo==0.2.3
@@ -128,6 +128,9 @@ multidict>=6.0.2
 
 # Version 2.0 added typing, prevent accidental fallbacks
 backoff>=2.0
+
+# Brotli 1.2.0 fixes CVE and is required for aiohttp 3.13.3 compatibility
+Brotli>=1.2.0
 
 # ensure pydantic version does not float since it might have breaking changes
 pydantic==2.12.2
