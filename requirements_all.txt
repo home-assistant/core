@@ -545,7 +545,7 @@ asusrouter==1.21.3
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
 # homeassistant.components.yeelight
-async-upnp-client==0.46.1
+async-upnp-client==0.46.2
 
 # homeassistant.components.arve
 asyncarve==0.1.1
@@ -1093,7 +1093,7 @@ google-cloud-speech==2.31.1
 google-cloud-texttospeech==2.25.1
 
 # homeassistant.components.google_generative_ai_conversation
-google-genai==1.38.0
+google-genai==1.56.0
 
 # homeassistant.components.google_travel_time
 google-maps-routing==0.6.15
@@ -1867,7 +1867,7 @@ pyRFXtrx==0.31.1
 pySDCP==1
 
 # homeassistant.components.tibber
-pyTibber==0.32.2
+pyTibber==0.33.1
 
 # homeassistant.components.dlink
 pyW215==0.8.0
@@ -3063,7 +3063,7 @@ ttls==1.8.3
 ttn_client==1.2.3
 
 # homeassistant.components.tuya
-tuya-device-sharing-sdk==0.2.7
+tuya-device-sharing-sdk==0.2.8
 
 # homeassistant.components.twentemilieu
 twentemilieu==2.2.1
@@ -3253,7 +3253,7 @@ yeelight==0.7.16
 yeelightsunflower==0.0.10
 
 # homeassistant.components.yolink
-yolink-api==0.5.9
+yolink-api==0.6.1
 
 # homeassistant.components.youless
 youless-api==2.2.0
