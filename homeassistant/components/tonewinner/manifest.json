@@ -1,11 +1,11 @@
 {
   "domain": "tonewinner",
   "name": "ToneWinner AT-500",
-  "version": "0.1.0",
-  "config_flow": true,
   "codeowners": ["@emma-sg"],
+  "config_flow": true,
   "documentation": "",
-  "issue_tracker": "",
   "iot_class": "local_polling",
-  "loggers": ["custom_components.tonewinner"]
+  "issue_tracker": "",
+  "loggers": ["custom_components.tonewinner"],
+  "version": "0.1.0"
 }
