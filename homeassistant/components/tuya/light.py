@@ -186,14 +186,14 @@ class _ColorDataWrapper(DPCodeJsonWrapper):
         )
 
     def _convert_value_to_raw_value(
-        self, device: CustomerDevice, value: tuple[tuple[float, float], float]
+        self, device: CustomerDevice, value: tuple[float, float, float]
     ) -> Any:
-        """Convert a Home Assistant color/brightness pair back to a raw device value."""
-        color, brightness = value
+        """Convert a Home Assistant tuple (H, S, V) back to a raw device value."""
+        hue, saturation, brightness = value
         return json.dumps(
             {
-                "h": round(self.h_type.remap_value_from(color[0])),
-                "s": round(self.s_type.remap_value_from(color[1])),
+                "h": round(self.h_type.remap_value_from(hue)),
+                "s": round(self.s_type.remap_value_from(saturation)),
                 "v": round(self.v_type.remap_value_from(brightness)),
             }
         )
