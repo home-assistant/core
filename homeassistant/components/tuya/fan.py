@@ -198,7 +198,7 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
 
         if speed_wrapper:
             self._attr_supported_features |= FanEntityFeature.SET_SPEED
-            if speed_wrapper.options is not None:
+            if hasattr(speed_wrapper, "options"):
                 self._attr_speed_count = len(speed_wrapper.options)
 
         if oscillate_wrapper:

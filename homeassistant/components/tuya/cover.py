@@ -424,11 +424,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
-        if (
-            self._instruction_wrapper
-            and (options := self._instruction_wrapper.options)
-            and "stop" in options
-        ):
+        if self._instruction_wrapper and "stop" in self._instruction_wrapper.options:
             await self._async_send_wrapper_updates(self._instruction_wrapper, "stop")
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
