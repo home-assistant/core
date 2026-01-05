@@ -23,6 +23,7 @@ from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util.ulid import ulid_now
 
 from .const import DOMAIN, KNX_MODULE_KEY, SUPPORTED_PLATFORMS_UI
+from .dpt import get_supported_dpts
 from .storage.config_store import ConfigStoreException
 from .storage.const import CONF_DATA
 from .storage.entity_store_schema import (
@@ -79,8 +80,6 @@ async def register_panel(hass: HomeAssistant) -> None:
             hass=hass,
             frontend_url_path=DOMAIN,
             webcomponent_name=knx_panel.webcomponent_name,
-            sidebar_title=DOMAIN.upper(),
-            sidebar_icon="mdi:bus-electric",
             module_url=f"{URL_BASE}/{knx_panel.entrypoint_js}",
             embed_iframe=True,
             require_admin=True,
@@ -191,6 +190,7 @@ def ws_get_base_data(
         msg["id"],
         {
             "connection_info": connection_info,
+            "dpt_metadata": get_supported_dpts(),
             "project_info": _project_info,
             "supported_platforms": sorted(SUPPORTED_PLATFORMS_UI),
         },
