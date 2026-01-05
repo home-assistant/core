@@ -1,7 +1,7 @@
 """Tests for the OpenEVSE sensor platform."""
 
 from ipaddress import ip_address
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 from homeassistant import config_entries
 from homeassistant.components.openevse.const import DOMAIN
@@ -10,6 +10,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+
 from tests.common import MockConfigEntry
 
 
@@ -147,7 +148,7 @@ async def test_zeroconf_already_configured_unique_id(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_charger: MagicMock,
-):
+) -> None:
     """Test zeroconf discovery updates info if unique_id is already configured."""
     # Create an existing entry with the same unique_id but different IP
     config_entry = MockConfigEntry(
@@ -183,7 +184,7 @@ async def test_zeroconf_already_configured_unique_id(
 
 async def test_zeroconf_discovery(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_charger: MagicMock
-):
+) -> None:
     """Test zeroconf discovery."""
     # Simulate a Zeroconf discovery packet
     discovery_info = ZeroconfServiceInfo(
@@ -221,7 +222,7 @@ async def test_zeroconf_discovery(
 
 async def test_zeroconf_no_serial(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_charger: MagicMock
-):
+) -> None:
     """Test zeroconf discovery with missing serial number."""
     discovery_info = ZeroconfServiceInfo(
         ip_address=ip_address("192.168.1.123"),
@@ -243,7 +244,9 @@ async def test_zeroconf_no_serial(
     assert result["reason"] == "invalid_discovery_parameters"
 
 
-async def test_zeroconf_connection_error(hass: HomeAssistant, mock_charger: MagicMock):
+async def test_zeroconf_connection_error(
+    hass: HomeAssistant, mock_charger: MagicMock
+) -> None:
     """Test zeroconf discovery with connection failure."""
     mock_charger.getStatus.side_effect = AttributeError
     discovery_info = ZeroconfServiceInfo(
@@ -268,7 +271,7 @@ async def test_zeroconf_connection_error(hass: HomeAssistant, mock_charger: Magi
 
 async def test_zeroconf_already_configured_host(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
-):
+) -> None:
     """Test zeroconf discovery aborts if host is already configured."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,

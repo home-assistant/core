@@ -19,7 +19,7 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Set up the instance."""
         self.discovery_info = {}
 
