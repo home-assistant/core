@@ -42,6 +42,8 @@ HA_TO_VS_HUMIDIFIER_NIGHT_LIGHT_LEVEL_MAP = {
     v: k for k, v in VS_TO_HA_HUMIDIFIER_NIGHT_LIGHT_LEVEL_MAP.items()
 }
 
+PARALLEL_UPDATES = 1
+
 
 @dataclass(frozen=True, kw_only=True)
 class VeSyncSelectEntityDescription(SelectEntityDescription):

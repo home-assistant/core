@@ -38,6 +38,8 @@ VS_TO_HA_MODE_MAP = {
     VS_HUMIDIFIER_MODE_SLEEP: MODE_SLEEP,
 }
 
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(
     hass: HomeAssistant,

@@ -47,6 +47,8 @@ VS_TO_HA_MODE_MAP = {
     VS_FAN_MODE_NORMAL: VS_FAN_MODE_NORMAL,
 }
 
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(
     hass: HomeAssistant,

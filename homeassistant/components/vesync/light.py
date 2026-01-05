@@ -27,6 +27,8 @@ _LOGGER = logging.getLogger(__name__)
 MAX_MIREDS = 370  # 1,000,000 divided by 2700 Kelvin = 370 Mireds
 MIN_MIREDS = 153  # 1,000,000 divided by 6500 Kelvin = 153 Mireds
 
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
