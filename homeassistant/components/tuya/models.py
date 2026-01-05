@@ -18,15 +18,23 @@ from .type_information import (
 )
 
 
-class DeviceWrapper:
+class DeviceWrapper[T]:
     """Base device wrapper."""
 
-    def read_device_status(self, device: CustomerDevice) -> Any | None:
+    native_unit: str | None = None
+    options: list[str] | None = None
+    suggested_unit: str | None = None
+
+    max_value: float
+    min_value: float
+    value_step: float
+
+    def read_device_status(self, device: CustomerDevice) -> T | None:
         """Read device status and convert to a Home Assistant value."""
         raise NotImplementedError
 
     def get_update_commands(
-        self, device: CustomerDevice, value: Any
+        self, device: CustomerDevice, value: T
     ) -> list[dict[str, Any]]:
         """Generate update commands for a Home Assistant action."""
         raise NotImplementedError
@@ -38,9 +46,6 @@ class DPCodeWrapper(DeviceWrapper):
     Used as a common interface for referring to a DPCode, and
     access read conversion routines.
     """
-
-    native_unit: str | None = None
-    suggested_unit: str | None = None
 
     def __init__(self, dpcode: str) -> None:
         """Init DPCodeWrapper."""
@@ -133,6 +138,12 @@ class DPCodeEnumWrapper(DPCodeTypeInformationWrapper[EnumTypeInformation]):
     """Simple wrapper for EnumTypeInformation values."""
 
     _DPTYPE = EnumTypeInformation
+    options: list[str]
+
+    def __init__(self, dpcode: str, type_information: EnumTypeInformation) -> None:
+        """Init DPCodeEnumWrapper."""
+        super().__init__(dpcode, type_information)
+        self.options = type_information.range
 
     def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
         """Convert a Home Assistant value back to a raw device value."""
@@ -154,6 +165,9 @@ class DPCodeIntegerWrapper(DPCodeTypeInformationWrapper[IntegerTypeInformation])
         """Init DPCodeIntegerWrapper."""
         super().__init__(dpcode, type_information)
         self.native_unit = type_information.unit
+        self.min_value = self.type_information.scale_value(type_information.min)
+        self.max_value = self.type_information.scale_value(type_information.max)
+        self.value_step = self.type_information.scale_value(type_information.step)
 
     def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
         """Convert a Home Assistant value back to a raw device value."""

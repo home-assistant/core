@@ -70,6 +70,7 @@ MEDIA_MODES = {
     "Favorites": "FAVORITES",
     "Internet Radio": "IRADIO",
     "USB/IPOD": "USB/IPOD",
+    "USB": "USB",
 }
 
 # Sub-modes of 'NET/USB'
@@ -279,7 +280,7 @@ class DenonDevice(MediaPlayerEntity):
     def mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) media player."""
         mute_status = "ON" if mute else "OFF"
-        self.telnet_command(f"MU{mute_status})")
+        self.telnet_command(f"MU{mute_status}")
 
     def media_play(self) -> None:
         """Play media player."""

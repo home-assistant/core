@@ -168,11 +168,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # influxdb-client > setuptools
         "influxdb-client": {"setuptools"}
     },
-    "insteon": {
-        # https://github.com/pyinsteon/pyinsteon/issues/430
-        # pyinsteon > pyserial-asyncio
-        "pyinsteon": {"pyserial-asyncio"}
-    },
     "izone": {"python-izone": {"async-timeout"}},
     "keba": {
         # https://github.com/jsbronder/asyncio-dgram/issues/20
@@ -189,7 +184,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         "python-linkplay": {"async-timeout"},
     },
     "loqed": {"loqedapi": {"async-timeout"}},
-    "matter": {"python-matter-server": {"async-timeout"}},
     "mediaroom": {"pymediaroom": {"async-timeout"}},
     "met": {"pymetno": {"async-timeout"}},
     "met_eireann": {"pymeteireann": {"async-timeout"}},

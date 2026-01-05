@@ -31,10 +31,12 @@ from .models import (
 class _DPCodeEventWrapper(DPCodeTypeInformationWrapper):
     """Base class for Tuya event wrappers."""
 
-    @property
-    def event_types(self) -> list[str]:
-        """Return the event types for the DP code."""
-        return ["triggered"]
+    options: list[str]
+
+    def __init__(self, dpcode: str, type_information: Any) -> None:
+        """Init _DPCodeEventWrapper."""
+        super().__init__(dpcode, type_information)
+        self.options = ["triggered"]
 
     def get_event_type(
         self, device: CustomerDevice, updated_status_properties: list[str] | None
@@ -54,11 +56,6 @@ class _DPCodeEventWrapper(DPCodeTypeInformationWrapper):
 
 class _EventEnumWrapper(DPCodeEnumWrapper, _DPCodeEventWrapper):
     """Wrapper for event enum DP codes."""
-
-    @property
-    def event_types(self) -> list[str]:
-        """Return the event types for the enum."""
-        return self.type_information.range
 
     def get_event_type(
         self, device: CustomerDevice, updated_status_properties: list[str] | None
@@ -232,7 +229,7 @@ class TuyaEventEntity(TuyaEntity, EventEntity):
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
         self._dpcode_wrapper = dpcode_wrapper
-        self._attr_event_types = dpcode_wrapper.event_types
+        self._attr_event_types = dpcode_wrapper.options
 
     async def _handle_state_update(
         self,

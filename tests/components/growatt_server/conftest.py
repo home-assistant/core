@@ -1,6 +1,6 @@
 """Common fixtures for the Growatt server tests."""
 
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -9,6 +9,7 @@ from homeassistant.components.growatt_server.const import (
     AUTH_PASSWORD,
     CONF_AUTH_TYPE,
     CONF_PLANT_ID,
+    DEFAULT_PLANT_ID,
     DEFAULT_URL,
     DOMAIN,
 )
@@ -36,6 +37,9 @@ def mock_growatt_v1_api():
 
     Methods mocked for switch and number operations:
     - min_write_parameter: Called by switch/number entities to change settings
+
+    Methods mocked for service operations:
+    - min_write_time_segment: Called by time segment management services
     """
     with patch(
         "homeassistant.components.growatt_server.config_flow.growattServer.OpenApiV1",
@@ -65,15 +69,45 @@ def mock_growatt_v1_api():
 
         # Called by MIN device coordinator during refresh
         mock_v1_api.min_settings.return_value = {
-            # Forced charge time segments (not used by switch/number, but coordinator fetches it)
+            # Time segment 1 - enabled, load_first mode
             "forcedTimeStart1": "06:00",
             "forcedTimeStop1": "08:00",
-            "forcedChargeBatMode1": 1,
-            "forcedChargeFlag1": 1,
+            "time1Mode": 1,  # load_first
+            "forcedStopSwitch1": 1,  # enabled
+            # Time segment 2 - disabled
             "forcedTimeStart2": "22:00",
             "forcedTimeStop2": "24:00",
-            "forcedChargeBatMode2": 0,
-            "forcedChargeFlag2": 0,
+            "time2Mode": 0,  # battery_first
+            "forcedStopSwitch2": 0,  # disabled
+            # Time segments 3-9 - all disabled with default values
+            "forcedTimeStart3": "00:00",
+            "forcedTimeStop3": "00:00",
+            "time3Mode": 1,
+            "forcedStopSwitch3": 0,
+            "forcedTimeStart4": "00:00",
+            "forcedTimeStop4": "00:00",
+            "time4Mode": 1,
+            "forcedStopSwitch4": 0,
+            "forcedTimeStart5": "00:00",
+            "forcedTimeStop5": "00:00",
+            "time5Mode": 1,
+            "forcedStopSwitch5": 0,
+            "forcedTimeStart6": "00:00",
+            "forcedTimeStop6": "00:00",
+            "time6Mode": 1,
+            "forcedStopSwitch6": 0,
+            "forcedTimeStart7": "00:00",
+            "forcedTimeStop7": "00:00",
+            "time7Mode": 1,
+            "forcedStopSwitch7": 0,
+            "forcedTimeStart8": "00:00",
+            "forcedTimeStop8": "00:00",
+            "time8Mode": 1,
+            "forcedStopSwitch8": 0,
+            "forcedTimeStart9": "00:00",
+            "forcedTimeStop9": "00:00",
+            "time9Mode": 1,
+            "forcedStopSwitch9": 0,
         }
 
         # Called by MIN device coordinator during refresh
@@ -101,6 +135,15 @@ def mock_growatt_v1_api():
         # Called by switch/number entities during turn_on/turn_off/set_value
         mock_v1_api.min_write_parameter.return_value = None
 
+        # Called by time segment management services
+        # Note: Don't use autospec for this method as it needs to accept variable arguments
+        mock_v1_api.min_write_time_segment = Mock(
+            return_value={
+                "error_code": 0,
+                "error_msg": "Success",
+            }
+        )
+
         yield mock_v1_api
 
 
@@ -119,8 +162,11 @@ def mock_growatt_classic_api():
     Methods mocked for total coordinator refresh:
     - plant_info: Provides plant totals (energy, power, money) for Classic API
 
-    Methods mocked for device-specific tests:
-    - tlx_detail: Provides TLX device data (kept for potential future tests)
+    Methods mocked for device coordinators (individual device data):
+    - inverter_detail: Provides inverter device data
+    - storage_detail: Provides storage device data
+    - mix_detail: Provides mix device data
+    - tlx_detail: Provides TLX device data
     """
     with patch(
         "homeassistant.components.growatt_server.config_flow.growattServer.GrowattApi",
@@ -149,7 +195,21 @@ def mock_growatt_classic_api():
             "plantMoneyText": "123.45/USD",
         }
 
-        # Called for TLX device coordinator (kept for potential future tests)
+        # Called by device coordinators during refresh for various device types
+        mock_classic_api.inverter_detail.return_value = {
+            "deviceSn": "INV123456",
+            "status": 1,
+        }
+
+        mock_classic_api.storage_detail.return_value = {
+            "deviceSn": "STO123456",
+        }
+
+        mock_classic_api.mix_detail.return_value = {
+            "deviceSn": "MIX123456",
+            "chartData": {"06:00": {}},  # At least one time entry needed
+        }
+
         mock_classic_api.tlx_detail.return_value = {
             "data": {
                 "deviceSn": "TLX123456",
@@ -198,6 +258,27 @@ def mock_config_entry_classic() -> MockConfigEntry:
             "name": "Test Plant",
         },
         unique_id="123456",
+    )
+
+
+@pytest.fixture
+def mock_config_entry_classic_default_plant() -> MockConfigEntry:
+    """Return a mocked config entry for Classic API with DEFAULT_PLANT_ID.
+
+    This config entry uses plant_id="0" which triggers auto-plant-selection logic
+    in the Classic API path. This is legacy support for old config entries that
+    didn't have a specific plant_id set during initial configuration.
+    """
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_AUTH_TYPE: AUTH_PASSWORD,
+            CONF_USERNAME: "test_user",
+            CONF_PASSWORD: "test_password",
+            CONF_URL: "https://server.growatt.com/",
+            CONF_PLANT_ID: DEFAULT_PLANT_ID,  # "0" triggers auto-selection
+        },
+        unique_id="plant_default",
     )
 
 
