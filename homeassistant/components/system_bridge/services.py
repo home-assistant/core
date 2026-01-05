@@ -31,7 +31,6 @@ from homeassistant.core import (
     ServiceCall,
     ServiceResponse,
     SupportsResponse,
-    callback,
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
@@ -278,7 +277,6 @@ async def _handle_execute_command(service_call: ServiceCall) -> ServiceResponse:
         ) from err
 
 
-@callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register all System Bridge services."""
     if hass.services.has_service(DOMAIN, SERVICE_OPEN_URL):
