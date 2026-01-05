@@ -351,7 +351,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         self._set_position = set_position
         self._tilt_position = tilt_position
 
-        if instruction_wrapper and instruction_wrapper.options:
+        if instruction_wrapper:
             if "open" in instruction_wrapper.options:
                 self._attr_supported_features |= CoverEntityFeature.OPEN
             if "close" in instruction_wrapper.options:
