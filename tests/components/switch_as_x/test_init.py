@@ -1143,11 +1143,11 @@ async def test_migrate(
         target_domain,
         "switch_as_x",
         config_entry.entry_id,
+        calculated_object_id="ABC",
         capabilities=CAPABILITY_MAP[target_domain],
         config_entry=config_entry,
         device_id=device_entry.id,
         original_name="ABC",
-        suggested_object_id="abc",
         supported_features=SUPPORTED_FEATURE_MAP[target_domain],
     )
     entity_registry.async_update_entity_options(

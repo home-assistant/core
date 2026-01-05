@@ -8290,7 +8290,7 @@
     'state': '444.444',
   })
 # ---
-# name: test_sensors[HWE-P1-entity_ids0][sensor.inlet_heat_meter_none:device-registry]
+# name: test_sensors[HWE-P1-entity_ids0][sensor.inlet_heat_meter:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -8321,7 +8321,7 @@
     'via_device_id': <ANY>,
   })
 # ---
-# name: test_sensors[HWE-P1-entity_ids0][sensor.inlet_heat_meter_none:entity-registry]
+# name: test_sensors[HWE-P1-entity_ids0][sensor.inlet_heat_meter:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -8336,7 +8336,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.inlet_heat_meter_none',
+    'entity_id': 'sensor.inlet_heat_meter',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -8358,7 +8358,7 @@
     'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
   })
 # ---
-# name: test_sensors[HWE-P1-entity_ids0][sensor.inlet_heat_meter_none:state]
+# name: test_sensors[HWE-P1-entity_ids0][sensor.inlet_heat_meter:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Inlet heat meter None',
@@ -8366,7 +8366,7 @@
       'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inlet_heat_meter_none',
+    'entity_id': 'sensor.inlet_heat_meter',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -12166,7 +12166,7 @@
     'state': '444.444',
   })
 # ---
-# name: test_sensors[HWE-P1-invalid-EAN-entity_ids9][sensor.inlet_heat_meter_none:device-registry]
+# name: test_sensors[HWE-P1-invalid-EAN-entity_ids9][sensor.inlet_heat_meter:device-registry]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
@@ -12197,7 +12197,7 @@
     'via_device_id': <ANY>,
   })
 # ---
-# name: test_sensors[HWE-P1-invalid-EAN-entity_ids9][sensor.inlet_heat_meter_none:entity-registry]
+# name: test_sensors[HWE-P1-invalid-EAN-entity_ids9][sensor.inlet_heat_meter:entity-registry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12212,7 +12212,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.inlet_heat_meter_none',
+    'entity_id': 'sensor.inlet_heat_meter',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -12234,7 +12234,7 @@
     'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
   })
 # ---
-# name: test_sensors[HWE-P1-invalid-EAN-entity_ids9][sensor.inlet_heat_meter_none:state]
+# name: test_sensors[HWE-P1-invalid-EAN-entity_ids9][sensor.inlet_heat_meter:state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Inlet heat meter None',
@@ -12242,7 +12242,7 @@
       'unit_of_measurement': <UnitOfVolume.CUBIC_METERS: 'm³'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.inlet_heat_meter_none',
+    'entity_id': 'sensor.inlet_heat_meter',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
