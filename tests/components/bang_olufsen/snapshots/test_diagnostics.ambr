@@ -109,11 +109,11 @@
     'remote_55555555_battery_level': dict({
       'attributes': dict({
         'device_class': 'battery',
-        'friendly_name': 'Beoremote One-55555555-11111111 Battery level',
+        'friendly_name': 'Beoremote One-55555555-11111111 Battery',
         'state_class': 'measurement',
         'unit_of_measurement': '%',
       }),
-      'entity_id': 'sensor.beoremote_one_55555555_11111111_battery_level',
+      'entity_id': 'sensor.beoremote_one_55555555_11111111_battery',
       'state': '50',
     }),
     'websocket_connected': False,
@@ -124,11 +124,11 @@
     'battery_level': dict({
       'attributes': dict({
         'device_class': 'battery',
-        'friendly_name': 'Living room Balance Battery level',
+        'friendly_name': 'Living room Balance Battery',
         'state_class': 'measurement',
         'unit_of_measurement': '%',
       }),
-      'entity_id': 'sensor.beosound_a5_44444444_battery_level',
+      'entity_id': 'sensor.beosound_a5_44444444_battery',
       'state': '5',
     }),
     'config_entry': dict({
@@ -210,11 +210,11 @@
     'remote_55555555_battery_level': dict({
       'attributes': dict({
         'device_class': 'battery',
-        'friendly_name': 'Beoremote One-55555555-44444444 Battery level',
+        'friendly_name': 'Beoremote One-55555555-44444444 Battery',
         'state_class': 'measurement',
         'unit_of_measurement': '%',
       }),
-      'entity_id': 'sensor.beoremote_one_55555555_44444444_battery_level',
+      'entity_id': 'sensor.beoremote_one_55555555_44444444_battery',
       'state': '50',
     }),
     'websocket_connected': False,

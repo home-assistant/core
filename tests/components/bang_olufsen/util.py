@@ -69,7 +69,7 @@ def get_remote_entity_ids(
 ) -> list[str]:
     """Return a list of entity_ids that the Beoremote One provides."""
     entity_ids: list[str] = [
-        f"sensor.beoremote_one_{remote_serial}_{device_serial}_battery_level"
+        f"sensor.beoremote_one_{remote_serial}_{device_serial}_battery"
     ]
 
     # Add remote light key Event entity ids

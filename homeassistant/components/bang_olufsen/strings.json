@@ -1168,14 +1168,6 @@
           }
         }
       }
-    },
-    "sensor": {
-      "battery_level": {
-        "name": "Battery level"
-      },
-      "remote_battery_level": {
-        "name": "Battery level"
-      }
     }
   },
   "exceptions": {

@@ -14,6 +14,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
+from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -63,15 +64,14 @@ class BeoSensor(SensorEntity, BeoEntity):
 class BeoSensorBatteryLevel(BeoSensor):
     """Battery level Sensor for Mozart devices."""
 
-    _attr_native_unit_of_measurement = "%"
-    _attr_translation_key = "battery_level"
+    _attr_device_class = SensorDeviceClass.BATTERY
+    _attr_native_unit_of_measurement = PERCENTAGE
     _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(self, config_entry: BeoConfigEntry) -> None:
         """Init the battery level Sensor."""
         super().__init__(config_entry)
 
-        self._attr_device_class = SensorDeviceClass.BATTERY
         self._attr_unique_id = f"{self._unique_id}_battery_level"
 
     async def async_added_to_hass(self) -> None:
@@ -100,8 +100,8 @@ class BeoSensorBatteryLevel(BeoSensor):
 class BeoSensorRemoteBatteryLevel(BeoSensor):
     """Battery level Sensor for the Beoremote One."""
 
-    _attr_native_unit_of_measurement = "%"
-    _attr_translation_key = "remote_battery_level"
+    _attr_device_class = SensorDeviceClass.BATTERY
+    _attr_native_unit_of_measurement = PERCENTAGE
     _attr_should_poll = True
     _attr_state_class = SensorStateClass.MEASUREMENT
 
@@ -111,7 +111,6 @@ class BeoSensorRemoteBatteryLevel(BeoSensor):
         # Serial number is not None, as the remote object is provided by get_remotes
         assert remote.serial_number
 
-        self._attr_device_class = SensorDeviceClass.BATTERY
         self._attr_unique_id = (
             f"{remote.serial_number}_{self._unique_id}_remote_battery_level"
         )

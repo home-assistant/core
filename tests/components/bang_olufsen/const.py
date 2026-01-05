@@ -72,9 +72,7 @@ TEST_NAME_4 = f"{TEST_MODEL_A5}-{TEST_SERIAL_NUMBER_4}"
 TEST_JID_4 = f"{TEST_TYPE_NUMBER}.{TEST_ITEM_NUMBER}.{TEST_SERIAL_NUMBER_4}@products.bang-olufsen.com"
 TEST_MEDIA_PLAYER_ENTITY_ID_4 = f"media_player.beosound_a5_{TEST_SERIAL_NUMBER_4}"
 TEST_HOST_4 = "192.168.0.4"
-TEST_BATTERY_A5_SENSOR_ENTITY_ID = (
-    f"sensor.beosound_a5_{TEST_SERIAL_NUMBER_4}_battery_level"
-)
+TEST_BATTERY_A5_SENSOR_ENTITY_ID = f"sensor.beosound_a5_{TEST_SERIAL_NUMBER_4}_battery"
 
 # Beoremote One
 TEST_REMOTE_SERIAL = "55555555"
@@ -83,7 +81,7 @@ TEST_REMOTE_SW_VERSION = "1.0.0"
 
 TEST_REMOTE_KEY_EVENT_ENTITY_ID = "event.beoremote_one_55555555_11111111_control_play"
 TEST_REMOTE_BATTERY_LEVEL_SENSOR_ENTITY_ID = (
-    "sensor.beoremote_one_55555555_11111111_battery_level"
+    "sensor.beoremote_one_55555555_11111111_battery"
 )
 TEST_BUTTON_EVENT_ENTITY_ID = "event.beosound_balance_11111111_play_pause"
 
