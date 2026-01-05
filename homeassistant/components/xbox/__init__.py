@@ -25,6 +25,7 @@ from .coordinator import (
     XboxConfigEntry,
     XboxConsolesCoordinator,
     XboxCoordinators,
+    XboxTitleHistoryCoordinator,
     XboxUpdateCoordinator,
 )
 
@@ -48,8 +49,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: XboxConfigEntry) -> bool
     await coordinator.async_config_entry_first_refresh()
 
     consoles = XboxConsolesCoordinator(hass, entry, coordinator)
+    title_history = XboxTitleHistoryCoordinator(hass, entry, coordinator)
 
-    entry.runtime_data = XboxCoordinators(coordinator, consoles)
+    entry.runtime_data = XboxCoordinators(coordinator, consoles, title_history)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

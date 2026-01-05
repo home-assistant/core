@@ -16,7 +16,7 @@ from pythonxbox.api.provider.smartglass.models import (
     SmartglassConsoleList,
     SmartglassConsoleStatus,
 )
-from pythonxbox.api.provider.titlehub.models import Title
+from pythonxbox.api.provider.titlehub.models import Title, TitleFields, TitleHubResponse
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -60,6 +60,7 @@ class XboxCoordinators:
 
     status: XboxUpdateCoordinator
     consoles: XboxConsolesCoordinator
+    title_history: XboxTitleHistoryCoordinator
 
 
 class XboxUpdateCoordinator(DataUpdateCoordinator[XboxData]):
@@ -307,6 +308,52 @@ class XboxConsolesCoordinator(DataUpdateCoordinator[SmartglassConsoleList]):
 
         try:
             return await self.client.smartglass.get_console_list()
+        except TimeoutException as e:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="timeout_exception",
+            ) from e
+        except (RequestError, HTTPStatusError) as e:
+            _LOGGER.debug("Xbox exception:", exc_info=True)
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="request_exception",
+            ) from e
+
+
+class XboxTitleHistoryCoordinator(DataUpdateCoordinator[TitleHubResponse | None]):
+    """Update title history and achievement data."""
+
+    config_entry: XboxConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: XboxConfigEntry,
+        coordinator: XboxUpdateCoordinator,
+    ) -> None:
+        """Initialize."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=f"{DOMAIN}_title_history",
+            update_interval=timedelta(minutes=5),
+        )
+        self.client = coordinator.client
+        self.xuid = coordinator.client.xuid
+
+    async def _async_update_data(self) -> TitleHubResponse | None:
+        """Fetch title history with achievement data."""
+        fields = [
+            TitleFields.ACHIEVEMENT,
+            TitleFields.IMAGE,
+        ]
+
+        try:
+            return await self.client.titlehub.get_title_history(
+                self.xuid, fields, max_items=10
+            )
         except TimeoutException as e:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
