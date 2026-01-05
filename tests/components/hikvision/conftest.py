@@ -73,7 +73,6 @@ def mock_hikcamera() -> Generator[MagicMock]:
     with (
         patch(
             "homeassistant.components.hikvision.HikCamera",
-            autospec=True,
         ) as hikcamera_mock,
         patch(
             "homeassistant.components.hikvision.config_flow.HikCamera",
@@ -95,6 +94,15 @@ def mock_hikcamera() -> Generator[MagicMock]:
             "2024-01-01T00:00:00Z",
         )
         camera.get_event_triggers.return_value = {}
+
+        # pyHik 0.4.0 methods
+        camera.get_channels.return_value = [1]
+        camera.get_snapshot.return_value = b"fake_image_data"
+        camera.get_stream_url.return_value = (
+            f"rtsp://{TEST_USERNAME}:{TEST_PASSWORD}"
+            f"@{TEST_HOST}:554/Streaming/Channels/1"
+        )
+
         yield hikcamera_mock
 
 

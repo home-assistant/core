@@ -3,22 +3,11 @@
 from __future__ import annotations
 
 import logging
-from urllib.parse import quote
-
-import httpx
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_USERNAME,
-)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.httpx_client import get_async_client
 
 from . import HikvisionConfigEntry
 from .const import DOMAIN
@@ -26,26 +15,6 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
-
-# Timeout for fetching camera snapshot
-SNAPSHOT_TIMEOUT = 10
-
-# Default RTSP port for Hikvision devices
-DEFAULT_RTSP_PORT = 554
-
-
-def get_stream_id(device_type: str, channel: int, stream_type: int = 1) -> int:
-    """Get the Hikvision stream ID for a channel.
-
-    For NVRs: channel 1 main stream = 101, channel 1 sub stream = 102, etc.
-    For cameras: main stream = 1, sub stream = 2, etc.
-
-    TODO(pyHik): This logic should be moved to the pyHik library as it's
-    Hikvision-specific URL formatting that the library should handle.
-    """
-    if device_type == "NVR":
-        return channel * 100 + stream_type
-    return stream_type
 
 
 async def async_setup_entry(
@@ -57,22 +26,14 @@ async def async_setup_entry(
     data = entry.runtime_data
     camera = data.camera
 
-    entities: list[HikvisionCamera] = []
+    # Get available channels from the library
+    channels = await hass.async_add_executor_job(camera.get_channels)
 
-    # Get channels from current event states (same approach as binary sensors)
-    sensors = camera.current_event_states
-    if sensors:
-        # Collect unique channels from all event types
-        channels: set[int] = set()
-        for channel_list in sensors.values():
-            for channel_info in channel_list:
-                channels.add(channel_info[1])
-
-        # Create a camera entity for each channel
-        entities.extend(HikvisionCamera(entry, channel) for channel in sorted(channels))
+    if channels:
+        entities = [HikvisionCamera(entry, channel) for channel in channels]
     else:
-        # Single camera device (no NVR channels detected)
-        entities.append(HikvisionCamera(entry, 1))
+        # Fallback to single camera if no channels detected
+        entities = [HikvisionCamera(entry, 1)]
 
     async_add_entities(entities)
 
@@ -93,14 +54,7 @@ class HikvisionCamera(Camera):
         self._entry = entry
         self._data = entry.runtime_data
         self._channel = channel
-
-        # Connection parameters
-        self._host = entry.data[CONF_HOST]
-        self._port = entry.data[CONF_PORT]
-        self._username = entry.data[CONF_USERNAME]
-        self._password = entry.data[CONF_PASSWORD]
-        self._ssl = entry.data[CONF_SSL]
-        self._protocol = "https" if self._ssl else "http"
+        self._camera = self._data.camera
 
         # Build unique ID
         self._attr_unique_id = f"{self._data.device_id}_camera_{channel}"
@@ -119,63 +73,15 @@ class HikvisionCamera(Camera):
             model=self._data.device_type,
         )
 
-    def _get_snapshot_url(self) -> str:
-        """Get the snapshot URL for the channel.
-
-        TODO(pyHik): This URL construction should be a property on HikCamera.
-        """
-        stream_id = get_stream_id(self._data.device_type, self._channel)
-        return (
-            f"{self._protocol}://{self._host}:{self._port}"
-            f"/ISAPI/Streaming/channels/{stream_id}/picture"
-        )
-
-    def _get_rtsp_url(self) -> str:
-        """Get the RTSP stream URL for the channel.
-
-        TODO(pyHik): This URL construction should be a property on HikCamera.
-        """
-        stream_id = get_stream_id(self._data.device_type, self._channel)
-
-        # URL-encode credentials for safety
-        username = quote(self._username, safe="")
-        password = quote(self._password, safe="")
-
-        return (
-            f"rtsp://{username}:{password}"
-            f"@{self._host}:{DEFAULT_RTSP_PORT}/Streaming/Channels/{stream_id}"
-        )
-
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a still image from the camera."""
-        url = self._get_snapshot_url()
-
         try:
-            async_client = get_async_client(self.hass, verify_ssl=self._ssl)
-            response = await async_client.get(
-                url,
-                auth=httpx.DigestAuth(self._username, self._password),
-                timeout=SNAPSHOT_TIMEOUT,
+            return await self.hass.async_add_executor_job(
+                self._camera.get_snapshot, self._channel
             )
-            response.raise_for_status()
-        except httpx.TimeoutException:
-            _LOGGER.error(
-                "Timeout getting camera image from %s channel %d",
-                self._data.device_name,
-                self._channel,
-            )
-            return None
-        except httpx.HTTPStatusError as err:
-            _LOGGER.error(
-                "HTTP error getting camera image from %s channel %d: %s",
-                self._data.device_name,
-                self._channel,
-                err,
-            )
-            return None
-        except httpx.RequestError as err:
+        except Exception as err:  # noqa: BLE001
             _LOGGER.error(
                 "Error getting camera image from %s channel %d: %s",
                 self._data.device_name,
@@ -184,8 +90,8 @@ class HikvisionCamera(Camera):
             )
             return None
 
-        return response.content
-
     async def stream_source(self) -> str | None:
         """Return the stream source URL."""
-        return self._get_rtsp_url()
+        return await self.hass.async_add_executor_job(
+            self._camera.get_stream_url, self._channel
+        )
