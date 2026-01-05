@@ -2959,7 +2959,7 @@ switchbot-api==2.9.0
 synology-srm==0.2.0
 
 # homeassistant.components.system_bridge
-systembridgeconnector==5.3.0
+systembridgeconnector==5.3.1
 
 # homeassistant.components.tailscale
 tailscale==0.6.2
