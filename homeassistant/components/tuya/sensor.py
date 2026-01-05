@@ -39,6 +39,7 @@ from .const import (
 )
 from .entity import TuyaEntity
 from .models import (
+    DeviceWrapper,
     DPCodeEnumWrapper,
     DPCodeIntegerWrapper,
     DPCodeJsonWrapper,
@@ -1779,14 +1780,13 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
     """Tuya Sensor Entity."""
 
     entity_description: TuyaSensorEntityDescription
-    _dpcode_wrapper: DPCodeWrapper
 
     def __init__(
         self,
         device: CustomerDevice,
         device_manager: Manager,
         description: TuyaSensorEntityDescription,
-        dpcode_wrapper: DPCodeWrapper,
+        dpcode_wrapper: DeviceWrapper[StateType],
     ) -> None:
         """Init Tuya sensor."""
         super().__init__(device, device_manager)
