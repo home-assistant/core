@@ -13,7 +13,7 @@ aiozoneinfo==0.2.3
 annotatedyaml==1.0.2
 astral==2.2
 async-interrupt==1.2.2
-async-upnp-client==0.46.1
+async-upnp-client==0.46.2
 atomicwrites-homeassistant==1.4.1
 attrs==25.4.0
 audioop-lts==0.2.1
