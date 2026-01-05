@@ -334,10 +334,10 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         *,
         current_humidity_wrapper: DeviceWrapper[int] | None,
         current_temperature_wrapper: DeviceWrapper[float] | None,
-        fan_mode_wrapper: DPCodeEnumWrapper | None,
-        hvac_mode_wrapper: DPCodeEnumWrapper | None,
+        fan_mode_wrapper: DeviceWrapper[str] | None,
+        hvac_mode_wrapper: DeviceWrapper[str] | None,
         set_temperature_wrapper: DPCodeIntegerWrapper | None,
-        swing_wrapper: _SwingModeWrapper | None,
+        swing_wrapper: DeviceWrapper[str] | None,
         switch_wrapper: DeviceWrapper[bool] | None,
         target_humidity_wrapper: _RoundedIntegerWrapper | None,
         temperature_unit: UnitOfTemperature,
@@ -368,7 +368,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         # Determine HVAC modes
         self._attr_hvac_modes: list[HVACMode] = []
         self._hvac_to_tuya = {}
-        if hvac_mode_wrapper:
+        if hvac_mode_wrapper and hvac_mode_wrapper.options is not None:
             self._attr_hvac_modes = [HVACMode.OFF]
             unknown_hvac_modes: list[str] = []
             for tuya_mode in hvac_mode_wrapper.options:
