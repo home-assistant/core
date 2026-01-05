@@ -7,7 +7,7 @@
     'capabilities': dict({
       'hvac_modes': list([
       ]),
-      'max_temp': 37,
+      'max_temp': 60,
       'min_temp': 3,
       'preset_modes': list([
         'comfort',
@@ -54,7 +54,7 @@
       'hvac_action': <HVACAction.IDLE: 'idle'>,
       'hvac_modes': list([
       ]),
-      'max_temp': 37,
+      'max_temp': 60,
       'min_temp': 3,
       'preset_mode': None,
       'preset_modes': list([
@@ -92,7 +92,7 @@
     'capabilities': dict({
       'hvac_modes': list([
       ]),
-      'max_temp': 37,
+      'max_temp': 60,
       'min_temp': 3,
       'preset_modes': list([
         'comfort',
@@ -139,7 +139,7 @@
       'hvac_action': <HVACAction.IDLE: 'idle'>,
       'hvac_modes': list([
       ]),
-      'max_temp': 37,
+      'max_temp': 60,
       'min_temp': 3,
       'preset_mode': None,
       'preset_modes': list([
