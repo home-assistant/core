@@ -25,6 +25,7 @@ NUMBER_DESC: dict[ThinQProperty, NumberEntityDescription] = {
     ThinQProperty.FAN_SPEED: NumberEntityDescription(
         key=ThinQProperty.FAN_SPEED,
         translation_key=ThinQProperty.FAN_SPEED,
+        entity_registry_enabled_default=False,
     ),
     ThinQProperty.LAMP_BRIGHTNESS: NumberEntityDescription(
         key=ThinQProperty.LAMP_BRIGHTNESS,

@@ -199,6 +199,11 @@
         }
       }
     },
+    "fan": {
+      "fan_speed": {
+        "name": "Hood"
+      }
+    },
     "number": {
       "fan_speed": {
         "name": "Fan"
