@@ -1,0 +1,30 @@
+{
+  "entity": {
+    "switch": {
+      "away_mode": {
+        "default": "mdi:home-export-outline",
+        "state": {
+          "off": "mdi:home-import-outline"
+        }
+      },
+      "continuous_fan": {
+        "default": "mdi:fan",
+        "state": {
+          "off": "mdi:fan-off"
+        }
+      },
+      "quiet_mode": {
+        "default": "mdi:volume-low",
+        "state": {
+          "off": "mdi:volume-high"
+        }
+      },
+      "turbo_mode": {
+        "default": "mdi:fan-plus",
+        "state": {
+          "off": "mdi:fan"
+        }
+      }
+    }
+  }
+}
