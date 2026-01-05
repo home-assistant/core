@@ -1,4 +1,4 @@
-"""Test update triggers."""
+"""Test person trigger."""
 
 from collections.abc import Generator
 from typing import Any
@@ -6,8 +6,13 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.update import DOMAIN
-from homeassistant.const import ATTR_LABEL_ID, CONF_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.components.person.const import DOMAIN
+from homeassistant.const import (
+    ATTR_LABEL_ID,
+    CONF_ENTITY_ID,
+    STATE_HOME,
+    STATE_NOT_HOME,
+)
 from homeassistant.core import HomeAssistant, ServiceCall
 
 from tests.components import (
@@ -18,6 +23,8 @@ from tests.components import (
     set_or_remove_state,
     target_entities,
 )
+
+STATE_WORK_ZONE = "work"
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
@@ -36,21 +43,19 @@ def enable_experimental_triggers_conditions() -> Generator[None]:
 
 
 @pytest.fixture
-async def target_updates(hass: HomeAssistant) -> list[str]:
-    """Create multiple update entities associated with different targets."""
+async def target_persons(hass: HomeAssistant) -> list[str]:
+    """Create multiple persons entities associated with different targets."""
     return (await target_entities(hass, DOMAIN))["included"]
 
 
 @pytest.mark.parametrize(
     "trigger_key",
-    [
-        "update.update_became_available",
-    ],
+    ["person.entered_home", "person.left_home"],
 )
-async def test_update_triggers_gated_by_labs_flag(
+async def test_person_triggers_gated_by_labs_flag(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
 ) -> None:
-    """Test the update triggers are gated by the labs flag."""
+    """Test the person triggers are gated by the labs flag."""
     await arm_trigger(hass, trigger_key, None, {ATTR_LABEL_ID: "test_label"})
     assert (
         "Unnamed automation failed to setup triggers and has been disabled: Trigger "
@@ -69,16 +74,21 @@ async def test_update_triggers_gated_by_labs_flag(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
-            trigger="update.update_became_available",
-            target_states=[STATE_ON],
-            other_states=[STATE_OFF],
+            trigger="person.entered_home",
+            target_states=[STATE_HOME],
+            other_states=[STATE_NOT_HOME, STATE_WORK_ZONE],
+        ),
+        *parametrize_trigger_states(
+            trigger="person.left_home",
+            target_states=[STATE_NOT_HOME, STATE_WORK_ZONE],
+            other_states=[STATE_HOME],
         ),
     ],
 )
-async def test_update_state_trigger_behavior_any(
+async def test_person_home_trigger_behavior_any(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_updates: list[str],
+    target_persons: list[str],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -86,11 +96,11 @@ async def test_update_state_trigger_behavior_any(
     trigger_options: dict[str, Any],
     states: list[StateDescription],
 ) -> None:
-    """Test that the update state trigger fires when any update state changes to a specific state."""
-    other_entity_ids = set(target_updates) - {entity_id}
+    """Test that the person home triggers when any person changes to a specific state."""
+    other_entity_ids = set(target_persons) - {entity_id}
 
-    # Set all updates, including the tested one, to the initial state
-    for eid in target_updates:
+    # Set all persons, including the tested person, to the initial state
+    for eid in target_persons:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -105,7 +115,7 @@ async def test_update_state_trigger_behavior_any(
             assert service_call.data[CONF_ENTITY_ID] == entity_id
         service_calls.clear()
 
-        # Check if changing other updates also triggers
+        # Check that changing other persons also triggers
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, included_state)
             await hass.async_block_till_done()
@@ -122,16 +132,21 @@ async def test_update_state_trigger_behavior_any(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
-            trigger="update.update_became_available",
-            target_states=[STATE_ON],
-            other_states=[STATE_OFF],
+            trigger="person.entered_home",
+            target_states=[STATE_HOME],
+            other_states=[STATE_NOT_HOME, STATE_WORK_ZONE],
+        ),
+        *parametrize_trigger_states(
+            trigger="person.left_home",
+            target_states=[STATE_NOT_HOME, STATE_WORK_ZONE],
+            other_states=[STATE_HOME],
         ),
     ],
 )
-async def test_update_state_trigger_behavior_first(
+async def test_person_state_trigger_behavior_first(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_updates: list[str],
+    target_persons: list[str],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -139,11 +154,11 @@ async def test_update_state_trigger_behavior_first(
     trigger_options: dict[str, Any],
     states: list[StateDescription],
 ) -> None:
-    """Test that the update state trigger fires when the first update changes to a specific state."""
-    other_entity_ids = set(target_updates) - {entity_id}
+    """Test that the person home triggers when the first person changes to a specific state."""
+    other_entity_ids = set(target_persons) - {entity_id}
 
-    # Set all updates, including the tested one, to the initial state
-    for eid in target_updates:
+    # Set all persons, including the tested person, to the initial state
+    for eid in target_persons:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 
@@ -158,7 +173,7 @@ async def test_update_state_trigger_behavior_first(
             assert service_call.data[CONF_ENTITY_ID] == entity_id
         service_calls.clear()
 
-        # Triggering other updates should not cause the trigger to fire again
+        # Triggering other persons should not cause the trigger to fire again
         for other_entity_id in other_entity_ids:
             set_or_remove_state(hass, other_entity_id, included_state)
             await hass.async_block_till_done()
@@ -174,16 +189,21 @@ async def test_update_state_trigger_behavior_first(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
-            trigger="update.update_became_available",
-            target_states=[STATE_ON],
-            other_states=[STATE_OFF],
+            trigger="person.entered_home",
+            target_states=[STATE_HOME],
+            other_states=[STATE_NOT_HOME, STATE_WORK_ZONE],
+        ),
+        *parametrize_trigger_states(
+            trigger="person.left_home",
+            target_states=[STATE_NOT_HOME, STATE_WORK_ZONE],
+            other_states=[STATE_HOME],
         ),
     ],
 )
-async def test_update_state_trigger_behavior_last(
+async def test_person_state_trigger_behavior_last(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
-    target_updates: list[str],
+    target_persons: list[str],
     trigger_target_config: dict,
     entity_id: str,
     entities_in_target: int,
@@ -191,11 +211,11 @@ async def test_update_state_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[StateDescription],
 ) -> None:
-    """Test that the update state trigger fires when the last update changes to a specific state."""
-    other_entity_ids = set(target_updates) - {entity_id}
+    """Test that the person home triggers when the last person changes to a specific state."""
+    other_entity_ids = set(target_persons) - {entity_id}
 
-    # Set all updates, including the tested one, to the initial state
-    for eid in target_updates:
+    # Set all persons, including the tested person, to the initial state
+    for eid in target_persons:
         set_or_remove_state(hass, eid, states[0]["included"])
         await hass.async_block_till_done()
 

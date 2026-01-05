@@ -243,7 +243,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==43.9.1
+aioesphomeapi==43.10.1
 
 # homeassistant.components.matrix
 # homeassistant.components.slack
@@ -426,7 +426,7 @@ aiowaqi==3.1.0
 aiowatttime==0.1.1
 
 # homeassistant.components.webdav
-aiowebdav2==0.4.6
+aiowebdav2==0.5.0
 
 # homeassistant.components.webostv
 aiowebostv==0.7.5
@@ -1222,7 +1222,7 @@ libpyfoscamcgi==0.0.9
 libpyvivotek==0.6.1
 
 # homeassistant.components.libre_hardware_monitor
-librehardwaremonitor-api==1.7.2
+librehardwaremonitor-api==1.8.4
 
 # homeassistant.components.mikrotik
 librouteros==3.2.0
@@ -2095,7 +2095,7 @@ python-MotionMount==2.3.0
 python-awair==0.2.5
 
 # homeassistant.components.bsblan
-python-bsblan==3.1.4
+python-bsblan==3.1.6
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.3.2
@@ -2165,7 +2165,7 @@ python-pooldose==0.8.1
 python-rabbitair==0.0.8
 
 # homeassistant.components.roborock
-python-roborock==4.1.0
+python-roborock==4.2.0
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.46
@@ -2551,7 +2551,7 @@ ttls==1.8.3
 ttn_client==1.2.3
 
 # homeassistant.components.tuya
-tuya-device-sharing-sdk==0.2.7
+tuya-device-sharing-sdk==0.2.8
 
 # homeassistant.components.twentemilieu
 twentemilieu==2.2.1
