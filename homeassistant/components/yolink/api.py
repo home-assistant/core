@@ -114,7 +114,6 @@ class UACAuth(YoLinkAuthMgr):
 
     async def _fetch_token(self) -> None:
         """Fetch a new access token."""
-        _LOGGER.debug("Fetching UAC token from %s", self._token_url)
         try:
             async with self._session.post(
                 self._token_url,
@@ -124,7 +123,6 @@ class UACAuth(YoLinkAuthMgr):
                     "client_secret": self._secret_key,
                 },
             ) as resp:
-                _LOGGER.debug("Token response status: %s", resp.status)
                 if resp.status in (401, 403):
                     raise YoLinkAuthFailError("Invalid UAC credentials")
                 if resp.status != 200:
@@ -133,7 +131,6 @@ class UACAuth(YoLinkAuthMgr):
                     )
 
                 result = await resp.json()
-                _LOGGER.debug("Token response keys: %s", list(result.keys()))
                 if "access_token" not in result:
                     raise YoLinkAuthFailError("No access_token in response")
 
@@ -141,16 +138,6 @@ class UACAuth(YoLinkAuthMgr):
                 # Calculate expiry: use expires_in from response, default to 2 hours
                 expires_in = result.get("expires_in", 7200)
                 self._token_expiry = time.time() + expires_in
-                _LOGGER.debug(
-                    "Successfully fetched access token, expires in %s seconds",
-                    expires_in,
-                )
-        except YoLinkAuthFailError:
-            _LOGGER.error("Auth failure during token fetch")
-            raise
-        except YoLinkClientError:
-            _LOGGER.error("Client error during token fetch")
-            raise
+                _LOGGER.debug("Fetched UAC access token, expires in %s seconds", expires_in)
         except ClientError as err:
-            _LOGGER.error("Network error during token fetch: %s", err)
             raise YoLinkClientError(f"Failed to fetch token: {err}") from err

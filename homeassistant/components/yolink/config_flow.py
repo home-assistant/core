@@ -142,24 +142,21 @@ class OAuth2FlowHandler(
         self, uaid: str, secret_key: str
     ) -> dict[str, Any]:
         """Validate UAC credentials and return home info."""
-        _LOGGER.debug("Starting UAC validation for UAID: %s...", uaid[:8])
         websession = aiohttp_client.async_get_clientsession(self.hass)
         auth_mgr = UACAuth(self.hass, websession, uaid, secret_key)
 
         yolink_home = YoLinkHome()
         async with asyncio.timeout(10):
-            _LOGGER.debug("Calling yolink_home.async_setup...")
             # Use no-op listener for validation
             await yolink_home.async_setup(auth_mgr, _NoOpMessageListener())
-            _LOGGER.debug("async_setup completed, getting home info...")
             home_info = await yolink_home.async_get_home_info()
-            _LOGGER.debug(
-                "Got home info: id=%s, name=%s",
-                home_info.data.get("id"),
-                home_info.data.get("name"),
-            )
             await yolink_home.async_unload()
 
+        _LOGGER.debug(
+            "Validated UAC credentials for home: id=%s, name=%s",
+            home_info.data.get("id"),
+            home_info.data.get("name"),
+        )
         return home_info.data
 
     async def async_step_reauth(
