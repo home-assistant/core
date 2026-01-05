@@ -1,143 +1,77 @@
-"""Get your own public IP address or that of any host."""
-
+"""Get the IP address of a given host."""
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
-from ipaddress import IPv4Address, IPv6Address
 import logging
-from typing import Literal
+import socket
+from typing import Final
 
-import aiodns
-from aiodns.error import DNSError
+import voluptuous as vol
 
-from homeassistant.components.sensor import SensorEntity
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, CONF_PORT
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-
-from .const import (
-    CONF_HOSTNAME,
-    CONF_IPV4,
-    CONF_IPV6,
-    CONF_PORT_IPV6,
-    CONF_RESOLVER,
-    CONF_RESOLVER_IPV6,
-    DOMAIN,
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    SensorEntity,
 )
-
-DEFAULT_RETRIES = 2
-MAX_RESULTS = 10
+from homeassistant.const import CONF_HOSTNAME, CONF_NAME
+from homeassistant.core import HomeAssistant
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
+DEFAULT_NAME: Final = "My IP"
 SCAN_INTERVAL = timedelta(seconds=120)
 
+PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+    {
+        vol.Required(CONF_HOSTNAME): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    }
+)
 
-def sort_ips(ips: list, querytype: Literal["A", "AAAA"]) -> list:
-    """Join IPs into a single string."""
-
-    if querytype == "AAAA":
-        ips = [IPv6Address(ip) for ip in ips]
-    else:
-        ips = [IPv4Address(ip) for ip in ips]
-    return [str(ip) for ip in sorted(ips)][:MAX_RESULTS]
-
-
-async def async_setup_entry(
+async def async_setup_platform(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the dnsip sensor entry."""
+    """Set up the DNS IP sensor."""
+    hostname: str = config[CONF_HOSTNAME]
+    name: str = config[CONF_NAME]
 
-    hostname = entry.data[CONF_HOSTNAME]
-    name = entry.data[CONF_NAME]
+    async_add_entities([DnsIPSensor(name, hostname)], True)
 
-    nameserver_ipv4 = entry.options[CONF_RESOLVER]
-    nameserver_ipv6 = entry.options[CONF_RESOLVER_IPV6]
-    port_ipv4 = entry.options[CONF_PORT]
-    port_ipv6 = entry.options[CONF_PORT_IPV6]
-
-    entities = []
-    if entry.data[CONF_IPV4]:
-        entities.append(WanIpSensor(name, hostname, nameserver_ipv4, False, port_ipv4))
-    if entry.data[CONF_IPV6]:
-        entities.append(WanIpSensor(name, hostname, nameserver_ipv6, True, port_ipv6))
-
-    async_add_entities(entities, update_before_add=True)
-
-
-class WanIpSensor(SensorEntity):
+class DnsIPSensor(SensorEntity):
     """Implementation of a DNS IP sensor."""
 
-    _attr_has_entity_name = True
-    _attr_translation_key = "dnsip"
-    _unrecorded_attributes = frozenset({"resolver", "querytype", "ip_addresses"})
+    def __init__(self, name: str, hostname: str) -> None:
+        """Initialize the sensor."""
+        self._attr_name = name
+        self._hostname = hostname
+        self._attr_icon = "mdi:web"
+        self._attr_native_value = None # Initialize default
 
-    resolver: aiodns.DNSResolver
-
-    def __init__(
-        self,
-        name: str,
-        hostname: str,
-        nameserver: str,
-        ipv6: bool,
-        port: int,
-    ) -> None:
-        """Initialize the DNS IP sensor."""
-        self._attr_name = "IPv6" if ipv6 else None
-        self._attr_unique_id = f"{hostname}_{ipv6}"
-        self.hostname = hostname
-        self.port = port
-        self.nameserver = nameserver
-        self.querytype: Literal["A", "AAAA"] = "AAAA" if ipv6 else "A"
-        self._retries = DEFAULT_RETRIES
-        self._attr_extra_state_attributes = {
-            "resolver": nameserver,
-            "querytype": self.querytype,
-        }
-        self._attr_device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, hostname)},
-            manufacturer="DNS",
-            model=aiodns.__version__,
-            name=name,
-        )
-        self.create_dns_resolver()
-
-    def create_dns_resolver(self) -> None:
-        """Create the DNS resolver."""
-        self.resolver = aiodns.DNSResolver(
-            nameservers=[self.nameserver], tcp_port=self.port, udp_port=self.port
-        )
+    @property
+    def native_value(self) -> str | None:
+        """Return the IP address of the given hostname."""
+        return self._attr_native_value
 
     async def async_update(self) -> None:
-        """Get the current DNS IP address for hostname."""
-        if self.resolver._closed:  # noqa: SLF001
-            self.create_dns_resolver()
-        response = None
+        """Fetch the IP address of the given hostname."""
         try:
-            async with asyncio.timeout(10):
-                response = await self.resolver.query(self.hostname, self.querytype)
-        except TimeoutError as err:
-            _LOGGER.debug("Timeout while resolving host: %s", err)
-            await self.resolver.close()
-        except DNSError as err:
-            _LOGGER.warning("Exception while resolving host: %s", err)
-            await self.resolver.close()
-
-        if response:
-            sorted_ips = sort_ips(
-                [res.host for res in response], querytype=self.querytype
+            # We use the executor job to run blocking socket calls
+            self._attr_native_value = await self.hass.async_add_executor_job(
+                socket.gethostbyname, self._hostname
             )
-            self._attr_native_value = sorted_ips[0]
-            self._attr_extra_state_attributes["ip_addresses"] = sorted_ips
-            self._attr_available = True
-            self._retries = DEFAULT_RETRIES
-        elif self._retries > 0:
-            self._retries -= 1
-        else:
-            self._attr_available = False
+        except socket.gaierror:
+            _LOGGER.warning("Cannot resolve hostname: %s", self._hostname)
+            self._attr_native_value = None
+
+
+
+
+
+
+
+            
