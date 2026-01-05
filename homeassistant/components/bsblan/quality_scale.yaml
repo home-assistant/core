@@ -60,7 +60,7 @@ rules:
   entity-disabled-by-default:
     status: exempt
     comment: |
-      No entities need to be disabled by default.
+      This integration provides a limited number of entities, all of which are useful to users.
   entity-translations: done
   exception-translations: done
   icon-translations: todo

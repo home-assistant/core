@@ -1,8 +1,11 @@
 """DataUpdateCoordinator for the BSB-Lan integration."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 from datetime import timedelta
 from random import randint
+from typing import TYPE_CHECKING
 
 from bsblan import (
     BSBLAN,
@@ -15,13 +18,15 @@ from bsblan import (
     State,
 )
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL_FAST, SCAN_INTERVAL_SLOW
+
+if TYPE_CHECKING:
+    from . import BSBLanConfigEntry
 
 
 @dataclass
@@ -44,12 +49,12 @@ class BSBLanSlowData:
 class BSBLanCoordinator[T](DataUpdateCoordinator[T]):
     """Base BSB-Lan coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: BSBLanConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: BSBLanConfigEntry,
         client: BSBLAN,
         name: str,
         update_interval: timedelta,
@@ -71,7 +76,7 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: BSBLanConfigEntry,
         client: BSBLAN,
     ) -> None:
         """Initialize the BSB-Lan fast coordinator."""
@@ -103,12 +108,15 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
 
         except BSBLANAuthError as err:
             raise ConfigEntryAuthFailed(
-                "Authentication failed for BSB-Lan device"
+                translation_domain=DOMAIN,
+                translation_key="coordinator_auth_error",
             ) from err
         except BSBLANConnectionError as err:
             host = self.config_entry.data[CONF_HOST]
             raise UpdateFailed(
-                f"Error while establishing connection with BSB-Lan device at {host}"
+                translation_domain=DOMAIN,
+                translation_key="coordinator_connection_error",
+                translation_placeholders={"host": host},
             ) from err
 
         # Update the interval with random jitter for next update
@@ -127,7 +135,7 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: BSBLanConfigEntry,
         client: BSBLAN,
     ) -> None:
         """Initialize the BSB-Lan slow coordinator."""
