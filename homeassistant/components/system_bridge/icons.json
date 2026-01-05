@@ -56,6 +56,9 @@
     }
   },
   "services": {
+    "execute_command": {
+      "service": "mdi:console-line"
+    },
     "get_process_by_id": {
       "service": "mdi:console"
     },
