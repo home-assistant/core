@@ -1,0 +1,85 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "wrong_device": "This Cambridge Audio device does not match the existing device ID. Please make sure you entered the correct IP address."
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to Cambridge Audio device. Please make sure the device is powered up and connected to the network. Try power-cycling the device if it does not connect."
+    },
+    "flow_title": "{name}",
+    "step": {
+      "discovery_confirm": {
+        "description": "Do you want to set up {name}?"
+      },
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "[%key:component::cambridge_audio::config::step::user::data_description::host%]"
+        },
+        "description": "Reconfigure your Cambridge Audio Streamer."
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the Cambridge Audio Streamer."
+        },
+        "description": "Set up your Cambridge Audio Streamer to integrate with Home Assistant."
+      }
+    }
+  },
+  "entity": {
+    "select": {
+      "audio_output": {
+        "name": "Audio output"
+      },
+      "control_bus_mode": {
+        "name": "Control Bus mode",
+        "state": {
+          "amplifier": "Amplifier",
+          "off": "[%key:common::state::off%]",
+          "receiver": "Receiver"
+        }
+      },
+      "display_brightness": {
+        "name": "Display brightness",
+        "state": {
+          "bright": "Bright",
+          "dim": "Dim",
+          "off": "[%key:common::state::off%]"
+        }
+      }
+    },
+    "switch": {
+      "early_update": {
+        "name": "Early update"
+      },
+      "pre_amp": {
+        "name": "Pre-Amp"
+      }
+    }
+  },
+  "exceptions": {
+    "command_error": {
+      "message": "Error executing {function_name} on entity {entity_id}"
+    },
+    "entry_cannot_connect": {
+      "message": "Error while connecting to {host}"
+    },
+    "missing_preset": {
+      "message": "Missing preset for media_id: {preset_id}"
+    },
+    "preset_non_integer": {
+      "message": "Preset must be an integer, got: {preset_id}"
+    },
+    "unsupported_media_type": {
+      "message": "Unsupported media type for Cambridge Audio device: {media_type}"
+    }
+  }
+}

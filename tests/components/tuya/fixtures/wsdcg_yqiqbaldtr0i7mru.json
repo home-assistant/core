@@ -1,0 +1,259 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": false,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "WiFi Temperature & Humidity Sensor",
+  "category": "wsdcg",
+  "product_id": "yqiqbaldtr0i7mru",
+  "product_name": "WiFi Temperature & Humidity Sensor",
+  "online": true,
+  "sub": false,
+  "time_zone": "+07:00",
+  "active_time": "2023-11-27T03:59:48+00:00",
+  "create_time": "2023-11-27T03:59:48+00:00",
+  "update_time": "2023-11-27T03:59:48+00:00",
+  "function": {
+    "temp_unit_convert": {
+      "type": "Enum",
+      "value": {
+        "range": ["c", "f"]
+      }
+    },
+    "maxtemp_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": -200,
+        "max": 600,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "minitemp_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": -200,
+        "max": 600,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "maxhum_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "minihum_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temp_periodic_report": {
+      "type": "Integer",
+      "value": {
+        "unit": "min",
+        "min": 1,
+        "max": 120,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "hum_periodic_report": {
+      "type": "Integer",
+      "value": {
+        "unit": "min",
+        "min": 1,
+        "max": 120,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temp_sensitivity": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": 3,
+        "max": 20,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "hum_sensitivity": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 3,
+        "max": 20,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status_range": {
+    "va_temperature": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": -200,
+        "max": 600,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "va_humidity": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "battery_state": {
+      "type": "Enum",
+      "value": {
+        "range": ["low", "middle", "high"]
+      }
+    },
+    "battery_percentage": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temp_unit_convert": {
+      "type": "Enum",
+      "value": {
+        "range": ["c", "f"]
+      }
+    },
+    "maxtemp_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": -200,
+        "max": 600,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "minitemp_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": -200,
+        "max": 600,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "maxhum_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "minihum_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temp_alarm": {
+      "type": "Enum",
+      "value": {
+        "range": ["loweralarm", "upperalarm", "cancel"]
+      }
+    },
+    "hum_alarm": {
+      "type": "Enum",
+      "value": {
+        "range": ["loweralarm", "upperalarm", "cancel"]
+      }
+    },
+    "temp_periodic_report": {
+      "type": "Integer",
+      "value": {
+        "unit": "min",
+        "min": 1,
+        "max": 120,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "hum_periodic_report": {
+      "type": "Integer",
+      "value": {
+        "unit": "min",
+        "min": 1,
+        "max": 120,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "temp_sensitivity": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": 3,
+        "max": 20,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "hum_sensitivity": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 3,
+        "max": 20,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "va_temperature": 251,
+    "va_humidity": 12,
+    "battery_state": "high",
+    "battery_percentage": 100,
+    "temp_unit_convert": "c",
+    "maxtemp_set": 390,
+    "minitemp_set": 0,
+    "maxhum_set": 60,
+    "minihum_set": 20,
+    "temp_alarm": "cancel",
+    "hum_alarm": "loweralarm",
+    "temp_periodic_report": 60,
+    "hum_periodic_report": 120,
+    "temp_sensitivity": 6,
+    "hum_sensitivity": 6
+  },
+  "set_up": true,
+  "support_local": true
+}

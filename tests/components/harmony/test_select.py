@@ -91,7 +91,9 @@ async def test_select_option(
     assert hass.states.is_state(ENTITY_SELECT, "power_off")
 
 
-async def _select_option_and_wait(hass, entity, option):
+async def _select_option_and_wait(
+    hass: HomeAssistant, entity: str, option: str
+) -> None:
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,

@@ -2,10 +2,10 @@
 
 from datetime import timedelta
 from typing import Any
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 from syrupy.assertion import SnapshotAssertion
-from tplink_omada_client import SwitchPortOverrides
+from tplink_omada_client import SwitchPortSettings
 from tplink_omada_client.definitions import PoEMode
 from tplink_omada_client.devices import (
     OmadaGateway,
@@ -17,9 +17,9 @@ from tplink_omada_client.devices import (
 from tplink_omada_client.exceptions import InvalidDevice
 
 from homeassistant.components import switch
-from homeassistant.components.tplink_omada.controller import POLL_GATEWAY
+from homeassistant.components.tplink_omada.coordinator import POLL_GATEWAY
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceResponse
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 
@@ -34,6 +34,7 @@ async def test_poe_switches(
     mock_omada_site_client: MagicMock,
     init_integration: MockConfigEntry,
     snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test PoE switch."""
     poe_switch_mac = "54-AF-97-00-00-01"
@@ -44,6 +45,7 @@ async def test_poe_switches(
         poe_switch_mac,
         1,
         snapshot,
+        entity_registry,
     )
 
     await _test_poe_switch(
@@ -53,6 +55,7 @@ async def test_poe_switches(
         poe_switch_mac,
         2,
         snapshot,
+        entity_registry,
     )
 
 
@@ -84,10 +87,11 @@ async def test_gateway_connect_ipv4_switch(
     port_status = test_gateway.port_status[3]
     assert port_status.port_number == 4
 
-    mock_omada_site_client.set_gateway_wan_port_connect_state.reset_mock()
-    mock_omada_site_client.set_gateway_wan_port_connect_state.return_value = (
-        _get_updated_gateway_port_status(
-            mock_omada_site_client, test_gateway, 3, "internetState", 0
+    mock_omada_site_client.set_gateway_wan_port_connect_state = AsyncMock(
+        return_value=(
+            _get_updated_gateway_port_status(
+                mock_omada_site_client, test_gateway, 3, "internetState", 0
+            )
         )
     )
     await call_service(hass, "turn_off", entity_id)
@@ -99,7 +103,7 @@ async def test_gateway_connect_ipv4_switch(
     await hass.async_block_till_done()
 
     entity = hass.states.get(entity_id)
-    assert entity.state == "off"
+    assert entity and entity.state == "off"
 
     mock_omada_site_client.set_gateway_wan_port_connect_state.reset_mock()
     mock_omada_site_client.set_gateway_wan_port_connect_state.return_value = (
@@ -116,7 +120,7 @@ async def test_gateway_connect_ipv4_switch(
     await hass.async_block_till_done()
 
     entity = hass.states.get(entity_id)
-    assert entity.state == "on"
+    assert entity and entity.state == "on"
 
 
 async def test_gateway_port_poe_switch(
@@ -136,8 +140,8 @@ async def test_gateway_port_poe_switch(
     port_config = test_gateway.port_configs[4]
     assert port_config.port_number == 5
 
-    mock_omada_site_client.set_gateway_port_settings.return_value = (
-        OmadaGatewayPortConfig(port_config.raw_data, poe_enabled=False)
+    mock_omada_site_client.set_gateway_port_settings = AsyncMock(
+        return_value=(OmadaGatewayPortConfig(port_config.raw_data, poe_enabled=False))
     )
     await call_service(hass, "turn_off", entity_id)
     _assert_gateway_poe_set(mock_omada_site_client, test_gateway, False)
@@ -146,7 +150,7 @@ async def test_gateway_port_poe_switch(
     await hass.async_block_till_done()
 
     entity = hass.states.get(entity_id)
-    assert entity.state == "off"
+    assert entity and entity.state == "off"
 
     mock_omada_site_client.set_gateway_port_settings.reset_mock()
     mock_omada_site_client.set_gateway_port_settings.return_value = port_config
@@ -157,7 +161,7 @@ async def test_gateway_port_poe_switch(
     await hass.async_block_till_done()
 
     entity = hass.states.get(entity_id)
-    assert entity.state == "on"
+    assert entity and entity.state == "on"
 
 
 async def test_gateway_wan_port_has_no_poe_switch(
@@ -192,7 +196,7 @@ async def test_gateway_api_fail_disables_switch_entities(
     """Test gateway connected switches."""
     entity_id = "switch.test_router_port_4_internet_connected"
     entity = hass.states.get(entity_id)
-    assert entity == snapshot
+    assert entity and entity == snapshot
     assert entity.state == "on"
 
     mock_omada_site_client.get_gateway.reset_mock()
@@ -202,7 +206,7 @@ async def test_gateway_api_fail_disables_switch_entities(
     await hass.async_block_till_done()
 
     entity = hass.states.get(entity_id)
-    assert entity.state == "unavailable"
+    assert entity and entity.state == "unavailable"
 
 
 async def test_gateway_port_change_disables_switch_entities(
@@ -218,7 +222,7 @@ async def test_gateway_port_change_disables_switch_entities(
 
     entity_id = "switch.test_router_port_4_internet_connected"
     entity = hass.states.get(entity_id)
-    assert entity == snapshot
+    assert entity and entity == snapshot
     assert entity.state == "on"
 
     mock_omada_site_client.get_gateway.reset_mock()
@@ -229,7 +233,7 @@ async def test_gateway_port_change_disables_switch_entities(
     await hass.async_block_till_done()
 
     entity = hass.states.get(entity_id)
-    assert entity.state == "unavailable"
+    assert entity and entity.state == "unavailable"
 
 
 async def _test_poe_switch(
@@ -239,30 +243,30 @@ async def _test_poe_switch(
     network_switch_mac: str,
     port_num: int,
     snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
 ) -> None:
-    entity_registry = er.async_get(hass)
-
     def assert_update_switch_port(
         device: OmadaSwitch,
         switch_port_details: OmadaSwitchPortDetails,
         poe_enabled: bool,
-        overrides: SwitchPortOverrides = None,
+        settings: SwitchPortSettings,
     ) -> None:
         assert device
         assert device.mac == network_switch_mac
         assert switch_port_details
         assert switch_port_details.port == port_num
-        assert overrides
-        assert overrides.enable_poe == poe_enabled
+        assert settings
+        assert settings.profile_override_enabled
+        assert settings.profile_overrides
+        assert settings.profile_overrides.enable_poe == poe_enabled
 
     entity = hass.states.get(entity_id)
     assert entity == snapshot
     entry = entity_registry.async_get(entity_id)
     assert entry == snapshot
 
-    mock_omada_site_client.update_switch_port.reset_mock()
-    mock_omada_site_client.update_switch_port.return_value = await _update_port_details(
-        mock_omada_site_client, port_num, False
+    mock_omada_site_client.update_switch_port = AsyncMock(
+        return_value=await _update_port_details(mock_omada_site_client, port_num, False)
     )
 
     await call_service(hass, "turn_off", entity_id)
@@ -281,7 +285,7 @@ async def _test_poe_switch(
     async_fire_time_changed(hass, utcnow() + UPDATE_INTERVAL)
     await hass.async_block_till_done()
     entity = hass.states.get(entity_id)
-    assert entity.state == "off"
+    assert entity and entity.state == "off"
 
     mock_omada_site_client.update_switch_port.reset_mock()
     mock_omada_site_client.update_switch_port.return_value = await _update_port_details(
@@ -299,7 +303,7 @@ async def _test_poe_switch(
     async_fire_time_changed(hass, utcnow() + UPDATE_INTERVAL)
     await hass.async_block_till_done()
     entity = hass.states.get(entity_id)
-    assert entity.state == "on"
+    assert entity and entity.state == "on"
 
 
 async def _update_port_details(
@@ -308,7 +312,7 @@ async def _update_port_details(
     poe_enabled: bool,
 ) -> OmadaSwitchPortDetails:
     switch_ports = await mock_omada_site_client.get_switch_ports()
-    port_details: OmadaSwitchPortDetails = None
+    port_details: OmadaSwitchPortDetails | None = None
     for details in switch_ports:
         if details.port == port_num:
             port_details = details
@@ -334,8 +338,10 @@ def _get_updated_gateway_port_status(
     return OmadaGatewayPortStatus(gateway_data["portStats"][port])
 
 
-def call_service(hass: HomeAssistant, service: str, entity_id: str):
+async def call_service(
+    hass: HomeAssistant, service: str, entity_id: str
+) -> ServiceResponse:
     """Call any service on entity."""
-    return hass.services.async_call(
+    return await hass.services.async_call(
         switch.DOMAIN, service, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )

@@ -2,60 +2,63 @@
 
 from __future__ import annotations
 
+import asyncio
 from dataclasses import dataclass
+import itertools
+import logging
+from typing import Any
 
-from roborock.roborock_typing import RoborockCommand
+from roborock.devices.traits.v1.consumeable import ConsumableAttribute
+from roborock.exceptions import RoborockException
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import slugify
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import RoborockDataUpdateCoordinator
-from .device import RoborockEntity
+from .coordinator import RoborockConfigEntry, RoborockDataUpdateCoordinator
+from .entity import RoborockEntity, RoborockEntityV1
+
+_LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
 class RoborockButtonDescription(ButtonEntityDescription):
     """Describes a Roborock button entity."""
 
-    command: RoborockCommand
-    param: list | dict | None
+    attribute: ConsumableAttribute
 
 
 CONSUMABLE_BUTTON_DESCRIPTIONS = [
     RoborockButtonDescription(
         key="reset_sensor_consumable",
         translation_key="reset_sensor_consumable",
-        command=RoborockCommand.RESET_CONSUMABLE,
-        param=["sensor_dirty_time"],
+        attribute=ConsumableAttribute.SENSOR_DIRTY_TIME,
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
     ),
     RoborockButtonDescription(
         key="reset_air_filter_consumable",
         translation_key="reset_air_filter_consumable",
-        command=RoborockCommand.RESET_CONSUMABLE,
-        param=["filter_work_time"],
+        attribute=ConsumableAttribute.FILTER_WORK_TIME,
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
     ),
     RoborockButtonDescription(
         key="reset_side_brush_consumable",
         translation_key="reset_side_brush_consumable",
-        command=RoborockCommand.RESET_CONSUMABLE,
-        param=["side_brush_work_time"],
+        attribute=ConsumableAttribute.SIDE_BRUSH_WORK_TIME,
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
     ),
     RoborockButtonDescription(
         key="reset_main_brush_consumable",
         translation_key="reset_main_brush_consumable",
-        command=RoborockCommand.RESET_CONSUMABLE,
-        param=["main_brush_work_time"],
+        attribute=ConsumableAttribute.MAIN_BRUSH_WORK_TIME,
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
     ),
@@ -64,39 +67,96 @@ CONSUMABLE_BUTTON_DESCRIPTIONS = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: RoborockConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Roborock button platform."""
-    coordinators: dict[str, RoborockDataUpdateCoordinator] = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
+    routines_lists = await asyncio.gather(
+        *[coordinator.get_routines() for coordinator in config_entry.runtime_data.v1],
+    )
     async_add_entities(
-        RoborockButtonEntity(
-            f"{description.key}_{slugify(device_id)}",
-            coordinator,
-            description,
+        itertools.chain(
+            (
+                RoborockButtonEntity(
+                    coordinator,
+                    description,
+                )
+                for coordinator in config_entry.runtime_data.v1
+                for description in CONSUMABLE_BUTTON_DESCRIPTIONS
+                if isinstance(coordinator, RoborockDataUpdateCoordinator)
+            ),
+            (
+                RoborockRoutineButtonEntity(
+                    coordinator,
+                    ButtonEntityDescription(
+                        key=str(routine.id),
+                        name=routine.name,
+                    ),
+                )
+                for coordinator, routines in zip(
+                    config_entry.runtime_data.v1, routines_lists, strict=True
+                )
+                for routine in routines
+            ),
         )
-        for device_id, coordinator in coordinators.items()
-        for description in CONSUMABLE_BUTTON_DESCRIPTIONS
     )
 
 
-class RoborockButtonEntity(RoborockEntity, ButtonEntity):
+class RoborockButtonEntity(RoborockEntityV1, ButtonEntity):
     """A class to define Roborock button entities."""
 
     entity_description: RoborockButtonDescription
 
     def __init__(
         self,
-        unique_id: str,
         coordinator: RoborockDataUpdateCoordinator,
         entity_description: RoborockButtonDescription,
     ) -> None:
         """Create a button entity."""
-        super().__init__(unique_id, coordinator.device_info, coordinator.api)
+        super().__init__(
+            f"{entity_description.key}_{coordinator.duid_slug}",
+            coordinator.device_info,
+            api=coordinator.properties_api.command,
+        )
         self.entity_description = entity_description
+        self._consumable = coordinator.properties_api.consumables
 
     async def async_press(self) -> None:
         """Press the button."""
-        await self.send(self.entity_description.command, self.entity_description.param)
+        try:
+            await self._consumable.reset_consumable(self.entity_description.attribute)
+        except RoborockException as err:
+            # This error message could be improved since it is fairly low level
+            # and technical. Can add a more user friendly message with the
+            # name of the attribute being reset.
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={
+                    "command": "RESET_CONSUMABLE",
+                },
+            ) from err
+
+
+class RoborockRoutineButtonEntity(RoborockEntity, ButtonEntity):
+    """A class to define Roborock routines button entities."""
+
+    entity_description: ButtonEntityDescription
+
+    def __init__(
+        self,
+        coordinator: RoborockDataUpdateCoordinator,
+        entity_description: ButtonEntityDescription,
+    ) -> None:
+        """Create a button entity."""
+        super().__init__(
+            f"{entity_description.key}_{coordinator.duid_slug}",
+            coordinator.device_info,
+        )
+        self._routine_id = int(entity_description.key)
+        self._coordinator = coordinator
+        self.entity_description = entity_description
+
+    async def async_press(self, **kwargs: Any) -> None:
+        """Press the button."""
+        await self._coordinator.execute_routines(self._routine_id)

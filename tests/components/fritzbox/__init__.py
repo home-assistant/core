@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import Any
 from unittest.mock import Mock
 
-from homeassistant.components.climate import PRESET_COMFORT, PRESET_ECO
 from homeassistant.components.fritzbox.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
@@ -26,7 +25,8 @@ async def setup_config_entry(
     device: Mock | None = None,
     fritz: Mock | None = None,
     template: Mock | None = None,
-) -> bool:
+    trigger: Mock | None = None,
+) -> MockConfigEntry:
     """Do setup of a MockConfigEntry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -40,14 +40,20 @@ async def setup_config_entry(
     if template is not None and fritz is not None:
         fritz().get_templates.return_value = [template]
 
-    result = await hass.config_entries.async_setup(entry.entry_id)
+    if trigger is not None and fritz is not None:
+        fritz().get_triggers.return_value = [trigger]
+
+    await hass.config_entries.async_setup(entry.entry_id)
     if device is not None:
         await hass.async_block_till_done()
-    return result
+    return entry
 
 
 def set_devices(
-    fritz: Mock, devices: list[Mock] | None = None, templates: list[Mock] | None = None
+    fritz: Mock,
+    devices: list[Mock] | None = None,
+    templates: list[Mock] | None = None,
+    triggers: list[Mock] | None = None,
 ) -> None:
     """Set list of devices or templates."""
     if devices is not None:
@@ -56,11 +62,15 @@ def set_devices(
     if templates is not None:
         fritz().get_templates.return_value = templates
 
+    if triggers is not None:
+        fritz().get_triggers.return_value = triggers
+
 
 class FritzEntityBaseMock(Mock):
     """base mock of a AVM Fritz!Box binary sensor device."""
 
     ain = CONF_FAKE_AIN
+    device_and_unit_id = (CONF_FAKE_AIN, None)
     manufacturer = CONF_FAKE_MANUFACTURER
     name = CONF_FAKE_NAME
     productname = CONF_FAKE_PRODUCTNAME
@@ -103,16 +113,21 @@ class FritzDeviceClimateMock(FritzEntityBaseMock):
     has_temperature_sensor = True
     has_thermostat = True
     has_blind = False
-    holiday_active = "fake_holiday"
+    holiday_active = False
     lock = "fake_locked"
     present = True
-    summer_active = "fake_summer"
+    summer_active = False
     target_temperature = 19.5
     window_open = "fake_window"
     nextchange_temperature = 22.0
-    nextchange_endperiod = 0
-    nextchange_preset = PRESET_COMFORT
-    scheduled_preset = PRESET_ECO
+    nextchange_endperiod = 1726855200
+
+
+class FritzDeviceClimateWithoutTempSensorMock(FritzDeviceClimateMock):
+    """Mock of a AVM Fritz!Box climate device without exposing temperature sensor."""
+
+    temperature = None
+    has_temperature_sensor = False
 
 
 class FritzDeviceSensorMock(FritzEntityBaseMock):
@@ -151,7 +166,7 @@ class FritzDeviceSwitchMock(FritzEntityBaseMock):
     has_thermostat = False
     has_blind = False
     switch_state = "fake_state"
-    lock = "fake_locked"
+    lock = False
     power = 5678
     present = True
     temperature = 1.23
@@ -173,6 +188,7 @@ class FritzDeviceLightMock(FritzEntityBaseMock):
     level = 100
     present = True
     state = True
+    color_temp = None
 
 
 class FritzDeviceCoverMock(FritzEntityBaseMock):
@@ -187,3 +203,17 @@ class FritzDeviceCoverMock(FritzEntityBaseMock):
     has_thermostat = False
     has_blind = True
     levelpercentage = 0
+
+
+class FritzDeviceCoverUnknownPositionMock(FritzDeviceCoverMock):
+    """Mock of a AVM Fritz!Box cover device with unknown position."""
+
+    levelpercentage = None
+
+
+class FritzTriggerMock(FritzEntityBaseMock):
+    """Mock of a AVM Fritz!Box smarthome trigger."""
+
+    active = True
+    ain = "trg1234 56789"
+    name = "fake_trigger"

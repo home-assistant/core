@@ -1,0 +1,92 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      This integration does not provide additional actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: |
+      This integration does not provide additional actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: |
+      Entities of this integration does not explicitly subscribe to events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: |
+      This integration does not provide additional actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: |
+      This integration does not have an options flow.
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates:
+    status: exempt
+    comment: |
+      This integration uses a coordinator to handle updates.
+  reauthentication-flow: done
+  test-coverage: done
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery-update-info:
+    status: exempt
+    comment: |
+      This integration is connecting to a cloud service.
+  discovery:
+    status: done
+    comment: |
+      It can find poweropti devices via zeroconf, and will start a normal user flow.
+  docs-data-update: done
+  docs-examples: todo
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: todo
+  docs-use-cases: done
+  dynamic-devices: todo
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: |
+      This integration does not have any entities that should disabled by default.
+  entity-translations: done
+  exception-translations: done
+  icon-translations:
+    status: exempt
+    comment: |
+      There is no need for icon translations.
+  reconfiguration-flow: done
+  repair-issues:
+    status: exempt
+    comment: |
+      This integration doesn't have any cases where raising an issue is needed.
+  stale-devices: todo
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done

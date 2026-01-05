@@ -5,5 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/sendgrid",
   "iot_class": "cloud_push",
   "loggers": ["sendgrid"],
+  "quality_scale": "legacy",
   "requirements": ["sendgrid==6.8.2"]
 }

@@ -1,0 +1,5 @@
+{
+  "domain": "eve",
+  "name": "Eve",
+  "iot_standards": ["matter"]
+}

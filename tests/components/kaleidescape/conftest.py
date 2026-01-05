@@ -1,11 +1,11 @@
 """Fixtures for Kaleidescape integration."""
 
+from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 from kaleidescape import Dispatcher
 from kaleidescape.device import Automation, Movie, Power, System
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.kaleidescape.const import DOMAIN
 from homeassistant.const import CONF_HOST

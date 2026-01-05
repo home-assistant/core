@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from unittest.mock import Mock
 
-from freezegun import freeze_time
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from yalesmartalarmclient.exceptions import UnknownError
@@ -18,7 +17,7 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@freeze_time("2024-04-29T18:00:00.612351+00:00")
+@pytest.mark.freeze_time("2024-04-29T18:00:00.612351+00:00")
 @pytest.mark.parametrize(
     "load_platforms",
     [[Platform.BUTTON]],
@@ -37,7 +36,7 @@ async def test_button(
         BUTTON_DOMAIN,
         SERVICE_PRESS,
         {
-            ATTR_ENTITY_ID: "button.yale_smart_alarm_panic_button",
+            ATTR_ENTITY_ID: "button.test_username_panic_button",
         },
         blocking=True,
     )
@@ -50,7 +49,7 @@ async def test_button(
             BUTTON_DOMAIN,
             SERVICE_PRESS,
             {
-                ATTR_ENTITY_ID: "button.yale_smart_alarm_panic_button",
+                ATTR_ENTITY_ID: "button.test_username_panic_button",
             },
             blocking=True,
         )

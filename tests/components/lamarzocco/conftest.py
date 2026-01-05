@@ -1,23 +1,27 @@
 """Lamarzocco session fixtures."""
 
-from collections.abc import Callable
-import json
-from unittest.mock import MagicMock, patch
+from collections.abc import Generator
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from bleak.backends.device import BLEDevice
-from lmcloud.const import FirmwareType, MachineModel, SteamLevel
-from lmcloud.lm_machine import LaMarzoccoMachine
-from lmcloud.models import LaMarzoccoDeviceInfo
+from pylamarzocco.const import ModelName
+from pylamarzocco.models import (
+    Thing,
+    ThingDashboardConfig,
+    ThingSchedulingSettings,
+    ThingSettings,
+    ThingStatistics,
+)
+from pylamarzocco.util import InstallationKey
 import pytest
-from typing_extensions import Generator
 
-from homeassistant.components.lamarzocco.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_NAME, CONF_TOKEN
+from homeassistant.components.lamarzocco.const import CONF_INSTALLATION_KEY, DOMAIN
+from homeassistant.const import CONF_ADDRESS, CONF_MAC, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
-from . import SERIAL_DICT, USER_INPUT, async_init_integration
+from . import MOCK_INSTALLATION_KEY, SERIAL_DICT, USER_INPUT, async_init_integration
 
-from tests.common import MockConfigEntry, load_fixture, load_json_object_fixture
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.fixture
@@ -25,21 +29,18 @@ def mock_config_entry(
     hass: HomeAssistant, mock_lamarzocco: MagicMock
 ) -> MockConfigEntry:
     """Return the default mocked config entry."""
-    entry = MockConfigEntry(
+    return MockConfigEntry(
         title="My LaMarzocco",
         domain=DOMAIN,
-        version=2,
+        version=4,
         data=USER_INPUT
         | {
-            CONF_MODEL: mock_lamarzocco.model,
-            CONF_HOST: "host",
+            CONF_ADDRESS: "000000000000",
             CONF_TOKEN: "token",
-            CONF_NAME: "GS3",
+            CONF_INSTALLATION_KEY: MOCK_INSTALLATION_KEY,
         },
         unique_id=mock_lamarzocco.serial_number,
     )
-    entry.add_to_hass(hass)
-    return entry
 
 
 @pytest.fixture
@@ -52,27 +53,30 @@ async def init_integration(
     return mock_config_entry
 
 
+@pytest.fixture(autouse=True)
+def mock_generate_installation_key() -> Generator[MagicMock]:
+    """Return a mocked generate_installation_key."""
+    with (
+        patch(
+            "homeassistant.components.lamarzocco.generate_installation_key",
+            return_value=InstallationKey.from_json(MOCK_INSTALLATION_KEY),
+        ) as mock_generate,
+        patch(
+            "homeassistant.components.lamarzocco.config_flow.generate_installation_key",
+            new=mock_generate,
+        ),
+    ):
+        yield mock_generate
+
+
 @pytest.fixture
-def device_fixture() -> MachineModel:
+def device_fixture() -> ModelName:
     """Return the device fixture for a specific device."""
-    return MachineModel.GS3_AV
+    return ModelName.GS3_AV
 
 
-@pytest.fixture
-def mock_device_info() -> LaMarzoccoDeviceInfo:
-    """Return a mocked La Marzocco device info."""
-    return LaMarzoccoDeviceInfo(
-        model=MachineModel.GS3_AV,
-        serial_number="GS01234",
-        name="GS3",
-        communication_key="token",
-    )
-
-
-@pytest.fixture
-def mock_cloud_client(
-    mock_device_info: LaMarzoccoDeviceInfo,
-) -> Generator[MagicMock]:
+@pytest.fixture(autouse=True)
+def mock_cloud_client() -> Generator[MagicMock]:
     """Return a mocked LM cloud client."""
     with (
         patch(
@@ -85,70 +89,54 @@ def mock_cloud_client(
         ),
     ):
         client = cloud_client.return_value
-        client.get_customer_fleet.return_value = {
-            mock_device_info.serial_number: mock_device_info
-        }
+        client.list_things.return_value = [
+            Thing.from_dict(load_json_object_fixture("thing.json", DOMAIN))
+        ]
+        client.get_thing_settings.return_value = ThingSettings.from_dict(
+            load_json_object_fixture("settings.json", DOMAIN)
+        )
         yield client
 
 
 @pytest.fixture
-def mock_lamarzocco(device_fixture: MachineModel) -> Generator[MagicMock]:
+def mock_lamarzocco(device_fixture: ModelName) -> Generator[MagicMock]:
     """Return a mocked LM client."""
-    model = device_fixture
 
-    serial_number = SERIAL_DICT[model]
-
-    dummy_machine = LaMarzoccoMachine(
-        model=model,
-        serial_number=serial_number,
-        name=serial_number,
-    )
-    config = load_json_object_fixture("config.json", DOMAIN)
-    statistics = json.loads(load_fixture("statistics.json", DOMAIN))
-
-    dummy_machine.parse_config(config)
-    dummy_machine.parse_statistics(statistics)
+    if device_fixture == ModelName.LINEA_MINI:
+        config = load_json_object_fixture("config_mini.json", DOMAIN)
+    elif device_fixture == ModelName.LINEA_MICRA:
+        config = load_json_object_fixture("config_micra.json", DOMAIN)
+    else:
+        config = load_json_object_fixture("config_gs3.json", DOMAIN)
+    schedule = load_json_object_fixture("schedule.json", DOMAIN)
+    settings = load_json_object_fixture("settings.json", DOMAIN)
+    statistics = load_json_object_fixture("statistics.json", DOMAIN)
 
     with (
         patch(
-            "homeassistant.components.lamarzocco.coordinator.LaMarzoccoMachine",
+            "homeassistant.components.lamarzocco.LaMarzoccoMachine",
             autospec=True,
-        ) as lamarzocco_mock,
+        ) as machine_mock_init,
     ):
-        lamarzocco = lamarzocco_mock.return_value
+        machine_mock = machine_mock_init.return_value
 
-        lamarzocco.name = dummy_machine.name
-        lamarzocco.model = dummy_machine.model
-        lamarzocco.serial_number = dummy_machine.serial_number
-        lamarzocco.full_model_name = dummy_machine.full_model_name
-        lamarzocco.config = dummy_machine.config
-        lamarzocco.statistics = dummy_machine.statistics
-        lamarzocco.firmware = dummy_machine.firmware
-        lamarzocco.steam_level = SteamLevel.LEVEL_1
-
-        lamarzocco.firmware[FirmwareType.GATEWAY].latest_version = "v3.5-rc3"
-        lamarzocco.firmware[FirmwareType.MACHINE].latest_version = "1.55"
-
-        async def websocket_connect_mock(
-            notify_callback: Callable | None,
-        ) -> None:
-            """Mock the websocket connect method."""
-            return None
-
-        lamarzocco.websocket_connect = websocket_connect_mock
-
-        yield lamarzocco
-
-
-@pytest.fixture
-def remove_local_connection(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> MockConfigEntry:
-    """Remove the local connection."""
-    data = mock_config_entry.data.copy()
-    del data[CONF_HOST]
-    hass.config_entries.async_update_entry(mock_config_entry, data=data)
-    return mock_config_entry
+        machine_mock.serial_number = SERIAL_DICT[device_fixture]
+        machine_mock.dashboard = ThingDashboardConfig.from_dict(config)
+        machine_mock.schedule = ThingSchedulingSettings.from_dict(schedule)
+        machine_mock.settings = ThingSettings.from_dict(settings)
+        machine_mock.statistics = ThingStatistics.from_dict(statistics)
+        machine_mock.dashboard.model_name = device_fixture
+        machine_mock.to_dict.return_value = {
+            "serial_number": machine_mock.serial_number,
+            "dashboard": machine_mock.dashboard.to_dict(),
+            "schedule": machine_mock.schedule.to_dict(),
+            "settings": machine_mock.settings.to_dict(),
+        }
+        machine_mock.connect_dashboard_websocket = AsyncMock()
+        machine_mock.websocket = MagicMock()
+        machine_mock.websocket.connected = True
+        machine_mock.websocket.disconnect = AsyncMock()
+        yield machine_mock
 
 
 @pytest.fixture(autouse=True)
@@ -159,6 +147,87 @@ def mock_bluetooth(enable_bluetooth: None) -> None:
 @pytest.fixture
 def mock_ble_device() -> BLEDevice:
     """Return a mock BLE device."""
-    return BLEDevice(
-        "00:00:00:00:00:00", "GS_GS01234", details={"path": "path"}, rssi=50
+    return BLEDevice("00:00:00:00:00:00", "GS_GS012345", details={"path": "path"})
+
+
+@pytest.fixture
+def mock_bluetooth_client() -> Generator[MagicMock]:
+    """Return a mocked Bluetooth client."""
+    with patch(
+        "homeassistant.components.lamarzocco.LaMarzoccoBluetoothClient",
+        autospec=True,
+    ) as mock_bt_client_cls:
+        mock_bt_client = mock_bt_client_cls.return_value
+
+        mock_bt_client.disconnect = AsyncMock()
+        yield mock_bt_client
+
+
+@pytest.fixture
+def mock_ble_device_from_address(
+    mock_ble_device: BLEDevice,
+) -> Generator[MagicMock]:
+    """Return a mocked async_ble_device_from_address."""
+    with patch(
+        "homeassistant.components.lamarzocco.async_ble_device_from_address",
+        return_value=mock_ble_device,
+    ) as mock_ble_device_from_address:
+        yield mock_ble_device_from_address
+
+
+@pytest.fixture
+def mock_lamarzocco_bluetooth(mock_lamarzocco: MagicMock) -> MagicMock:
+    """Return a mocked LM client with Bluetooth config."""
+
+    if mock_lamarzocco.dashboard.model_name == ModelName.LINEA_MICRA:
+        config = load_json_object_fixture("config_micra_bluetooth.json", DOMAIN)
+    else:
+        config = load_json_object_fixture("config_gs3_bluetooth.json", DOMAIN)
+
+    mock_lamarzocco.dashboard = ThingDashboardConfig.from_dict(config)
+    mock_lamarzocco.dashboard.model_name = mock_lamarzocco.dashboard.model_name
+    mock_lamarzocco.schedule = ThingSchedulingSettings(
+        serial_number=mock_lamarzocco.serial_number
     )
+    mock_lamarzocco.settings = ThingSettings(
+        serial_number=mock_lamarzocco.serial_number
+    )
+    mock_lamarzocco.statistics = ThingStatistics(
+        serial_number=mock_lamarzocco.serial_number
+    )
+    mock_lamarzocco.to_dict.return_value = {
+        "serial_number": mock_lamarzocco.serial_number,
+        "dashboard": mock_lamarzocco.dashboard.to_dict(),
+    }
+    return mock_lamarzocco
+
+
+@pytest.fixture
+def mock_config_entry_bluetooth(
+    mock_lamarzocco: MagicMock,
+    mock_ble_device: BLEDevice,
+) -> MockConfigEntry:
+    """Return a mocked config entry with Bluetooth enabled."""
+    return MockConfigEntry(
+        title=mock_lamarzocco.serial_number,
+        domain=DOMAIN,
+        version=4,
+        data=USER_INPUT
+        | {
+            CONF_MAC: mock_ble_device.address,
+            CONF_TOKEN: "token",
+            CONF_INSTALLATION_KEY: MOCK_INSTALLATION_KEY,
+        },
+        unique_id=mock_lamarzocco.serial_number,
+    )
+
+
+@pytest.fixture
+def mock_websocket_terminated() -> Generator[PropertyMock]:
+    """Mock websocket terminated."""
+    with patch(
+        "homeassistant.components.lamarzocco.coordinator.LaMarzoccoUpdateCoordinator.websocket_terminated",
+        new_callable=PropertyMock,
+    ) as mock_websocket_terminated:
+        mock_websocket_terminated.return_value = False
+        yield mock_websocket_terminated

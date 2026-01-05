@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime as dt
+import logging
 from typing import Any, Literal, cast
 
 import voluptuous as vol
@@ -13,53 +15,89 @@ from homeassistant.core import HomeAssistant, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import json_bytes
+from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
+    ApparentPowerConverter,
+    AreaConverter,
+    BloodGlucoseConcentrationConverter,
+    CarbonMonoxideConcentrationConverter,
+    ConductivityConverter,
     DataRateConverter,
     DistanceConverter,
     DurationConverter,
     ElectricCurrentConverter,
     ElectricPotentialConverter,
     EnergyConverter,
+    EnergyDistanceConverter,
     InformationConverter,
     MassConverter,
+    MassVolumeConcentrationConverter,
     PowerConverter,
     PressureConverter,
+    ReactiveEnergyConverter,
+    ReactivePowerConverter,
     SpeedConverter,
     TemperatureConverter,
+    TemperatureDeltaConverter,
     UnitlessRatioConverter,
     VolumeConverter,
     VolumeFlowRateConverter,
 )
 
-from .models import StatisticPeriod
+from .models import StatisticMeanType, StatisticPeriod
 from .statistics import (
-    STATISTIC_UNIT_TO_UNIT_CONVERTER,
+    UNIT_CLASS_TO_UNIT_CONVERTER,
     async_add_external_statistics,
     async_change_statistics_unit,
     async_import_statistics,
     async_list_statistic_ids,
+    async_update_statistics_metadata,
     list_statistic_ids,
     statistic_during_period,
     statistics_during_period,
+    update_statistics_issues,
     validate_statistics,
 )
 from .util import PERIOD_SCHEMA, get_instance, resolve_period
 
+_LOGGER = logging.getLogger(__name__)
+
+CLEAR_STATISTICS_TIME_OUT = 10
+UPDATE_STATISTICS_METADATA_TIME_OUT = 10
+
 UNIT_SCHEMA = vol.Schema(
     {
+        vol.Optional("apparent_power"): vol.In(ApparentPowerConverter.VALID_UNITS),
+        vol.Optional("area"): vol.In(AreaConverter.VALID_UNITS),
+        vol.Optional("blood_glucose_concentration"): vol.In(
+            BloodGlucoseConcentrationConverter.VALID_UNITS
+        ),
+        vol.Optional("carbon_monoxide"): vol.In(
+            CarbonMonoxideConcentrationConverter.VALID_UNITS
+        ),
+        vol.Optional("concentration"): vol.In(
+            MassVolumeConcentrationConverter.VALID_UNITS
+        ),
+        vol.Optional("conductivity"): vol.In(ConductivityConverter.VALID_UNITS),
         vol.Optional("data_rate"): vol.In(DataRateConverter.VALID_UNITS),
         vol.Optional("distance"): vol.In(DistanceConverter.VALID_UNITS),
         vol.Optional("duration"): vol.In(DurationConverter.VALID_UNITS),
         vol.Optional("electric_current"): vol.In(ElectricCurrentConverter.VALID_UNITS),
         vol.Optional("voltage"): vol.In(ElectricPotentialConverter.VALID_UNITS),
         vol.Optional("energy"): vol.In(EnergyConverter.VALID_UNITS),
+        vol.Optional("energy_distance"): vol.In(EnergyDistanceConverter.VALID_UNITS),
         vol.Optional("information"): vol.In(InformationConverter.VALID_UNITS),
         vol.Optional("mass"): vol.In(MassConverter.VALID_UNITS),
         vol.Optional("power"): vol.In(PowerConverter.VALID_UNITS),
         vol.Optional("pressure"): vol.In(PressureConverter.VALID_UNITS),
+        vol.Optional("reactive_energy"): vol.In(ReactiveEnergyConverter.VALID_UNITS),
+        vol.Optional("reactive_power"): vol.In(ReactivePowerConverter.VALID_UNITS),
         vol.Optional("speed"): vol.In(SpeedConverter.VALID_UNITS),
         vol.Optional("temperature"): vol.In(TemperatureConverter.VALID_UNITS),
+        vol.Optional("temperature_delta"): vol.In(
+            TemperatureDeltaConverter.VALID_UNITS
+        ),
         vol.Optional("unitless"): vol.In(UnitlessRatioConverter.VALID_UNITS),
         vol.Optional("volume"): vol.In(VolumeConverter.VALID_UNITS),
         vol.Optional("volume_flow_rate"): vol.In(VolumeFlowRateConverter.VALID_UNITS),
@@ -78,7 +116,7 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_get_statistics_metadata)
     websocket_api.async_register_command(hass, ws_list_statistic_ids)
     websocket_api.async_register_command(hass, ws_import_statistics)
-    websocket_api.async_register_command(hass, ws_info)
+    websocket_api.async_register_command(hass, ws_update_statistics_issues)
     websocket_api.async_register_command(hass, ws_update_statistics_metadata)
     websocket_api.async_register_command(hass, ws_validate_statistics)
 
@@ -282,13 +320,31 @@ async def ws_list_statistic_ids(
 async def ws_validate_statistics(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
-    """Fetch a list of available statistic_id."""
+    """Validate statistics and return issues found."""
     instance = get_instance(hass)
-    statistic_ids = await instance.async_add_executor_job(
+    validation_issues = await instance.async_add_executor_job(
         validate_statistics,
         hass,
     )
-    connection.send_result(msg["id"], statistic_ids)
+    connection.send_result(msg["id"], validation_issues)
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "recorder/update_statistics_issues",
+    }
+)
+@websocket_api.async_response
+async def ws_update_statistics_issues(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Update statistics issues."""
+    instance = get_instance(hass)
+    await instance.async_add_executor_job(
+        update_statistics_issues,
+        hass,
+    )
+    connection.send_result(msg["id"])
 
 
 @websocket_api.require_admin
@@ -298,8 +354,8 @@ async def ws_validate_statistics(
         vol.Required("statistic_ids"): [str],
     }
 )
-@callback
-def ws_clear_statistics(
+@websocket_api.async_response
+async def ws_clear_statistics(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Clear statistics for a list of statistic_ids.
@@ -307,7 +363,23 @@ def ws_clear_statistics(
     Note: The WS call posts a job to the recorder's queue and then returns, it doesn't
     wait until the job is completed.
     """
-    get_instance(hass).async_clear_statistics(msg["statistic_ids"])
+    done_event = asyncio.Event()
+
+    def clear_statistics_done() -> None:
+        hass.loop.call_soon_threadsafe(done_event.set)
+
+    get_instance(hass).async_clear_statistics(
+        msg["statistic_ids"], on_done=clear_statistics_done
+    )
+    try:
+        async with asyncio.timeout(CLEAR_STATISTICS_TIME_OUT):
+            await done_event.wait()
+    except TimeoutError:
+        connection.send_error(
+            msg["id"], websocket_api.ERR_TIMEOUT, "clear_statistics timed out"
+        )
+        return
+
     connection.send_result(msg["id"])
 
 
@@ -333,20 +405,49 @@ async def ws_get_statistics_metadata(
     {
         vol.Required("type"): "recorder/update_statistics_metadata",
         vol.Required("statistic_id"): str,
+        vol.Optional("unit_class"): vol.Any(str, None),
         vol.Required("unit_of_measurement"): vol.Any(str, None),
     }
 )
-@callback
-def ws_update_statistics_metadata(
+@websocket_api.async_response
+async def ws_update_statistics_metadata(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Update statistics metadata for a statistic_id.
 
+    The unit_class specifies which unit conversion class to use, if applicable.
+
     Only the normalized unit of measurement can be updated.
     """
-    get_instance(hass).async_update_statistics_metadata(
-        msg["statistic_id"], new_unit_of_measurement=msg["unit_of_measurement"]
+    done_event = asyncio.Event()
+
+    def update_statistics_metadata_done() -> None:
+        hass.loop.call_soon_threadsafe(done_event.set)
+
+    if "unit_class" not in msg:
+        _LOGGER.warning(
+            "WS command recorder/update_statistics_metadata called without "
+            "specifying unit_class in metadata, this is deprecated and will "
+            "stop working in HA Core 2026.11"
+        )
+
+    async_update_statistics_metadata(
+        hass,
+        msg["statistic_id"],
+        new_unit_class=msg.get("unit_class", UNDEFINED),
+        new_unit_of_measurement=msg["unit_of_measurement"],
+        on_done=update_statistics_metadata_done,
+        _called_from_ws_api=True,
     )
+    try:
+        async with asyncio.timeout(UPDATE_STATISTICS_METADATA_TIME_OUT):
+            await done_event.wait()
+    except TimeoutError:
+        connection.send_error(
+            msg["id"], websocket_api.ERR_TIMEOUT, "update_statistics_metadata timed out"
+        )
+        return
+
     connection.send_result(msg["id"])
 
 
@@ -359,15 +460,15 @@ def ws_update_statistics_metadata(
         vol.Required("old_unit_of_measurement"): vol.Any(str, None),
     }
 )
-@callback
-def ws_change_statistics_unit(
+@websocket_api.async_response
+async def ws_change_statistics_unit(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Change the unit_of_measurement for a statistic_id.
 
     All existing statistics will be converted to the new unit.
     """
-    async_change_statistics_unit(
+    await async_change_statistics_unit(
         hass,
         msg["statistic_id"],
         new_unit_of_measurement=msg["new_unit_of_measurement"],
@@ -412,17 +513,23 @@ async def ws_adjust_sum_statistics(
         return
     metadata = metadatas[0]
 
-    def valid_units(statistics_unit: str | None, adjustment_unit: str | None) -> bool:
+    def valid_units(
+        unit_class: str | None, statistics_unit: str | None, adjustment_unit: str | None
+    ) -> bool:
         if statistics_unit == adjustment_unit:
             return True
-        converter = STATISTIC_UNIT_TO_UNIT_CONVERTER.get(statistics_unit)
-        if converter is not None and adjustment_unit in converter.VALID_UNITS:
+        if (
+            (converter := UNIT_CLASS_TO_UNIT_CONVERTER.get(unit_class)) is not None
+            and statistics_unit in converter.VALID_UNITS
+            and adjustment_unit in converter.VALID_UNITS
+        ):
             return True
         return False
 
+    unit_class = metadata["unit_class"]
     stat_unit = metadata["statistics_unit_of_measurement"]
     adjustment_unit = msg["adjustment_unit_of_measurement"]
-    if not valid_units(stat_unit, adjustment_unit):
+    if not valid_units(unit_class, stat_unit, adjustment_unit):
         connection.send_error(
             msg["id"],
             "invalid_units",
@@ -441,11 +548,16 @@ async def ws_adjust_sum_statistics(
     {
         vol.Required("type"): "recorder/import_statistics",
         vol.Required("metadata"): {
-            vol.Required("has_mean"): bool,
+            vol.Optional("has_mean"): bool,
+            vol.Optional("mean_type"): vol.All(
+                vol.In(StatisticMeanType.__members__.values()),
+                vol.Coerce(StatisticMeanType),
+            ),
             vol.Required("has_sum"): bool,
             vol.Required("name"): vol.Any(str, None),
             vol.Required("source"): str,
             vol.Required("statistic_id"): str,
+            vol.Optional("unit_class"): vol.Any(str, None),
             vol.Required("unit_of_measurement"): vol.Any(str, None),
         },
         vol.Required("stats"): [
@@ -465,50 +577,27 @@ async def ws_adjust_sum_statistics(
 def ws_import_statistics(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
-    """Import statistics."""
+    """Import statistics.
+
+    The unit_class specifies which unit conversion class to use, if applicable.
+    """
     metadata = msg["metadata"]
+    if "mean_type" not in metadata:
+        _LOGGER.warning(
+            "WS command recorder/import_statistics called without specifying "
+            "mean_type in metadata, this is deprecated and will stop working "
+            "in HA Core 2026.11"
+        )
+    if "unit_class" not in metadata:
+        _LOGGER.warning(
+            "WS command recorder/import_statistics called without specifying "
+            "unit_class in metadata, this is deprecated and will stop working "
+            "in HA Core 2026.11"
+        )
     stats = msg["stats"]
 
     if valid_entity_id(metadata["statistic_id"]):
-        async_import_statistics(hass, metadata, stats)
+        async_import_statistics(hass, metadata, stats, _called_from_ws_api=True)
     else:
-        async_add_external_statistics(hass, metadata, stats)
+        async_add_external_statistics(hass, metadata, stats, _called_from_ws_api=True)
     connection.send_result(msg["id"])
-
-
-@websocket_api.websocket_command(
-    {
-        vol.Required("type"): "recorder/info",
-    }
-)
-@callback
-def ws_info(
-    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
-) -> None:
-    """Return status of the recorder."""
-    if instance := get_instance(hass):
-        backlog = instance.backlog
-        migration_in_progress = instance.migration_in_progress
-        migration_is_live = instance.migration_is_live
-        recording = instance.recording
-        # We avoid calling is_alive() as it can block waiting
-        # for the thread state lock which will block the event loop.
-        is_running = instance.is_running
-        max_backlog = instance.max_backlog
-    else:
-        backlog = None
-        migration_in_progress = False
-        migration_is_live = False
-        recording = False
-        is_running = False
-        max_backlog = None
-
-    recorder_info = {
-        "backlog": backlog,
-        "max_backlog": max_backlog,
-        "migration_in_progress": migration_in_progress,
-        "migration_is_live": migration_is_live,
-        "recording": recording,
-        "thread_running": is_running,
-    }
-    connection.send_result(msg["id"], recorder_info)

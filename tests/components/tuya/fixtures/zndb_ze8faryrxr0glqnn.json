@@ -1,0 +1,77 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Meter",
+  "category": "zndb",
+  "product_id": "ze8faryrxr0glqnn",
+  "product_name": "PJ2101A 1P WiFi Smart Meter ",
+  "online": true,
+  "sub": false,
+  "time_zone": "+02:00",
+  "active_time": "2024-08-24T11:22:33+00:00",
+  "create_time": "2024-08-24T11:22:33+00:00",
+  "update_time": "2024-08-24T11:22:33+00:00",
+  "function": {
+    "forward_energy_total": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW\u00b7h",
+        "min": 0,
+        "max": 99999999,
+        "scale": 2,
+        "step": 1
+      }
+    },
+    "energy_month": {
+      "type": "raw",
+      "value": {}
+    },
+    "energy_daily": {
+      "type": "raw",
+      "value": {}
+    }
+  },
+  "status_range": {
+    "energy_month": {
+      "type": "raw",
+      "value": {}
+    },
+    "energy_daily": {
+      "type": "raw",
+      "value": {}
+    },
+    "phase_a": {
+      "type": "raw",
+      "value": {}
+    },
+    "forward_energy_total": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW\u00b7h",
+        "min": 0,
+        "max": 99999999,
+        "scale": 2,
+        "step": 1
+      }
+    },
+    "reverse_energy_total": {
+      "type": "Integer",
+      "value": {
+        "unit": "kW\u00b7h",
+        "min": 0,
+        "max": 99999999,
+        "scale": 2,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "energy_month": "GAkYCQAAANQ=",
+    "energy_daily": "",
+    "phase_a": "CSIAFfQABKE="
+  },
+  "set_up": true,
+  "support_local": false
+}

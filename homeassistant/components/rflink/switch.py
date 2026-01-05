@@ -4,14 +4,17 @@ from __future__ import annotations
 
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.components.switch import (
+    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
+    SwitchEntity,
+)
 from homeassistant.const import CONF_DEVICES, CONF_NAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import (
+from .const import (
     CONF_ALIASES,
     CONF_DEVICE_DEFAULTS,
     CONF_FIRE_EVENT,
@@ -20,12 +23,12 @@ from . import (
     CONF_NOGROUP_ALIASES,
     CONF_SIGNAL_REPETITIONS,
     DEVICE_DEFAULTS_SCHEMA,
-    SwitchableRflinkDevice,
 )
+from .entity import SwitchableRflinkDevice
 
 PARALLEL_UPDATES = 0
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(
             CONF_DEVICE_DEFAULTS, default=DEVICE_DEFAULTS_SCHEMA({})

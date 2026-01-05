@@ -11,7 +11,7 @@ from PIL import Image
 import voluptuous as vol
 
 from homeassistant.components.camera import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as CAMERA_PLATFORM_SCHEMA,
     Camera,
     async_get_image,
     async_get_mjpeg_stream,
@@ -23,7 +23,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,12 +45,12 @@ MODE_CROP = "crop"
 DEFAULT_BASENAME = "Camera Proxy"
 DEFAULT_QUALITY = 75
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = CAMERA_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_ENTITY_ID): cv.entity_id,
         vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_CACHE_IMAGES, False): cv.boolean,
-        vol.Optional(CONF_FORCE_RESIZE, False): cv.boolean,
+        vol.Optional(CONF_CACHE_IMAGES, default=False): cv.boolean,
+        vol.Optional(CONF_FORCE_RESIZE, default=False): cv.boolean,
         vol.Optional(CONF_MODE, default=MODE_RESIZE): vol.In([MODE_RESIZE, MODE_CROP]),
         vol.Optional(CONF_IMAGE_QUALITY): int,
         vol.Optional(CONF_IMAGE_REFRESH_RATE): float,
@@ -104,6 +104,15 @@ def _resize_image(image, opts):
     new_width = opts.max_width
     (old_width, old_height) = img.size
     old_size = len(image)
+
+    # If no max_width specified, only apply quality changes if requested
+    if new_width is None:
+        if opts.quality is None:
+            return image
+        imgbuf = io.BytesIO()
+        img.save(imgbuf, "JPEG", optimize=True, quality=quality)
+        return imgbuf.getvalue()
+
     if old_width <= new_width:
         if opts.quality is None:
             _LOGGER.debug("Image is smaller-than/equal-to requested width")

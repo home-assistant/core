@@ -1,0 +1,149 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Weihnachten3",
+  "category": "cz",
+  "product_id": "0fHWRe8ULjtmnBNd",
+  "product_name": "SP22-10A",
+  "online": true,
+  "sub": false,
+  "time_zone": "+01:00",
+  "active_time": "2018-12-07T12:58:37+00:00",
+  "create_time": "2018-12-07T12:58:37+00:00",
+  "update_time": "2018-12-07T12:58:37+00:00",
+  "function": {
+    "switch_1": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "countdown_1": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status_range": {
+    "switch_1": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "countdown_1": {
+      "type": "Integer",
+      "value": {
+        "unit": "s",
+        "min": 0,
+        "max": 86400,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "add_ele": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": 0,
+        "max": 50000,
+        "scale": 3,
+        "step": 100
+      }
+    },
+    "cur_current": {
+      "type": "Integer",
+      "value": {
+        "unit": "mA",
+        "min": 0,
+        "max": 30000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "cur_power": {
+      "type": "Integer",
+      "value": {
+        "unit": "W",
+        "min": 0,
+        "max": 50000,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "cur_voltage": {
+      "type": "Integer",
+      "value": {
+        "unit": "V",
+        "min": 0,
+        "max": 5000,
+        "scale": 1,
+        "step": 1
+      }
+    },
+    "voltage_coe": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": 0,
+        "max": 1000000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "electric_coe": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": 0,
+        "max": 1000000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "power_coe": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": 0,
+        "max": 1000000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "electricity_coe": {
+      "type": "Integer",
+      "value": {
+        "unit": "",
+        "min": 0,
+        "max": 1000000,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "fault": {
+      "type": "Bitmap",
+      "value": {
+        "label": ["ov_cr", "ov_vol", "ov_pwr", "ls_cr", "ls_vol", "ls_pow"]
+      }
+    }
+  },
+  "status": {
+    "switch_1": false,
+    "countdown_1": 0,
+    "add_ele": 1,
+    "cur_current": 18,
+    "cur_power": 21,
+    "cur_voltage": 2351,
+    "voltage_coe": 638,
+    "electric_coe": 31090,
+    "power_coe": 17883,
+    "electricity_coe": 1165,
+    "fault": 0
+  },
+  "set_up": true,
+  "support_local": true
+}

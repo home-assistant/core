@@ -30,7 +30,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except InvalidLoginException:
         return False
 
-    coordinator = OurGroceriesDataUpdateCoordinator(hass, og)
+    coordinator = OurGroceriesDataUpdateCoordinator(hass, entry, og)
     await coordinator.async_config_entry_first_refresh()
     hass.data[DOMAIN][entry.entry_id] = coordinator
 

@@ -10,9 +10,12 @@ import voluptuous as vol
 
 from homeassistant.components import sensor
 from homeassistant.components.sensor import (
+    AMBIGUOUS_UNITS,
     CONF_STATE_CLASS,
+    DEVICE_CLASS_UNITS,
     DEVICE_CLASSES_SCHEMA,
     ENTITY_ID_FORMAT,
+    STATE_CLASS_UNITS,
     STATE_CLASSES_SCHEMA,
     RestoreSensor,
     SensorDeviceClass,
@@ -30,30 +33,31 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, State, callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
+from homeassistant.helpers.typing import ConfigType, VolSchemaType
 from homeassistant.util import dt as dt_util
 
 from . import subscription
 from .config import MQTT_RO_SCHEMA
-from .const import CONF_STATE_TOPIC, PAYLOAD_NONE
-from .mixins import MqttAvailabilityMixin, MqttEntity, async_setup_entity_entry_helper
-from .models import (
-    MqttValueTemplate,
-    PayloadSentinel,
-    ReceiveMessage,
-    ReceivePayloadType,
+from .const import (
+    CONF_EXPIRE_AFTER,
+    CONF_LAST_RESET_VALUE_TEMPLATE,
+    CONF_OPTIONS,
+    CONF_STATE_TOPIC,
+    CONF_SUGGESTED_DISPLAY_PRECISION,
+    PAYLOAD_NONE,
 )
+from .entity import MqttAvailabilityMixin, MqttEntity, async_setup_entity_entry_helper
+from .models import MqttValueTemplate, PayloadSentinel, ReceiveMessage
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import check_state_too_long
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_EXPIRE_AFTER = "expire_after"
-CONF_LAST_RESET_VALUE_TEMPLATE = "last_reset_value_template"
-CONF_SUGGESTED_DISPLAY_PRECISION = "suggested_display_precision"
+PARALLEL_UPDATES = 0
 
 MQTT_SENSOR_ATTRIBUTES_BLOCKED = frozenset(
     {
@@ -65,6 +69,10 @@ MQTT_SENSOR_ATTRIBUTES_BLOCKED = frozenset(
 DEFAULT_NAME = "MQTT Sensor"
 DEFAULT_FORCE_UPDATE = False
 
+URL_DOCS_SUPPORTED_SENSOR_UOM = (
+    "https://www.home-assistant.io/integrations/sensor/#device-class"
+)
+
 _PLATFORM_SCHEMA_BASE = MQTT_RO_SCHEMA.extend(
     {
         vol.Optional(CONF_DEVICE_CLASS): vol.Any(DEVICE_CLASSES_SCHEMA, None),
@@ -72,6 +80,7 @@ _PLATFORM_SCHEMA_BASE = MQTT_RO_SCHEMA.extend(
         vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
         vol.Optional(CONF_LAST_RESET_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_NAME): vol.Any(cv.string, None),
+        vol.Optional(CONF_OPTIONS): cv.ensure_list,
         vol.Optional(CONF_SUGGESTED_DISPLAY_PRECISION): cv.positive_int,
         vol.Optional(CONF_STATE_CLASS): vol.Any(STATE_CLASSES_SCHEMA, None),
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): vol.Any(cv.string, None),
@@ -79,8 +88,8 @@ _PLATFORM_SCHEMA_BASE = MQTT_RO_SCHEMA.extend(
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
 
-def validate_sensor_state_class_config(config: ConfigType) -> ConfigType:
-    """Validate the sensor state class config."""
+def validate_sensor_state_and_device_class_config(config: ConfigType) -> ConfigType:
+    """Validate the sensor options, state and device class config."""
     if (
         CONF_LAST_RESET_VALUE_TEMPLATE in config
         and (state_class := config.get(CONF_STATE_CLASS)) != SensorStateClass.TOTAL
@@ -90,24 +99,78 @@ def validate_sensor_state_class_config(config: ConfigType) -> ConfigType:
             f"together with state class `{state_class}`"
         )
 
+    unit_of_measurement: str | None
+    if (
+        unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT)
+    ) is not None and not unit_of_measurement.strip():
+        config.pop(CONF_UNIT_OF_MEASUREMENT)
+
+    # Only allow `options` to be set for `enum` sensors
+    # to limit the possible sensor values
+    if (options := config.get(CONF_OPTIONS)) is not None:
+        if not options:
+            raise vol.Invalid("An empty options list is not allowed")
+        if config.get(CONF_STATE_CLASS) or config.get(CONF_UNIT_OF_MEASUREMENT):
+            raise vol.Invalid(
+                f"Specifying `{CONF_OPTIONS}` is not allowed together with "
+                f"the `{CONF_STATE_CLASS}` or `{CONF_UNIT_OF_MEASUREMENT}` option"
+            )
+
+        if (device_class := config.get(CONF_DEVICE_CLASS)) != SensorDeviceClass.ENUM:
+            raise vol.Invalid(
+                f"The option `{CONF_OPTIONS}` must be used "
+                f"together with device class `{SensorDeviceClass.ENUM}`, "
+                f"got `{CONF_DEVICE_CLASS}` '{device_class}'"
+            )
+
+    if (
+        (state_class := config.get(CONF_STATE_CLASS)) is not None
+        and state_class in STATE_CLASS_UNITS
+        and (unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT))
+        not in STATE_CLASS_UNITS[state_class]
+    ):
+        raise vol.Invalid(
+            f"The unit of measurement '{unit_of_measurement}' is not valid "
+            f"together with state class '{state_class}'"
+        )
+
+    if (unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT)) is None:
+        return config
+
+    unit_of_measurement = config[CONF_UNIT_OF_MEASUREMENT] = AMBIGUOUS_UNITS.get(
+        unit_of_measurement, unit_of_measurement
+    )
+
+    if (device_class := config.get(CONF_DEVICE_CLASS)) is None:
+        return config
+
+    if (
+        device_class in DEVICE_CLASS_UNITS
+        and unit_of_measurement not in DEVICE_CLASS_UNITS[device_class]
+    ):
+        raise vol.Invalid(
+            f"The unit of measurement `{unit_of_measurement}` is not valid "
+            f"together with device class `{device_class}`",
+        )
+
     return config
 
 
 PLATFORM_SCHEMA_MODERN = vol.All(
     _PLATFORM_SCHEMA_BASE,
-    validate_sensor_state_class_config,
+    validate_sensor_state_and_device_class_config,
 )
 
 DISCOVERY_SCHEMA = vol.All(
     _PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA),
-    validate_sensor_state_class_config,
+    validate_sensor_state_and_device_class_config,
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MQTT sensor through YAML and through MQTT discovery."""
     async_setup_entity_entry_helper(
@@ -185,7 +248,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
         await MqttEntity.async_will_remove_from_hass(self)
 
     @staticmethod
-    def config_schema() -> vol.Schema:
+    def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
@@ -197,6 +260,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
             CONF_SUGGESTED_DISPLAY_PRECISION
         )
         self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
+        self._attr_options = config.get(CONF_OPTIONS)
         self._attr_state_class = config.get(CONF_STATE_CLASS)
 
         self._expire_after = config.get(CONF_EXPIRE_AFTER)
@@ -244,14 +308,27 @@ class MqttSensor(MqttEntity, RestoreSensor):
                 msg.topic,
             )
             return
+
+        if payload == PAYLOAD_NONE:
+            self._attr_native_value = None
+            return
+
         if self._numeric_state_expected:
             if payload == "":
                 _LOGGER.debug("Ignore empty state from '%s'", msg.topic)
-            elif payload == PAYLOAD_NONE:
-                self._attr_native_value = None
             else:
                 self._attr_native_value = payload
             return
+
+        if self.options and payload not in self.options:
+            _LOGGER.warning(
+                "Ignoring invalid option received on topic '%s', got '%s', allowed: %s",
+                msg.topic,
+                payload,
+                ", ".join(self.options),
+            )
+            return
+
         if self.device_class in {
             None,
             SensorDeviceClass.ENUM,
@@ -260,7 +337,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
             return
         try:
             if (payload_datetime := dt_util.parse_datetime(payload)) is None:
-                raise ValueError
+                raise ValueError  # noqa: TRY301
         except ValueError:
             _LOGGER.warning("Invalid state message '%s' from '%s'", payload, msg.topic)
             self._attr_native_value = None
@@ -280,7 +357,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
         try:
             last_reset = dt_util.parse_datetime(str(payload))
             if last_reset is None:
-                raise ValueError
+                raise ValueError  # noqa: TRY301
             self._attr_last_reset = last_reset
         except ValueError:
             _LOGGER.warning(

@@ -1,37 +1,11 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      "single_instance_allowed": "[%key:common::config_flow::abort::already_configured_service%]"
     },
     "step": {
       "user": {
-        "description": "Press submit for initial setup. On the created config entry, press configure to add sensors for selected processes"
-      }
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "description": "Configure a monitoring sensor for a running process",
-        "data": {
-          "process": "Processes to add as sensor(s)"
-        },
-        "data_description": {
-          "process": "Select a running process from the list or add a custom value. Multiple selections/custom values are supported"
-        }
-      }
-    }
-  },
-  "issues": {
-    "process_sensor": {
-      "title": "Process sensors are deprecated and will be removed",
-      "fix_flow": {
-        "step": {
-          "migrate_process_sensor": {
-            "title": "Process sensors have been setup as binary sensors",
-            "description": "Process sensors `{processes}` have been created as binary sensors and the sensors will be removed in 2024.9.0.\n\nPlease update all automations, scripts, dashboards or other things depending on these sensors to use the newly created binary sensors instead and press **Submit** to fix this issue."
-          }
-        }
+        "description": "Select **Submit** for initial setup. On the created config entry, select configure to add sensors for selected processes"
       }
     }
   },
@@ -42,6 +16,9 @@
       }
     },
     "sensor": {
+      "battery_empty": {
+        "name": "Battery empty"
+      },
       "disk_free": {
         "name": "Disk free {mount_point}"
       },
@@ -50,6 +27,9 @@
       },
       "disk_use_percent": {
         "name": "Disk usage {mount_point}"
+      },
+      "fan_speed": {
+        "name": "{fan_name} fan speed"
       },
       "ipv4_address": {
         "name": "IPv4 address {ip_address}"
@@ -61,13 +41,13 @@
         "name": "Last boot"
       },
       "load_15m": {
-        "name": "Load (15m)"
+        "name": "Load (15 min)"
       },
       "load_1m": {
-        "name": "Load (1m)"
+        "name": "Load (1 min)"
       },
       "load_5m": {
-        "name": "Load (5m)"
+        "name": "Load (5 min)"
       },
       "memory_free": {
         "name": "Memory free"
@@ -90,20 +70,17 @@
       "packets_out": {
         "name": "Packets out {interface}"
       },
-      "throughput_network_in": {
-        "name": "Network throughput in {interface}"
-      },
-      "throughput_network_out": {
-        "name": "Network throughput out {interface}"
-      },
       "process": {
         "name": "Process {process}"
       },
-      "processor_use": {
-        "name": "Processor use"
+      "process_num_fds": {
+        "name": "Open file descriptors {process}"
       },
       "processor_temperature": {
         "name": "Processor temperature"
+      },
+      "processor_use": {
+        "name": "Processor use"
       },
       "swap_free": {
         "name": "Swap free"
@@ -113,6 +90,25 @@
       },
       "swap_use_percent": {
         "name": "Swap usage"
+      },
+      "throughput_network_in": {
+        "name": "Network throughput in {interface}"
+      },
+      "throughput_network_out": {
+        "name": "Network throughput out {interface}"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "process": "Processes to add as sensor(s)"
+        },
+        "data_description": {
+          "process": "Select a running process from the list or add a custom value. Multiple selections/custom values are supported"
+        },
+        "description": "Configure a monitoring sensor for a running process"
       }
     }
   }

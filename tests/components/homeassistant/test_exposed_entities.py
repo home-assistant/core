@@ -103,8 +103,9 @@ async def test_load_preferences(hass: HomeAssistant) -> None:
     """Make sure that we can load/save data correctly."""
     assert await async_setup_component(hass, "homeassistant", {})
 
-    exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
     assert exposed_entities._assistants == {}
+    assert exposed_entities.entities == {}
 
     exposed_entities.async_set_expose_new_entities("test1", True)
     exposed_entities.async_set_expose_new_entities("test2", False)
@@ -139,7 +140,7 @@ async def test_expose_entity(
     entry1 = entity_registry.async_get_or_create("test", "test", "unique1")
     entry2 = entity_registry.async_get_or_create("test", "test", "unique2")
 
-    exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
     assert len(exposed_entities.entities) == 0
 
     # Set options
@@ -196,7 +197,7 @@ async def test_expose_entity_unknown(
     assert await async_setup_component(hass, "homeassistant", {})
     await hass.async_block_till_done()
 
-    exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
     assert len(exposed_entities.entities) == 0
 
     # Set options
@@ -442,7 +443,7 @@ async def test_should_expose(
     )
 
     # Check with a different assistant
-    exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
     exposed_entities.async_set_expose_new_entities("cloud.no_default_expose", False)
     assert (
         async_should_expose(
@@ -497,14 +498,26 @@ async def test_list_exposed_entities(
 
     entry1 = entity_registry.async_get_or_create("test", "test", "unique1")
     entry2 = entity_registry.async_get_or_create("test", "test", "unique2")
+    entity_registry.async_get_or_create("test", "test", "unique3")
 
     # Set options for registered entities
     await ws_client.send_json_auto_id(
         {
             "type": "homeassistant/expose_entity",
             "assistants": ["cloud.alexa", "cloud.google_assistant"],
-            "entity_ids": [entry1.entity_id, entry2.entity_id],
+            "entity_ids": [entry1.entity_id],
             "should_expose": True,
+        }
+    )
+    response = await ws_client.receive_json()
+    assert response["success"]
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "homeassistant/expose_entity",
+            "assistants": ["cloud.alexa", "cloud.google_assistant"],
+            "entity_ids": [entry2.entity_id],
+            "should_expose": False,
         }
     )
     response = await ws_client.receive_json()
@@ -515,10 +528,18 @@ async def test_list_exposed_entities(
         {
             "type": "homeassistant/expose_entity",
             "assistants": ["cloud.alexa", "cloud.google_assistant"],
-            "entity_ids": [
-                "test.test",
-                "test.test2",
-            ],
+            "entity_ids": ["test.test"],
+            "should_expose": True,
+        }
+    )
+    response = await ws_client.receive_json()
+    assert response["success"]
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "homeassistant/expose_entity",
+            "assistants": ["cloud.alexa", "cloud.google_assistant"],
+            "entity_ids": ["test.test2"],
             "should_expose": False,
         }
     )
@@ -531,10 +552,8 @@ async def test_list_exposed_entities(
     assert response["success"]
     assert response["result"] == {
         "exposed_entities": {
-            "test.test": {"cloud.alexa": False, "cloud.google_assistant": False},
-            "test.test2": {"cloud.alexa": False, "cloud.google_assistant": False},
+            "test.test": {"cloud.alexa": True, "cloud.google_assistant": True},
             "test.test_unique1": {"cloud.alexa": True, "cloud.google_assistant": True},
-            "test.test_unique2": {"cloud.alexa": True, "cloud.google_assistant": True},
         },
     }
 
@@ -545,7 +564,7 @@ async def test_listeners(
     """Make sure we call entity listeners."""
     assert await async_setup_component(hass, "homeassistant", {})
 
-    exposed_entities: ExposedEntities = hass.data[DATA_EXPOSED_ENTITIES]
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
 
     callbacks = []
     exposed_entities.async_listen_entity_updates("test1", lambda: callbacks.append(1))

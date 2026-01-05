@@ -8,7 +8,7 @@ from typing import Any
 from aiosteamist import Steamist
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME, Platform
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -52,9 +52,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     host = entry.data[CONF_HOST]
     coordinator = SteamistDataUpdateCoordinator(
         hass,
+        entry,
         Steamist(host, async_get_clientsession(hass)),
-        host,
-        entry.data.get(CONF_NAME),  # Only found from discovery
     )
     await coordinator.async_config_entry_first_refresh()
     if not async_get_discovery(hass, host):

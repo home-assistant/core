@@ -99,9 +99,9 @@ async def test_services_remote(hass: HomeAssistant, config) -> None:
                 "adb_shell",
                 {ATTR_COMMAND: ["BACK", "test"], ATTR_NUM_REPEATS: 2},
                 [
-                    f"input keyevent {KEYS["BACK"]}",
+                    f"input keyevent {KEYS['BACK']}",
                     "test",
-                    f"input keyevent {KEYS["BACK"]}",
+                    f"input keyevent {KEYS['BACK']}",
                     "test",
                 ],
             )

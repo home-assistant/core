@@ -96,7 +96,7 @@ class SnoozConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
             return self._create_snooz_entry(discovered)
 
-        configured_addresses = self._async_current_ids()
+        configured_addresses = self._async_current_ids(include_ignore=False)
 
         for info in async_discovered_service_info(self.hass):
             address = info.address

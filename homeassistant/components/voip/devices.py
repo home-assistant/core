@@ -4,14 +4,20 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterator
 from dataclasses import dataclass, field
+import logging
+from typing import Any
 
-from voip_utils import CallInfo
+from voip_utils import CallInfo, VoipDatagramProtocol
+from voip_utils.sip import SipEndpoint
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import DOMAIN
+from .store import DeviceContact, DeviceContacts, VoipStore
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
@@ -22,6 +28,8 @@ class VoIPDevice:
     device_id: str
     is_active: bool = False
     update_listeners: list[Callable[[VoIPDevice], None]] = field(default_factory=list)
+    protocol: VoipDatagramProtocol | None = None
+    contact: SipEndpoint | None = None
 
     @callback
     def set_is_active(self, active: bool) -> None:
@@ -56,6 +64,18 @@ class VoIPDevice:
 
         return False
 
+    def get_pipeline_entity_id(self, hass: HomeAssistant) -> str | None:
+        """Return entity id for pipeline select."""
+        ent_reg = er.async_get(hass)
+        return ent_reg.async_get_entity_id("select", DOMAIN, f"{self.voip_id}-pipeline")
+
+    def get_vad_sensitivity_entity_id(self, hass: HomeAssistant) -> str | None:
+        """Return entity id for VAD sensitivity."""
+        ent_reg = er.async_get(hass)
+        return ent_reg.async_get_entity_id(
+            "select", DOMAIN, f"{self.voip_id}-vad_sensitivity"
+        )
+
 
 class VoIPDevices:
     """Class to store devices."""
@@ -66,9 +86,9 @@ class VoIPDevices:
         self.config_entry = config_entry
         self._new_device_listeners: list[Callable[[VoIPDevice], None]] = []
         self.devices: dict[str, VoIPDevice] = {}
+        self.device_store: VoipStore = config_entry.runtime_data
 
-    @callback
-    def async_setup(self) -> None:
+    async def async_setup(self) -> None:
         """Set up devices."""
         for device in dr.async_entries_for_config_entry(
             dr.async_get(self.hass), self.config_entry.entry_id
@@ -78,9 +98,13 @@ class VoIPDevices:
             )
             if voip_id is None:
                 continue
+            devices_data: DeviceContacts = await self.device_store.async_load_devices()
+            device_data: DeviceContact | None = devices_data.get(voip_id)
+            _LOGGER.debug("Loaded device data for %s: %s", voip_id, device_data)
             self.devices[voip_id] = VoIPDevice(
                 voip_id=voip_id,
                 device_id=device.id,
+                contact=SipEndpoint(device_data.contact) if device_data else None,
             )
 
         @callback
@@ -123,29 +147,77 @@ class VoIPDevices:
             fw_version = None
 
         dev_reg = dr.async_get(self.hass)
-        voip_id = call_info.caller_ip
+        if call_info.caller_endpoint is None:
+            raise RuntimeError("Could not identify VOIP caller")
+        voip_id = call_info.caller_endpoint.uri
         voip_device = self.devices.get(voip_id)
 
-        if voip_device is not None:
-            device = dev_reg.async_get(voip_device.device_id)
-            if device and fw_version and device.sw_version != fw_version:
-                dev_reg.async_update_device(device.id, sw_version=fw_version)
+        if voip_device is None:
+            # If we couldn't find the device based on SIP URI, see if we can
+            # find an old device based on just the host/IP and migrate it
+            old_id = call_info.caller_endpoint.host
+            voip_device = self.devices.get(old_id)
+            if voip_device is not None:
+                voip_device.voip_id = voip_id
+                self.devices[voip_id] = voip_device
+                dev_reg.async_update_device(
+                    voip_device.device_id, new_identifiers={(DOMAIN, voip_id)}
+                )
+                # Migrate entities
+                old_prefix = f"{old_id}-"
 
-            return voip_device
+                def entity_migrator(entry: er.RegistryEntry) -> dict[str, Any] | None:
+                    """Migrate entities."""
+                    if not entry.unique_id.startswith(old_prefix):
+                        return None
+                    key = entry.unique_id[len(old_prefix) :]
+                    return {
+                        "new_unique_id": f"{voip_id}-{key}",
+                    }
 
+                self.config_entry.async_create_task(
+                    self.hass,
+                    er.async_migrate_entries(
+                        self.hass, self.config_entry.entry_id, entity_migrator
+                    ),
+                    f"voip migrating entities {voip_id}",
+                )
+
+        # Update device with latest info
         device = dev_reg.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
             identifiers={(DOMAIN, voip_id)},
-            name=voip_id,
+            name=call_info.caller_endpoint.host,
             manufacturer=manuf,
             model=model,
             sw_version=fw_version,
             configuration_url=f"http://{call_info.caller_ip}",
         )
+
+        if voip_device is not None:
+            if (
+                call_info.contact_endpoint is not None
+                and voip_device.contact != call_info.contact_endpoint
+            ):
+                # Update VOIP device with contact information from call info
+                voip_device.contact = call_info.contact_endpoint
+                self.hass.async_create_task(
+                    self.device_store.async_update_device(
+                        voip_id, call_info.contact_endpoint.sip_header
+                    )
+                )
+            return voip_device
+
         voip_device = self.devices[voip_id] = VoIPDevice(
-            voip_id=voip_id,
-            device_id=device.id,
+            voip_id=voip_id, device_id=device.id, contact=call_info.contact_endpoint
         )
+        if call_info.contact_endpoint is not None:
+            self.hass.async_create_task(
+                self.device_store.async_update_device(
+                    voip_id, call_info.contact_endpoint.sip_header
+                )
+            )
+
         for listener in self._new_device_listeners:
             listener(voip_device)
 

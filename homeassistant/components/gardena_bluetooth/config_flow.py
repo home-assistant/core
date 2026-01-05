@@ -41,6 +41,8 @@ def _is_supported(discovery_info: BluetoothServiceInfo):
         ProductType.PUMP,
         ProductType.VALVE,
         ProductType.WATER_COMPUTER,
+        ProductType.AUTOMATS,
+        ProductType.PRESSURE_TANKS,
     ):
         _LOGGER.debug("Unsupported device: %s", manufacturer_data)
         return False
@@ -126,7 +128,7 @@ class GardenaBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
             return await self.async_step_confirm()
 
-        current_addresses = self._async_current_ids()
+        current_addresses = self._async_current_ids(include_ignore=False)
         for discovery_info in async_discovered_service_info(self.hass):
             address = discovery_info.address
             if address in current_addresses or not _is_supported(discovery_info):

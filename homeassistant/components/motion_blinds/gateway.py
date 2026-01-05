@@ -42,11 +42,16 @@ class ConnectMotionGateway:
         for blind in self.gateway_device.device_list.values():
             blind.Update_from_cache()
 
-    async def async_connect_gateway(self, host, key):
+    async def async_connect_gateway(
+        self,
+        host: str,
+        key: str,
+        blind_type_list: dict[str, int] | None = None,
+    ) -> bool:
         """Connect to the Motion Gateway."""
         _LOGGER.debug("Initializing with host %s (key %s)", host, key[:3])
         self._gateway_device = MotionGateway(
-            ip=host, key=key, multicast=self._multicast
+            ip=host, key=key, multicast=self._multicast, blind_type_list=blind_type_list
         )
         try:
             # update device info and get the connected sub devices

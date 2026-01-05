@@ -15,10 +15,9 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UV_INDEX, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import as_local, parse_datetime
 
-from . import OpenUvEntity
 from .const import (
     DATA_UV,
     DOMAIN,
@@ -34,6 +33,7 @@ from .const import (
     TYPE_SAFE_EXPOSURE_TIME_6,
 )
 from .coordinator import OpenUvCoordinator
+from .entity import OpenUvEntity
 
 ATTR_MAX_UV_TIME = "time"
 
@@ -166,7 +166,9 @@ SENSOR_DESCRIPTIONS = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a OpenUV sensor based on a config entry."""
     coordinators: dict[str, OpenUvCoordinator] = hass.data[DOMAIN][entry.entry_id]

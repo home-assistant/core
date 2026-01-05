@@ -18,12 +18,12 @@ from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TARGET,
     ATTR_TITLE,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
 from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 CONF_CONNECTION_STRING = "connection_string"
@@ -36,7 +36,7 @@ ATTR_ASB_TARGET = "target"
 
 PLATFORM_SCHEMA = vol.All(
     cv.has_at_least_one_key(CONF_QUEUE_NAME, CONF_TOPIC_NAME),
-    PLATFORM_SCHEMA.extend(
+    NOTIFY_PLATFORM_SCHEMA.extend(
         {
             vol.Required(CONF_CONNECTION_STRING): cv.string,
             vol.Exclusive(

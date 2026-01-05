@@ -1,7 +1,7 @@
 """Tests for the WLED number platform."""
 
-import json
-from unittest.mock import MagicMock
+from collections.abc import Generator
+from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -13,15 +13,37 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.components.wled.const import SCAN_INTERVAL
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.components.wled.const import DOMAIN, SCAN_INTERVAL
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import async_fire_time_changed, load_fixture
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 
 pytestmark = pytest.mark.usefixtures("init_integration")
+
+
+@pytest.fixture(autouse=True)
+def override_platforms() -> Generator[None]:
+    """Override PLATFORMS."""
+    with patch("homeassistant.components.wled.PLATFORMS", [Platform.NUMBER]):
+        yield
+
+
+async def test_snapshots(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test snapshot of the platform."""
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 @pytest.mark.parametrize(
@@ -128,8 +150,8 @@ async def test_speed_dynamically_handle_segments(
 
     # Test adding a segment dynamically...
     return_value = mock_wled.update.return_value
-    mock_wled.update.return_value = WLEDDevice(
-        json.loads(load_fixture("wled/rgb.json"))
+    mock_wled.update.return_value = WLEDDevice.from_dict(
+        await async_load_json_object_fixture(hass, "rgb.json", DOMAIN)
     )
 
     freezer.tick(SCAN_INTERVAL)

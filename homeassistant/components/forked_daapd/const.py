@@ -30,10 +30,8 @@ DEFAULT_SERVER_NAME = "My Server"
 DEFAULT_TTS_PAUSE_TIME = 1.2
 DEFAULT_TTS_VOLUME = 0.8
 DEFAULT_UNMUTE_VOLUME = 0.6
-DOMAIN = "forked_daapd"  # key for hass.data
+DOMAIN = "forked_daapd"
 FD_NAME = "OwnTone"
-HASS_DATA_REMOVE_LISTENERS_KEY = "REMOVE_LISTENERS"
-HASS_DATA_UPDATER_KEY = "UPDATER"
 KNOWN_PIPES = {"librespot-java"}
 PIPE_FUNCTION_MAP = {
     "librespot-java": {

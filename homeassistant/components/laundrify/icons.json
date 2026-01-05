@@ -1,8 +1,12 @@
 {
   "entity": {
     "binary_sensor": {
-      "laundrify_power_plug": {
-        "default": "mdi:washing-machine"
+      "wash_cycle": {
+        "default": "mdi:washing-machine",
+        "state": {
+          "off": "mdi:washing-machine-off",
+          "on": "mdi:washing-machine"
+        }
       }
     }
   }

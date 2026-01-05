@@ -1,0 +1,719 @@
+{
+  "components": {
+    "hca.main": {
+      "hca.dryerMode": {
+        "mode": {
+          "value": "normal",
+          "timestamp": "2025-02-08T18:10:11.023Z"
+        },
+        "supportedModes": {
+          "value": ["normal", "timeDry", "quickDry"],
+          "timestamp": "2025-02-08T18:10:10.497Z"
+        }
+      }
+    },
+    "main": {
+      "custom.dryerWrinklePrevent": {
+        "operatingState": {
+          "value": "ready",
+          "timestamp": "2025-02-08T18:10:10.497Z"
+        },
+        "dryerWrinklePrevent": {
+          "value": "off",
+          "timestamp": "2025-02-08T18:10:10.840Z"
+        }
+      },
+      "samsungce.dryerDryingTemperature": {
+        "dryingTemperature": {
+          "value": "medium",
+          "timestamp": "2025-02-08T18:10:10.840Z"
+        },
+        "supportedDryingTemperature": {
+          "value": ["none", "extraLow", "low", "mediumLow", "medium", "high"],
+          "timestamp": "2025-01-04T22:52:14.884Z"
+        }
+      },
+      "samsungce.welcomeMessage": {
+        "welcomeMessage": {
+          "value": null
+        }
+      },
+      "samsungce.dongleSoftwareInstallation": {
+        "status": {
+          "value": "completed",
+          "timestamp": "2022-06-14T06:49:02.183Z"
+        }
+      },
+      "samsungce.dryerCyclePreset": {
+        "maxNumberOfPresets": {
+          "value": 10,
+          "timestamp": "2025-02-08T18:10:10.990Z"
+        },
+        "presets": {
+          "value": null
+        }
+      },
+      "samsungce.deviceIdentification": {
+        "micomAssayCode": {
+          "value": "20233741",
+          "timestamp": "2025-02-08T18:10:11.113Z"
+        },
+        "modelName": {
+          "value": null
+        },
+        "serialNumber": {
+          "value": null
+        },
+        "serialNumberExtra": {
+          "value": null
+        },
+        "modelClassificationCode": {
+          "value": "3000000100111100020B000000000000",
+          "timestamp": "2025-02-08T18:10:11.113Z"
+        },
+        "description": {
+          "value": "DA_WM_A51_20_COMMON_DV6300R/DC92-02385A_0090",
+          "timestamp": "2025-02-08T18:10:11.113Z"
+        },
+        "releaseYear": {
+          "value": null
+        },
+        "binaryId": {
+          "value": "DA_WM_A51_20_COMMON",
+          "timestamp": "2025-02-08T18:10:11.113Z"
+        }
+      },
+      "switch": {
+        "switch": {
+          "value": "off",
+          "timestamp": "2025-02-08T18:10:10.911Z"
+        }
+      },
+      "samsungce.quickControl": {
+        "version": {
+          "value": null
+        }
+      },
+      "samsungce.dryerFreezePrevent": {
+        "operatingState": {
+          "value": null
+        }
+      },
+      "ocf": {
+        "st": {
+          "value": null
+        },
+        "mndt": {
+          "value": null
+        },
+        "mnfv": {
+          "value": "DA_WM_A51_20_COMMON_30230708",
+          "timestamp": "2025-01-04T22:52:14.222Z"
+        },
+        "mnhw": {
+          "value": "ARTIK051",
+          "timestamp": "2025-01-04T22:52:14.222Z"
+        },
+        "di": {
+          "value": "02f7256e-8353-5bdd-547f-bd5b1647e01b",
+          "timestamp": "2025-01-04T22:52:14.222Z"
+        },
+        "mnsl": {
+          "value": "http://www.samsung.com",
+          "timestamp": "2025-01-04T22:52:14.222Z"
+        },
+        "dmv": {
+          "value": "res.1.1.0,sh.1.1.0",
+          "timestamp": "2025-01-04T22:52:14.222Z"
+        },
+        "n": {
+          "value": "[dryer] Samsung",
+          "timestamp": "2025-01-04T22:52:14.222Z"
+        },
+        "mnmo": {
+          "value": "DA_WM_A51_20_COMMON|20233741|3000000100111100020B000000000000",
+          "timestamp": "2025-01-04T22:52:14.222Z"
+        },
+        "vid": {
+          "value": "DA-WM-WD-000001",
+          "timestamp": "2025-01-04T22:52:14.222Z"
+        },
+        "mnmn": {
+          "value": "Samsung Electronics",
+          "timestamp": "2025-01-04T22:52:14.222Z"
+        },
+        "mnml": {
+          "value": "http://www.samsung.com",
+          "timestamp": "2025-01-04T22:52:14.222Z"
+        },
+        "mnpv": {
+          "value": "DAWIT 2.0",
+          "timestamp": "2025-01-04T22:52:14.222Z"
+        },
+        "mnos": {
+          "value": "TizenRT 1.0 + IPv6",
+          "timestamp": "2025-01-04T22:52:14.222Z"
+        },
+        "pi": {
+          "value": "02f7256e-8353-5bdd-547f-bd5b1647e01b",
+          "timestamp": "2025-01-04T22:52:14.222Z"
+        },
+        "icv": {
+          "value": "core.1.1.0",
+          "timestamp": "2025-01-04T22:52:14.222Z"
+        }
+      },
+      "custom.dryerDryLevel": {
+        "dryerDryLevel": {
+          "value": "normal",
+          "timestamp": "2025-02-08T18:10:10.840Z"
+        },
+        "supportedDryerDryLevel": {
+          "value": ["none", "damp", "less", "normal", "more", "very"],
+          "timestamp": "2021-06-01T22:54:28.224Z"
+        }
+      },
+      "samsungce.dryerAutoCycleLink": {
+        "dryerAutoCycleLink": {
+          "value": "on",
+          "timestamp": "2025-02-08T18:10:11.986Z"
+        }
+      },
+      "samsungce.dryerCycle": {
+        "dryerCycle": {
+          "value": "Table_00_Course_01",
+          "timestamp": "2025-02-08T18:10:11.023Z"
+        },
+        "supportedCycles": {
+          "value": [
+            {
+              "cycle": "01",
+              "supportedOptions": {
+                "dryingLevel": {
+                  "raw": "D33E",
+                  "default": "normal",
+                  "options": ["damp", "less", "normal", "more", "very"]
+                },
+                "dryingTemperature": {
+                  "raw": "8410",
+                  "default": "medium",
+                  "options": ["medium"]
+                }
+              }
+            },
+            {
+              "cycle": "9C",
+              "supportedOptions": {
+                "dryingLevel": {
+                  "raw": "D33E",
+                  "default": "normal",
+                  "options": ["damp", "less", "normal", "more", "very"]
+                },
+                "dryingTemperature": {
+                  "raw": "8520",
+                  "default": "high",
+                  "options": ["high"]
+                }
+              }
+            },
+            {
+              "cycle": "A5",
+              "supportedOptions": {
+                "dryingLevel": {
+                  "raw": "D33E",
+                  "default": "normal",
+                  "options": ["damp", "less", "normal", "more", "very"]
+                },
+                "dryingTemperature": {
+                  "raw": "8520",
+                  "default": "high",
+                  "options": ["high"]
+                }
+              }
+            },
+            {
+              "cycle": "9E",
+              "supportedOptions": {
+                "dryingLevel": {
+                  "raw": "D33E",
+                  "default": "normal",
+                  "options": ["damp", "less", "normal", "more", "very"]
+                },
+                "dryingTemperature": {
+                  "raw": "8308",
+                  "default": "mediumLow",
+                  "options": ["mediumLow"]
+                }
+              }
+            },
+            {
+              "cycle": "9B",
+              "supportedOptions": {
+                "dryingLevel": {
+                  "raw": "D520",
+                  "default": "very",
+                  "options": ["very"]
+                },
+                "dryingTemperature": {
+                  "raw": "8520",
+                  "default": "high",
+                  "options": ["high"]
+                }
+              }
+            },
+            {
+              "cycle": "27",
+              "supportedOptions": {
+                "dryingLevel": {
+                  "raw": "D000",
+                  "default": "none",
+                  "options": []
+                },
+                "dryingTemperature": {
+                  "raw": "8520",
+                  "default": "high",
+                  "options": ["high"]
+                }
+              }
+            },
+            {
+              "cycle": "E5",
+              "supportedOptions": {
+                "dryingLevel": {
+                  "raw": "D000",
+                  "default": "none",
+                  "options": []
+                },
+                "dryingTemperature": {
+                  "raw": "8000",
+                  "default": "none",
+                  "options": []
+                }
+              }
+            },
+            {
+              "cycle": "A0",
+              "supportedOptions": {
+                "dryingLevel": {
+                  "raw": "D000",
+                  "default": "none",
+                  "options": []
+                },
+                "dryingTemperature": {
+                  "raw": "8000",
+                  "default": "none",
+                  "options": []
+                }
+              }
+            },
+            {
+              "cycle": "A4",
+              "supportedOptions": {
+                "dryingLevel": {
+                  "raw": "D000",
+                  "default": "none",
+                  "options": []
+                },
+                "dryingTemperature": {
+                  "raw": "853E",
+                  "default": "high",
+                  "options": ["extraLow", "low", "mediumLow", "medium", "high"]
+                }
+              }
+            },
+            {
+              "cycle": "A6",
+              "supportedOptions": {
+                "dryingLevel": {
+                  "raw": "D000",
+                  "default": "none",
+                  "options": []
+                },
+                "dryingTemperature": {
+                  "raw": "8520",
+                  "default": "high",
+                  "options": ["high"]
+                }
+              }
+            },
+            {
+              "cycle": "A3",
+              "supportedOptions": {
+                "dryingLevel": {
+                  "raw": "D308",
+                  "default": "normal",
+                  "options": ["normal"]
+                },
+                "dryingTemperature": {
+                  "raw": "8410",
+                  "default": "medium",
+                  "options": ["medium"]
+                }
+              }
+            },
+            {
+              "cycle": "A2",
+              "supportedOptions": {
+                "dryingLevel": {
+                  "raw": "D33E",
+                  "default": "normal",
+                  "options": ["damp", "less", "normal", "more", "very"]
+                },
+                "dryingTemperature": {
+                  "raw": "8102",
+                  "default": "extraLow",
+                  "options": ["extraLow"]
+                }
+              }
+            }
+          ],
+          "timestamp": "2025-01-04T22:52:14.884Z"
+        },
+        "referenceTable": {
+          "value": {
+            "id": "Table_00"
+          },
+          "timestamp": "2025-02-08T18:10:11.023Z"
+        },
+        "specializedFunctionClassification": {
+          "value": 4,
+          "timestamp": "2025-02-08T18:10:10.497Z"
+        }
+      },
+      "custom.disabledCapabilities": {
+        "disabledCapabilities": {
+          "value": [
+            "samsungce.dryerCyclePreset",
+            "samsungce.welcomeMessage",
+            "samsungce.dongleSoftwareInstallation",
+            "sec.wifiConfiguration",
+            "samsungce.quickControl",
+            "samsungce.deviceInfoPrivate",
+            "demandResponseLoadControl",
+            "samsungce.dryerFreezePrevent",
+            "sec.diagnosticsInformation"
+          ],
+          "timestamp": "2024-07-05T16:04:06.674Z"
+        }
+      },
+      "samsungce.driverVersion": {
+        "versionNumber": {
+          "value": 24110101,
+          "timestamp": "2024-12-03T02:59:11.115Z"
+        }
+      },
+      "sec.diagnosticsInformation": {
+        "logType": {
+          "value": null
+        },
+        "endpoint": {
+          "value": null
+        },
+        "minVersion": {
+          "value": null
+        },
+        "signinPermission": {
+          "value": null
+        },
+        "setupId": {
+          "value": null
+        },
+        "protocolType": {
+          "value": null
+        },
+        "tsId": {
+          "value": null
+        },
+        "mnId": {
+          "value": null
+        },
+        "dumpType": {
+          "value": null
+        }
+      },
+      "samsungce.kidsLock": {
+        "lockState": {
+          "value": "unlocked",
+          "timestamp": "2025-02-08T18:10:10.825Z"
+        }
+      },
+      "demandResponseLoadControl": {
+        "drlcStatus": {
+          "value": null
+        }
+      },
+      "samsungce.detergentOrder": {
+        "alarmEnabled": {
+          "value": false,
+          "timestamp": "2025-02-08T18:10:10.497Z"
+        },
+        "orderThreshold": {
+          "value": 0,
+          "unit": "cc",
+          "timestamp": "2025-02-08T18:10:10.497Z"
+        }
+      },
+      "powerConsumptionReport": {
+        "powerConsumption": {
+          "value": {
+            "energy": 4495500,
+            "deltaEnergy": 0,
+            "power": 0,
+            "powerEnergy": 0.0,
+            "persistedEnergy": 0,
+            "energySaved": 0,
+            "start": "2025-02-07T04:00:19Z",
+            "end": "2025-02-08T18:10:11Z"
+          },
+          "timestamp": "2025-02-08T18:10:11.053Z"
+        }
+      },
+      "dryerOperatingState": {
+        "completionTime": {
+          "value": "2025-02-08T19:25:10Z",
+          "timestamp": "2025-02-08T18:10:10.962Z"
+        },
+        "machineState": {
+          "value": "stop",
+          "timestamp": "2025-02-08T18:10:10.962Z"
+        },
+        "supportedMachineStates": {
+          "value": ["stop", "run", "pause"],
+          "timestamp": "2025-02-08T18:10:10.962Z"
+        },
+        "dryerJobState": {
+          "value": "none",
+          "timestamp": "2025-02-08T18:10:10.962Z"
+        }
+      },
+      "samsungce.detergentState": {
+        "remainingAmount": {
+          "value": 0,
+          "unit": "cc",
+          "timestamp": "2025-02-08T18:10:10.497Z"
+        },
+        "dosage": {
+          "value": 0,
+          "unit": "cc",
+          "timestamp": "2025-02-08T18:10:10.497Z"
+        },
+        "initialAmount": {
+          "value": 0,
+          "unit": "cc",
+          "timestamp": "2025-02-08T18:10:10.497Z"
+        },
+        "detergentType": {
+          "value": "none",
+          "timestamp": "2021-06-01T22:54:28.372Z"
+        }
+      },
+      "samsungce.dryerDelayEnd": {
+        "remainingTime": {
+          "value": 0,
+          "unit": "min",
+          "timestamp": "2025-02-08T18:10:10.962Z"
+        }
+      },
+      "refresh": {},
+      "custom.jobBeginningStatus": {
+        "jobBeginningStatus": {
+          "value": null
+        }
+      },
+      "execute": {
+        "data": {
+          "value": {
+            "payload": {
+              "rt": ["x.com.samsung.da.information"],
+              "if": ["oic.if.baseline", "oic.if.a"],
+              "x.com.samsung.da.modelNum": "DA_WM_A51_20_COMMON|20233741|3000000100111100020B000000000000",
+              "x.com.samsung.da.description": "DA_WM_A51_20_COMMON_DV6300R/DC92-02385A_0090",
+              "x.com.samsung.da.serialNum": "FFFFFFFFFFFFFFF",
+              "x.com.samsung.da.otnDUID": "7XCDM6YAIRCGM",
+              "x.com.samsung.da.items": [
+                {
+                  "x.com.samsung.da.id": "0",
+                  "x.com.samsung.da.description": "DA_WM_A51_20_COMMON|20233741|3000000100111100020B000000000000",
+                  "x.com.samsung.da.type": "Software",
+                  "x.com.samsung.da.number": "02198A220728(E256)",
+                  "x.com.samsung.da.newVersionAvailable": "0"
+                },
+                {
+                  "x.com.samsung.da.id": "1",
+                  "x.com.samsung.da.description": "DA_WM_A51_20_COMMON",
+                  "x.com.samsung.da.type": "Firmware",
+                  "x.com.samsung.da.number": "18112816,20112625",
+                  "x.com.samsung.da.newVersionAvailable": "0"
+                }
+              ]
+            }
+          },
+          "data": {
+            "href": "/information/vs/0"
+          },
+          "timestamp": "2023-08-06T22:48:43.192Z"
+        }
+      },
+      "sec.wifiConfiguration": {
+        "autoReconnection": {
+          "value": null
+        },
+        "minVersion": {
+          "value": null
+        },
+        "supportedWiFiFreq": {
+          "value": null
+        },
+        "supportedAuthType": {
+          "value": null
+        },
+        "protocolType": {
+          "value": null
+        }
+      },
+      "remoteControlStatus": {
+        "remoteControlEnabled": {
+          "value": "false",
+          "timestamp": "2025-02-08T18:10:10.970Z"
+        }
+      },
+      "custom.supportedOptions": {
+        "course": {
+          "value": null
+        },
+        "referenceTable": {
+          "value": {
+            "id": "Table_00"
+          },
+          "timestamp": "2025-02-08T18:10:11.023Z"
+        },
+        "supportedCourses": {
+          "value": [
+            "01",
+            "9C",
+            "A5",
+            "9E",
+            "9B",
+            "27",
+            "E5",
+            "A0",
+            "A4",
+            "A6",
+            "A3",
+            "A2"
+          ],
+          "timestamp": "2025-02-08T18:10:10.497Z"
+        }
+      },
+      "custom.energyType": {
+        "energyType": {
+          "value": "2.0",
+          "timestamp": "2022-06-14T06:49:02.183Z"
+        },
+        "energySavingSupport": {
+          "value": false,
+          "timestamp": "2022-06-14T06:49:02.721Z"
+        },
+        "drMaxDuration": {
+          "value": null
+        },
+        "energySavingLevel": {
+          "value": null
+        },
+        "energySavingInfo": {
+          "value": null
+        },
+        "supportedEnergySavingLevels": {
+          "value": null
+        },
+        "energySavingOperation": {
+          "value": null
+        },
+        "notificationTemplateID": {
+          "value": null
+        },
+        "energySavingOperationSupport": {
+          "value": null
+        }
+      },
+      "samsungce.dryerOperatingState": {
+        "operatingState": {
+          "value": "ready",
+          "timestamp": "2025-02-07T04:00:18.186Z"
+        },
+        "supportedOperatingStates": {
+          "value": ["ready", "running", "paused"],
+          "timestamp": "2022-11-01T13:43:26.961Z"
+        },
+        "scheduledJobs": {
+          "value": [
+            {
+              "jobName": "drying",
+              "timeInMin": 57
+            },
+            {
+              "jobName": "cooling",
+              "timeInMin": 3
+            }
+          ],
+          "timestamp": "2025-02-08T18:10:10.497Z"
+        },
+        "progress": {
+          "value": 1,
+          "unit": "%",
+          "timestamp": "2025-02-07T04:00:18.186Z"
+        },
+        "remainingTimeStr": {
+          "value": "01:15",
+          "timestamp": "2025-02-07T04:00:18.186Z"
+        },
+        "dryerJobState": {
+          "value": "none",
+          "timestamp": "2025-02-07T04:00:18.186Z"
+        },
+        "remainingTime": {
+          "value": 75,
+          "unit": "min",
+          "timestamp": "2025-02-07T04:00:18.186Z"
+        }
+      },
+      "samsungce.softwareUpdate": {
+        "targetModule": {
+          "value": null
+        },
+        "otnDUID": {
+          "value": "7XCDM6YAIRCGM",
+          "timestamp": "2025-02-08T18:10:11.113Z"
+        },
+        "lastUpdatedDate": {
+          "value": null
+        },
+        "availableModules": {
+          "value": [],
+          "timestamp": "2024-12-02T00:29:53.432Z"
+        },
+        "newVersionAvailable": {
+          "value": false,
+          "timestamp": "2024-12-02T00:29:53.432Z"
+        },
+        "operatingState": {
+          "value": null
+        },
+        "progress": {
+          "value": null
+        }
+      },
+      "samsungce.dryerDryingTime": {
+        "supportedDryingTime": {
+          "value": ["0", "20", "30", "40", "50", "60"],
+          "timestamp": "2021-06-01T22:54:28.224Z"
+        },
+        "dryingTime": {
+          "value": "0",
+          "unit": "min",
+          "timestamp": "2025-02-08T18:10:10.840Z"
+        }
+      }
+    }
+  }
+}

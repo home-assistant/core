@@ -4,11 +4,11 @@ from typing import Any
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_WEBHOOK_ID, STATE_ON
+from homeassistant.const import CONF_WEBHOOK_ID, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     ATTR_SENSOR_ATTRIBUTES,
@@ -28,7 +28,7 @@ from .entity import MobileAppEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up mobile app binary sensor from a config entry."""
     entities = []
@@ -61,20 +61,23 @@ async def async_setup_entry(
 
         async_add_entities([MobileAppBinarySensor(data, config_entry)])
 
-    async_dispatcher_connect(
-        hass,
-        f"{DOMAIN}_{ENTITY_TYPE}_register",
-        handle_sensor_registration,
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            f"{DOMAIN}_{ENTITY_TYPE}_register",
+            handle_sensor_registration,
+        )
     )
 
 
 class MobileAppBinarySensor(MobileAppEntity, BinarySensorEntity):
-    """Representation of an mobile app binary sensor."""
+    """Representation of a mobile app binary sensor."""
 
     async def async_restore_last_state(self, last_state: State) -> None:
         """Restore previous state."""
-        await super().async_restore_last_state(last_state)
-        self._config[ATTR_SENSOR_STATE] = last_state.state == STATE_ON
+        if self._config[ATTR_SENSOR_STATE] in (None, STATE_UNKNOWN):
+            await super().async_restore_last_state(last_state)
+            self._config[ATTR_SENSOR_STATE] = last_state.state == STATE_ON
         self._async_update_attr_from_config()
 
     @callback

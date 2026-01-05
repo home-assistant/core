@@ -27,7 +27,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AmbientStation, AmbientStationConfigEntry
 from .const import ATTR_LAST_DATA, TYPE_SOLARRADIATION, TYPE_SOLARRADIATION_LX
@@ -608,21 +608,26 @@ SENSOR_DESCRIPTIONS = (
         key=TYPE_WINDDIR,
         translation_key="wind_direction",
         native_unit_of_measurement=DEGREE,
+        device_class=SensorDeviceClass.WIND_DIRECTION,
+        state_class=SensorStateClass.MEASUREMENT_ANGLE,
     ),
     SensorEntityDescription(
         key=TYPE_WINDDIR_AVG10M,
         translation_key="wind_direction_average_10m",
         native_unit_of_measurement=DEGREE,
+        device_class=SensorDeviceClass.WIND_DIRECTION,
     ),
     SensorEntityDescription(
         key=TYPE_WINDDIR_AVG2M,
         translation_key="wind_direction_average_2m",
         native_unit_of_measurement=DEGREE,
+        device_class=SensorDeviceClass.WIND_DIRECTION,
     ),
     SensorEntityDescription(
         key=TYPE_WINDGUSTDIR,
         translation_key="wind_gust_direction",
         native_unit_of_measurement=DEGREE,
+        device_class=SensorDeviceClass.WIND_DIRECTION,
     ),
     SensorEntityDescription(
         key=TYPE_WINDGUSTMPH,
@@ -662,7 +667,7 @@ SENSOR_DESCRIPTIONS = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AmbientStationConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Ambient PWS sensors based on a config entry."""
     ambient = entry.runtime_data

@@ -6,14 +6,14 @@ from nad_receiver import NADReceiver, NADReceiverTCP, NADReceiverTelnet
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as MEDIA_PLAYER_PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -43,7 +43,7 @@ CONF_SOURCE_DICT = "sources"  # for NADReceiver
 # Max value based on a C658 with an MDC HDM-2 card installed
 SOURCE_DICT_SCHEMA = vol.Schema({vol.Range(min=1, max=12): cv.string})
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = MEDIA_PLAYER_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_TYPE, default=DEFAULT_TYPE): vol.In(
             ["RS232", "Telnet", "TCP"]

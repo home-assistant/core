@@ -1,0 +1,25 @@
+{
+  "estimatedChargingTime": {
+    "value": "780",
+    "unit": "minutes",
+    "timestamp": "2024-12-30T14:30:08Z"
+  },
+  "batteryChargeLevel": {
+    "value": "58.0",
+    "unit": "percentage",
+    "timestamp": "2024-12-30T14:30:08Z"
+  },
+  "electricRange": {
+    "value": "250",
+    "unit": "kilometers",
+    "timestamp": "2024-12-30T14:30:08Z"
+  },
+  "chargingSystemStatus": {
+    "value": "CHARGING_SYSTEM_IDLE",
+    "timestamp": "2024-12-30T14:30:08Z"
+  },
+  "chargingConnectionStatus": {
+    "value": "CONNECTION_STATUS_CONNECTED_AC",
+    "timestamp": "2024-12-30T14:30:08Z"
+  }
+}

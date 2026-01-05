@@ -8,16 +8,20 @@ from typing import Any
 from scsgate.tasks import ToggleStatusTask
 import voluptuous as vol
 
-from homeassistant.components.light import PLATFORM_SCHEMA, ColorMode, LightEntity
+from homeassistant.components.light import (
+    PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
+    ColorMode,
+    LightEntity,
+)
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_STATE, CONF_DEVICES, CONF_NAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import CONF_SCS_ID, DOMAIN, SCSGATE_SCHEMA
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_DEVICES): cv.schema_with_slug_keys(SCSGATE_SCHEMA)}
 )
 

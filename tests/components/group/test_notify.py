@@ -1,18 +1,45 @@
 """The tests for the notify.group platform."""
 
-from collections.abc import Mapping
+from collections.abc import Generator, Mapping
 from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, call, patch
 
+import pytest
+
 from homeassistant import config as hass_config
 from homeassistant.components import notify
-from homeassistant.components.group import SERVICE_RELOAD
+from homeassistant.components.group import DOMAIN, SERVICE_RELOAD
+from homeassistant.components.notify import (
+    ATTR_MESSAGE,
+    ATTR_TITLE,
+    DOMAIN as NOTIFY_DOMAIN,
+    SERVICE_SEND_MESSAGE,
+    NotifyEntity,
+    NotifyEntityFeature,
+)
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockPlatform, get_fixture_path, mock_platform
+from tests.common import (
+    MockConfigEntry,
+    MockEntity,
+    MockModule,
+    MockPlatform,
+    get_fixture_path,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+    setup_test_component_platform,
+)
 
 
 class MockNotifyPlatform(MockPlatform):
@@ -96,7 +123,7 @@ async def test_send_message_with_data(hass: HomeAssistant, tmp_path: Path) -> No
             "services": [
                 {"service": "test_service1"},
                 {
-                    "service": "test_service2",
+                    "action": "test_service2",
                     "data": {
                         "target": "unnamed device",
                         "data": {"test": "message", "default": "default"},
@@ -135,7 +162,8 @@ async def test_send_message_with_data(hass: HomeAssistant, tmp_path: Path) -> No
                     "data": {"hello": "world", "test": "message", "default": "default"},
                 },
             ),
-        ]
+        ],
+        any_order=True,
     )
     send_message_mock.reset_mock()
 
@@ -172,7 +200,43 @@ async def test_send_message_with_data(hass: HomeAssistant, tmp_path: Path) -> No
                     },
                 },
             ),
-        ]
+        ],
+        any_order=True,
+    )
+
+
+async def test_invalid_configuration(
+    hass: HomeAssistant, tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test failing to set up group with an invalid configuration."""
+    assert await async_setup_component(
+        hass,
+        "group",
+        {},
+    )
+    await hass.async_block_till_done()
+
+    group_setup = [
+        {
+            "platform": "group",
+            "name": "My invalid notification group",
+            "services": [
+                {
+                    "service": "test_service1",
+                    "action": "test_service2",
+                    "data": {
+                        "target": "unnamed device",
+                        "data": {"test": "message", "default": "default"},
+                    },
+                },
+            ],
+        }
+    ]
+    await help_setup_notify(hass, tmp_path, {"service1": 1, "service2": 2}, group_setup)
+    assert not hass.services.has_service("notify", "my_invalid_notification_group")
+    assert (
+        "Invalid config for 'notify' from integration 'group':"
+        " Cannot specify both 'service' and 'action'." in caplog.text
     )
 
 
@@ -193,7 +257,7 @@ async def test_reload_notify(hass: HomeAssistant, tmp_path: Path) -> None:
             {
                 "name": "group_notify",
                 "platform": "group",
-                "services": [{"service": "test_service1"}],
+                "services": [{"action": "test_service1"}],
             }
         ],
     )
@@ -217,3 +281,290 @@ async def test_reload_notify(hass: HomeAssistant, tmp_path: Path) -> None:
     assert hass.services.has_service(notify.DOMAIN, "test_service2")
     assert not hass.services.has_service(notify.DOMAIN, "group_notify")
     assert hass.services.has_service(notify.DOMAIN, "new_group_notify")
+
+
+class MockFlow(ConfigFlow):
+    """Test flow."""
+
+
+@pytest.fixture
+def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
+    """Mock config flow."""
+    mock_platform(hass, "test.config_flow")
+
+    with mock_config_flow("test", MockFlow):
+        yield
+
+
+class MockNotifyEntity(MockEntity, NotifyEntity):
+    """Mock Email notifier entity to use in tests."""
+
+    def __init__(self, *, is_title_supported: bool, **values: Any) -> None:
+        """Initialize the mock entity."""
+        super().__init__(**values)
+        if is_title_supported:
+            self._attr_supported_features = NotifyEntityFeature.TITLE
+        self.send_message_mock_calls = MagicMock()
+
+    async def async_send_message(self, message: str, title: str | None = None) -> None:
+        """Send a notification message."""
+        self.send_message_mock_calls(message, title=title)
+
+
+async def help_async_setup_entry_init(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> bool:
+    """Set up test config entry."""
+    await hass.config_entries.async_forward_entry_setups(
+        config_entry, [Platform.NOTIFY]
+    )
+    return True
+
+
+async def help_async_unload_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> bool:
+    """Unload test config entry."""
+    return await hass.config_entries.async_unload_platforms(
+        config_entry, [Platform.NOTIFY]
+    )
+
+
+@pytest.fixture
+async def mock_notifiers(
+    hass: HomeAssistant, config_flow_fixture: None
+) -> list[MockNotifyEntity]:
+    """Set up the notify entities."""
+    entity_title_1 = MockNotifyEntity(
+        is_title_supported=True, name="has_title_1", entity_id="notify.has_title_1"
+    )
+    entity_title_2 = MockNotifyEntity(
+        is_title_supported=True, name="has_title_2", entity_id="notify.has_title_2"
+    )
+    entity_no_title_1 = MockNotifyEntity(
+        is_title_supported=False, name="no_title_1", entity_id="notify.no_title_1"
+    )
+    entity_no_title_2 = MockNotifyEntity(
+        is_title_supported=False, name="no_title_2", entity_id="notify.no_title_2"
+    )
+    entities = [entity_title_1, entity_title_2, entity_no_title_1, entity_no_title_2]
+    test_entry = MockConfigEntry(domain="test")
+    test_entry.add_to_hass(hass)
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=help_async_setup_entry_init,
+            async_unload_entry=help_async_unload_entry,
+        ),
+    )
+    setup_test_component_platform(hass, NOTIFY_DOMAIN, entities, from_config_entry=True)
+    assert await hass.config_entries.async_setup(test_entry.entry_id)
+    await hass.async_block_till_done()
+    return entities
+
+
+async def test_notify_entity_group(
+    hass: HomeAssistant, mock_notifiers: list[MockNotifyEntity]
+) -> None:
+    """Test sending a message to a notify group."""
+    entity_title_1, entity_title_2, entity_no_title_1, entity_no_title_2 = (
+        mock_notifiers
+    )
+    for mock_notifier in mock_notifiers:
+        assert mock_notifier.send_message_mock_calls.call_count == 0
+
+    # test group containing 1 member with title supported
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        options={
+            "group_type": "notify",
+            "name": "Test Group",
+            "entities": ["notify.has_title_1"],
+            "hide_members": True,
+        },
+        title="Test Group",
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        NOTIFY_DOMAIN,
+        SERVICE_SEND_MESSAGE,
+        {
+            ATTR_MESSAGE: "Hello",
+            ATTR_TITLE: "Test notification",
+            ATTR_ENTITY_ID: "notify.test_group",
+        },
+        blocking=True,
+    )
+
+    assert entity_title_1.send_message_mock_calls.call_count == 1
+    assert entity_title_1.send_message_mock_calls.call_args == call(
+        "Hello", title="Test notification"
+    )
+
+    for mock_notifier in mock_notifiers:
+        mock_notifier.send_message_mock_calls.reset_mock()
+
+    # test group containing 1 member with title supported but no title provided
+
+    await hass.services.async_call(
+        NOTIFY_DOMAIN,
+        SERVICE_SEND_MESSAGE,
+        {
+            ATTR_MESSAGE: "Hello",
+            ATTR_ENTITY_ID: "notify.test_group",
+        },
+        blocking=True,
+    )
+
+    assert entity_title_1.send_message_mock_calls.call_count == 1
+    assert entity_title_1.send_message_mock_calls.call_args == call("Hello", title=None)
+
+    for mock_notifier in mock_notifiers:
+        mock_notifier.send_message_mock_calls.reset_mock()
+
+    # test group containing 2 members with title supported
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        options={
+            "group_type": "notify",
+            "name": "Test Group 2",
+            "entities": ["notify.has_title_1", "notify.has_title_2"],
+            "hide_members": True,
+        },
+        title="Test Group 2",
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        NOTIFY_DOMAIN,
+        SERVICE_SEND_MESSAGE,
+        {
+            ATTR_MESSAGE: "Hello",
+            ATTR_TITLE: "Test notification",
+            ATTR_ENTITY_ID: "notify.test_group_2",
+        },
+        blocking=True,
+    )
+
+    assert entity_title_1.send_message_mock_calls.call_count == 1
+    assert entity_title_1.send_message_mock_calls.call_args == call(
+        "Hello", title="Test notification"
+    )
+    assert entity_title_2.send_message_mock_calls.call_count == 1
+    assert entity_title_2.send_message_mock_calls.call_args == call(
+        "Hello", title="Test notification"
+    )
+
+    for mock_notifier in mock_notifiers:
+        mock_notifier.send_message_mock_calls.reset_mock()
+
+    # test group containing 2 members: 1 title supported and 1 not supported
+    # title is not supported since not all members support it
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        options={
+            "group_type": "notify",
+            "name": "Test Group",
+            "entities": ["notify.has_title_1", "notify.no_title_1"],
+            "hide_members": True,
+        },
+        title="Test Group 3",
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        NOTIFY_DOMAIN,
+        SERVICE_SEND_MESSAGE,
+        {
+            ATTR_MESSAGE: "Hello",
+            ATTR_TITLE: "Test notification",
+            ATTR_ENTITY_ID: "notify.test_group_3",
+        },
+        blocking=True,
+    )
+
+    assert entity_title_1.send_message_mock_calls.call_count == 1
+    assert entity_title_1.send_message_mock_calls.call_args == call("Hello", title=None)
+    assert entity_no_title_1.send_message_mock_calls.call_count == 1
+    assert entity_no_title_1.send_message_mock_calls.call_args == call(
+        "Hello", title=None
+    )
+
+    for mock_notifier in mock_notifiers:
+        mock_notifier.send_message_mock_calls.reset_mock()
+
+    # test group containing 2 members: both not supporting title
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        options={
+            "group_type": "notify",
+            "name": "Test Group",
+            "entities": ["notify.no_title_1", "notify.no_title_2"],
+            "hide_members": True,
+        },
+        title="Test Group 4",
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        NOTIFY_DOMAIN,
+        SERVICE_SEND_MESSAGE,
+        {
+            ATTR_MESSAGE: "Hello",
+            ATTR_TITLE: "Test notification",
+            ATTR_ENTITY_ID: "notify.test_group_4",
+        },
+        blocking=True,
+    )
+
+    assert entity_no_title_1.send_message_mock_calls.call_count == 1
+    assert entity_no_title_1.send_message_mock_calls.call_args == call(
+        "Hello", title=None
+    )
+    assert entity_no_title_2.send_message_mock_calls.call_count == 1
+    assert entity_no_title_2.send_message_mock_calls.call_args == call(
+        "Hello", title=None
+    )
+
+
+async def test_state_reporting(hass: HomeAssistant) -> None:
+    """Test sending a message to a notify group."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        options={
+            "group_type": "notify",
+            "name": "Test Group",
+            "entities": ["notify.test", "notify.test2"],
+            "hide_members": True,
+        },
+        title="Test Group",
+    )
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("notify.test_group").state == STATE_UNAVAILABLE
+
+    hass.states.async_set("notify.test", STATE_UNAVAILABLE)
+    hass.states.async_set("notify.test2", STATE_UNAVAILABLE)
+    await hass.async_block_till_done()
+    assert hass.states.get("notify.test_group").state == STATE_UNAVAILABLE
+
+    hass.states.async_set("notify.test", "2021-01-01T23:59:59.123+00:00")
+    hass.states.async_set("notify.test2", "2021-01-01T23:59:59.123+00:00")
+    await hass.async_block_till_done()
+    assert hass.states.get("notify.test_group").state == STATE_UNKNOWN

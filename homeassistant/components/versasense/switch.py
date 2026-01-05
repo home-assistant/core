@@ -33,7 +33,7 @@ async def async_setup_platform(
 ) -> None:
     """Set up actuator platform."""
     if discovery_info is None:
-        return None
+        return
 
     consumer = hass.data[DOMAIN][KEY_CONSUMER]
 
@@ -84,7 +84,7 @@ class VActuator(SwitchEntity):
         return self._is_on
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return if the actuator is available."""
         return self._available
 

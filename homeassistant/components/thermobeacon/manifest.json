@@ -3,38 +3,50 @@
   "name": "ThermoBeacon",
   "bluetooth": [
     {
-      "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb",
+      "connectable": false,
+      "manufacturer_data_start": [0],
       "manufacturer_id": 16,
-      "manufacturer_data_start": [0],
-      "connectable": false
+      "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb"
     },
     {
-      "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb",
+      "connectable": false,
+      "manufacturer_data_start": [0],
       "manufacturer_id": 17,
-      "manufacturer_data_start": [0],
-      "connectable": false
+      "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb"
     },
     {
-      "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb",
+      "connectable": false,
+      "manufacturer_data_start": [0],
+      "manufacturer_id": 20,
+      "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb"
+    },
+    {
+      "connectable": false,
+      "manufacturer_data_start": [0],
       "manufacturer_id": 21,
-      "manufacturer_data_start": [0],
-      "connectable": false
+      "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb"
     },
     {
-      "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb",
+      "connectable": false,
+      "manufacturer_data_start": [0],
       "manufacturer_id": 24,
-      "manufacturer_data_start": [0],
-      "connectable": false
+      "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb"
     },
     {
-      "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb",
+      "connectable": false,
+      "manufacturer_data_start": [0],
       "manufacturer_id": 27,
-      "manufacturer_data_start": [0],
-      "connectable": false
+      "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb"
     },
     {
-      "local_name": "ThermoBeacon",
-      "connectable": false
+      "connectable": false,
+      "manufacturer_data_start": [0],
+      "manufacturer_id": 48,
+      "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb"
+    },
+    {
+      "connectable": false,
+      "local_name": "ThermoBeacon"
     }
   ],
   "codeowners": ["@bdraco"],
@@ -42,5 +54,5 @@
   "dependencies": ["bluetooth_adapters"],
   "documentation": "https://www.home-assistant.io/integrations/thermobeacon",
   "iot_class": "local_push",
-  "requirements": ["thermobeacon-ble==0.6.2"]
+  "requirements": ["thermobeacon-ble==0.10.0"]
 }

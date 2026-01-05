@@ -1,5 +1,7 @@
 """Config flow for AirNow integration."""
 
+from __future__ import annotations
+
 import logging
 from typing import Any
 
@@ -11,18 +13,21 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
-    OptionsFlowWithConfigEntry,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+
+# Documentation URL for API key generation
+_API_KEY_URL = "https://docs.airnowapi.org/account/request/"
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> bool:
@@ -113,6 +118,7 @@ class AirNowConfigFlow(ConfigFlow, domain=DOMAIN):
                     ),
                 }
             ),
+            description_placeholders={"api_key_url": _API_KEY_URL},
             errors=errors,
         )
 
@@ -120,12 +126,12 @@ class AirNowConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(
         config_entry: ConfigEntry,
-    ) -> OptionsFlow:
+    ) -> AirNowOptionsFlowHandler:
         """Return the options flow."""
-        return AirNowOptionsFlowHandler(config_entry)
+        return AirNowOptionsFlowHandler()
 
 
-class AirNowOptionsFlowHandler(OptionsFlowWithConfigEntry):
+class AirNowOptionsFlowHandler(OptionsFlowWithReload):
     """Handle an options flow for AirNow."""
 
     async def async_step_init(
@@ -136,12 +142,7 @@ class AirNowOptionsFlowHandler(OptionsFlowWithConfigEntry):
             return self.async_create_entry(data=user_input)
 
         options_schema = vol.Schema(
-            {
-                vol.Optional(CONF_RADIUS): vol.All(
-                    int,
-                    vol.Range(min=5),
-                ),
-            }
+            {vol.Optional(CONF_RADIUS): vol.All(int, vol.Range(min=5))}
         )
 
         return self.async_show_form(

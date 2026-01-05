@@ -175,6 +175,9 @@ async def async_process_integration_platforms(
     else:
         integration_platforms = hass.data[DATA_INTEGRATION_PLATFORMS]
 
+    # Tell the loader that it should try to pre-load the integration
+    # for any future components that are loaded so we can reduce the
+    # amount of import executor usage.
     async_register_preload_platform(hass, platform_name)
     top_level_components = hass.config.top_level_components.copy()
     process_job = HassJob(
@@ -187,10 +190,6 @@ async def async_process_integration_platforms(
     integration_platform = IntegrationPlatform(
         platform_name, process_job, top_level_components
     )
-    # Tell the loader that it should try to pre-load the integration
-    # for any future components that are loaded so we can reduce the
-    # amount of import executor usage.
-    async_register_preload_platform(hass, platform_name)
     integration_platforms.append(integration_platform)
     if not top_level_components:
         return

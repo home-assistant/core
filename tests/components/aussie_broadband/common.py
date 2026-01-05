@@ -1,12 +1,12 @@
 """Aussie Broadband common helpers for tests."""
 
+from typing import Any
 from unittest.mock import patch
 
-from homeassistant.components.aussie_broadband.const import (
-    CONF_SERVICES,
-    DOMAIN as AUSSIE_BROADBAND_DOMAIN,
-)
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.components.aussie_broadband.const import CONF_SERVICES, DOMAIN
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from tests.common import MockConfigEntry
 
@@ -38,11 +38,15 @@ FAKE_DATA = {
 
 
 async def setup_platform(
-    hass, platforms=[], side_effect=None, usage={}, usage_effect=None
+    hass: HomeAssistant,
+    platforms: list[Platform] | UndefinedType = UNDEFINED,
+    side_effect=None,
+    usage: dict[str, Any] | UndefinedType = UNDEFINED,
+    usage_effect=None,
 ):
     """Set up the Aussie Broadband platform."""
     mock_entry = MockConfigEntry(
-        domain=AUSSIE_BROADBAND_DOMAIN,
+        domain=DOMAIN,
         data=FAKE_DATA,
         options={
             CONF_SERVICES: ["12345678", "87654321", "23456789", "98765432"],
@@ -51,7 +55,10 @@ async def setup_platform(
     mock_entry.add_to_hass(hass)
 
     with (
-        patch("homeassistant.components.aussie_broadband.PLATFORMS", platforms),
+        patch(
+            "homeassistant.components.aussie_broadband.PLATFORMS",
+            [] if platforms is UNDEFINED else platforms,
+        ),
         patch("aussiebb.asyncio.AussieBB.__init__", return_value=None),
         patch(
             "aussiebb.asyncio.AussieBB.login",
@@ -65,7 +72,7 @@ async def setup_platform(
         ),
         patch(
             "aussiebb.asyncio.AussieBB.get_usage",
-            return_value=usage,
+            return_value={} if usage is UNDEFINED else usage,
             side_effect=usage_effect,
         ),
     ):

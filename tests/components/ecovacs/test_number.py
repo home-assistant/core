@@ -2,12 +2,17 @@
 
 from dataclasses import dataclass
 
-from deebot_client.capabilities import Capabilities
 from deebot_client.command import Command
-from deebot_client.commands.json import SetVolume
-from deebot_client.events import Event, VolumeEvent
+from deebot_client.commands.json import (
+    SetCleanCount,
+    SetCutDirection,
+    SetVolume,
+    SetWaterInfo,
+)
+from deebot_client.events import CleanCountEvent, CutDirectionEvent, Event, VolumeEvent
+from deebot_client.events.water_info import WaterCustomAmountEvent
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ecovacs.const import DOMAIN
 from homeassistant.components.ecovacs.controller import EcovacsController
@@ -54,8 +59,49 @@ class NumberTestCase:
                 ),
             ],
         ),
+        (
+            "5xu9h3",
+            [
+                NumberTestCase(
+                    "number.goat_g1_volume", VolumeEvent(3, 11), "3", 7, SetVolume(7)
+                ),
+                NumberTestCase(
+                    "number.goat_g1_cut_direction",
+                    CutDirectionEvent(45),
+                    "45",
+                    97,
+                    SetCutDirection(97),
+                ),
+            ],
+        ),
+        (
+            "n0vyif",
+            [
+                NumberTestCase(
+                    "number.x8_pro_omni_clean_count",
+                    CleanCountEvent(1),
+                    "1",
+                    4,
+                    SetCleanCount(4),
+                ),
+                NumberTestCase(
+                    "number.x8_pro_omni_volume",
+                    VolumeEvent(5, 11),
+                    "5",
+                    10,
+                    SetVolume(10),
+                ),
+                NumberTestCase(
+                    "number.x8_pro_omni_water_flow_level",
+                    WaterCustomAmountEvent(14),
+                    "14",
+                    7,
+                    SetWaterInfo(custom_amount=7),
+                ),
+            ],
+        ),
     ],
-    ids=["yna5x1"],
+    ids=["yna5x1", "5xu9h3", "n0vyif"],
 )
 async def test_number_entities(
     hass: HomeAssistant,
@@ -66,7 +112,7 @@ async def test_number_entities(
     tests: list[NumberTestCase],
 ) -> None:
     """Test that number entity snapshots match."""
-    device = next(controller.devices(Capabilities))
+    device = controller.devices[0]
     event_bus = device.events
 
     assert sorted(hass.states.async_entity_ids()) == sorted(
@@ -108,8 +154,12 @@ async def test_number_entities(
             "yna5x1",
             ["number.ozmo_950_volume"],
         ),
+        (
+            "5xu9h3",
+            ["number.goat_g1_cut_direction", "number.goat_g1_volume"],
+        ),
     ],
-    ids=["yna5x1"],
+    ids=["yna5x1", "5xu9h3"],
 )
 async def test_disabled_by_default_number_entities(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, entity_ids: list[str]
@@ -118,20 +168,21 @@ async def test_disabled_by_default_number_entities(
     for entity_id in entity_ids:
         assert not hass.states.get(entity_id)
 
-        assert (
-            entry := entity_registry.async_get(entity_id)
-        ), f"Entity registry entry for {entity_id} is missing"
+        assert (entry := entity_registry.async_get(entity_id)), (
+            f"Entity registry entry for {entity_id} is missing"
+        )
         assert entry.disabled
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(("device_fixture"), ["yna5x1"])
 async def test_volume_maximum(
     hass: HomeAssistant,
     controller: EcovacsController,
 ) -> None:
     """Test volume maximum."""
-    device = next(controller.devices(Capabilities))
+    device = controller.devices[0]
     event_bus = device.events
     entity_id = "number.ozmo_950_volume"
     assert (state := hass.states.get(entity_id))

@@ -1,13 +1,16 @@
 """Tests for the category registry."""
 
+from datetime import datetime
 from functools import partial
 import re
 from typing import Any
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import category_registry as cr
+from homeassistant.util.dt import UTC
 
 from tests.common import async_capture_events, flush_store
 
@@ -152,9 +155,13 @@ async def test_delete_non_existing_category(
 
 
 async def test_update_category(
-    hass: HomeAssistant, category_registry: cr.CategoryRegistry
+    hass: HomeAssistant,
+    category_registry: cr.CategoryRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Make sure that we can update categories."""
+    created = datetime(2024, 2, 14, 12, 0, 0, tzinfo=UTC)
+    freezer.move_to(created)
     update_events = async_capture_events(hass, cr.EVENT_CATEGORY_REGISTRY_UPDATED)
     category = category_registry.async_create(
         scope="automation",
@@ -162,9 +169,16 @@ async def test_update_category(
     )
 
     assert len(category_registry.categories["automation"]) == 1
-    assert category.category_id
-    assert category.name == "Energy saving"
-    assert category.icon is None
+    assert category == cr.CategoryEntry(
+        category_id=category.category_id,
+        created_at=created,
+        modified_at=created,
+        name="Energy saving",
+        icon=None,
+    )
+
+    modified = datetime(2024, 3, 14, 12, 0, 0, tzinfo=UTC)
+    freezer.move_to(modified)
 
     updated_category = category_registry.async_update(
         scope="automation",
@@ -174,9 +188,13 @@ async def test_update_category(
     )
 
     assert updated_category != category
-    assert updated_category.category_id == category.category_id
-    assert updated_category.name == "ENERGY SAVING"
-    assert updated_category.icon == "mdi:leaf"
+    assert updated_category == cr.CategoryEntry(
+        category_id=category.category_id,
+        created_at=created,
+        modified_at=modified,
+        name="ENERGY SAVING",
+        icon="mdi:leaf",
+    )
 
     assert len(category_registry.categories["automation"]) == 1
 
@@ -343,18 +361,25 @@ async def test_loading_categories_from_storage(
     hass: HomeAssistant, hass_storage: dict[str, Any]
 ) -> None:
     """Test loading stored categories on start."""
+    date_1 = datetime(2024, 2, 14, 12, 0, 0)
+    date_2 = datetime(2024, 2, 14, 12, 0, 0)
     hass_storage[cr.STORAGE_KEY] = {
         "version": cr.STORAGE_VERSION_MAJOR,
+        "minor_version": cr.STORAGE_VERSION_MINOR,
         "data": {
             "categories": {
                 "automation": [
                     {
                         "category_id": "uuid1",
+                        "created_at": date_1.isoformat(),
+                        "modified_at": date_1.isoformat(),
                         "name": "Energy saving",
                         "icon": "mdi:leaf",
                     },
                     {
                         "category_id": "uuid2",
+                        "created_at": date_1.isoformat(),
+                        "modified_at": date_2.isoformat(),
                         "name": "Something else",
                         "icon": None,
                     },
@@ -362,6 +387,8 @@ async def test_loading_categories_from_storage(
                 "zone": [
                     {
                         "category_id": "uuid3",
+                        "created_at": date_2.isoformat(),
+                        "modified_at": date_2.isoformat(),
                         "name": "Grocery stores",
                         "icon": "mdi:store",
                     },
@@ -380,21 +407,33 @@ async def test_loading_categories_from_storage(
     category1 = category_registry.async_get_category(
         scope="automation", category_id="uuid1"
     )
-    assert category1.category_id == "uuid1"
-    assert category1.name == "Energy saving"
-    assert category1.icon == "mdi:leaf"
+    assert category1 == cr.CategoryEntry(
+        category_id="uuid1",
+        created_at=date_1,
+        modified_at=date_1,
+        name="Energy saving",
+        icon="mdi:leaf",
+    )
 
     category2 = category_registry.async_get_category(
         scope="automation", category_id="uuid2"
     )
-    assert category2.category_id == "uuid2"
-    assert category2.name == "Something else"
-    assert category2.icon is None
+    assert category2 == cr.CategoryEntry(
+        category_id="uuid2",
+        created_at=date_1,
+        modified_at=date_2,
+        name="Something else",
+        icon=None,
+    )
 
     category3 = category_registry.async_get_category(scope="zone", category_id="uuid3")
-    assert category3.category_id == "uuid3"
-    assert category3.name == "Grocery stores"
-    assert category3.icon == "mdi:store"
+    assert category3 == cr.CategoryEntry(
+        category_id="uuid3",
+        created_at=date_2,
+        modified_at=date_2,
+        name="Grocery stores",
+        icon="mdi:store",
+    )
 
 
 async def test_async_create_thread_safety(
@@ -447,3 +486,83 @@ async def test_async_update_thread_safety(
                 name="new name",
             )
         )
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_migration_from_1_1(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test migration from version 1.1."""
+    hass_storage[cr.STORAGE_KEY] = {
+        "version": 1,
+        "data": {
+            "categories": {
+                "automation": [
+                    {
+                        "category_id": "uuid1",
+                        "name": "Energy saving",
+                        "icon": "mdi:leaf",
+                    },
+                    {
+                        "category_id": "uuid2",
+                        "name": "Something else",
+                        "icon": None,
+                    },
+                ],
+                "zone": [
+                    {
+                        "category_id": "uuid3",
+                        "name": "Grocery stores",
+                        "icon": "mdi:store",
+                    },
+                ],
+            }
+        },
+    }
+
+    await cr.async_load(hass)
+    registry = cr.async_get(hass)
+
+    # Test data was loaded
+    assert len(registry.categories) == 2
+    assert len(registry.categories["automation"]) == 2
+    assert len(registry.categories["zone"]) == 1
+
+    assert registry.async_get_category(scope="automation", category_id="uuid1")
+
+    # Check we store migrated data
+    await flush_store(registry._store)
+    assert hass_storage[cr.STORAGE_KEY] == {
+        "version": cr.STORAGE_VERSION_MAJOR,
+        "minor_version": cr.STORAGE_VERSION_MINOR,
+        "key": cr.STORAGE_KEY,
+        "data": {
+            "categories": {
+                "automation": [
+                    {
+                        "category_id": "uuid1",
+                        "created_at": "1970-01-01T00:00:00+00:00",
+                        "modified_at": "1970-01-01T00:00:00+00:00",
+                        "name": "Energy saving",
+                        "icon": "mdi:leaf",
+                    },
+                    {
+                        "category_id": "uuid2",
+                        "created_at": "1970-01-01T00:00:00+00:00",
+                        "modified_at": "1970-01-01T00:00:00+00:00",
+                        "name": "Something else",
+                        "icon": None,
+                    },
+                ],
+                "zone": [
+                    {
+                        "category_id": "uuid3",
+                        "created_at": "1970-01-01T00:00:00+00:00",
+                        "modified_at": "1970-01-01T00:00:00+00:00",
+                        "name": "Grocery stores",
+                        "icon": "mdi:store",
+                    },
+                ],
+            }
+        },
+    }

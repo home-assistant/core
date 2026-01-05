@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.components.button import DOMAIN, ButtonEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import TEST_DOMAIN
@@ -31,7 +31,7 @@ async def setup_platform(hass: HomeAssistant) -> None:
     async def async_setup_platform(
         hass: HomeAssistant,
         config: ConfigType,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
         discovery_info: DiscoveryInfoType | None = None,
     ) -> None:
         """Set up test button platform."""

@@ -15,11 +15,10 @@ from homeassistant.components.sensor import (
 from homeassistant.const import UnitOfDataRate, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import SpeedTestConfigEntry
 from .const import (
     ATTR_BYTES_RECEIVED,
     ATTR_BYTES_SENT,
@@ -30,7 +29,7 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
 )
-from .coordinator import SpeedTestDataCoordinator
+from .coordinator import SpeedTestConfigEntry, SpeedTestDataCoordinator
 
 
 @dataclass(frozen=True)
@@ -70,7 +69,7 @@ SENSOR_TYPES: tuple[SpeedtestSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: SpeedTestConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Speedtestdotnet sensors."""
     speedtest_coordinator = config_entry.runtime_data

@@ -1,5 +1,7 @@
 """Define patches used for androidtv tests."""
 
+import os.path
+from typing import Any
 from unittest.mock import patch
 
 from androidtv.adb_manager.adb_manager_async import DeviceAsync
@@ -10,6 +12,8 @@ from homeassistant.components.androidtv.const import (
     DEVICE_ANDROIDTV,
     DEVICE_FIRETV,
 )
+
+_original_isfile = os.path.isfile
 
 ADB_SERVER_HOST = "127.0.0.1"
 KEY_PYTHON = "python"
@@ -25,7 +29,7 @@ PROPS_DEV_MAC = "ether ab:cd:ef:gh:ij:kl brd"
 class AdbDeviceTcpAsyncFake:
     """A fake of the `adb_shell.adb_device_async.AdbDeviceTcpAsync` class."""
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize a fake `adb_shell.adb_device_async.AdbDeviceTcpAsync` instance."""
         self.available = False
 
@@ -37,7 +41,7 @@ class AdbDeviceTcpAsyncFake:
         """Try to connect to a device."""
         raise NotImplementedError
 
-    async def shell(self, cmd, *args, **kwargs):
+    async def shell(self, cmd, *args, **kwargs) -> bytes | str | None:
         """Send an ADB shell command."""
         return None
 
@@ -184,7 +188,9 @@ def patch_androidtv_update(
 
 def isfile(filepath):
     """Mock `os.path.isfile`."""
-    return filepath.endswith("adbkey")
+    if str(filepath).endswith("adbkey"):
+        return True
+    return _original_isfile(filepath)
 
 
 PATCH_SCREENCAP = patch(

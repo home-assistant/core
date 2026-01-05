@@ -5,5 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/elv",
   "iot_class": "local_polling",
   "loggers": ["pypca"],
+  "quality_scale": "legacy",
   "requirements": ["pypca==0.0.7"]
 }

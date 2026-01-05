@@ -6,18 +6,29 @@ import time
 from typing import Any
 from unittest.mock import patch
 
+from freezegun import freeze_time
 from gspread.exceptions import APIError
 import pytest
 from requests.models import Response
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.google_sheets import DOMAIN
+from homeassistant.components.google_sheets.const import DOMAIN
+from homeassistant.components.google_sheets.services import (
+    ADD_CREATED_COLUMN,
+    DATA,
+    DATA_CONFIG_ENTRY,
+    ROWS,
+    SERVICE_APPEND_SHEET,
+    SERVICE_GET_SHEET,
+    WORKSHEET,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceNotFound
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -95,7 +106,6 @@ async def test_setup_success(
 
     assert not hass.data.get(DOMAIN)
     assert entries[0].state is ConfigEntryState.NOT_LOADED
-    assert not hass.services.async_services().get(DOMAIN, {})
 
 
 @pytest.mark.parametrize(
@@ -188,7 +198,88 @@ async def test_expired_token_refresh_failure(
     assert entries[0].state is expected_state
 
 
+@pytest.mark.parametrize(
+    ("add_created_column_param", "expected_row"),
+    [
+        ({ADD_CREATED_COLUMN: True}, ["bar", "2024-01-15 12:30:45.123456"]),
+        ({ADD_CREATED_COLUMN: False}, ["bar", ""]),
+        ({}, ["bar", "2024-01-15 12:30:45.123456"]),
+    ],
+    ids=["created_column_true", "created_column_false", "created_column_default"],
+)
+@freeze_time("2024-01-15 12:30:45.123456")
 async def test_append_sheet(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
+    add_created_column_param: dict[str, bool],
+    expected_row: list[str],
+) -> None:
+    """Test created column behavior based on add_created_column parameter."""
+    await setup_integration()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state is ConfigEntryState.LOADED
+
+    with patch("homeassistant.components.google_sheets.services.Client") as mock_client:
+        mock_worksheet = (
+            mock_client.return_value.open_by_key.return_value.worksheet.return_value
+        )
+        mock_worksheet.get_values.return_value = [["foo", "created"]]
+
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_APPEND_SHEET,
+            {
+                DATA_CONFIG_ENTRY: config_entry.entry_id,
+                WORKSHEET: "Sheet1",
+                DATA: {"foo": "bar"},
+                **add_created_column_param,
+            },
+            blocking=True,
+        )
+
+        mock_worksheet.append_rows.assert_called_once()
+        rows_data = mock_worksheet.append_rows.call_args[0][0]
+        assert rows_data[0] == expected_row
+
+
+async def test_get_sheet(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test service call getting data from a sheet."""
+    await setup_integration()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state is ConfigEntryState.LOADED
+
+    with patch("homeassistant.components.google_sheets.services.Client") as mock_client:
+        mock_client.return_value.open_by_key.return_value.worksheet.return_value.get_values.return_value = [
+            ["col1", "col2"],
+            ["a", "b"],
+            ["c", "d"],
+        ]
+        response = await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_SHEET,
+            {
+                DATA_CONFIG_ENTRY: config_entry.entry_id,
+                WORKSHEET: "Sheet1",
+                ROWS: 2,
+            },
+            blocking=True,
+            return_response=True,
+        )
+    assert len(mock_client.mock_calls) == 4
+    assert response == snapshot
+
+
+async def test_append_sheet_multiple_rows(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
     config_entry: MockConfigEntry,
@@ -200,14 +291,14 @@ async def test_append_sheet(
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.LOADED
 
-    with patch("homeassistant.components.google_sheets.Client") as mock_client:
+    with patch("homeassistant.components.google_sheets.services.Client") as mock_client:
         await hass.services.async_call(
             DOMAIN,
             "append_sheet",
             {
                 "config_entry": config_entry.entry_id,
                 "worksheet": "Sheet1",
-                "data": {"foo": "bar"},
+                "data": [{"foo": "bar"}, {"foo": "bar2"}],
             },
             blocking=True,
         )
@@ -232,7 +323,7 @@ async def test_append_sheet_api_error(
     with (
         pytest.raises(HomeAssistantError),
         patch(
-            "homeassistant.components.google_sheets.Client.request",
+            "homeassistant.components.google_sheets.services.Client.request",
             side_effect=APIError(response),
         ),
     ):
@@ -294,7 +385,7 @@ async def test_append_sheet_invalid_config_entry(
     await hass.async_block_till_done()
     assert config_entry2.state is ConfigEntryState.NOT_LOADED
 
-    with pytest.raises(ValueError, match="Config entry not loaded"):
+    with pytest.raises(ValueError, match="Invalid config entry"):
         await hass.services.async_call(
             DOMAIN,
             "append_sheet",
@@ -306,19 +397,97 @@ async def test_append_sheet_invalid_config_entry(
             blocking=True,
         )
 
-    # Unloading the other config entry will de-register the service
-    await hass.config_entries.async_unload(config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
-    with pytest.raises(ServiceNotFound):
+async def test_get_sheet_invalid_config_entry(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
+    expires_at: int,
+    scopes: list[str],
+) -> None:
+    """Test service call get sheet with invalid config entries."""
+    config_entry2 = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_SHEET_ID + "2",
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {
+                "access_token": "mock-access-token",
+                "refresh_token": "mock-refresh-token",
+                "expires_at": expires_at,
+                "scope": " ".join(scopes),
+            },
+        },
+    )
+    config_entry2.add_to_hass(hass)
+
+    await setup_integration()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry2.state is ConfigEntryState.LOADED
+
+    # Exercise service call on a config entry that does not exist
+    with pytest.raises(ServiceValidationError, match="Invalid config entry"):
         await hass.services.async_call(
             DOMAIN,
-            "append_sheet",
+            SERVICE_GET_SHEET,
             {
-                "config_entry": config_entry.entry_id,
-                "worksheet": "Sheet1",
-                "data": {"foo": "bar"},
+                DATA_CONFIG_ENTRY: config_entry.entry_id + "XXX",
+                WORKSHEET: "Sheet1",
+                ROWS: 2,
             },
             blocking=True,
+            return_response=True,
         )
+
+    # Unload the config entry invoke the service on the unloaded entry id
+    await hass.config_entries.async_unload(config_entry2.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry2.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_get_sheet_invalid_worksheet(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
+    expires_at: int,
+    scopes: list[str],
+) -> None:
+    """Test service call get sheet with invalid config entries."""
+    config_entry2 = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_SHEET_ID + "2",
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {
+                "access_token": "mock-access-token",
+                "refresh_token": "mock-refresh-token",
+                "expires_at": expires_at,
+                "scope": " ".join(scopes),
+            },
+        },
+    )
+    config_entry2.add_to_hass(hass)
+
+    await setup_integration()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry2.state is ConfigEntryState.LOADED
+
+    # Exercise service call on a worksheet that does not exist
+    with patch("homeassistant.components.google_sheets.services.Client") as mock_client:
+        mock_client.return_value.open_by_key.return_value.worksheet.side_effect = (
+            APIError(Response())
+        )
+        with pytest.raises(APIError):
+            await hass.services.async_call(
+                DOMAIN,
+                SERVICE_GET_SHEET,
+                {
+                    DATA_CONFIG_ENTRY: config_entry.entry_id,
+                    WORKSHEET: "DoesNotExist",
+                    ROWS: 2,
+                },
+                blocking=True,
+                return_response=True,
+            )

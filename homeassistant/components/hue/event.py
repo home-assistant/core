@@ -6,6 +6,7 @@ from typing import Any
 
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
+from aiohue.v2.models.bell_button import BellButton
 from aiohue.v2.models.button import Button
 from aiohue.v2.models.relative_rotary import RelativeRotary, RelativeRotaryDirection
 
@@ -14,22 +15,21 @@ from homeassistant.components.event import (
     EventEntity,
     EventEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .bridge import HueBridge
-from .const import DEFAULT_BUTTON_EVENT_TYPES, DEVICE_SPECIFIC_EVENT_TYPES, DOMAIN
+from .bridge import HueConfigEntry
+from .const import DEFAULT_BUTTON_EVENT_TYPES, DEVICE_SPECIFIC_EVENT_TYPES
 from .v2.entity import HueBaseEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: HueConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up event platform from Hue button resources."""
-    bridge: HueBridge = hass.data[DOMAIN][config_entry.entry_id]
+    bridge = config_entry.runtime_data
     api: HueBridgeV2 = bridge.api
 
     if bridge.api_version == 1:
@@ -40,19 +40,27 @@ async def async_setup_entry(
     @callback
     def async_add_entity(
         event_type: EventType,
-        resource: Button | RelativeRotary,
+        resource: Button | RelativeRotary | BellButton,
     ) -> None:
         """Add entity from Hue resource."""
         if isinstance(resource, RelativeRotary):
             async_add_entities(
                 [HueRotaryEventEntity(bridge, api.sensors.relative_rotary, resource)]
             )
+        elif isinstance(resource, BellButton):
+            async_add_entities(
+                [HueBellButtonEventEntity(bridge, api.sensors.bell_button, resource)]
+            )
         else:
             async_add_entities(
                 [HueButtonEventEntity(bridge, api.sensors.button, resource)]
             )
 
-    for controller in (api.sensors.button, api.sensors.relative_rotary):
+    for controller in (
+        api.sensors.button,
+        api.sensors.relative_rotary,
+        api.sensors.bell_button,
+    ):
         # add all current items in controller
         for item in controller:
             async_add_entity(EventType.RESOURCE_ADDED, item)
@@ -67,6 +75,8 @@ async def async_setup_entry(
 
 class HueButtonEventEntity(HueBaseEntity, EventEntity):
     """Representation of a Hue Event entity from a button resource."""
+
+    resource: Button | BellButton
 
     entity_description = EventEntityDescription(
         key="button",
@@ -92,7 +102,9 @@ class HueButtonEventEntity(HueBaseEntity, EventEntity):
         }
 
     @callback
-    def _handle_event(self, event_type: EventType, resource: Button) -> None:
+    def _handle_event(
+        self, event_type: EventType, resource: Button | BellButton
+    ) -> None:
         """Handle status event for this resource (or it's parent)."""
         if event_type == EventType.RESOURCE_UPDATED and resource.id == self.resource.id:
             if resource.button is None or resource.button.button_report is None:
@@ -101,6 +113,18 @@ class HueButtonEventEntity(HueBaseEntity, EventEntity):
             self.async_write_ha_state()
             return
         super()._handle_event(event_type, resource)
+
+
+class HueBellButtonEventEntity(HueButtonEventEntity):
+    """Representation of a Hue Event entity from a bell_button resource."""
+
+    resource: Button | BellButton
+
+    entity_description = EventEntityDescription(
+        key="bell_button",
+        device_class=EventDeviceClass.DOORBELL,
+        has_entity_name=True,
+    )
 
 
 class HueRotaryEventEntity(HueBaseEntity, EventEntity):

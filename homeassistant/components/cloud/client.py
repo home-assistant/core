@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from datetime import datetime
 from http import HTTPStatus
 import logging
@@ -11,6 +12,7 @@ from typing import Any, Literal
 
 import aiohttp
 from hass_nabucasa.client import CloudClient as Interface, RemoteActivationNotAllowed
+from webrtc_models import RTCIceServer
 
 from homeassistant.components import google_assistant, persistent_notification, webhook
 from homeassistant.components.alexa import (
@@ -18,23 +20,31 @@ from homeassistant.components.alexa import (
     smart_home as alexa_smart_home,
 )
 from homeassistant.components.google_assistant import smart_home as ga
+from homeassistant.components.web_rtc import async_register_ice_servers
 from homeassistant.const import __version__ as HA_VERSION
 from homeassistant.core import Context, HassJob, HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import SERVER_SOFTWARE
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.util.aiohttp import MockRequest, serialize_response
 
 from . import alexa_config, google_config
-from .const import DISPATCHER_REMOTE_UPDATE, DOMAIN
+from .const import DISPATCHER_REMOTE_UPDATE, DOMAIN, PREF_ENABLE_CLOUD_ICE_SERVERS
 from .prefs import CloudPreferences
 
 _LOGGER = logging.getLogger(__name__)
 
 VALID_REPAIR_TRANSLATION_KEYS = {
-    "warn_bad_custom_domain_configuration",
+    "connection_error",
+    "no_subscription",
     "reset_bad_custom_domain_configuration",
+    "subscription_expired",
+    "warn_bad_custom_domain_configuration",
 }
 
 
@@ -60,6 +70,8 @@ class CloudClient(Interface):
         self._alexa_config_init_lock = asyncio.Lock()
         self._google_config_init_lock = asyncio.Lock()
         self._relayer_region: str | None = None
+        self._cloud_ice_servers_listener: Callable[[], None] | None = None
+        self._ice_servers: list[RTCIceServer] = []
 
     @property
     def base_path(self) -> Path:
@@ -105,6 +117,11 @@ class CloudClient(Interface):
     def relayer_region(self) -> str | None:
         """Return the connected relayer region."""
         return self._relayer_region
+
+    @property
+    def ice_servers(self) -> list[RTCIceServer]:
+        """Return the current ICE servers."""
+        return self._ice_servers
 
     async def get_alexa_config(self) -> alexa_config.CloudAlexaConfig:
         """Return Alexa config."""
@@ -187,6 +204,46 @@ class CloudClient(Interface):
             if is_new_user:
                 await gconf.async_sync_entities(gconf.agent_user_id)
 
+        async def setup_cloud_ice_servers(_: datetime) -> None:
+            async def register_cloud_ice_server(
+                ice_servers: list[RTCIceServer],
+            ) -> Callable[[], None]:
+                """Register cloud ice server."""
+                self._ice_servers = ice_servers
+                return async_register_ice_servers(self._hass, lambda: self._ice_servers)
+
+            async def async_register_cloud_ice_servers_listener(
+                prefs: CloudPreferences,
+            ) -> None:
+                is_cloud_ice_servers_enabled = (
+                    self.cloud.is_logged_in
+                    and not self.cloud.subscription_expired
+                    and prefs.cloud_ice_servers_enabled
+                )
+                if is_cloud_ice_servers_enabled:
+                    if self._cloud_ice_servers_listener is None:
+                        self._cloud_ice_servers_listener = await self.cloud.ice_servers.async_register_ice_servers_listener(
+                            register_cloud_ice_server
+                        )
+                elif self._cloud_ice_servers_listener:
+                    self._cloud_ice_servers_listener()
+                    self._cloud_ice_servers_listener = None
+
+            async def async_prefs_updated(prefs: CloudPreferences) -> None:
+                updated_prefs = prefs.last_updated
+
+                if (
+                    updated_prefs is None
+                    or PREF_ENABLE_CLOUD_ICE_SERVERS not in updated_prefs
+                ):
+                    return
+
+                await async_register_cloud_ice_servers_listener(prefs)
+
+            await async_register_cloud_ice_servers_listener(self._prefs)
+
+            self._prefs.async_listen_updates(async_prefs_updated)
+
         tasks = []
 
         if self._prefs.alexa_enabled and self._prefs.alexa_report_state:
@@ -194,6 +251,8 @@ class CloudClient(Interface):
 
         if self._prefs.google_enabled:
             tasks.append(enable_google)
+
+        tasks.append(setup_cloud_ice_servers)
 
         if tasks:
             await asyncio.gather(*(task(None) for task in tasks))
@@ -212,6 +271,7 @@ class CloudClient(Interface):
 
     async def logout_cleanups(self) -> None:
         """Cleanup some stuff after logout."""
+        self._ice_servers = []
         await self.prefs.async_set_username(None)
 
         if self._alexa_config:
@@ -221,6 +281,10 @@ class CloudClient(Interface):
         if self._google_config:
             self._google_config.async_deinitialize()
         self._google_config = None
+
+        if self._cloud_ice_servers_listener:
+            self._cloud_ice_servers_listener()
+            self._cloud_ice_servers_listener = None
 
     @callback
     def user_message(self, identifier: str, title: str, message: str) -> None:
@@ -253,6 +317,7 @@ class CloudClient(Interface):
             },
             "version": HA_VERSION,
             "instance_id": self.prefs.instance_id,
+            "name": self._hass.config.location_name,
         }
 
     async def async_alexa_message(self, payload: dict[Any, Any]) -> dict[Any, Any]:
@@ -345,7 +410,12 @@ class CloudClient(Interface):
     ) -> None:
         """Create a repair issue."""
         if translation_key not in VALID_REPAIR_TRANSLATION_KEYS:
-            raise ValueError(f"Invalid translation key {translation_key}")
+            _LOGGER.error(
+                "Invalid translation key %s for repair issue %s",
+                translation_key,
+                identifier,
+            )
+            return
         async_create_issue(
             hass=self._hass,
             domain=DOMAIN,
@@ -355,3 +425,7 @@ class CloudClient(Interface):
             severity=IssueSeverity(severity),
             is_fixable=False,
         )
+
+    async def async_delete_repair_issue(self, identifier: str) -> None:
+        """Delete a repair issue."""
+        async_delete_issue(hass=self._hass, domain=DOMAIN, issue_id=identifier)

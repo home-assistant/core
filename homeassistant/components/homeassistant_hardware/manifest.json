@@ -1,8 +1,14 @@
 {
   "domain": "homeassistant_hardware",
   "name": "Home Assistant Hardware",
-  "after_dependencies": ["zha"],
+  "after_dependencies": ["hassio"],
   "codeowners": ["@home-assistant/core"],
+  "dependencies": ["usb"],
   "documentation": "https://www.home-assistant.io/integrations/homeassistant_hardware",
-  "integration_type": "system"
+  "integration_type": "system",
+  "requirements": [
+    "serialx==0.5.0",
+    "universal-silabs-flasher==0.1.2",
+    "ha-silabs-firmware-client==0.3.0"
+  ]
 }

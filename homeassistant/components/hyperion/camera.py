@@ -13,6 +13,7 @@ from typing import Any
 from aiohttp import web
 from hyperion import client
 from hyperion.const import (
+    KEY_DATA,
     KEY_IMAGE,
     KEY_IMAGE_STREAM,
     KEY_LEDCOLORS,
@@ -25,22 +26,21 @@ from homeassistant.components.camera import (
     Camera,
     async_get_still_stream,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import (
+    HyperionConfigEntry,
     get_hyperion_device_id,
     get_hyperion_unique_id,
     listen_for_instance_updates,
 )
 from .const import (
-    CONF_INSTANCE_CLIENTS,
     DOMAIN,
     HYPERION_MANUFACTURER_NAME,
     HYPERION_MODEL_NAME,
@@ -53,12 +53,11 @@ IMAGE_STREAM_JPG_SENTINEL = "data:image/jpg;base64,"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: HyperionConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Hyperion platform from config entry."""
-    entry_data = hass.data[DOMAIN][config_entry.entry_id]
-    server_id = config_entry.unique_id
+    server_id = entry.unique_id
 
     def camera_unique_id(instance_num: int) -> str:
         """Return the camera unique_id."""
@@ -75,7 +74,7 @@ async def async_setup_entry(
                     server_id,
                     instance_num,
                     instance_name,
-                    entry_data[CONF_INSTANCE_CLIENTS][instance_num],
+                    entry.runtime_data.instance_clients[instance_num],
                 )
             ]
         )
@@ -91,7 +90,7 @@ async def async_setup_entry(
             ),
         )
 
-    listen_for_instance_updates(hass, config_entry, instance_add, instance_remove)
+    listen_for_instance_updates(hass, entry, instance_add, instance_remove)
 
 
 # A note on Hyperion streaming semantics:
@@ -157,7 +156,8 @@ class HyperionCamera(Camera):
         """Update Hyperion components."""
         if not img:
             return
-        img_data = img.get(KEY_RESULT, {}).get(KEY_IMAGE)
+        # Prefer KEY_DATA (Hyperion server >= 2.1.1); fall back to KEY_RESULT for older server versions
+        img_data = img.get(KEY_DATA, img.get(KEY_RESULT, {})).get(KEY_IMAGE)
         if not img_data or not img_data.startswith(IMAGE_STREAM_JPG_SENTINEL):
             return
         async with self._image_cond:

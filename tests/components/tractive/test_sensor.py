@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -26,5 +26,6 @@ async def test_sensor(
 
         mock_tractive_client.send_hardware_event(mock_config_entry)
         mock_tractive_client.send_wellness_event(mock_config_entry)
+        mock_tractive_client.send_health_overview_event(mock_config_entry)
         await hass.async_block_till_done()
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)

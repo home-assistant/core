@@ -1,0 +1,100 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      No custom actions are defined.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: |
+      No custom actions are defined.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: |
+      No explicit event subscriptions.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup:
+    status: exempt
+    comment: |
+      Device is expected to be offline most of the time, but needs to connect quickly once available.
+  unique-config-entry: done
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: |
+      No custom actions are defined.
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable:
+    status: done
+    comment: |
+      Handled by coordinator.
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: |
+      No authentication required.
+  test-coverage: todo
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery-update-info:
+    status: exempt
+    comment: |
+      No IP discovery.
+  discovery:
+    status: done
+    comment: |
+      The integration uses Bluetooth discovery to find devices.
+  docs-data-update: done
+  docs-examples: todo
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
+  dynamic-devices: done
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations:
+    status: exempt
+    comment: |
+      No custom exceptions are defined.
+  icon-translations: done
+  reconfiguration-flow:
+    status: exempt
+    comment: |
+      No reconfiguration flow is needed as the only thing that could be changed is the MAC, which is already hardcoded on the device itself.
+  repair-issues:
+    status: exempt
+    comment: |
+      No repair issues.
+  stale-devices:
+    status: exempt
+    comment: |
+      The device itself is the integration.
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: exempt
+    comment: |
+      No web session is used.
+  strict-typing: todo

@@ -45,17 +45,19 @@ async def test_init_success(
 
 
 @pytest.mark.parametrize(
-    ("config_entry_data", "responses", "config_entry_state"),
+    ("config_entry_data", "responses", "config_entry_state", "config_flow_steps"),
     [
         (
             CONFIG_ENTRY_DATA,
             [mock_response_error(HTTPStatus.SERVICE_UNAVAILABLE)],
             ConfigEntryState.SETUP_RETRY,
+            [],
         ),
         (
             CONFIG_ENTRY_DATA,
             [mock_response_error(HTTPStatus.INTERNAL_SERVER_ERROR)],
             ConfigEntryState.SETUP_RETRY,
+            [],
         ),
         (
             CONFIG_ENTRY_DATA,
@@ -64,6 +66,7 @@ async def test_init_success(
                 mock_response_error(HTTPStatus.SERVICE_UNAVAILABLE),
             ],
             ConfigEntryState.SETUP_RETRY,
+            [],
         ),
         (
             CONFIG_ENTRY_DATA,
@@ -72,6 +75,13 @@ async def test_init_success(
                 mock_response_error(HTTPStatus.INTERNAL_SERVER_ERROR),
             ],
             ConfigEntryState.SETUP_RETRY,
+            [],
+        ),
+        (
+            CONFIG_ENTRY_DATA,
+            [mock_response_error(HTTPStatus.FORBIDDEN)],
+            ConfigEntryState.SETUP_ERROR,
+            ["reauth_confirm"],
         ),
     ],
     ids=[
@@ -79,16 +89,21 @@ async def test_init_success(
         "server-error",
         "coordinator-unavailable",
         "coordinator-server-error",
+        "forbidden",
     ],
 )
 async def test_communication_failure(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     config_entry_state: list[ConfigEntryState],
+    config_flow_steps: list[str],
 ) -> None:
     """Test unable to talk to device on startup, which fails setup."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state == config_entry_state
+
+    flows = hass.config_entries.flow.async_progress()
+    assert [flow["step_id"] for flow in flows] == config_flow_steps
 
 
 @pytest.mark.parametrize(
@@ -434,3 +449,75 @@ async def test_fix_duplicate_device_ids(
     assert device_entry.identifiers == {(DOMAIN, MAC_ADDRESS_UNIQUE_ID)}
     assert device_entry.name_by_user == expected_device_name
     assert device_entry.disabled_by == expected_disabled_by
+
+
+async def test_reload_migration_with_leading_zero_mac(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test migration and reload of a device with a mac address with a leading zero."""
+    mac_address = "01:02:03:04:05:06"
+    mac_address_unique_id = dr.format_mac(mac_address)
+    serial_number = "0"
+
+    # Setup the config entry to be in a pre-migrated state
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=serial_number,
+        data={
+            "host": "127.0.0.1",
+            "password": "password",
+            CONF_MAC: mac_address,
+            "serial_number": serial_number,
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    # Create a device and entity with the old unique id format
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, f"{serial_number}-1")},
+    )
+    entity_entry = entity_registry.async_get_or_create(
+        "switch",
+        DOMAIN,
+        f"{serial_number}-1-zone1",
+        suggested_object_id="zone1",
+        config_entry=config_entry,
+        device_id=device_entry.id,
+    )
+
+    # Setup the integration, which will migrate the unique ids
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Verify the device and entity were migrated to the new format
+    migrated_device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{mac_address_unique_id}-1")}
+    )
+    assert migrated_device_entry is not None
+    migrated_entity_entry = entity_registry.async_get(entity_entry.entity_id)
+    assert migrated_entity_entry is not None
+    assert migrated_entity_entry.unique_id == f"{mac_address_unique_id}-1-zone1"
+
+    # Reload the integration
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Verify the device and entity still have the correct identifiers and were not duplicated
+    reloaded_device_entry = device_registry.async_get(migrated_device_entry.id)
+    assert reloaded_device_entry is not None
+    assert reloaded_device_entry.identifiers == {(DOMAIN, f"{mac_address_unique_id}-1")}
+    reloaded_entity_entry = entity_registry.async_get(entity_entry.entity_id)
+    assert reloaded_entity_entry is not None
+    assert reloaded_entity_entry.unique_id == f"{mac_address_unique_id}-1-zone1"
+
+    assert (
+        len(dr.async_entries_for_config_entry(device_registry, config_entry.entry_id))
+        == 1
+    )
+    assert (
+        len(er.async_entries_for_config_entry(entity_registry, config_entry.entry_id))
+        == 1
+    )

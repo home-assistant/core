@@ -1,6 +1,7 @@
 """Tests for mobile_app component."""
 
 from http import HTTPStatus
+from typing import Any
 
 from aiohttp.test_utils import TestClient
 import pytest
@@ -15,7 +16,9 @@ from tests.typing import ClientSessionGenerator
 
 
 @pytest.fixture
-async def create_registrations(hass, webhook_client):
+async def create_registrations(
+    hass: HomeAssistant, webhook_client: TestClient
+) -> tuple[dict[str, Any], dict[str, Any]]:
     """Return two new registrations."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -37,7 +40,7 @@ async def create_registrations(hass, webhook_client):
 
 
 @pytest.fixture
-async def push_registration(hass, webhook_client):
+async def push_registration(hass: HomeAssistant, webhook_client: TestClient):
     """Return registration with push notifications enabled."""
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
 
@@ -67,7 +70,7 @@ async def webhook_client(
 
 
 @pytest.fixture(autouse=True)
-async def setup_ws(hass):
+async def setup_ws(hass: HomeAssistant) -> None:
     """Configure the websocket_api component."""
     assert await async_setup_component(hass, "repairs", {})
     assert await async_setup_component(hass, "websocket_api", {})

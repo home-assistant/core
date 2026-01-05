@@ -8,6 +8,7 @@ from typing import Any
 
 import opengarage
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import update_coordinator
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
@@ -20,10 +21,12 @@ _LOGGER = logging.getLogger(__name__)
 class OpenGarageDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching Opengarage data."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
-        *,
+        config_entry: ConfigEntry,
         open_garage_connection: opengarage.OpenGarage,
     ) -> None:
         """Initialize global Opengarage data updater."""
@@ -32,6 +35,7 @@ class OpenGarageDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=5),
         )

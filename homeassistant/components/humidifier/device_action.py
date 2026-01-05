@@ -19,10 +19,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import get_capability, get_supported_features
-from homeassistant.helpers.typing import ConfigType, TemplateVarsType
+from homeassistant.helpers.typing import ConfigType, TemplateVarsType, VolDictType
 
 from . import DOMAIN, const
 
@@ -99,9 +98,10 @@ async def async_call_action_from_config(
         service = const.SERVICE_SET_MODE
         service_data[ATTR_MODE] = config[ATTR_MODE]
     else:
-        return await toggle_entity.async_call_action_from_config(
+        await toggle_entity.async_call_action_from_config(
             hass, config, variables, context, DOMAIN
         )
+        return
 
     await hass.services.async_call(
         DOMAIN, service, service_data, blocking=True, context=context
@@ -114,7 +114,7 @@ async def async_get_action_capabilities(
     """List action capabilities."""
     action_type = config[CONF_TYPE]
 
-    fields = {}
+    fields: VolDictType = {}
 
     if action_type == "set_humidity":
         fields[vol.Required(const.ATTR_HUMIDITY)] = vol.Coerce(int)

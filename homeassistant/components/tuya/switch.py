@@ -2,31 +2,47 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
 
 from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.switch import (
+    DOMAIN as SWITCH_DOMAIN,
     SwitchDeviceClass,
     SwitchEntity,
     SwitchEntityDescription,
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 
 from . import TuyaConfigEntry
-from .base import TuyaEntity
-from .const import TUYA_DISCOVERY_NEW, DPCode
+from .const import DOMAIN, TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
+from .entity import TuyaEntity
+from .models import DPCodeBooleanWrapper
+
+
+@dataclass(frozen=True, kw_only=True)
+class TuyaDeprecatedSwitchEntityDescription(SwitchEntityDescription):
+    """Describes Tuya deprecated switch entity."""
+
+    deprecated: str
+    breaks_in_ha_version: str
+
 
 # All descriptions can be found here. Mostly the Boolean data types in the
 # default instruction set of each category end up being a Switch.
 # https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
-SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
-    # Smart Kettle
-    # https://developer.tuya.com/en/docs/iot/fbh?id=K9gf484m21yq7
-    "bh": (
+SWITCHES: dict[DeviceCategory, tuple[SwitchEntityDescription, ...]] = {
+    DeviceCategory.BH: (
         SwitchEntityDescription(
             key=DPCode.START,
             translation_key="start",
@@ -37,9 +53,65 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # EasyBaby
-    # Undocumented, might have a wider use
-    "cn": (
+    DeviceCategory.BZYD: (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH,
+            name=None,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.CHILD_LOCK,
+            translation_key="child_lock",
+            icon="mdi:account-lock",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_MUSIC,
+            translation_key="music",
+            icon="mdi:music",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SNOOZE,
+            translation_key="snooze",
+            icon="mdi:alarm-snooze",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    DeviceCategory.CJKG: (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_1,
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "1"},
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_2,
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "2"},
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_3,
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "3"},
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_4,
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "4"},
+        ),
+    ),
+    DeviceCategory.CL: (
+        SwitchEntityDescription(
+            key=DPCode.CONTROL_BACK,
+            translation_key="reverse",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.OPPOSITE,
+            translation_key="reverse",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    DeviceCategory.CN: (
         SwitchEntityDescription(
             key=DPCode.DISINFECTION,
             translation_key="disinfection",
@@ -49,18 +121,40 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             translation_key="water",
         ),
     ),
-    # Smart Pet Feeder
-    # https://developer.tuya.com/en/docs/iot/categorycwwsq?id=Kaiuz2b6vydld
-    "cwwsq": (
+    DeviceCategory.CS: (
+        SwitchEntityDescription(
+            key=DPCode.ANION,
+            translation_key="ionizer",
+            icon="mdi:atom",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.CHILD_LOCK,
+            translation_key="child_lock",
+            icon="mdi:account-lock",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.FILTER_RESET,
+            translation_key="filter_reset",
+            icon="mdi:filter",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    DeviceCategory.CWJWQ: (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH,
+            translation_key="switch",
+        ),
+    ),
+    DeviceCategory.CWWSQ: (
         SwitchEntityDescription(
             key=DPCode.SLOW_FEED,
             translation_key="slow_feed",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Pet Water Feeder
-    # https://developer.tuya.com/en/docs/iot/f?id=K9gf46aewxem5
-    "cwysj": (
+    DeviceCategory.CWYSJ: (
         SwitchEntityDescription(
             key=DPCode.FILTER_RESET,
             translation_key="filter_reset",
@@ -86,9 +180,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Light
-    # https://developer.tuya.com/en/docs/iot/f?id=K9i5ql3v98hn3
-    "dj": (
+    DeviceCategory.DJ: (
         # There are sockets available with an RGB light
         # that advertise as `dj`, but provide an additional
         # switch to control the plug.
@@ -97,8 +189,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             translation_key="plug",
         ),
     ),
-    # Circuit Breaker
-    "dlq": (
+    DeviceCategory.DLQ: (
         SwitchEntityDescription(
             key=DPCode.CHILD_LOCK,
             translation_key="child_lock",
@@ -109,31 +200,152 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             translation_key="switch",
         ),
     ),
-    # Wake Up Light II
-    # Not documented
-    "hxd": (
+    DeviceCategory.DR: (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH,
+            name="Power",
+            icon="mdi:power",
+            device_class=SwitchDeviceClass.SWITCH,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_1,
+            name="Side A Power",
+            icon="mdi:alpha-a",
+            device_class=SwitchDeviceClass.SWITCH,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_2,
+            name="Side B Power",
+            icon="mdi:alpha-b",
+            device_class=SwitchDeviceClass.SWITCH,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.PREHEAT,
+            name="Preheat",
+            icon="mdi:radiator",
+            device_class=SwitchDeviceClass.SWITCH,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.PREHEAT_1,
+            name="Side A Preheat",
+            icon="mdi:radiator",
+            device_class=SwitchDeviceClass.SWITCH,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.PREHEAT_2,
+            name="Side B Preheat",
+            icon="mdi:radiator",
+            device_class=SwitchDeviceClass.SWITCH,
+        ),
+    ),
+    DeviceCategory.FS: (
+        SwitchEntityDescription(
+            key=DPCode.ANION,
+            translation_key="anion",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.HUMIDIFIER,
+            translation_key="humidification",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.OXYGEN,
+            translation_key="oxygen_bar",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.FAN_COOL,
+            translation_key="natural_wind",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.FAN_BEEP,
+            translation_key="sound",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.CHILD_LOCK,
+            translation_key="child_lock",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    DeviceCategory.FSD: (
+        SwitchEntityDescription(
+            key=DPCode.FAN_BEEP,
+            translation_key="sound",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    DeviceCategory.GGQ: (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_1,
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "1"},
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_2,
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "2"},
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_3,
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "3"},
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_4,
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "4"},
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_5,
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "5"},
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_6,
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "6"},
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_7,
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "7"},
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_8,
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "8"},
+        ),
+    ),
+    DeviceCategory.HXD: (
         SwitchEntityDescription(
             key=DPCode.SWITCH_1,
             translation_key="radio",
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_2,
-            translation_key="alarm_1",
+            translation_key="indexed_alarm",
+            translation_placeholders={"index": "1"},
             entity_category=EntityCategory.CONFIG,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_3,
-            translation_key="alarm_2",
+            translation_key="indexed_alarm",
+            translation_placeholders={"index": "2"},
             entity_category=EntityCategory.CONFIG,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_4,
-            translation_key="alarm_3",
+            translation_key="indexed_alarm",
+            translation_placeholders={"index": "3"},
             entity_category=EntityCategory.CONFIG,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_5,
-            translation_key="alarm_4",
+            translation_key="indexed_alarm",
+            translation_placeholders={"index": "4"},
             entity_category=EntityCategory.CONFIG,
         ),
         SwitchEntityDescription(
@@ -141,24 +353,24 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             translation_key="sleep_aid",
         ),
     ),
-    # Two-way temperature and humidity switch
-    # "MOES Temperature and Humidity Smart Switch Module MS-103"
-    # Documentation not found
-    "wkcz": (
+    DeviceCategory.JSQ: (
         SwitchEntityDescription(
-            key=DPCode.SWITCH_1,
-            translation_key="switch_1",
-            device_class=SwitchDeviceClass.OUTLET,
+            key=DPCode.SWITCH_SOUND,
+            translation_key="voice",
+            entity_category=EntityCategory.CONFIG,
         ),
         SwitchEntityDescription(
-            key=DPCode.SWITCH_2,
-            translation_key="switch_2",
-            device_class=SwitchDeviceClass.OUTLET,
+            key=DPCode.SLEEP,
+            translation_key="sleep",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.STERILIZATION,
+            translation_key="sterilization",
+            entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Switch
-    # https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
-    "kg": (
+    DeviceCategory.KG: (
         SwitchEntityDescription(
             key=DPCode.CHILD_LOCK,
             translation_key="child_lock",
@@ -166,67 +378,81 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_1,
-            translation_key="switch_1",
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "1"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_2,
-            translation_key="switch_2",
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "2"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_3,
-            translation_key="switch_3",
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "3"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_4,
-            translation_key="switch_4",
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "4"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_5,
-            translation_key="switch_5",
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "5"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_6,
-            translation_key="switch_6",
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "6"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_7,
-            translation_key="switch_7",
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "7"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_8,
-            translation_key="switch_8",
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "8"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_USB1,
-            translation_key="usb_1",
+            translation_key="indexed_usb",
+            translation_placeholders={"index": "1"},
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_USB2,
-            translation_key="usb_2",
+            translation_key="indexed_usb",
+            translation_placeholders={"index": "2"},
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_USB3,
-            translation_key="usb_3",
+            translation_key="indexed_usb",
+            translation_placeholders={"index": "3"},
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_USB4,
-            translation_key="usb_4",
+            translation_key="indexed_usb",
+            translation_placeholders={"index": "4"},
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_USB5,
-            translation_key="usb_5",
+            translation_key="indexed_usb",
+            translation_placeholders={"index": "5"},
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_USB6,
-            translation_key="usb_6",
+            translation_key="indexed_usb",
+            translation_placeholders={"index": "6"},
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH,
@@ -234,9 +460,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             device_class=SwitchDeviceClass.OUTLET,
         ),
     ),
-    # Air Purifier
-    # https://developer.tuya.com/en/docs/iot/f?id=K9gf46h2s6dzm
-    "kj": (
+    DeviceCategory.KJ: (
         SwitchEntityDescription(
             key=DPCode.ANION,
             translation_key="ionizer",
@@ -267,9 +491,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Air conditioner
-    # https://developer.tuya.com/en/docs/iot/categorykt?id=Kaiuz0z71ov2n
-    "kt": (
+    DeviceCategory.KT: (
         SwitchEntityDescription(
             key=DPCode.ANION,
             translation_key="ionizer",
@@ -281,9 +503,34 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Sous Vide Cooker
-    # https://developer.tuya.com/en/docs/iot/categorymzj?id=Kaiuz2vy130ux
-    "mzj": (
+    DeviceCategory.KS: (
+        SwitchEntityDescription(
+            key=DPCode.ANION,
+            translation_key="ionizer",
+        ),
+    ),
+    DeviceCategory.MAL: (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_ALARM_SOUND,
+            # This switch is called "Arm Beep" in the official Tuya app
+            translation_key="arm_beep",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_ALARM_LIGHT,
+            # This switch is called "Siren" in the official Tuya app
+            translation_key="siren",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    DeviceCategory.MSP: (
+        SwitchEntityDescription(
+            key=DPCode.AUTO_CLEAN,
+            translation_key="auto_clean",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    DeviceCategory.MZJ: (
         SwitchEntityDescription(
             key=DPCode.SWITCH,
             translation_key="switch",
@@ -295,9 +542,7 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Power Socket
-    # https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
-    "pc": (
+    DeviceCategory.PC: (
         SwitchEntityDescription(
             key=DPCode.CHILD_LOCK,
             translation_key="child_lock",
@@ -305,57 +550,69 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_1,
-            translation_key="socket_1",
+            translation_key="indexed_socket",
+            translation_placeholders={"index": "1"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_2,
-            translation_key="socket_2",
+            translation_key="indexed_socket",
+            translation_placeholders={"index": "2"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_3,
-            translation_key="socket_3",
+            translation_key="indexed_socket",
+            translation_placeholders={"index": "3"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_4,
-            translation_key="socket_4",
+            translation_key="indexed_socket",
+            translation_placeholders={"index": "4"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_5,
-            translation_key="socket_5",
+            translation_key="indexed_socket",
+            translation_placeholders={"index": "5"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_6,
-            translation_key="socket_6",
+            translation_key="indexed_socket",
+            translation_placeholders={"index": "6"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_USB1,
-            translation_key="usb_1",
+            translation_key="indexed_usb",
+            translation_placeholders={"index": "1"},
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_USB2,
-            translation_key="usb_2",
+            translation_key="indexed_usb",
+            translation_placeholders={"index": "2"},
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_USB3,
-            translation_key="usb_3",
+            translation_key="indexed_usb",
+            translation_placeholders={"index": "3"},
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_USB4,
-            translation_key="usb_4",
+            translation_key="indexed_usb",
+            translation_placeholders={"index": "4"},
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_USB5,
-            translation_key="usb_5",
+            translation_key="indexed_usb",
+            translation_placeholders={"index": "5"},
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_USB6,
-            translation_key="usb_6",
+            translation_key="indexed_usb",
+            translation_placeholders={"index": "6"},
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH,
@@ -363,18 +620,19 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             device_class=SwitchDeviceClass.OUTLET,
         ),
     ),
-    # Unknown product with switch capabilities
-    # Fond in some diffusers, plugs and PIR flood lights
-    # Not documented
-    "qjdcz": (
+    DeviceCategory.QCCDZ: (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH,
+            translation_key="switch",
+        ),
+    ),
+    DeviceCategory.QJDCZ: (
         SwitchEntityDescription(
             key=DPCode.SWITCH_1,
             translation_key="switch",
         ),
     ),
-    # Heater
-    # https://developer.tuya.com/en/docs/iot/categoryqn?id=Kaiuz18kih0sm
-    "qn": (
+    DeviceCategory.QN: (
         SwitchEntityDescription(
             key=DPCode.ANION,
             translation_key="ionizer",
@@ -386,9 +644,14 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Robot Vacuum
-    # https://developer.tuya.com/en/docs/iot/fsd?id=K9gf487ck1tlo
-    "sd": (
+    DeviceCategory.QXJ: (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH,
+            translation_key="switch",
+            device_class=SwitchDeviceClass.OUTLET,
+        ),
+    ),
+    DeviceCategory.SD: (
         SwitchEntityDescription(
             key=DPCode.SWITCH_DISTURB,
             translation_key="do_not_disturb",
@@ -400,25 +663,29 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Smart Water Timer
-    "sfkzq": (
-        SwitchEntityDescription(
+    DeviceCategory.SFKZQ: (
+        TuyaDeprecatedSwitchEntityDescription(
             key=DPCode.SWITCH,
             translation_key="switch",
+            deprecated="deprecated_entity_new_valve",
+            breaks_in_ha_version="2026.4.0",
         ),
     ),
-    # Siren Alarm
-    # https://developer.tuya.com/en/docs/iot/categorysgbj?id=Kaiuz37tlpbnu
-    "sgbj": (
+    DeviceCategory.SGBJ: (
         SwitchEntityDescription(
             key=DPCode.MUFFLING,
             translation_key="mute",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Smart Camera
-    # https://developer.tuya.com/en/docs/iot/categorysp?id=Kaiuz35leyo12
-    "sp": (
+    DeviceCategory.SJZ: (
+        SwitchEntityDescription(
+            key=DPCode.CHILD_LOCK,
+            translation_key="child_lock",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    DeviceCategory.SP: (
         SwitchEntityDescription(
             key=DPCode.WIRELESS_BATTERYLOCK,
             translation_key="battery_lock",
@@ -475,34 +742,57 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Fingerbot
-    "szjqr": (
+    DeviceCategory.SZ: (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH,
+            translation_key="power",
+        ),
+        SwitchEntityDescription(
+            key=DPCode.PUMP,
+            translation_key="pump",
+        ),
+    ),
+    DeviceCategory.SZJQR: (
         SwitchEntityDescription(
             key=DPCode.SWITCH,
             translation_key="switch",
         ),
     ),
-    # IoT Switch?
-    # Note: Undocumented
-    "tdq": (
+    DeviceCategory.TDQ: (
         SwitchEntityDescription(
             key=DPCode.SWITCH_1,
-            translation_key="switch_1",
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "1"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_2,
-            translation_key="switch_2",
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "2"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_3,
-            translation_key="switch_3",
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "3"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
         SwitchEntityDescription(
             key=DPCode.SWITCH_4,
-            translation_key="switch_4",
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "4"},
+            device_class=SwitchDeviceClass.OUTLET,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_5,
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "5"},
+            device_class=SwitchDeviceClass.OUTLET,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_6,
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "6"},
             device_class=SwitchDeviceClass.OUTLET,
         ),
         SwitchEntityDescription(
@@ -511,27 +801,47 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Solar Light
-    # https://developer.tuya.com/en/docs/iot/tynd?id=Kaof8j02e1t98
-    "tyndj": (
+    DeviceCategory.TYNDJ: (
         SwitchEntityDescription(
             key=DPCode.SWITCH_SAVE_ENERGY,
             translation_key="energy_saving",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Thermostat
-    # https://developer.tuya.com/en/docs/iot/f?id=K9gf45ld5l0t9
-    "wk": (
+    DeviceCategory.WG2: (
+        SwitchEntityDescription(
+            key=DPCode.MUFFLING,
+            translation_key="mute",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    DeviceCategory.WK: (
         SwitchEntityDescription(
             key=DPCode.CHILD_LOCK,
             translation_key="child_lock",
             entity_category=EntityCategory.CONFIG,
         ),
+        SwitchEntityDescription(
+            key=DPCode.FROST,
+            translation_key="frost_protection",
+            entity_category=EntityCategory.CONFIG,
+        ),
     ),
-    # Thermostatic Radiator Valve
-    # Not documented
-    "wkf": (
+    DeviceCategory.WKCZ: (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_1,
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "1"},
+            device_class=SwitchDeviceClass.OUTLET,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_2,
+            translation_key="indexed_switch",
+            translation_placeholders={"index": "2"},
+            device_class=SwitchDeviceClass.OUTLET,
+        ),
+    ),
+    DeviceCategory.WKF: (
         SwitchEntityDescription(
             key=DPCode.CHILD_LOCK,
             translation_key="child_lock",
@@ -543,34 +853,34 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Air Conditioner Mate (Smart IR Socket)
-    "wnykq": (
+    DeviceCategory.WNYKQ: (
         SwitchEntityDescription(
             key=DPCode.SWITCH,
             name=None,
         ),
     ),
-    # SIREN: Siren (switch) with Temperature and humidity sensor
-    # https://developer.tuya.com/en/docs/iot/f?id=Kavck4sr3o5ek
-    "wsdcg": (
+    DeviceCategory.WSDCG: (
         SwitchEntityDescription(
             key=DPCode.SWITCH,
             translation_key="switch",
             device_class=SwitchDeviceClass.OUTLET,
         ),
     ),
-    # Ceiling Light
-    # https://developer.tuya.com/en/docs/iot/ceiling-light?id=Kaiuz03xxfc4r
-    "xdd": (
+    DeviceCategory.XDD: (
         SwitchEntityDescription(
             key=DPCode.DO_NOT_DISTURB,
             translation_key="do_not_disturb",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Diffuser
-    # https://developer.tuya.com/en/docs/iot/categoryxxj?id=Kaiuz1f9mo6bl
-    "xxj": (
+    DeviceCategory.XNYJCN: (
+        SwitchEntityDescription(
+            key=DPCode.FEEDIN_POWER_LIMIT_ENABLE,
+            translation_key="output_power_limit",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    DeviceCategory.XXJ: (
         SwitchEntityDescription(
             key=DPCode.SWITCH,
             translation_key="power",
@@ -585,114 +895,128 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Smart Electricity Meter
-    # https://developer.tuya.com/en/docs/iot/smart-meter?id=Kaiuz4gv6ack7
-    "zndb": (
+    DeviceCategory.YWBJ: (
+        SwitchEntityDescription(
+            key=DPCode.MUFFLING,
+            translation_key="mute",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    DeviceCategory.ZNDB: (
         SwitchEntityDescription(
             key=DPCode.SWITCH,
             translation_key="switch",
         ),
     ),
-    # Fan
-    # https://developer.tuya.com/en/docs/iot/categoryfs?id=Kaiuz1xweel1c
-    "fs": (
+    DeviceCategory.ZNJXS: (
         SwitchEntityDescription(
-            key=DPCode.ANION,
-            translation_key="anion",
-            entity_category=EntityCategory.CONFIG,
-        ),
-        SwitchEntityDescription(
-            key=DPCode.HUMIDIFIER,
-            translation_key="humidification",
-            entity_category=EntityCategory.CONFIG,
-        ),
-        SwitchEntityDescription(
-            key=DPCode.OXYGEN,
-            translation_key="oxygen_bar",
-            entity_category=EntityCategory.CONFIG,
-        ),
-        SwitchEntityDescription(
-            key=DPCode.FAN_COOL,
-            translation_key="natural_wind",
-            entity_category=EntityCategory.CONFIG,
-        ),
-        SwitchEntityDescription(
-            key=DPCode.FAN_BEEP,
-            translation_key="sound",
-            entity_category=EntityCategory.CONFIG,
-        ),
-        SwitchEntityDescription(
-            key=DPCode.CHILD_LOCK,
-            translation_key="child_lock",
-            entity_category=EntityCategory.CONFIG,
+            key=DPCode.SWITCH,
+            translation_key="switch",
         ),
     ),
-    # Curtain
-    # https://developer.tuya.com/en/docs/iot/f?id=K9gf46o5mtfyc
-    "cl": (
+    DeviceCategory.ZNRB: (
         SwitchEntityDescription(
-            key=DPCode.CONTROL_BACK,
-            translation_key="reverse",
-            entity_category=EntityCategory.CONFIG,
-        ),
-        SwitchEntityDescription(
-            key=DPCode.OPPOSITE,
-            translation_key="reverse",
-            entity_category=EntityCategory.CONFIG,
-        ),
-    ),
-    # Humidifier
-    # https://developer.tuya.com/en/docs/iot/categoryjsq?id=Kaiuz1smr440b
-    "jsq": (
-        SwitchEntityDescription(
-            key=DPCode.SWITCH_SOUND,
-            translation_key="voice",
-            entity_category=EntityCategory.CONFIG,
-        ),
-        SwitchEntityDescription(
-            key=DPCode.SLEEP,
-            translation_key="sleep",
-            entity_category=EntityCategory.CONFIG,
-        ),
-        SwitchEntityDescription(
-            key=DPCode.STERILIZATION,
-            translation_key="sterilization",
-            entity_category=EntityCategory.CONFIG,
+            key=DPCode.SWITCH,
+            translation_key="switch",
         ),
     ),
 }
 
 # Socket (duplicate of `pc`)
-# https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
-SWITCHES["cz"] = SWITCHES["pc"]
+SWITCHES[DeviceCategory.CZ] = SWITCHES[DeviceCategory.PC]
+
+# Smart Camera - Low power consumption camera (duplicate of `sp`)
+SWITCHES[DeviceCategory.DGHSXJ] = SWITCHES[DeviceCategory.SP]
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: TuyaConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TuyaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up tuya sensors dynamically through tuya discovery."""
-    hass_data = entry.runtime_data
+    manager = entry.runtime_data.manager
+    entity_registry = er.async_get(hass)
 
     @callback
     def async_discover_device(device_ids: list[str]) -> None:
         """Discover and add a discovered tuya sensor."""
         entities: list[TuyaSwitchEntity] = []
         for device_id in device_ids:
-            device = hass_data.manager.device_map[device_id]
+            device = manager.device_map[device_id]
             if descriptions := SWITCHES.get(device.category):
                 entities.extend(
-                    TuyaSwitchEntity(device, hass_data.manager, description)
+                    TuyaSwitchEntity(device, manager, description, dpcode_wrapper)
                     for description in descriptions
-                    if description.key in device.status
+                    if (
+                        dpcode_wrapper := DPCodeBooleanWrapper.find_dpcode(
+                            device, description.key, prefer_function=True
+                        )
+                    )
+                    and _check_deprecation(
+                        hass,
+                        device,
+                        description,
+                        entity_registry,
+                    )
                 )
 
         async_add_entities(entities)
 
-    async_discover_device([*hass_data.manager.device_map])
+    async_discover_device([*manager.device_map])
 
     entry.async_on_unload(
         async_dispatcher_connect(hass, TUYA_DISCOVERY_NEW, async_discover_device)
     )
+
+
+def _check_deprecation(
+    hass: HomeAssistant,
+    device: CustomerDevice,
+    description: SwitchEntityDescription,
+    entity_registry: er.EntityRegistry,
+) -> bool:
+    """Check entity deprecation.
+
+    Returns:
+        `True` if the entity should be created, `False` otherwise.
+    """
+    # Not deprecated, just create it
+    if not isinstance(description, TuyaDeprecatedSwitchEntityDescription):
+        return True
+
+    unique_id = f"tuya.{device.id}{description.key}"
+    entity_id = entity_registry.async_get_entity_id(SWITCH_DOMAIN, DOMAIN, unique_id)
+
+    # Deprecated and not present in registry, skip creation
+    if not entity_id or not (entity_entry := entity_registry.async_get(entity_id)):
+        return False
+
+    # Deprecated and present in registry but disabled, remove it and skip creation
+    if entity_entry.disabled:
+        entity_registry.async_remove(entity_id)
+        async_delete_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_entity_{unique_id}",
+        )
+        return False
+
+    # Deprecated and present in registry and enabled, raise issue and create it
+    async_create_issue(
+        hass,
+        DOMAIN,
+        f"deprecated_entity_{unique_id}",
+        breaks_in_ha_version=description.breaks_in_ha_version,
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key=description.deprecated,
+        translation_placeholders={
+            "name": f"{device.name} {entity_entry.name or entity_entry.original_name}",
+            "entity": entity_id,
+        },
+    )
+    return True
 
 
 class TuyaSwitchEntity(TuyaEntity, SwitchEntity):
@@ -703,21 +1027,23 @@ class TuyaSwitchEntity(TuyaEntity, SwitchEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: SwitchEntityDescription,
+        dpcode_wrapper: DPCodeBooleanWrapper,
     ) -> None:
         """Init TuyaHaSwitch."""
         super().__init__(device, device_manager)
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
+        self._dpcode_wrapper = dpcode_wrapper
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if switch is on."""
-        return self.device.status.get(self.entity_description.key, False)
+        return self._read_wrapper(self._dpcode_wrapper)
 
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        self._send_command([{"code": self.entity_description.key, "value": True}])
+        await self._async_send_wrapper_updates(self._dpcode_wrapper, True)
 
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        self._send_command([{"code": self.entity_description.key, "value": False}])
+        await self._async_send_wrapper_updates(self._dpcode_wrapper, False)

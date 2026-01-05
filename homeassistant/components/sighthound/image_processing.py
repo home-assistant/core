@@ -5,13 +5,14 @@ from __future__ import annotations
 import io
 import logging
 from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
 from PIL import Image, ImageDraw, UnidentifiedImageError
 import simplehound.core as hound
 import voluptuous as vol
 
 from homeassistant.components.image_processing import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as IMAGE_PROCESSING_PLATFORM_SCHEMA,
     ImageProcessingEntity,
 )
 from homeassistant.const import (
@@ -22,10 +23,10 @@ from homeassistant.const import (
     CONF_SOURCE,
 )
 from homeassistant.core import HomeAssistant, split_entity_id
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.pil import draw_box
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,7 +42,7 @@ DATETIME_FORMAT = "%Y-%m-%d_%H:%M:%S"
 DEV = "dev"
 PROD = "prod"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = IMAGE_PROCESSING_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
         vol.Optional(CONF_ACCOUNT_TYPE, default=DEV): vol.In([DEV, PROD]),
@@ -59,8 +60,8 @@ def setup_platform(
 ) -> None:
     """Set up the platform."""
     # Validate credentials by processing image.
-    api_key = config[CONF_API_KEY]
-    account_type = config[CONF_ACCOUNT_TYPE]
+    api_key: str = config[CONF_API_KEY]
+    account_type: str = config[CONF_ACCOUNT_TYPE]
     api = hound.cloud(api_key, account_type)
     try:
         api.detect(b"Test")
@@ -72,7 +73,8 @@ def setup_platform(
         save_file_folder = Path(save_file_folder)
 
     entities = []
-    for camera in config[CONF_SOURCE]:
+    source: list[dict[str, str]] = config[CONF_SOURCE]
+    for camera in source:
         sighthound = SighthoundEntity(
             api,
             camera[CONF_ENTITY_ID],
@@ -91,29 +93,34 @@ class SighthoundEntity(ImageProcessingEntity):
     _attr_unit_of_measurement = ATTR_PEOPLE
 
     def __init__(
-        self, api, camera_entity, name, save_file_folder, save_timestamped_file
-    ):
+        self,
+        api: hound.cloud,
+        camera_entity: str,
+        name: str | None,
+        save_file_folder: Path | None,
+        save_timestamped_file: bool,
+    ) -> None:
         """Init."""
         self._api = api
-        self._camera = camera_entity
+        self._attr_camera_entity = camera_entity
         if name:
-            self._name = name
+            self._attr_name = name
         else:
             camera_name = split_entity_id(camera_entity)[1]
-            self._name = f"sighthound_{camera_name}"
-        self._state = None
-        self._last_detection = None
-        self._image_width = None
-        self._image_height = None
+            self._attr_name = f"sighthound_{camera_name}"
+        self._attr_state = None
+        self._last_detection: str | None = None
+        self._image_width: int | None = None
+        self._image_height: int | None = None
         self._save_file_folder = save_file_folder
         self._save_timestamped_file = save_timestamped_file
 
-    def process_image(self, image):
+    def process_image(self, image: bytes) -> None:
         """Process an image."""
         detections = self._api.detect(image)
         people = hound.get_people(detections)
-        self._state = len(people)
-        if self._state > 0:
+        self._attr_state = len(people)
+        if self._attr_state > 0:
             self._last_detection = dt_util.now().strftime(DATETIME_FORMAT)
 
         metadata = hound.get_metadata(detections)
@@ -121,10 +128,10 @@ class SighthoundEntity(ImageProcessingEntity):
         self._image_height = metadata["image_height"]
         for person in people:
             self.fire_person_detected_event(person)
-        if self._save_file_folder and self._state > 0:
+        if self._save_file_folder and self._attr_state > 0:
             self.save_image(image, people, self._save_file_folder)
 
-    def fire_person_detected_event(self, person):
+    def fire_person_detected_event(self, person: dict[str, Any]) -> None:
         """Send event with detected total_persons."""
         self.hass.bus.fire(
             EVENT_PERSON_DETECTED,
@@ -136,7 +143,9 @@ class SighthoundEntity(ImageProcessingEntity):
             },
         )
 
-    def save_image(self, image, people, directory):
+    def save_image(
+        self, image: bytes, people: list[dict[str, Any]], directory: Path
+    ) -> None:
         """Save a timestamped image with bounding boxes around targets."""
         try:
             img = Image.open(io.BytesIO(bytearray(image))).convert("RGB")
@@ -145,37 +154,26 @@ class SighthoundEntity(ImageProcessingEntity):
             return
         draw = ImageDraw.Draw(img)
 
+        if TYPE_CHECKING:
+            assert self._image_width is not None
+            assert self._image_height is not None
+
         for person in people:
             box = hound.bbox_to_tf_style(
                 person["boundingBox"], self._image_width, self._image_height
             )
             draw_box(draw, box, self._image_width, self._image_height)
 
-        latest_save_path = directory / f"{self._name}_latest.jpg"
+        latest_save_path = directory / f"{self.name}_latest.jpg"
         img.save(latest_save_path)
 
         if self._save_timestamped_file:
-            timestamp_save_path = directory / f"{self._name}_{self._last_detection}.jpg"
+            timestamp_save_path = directory / f"{self.name}_{self._last_detection}.jpg"
             img.save(timestamp_save_path)
-            _LOGGER.info("Sighthound saved file %s", timestamp_save_path)
+            _LOGGER.debug("Sighthound saved file %s", timestamp_save_path)
 
     @property
-    def camera_entity(self):
-        """Return camera entity id from process pictures."""
-        return self._camera
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the entity."""
-        return self._state
-
-    @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, str]:
         """Return the attributes."""
         if not self._last_detection:
             return {}

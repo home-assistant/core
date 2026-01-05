@@ -23,7 +23,7 @@ from .common import (
 )
 
 from tests.common import MockEntity, MockEntityPlatform
-from tests.typing import RecorderInstanceGenerator
+from tests.typing import RecorderInstanceContextManager
 
 
 def _count_entity_id_in_states_meta(
@@ -40,7 +40,7 @@ def _count_entity_id_in_states_meta(
 
 @pytest.fixture
 async def mock_recorder_before_hass(
-    async_setup_recorder_instance: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
 ) -> None:
     """Set up recorder."""
 
@@ -224,6 +224,7 @@ async def test_rename_entity_collision(
     hass.states.async_remove("sensor.test99")
 
     await hass.async_block_till_done()
+    await async_wait_recording_done(hass)
 
     # Rename entity sensor.test1 to sensor.test99
     entity_registry.async_update_entity("sensor.test1", new_entity_id="sensor.test99")

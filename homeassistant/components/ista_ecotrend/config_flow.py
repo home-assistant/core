@@ -2,20 +2,15 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from pyecotrend_ista.exception_classes import (
-    InternalServerError,
-    KeycloakError,
-    LoginError,
-    ServerError,
-)
-from pyecotrend_ista.pyecotrend_ista import PyEcotrendIsta
+from pyecotrend_ista import KeycloakError, LoginError, PyEcotrendIsta, ServerError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_EMAIL, CONF_NAME, CONF_PASSWORD
 from homeassistant.helpers.selector import (
     TextSelector,
     TextSelectorConfig,
@@ -60,7 +55,8 @@ class IstaConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             try:
                 await self.hass.async_add_executor_job(ista.login)
-            except (ServerError, InternalServerError):
+                info = ista.get_account()
+            except ServerError:
                 errors["base"] = "cannot_connect"
             except (LoginError, KeycloakError):
                 errors["base"] = "invalid_auth"
@@ -68,8 +64,10 @@ class IstaConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                title = f"{ista._a_firstName} {ista._a_lastName}".strip()  # noqa: SLF001
-                await self.async_set_unique_id(ista._uuid)  # noqa: SLF001
+                if TYPE_CHECKING:
+                    assert info
+                title = f"{info['firstName']} {info['lastName']}".strip()
+                await self.async_set_unique_id(info["activeConsumptionUnit"])
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=title or "ista EcoTrend", data=user_input
@@ -82,3 +80,74 @@ class IstaConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauth upon an API authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Dialog that informs the user that reauth is required."""
+        errors: dict[str, str] = {}
+
+        reauth_entry = (
+            self._get_reauth_entry()
+            if self.source == SOURCE_REAUTH
+            else self._get_reconfigure_entry()
+        )
+        if user_input is not None:
+            ista = PyEcotrendIsta(
+                user_input[CONF_EMAIL],
+                user_input[CONF_PASSWORD],
+                _LOGGER,
+            )
+
+            def get_consumption_units() -> set[str]:
+                ista.login()
+                consumption_units = ista.get_consumption_unit_details()[
+                    "consumptionUnits"
+                ]
+                return {unit["id"] for unit in consumption_units}
+
+            try:
+                consumption_units = await self.hass.async_add_executor_job(
+                    get_consumption_units
+                )
+
+            except ServerError:
+                errors["base"] = "cannot_connect"
+            except (LoginError, KeycloakError):
+                errors["base"] = "invalid_auth"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                if reauth_entry.unique_id not in consumption_units:
+                    return self.async_abort(reason="unique_id_mismatch")
+                return self.async_update_reload_and_abort(reauth_entry, data=user_input)
+
+        return self.async_show_form(
+            step_id="reauth_confirm" if self.source == SOURCE_REAUTH else "reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=STEP_USER_DATA_SCHEMA,
+                suggested_values={
+                    CONF_EMAIL: user_input[CONF_EMAIL]
+                    if user_input is not None
+                    else reauth_entry.data[CONF_EMAIL]
+                },
+            ),
+            description_placeholders={
+                CONF_NAME: reauth_entry.title,
+                CONF_EMAIL: reauth_entry.data[CONF_EMAIL],
+            },
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Reconfigure flow for ista EcoTrend integration."""
+        return await self.async_step_reauth_confirm(user_input)

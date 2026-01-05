@@ -4,10 +4,13 @@ from __future__ import annotations
 
 import logging
 import os
-from typing import Any, cast
+from typing import cast
 
-import voluptuous as vol
 from watchdog.events import (
+    DirCreatedEvent,
+    DirDeletedEvent,
+    DirModifiedEvent,
+    DirMovedEvent,
     FileClosedEvent,
     FileCreatedEvent,
     FileDeletedEvent,
@@ -19,67 +22,15 @@ from watchdog.events import (
 )
 from watchdog.observers import Observer
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_FOLDER, CONF_PATTERNS, DEFAULT_PATTERN, DOMAIN, PLATFORMS
+from .const import CONF_FOLDER, CONF_PATTERNS, DOMAIN, PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
-
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.All(
-            cv.ensure_list,
-            [
-                vol.Schema(
-                    {
-                        vol.Required(CONF_FOLDER): cv.isdir,
-                        vol.Optional(CONF_PATTERNS, default=[DEFAULT_PATTERN]): vol.All(
-                            cv.ensure_list, [cv.string]
-                        ),
-                    }
-                )
-            ],
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the folder watcher."""
-    if DOMAIN in config:
-        conf: list[dict[str, Any]] = config[DOMAIN]
-        for watcher in conf:
-            path: str = watcher[CONF_FOLDER]
-            if not hass.config.is_allowed_path(path):
-                async_create_issue(
-                    hass,
-                    DOMAIN,
-                    f"import_failed_not_allowed_path_{path}",
-                    is_fixable=False,
-                    is_persistent=False,
-                    severity=IssueSeverity.ERROR,
-                    translation_key="import_failed_not_allowed_path",
-                    translation_placeholders={
-                        "path": path,
-                        "config_variable": "allowlist_external_dirs",
-                    },
-                )
-                continue
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_IMPORT}, data=watcher
-                )
-            )
-
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -121,7 +72,7 @@ class EventHandler(PatternMatchingEventHandler):
 
     def __init__(self, patterns: list[str], hass: HomeAssistant, entry_id: str) -> None:
         """Initialise the EventHandler."""
-        super().__init__(patterns)
+        super().__init__(patterns=patterns)
         self.hass = hass
         self.entry_id = entry_id
 
@@ -154,19 +105,19 @@ class EventHandler(PatternMatchingEventHandler):
             signal = f"folder_watcher-{self.entry_id}"
             dispatcher_send(self.hass, signal, event.event_type, fireable)
 
-    def on_modified(self, event: FileModifiedEvent) -> None:
+    def on_modified(self, event: DirModifiedEvent | FileModifiedEvent) -> None:
         """File modified."""
         self.process(event)
 
-    def on_moved(self, event: FileMovedEvent) -> None:
+    def on_moved(self, event: DirMovedEvent | FileMovedEvent) -> None:
         """File moved."""
         self.process(event, moved=True)
 
-    def on_created(self, event: FileCreatedEvent) -> None:
+    def on_created(self, event: DirCreatedEvent | FileCreatedEvent) -> None:
         """File created."""
         self.process(event)
 
-    def on_deleted(self, event: FileDeletedEvent) -> None:
+    def on_deleted(self, event: DirDeletedEvent | FileDeletedEvent) -> None:
         """File deleted."""
         self.process(event)
 

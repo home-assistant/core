@@ -1,9 +1,9 @@
 """Common fixtures for the Aurora tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.aurora.const import CONF_THRESHOLD, DOMAIN
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE

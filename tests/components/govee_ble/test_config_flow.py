@@ -3,7 +3,7 @@
 from unittest.mock import patch
 
 from homeassistant import config_entries
-from homeassistant.components.govee_ble.const import DOMAIN
+from homeassistant.components.govee_ble.const import CONF_DEVICE_TYPE, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -29,7 +29,7 @@ async def test_async_step_bluetooth_valid_device(hass: HomeAssistant) -> None:
         )
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "H5075 2762"
-    assert result2["data"] == {}
+    assert result2["data"] == {CONF_DEVICE_TYPE: "H5075"}
     assert result2["result"].unique_id == "61DE521B-F0BF-9F44-64D4-75BBE1738105"
 
 
@@ -75,7 +75,39 @@ async def test_async_step_user_with_found_devices(hass: HomeAssistant) -> None:
         )
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "H5177 2EC8"
-    assert result2["data"] == {}
+    assert result2["data"] == {CONF_DEVICE_TYPE: "H5177"}
+    assert result2["result"].unique_id == "4125DDBA-2774-4851-9889-6AADDD4CAC3D"
+
+
+async def test_async_step_user_replace_ignored_device(hass: HomeAssistant) -> None:
+    """Test setup user step can replace an ignored device."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=GVH5177_SERVICE_INFO.address,
+        data={},
+        source=config_entries.SOURCE_IGNORE,
+    )
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.govee_ble.config_flow.async_discovered_service_info",
+        return_value=[GVH5177_SERVICE_INFO],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    with patch(
+        "homeassistant.components.govee_ble.async_setup_entry", return_value=True
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"address": "4125DDBA-2774-4851-9889-6AADDD4CAC3D"},
+        )
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "H5177 2EC8"
+    assert result2["data"] == {CONF_DEVICE_TYPE: "H5177"}
     assert result2["result"].unique_id == "4125DDBA-2774-4851-9889-6AADDD4CAC3D"
 
 
@@ -198,7 +230,7 @@ async def test_async_step_user_takes_precedence_over_discovery(
         )
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "H5177 2EC8"
-    assert result2["data"] == {}
+    assert result2["data"] == {CONF_DEVICE_TYPE: "H5177"}
     assert result2["result"].unique_id == "4125DDBA-2774-4851-9889-6AADDD4CAC3D"
 
     # Verify the original one was aborted

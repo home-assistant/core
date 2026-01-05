@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from types import MappingProxyType
+from collections.abc import Callable, Mapping
 from typing import Any
 
 from dynalite_devices_lib.dynalite_devices import (
@@ -16,12 +15,15 @@ from dynalite_devices_lib.dynalite_devices import (
     DynaliteNotification,
 )
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import ATTR_AREA, ATTR_HOST, ATTR_PACKET, ATTR_PRESET, LOGGER, PLATFORMS
 from .convert_config import convert_config
+
+type DynaliteConfigEntry = ConfigEntry[DynaliteBridge]
 
 
 class DynaliteBridge:
@@ -47,7 +49,7 @@ class DynaliteBridge:
         LOGGER.debug("Setting up bridge - host %s", self.host)
         return await self.dynalite_devices.async_setup()
 
-    def reload_config(self, config: MappingProxyType[str, Any]) -> None:
+    def reload_config(self, config: Mapping[str, Any]) -> None:
         """Reconfigure a bridge when config changes."""
         LOGGER.debug("Reloading bridge - host %s, config %s", self.host, config)
         self.dynalite_devices.configure(convert_config(config))
@@ -68,7 +70,7 @@ class DynaliteBridge:
             log_string = (
                 "Connected" if self.dynalite_devices.connected else "Disconnected"
             )
-            LOGGER.info("%s to dynalite host", log_string)
+            LOGGER.debug("%s to dynalite host", log_string)
             async_dispatcher_send(self.hass, self.update_signal())
         else:
             async_dispatcher_send(self.hass, self.update_signal(device))

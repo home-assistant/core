@@ -6,8 +6,8 @@ import pytest
 import voluptuous_serialize
 
 from homeassistant.components import automation
-from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.device_automation.exceptions import (
+from homeassistant.components.device_automation import (
+    DeviceAutomationType,
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.components.knx import DOMAIN, device_trigger
@@ -18,23 +18,17 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import KNXTestKit
 
-from tests.common import async_get_device_automations, async_mock_service
-
-
-@pytest.fixture
-def calls(hass: HomeAssistant) -> list[ServiceCall]:
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
+from tests.common import async_get_device_automations
 
 
 async def test_if_fires_on_telegram(
     hass: HomeAssistant,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
     device_registry: dr.DeviceRegistry,
     knx: KNXTestKit,
 ) -> None:
     """Test telegram device triggers firing."""
-    await knx.setup_integration({})
+    await knx.setup_integration()
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, f"_{knx.mock_config_entry.entry_id}_interface")}
     )
@@ -98,31 +92,31 @@ async def test_if_fires_on_telegram(
 
     # "specific" shall ignore destination address
     await knx.receive_write("0/0/1", (0x03, 0x2F))
-    assert len(calls) == 1
-    test_call = calls.pop()
+    assert len(service_calls) == 1
+    test_call = service_calls.pop()
     assert test_call.data["catch_all"] == "telegram - 0/0/1"
     assert test_call.data["id"] == 0
 
     await knx.receive_write("1/2/4", (0x03, 0x2F))
-    assert len(calls) == 2
-    test_call = calls.pop()
+    assert len(service_calls) == 2
+    test_call = service_calls.pop()
     assert test_call.data["specific"] == "telegram - 1/2/4"
     assert test_call.data["id"] == "test-id"
-    test_call = calls.pop()
+    test_call = service_calls.pop()
     assert test_call.data["catch_all"] == "telegram - 1/2/4"
     assert test_call.data["id"] == 0
 
     # "specific" shall ignore GroupValueRead
     await knx.receive_read("1/2/4")
-    assert len(calls) == 1
-    test_call = calls.pop()
+    assert len(service_calls) == 1
+    test_call = service_calls.pop()
     assert test_call.data["catch_all"] == "telegram - 1/2/4"
     assert test_call.data["id"] == 0
 
 
 async def test_default_if_fires_on_telegram(
     hass: HomeAssistant,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
     device_registry: dr.DeviceRegistry,
     knx: KNXTestKit,
 ) -> None:
@@ -130,7 +124,7 @@ async def test_default_if_fires_on_telegram(
     # by default (without a user changing any) extra_fields are not added to the trigger and
     # pre 2024.2 device triggers did only support "destination" field so they didn't have
     # "group_value_write", "group_value_response", "group_value_read", "incoming", "outgoing"
-    await knx.setup_integration({})
+    await knx.setup_integration()
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, f"_{knx.mock_config_entry.entry_id}_interface")}
     )
@@ -179,40 +173,40 @@ async def test_default_if_fires_on_telegram(
     )
 
     await knx.receive_write("0/0/1", (0x03, 0x2F))
-    assert len(calls) == 1
-    test_call = calls.pop()
+    assert len(service_calls) == 1
+    test_call = service_calls.pop()
     assert test_call.data["catch_all"] == "telegram - 0/0/1"
     assert test_call.data["id"] == 0
 
     await knx.receive_write("1/2/4", (0x03, 0x2F))
-    assert len(calls) == 2
-    test_call = calls.pop()
+    assert len(service_calls) == 2
+    test_call = service_calls.pop()
     assert test_call.data["specific"] == "telegram - 1/2/4"
     assert test_call.data["id"] == "test-id"
-    test_call = calls.pop()
+    test_call = service_calls.pop()
     assert test_call.data["catch_all"] == "telegram - 1/2/4"
     assert test_call.data["id"] == 0
 
     # "specific" shall catch GroupValueRead as it is not set explicitly
     await knx.receive_read("1/2/4")
-    assert len(calls) == 2
-    test_call = calls.pop()
+    assert len(service_calls) == 2
+    test_call = service_calls.pop()
     assert test_call.data["specific"] == "telegram - 1/2/4"
     assert test_call.data["id"] == "test-id"
-    test_call = calls.pop()
+    test_call = service_calls.pop()
     assert test_call.data["catch_all"] == "telegram - 1/2/4"
     assert test_call.data["id"] == 0
 
 
 async def test_remove_device_trigger(
     hass: HomeAssistant,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
     device_registry: dr.DeviceRegistry,
     knx: KNXTestKit,
 ) -> None:
     """Test for removed callback when device trigger not used."""
     automation_name = "telegram_trigger_automation"
-    await knx.setup_integration({})
+    await knx.setup_integration()
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, f"_{knx.mock_config_entry.entry_id}_interface")}
     )
@@ -241,8 +235,8 @@ async def test_remove_device_trigger(
     )
 
     await knx.receive_write("0/0/1", (0x03, 0x2F))
-    assert len(calls) == 1
-    assert calls.pop().data["catch_all"] == "telegram - 0/0/1"
+    assert len(service_calls) == 1
+    assert service_calls.pop().data["catch_all"] == "telegram - 0/0/1"
 
     await hass.services.async_call(
         automation.DOMAIN,
@@ -250,8 +244,10 @@ async def test_remove_device_trigger(
         {ATTR_ENTITY_ID: f"automation.{automation_name}"},
         blocking=True,
     )
+    assert len(service_calls) == 1
+
     await knx.receive_write("0/0/1", (0x03, 0x2F))
-    assert len(calls) == 0
+    assert len(service_calls) == 1
 
 
 async def test_get_triggers(
@@ -260,7 +256,7 @@ async def test_get_triggers(
     knx: KNXTestKit,
 ) -> None:
     """Test we get the expected device triggers from knx."""
-    await knx.setup_integration({})
+    await knx.setup_integration()
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, f"_{knx.mock_config_entry.entry_id}_interface")}
     )
@@ -283,7 +279,7 @@ async def test_get_trigger_capabilities(
     knx: KNXTestKit,
 ) -> None:
     """Test we get the expected capabilities telegram device trigger."""
-    await knx.setup_integration({})
+    await knx.setup_integration()
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, f"_{knx.mock_config_entry.entry_id}_interface")}
     )
@@ -305,6 +301,7 @@ async def test_get_trigger_capabilities(
         {
             "name": "destination",
             "optional": True,
+            "required": False,
             "selector": {
                 "select": {
                     "custom_value": True,
@@ -318,32 +315,47 @@ async def test_get_trigger_capabilities(
         {
             "name": "group_value_write",
             "optional": True,
+            "required": False,
             "default": True,
-            "type": "boolean",
+            "selector": {
+                "boolean": {},
+            },
         },
         {
             "name": "group_value_response",
             "optional": True,
+            "required": False,
             "default": True,
-            "type": "boolean",
+            "selector": {
+                "boolean": {},
+            },
         },
         {
             "name": "group_value_read",
             "optional": True,
+            "required": False,
             "default": True,
-            "type": "boolean",
+            "selector": {
+                "boolean": {},
+            },
         },
         {
             "name": "incoming",
             "optional": True,
+            "required": False,
             "default": True,
-            "type": "boolean",
+            "selector": {
+                "boolean": {},
+            },
         },
         {
             "name": "outgoing",
             "optional": True,
+            "required": False,
             "default": True,
-            "type": "boolean",
+            "selector": {
+                "boolean": {},
+            },
         },
     ]
 
@@ -355,7 +367,7 @@ async def test_invalid_device_trigger(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test invalid telegram device trigger configuration."""
-    await knx.setup_integration({})
+    await knx.setup_integration()
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, f"_{knx.mock_config_entry.entry_id}_interface")}
     )
@@ -385,7 +397,6 @@ async def test_invalid_device_trigger(
                 ]
             },
         )
-        await hass.async_block_till_done()
         assert (
             "Unnamed automation failed to setup triggers and has been disabled: "
             "extra keys not allowed @ data['invalid']. Got None"
@@ -399,7 +410,7 @@ async def test_invalid_trigger_configuration(
     knx: KNXTestKit,
 ) -> None:
     """Test invalid telegram device trigger configuration at attach_trigger."""
-    await knx.setup_integration({})
+    await knx.setup_integration()
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, f"_{knx.mock_config_entry.entry_id}_interface")}
     )

@@ -11,13 +11,13 @@ from PIL import Image
 import voluptuous as vol
 
 from homeassistant.components.image_processing import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as IMAGE_PROCESSING_PLATFORM_SCHEMA,
     ImageProcessingDeviceClass,
     ImageProcessingEntity,
 )
 from homeassistant.const import CONF_ENTITY_ID, CONF_NAME, CONF_SOURCE
 from homeassistant.core import HomeAssistant, split_entity_id
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -35,7 +35,7 @@ CONF_Y_POS = "y_position"
 
 DEFAULT_BINARY = "ssocr"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = IMAGE_PROCESSING_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_EXTRA_ARGUMENTS, default=""): cv.string,
         vol.Optional(CONF_DIGITS): cv.positive_int,
@@ -70,19 +70,24 @@ class ImageProcessingSsocr(ImageProcessingEntity):
 
     _attr_device_class = ImageProcessingDeviceClass.OCR
 
-    def __init__(self, hass, camera_entity, config, name):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        camera_entity: str,
+        config: ConfigType,
+        name: str | None,
+    ) -> None:
         """Initialize seven segments processing."""
-        self.hass = hass
-        self._camera_entity = camera_entity
+        self._attr_camera_entity = camera_entity
         if name:
-            self._name = name
+            self._attr_name = name
         else:
-            self._name = f"SevenSegment OCR {split_entity_id(camera_entity)[1]}"
-        self._state = None
+            self._attr_name = f"SevenSegment OCR {split_entity_id(camera_entity)[1]}"
+        self._attr_state = None
 
         self.filepath = os.path.join(
-            self.hass.config.config_dir,
-            "ssocr-{}.png".format(self._name.replace(" ", "_")),
+            hass.config.config_dir,
+            f"ssocr-{self._attr_name.replace(' ', '_')}.png",
         )
         crop = [
             "crop",
@@ -106,22 +111,7 @@ class ImageProcessingSsocr(ImageProcessingEntity):
         ]
         self._command.append(self.filepath)
 
-    @property
-    def camera_entity(self):
-        """Return camera entity id from process pictures."""
-        return self._camera_entity
-
-    @property
-    def name(self):
-        """Return the name of the image processor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the entity."""
-        return self._state
-
-    def process_image(self, image):
+    def process_image(self, image: bytes) -> None:
         """Process the image."""
         stream = io.BytesIO(image)
         img = Image.open(stream)
@@ -135,9 +125,9 @@ class ImageProcessingSsocr(ImageProcessingEntity):
         ) as ocr:
             out = ocr.communicate()
             if out[0] != b"":
-                self._state = out[0].strip().decode("utf-8")
+                self._attr_state = out[0].strip().decode("utf-8")
             else:
-                self._state = None
+                self._attr_state = None
                 _LOGGER.warning(
                     "Unable to detect value: %s", out[1].strip().decode("utf-8")
                 )

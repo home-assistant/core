@@ -1,12 +1,14 @@
 """Configure Synology DSM tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+
+from .common import mock_dsm_information
 
 
 @pytest.fixture
@@ -31,8 +33,9 @@ def fixture_dsm():
         dsm.login = AsyncMock(return_value=True)
         dsm.update = AsyncMock(return_value=True)
 
+        dsm.information = mock_dsm_information()
         dsm.network.update = AsyncMock(return_value=True)
         dsm.surveillance_station.update = AsyncMock(return_value=True)
         dsm.upgrade.update = AsyncMock(return_value=True)
-
+        dsm.file = AsyncMock(get_shared_folders=AsyncMock(return_value=None))
     return dsm

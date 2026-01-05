@@ -2,18 +2,18 @@
 
 import asyncio
 from datetime import timedelta
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 from freezegun import freeze_time
 import pytest
 
 from homeassistant.components import history
 from homeassistant.components.history import websocket_api
-from homeassistant.components.recorder import Recorder
-from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE, STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed
 from tests.components.recorder.common import (
@@ -38,8 +38,9 @@ def test_setup() -> None:
     # Verification occurs in the fixture
 
 
+@pytest.mark.usefixtures("recorder_mock")
 async def test_history_during_period(
-    hass: HomeAssistant, recorder_mock: Recorder, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test history_during_period."""
     now = dt_util.utcnow()
@@ -172,8 +173,9 @@ async def test_history_during_period(
     assert sensor_test_history[2]["a"] == {"any": "attr"}
 
 
+@pytest.mark.usefixtures("recorder_mock")
 async def test_history_during_period_impossible_conditions(
-    hass: HomeAssistant, recorder_mock: Recorder, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test history_during_period returns when condition cannot be true."""
     await async_setup_component(hass, "history", {})
@@ -234,9 +236,9 @@ async def test_history_during_period_impossible_conditions(
 @pytest.mark.parametrize(
     "time_zone", ["UTC", "Europe/Berlin", "America/Chicago", "US/Hawaii"]
 )
+@pytest.mark.usefixtures("recorder_mock")
 async def test_history_during_period_significant_domain(
     hass: HomeAssistant,
-    recorder_mock: Recorder,
     hass_ws_client: WebSocketGenerator,
     time_zone,
 ) -> None:
@@ -402,8 +404,9 @@ async def test_history_during_period_significant_domain(
     assert "lc" not in sensor_test_history[0]  # skipped if the same a last_updated (lu)
 
 
+@pytest.mark.usefixtures("recorder_mock")
 async def test_history_during_period_bad_start_time(
-    hass: HomeAssistant, recorder_mock: Recorder, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test history_during_period bad state time."""
     await async_setup_component(
@@ -426,8 +429,9 @@ async def test_history_during_period_bad_start_time(
     assert response["error"]["code"] == "invalid_start_time"
 
 
+@pytest.mark.usefixtures("recorder_mock")
 async def test_history_during_period_bad_end_time(
-    hass: HomeAssistant, recorder_mock: Recorder, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test history_during_period bad end time."""
     now = dt_util.utcnow()
@@ -453,8 +457,9 @@ async def test_history_during_period_bad_end_time(
     assert response["error"]["code"] == "invalid_end_time"
 
 
+@pytest.mark.usefixtures("recorder_mock")
 async def test_history_stream_historical_only(
-    hass: HomeAssistant, recorder_mock: Recorder, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test history stream."""
     now = dt_util.utcnow()
@@ -542,8 +547,9 @@ async def test_history_stream_historical_only(
     }
 
 
+@pytest.mark.usefixtures("recorder_mock")
 async def test_history_stream_significant_domain_historical_only(
-    hass: HomeAssistant, recorder_mock: Recorder, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test the stream with climate domain with historical states only."""
     now = dt_util.utcnow()
@@ -743,8 +749,9 @@ async def test_history_stream_significant_domain_historical_only(
     assert "lc" not in sensor_test_history[0]  # skipped if the same a last_updated (lu)
 
 
+@pytest.mark.usefixtures("recorder_mock")
 async def test_history_stream_bad_start_time(
-    hass: HomeAssistant, recorder_mock: Recorder, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test history stream bad state time."""
     await async_setup_component(
@@ -767,8 +774,9 @@ async def test_history_stream_bad_start_time(
     assert response["error"]["code"] == "invalid_start_time"
 
 
+@pytest.mark.usefixtures("recorder_mock")
 async def test_history_stream_end_time_before_start_time(
-    hass: HomeAssistant, recorder_mock: Recorder, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test history stream with an end_time before the start_time."""
     end_time = dt_util.utcnow() - timedelta(seconds=2)
@@ -795,8 +803,9 @@ async def test_history_stream_end_time_before_start_time(
     assert response["error"]["code"] == "invalid_end_time"
 
 
+@pytest.mark.usefixtures("recorder_mock")
 async def test_history_stream_bad_end_time(
-    hass: HomeAssistant, recorder_mock: Recorder, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test history stream bad end time."""
     now = dt_util.utcnow()
@@ -822,8 +831,9 @@ async def test_history_stream_bad_end_time(
     assert response["error"]["code"] == "invalid_end_time"
 
 
+@pytest.mark.usefixtures("recorder_mock")
 async def test_history_stream_live_no_attributes_minimal_response(
-    hass: HomeAssistant, recorder_mock: Recorder, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test history stream with history and live data and no_attributes and minimal_response."""
     now = dt_util.utcnow()
@@ -915,8 +925,9 @@ async def test_history_stream_live_no_attributes_minimal_response(
     }
 
 
+@pytest.mark.usefixtures("recorder_mock")
 async def test_history_stream_live(
-    hass: HomeAssistant, recorder_mock: Recorder, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test history stream with history and live data."""
     now = dt_util.utcnow()
@@ -1028,8 +1039,9 @@ async def test_history_stream_live(
     }
 
 
+@pytest.mark.usefixtures("recorder_mock")
 async def test_history_stream_live_minimal_response(
-    hass: HomeAssistant, recorder_mock: Recorder, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test history stream with history and live data and minimal_response."""
     now = dt_util.utcnow()
@@ -1133,8 +1145,9 @@ async def test_history_stream_live_minimal_response(
     }
 
 
+@pytest.mark.usefixtures("recorder_mock")
 async def test_history_stream_live_no_attributes(
-    hass: HomeAssistant, recorder_mock: Recorder, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test history stream with history and live data and no_attributes."""
     now = dt_util.utcnow()
@@ -1234,8 +1247,9 @@ async def test_history_stream_live_no_attributes(
     }
 
 
+@pytest.mark.usefixtures("recorder_mock")
 async def test_history_stream_live_no_attributes_minimal_response_specific_entities(
-    hass: HomeAssistant, recorder_mock: Recorder, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test history stream with history and live data and no_attributes and minimal_response with specific entities."""
     now = dt_util.utcnow()
@@ -1328,8 +1342,9 @@ async def test_history_stream_live_no_attributes_minimal_response_specific_entit
     }
 
 
+@pytest.mark.usefixtures("recorder_mock")
 async def test_history_stream_live_with_future_end_time(
-    hass: HomeAssistant, recorder_mock: Recorder, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test history stream with history and live data with future end time."""
     now = dt_util.utcnow()
@@ -1437,9 +1452,9 @@ async def test_history_stream_live_with_future_end_time(
 
 
 @pytest.mark.parametrize("include_start_time_state", [True, False])
+@pytest.mark.usefixtures("recorder_mock")
 async def test_history_stream_before_history_starts(
     hass: HomeAssistant,
-    recorder_mock: Recorder,
     hass_ws_client: WebSocketGenerator,
     include_start_time_state,
 ) -> None:
@@ -1488,8 +1503,9 @@ async def test_history_stream_before_history_starts(
     }
 
 
+@pytest.mark.usefixtures("recorder_mock")
 async def test_history_stream_for_entity_with_no_possible_changes(
-    hass: HomeAssistant, recorder_mock: Recorder, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test history stream for future with no possible changes where end time is less than or equal to now."""
     await async_setup_component(
@@ -1539,8 +1555,9 @@ async def test_history_stream_for_entity_with_no_possible_changes(
         }
 
 
+@pytest.mark.usefixtures("recorder_mock")
 async def test_overflow_queue(
-    hass: HomeAssistant, recorder_mock: Recorder, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test overflowing the history stream queue."""
     now = dt_util.utcnow()
@@ -1626,8 +1643,9 @@ async def test_overflow_queue(
     ) == listeners_without_writes(init_listeners)
 
 
+@pytest.mark.usefixtures("recorder_mock")
 async def test_history_during_period_for_invalid_entity_ids(
-    hass: HomeAssistant, recorder_mock: Recorder, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test history_during_period for valid and invalid entity ids."""
     now = dt_util.utcnow()
@@ -1785,8 +1803,9 @@ async def test_history_during_period_for_invalid_entity_ids(
     }
 
 
+@pytest.mark.usefixtures("recorder_mock")
 async def test_history_stream_for_invalid_entity_ids(
-    hass: HomeAssistant, recorder_mock: Recorder, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test history stream for invalid and valid entity ids."""
 
@@ -1963,8 +1982,9 @@ async def test_history_stream_for_invalid_entity_ids(
     }
 
 
+@pytest.mark.usefixtures("recorder_mock")
 async def test_history_stream_historical_only_with_start_time_state_past(
-    hass: HomeAssistant, recorder_mock: Recorder, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test history stream."""
     await async_setup_component(
@@ -2066,6 +2086,88 @@ async def test_history_stream_historical_only_with_start_time_state_past(
                 ],
                 "sensor.two": [
                     {"lu": pytest.approx(sensor_two_last_updated_timestamp), "s": "off"}
+                ],
+            },
+        },
+        "id": 1,
+        "type": "event",
+    }
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_history_stream_live_chained_events(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test history stream with history with a chained event."""
+    now = dt_util.utcnow()
+    await async_setup_component(hass, "history", {})
+
+    await async_wait_recording_done(hass)
+    hass.states.async_set("binary_sensor.is_light", STATE_OFF)
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "history/stream",
+            "entity_ids": ["binary_sensor.is_light"],
+            "start_time": now.isoformat(),
+            "include_start_time_state": True,
+            "significant_changes_only": False,
+            "no_attributes": False,
+            "minimal_response": True,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["id"] == 1
+    assert response["type"] == "result"
+
+    response = await client.receive_json()
+
+    assert response == {
+        "event": {
+            "end_time": ANY,
+            "start_time": ANY,
+            "states": {
+                "binary_sensor.is_light": [
+                    {
+                        "a": {},
+                        "lu": ANY,
+                        "s": STATE_OFF,
+                    },
+                ],
+            },
+        },
+        "id": 1,
+        "type": "event",
+    }
+
+    await async_recorder_block_till_done(hass)
+
+    @callback
+    def auto_off_listener(event):
+        hass.states.async_set("binary_sensor.is_light", STATE_OFF)
+
+    async_track_state_change_event(hass, ["binary_sensor.is_light"], auto_off_listener)
+
+    hass.states.async_set("binary_sensor.is_light", STATE_ON)
+
+    response = await client.receive_json()
+    assert response == {
+        "event": {
+            "states": {
+                "binary_sensor.is_light": [
+                    {
+                        "lu": ANY,
+                        "s": STATE_ON,
+                        "a": {},
+                    },
+                    {
+                        "lu": ANY,
+                        "s": STATE_OFF,
+                        "a": {},
+                    },
                 ],
             },
         },

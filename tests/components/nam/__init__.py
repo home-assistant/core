@@ -3,8 +3,9 @@
 from unittest.mock import AsyncMock, Mock, patch
 
 from homeassistant.components.nam.const import DOMAIN
+from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_json_object_fixture
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 INCOMPLETE_NAM_DATA = {
     "software_version": "NAMF-2020-36",
@@ -12,7 +13,9 @@ INCOMPLETE_NAM_DATA = {
 }
 
 
-async def init_integration(hass, co2_sensor=True) -> MockConfigEntry:
+async def init_integration(
+    hass: HomeAssistant, co2_sensor: bool = True
+) -> MockConfigEntry:
     """Set up the Nettigo Air Monitor integration in Home Assistant."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -21,7 +24,7 @@ async def init_integration(hass, co2_sensor=True) -> MockConfigEntry:
         data={"host": "10.10.2.3"},
     )
 
-    nam_data = load_json_object_fixture("nam/nam_data.json")
+    nam_data = await async_load_json_object_fixture(hass, "nam_data.json", DOMAIN)
 
     if not co2_sensor:
         # Remove conc_co2_ppm value
@@ -30,7 +33,10 @@ async def init_integration(hass, co2_sensor=True) -> MockConfigEntry:
     update_response = Mock(json=AsyncMock(return_value=nam_data))
 
     with (
-        patch("homeassistant.components.nam.NettigoAirMonitor.initialize"),
+        patch(
+            "homeassistant.components.nam.NettigoAirMonitor.async_get_mac_address",
+            return_value="aa:bb:cc:dd:ee:ff",
+        ),
         patch(
             "homeassistant.components.nam.NettigoAirMonitor._async_http_request",
             return_value=update_response,

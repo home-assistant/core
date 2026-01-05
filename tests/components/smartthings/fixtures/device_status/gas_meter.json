@@ -1,0 +1,61 @@
+{
+  "components": {
+    "main": {
+      "healthCheck": {
+        "checkInterval": {
+          "value": 60,
+          "unit": "s",
+          "data": {
+            "deviceScheme": "UNTRACKED",
+            "protocol": "cloud"
+          },
+          "timestamp": "2025-02-27T14:06:11.704Z"
+        },
+        "healthStatus": {
+          "value": null
+        },
+        "DeviceWatch-Enroll": {
+          "value": null
+        },
+        "DeviceWatch-DeviceStatus": {
+          "value": "online",
+          "data": {},
+          "timestamp": "2025-04-11T13:00:00.444Z"
+        }
+      },
+      "refresh": {},
+      "gasMeter": {
+        "gasMeterPrecision": {
+          "value": {
+            "volume": 5,
+            "calorific": 1,
+            "conversion": 1
+          },
+          "timestamp": "2025-04-11T13:00:00.444Z"
+        },
+        "gasMeterCalorific": {
+          "value": 40,
+          "timestamp": "2025-04-11T13:00:00.444Z"
+        },
+        "gasMeterTime": {
+          "value": "2025-04-11T13:30:00.028Z",
+          "timestamp": "2025-04-11T13:30:00.532Z"
+        },
+        "gasMeterVolume": {
+          "value": 14,
+          "unit": "ccf",
+          "timestamp": "2025-04-11T13:00:00.444Z"
+        },
+        "gasMeterConversion": {
+          "value": 3.6,
+          "timestamp": "2025-04-11T13:00:00.444Z"
+        },
+        "gasMeter": {
+          "value": 450.5,
+          "unit": "kWh",
+          "timestamp": "2025-04-11T13:00:00.444Z"
+        }
+      }
+    }
+  }
+}

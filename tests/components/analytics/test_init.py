@@ -2,7 +2,9 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.analytics.const import ANALYTICS_ENDPOINT_URL, DOMAIN
+import pytest
+
+from homeassistant.components.analytics.const import BASIC_ENDPOINT_URL, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -20,13 +22,14 @@ async def test_setup(hass: HomeAssistant) -> None:
     assert DOMAIN in hass.data
 
 
+@pytest.mark.usefixtures("supervisor_client")
 async def test_websocket(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test WebSocket commands."""
-    aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
+    aioclient_mock.post(BASIC_ENDPOINT_URL, status=200)
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
 
@@ -42,7 +45,6 @@ async def test_websocket(
             {"type": "analytics/preferences", "preferences": {"base": True}}
         )
         response = await ws_client.receive_json()
-    assert len(aioclient_mock.mock_calls) == 1
     assert response["result"]["preferences"]["base"]
 
     await ws_client.send_json_auto_id({"type": "analytics"})

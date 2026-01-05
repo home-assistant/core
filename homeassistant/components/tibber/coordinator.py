@@ -9,7 +9,11 @@ from typing import cast
 import tibber
 
 from homeassistant.components.recorder import get_instance
-from homeassistant.components.recorder.models import StatisticData, StatisticMetaData
+from homeassistant.components.recorder.models import (
+    StatisticData,
+    StatisticMeanType,
+    StatisticMetaData,
+)
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
     get_last_statistics,
@@ -20,8 +24,9 @@ from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_conversion import EnergyConverter
 
-from .const import DOMAIN as TIBBER_DOMAIN
+from .const import DOMAIN
 
 FIVE_YEARS = 5 * 365 * 24
 
@@ -33,11 +38,17 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):
 
     config_entry: ConfigEntry
 
-    def __init__(self, hass: HomeAssistant, tibber_connection: tibber.Tibber) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        tibber_connection: tibber.Tibber,
+    ) -> None:
         """Initialize the data handler."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=f"Tibber {tibber_connection.name}",
             update_interval=timedelta(minutes=20),
         )
@@ -49,9 +60,9 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):
             await self._tibber_connection.fetch_consumption_data_active_homes()
             await self._tibber_connection.fetch_production_data_active_homes()
             await self._insert_statistics()
-        except tibber.RetryableHttpException as err:
+        except tibber.RetryableHttpExceptionError as err:
             raise UpdateFailed(f"Error communicating with API ({err.status})") from err
-        except tibber.FatalHttpException:
+        except tibber.FatalHttpExceptionError:
             # Fatal error. Reload config entry to show correct error.
             self.hass.async_create_task(
                 self.hass.config_entries.async_reload(self.config_entry.entry_id)
@@ -60,17 +71,31 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):
     async def _insert_statistics(self) -> None:
         """Insert Tibber statistics."""
         for home in self._tibber_connection.get_homes():
-            sensors: list[tuple[str, bool, str]] = []
+            sensors: list[tuple[str, bool, str | None, str]] = []
             if home.hourly_consumption_data:
-                sensors.append(("consumption", False, UnitOfEnergy.KILO_WATT_HOUR))
-                sensors.append(("totalCost", False, home.currency))
+                sensors.append(
+                    (
+                        "consumption",
+                        False,
+                        EnergyConverter.UNIT_CLASS,
+                        UnitOfEnergy.KILO_WATT_HOUR,
+                    )
+                )
+                sensors.append(("totalCost", False, None, home.currency))
             if home.hourly_production_data:
-                sensors.append(("production", True, UnitOfEnergy.KILO_WATT_HOUR))
-                sensors.append(("profit", True, home.currency))
+                sensors.append(
+                    (
+                        "production",
+                        True,
+                        EnergyConverter.UNIT_CLASS,
+                        UnitOfEnergy.KILO_WATT_HOUR,
+                    )
+                )
+                sensors.append(("profit", True, None, home.currency))
 
-            for sensor_type, is_production, unit in sensors:
+            for sensor_type, is_production, unit_class, unit in sensors:
                 statistic_id = (
-                    f"{TIBBER_DOMAIN}:energy_"
+                    f"{DOMAIN}:energy_"
                     f"{sensor_type.lower()}_"
                     f"{home.home_id.replace('-', '')}"
                 )
@@ -153,11 +178,12 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):
                     )
 
                 metadata = StatisticMetaData(
-                    has_mean=False,
+                    mean_type=StatisticMeanType.NONE,
                     has_sum=True,
                     name=f"{home.name} {sensor_type}",
-                    source=TIBBER_DOMAIN,
+                    source=DOMAIN,
                     statistic_id=statistic_id,
+                    unit_class=unit_class,
                     unit_of_measurement=unit,
                 )
                 async_add_external_statistics(self.hass, metadata, statistics)

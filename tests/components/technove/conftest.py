@@ -1,10 +1,10 @@
 """Fixtures for TechnoVE integration tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from technove import Station as TechnoVEStation
-from typing_extensions import Generator
 
 from homeassistant.components.technove.const import DOMAIN
 from homeassistant.const import CONF_HOST

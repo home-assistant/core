@@ -1,7 +1,18 @@
 {
   "services": {
-    "publish": "mdi:publish",
-    "dump": "mdi:database-export",
-    "reload": "mdi:reload"
+    "dump": {
+      "service": "mdi:database-export"
+    },
+    "publish": {
+      "service": "mdi:publish"
+    },
+    "reload": {
+      "service": "mdi:reload"
+    }
+  },
+  "triggers": {
+    "_": {
+      "trigger": "mdi:swap-horizontal"
+    }
   }
 }

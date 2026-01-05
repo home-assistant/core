@@ -1,0 +1,46 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "description": "Please re-enter the password for {username}:",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "user": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "region": "Region",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "title": "Enter your FGLair credentials"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "fglair_outside_temp": {
+        "name": "Outside temperature"
+      }
+    }
+  },
+  "selector": {
+    "region": {
+      "options": {
+        "cn": "China",
+        "default": "Other",
+        "eu": "Europe"
+      }
+    }
+  }
+}

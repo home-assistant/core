@@ -75,6 +75,11 @@ class SensiboBaseEntity(CoordinatorEntity[SensiboDataUpdateCoordinator]):
         """Return data for device."""
         return self.coordinator.data.parsed[self._device_id]
 
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self.device_data.available and super().available
+
 
 class SensiboDeviceBaseEntity(SensiboBaseEntity):
     """Representation of a Sensibo Device."""
@@ -125,8 +130,13 @@ class SensiboMotionBaseEntity(SensiboBaseEntity):
         )
 
     @property
-    def sensor_data(self) -> MotionSensor | None:
+    def sensor_data(self) -> MotionSensor:
         """Return data for Motion Sensor."""
         if TYPE_CHECKING:
             assert self.device_data.motion_sensors
         return self.device_data.motion_sensors[self._sensor_id]
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return bool(self.sensor_data.alive) and super().available

@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Callable, Coroutine, Iterable, KeysView, Mapping
 from datetime import datetime, timedelta
 from functools import wraps
+import inspect
 import random
 import re
 import string
@@ -97,6 +97,20 @@ def get_random_string(length: int = 10) -> str:
     return "".join(generator.choice(source_chars) for _ in range(length))
 
 
+# Adapted from https://github.com/okunishinishi/python-stringcase, with improvements
+def snakecase(text: str) -> str:
+    """Convert a string to snake_case."""
+    text = re.sub(r"[\s.-]", "_", text)
+    if not text.isupper():
+        # Underscore before last uppercase of groups of 2+ uppercase ("HTTPResponse", "IPAddress")
+        text = re.sub(
+            r"[A-Z]{2,}(?=[A-Z][^A-Z])", lambda match: match.group(0) + "_", text
+        )
+        # Underscore between non-uppercase followed by uppercase
+        text = re.sub(r"(?<=[^A-Z_])[A-Z]", lambda match: "_" + match.group(0), text)
+    return text.lower()
+
+
 class Throttle:
     """A class for throttling the execution of tasks.
 
@@ -125,17 +139,15 @@ class Throttle:
     def __call__(self, method: Callable) -> Callable:
         """Caller for the throttle."""
         # Make sure we return a coroutine if the method is async.
-        if asyncio.iscoroutinefunction(method):
+        if inspect.iscoroutinefunction(method):
 
             async def throttled_value() -> None:
                 """Stand-in function for when real func is being throttled."""
-                return None
 
         else:
 
             def throttled_value() -> None:  # type: ignore[misc]
                 """Stand-in function for when real func is being throttled."""
-                return None
 
         if self.limit_no_throttle is not None:
             method = Throttle(self.limit_no_throttle)(method)
@@ -162,7 +174,7 @@ class Throttle:
             If we cannot acquire the lock, it is running so return None.
             """
             if hasattr(method, "__self__"):
-                host = getattr(method, "__self__")
+                host = method.__self__
             elif is_func:
                 host = wrapper
             else:

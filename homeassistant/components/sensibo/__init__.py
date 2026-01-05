@@ -8,20 +8,31 @@ from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, LOGGER, PLATFORMS
 from .coordinator import SensiboDataUpdateCoordinator
+from .services import async_setup_services
 from .util import NoDevicesError, NoUsernameError, async_validate_api
 
 type SensiboConfigEntry = ConfigEntry[SensiboDataUpdateCoordinator]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Sensibo component."""
+    async_setup_services(hass)
+
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SensiboConfigEntry) -> bool:
     """Set up Sensibo from a config entry."""
 
-    coordinator = SensiboDataUpdateCoordinator(hass)
+    coordinator = SensiboDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 
@@ -30,12 +41,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: SensiboConfigEntry) -> b
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SensiboConfigEntry) -> bool:
     """Unload Sensibo config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: SensiboConfigEntry) -> bool:
     """Migrate old entry."""
     # Change entry unique id from api_key to username
     if entry.version == 1:
@@ -57,7 +68,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, entry: ConfigEntry, device: DeviceEntry
+    hass: HomeAssistant, entry: SensiboConfigEntry, device: DeviceEntry
 ) -> bool:
     """Remove Sensibo config entry from a device."""
     entity_registry = er.async_get(hass)

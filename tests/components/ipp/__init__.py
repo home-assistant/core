@@ -2,9 +2,9 @@
 
 from ipaddress import ip_address
 
-from homeassistant.components import zeroconf
 from homeassistant.components.ipp.const import CONF_BASE_PATH
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SSL, CONF_VERIFY_SSL
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 ATTR_HOSTNAME = "hostname"
 ATTR_PROPERTIES = "properties"
@@ -30,7 +30,7 @@ MOCK_USER_INPUT = {
     CONF_BASE_PATH: BASE_PATH,
 }
 
-MOCK_ZEROCONF_IPP_SERVICE_INFO = zeroconf.ZeroconfServiceInfo(
+MOCK_ZEROCONF_IPP_SERVICE_INFO = ZeroconfServiceInfo(
     type=IPP_ZEROCONF_SERVICE_TYPE,
     name=f"{ZEROCONF_NAME}.{IPP_ZEROCONF_SERVICE_TYPE}",
     ip_address=ip_address(ZEROCONF_HOST),
@@ -40,7 +40,7 @@ MOCK_ZEROCONF_IPP_SERVICE_INFO = zeroconf.ZeroconfServiceInfo(
     properties={"rp": ZEROCONF_RP},
 )
 
-MOCK_ZEROCONF_IPPS_SERVICE_INFO = zeroconf.ZeroconfServiceInfo(
+MOCK_ZEROCONF_IPPS_SERVICE_INFO = ZeroconfServiceInfo(
     type=IPPS_ZEROCONF_SERVICE_TYPE,
     name=f"{ZEROCONF_NAME}.{IPPS_ZEROCONF_SERVICE_TYPE}",
     ip_address=ip_address(ZEROCONF_HOST),

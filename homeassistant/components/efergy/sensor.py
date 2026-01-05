@@ -15,14 +15,14 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import EfergyEntity
-from .const import CONF_CURRENT_VALUES, DOMAIN, LOGGER
+from . import EfergyConfigEntry
+from .const import CONF_CURRENT_VALUES, LOGGER
+from .entity import EfergyEntity
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -106,10 +106,12 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: EfergyConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Efergy sensors."""
-    api: Efergy = hass.data[DOMAIN][entry.entry_id]
+    api = entry.runtime_data
     sensors = []
     for description in SENSOR_TYPES:
         if description.key != CONF_CURRENT_VALUES:
@@ -181,4 +183,4 @@ class EfergySensor(EfergyEntity, SensorEntity):
             return
         if not self._attr_available:
             self._attr_available = True
-            LOGGER.info("Connection has resumed")
+            LOGGER.debug("Connection has resumed")

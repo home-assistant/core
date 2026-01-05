@@ -16,6 +16,7 @@ from aiohttp import ClientError
 from aiohttp.hdrs import METH_POST
 from aiohttp.web import Request, Response
 from aiowithings import NotificationCategory, WithingsClient
+from aiowithings.exceptions import WithingsError
 from aiowithings.util import to_enum
 from yarl import URL
 
@@ -36,8 +37,10 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
@@ -48,6 +51,7 @@ from .coordinator import (
     WithingsActivityDataUpdateCoordinator,
     WithingsBedPresenceDataUpdateCoordinator,
     WithingsDataUpdateCoordinator,
+    WithingsDeviceDataUpdateCoordinator,
     WithingsGoalsDataUpdateCoordinator,
     WithingsMeasurementDataUpdateCoordinator,
     WithingsSleepDataUpdateCoordinator,
@@ -73,6 +77,7 @@ class WithingsData:
     goals_coordinator: WithingsGoalsDataUpdateCoordinator
     activity_coordinator: WithingsActivityDataUpdateCoordinator
     workout_coordinator: WithingsWorkoutDataUpdateCoordinator
+    device_coordinator: WithingsDeviceDataUpdateCoordinator
     coordinators: set[WithingsDataUpdateCoordinator] = field(default_factory=set)
 
     def __post_init__(self) -> None:
@@ -84,6 +89,7 @@ class WithingsData:
             self.goals_coordinator,
             self.activity_coordinator,
             self.workout_coordinator,
+            self.device_coordinator,
         }
 
 
@@ -100,7 +106,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: WithingsConfigEntry) -> 
         )
     session = async_get_clientsession(hass)
     client = WithingsClient(session=session)
-    implementation = await async_get_config_entry_implementation(hass, entry)
+    try:
+        implementation = await async_get_config_entry_implementation(hass, entry)
+    except ImplementationUnavailableError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="oauth2_implementation_unavailable",
+        ) from err
     oauth_session = OAuth2Session(hass, entry, implementation)
 
     refresh_lock = asyncio.Lock()
@@ -116,12 +128,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: WithingsConfigEntry) -> 
     client.refresh_token_function = _refresh_token
     withings_data = WithingsData(
         client=client,
-        measurement_coordinator=WithingsMeasurementDataUpdateCoordinator(hass, client),
-        sleep_coordinator=WithingsSleepDataUpdateCoordinator(hass, client),
-        bed_presence_coordinator=WithingsBedPresenceDataUpdateCoordinator(hass, client),
-        goals_coordinator=WithingsGoalsDataUpdateCoordinator(hass, client),
-        activity_coordinator=WithingsActivityDataUpdateCoordinator(hass, client),
-        workout_coordinator=WithingsWorkoutDataUpdateCoordinator(hass, client),
+        measurement_coordinator=WithingsMeasurementDataUpdateCoordinator(
+            hass, entry, client
+        ),
+        sleep_coordinator=WithingsSleepDataUpdateCoordinator(hass, entry, client),
+        bed_presence_coordinator=WithingsBedPresenceDataUpdateCoordinator(
+            hass, entry, client
+        ),
+        goals_coordinator=WithingsGoalsDataUpdateCoordinator(hass, entry, client),
+        activity_coordinator=WithingsActivityDataUpdateCoordinator(hass, entry, client),
+        workout_coordinator=WithingsWorkoutDataUpdateCoordinator(hass, entry, client),
+        device_coordinator=WithingsDeviceDataUpdateCoordinator(hass, entry, client),
     )
 
     for coordinator in withings_data.coordinators:
@@ -219,10 +236,13 @@ class WithingsWebhookManager:
                 "Unregister Withings webhook (%s)", self.entry.data[CONF_WEBHOOK_ID]
             )
             webhook_unregister(self.hass, self.entry.data[CONF_WEBHOOK_ID])
-            await async_unsubscribe_webhooks(self.withings_data.client)
             for coordinator in self.withings_data.coordinators:
                 coordinator.webhook_subscription_listener(False)
             self._webhooks_registered = False
+            try:
+                await async_unsubscribe_webhooks(self.withings_data.client)
+            except WithingsError as ex:
+                LOGGER.warning("Failed to unsubscribe from Withings webhook: %s", ex)
 
     async def register_webhook(
         self,
@@ -239,10 +259,16 @@ class WithingsWebhookManager:
                     self.hass, self.entry.data[CONF_WEBHOOK_ID]
                 )
             url = URL(webhook_url)
-            if url.scheme != "https" or url.port != 443:
+            if url.scheme != "https":
                 LOGGER.warning(
-                    "Webhook not registered - "
-                    "https and port 443 is required to register the webhook"
+                    "Webhook not registered - HTTPS is required. "
+                    "See https://www.home-assistant.io/integrations/withings/#webhook-requirements"
+                )
+                return
+            if url.port != 443:
+                LOGGER.warning(
+                    "Webhook not registered - port 443 is required. "
+                    "See https://www.home-assistant.io/integrations/withings/#webhook-requirements"
                 )
                 return
 

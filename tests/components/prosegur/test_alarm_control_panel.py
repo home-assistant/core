@@ -1,12 +1,15 @@
 """Tests for the Prosegur alarm control panel device."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 from pyprosegur.installation import Status
 import pytest
-from typing_extensions import Generator
 
-from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
+from homeassistant.components.alarm_control_panel import (
+    DOMAIN as ALARM_DOMAIN,
+    AlarmControlPanelState,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FRIENDLY_NAME,
@@ -14,9 +17,6 @@ from homeassistant.const import (
     SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_HOME,
     SERVICE_ALARM_DISARM,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_DISARMED,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
@@ -93,9 +93,13 @@ async def test_connection_error(
 @pytest.mark.parametrize(
     ("code", "alarm_service", "alarm_state"),
     [
-        (Status.ARMED, SERVICE_ALARM_ARM_AWAY, STATE_ALARM_ARMED_AWAY),
-        (Status.PARTIALLY, SERVICE_ALARM_ARM_HOME, STATE_ALARM_ARMED_HOME),
-        (Status.DISARMED, SERVICE_ALARM_DISARM, STATE_ALARM_DISARMED),
+        (Status.ARMED, SERVICE_ALARM_ARM_AWAY, AlarmControlPanelState.ARMED_AWAY),
+        (
+            Status.PARTIALLY,
+            SERVICE_ALARM_ARM_HOME,
+            AlarmControlPanelState.ARMED_HOME,
+        ),
+        (Status.DISARMED, SERVICE_ALARM_DISARM, AlarmControlPanelState.DISARMED),
     ],
 )
 async def test_arm(

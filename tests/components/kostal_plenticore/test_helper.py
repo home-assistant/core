@@ -1,10 +1,10 @@
 """Test Kostal Plenticore helper."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pykoplenti import ApiClient, ExtendedApiClient, SettingsData
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.kostal_plenticore.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -67,7 +67,7 @@ async def test_plenticore_async_setup_g1(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    plenticore = hass.data[DOMAIN][mock_config_entry.entry_id]
+    plenticore = mock_config_entry.runtime_data
 
     assert plenticore.device_info == DeviceInfo(
         configuration_url="http://192.168.1.2",
@@ -119,7 +119,7 @@ async def test_plenticore_async_setup_g2(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    plenticore = hass.data[DOMAIN][mock_config_entry.entry_id]
+    plenticore = mock_config_entry.runtime_data
 
     assert plenticore.device_info == DeviceInfo(
         configuration_url="http://192.168.1.2",

@@ -1,12 +1,12 @@
 """Define tests for the Elexa Guardian config flow."""
 
 from ipaddress import ip_address
+from typing import Any
 from unittest.mock import patch
 
 from aioguardian.errors import GuardianError
 import pytest
 
-from homeassistant.components import dhcp, zeroconf
 from homeassistant.components.guardian import CONF_UID, DOMAIN
 from homeassistant.components.guardian.config_flow import (
     async_get_pin_from_discovery_hostname,
@@ -16,15 +16,16 @@ from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER, SOURCE_ZEROCO
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from tests.common import MockConfigEntry
 
 pytestmark = pytest.mark.usefixtures("mock_setup_entry")
 
 
-async def test_duplicate_error(
-    hass: HomeAssistant, config, config_entry, setup_guardian
-) -> None:
+@pytest.mark.usefixtures("config_entry", "setup_guardian")
+async def test_duplicate_error(hass: HomeAssistant, config: dict[str, Any]) -> None:
     """Test that errors are shown when duplicate entries are added."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=config
@@ -33,7 +34,7 @@ async def test_duplicate_error(
     assert result["reason"] == "already_configured"
 
 
-async def test_connect_error(hass: HomeAssistant, config) -> None:
+async def test_connect_error(hass: HomeAssistant, config: dict[str, Any]) -> None:
     """Test that the config entry errors out if the device cannot connect."""
     with patch(
         "aioguardian.client.Client.connect",
@@ -58,7 +59,8 @@ async def test_get_pin_from_uid() -> None:
     assert pin == "3456"
 
 
-async def test_step_user(hass: HomeAssistant, config, setup_guardian) -> None:
+@pytest.mark.usefixtures("setup_guardian")
+async def test_step_user(hass: HomeAssistant, config: dict[str, Any]) -> None:
     """Test the user step."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -78,9 +80,10 @@ async def test_step_user(hass: HomeAssistant, config, setup_guardian) -> None:
     }
 
 
-async def test_step_zeroconf(hass: HomeAssistant, setup_guardian) -> None:
+@pytest.mark.usefixtures("setup_guardian")
+async def test_step_zeroconf(hass: HomeAssistant) -> None:
     """Test the zeroconf step."""
-    zeroconf_data = zeroconf.ZeroconfServiceInfo(
+    zeroconf_data = ZeroconfServiceInfo(
         ip_address=ip_address("192.168.1.100"),
         ip_addresses=[ip_address("192.168.1.100")],
         port=7777,
@@ -110,7 +113,7 @@ async def test_step_zeroconf(hass: HomeAssistant, setup_guardian) -> None:
 
 async def test_step_zeroconf_already_in_progress(hass: HomeAssistant) -> None:
     """Test the zeroconf step aborting because it's already in progress."""
-    zeroconf_data = zeroconf.ZeroconfServiceInfo(
+    zeroconf_data = ZeroconfServiceInfo(
         ip_address=ip_address("192.168.1.100"),
         ip_addresses=[ip_address("192.168.1.100")],
         port=7777,
@@ -133,9 +136,10 @@ async def test_step_zeroconf_already_in_progress(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_in_progress"
 
 
-async def test_step_dhcp(hass: HomeAssistant, setup_guardian) -> None:
+@pytest.mark.usefixtures("setup_guardian")
+async def test_step_dhcp(hass: HomeAssistant) -> None:
     """Test the dhcp step."""
-    dhcp_data = dhcp.DhcpServiceInfo(
+    dhcp_data = DhcpServiceInfo(
         ip="192.168.1.100",
         hostname="GVC1-ABCD.local.",
         macaddress="aabbccddeeff",
@@ -161,7 +165,7 @@ async def test_step_dhcp(hass: HomeAssistant, setup_guardian) -> None:
 
 async def test_step_dhcp_already_in_progress(hass: HomeAssistant) -> None:
     """Test the zeroconf step aborting because it's already in progress."""
-    dhcp_data = dhcp.DhcpServiceInfo(
+    dhcp_data = DhcpServiceInfo(
         ip="192.168.1.100",
         hostname="GVC1-ABCD.local.",
         macaddress="aabbccddeeff",
@@ -190,7 +194,7 @@ async def test_step_dhcp_already_setup_match_mac(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_DHCP},
-        data=dhcp.DhcpServiceInfo(
+        data=DhcpServiceInfo(
             ip="192.168.1.100",
             hostname="GVC1-ABCD.local.",
             macaddress="aabbccddabcd",
@@ -212,7 +216,7 @@ async def test_step_dhcp_already_setup_match_ip(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_DHCP},
-        data=dhcp.DhcpServiceInfo(
+        data=DhcpServiceInfo(
             ip="192.168.1.100",
             hostname="GVC1-ABCD.local.",
             macaddress="aabbccddabcd",

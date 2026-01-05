@@ -1,0 +1,27 @@
+# serializer version: 1
+# name: test_setup_config_entry[state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'My template',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.my_template',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_setup_config_entry[value_template]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'My template',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.my_template',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

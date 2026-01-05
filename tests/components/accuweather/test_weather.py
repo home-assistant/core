@@ -11,7 +11,6 @@ from homeassistant.components.accuweather.const import UPDATE_INTERVAL_DAILY_FOR
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
     DOMAIN as WEATHER_DOMAIN,
-    LEGACY_SERVICE_GET_FORECAST,
     SERVICE_GET_FORECASTS,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
@@ -108,27 +107,24 @@ async def test_unsupported_condition_icon_data(
 
 
 @pytest.mark.parametrize(
-    ("service"),
-    [
-        SERVICE_GET_FORECASTS,
-        LEGACY_SERVICE_GET_FORECAST,
-    ],
+    ("forecast_type"),
+    ["daily", "hourly"],
 )
 async def test_forecast_service(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     mock_accuweather_client: AsyncMock,
-    service: str,
+    forecast_type: str,
 ) -> None:
     """Test multiple forecast."""
     await init_integration(hass)
 
     response = await hass.services.async_call(
         WEATHER_DOMAIN,
-        service,
+        SERVICE_GET_FORECASTS,
         {
             "entity_id": "weather.home",
-            "type": "daily",
+            "type": forecast_type,
         },
         blocking=True,
         return_response=True,

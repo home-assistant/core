@@ -1,0 +1,28 @@
+# Describes the format for services provided by the SQL integration.
+
+query:
+  fields:
+    query:
+      required: true
+      example: |
+        SELECT
+          states.state,
+          last_updated_ts
+        FROM
+          states
+          INNER JOIN states_meta ON
+            states.metadata_id = states_meta.metadata_id
+        WHERE
+          states_meta.entity_id = 'sun.sun'
+        ORDER BY
+          last_updated_ts DESC
+        LIMIT
+          10;
+      selector:
+        text:
+          multiline: true
+    db_url:
+      required: false
+      example: "sqlite:////config/home-assistant_v2.db"
+      selector:
+        text:

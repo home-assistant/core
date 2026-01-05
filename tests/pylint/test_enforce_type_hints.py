@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 import re
 from types import ModuleType
 from unittest.mock import patch
@@ -55,6 +56,7 @@ def test_regex_get_module_platform(
         ("list[dict[str, Any]]", 1, ("list", "dict[str, Any]")),
         ("tuple[bytes | None, str | None]", 2, ("tuple", "bytes | None", "str | None")),
         ("Callable[[], TestServer]", 2, ("Callable", "[]", "TestServer")),
+        ("pytest.CaptureFixture[str]", 1, ("pytest.CaptureFixture", "str")),
     ],
 )
 def test_regex_x_of_y_i(
@@ -97,7 +99,7 @@ def test_regex_a_or_b(
     "code",
     [
         """
-    async def setup( #@
+    async def async_turn_on( #@
         arg1, arg2
     ):
         pass
@@ -113,7 +115,7 @@ def test_ignore_no_annotations(
 
     func_node = astroid.extract_node(
         code,
-        "homeassistant.components.pylint_test",
+        "homeassistant.components.pylint_test.light",
     )
     type_hint_checker.visit_module(func_node.parent)
 
@@ -312,7 +314,9 @@ def test_invalid_config_flow_step(
     linter: UnittestLinter, type_hint_checker: BaseChecker
 ) -> None:
     """Ensure invalid hints are rejected for ConfigFlow step."""
-    class_node, func_node, arg_node = astroid.extract_node(
+    type_hint_checker.linter.config.ignore_missing_annotations = True
+
+    class_node, func_node, arg_node, func_node2 = astroid.extract_node(
         """
     class FlowHandler():
         pass
@@ -326,6 +330,12 @@ def test_invalid_config_flow_step(
         async def async_step_zeroconf( #@
             self,
             device_config: dict #@
+        ):
+            pass
+
+        async def async_step_custom( #@
+            self,
+            user_input
         ):
             pass
     """,
@@ -353,16 +363,24 @@ def test_invalid_config_flow_step(
             end_line=11,
             end_col_offset=33,
         ),
+        pylint.testutils.MessageTest(
+            msg_id="hass-return-type",
+            node=func_node2,
+            args=("ConfigFlowResult", "async_step_custom"),
+            line=17,
+            col_offset=4,
+            end_line=17,
+            end_col_offset=31,
+        ),
     ):
         type_hint_checker.visit_classdef(class_node)
 
 
-def test_invalid_custom_config_flow_step(
-    linter: UnittestLinter, type_hint_checker: BaseChecker
-) -> None:
-    """Ensure invalid hints are rejected for ConfigFlow step."""
-    class_node, func_node, arg_node = astroid.extract_node(
-        """
+@pytest.mark.parametrize(
+    ("code", "expected_messages_fn"),
+    [
+        (
+            """
     class FlowHandler():
         pass
 
@@ -374,34 +392,79 @@ def test_invalid_custom_config_flow_step(
     ):
         async def async_step_axis_specific( #@
             self,
-            device_config: dict #@
+            device_config: dict
         ):
             pass
-    """,
+""",
+            lambda func_node: [
+                pylint.testutils.MessageTest(
+                    msg_id="hass-return-type",
+                    node=func_node,
+                    args=("ConfigFlowResult", "async_step_axis_specific"),
+                    line=11,
+                    col_offset=4,
+                    end_line=11,
+                    end_col_offset=38,
+                ),
+            ],
+        ),
+        (
+            """
+    class FlowHandler():
+        pass
+
+    class ConfigSubentryFlow(FlowHandler):
+        pass
+
+    class CustomSubentryFlowHandler(ConfigSubentryFlow): #@
+        async def async_step_user( #@
+            self, user_input: dict[str, Any] | None = None
+        ) -> FlowResult:
+            pass
+""",
+            lambda func_node: [
+                pylint.testutils.MessageTest(
+                    msg_id="hass-return-type",
+                    node=func_node,
+                    args=("SubentryFlowResult", "async_step_user"),
+                    line=9,
+                    col_offset=4,
+                    end_line=9,
+                    end_col_offset=29,
+                ),
+            ],
+        ),
+    ],
+    ids=[
+        "Config flow",
+        "Config subentry flow",
+    ],
+)
+def test_invalid_flow_step(
+    linter: UnittestLinter,
+    type_hint_checker: BaseChecker,
+    code: str,
+    expected_messages_fn: Callable[
+        [astroid.NodeNG], tuple[pylint.testutils.MessageTest, ...]
+    ],
+) -> None:
+    """Ensure invalid hints are rejected for flow step."""
+    class_node, func_node = astroid.extract_node(
+        code,
         "homeassistant.components.pylint_test.config_flow",
     )
     type_hint_checker.visit_module(class_node.parent)
 
     with assert_adds_messages(
         linter,
-        pylint.testutils.MessageTest(
-            msg_id="hass-return-type",
-            node=func_node,
-            args=("ConfigFlowResult", "async_step_axis_specific"),
-            line=11,
-            col_offset=4,
-            end_line=11,
-            end_col_offset=38,
-        ),
+        *expected_messages_fn(func_node),
     ):
         type_hint_checker.visit_classdef(class_node)
 
 
-def test_valid_config_flow_step(
-    linter: UnittestLinter, type_hint_checker: BaseChecker
-) -> None:
-    """Ensure valid hints are accepted for ConfigFlow step."""
-    class_node = astroid.extract_node(
+@pytest.mark.parametrize(
+    "code",
+    [
         """
     class FlowHandler():
         pass
@@ -418,6 +481,33 @@ def test_valid_config_flow_step(
         ) -> ConfigFlowResult:
             pass
     """,
+        """
+    class FlowHandler():
+        pass
+
+    class ConfigSubentryFlow(FlowHandler):
+        pass
+
+    class CustomSubentryFlowHandler(ConfigSubentryFlow): #@
+        async def async_step_user(
+            self, user_input: dict[str, Any] | None = None
+        ) -> SubentryFlowResult:
+            pass
+""",
+    ],
+    ids=[
+        "Config flow",
+        "Config subentry flow",
+    ],
+)
+def test_valid_flow_step(
+    linter: UnittestLinter,
+    type_hint_checker: BaseChecker,
+    code: str,
+) -> None:
+    """Ensure valid hints are accepted for flow step."""
+    class_node = astroid.extract_node(
+        code,
         "homeassistant.components.pylint_test.config_flow",
     )
     type_hint_checker.visit_module(class_node.parent)
@@ -1071,18 +1161,16 @@ def test_vacuum_entity(linter: UnittestLinter, type_hint_checker: BaseChecker) -
     class Entity():
         pass
 
-    class ToggleEntity(Entity):
-        pass
-
-    class _BaseVacuum(Entity):
-        pass
-
-    class VacuumEntity(_BaseVacuum, ToggleEntity):
+    class StateVacuumEntity(Entity):
         pass
 
     class MyVacuum( #@
-        VacuumEntity
+        StateVacuumEntity
     ):
+        @property
+        def activity(self) -> VacuumActivity | None:
+            pass
+
         def send_command(
             self,
             command: str,
@@ -1264,6 +1352,7 @@ def test_pytest_fixture(linter: UnittestLinter, type_hint_checker: BaseChecker) 
     def sample_fixture( #@
         hass: HomeAssistant,
         caplog: pytest.LogCaptureFixture,
+        capsys: pytest.CaptureFixture[str],
         aiohttp_server: Callable[[], TestServer],
         unused_tcp_port_factory: Callable[[], int],
         enable_custom_integrations: None,
@@ -1351,7 +1440,7 @@ def test_valid_generic(
     async def async_setup_entry( #@
         hass: HomeAssistant,
         entry: {entry_annotation},
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         pass
     """,
@@ -1383,7 +1472,7 @@ def test_invalid_generic(
     async def async_setup_entry( #@
         hass: HomeAssistant,
         entry: {entry_annotation}, #@
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         pass
     """,
@@ -1405,6 +1494,42 @@ def test_invalid_generic(
             col_offset=4,
             end_line=4,
             end_col_offset=end_col_offset,
+        ),
+    ):
+        type_hint_checker.visit_asyncfunctiondef(func_node)
+
+
+def test_missing_argument(
+    linter: UnittestLinter,
+    type_hint_checker: BaseChecker,
+) -> None:
+    """Ensure missing arg raises an error."""
+    func_node = astroid.extract_node(
+        """
+    async def async_setup_entry( #@
+        hass: HomeAssistant,
+        entry: ConfigEntry,
+    ) -> None:
+        pass
+    """,
+        "homeassistant.components.pylint_test.sensor",
+    )
+    type_hint_checker.visit_module(func_node.parent)
+
+    with assert_adds_messages(
+        linter,
+        pylint.testutils.MessageTest(
+            msg_id="hass-argument-type",
+            node=func_node,
+            args=(
+                3,
+                "AddConfigEntryEntitiesCallback",
+                "async_setup_entry",
+            ),
+            line=2,
+            col_offset=0,
+            end_line=2,
+            end_col_offset=27,
         ),
     ):
         type_hint_checker.visit_asyncfunctiondef(func_node)

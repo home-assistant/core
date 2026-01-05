@@ -22,7 +22,7 @@ from homeassistant.const import ATTR_ENTITY_ID, SERVICE_SELECT_OPTION
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 

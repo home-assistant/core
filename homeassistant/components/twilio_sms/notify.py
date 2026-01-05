@@ -9,12 +9,12 @@ import voluptuous as vol
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TARGET,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
 from homeassistant.components.twilio import DATA_TWILIO
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_FROM_NUMBER = "from_number"
 ATTR_MEDIAURL = "media_url"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_FROM_NUMBER): vol.All(
             cv.string,
@@ -66,7 +66,7 @@ class TwilioSMSNotificationService(BaseNotificationService):
             twilio_args[ATTR_MEDIAURL] = data[ATTR_MEDIAURL]
 
         if not targets:
-            _LOGGER.info("At least 1 target is required")
+            _LOGGER.warning("At least 1 target is required")
             return
 
         for target in targets:

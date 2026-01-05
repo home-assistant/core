@@ -31,7 +31,7 @@ from pycomfoconnect import (
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -48,7 +48,7 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -263,7 +263,7 @@ SENSOR_TYPES = (
     ),
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_RESOURCES, default=[]): vol.All(
             cv.ensure_list, [vol.In([desc.key for desc in SENSOR_TYPES])]
@@ -327,7 +327,7 @@ class ComfoConnectSensor(SensorEntity):
             self._ccb.comfoconnect.register_sensor, self.entity_description.sensor_id
         )
 
-    def _handle_update(self, value):
+    def _handle_update(self, value: float) -> None:
         """Handle update callbacks."""
         _LOGGER.debug(
             "Handle update for sensor %s (%d): %s",

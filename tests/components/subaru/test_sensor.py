@@ -8,7 +8,7 @@ import pytest
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.subaru.sensor import (
     API_GEN_2_SENSORS,
-    DOMAIN as SUBARU_DOMAIN,
+    DOMAIN,
     EV_SENSORS,
     SAFETY_SENSORS,
 )
@@ -26,6 +26,8 @@ from .conftest import (
     advance_time_to_next_fetch,
     setup_subaru_config_entry,
 )
+
+from tests.common import get_sensor_display_state
 
 
 async def test_sensors_ev_metric(hass: HomeAssistant, ev_entry) -> None:
@@ -48,7 +50,7 @@ async def test_sensors_missing_vin_data(hass: HomeAssistant, ev_entry) -> None:
         (
             {
                 "domain": SENSOR_DOMAIN,
-                "platform": SUBARU_DOMAIN,
+                "platform": DOMAIN,
                 "unique_id": f"{TEST_VIN_2_EV}_Avg fuel consumption",
             },
             f"{TEST_VIN_2_EV}_Avg fuel consumption",
@@ -84,7 +86,7 @@ async def test_sensor_migrate_unique_ids(
         (
             {
                 "domain": SENSOR_DOMAIN,
-                "platform": SUBARU_DOMAIN,
+                "platform": DOMAIN,
                 "unique_id": f"{TEST_VIN_2_EV}_Avg fuel consumption",
             },
             f"{TEST_VIN_2_EV}_Avg fuel consumption",
@@ -110,7 +112,7 @@ async def test_sensor_migrate_unique_ids_duplicate(
     # create existing entry with new_unique_id that conflicts with migrate
     existing_entity = entity_registry.async_get_or_create(
         SENSOR_DOMAIN,
-        SUBARU_DOMAIN,
+        DOMAIN,
         unique_id=new_unique_id,
         config_entry=subaru_config_entry,
     )
@@ -136,10 +138,10 @@ def _assert_data(hass: HomeAssistant, expected_state: dict[str, Any]) -> None:
     entity_registry = er.async_get(hass)
     for item in sensor_list:
         entity = entity_registry.async_get_entity_id(
-            SENSOR_DOMAIN, SUBARU_DOMAIN, f"{TEST_VIN_2_EV}_{item.key}"
+            SENSOR_DOMAIN, DOMAIN, f"{TEST_VIN_2_EV}_{item.key}"
         )
         expected_states[entity] = expected_state[item.key]
 
     for sensor, value in expected_states.items():
-        actual = hass.states.get(sensor)
-        assert actual.state == value
+        state = get_sensor_display_state(hass, entity_registry, sensor)
+        assert state == value

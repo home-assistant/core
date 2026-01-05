@@ -15,6 +15,7 @@ from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
     SourceType,
 )
+from homeassistant.components.zone import ENTITY_ID_HOME
 from homeassistant.const import (
     ATTR_EDITABLE,
     ATTR_GPS_ACCURACY,
@@ -24,11 +25,9 @@ from homeassistant.const import (
     ATTR_NAME,
     CONF_ID,
     CONF_NAME,
-    CONF_TYPE,
     EVENT_HOMEASSISTANT_START,
     SERVICE_RELOAD,
     STATE_HOME,
-    STATE_NOT_HOME,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -51,10 +50,9 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.storage import Store
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.loader import bind_hass
 
-from . import group as group_pre_import  # noqa: F401
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -167,7 +165,7 @@ def entities_in_person(hass: HomeAssistant, entity_id: str) -> list[str]:
     return person_entity.device_trackers
 
 
-CREATE_FIELDS = {
+CREATE_FIELDS: VolDictType = {
     vol.Required(CONF_NAME): vol.All(str, vol.Length(min=1)),
     vol.Optional(CONF_USER_ID): vol.Any(str, None),
     vol.Optional(CONF_DEVICE_TRACKERS, default=list): vol.All(
@@ -177,7 +175,7 @@ CREATE_FIELDS = {
 }
 
 
-UPDATE_FIELDS = {
+UPDATE_FIELDS: VolDictType = {
     vol.Optional(CONF_NAME): vol.All(str, vol.Length(min=1)),
     vol.Optional(CONF_USER_ID): vol.Any(str, None),
     vol.Optional(CONF_DEVICE_TRACKERS, default=list): vol.All(
@@ -282,7 +280,7 @@ class PersonStorageCollection(collection.DictStorageCollection):
         return data
 
     @callback
-    def _get_suggested_id(self, info: dict) -> str:
+    def _get_suggested_id(self, info: dict[str, str]) -> str:
         """Suggest an ID based on the config."""
         return info[CONF_NAME]
 
@@ -305,6 +303,23 @@ class PersonStorageCollection(collection.DictStorageCollection):
         for persons in (self.data.values(), self.yaml_collection.async_items()):
             if any(person for person in persons if person.get(CONF_USER_ID) == user_id):
                 raise ValueError("User already taken")
+
+
+class PersonStorageCollectionWebsocket(collection.DictStorageCollectionWebsocket):
+    """Class to expose storage collection management over websocket."""
+
+    def ws_list_item(
+        self,
+        hass: HomeAssistant,
+        connection: websocket_api.ActiveConnection,
+        msg: dict[str, Any],
+    ) -> None:
+        """List persons."""
+        yaml, storage, _ = hass.data[DOMAIN]
+        connection.send_result(
+            msg[ATTR_ID],
+            {"storage": storage.async_items(), "config": yaml.async_items()},
+        )
 
 
 async def filter_yaml_data(hass: HomeAssistant, persons: list[dict]) -> list[dict]:
@@ -370,11 +385,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.data[DOMAIN] = (yaml_collection, storage_collection, entity_component)
 
-    collection.DictStorageCollectionWebsocket(
+    PersonStorageCollectionWebsocket(
         storage_collection, DOMAIN, DOMAIN, CREATE_FIELDS, UPDATE_FIELDS
-    ).async_setup(hass, create_list=False)
-
-    websocket_api.async_register_command(hass, ws_list_person)
+    ).async_setup(hass)
 
     async def _handle_user_removed(event: Event) -> None:
         """Handle a user being removed."""
@@ -452,7 +465,7 @@ class Person(
         """Register device trackers."""
         await super().async_added_to_hass()
         if state := await self.async_get_last_state():
-            self._parse_source_state(state)
+            self._parse_source_state(state, state)
 
         if self.hass.is_running:
             # Update person now if hass is already running.
@@ -502,7 +515,7 @@ class Person(
     @callback
     def _update_state(self) -> None:
         """Update the state."""
-        latest_non_gps_home = latest_not_home = latest_gps = latest = None
+        latest_non_gps_home = latest_not_home = latest_gps = latest = coordinates = None
         for entity_id in self._config[CONF_DEVICE_TRACKERS]:
             state = self.hass.states.get(entity_id)
 
@@ -513,18 +526,28 @@ class Person(
                 latest_gps = _get_latest(latest_gps, state)
             elif state.state == STATE_HOME:
                 latest_non_gps_home = _get_latest(latest_non_gps_home, state)
-            elif state.state == STATE_NOT_HOME:
+            else:
                 latest_not_home = _get_latest(latest_not_home, state)
 
         if latest_non_gps_home:
             latest = latest_non_gps_home
+            if (
+                latest_non_gps_home.attributes.get(ATTR_LATITUDE) is None
+                and latest_non_gps_home.attributes.get(ATTR_LONGITUDE) is None
+                and (home_zone := self.hass.states.get(ENTITY_ID_HOME))
+            ):
+                coordinates = home_zone
+            else:
+                coordinates = latest_non_gps_home
         elif latest_gps:
             latest = latest_gps
+            coordinates = latest_gps
         else:
             latest = latest_not_home
+            coordinates = latest_not_home
 
-        if latest:
-            self._parse_source_state(latest)
+        if latest and coordinates:
+            self._parse_source_state(latest, coordinates)
         else:
             self._attr_state = None
             self._source = None
@@ -536,15 +559,15 @@ class Person(
         self.async_write_ha_state()
 
     @callback
-    def _parse_source_state(self, state: State) -> None:
+    def _parse_source_state(self, state: State, coordinates: State) -> None:
         """Parse source state and set person attributes.
 
         This is a device tracker state or the restored person state.
         """
         self._attr_state = state.state
         self._source = state.entity_id
-        self._latitude = state.attributes.get(ATTR_LATITUDE)
-        self._longitude = state.attributes.get(ATTR_LONGITUDE)
+        self._latitude = coordinates.attributes.get(ATTR_LATITUDE)
+        self._longitude = coordinates.attributes.get(ATTR_LONGITUDE)
         self._gps_accuracy = state.attributes.get(ATTR_GPS_ACCURACY)
 
     @callback
@@ -568,19 +591,6 @@ class Person(
             data[ATTR_USER_ID] = user_id
 
         self._attr_extra_state_attributes = data
-
-
-@websocket_api.websocket_command({vol.Required(CONF_TYPE): "person/list"})
-def ws_list_person(
-    hass: HomeAssistant,
-    connection: websocket_api.ActiveConnection,
-    msg: dict[str, Any],
-) -> None:
-    """List persons."""
-    yaml, storage, _ = hass.data[DOMAIN]
-    connection.send_result(
-        msg[ATTR_ID], {"storage": storage.async_items(), "config": yaml.async_items()}
-    )
 
 
 def _get_latest(prev: State | None, curr: State) -> State:

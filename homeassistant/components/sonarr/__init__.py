@@ -65,15 +65,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         host_configuration=host_configuration,
         session=async_get_clientsession(hass),
     )
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     coordinators: dict[str, SonarrDataUpdateCoordinator[Any]] = {
-        "upcoming": CalendarDataUpdateCoordinator(hass, host_configuration, sonarr),
-        "commands": CommandsDataUpdateCoordinator(hass, host_configuration, sonarr),
-        "diskspace": DiskSpaceDataUpdateCoordinator(hass, host_configuration, sonarr),
-        "queue": QueueDataUpdateCoordinator(hass, host_configuration, sonarr),
-        "series": SeriesDataUpdateCoordinator(hass, host_configuration, sonarr),
-        "status": StatusDataUpdateCoordinator(hass, host_configuration, sonarr),
-        "wanted": WantedDataUpdateCoordinator(hass, host_configuration, sonarr),
+        "upcoming": CalendarDataUpdateCoordinator(
+            hass, entry, host_configuration, sonarr
+        ),
+        "commands": CommandsDataUpdateCoordinator(
+            hass, entry, host_configuration, sonarr
+        ),
+        "diskspace": DiskSpaceDataUpdateCoordinator(
+            hass, entry, host_configuration, sonarr
+        ),
+        "queue": QueueDataUpdateCoordinator(hass, entry, host_configuration, sonarr),
+        "series": SeriesDataUpdateCoordinator(hass, entry, host_configuration, sonarr),
+        "status": StatusDataUpdateCoordinator(hass, entry, host_configuration, sonarr),
+        "wanted": WantedDataUpdateCoordinator(hass, entry, host_configuration, sonarr),
     }
     # Temporary, until we add diagnostic entities
     _version = None
@@ -107,7 +112,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         }
         hass.config_entries.async_update_entry(entry, data=data, version=2)
 
-    LOGGER.info("Migration to version %s successful", entry.version)
+    LOGGER.debug("Migration to version %s successful", entry.version)
 
     return True
 
@@ -120,8 +125,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
-
-
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle options update."""
-    await hass.config_entries.async_reload(entry.entry_id)

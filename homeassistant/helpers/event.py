@@ -17,6 +17,7 @@ from typing import TYPE_CHECKING, Any, Concatenate, Generic, TypeVar
 from homeassistant.const import (
     EVENT_CORE_CONFIG_UPDATE,
     EVENT_STATE_CHANGED,
+    EVENT_STATE_REPORTED,
     MATCH_ALL,
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
@@ -26,6 +27,8 @@ from homeassistant.core import (
     Event,
     # Explicit reexport of 'EventStateChangedData' for backwards compatibility
     EventStateChangedData as EventStateChangedData,  # noqa: PLC0414
+    EventStateEventData,
+    EventStateReportedData,
     HassJob,
     HassJobType,
     HomeAssistant,
@@ -33,7 +36,7 @@ from homeassistant.core import (
     callback,
     split_entity_id,
 )
-from homeassistant.exceptions import TemplateError
+from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -51,11 +54,15 @@ from .entity_registry import (
 )
 from .ratelimit import KeyedRateLimit
 from .sun import get_astral_event_next
-from .template import RenderInfo, Template, result_as_boolean
+from .template import Template, result_as_boolean
+from .template.render_info import RenderInfo
 from .typing import TemplateVarsType
 
 _TRACK_STATE_CHANGE_DATA: HassKey[_KeyedEventData[EventStateChangedData]] = HassKey(
     "track_state_change_data"
+)
+_TRACK_STATE_REPORT_DATA: HassKey[_KeyedEventData[EventStateReportedData]] = HassKey(
+    "track_state_report_data"
 )
 _TRACK_STATE_ADDED_DOMAIN_DATA: HassKey[_KeyedEventData[EventStateChangedData]] = (
     HassKey("track_state_added_domain_data")
@@ -217,10 +224,10 @@ def async_track_state_change(
 
     Must be run within the event loop.
     """
-    frame.report(
+    frame.report_usage(
         "calls `async_track_state_change` instead of `async_track_state_change_event`"
         " which is deprecated and will be removed in Home Assistant 2025.5",
-        error_if_core=False,
+        core_behavior=frame.ReportBehavior.LOG,
     )
 
     if from_state is not None:
@@ -310,11 +317,19 @@ def async_track_state_change_event(
     Unlike async_track_state_change, async_track_state_change_event
     passes the full event to the callback.
 
+    The action will not be called immediately, but will be scheduled to run
+    in the next event loop iteration, even if the action is decorated with
+    @callback.
+
     In order to avoid having to iterate a long list
     of EVENT_STATE_CHANGED and fire and create a job
     for each one, we keep a dict of entity ids that
     care about the state change events so we can
     do a fast dict lookup to route events.
+    The passed in entity_ids will be automatically lower cased.
+
+    EVENT_STATE_CHANGED is fired on each occasion the state is updated
+    and changed, opposite of EVENT_STATE_REPORTED.
     """
     if not (entity_ids := _async_string_to_lower_list(entity_ids)):
         return _remove_empty_listener
@@ -322,10 +337,20 @@ def async_track_state_change_event(
 
 
 @callback
-def _async_dispatch_entity_id_event(
+def _async_dispatch_entity_id_event_soon[_StateEventDataT: EventStateEventData](
     hass: HomeAssistant,
-    callbacks: dict[str, list[HassJob[[Event[EventStateChangedData]], Any]]],
-    event: Event[EventStateChangedData],
+    callbacks: dict[str, list[HassJob[[Event[_StateEventDataT]], Any]]],
+    event: Event[_StateEventDataT],
+) -> None:
+    """Dispatch to listeners soon to ensure one event loop runs before dispatch."""
+    hass.loop.call_soon(_async_dispatch_entity_id_event, hass, callbacks, event)
+
+
+@callback
+def _async_dispatch_entity_id_event[_StateEventDataT: EventStateEventData](
+    hass: HomeAssistant,
+    callbacks: dict[str, list[HassJob[[Event[_StateEventDataT]], Any]]],
+    event: Event[_StateEventDataT],
 ) -> None:
     """Dispatch to listeners."""
     if not (callbacks_list := callbacks.get(event.data["entity_id"])):
@@ -342,10 +367,10 @@ def _async_dispatch_entity_id_event(
 
 
 @callback
-def _async_state_change_filter(
+def _async_state_filter[_StateEventDataT: EventStateEventData](
     hass: HomeAssistant,
-    callbacks: dict[str, list[HassJob[[Event[EventStateChangedData]], Any]]],
-    event_data: EventStateChangedData,
+    callbacks: dict[str, list[HassJob[[Event[_StateEventDataT]], Any]]],
+    event_data: _StateEventDataT,
 ) -> bool:
     """Filter state changes by entity_id."""
     return event_data["entity_id"] in callbacks
@@ -354,8 +379,8 @@ def _async_state_change_filter(
 _KEYED_TRACK_STATE_CHANGE = _KeyedEventTracker(
     key=_TRACK_STATE_CHANGE_DATA,
     event_type=EVENT_STATE_CHANGED,
-    dispatcher_callable=_async_dispatch_entity_id_event,
-    filter_callable=_async_state_change_filter,
+    dispatcher_callable=_async_dispatch_entity_id_event_soon,
+    filter_callable=_async_state_filter,
 )
 
 
@@ -366,9 +391,36 @@ def _async_track_state_change_event(
     action: Callable[[Event[EventStateChangedData]], Any],
     job_type: HassJobType | None,
 ) -> CALLBACK_TYPE:
-    """async_track_state_change_event without lowercasing."""
+    """Faster version of async_track_state_change_event.
+
+    The passed in entity_ids will not be automatically lower cased.
+    """
     return _async_track_event(
         _KEYED_TRACK_STATE_CHANGE, hass, entity_ids, action, job_type
+    )
+
+
+_KEYED_TRACK_STATE_REPORT = _KeyedEventTracker(
+    key=_TRACK_STATE_REPORT_DATA,
+    event_type=EVENT_STATE_REPORTED,
+    dispatcher_callable=_async_dispatch_entity_id_event_soon,
+    filter_callable=_async_state_filter,
+)
+
+
+def async_track_state_report_event(
+    hass: HomeAssistant,
+    entity_ids: str | Iterable[str],
+    action: Callable[[Event[EventStateReportedData]], Any],
+    job_type: HassJobType | None = None,
+) -> CALLBACK_TYPE:
+    """Track EVENT_STATE_REPORTED by entity_ids.
+
+    EVENT_STATE_REPORTED is fired on each occasion the state is updated
+    but not changed, opposite of EVENT_STATE_CHANGED.
+    """
+    return _async_track_event(
+        _KEYED_TRACK_STATE_REPORT, hass, entity_ids, action, job_type
     )
 
 
@@ -502,6 +554,12 @@ def async_track_entity_registry_updated_event(
     return _async_track_event(
         _KEYED_TRACK_ENTITY_REGISTRY_UPDATED, hass, entity_ids, action, job_type
     )
+
+
+@callback
+def async_has_entity_registry_updated_listeners(hass: HomeAssistant) -> bool:
+    """Check if async_track_entity_registry_updated_event has been called yet."""
+    return _KEYED_TRACK_ENTITY_REGISTRY_UPDATED.key in hass.data
 
 
 @callback
@@ -813,19 +871,21 @@ def async_track_state_change_filtered(
 ) -> _TrackStateChangeFiltered:
     """Track state changes with a TrackStates filter that can be updated.
 
-    Parameters
-    ----------
-    hass
-        Home assistant object.
-    track_states
-        A TrackStates data class.
-    action
-        Callable to call with results.
+    The action will not be called immediately, but will be scheduled to run
+    in the next event loop iteration, even if the action is decorated with
+    @callback.
 
-    Returns
-    -------
-    Object used to update the listeners (async_update_listeners) with a new
-    TrackStates or cancel the tracking (async_remove).
+    Args:
+        hass:
+            Home assistant object.
+        track_states:
+            A TrackStates data class.
+        action:
+            Callable to call with results.
+
+    Returns:
+        Object used to update the listeners (async_update_listeners) with a new
+        TrackStates or cancel the tracking (async_remove).
 
     """
     tracker = _TrackStateChangeFiltered(hass, track_states, action)
@@ -854,29 +914,26 @@ def async_track_template(
     exception, the listener will still be registered but will only
     fire if the template result becomes true without an exception.
 
-    Action arguments
-    ----------------
-    entity_id
-        ID of the entity that triggered the state change.
-    old_state
-        The old state of the entity that changed.
-    new_state
-        New state of the entity that changed.
+    Action args:
+        entity_id:
+            ID of the entity that triggered the state change.
+        old_state:
+            The old state of the entity that changed.
+        new_state:
+            New state of the entity that changed.
 
-    Parameters
-    ----------
-    hass
-        Home assistant object.
-    template
-        The template to calculate.
-    action
-        Callable to call with results. See above for arguments.
-    variables
-        Variables to pass to the template.
+    Args:
+        hass:
+            Home assistant object.
+        template:
+            The template to calculate.
+        action:
+            Callable to call with results. See above for arguments.
+        variables:
+            Variables to pass to the template.
 
-    Returns
-    -------
-    Callable to unregister the listener.
+    Returns:
+        Callable to unregister the listener.
 
     """
     job = HassJob(action, f"track template {template}")
@@ -904,8 +961,7 @@ def async_track_template(
         if (
             not isinstance(last_result, TemplateError)
             and result_as_boolean(last_result)
-            or not result_as_boolean(result)
-        ):
+        ) or not result_as_boolean(result):
             return
 
         hass.async_run_hass_job(
@@ -939,12 +995,18 @@ class TrackTemplateResultInfo:
         self.hass = hass
         self._job = HassJob(action, f"track template result {track_templates}")
 
-        for track_template_ in track_templates:
-            track_template_.template.hass = hass
         self._track_templates = track_templates
         self._has_super_template = has_super_template
 
         self._last_result: dict[Template, bool | str | TemplateError] = {}
+
+        for track_template_ in track_templates:
+            if track_template_.template.hass:
+                continue
+
+            raise HomeAssistantError(
+                "Calls async_track_template_result with template without hass"
+            )
 
         self._rate_limit = KeyedRateLimit(hass)
         self._info: dict[Template, RenderInfo] = {}
@@ -1292,34 +1354,36 @@ def async_track_template_result(
     then whenever the output from the template changes. The template will
     be reevaluated if any states referenced in the last run of the
     template change, or if manually triggered. If the result of the
-    evaluation is different from the previous run, the listener is passed
+    evaluation is different from the previous run, the action is passed
     the result.
+
+    The action will not be called immediately, but will be scheduled to run
+    in the next event loop iteration, even if the action is decorated with
+    @callback.
 
     If the template results in an TemplateError, this will be returned to
     the listener the first time this happens but not for subsequent errors.
     Once the template returns to a non-error condition the result is sent
     to the action as usual.
 
-    Parameters
-    ----------
-    hass
-        Home assistant object.
-    track_templates
-        An iterable of TrackTemplate.
-    action
-        Callable to call with results.
-    strict
-        When set to True, raise on undefined variables.
-    log_fn
-        If not None, template error messages will logging by calling log_fn
-        instead of the normal logging facility.
-    has_super_template
-        When set to True, the first template will block rendering of other
-        templates if it doesn't render as True.
+    Args:
+        hass:
+            Home assistant object.
+        track_templates:
+            An iterable of TrackTemplate.
+        action:
+            Callable to call with results.
+        strict:
+            When set to True, raise on undefined variables.
+        log_fn:
+            If not None, template error messages will logging by calling log_fn
+            instead of the normal logging facility.
+        has_super_template:
+            When set to True, the first template will block rendering of other
+            templates if it doesn't render as True.
 
-    Returns
-    -------
-    Info object used to unregister the listener, and refresh the template.
+    Returns:
+        Info object used to unregister the listener, and refresh the template.
 
     """
     tracker = TrackTemplateResultInfo(hass, track_templates, action, has_super_template)

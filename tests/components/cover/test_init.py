@@ -1,29 +1,15 @@
 """The tests for Cover."""
 
-from enum import Enum
-
-import pytest
-
 from homeassistant.components import cover
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    CONF_PLATFORM,
-    SERVICE_TOGGLE,
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPEN,
-    STATE_OPENING,
-)
-from homeassistant.core import HomeAssistant
+from homeassistant.components.cover import CoverState
+from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM, SERVICE_TOGGLE
+from homeassistant.core import HomeAssistant, ServiceResponse
+from homeassistant.helpers.entity import Entity
 from homeassistant.setup import async_setup_component
 
 from .common import MockCover
 
-from tests.common import (
-    help_test_all,
-    import_and_test_deprecated_constant_enum,
-    setup_test_component_platform,
-)
+from tests.common import setup_test_component_platform
 
 
 async def test_services(
@@ -105,21 +91,23 @@ async def test_services(
     assert is_closing(hass, ent6)
 
     # Without STOP but still reports opening/closing has a 4th possible toggle state
-    set_state(ent6, STATE_CLOSED)
+    set_state(ent6, CoverState.CLOSED)
     await call_service(hass, SERVICE_TOGGLE, ent6)
     assert is_opening(hass, ent6)
 
     # After the unusual state transition: closing -> fully open, toggle should close
-    set_state(ent5, STATE_OPEN)
+    set_state(ent5, CoverState.OPEN)
     await call_service(hass, SERVICE_TOGGLE, ent5)  # Start closing
     assert is_closing(hass, ent5)
-    set_state(ent5, STATE_OPEN)  # Unusual state transition from closing -> fully open
+    set_state(
+        ent5, CoverState.OPEN
+    )  # Unusual state transition from closing -> fully open
     set_cover_position(ent5, 100)
     await call_service(hass, SERVICE_TOGGLE, ent5)  # Should close, not open
     assert is_closing(hass, ent5)
 
 
-def call_service(hass, service, ent):
+def call_service(hass: HomeAssistant, service: str, ent: Entity) -> ServiceResponse:
     """Call any service on entity."""
     return hass.services.async_call(
         cover.DOMAIN, service, {ATTR_ENTITY_ID: ent.entity_id}, blocking=True
@@ -136,63 +124,21 @@ def set_state(ent, state) -> None:
     ent._values["state"] = state
 
 
-def is_open(hass, ent):
+def is_open(hass: HomeAssistant, ent: Entity) -> bool:
     """Return if the cover is closed based on the statemachine."""
-    return hass.states.is_state(ent.entity_id, STATE_OPEN)
+    return hass.states.is_state(ent.entity_id, CoverState.OPEN)
 
 
-def is_opening(hass, ent):
+def is_opening(hass: HomeAssistant, ent: Entity) -> bool:
     """Return if the cover is closed based on the statemachine."""
-    return hass.states.is_state(ent.entity_id, STATE_OPENING)
+    return hass.states.is_state(ent.entity_id, CoverState.OPENING)
 
 
-def is_closed(hass, ent):
+def is_closed(hass: HomeAssistant, ent: Entity) -> bool:
     """Return if the cover is closed based on the statemachine."""
-    return hass.states.is_state(ent.entity_id, STATE_CLOSED)
+    return hass.states.is_state(ent.entity_id, CoverState.CLOSED)
 
 
-def is_closing(hass, ent):
+def is_closing(hass: HomeAssistant, ent: Entity) -> bool:
     """Return if the cover is closed based on the statemachine."""
-    return hass.states.is_state(ent.entity_id, STATE_CLOSING)
-
-
-def _create_tuples(enum: Enum, constant_prefix: str) -> list[tuple[Enum, str]]:
-    return [(enum_field, constant_prefix) for enum_field in enum]
-
-
-def test_all() -> None:
-    """Test module.__all__ is correctly set."""
-    help_test_all(cover)
-
-
-@pytest.mark.parametrize(
-    ("enum", "constant_prefix"),
-    _create_tuples(cover.CoverEntityFeature, "SUPPORT_")
-    + _create_tuples(cover.CoverDeviceClass, "DEVICE_CLASS_"),
-)
-def test_deprecated_constants(
-    caplog: pytest.LogCaptureFixture,
-    enum: Enum,
-    constant_prefix: str,
-) -> None:
-    """Test deprecated constants."""
-    import_and_test_deprecated_constant_enum(
-        caplog, cover, enum, constant_prefix, "2025.1"
-    )
-
-
-def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
-    """Test deprecated supported features ints."""
-
-    class MockCoverEntity(cover.CoverEntity):
-        _attr_supported_features = 1
-
-    entity = MockCoverEntity()
-    assert entity.supported_features is cover.CoverEntityFeature(1)
-    assert "MockCoverEntity" in caplog.text
-    assert "is using deprecated supported features values" in caplog.text
-    assert "Instead it should use" in caplog.text
-    assert "CoverEntityFeature.OPEN" in caplog.text
-    caplog.clear()
-    assert entity.supported_features is cover.CoverEntityFeature(1)
-    assert "is using deprecated supported features values" not in caplog.text
+    return hass.states.is_state(ent.entity_id, CoverState.CLOSING)

@@ -5,7 +5,6 @@ from unittest.mock import Mock, patch
 from pynetgear import DEFAULT_USER
 import pytest
 
-from homeassistant.components import ssdp
 from homeassistant.components.netgear.const import (
     CONF_CONSIDER_HOME,
     DOMAIN,
@@ -23,6 +22,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_MODEL_NUMBER,
+    ATTR_UPNP_PRESENTATION_URL,
+    ATTR_UPNP_SERIAL,
+    SsdpServiceInfo,
+)
 
 from tests.common import MockConfigEntry
 
@@ -208,14 +213,14 @@ async def test_ssdp_already_configured(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_SSDP},
-        data=ssdp.SsdpServiceInfo(
+        data=SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="mock_st",
             ssdp_location=SSDP_URL_SLL,
             upnp={
-                ssdp.ATTR_UPNP_MODEL_NUMBER: "RBR20",
-                ssdp.ATTR_UPNP_PRESENTATION_URL: URL,
-                ssdp.ATTR_UPNP_SERIAL: SERIAL,
+                ATTR_UPNP_MODEL_NUMBER: "RBR20",
+                ATTR_UPNP_PRESENTATION_URL: URL,
+                ATTR_UPNP_SERIAL: SERIAL,
             },
         ),
     )
@@ -228,13 +233,13 @@ async def test_ssdp_no_serial(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_SSDP},
-        data=ssdp.SsdpServiceInfo(
+        data=SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="mock_st",
             ssdp_location=SSDP_URL,
             upnp={
-                ssdp.ATTR_UPNP_MODEL_NUMBER: "RBR20",
-                ssdp.ATTR_UPNP_PRESENTATION_URL: URL,
+                ATTR_UPNP_MODEL_NUMBER: "RBR20",
+                ATTR_UPNP_PRESENTATION_URL: URL,
             },
         ),
     )
@@ -253,14 +258,14 @@ async def test_ssdp_ipv6(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_SSDP},
-        data=ssdp.SsdpServiceInfo(
+        data=SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="mock_st",
             ssdp_location=SSDP_URLipv6,
             upnp={
-                ssdp.ATTR_UPNP_MODEL_NUMBER: "RBR20",
-                ssdp.ATTR_UPNP_PRESENTATION_URL: URL,
-                ssdp.ATTR_UPNP_SERIAL: SERIAL,
+                ATTR_UPNP_MODEL_NUMBER: "RBR20",
+                ATTR_UPNP_PRESENTATION_URL: URL,
+                ATTR_UPNP_SERIAL: SERIAL,
             },
         ),
     )
@@ -273,14 +278,14 @@ async def test_ssdp(hass: HomeAssistant, service) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_SSDP},
-        data=ssdp.SsdpServiceInfo(
+        data=SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="mock_st",
             ssdp_location=SSDP_URL,
             upnp={
-                ssdp.ATTR_UPNP_MODEL_NUMBER: "RBR20",
-                ssdp.ATTR_UPNP_PRESENTATION_URL: URL,
-                ssdp.ATTR_UPNP_SERIAL: SERIAL,
+                ATTR_UPNP_MODEL_NUMBER: "RBR20",
+                ATTR_UPNP_PRESENTATION_URL: URL,
+                ATTR_UPNP_SERIAL: SERIAL,
             },
         ),
     )
@@ -305,14 +310,14 @@ async def test_ssdp_port_5555(hass: HomeAssistant, service) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_SSDP},
-        data=ssdp.SsdpServiceInfo(
+        data=SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="mock_st",
             ssdp_location=SSDP_URL_SLL,
             upnp={
-                ssdp.ATTR_UPNP_MODEL_NUMBER: MODELS_PORT_5555[0],
-                ssdp.ATTR_UPNP_PRESENTATION_URL: URL_SSL,
-                ssdp.ATTR_UPNP_SERIAL: SERIAL,
+                ATTR_UPNP_MODEL_NUMBER: MODELS_PORT_5555[0],
+                ATTR_UPNP_PRESENTATION_URL: URL_SSL,
+                ATTR_UPNP_SERIAL: SERIAL,
             },
         ),
     )

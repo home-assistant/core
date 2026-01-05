@@ -9,18 +9,12 @@ from homeassistant.components.philips_js.const import DOMAIN
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_get_device_automations, async_mock_service
+from tests.common import async_get_device_automations
 
 
 @pytest.fixture(autouse=True, name="stub_blueprint_populate")
 def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
     """Stub copying the blueprints to the config folder."""
-
-
-@pytest.fixture
-def calls(hass: HomeAssistant) -> list[ServiceCall]:
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
 
 
 async def test_get_triggers(hass: HomeAssistant, mock_device) -> None:
@@ -42,7 +36,11 @@ async def test_get_triggers(hass: HomeAssistant, mock_device) -> None:
 
 
 async def test_if_fires_on_turn_on_request(
-    hass: HomeAssistant, calls: list[ServiceCall], mock_tv, mock_entity, mock_device
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    mock_tv,
+    mock_entity,
+    mock_device,
 ) -> None:
     """Test for turn_on and turn_off triggers firing."""
 
@@ -80,6 +78,10 @@ async def test_if_fires_on_turn_on_request(
     )
 
     await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0].data["some"] == mock_device.id
-    assert calls[0].data["id"] == 0
+    assert len(service_calls) == 2
+    assert service_calls[0].domain == "media_player"
+    assert service_calls[0].service == "turn_on"
+    assert service_calls[1].domain == "test"
+    assert service_calls[1].service == "automation"
+    assert service_calls[1].data["some"] == mock_device.id
+    assert service_calls[1].data["id"] == 0

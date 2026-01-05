@@ -8,14 +8,14 @@ from __future__ import annotations
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import secrets
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import aiounifi
-from aiounifi.interfaces.api_handlers import ItemEvent
+from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
 from aiounifi.interfaces.devices import Devices
 from aiounifi.interfaces.ports import Ports
 from aiounifi.interfaces.wlans import Wlans
-from aiounifi.models.api import ApiItemT
+from aiounifi.models.api import ApiItem
 from aiounifi.models.device import (
     Device,
     DevicePowerCyclePortRequest,
@@ -31,11 +31,10 @@ from homeassistant.components.button import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import UnifiConfigEntry
 from .entity import (
-    HandlerT,
     UnifiEntity,
     UnifiEntityDescription,
     async_device_available_fn,
@@ -43,6 +42,17 @@ from .entity import (
     async_wlan_available_fn,
     async_wlan_device_info_fn,
 )
+
+if TYPE_CHECKING:
+    from .hub import UnifiHub
+
+
+@callback
+def async_port_power_cycle_available_fn(hub: UnifiHub, obj_id: str) -> bool:
+    """Check if port allows power cycle action."""
+    if not async_device_available_fn(hub, obj_id):
+        return False
+    return bool(hub.api.ports[obj_id].poe_enable)
 
 
 async def async_restart_device_control_fn(
@@ -70,7 +80,7 @@ async def async_regenerate_password_control_fn(
 
 
 @dataclass(frozen=True, kw_only=True)
-class UnifiButtonEntityDescription(
+class UnifiButtonEntityDescription[HandlerT: APIHandler, ApiItemT: ApiItem](
     ButtonEntityDescription, UnifiEntityDescription[HandlerT, ApiItemT]
 ):
     """Class describing UniFi button entity."""
@@ -96,7 +106,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiButtonEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         device_class=ButtonDeviceClass.RESTART,
         api_handler_fn=lambda api: api.ports,
-        available_fn=async_device_available_fn,
+        available_fn=async_port_power_cycle_available_fn,
         control_fn=async_power_cycle_port_control_fn,
         device_info_fn=async_device_device_info_fn,
         name_fn=lambda port: f"{port.name} Power Cycle",
@@ -106,6 +116,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiButtonEntityDescription, ...] = (
     ),
     UnifiButtonEntityDescription[Wlans, Wlan](
         key="WLAN regenerate password",
+        translation_key="wlan_regenerate_password",
         device_class=ButtonDeviceClass.UPDATE,
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -123,7 +134,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiButtonEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: UnifiConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up button platform for UniFi Network integration."""
     config_entry.runtime_data.entity_loader.register_platform(
@@ -131,14 +142,16 @@ async def async_setup_entry(
     )
 
 
-class UnifiButtonEntity(UnifiEntity[HandlerT, ApiItemT], ButtonEntity):
+class UnifiButtonEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
+    UnifiEntity[HandlerT, ApiItemT], ButtonEntity
+):
     """Base representation of a UniFi button."""
 
     entity_description: UnifiButtonEntityDescription[HandlerT, ApiItemT]
 
     async def async_press(self) -> None:
         """Press the button."""
-        await self.entity_description.control_fn(self.hub.api, self._obj_id)
+        await self.entity_description.control_fn(self.api, self._obj_id)
 
     @callback
     def async_update_state(self, event: ItemEvent, obj_id: str) -> None:

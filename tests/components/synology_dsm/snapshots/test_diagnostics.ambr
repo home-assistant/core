@@ -1,0 +1,130 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'device_info': dict({
+      'model': 'DS1821+',
+      'ram': 32768,
+      'temperature': 58,
+      'uptime': 123456,
+      'version': 'DSM 7.2.2-72806 Update 3',
+    }),
+    'entry': dict({
+      'data': dict({
+        'host': 'nas.meontheinternet.com',
+        'mac': '00-11-32-XX-XX-59',
+        'password': '**REDACTED**',
+        'port': 1234,
+        'ssl': True,
+        'username': '**REDACTED**',
+        'verify_ssl': False,
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'synology_dsm',
+      'minor_version': 1,
+      'options': dict({
+        'backup_path': None,
+        'backup_share': None,
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'Mock Title',
+      'unique_id': 'mySerial',
+      'version': 1,
+    }),
+    'external_usb': dict({
+      'devices': dict({
+        'usb1': dict({
+          'manufacturer': 'Western Digital Technologies, Inc.',
+          'model': 'easystore 264D',
+          'name': 'USB Disk 1',
+          'size_total': 16000900661248,
+          'status': 'normal',
+          'type': 'usbDisk',
+        }),
+      }),
+      'partitions': dict({
+        'usb1p1': dict({
+          'filesystem': 'ntfs',
+          'name': 'USB Disk 1 Partition 1',
+          'share_name': 'usbshare1',
+          'size_total': 16000898564096,
+          'size_used': 6231101014016,
+        }),
+      }),
+    }),
+    'is_system_loaded': True,
+    'network': dict({
+      'interfaces': dict({
+        'ovs_eth0': dict({
+          'ip': list([
+            dict({
+              'address': '127.0.0.1',
+              'netmask': '255.255.255.0',
+            }),
+          ]),
+          'type': 'ovseth',
+        }),
+      }),
+    }),
+    'storage': dict({
+      'disks': dict({
+      }),
+      'volumes': dict({
+      }),
+    }),
+    'surveillance_station': dict({
+      'camera_diagnostics': dict({
+      }),
+      'cameras': dict({
+      }),
+    }),
+    'upgrade': dict({
+      'available_version': None,
+      'reboot_needed': None,
+      'service_restarts': None,
+      'update_available': False,
+    }),
+    'utilisation': dict({
+      'cpu': dict({
+        '15min_load': 461,
+        '1min_load': 410,
+        '5min_load': 404,
+        'device': 'System',
+        'other_load': 5,
+        'system_load': 11,
+        'user_load': 11,
+      }),
+      'memory': dict({
+        'avail_real': 463628,
+        'avail_swap': 0,
+        'buffer': 10556600,
+        'cached': 5297776,
+        'device': 'Memory',
+        'memory_size': 33554432,
+        'real_usage': 50,
+        'si_disk': 0,
+        'so_disk': 0,
+        'swap_usage': 100,
+        'total_real': 32841680,
+        'total_swap': 2097084,
+      }),
+      'network': list([
+        dict({
+          'device': 'total',
+          'rx': 1065612,
+          'tx': 36311,
+        }),
+        dict({
+          'device': 'eth0',
+          'rx': 1065612,
+          'tx': 36311,
+        }),
+      ]),
+    }),
+  })
+# ---

@@ -1,0 +1,30 @@
+{
+  "config": {
+    "abort": {
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "mqtt_not_configured": "Home Assistant MQTT integration not configured.",
+      "mqtt_not_connected": "Home Assistant MQTT integration not connected to MQTT broker."
+    },
+    "step": {
+      "confirm_from_mqtt": {
+        "description": "Do you want to set up iNELS?"
+      },
+      "confirm_from_user": {
+        "description": "iNELS devices must be connected to the same broker as the Home Assistant MQTT integration client. Continue setup?"
+      }
+    }
+  },
+  "entity": {
+    "switch": {
+      "bit": {
+        "name": "Bit{addr}"
+      },
+      "relay": {
+        "name": "Relay{index}"
+      },
+      "simple_relay": {
+        "name": "Simple relay{index}"
+      }
+    }
+  }
+}

@@ -1,5 +1,6 @@
 """Tests for the lifx integration."""
 
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -7,8 +8,6 @@ import pytest
 from homeassistant.components.lifx import config_flow, coordinator, util
 
 from . import _patch_discovery
-
-from tests.common import mock_device_registry, mock_registry
 
 
 @pytest.fixture
@@ -23,7 +22,7 @@ def mock_effect_conductor():
     """Mock the effect conductor."""
 
     class MockConductor:
-        def __init__(self, *args, **kwargs) -> None:
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
             """Mock the conductor."""
             self.start = AsyncMock()
             self.stop = AsyncMock()
@@ -61,15 +60,3 @@ def lifx_mock_async_get_ipv4_broadcast_addresses():
         return_value=["255.255.255.255"],
     ):
         yield
-
-
-@pytest.fixture(name="device_reg")
-def device_reg_fixture(hass):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture(name="entity_reg")
-def entity_reg_fixture(hass):
-    """Return an empty, loaded, registry."""
-    return mock_registry(hass)

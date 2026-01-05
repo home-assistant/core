@@ -1,48 +1,80 @@
 """Vodafone Station integration."""
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
+from aiohttp import ClientSession, CookieJar
+from aiovodafone.models import get_device_type
+
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
-from .coordinator import VodafoneStationRouter
+from .const import _LOGGER, CONF_DEVICE_DETAILS, DEVICE_TYPE, DEVICE_URL
+from .coordinator import VodafoneConfigEntry, VodafoneStationRouter
+from .utils import async_client_session
 
 PLATFORMS = [Platform.BUTTON, Platform.DEVICE_TRACKER, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: VodafoneConfigEntry) -> bool:
     """Set up Vodafone Station platform."""
+    session = await async_client_session(hass)
     coordinator = VodafoneStationRouter(
         hass,
-        entry.data[CONF_HOST],
-        entry.data[CONF_USERNAME],
-        entry.data[CONF_PASSWORD],
-        entry.unique_id,
+        entry,
+        session,
     )
 
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
-
-    entry.async_on_unload(entry.add_update_listener(update_listener))
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: VodafoneConfigEntry) -> bool:
+    """Migrate old entry."""
+    if entry.version == 1 and entry.minor_version == 1:
+        _LOGGER.debug(
+            "Migrating from version %s.%s", entry.version, entry.minor_version
+        )
+
+        jar = CookieJar(unsafe=True, quote_cookie=False)
+        session = ClientSession(cookie_jar=jar)
+
+        try:
+            device_type, url = await get_device_type(
+                entry.data[CONF_HOST],
+                session,
+            )
+        finally:
+            await session.close()
+
+        # Save device details to config entry
+        new_data = entry.data.copy()
+        new_data.update(
+            {
+                CONF_DEVICE_DETAILS: {
+                    DEVICE_TYPE: device_type.value,
+                    DEVICE_URL: str(url),
+                }
+            },
+        )
+
+        hass.config_entries.async_update_entry(
+            entry, data=new_data, version=1, minor_version=2
+        )
+
+        _LOGGER.info(
+            "Migration to version %s.%s successful", entry.version, entry.minor_version
+        )
+
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: VodafoneConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        coordinator: VodafoneStationRouter = hass.data[DOMAIN][entry.entry_id]
+        coordinator = entry.runtime_data
         await coordinator.api.logout()
-        await coordinator.api.close()
-        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
-
-
-async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Update when config_entry options update."""
-    if entry.options:
-        await hass.config_entries.async_reload(entry.entry_id)

@@ -12,25 +12,11 @@ from aiohttp import web
 
 from homeassistant.components import camera
 from homeassistant.components.camera import Camera
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import callback
 
 from .entity import EsphomeEntity, platform_async_setup_entry
 
-
-async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
-) -> None:
-    """Set up esphome cameras based on a config entry."""
-    await platform_async_setup_entry(
-        hass,
-        entry,
-        async_add_entities,
-        info_type=CameraInfo,
-        entity_type=EsphomeCamera,
-        state_type=CameraState,
-    )
+PARALLEL_UPDATES = 0
 
 
 class EsphomeCamera(Camera, EsphomeEntity[CameraInfo, CameraState]):
@@ -93,3 +79,11 @@ class EsphomeCamera(Camera, EsphomeEntity[CameraInfo, CameraState]):
         return await camera.async_get_still_stream(
             request, stream_request, camera.DEFAULT_CONTENT_TYPE, 0.0
         )
+
+
+async_setup_entry = partial(
+    platform_async_setup_entry,
+    info_type=CameraInfo,
+    entity_type=EsphomeCamera,
+    state_type=CameraState,
+)

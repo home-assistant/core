@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from dataclasses import dataclass
 from datetime import timedelta
 from http import HTTPStatus
@@ -10,7 +11,6 @@ from unittest.mock import MagicMock, patch
 from influxdb.exceptions import InfluxDBClientError, InfluxDBServerError
 from influxdb_client.rest import ApiException
 import pytest
-from typing_extensions import Generator
 from voluptuous import Invalid
 
 from homeassistant.components import sensor
@@ -25,7 +25,7 @@ from homeassistant.components.influxdb.const import (
 )
 from homeassistant.components.influxdb.sensor import PLATFORM_SCHEMA
 from homeassistant.const import STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.entity_platform import PLATFORM_NOT_READY_BASE_WAIT_TIME
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -111,7 +111,7 @@ def _make_v1_resultset(*args):
 
 def _make_v1_databases_resultset():
     """Create a mock V1 'show databases' resultset."""
-    for name in [DEFAULT_DATABASE, "db2"]:
+    for name in (DEFAULT_DATABASE, "db2"):
         yield {"name": name}
 
 
@@ -129,7 +129,7 @@ def _make_v2_resultset(*args):
 
 def _make_v2_buckets_resultset():
     """Create a mock V2 'buckets()' resultset."""
-    records = [Record({"name": name}) for name in [DEFAULT_BUCKET, "bucket2"]]
+    records = [Record({"name": name}) for name in (DEFAULT_BUCKET, "bucket2")]
 
     return [Table(records)]
 
@@ -190,7 +190,9 @@ def _set_query_mock_v2(
     return query_api
 
 
-async def _setup(hass, config_ext, queries, expected_sensors):
+async def _setup(
+    hass: HomeAssistant, config_ext, queries, expected_sensors
+) -> list[State]:
     """Create client and test expected sensors."""
     config = {
         DOMAIN: config_ext,

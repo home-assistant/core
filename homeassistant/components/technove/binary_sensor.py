@@ -12,13 +12,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import TechnoVEDataUpdateCoordinator
+from .coordinator import TechnoVEConfigEntry, TechnoVEDataUpdateCoordinator
 from .entity import TechnoVEEntity
 
 
@@ -49,12 +47,6 @@ BINARY_SENSORS = [
         value_fn=lambda station: station.info.is_battery_protected,
     ),
     TechnoVEBinarySensorDescription(
-        key="is_session_active",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
-        value_fn=lambda station: station.info.is_session_active,
-    ),
-    TechnoVEBinarySensorDescription(
         key="is_static_ip",
         translation_key="is_static_ip",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -72,13 +64,12 @@ BINARY_SENSORS = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: TechnoVEConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the binary sensor platform."""
-    coordinator: TechnoVEDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        TechnoVEBinarySensorEntity(coordinator, description)
+        TechnoVEBinarySensorEntity(entry.runtime_data, description)
         for description in BINARY_SENSORS
     )
 

@@ -1,36 +1,70 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "title": "Setup Velux",
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        }
-      }
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    "step": {
+      "discovery_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "The password for your KLF200 gateway."
+        },
+        "description": "Please enter the password for {name} ({host})"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "The password for your KLF200 gateway."
+        },
+        "description": "The password for {host} is incorrect. Please enter the correct password."
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your KLF200 gateway.",
+          "password": "The password for your KLF200 gateway."
+        }
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "rain_sensor": {
+        "name": "Rain sensor"
+      }
+    }
+  },
+  "exceptions": {
+    "no_gateway_loaded": {
+      "message": "No loaded Velux gateway found"
+    },
+    "reboot_failed": {
+      "message": "Failed to reboot gateway. Try again in a few moments or power cycle the device manually"
     }
   },
   "issues": {
-    "deprecated_yaml_import_issue_cannot_connect": {
-      "title": "The Velux YAML configuration import cannot connect to server",
-      "description": "Configuring Velux using YAML is being removed but there was an connection error importing your YAML configuration.\n\nMake sure your home assistant can reach the KLF 200."
-    },
-    "deprecated_yaml_import_issue_unknown": {
-      "title": "The Velux YAML configuration import failed with unknown error raised by pyvlx",
-      "description": "Configuring Velux using YAML is being removed but there was an unknown error importing your YAML configuration.\n\nCheck your configuration or have a look at the documentation of the integration."
+    "deprecated_reboot_service": {
+      "description": "The `velux.reboot_gateway` service is deprecated and will be removed in Home Assistant 2026.6.0. Please use the 'Restart' button entity instead. You can find this button in the device page for your KLF 200 Gateway or by searching for 'restart' in your entity list.",
+      "title": "Velux reboot service is deprecated"
     }
   },
   "services": {
     "reboot_gateway": {
-      "name": "Reboot gateway",
-      "description": "Reboots the KLF200 Gateway."
+      "description": "Reboots the KLF200 Gateway",
+      "name": "Reboot gateway"
     }
   }
 }

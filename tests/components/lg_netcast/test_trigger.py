@@ -1,5 +1,6 @@
 """The tests for LG Netcast device triggers."""
 
+from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
@@ -17,8 +18,17 @@ from . import ENTITY_ID, UNIQUE_ID, setup_lgnetcast
 from tests.common import MockEntity, MockEntityPlatform
 
 
+@pytest.fixture(autouse=True)
+def mock_lg_netcast() -> Generator[None]:
+    """Mock LG Netcast library."""
+    with patch("homeassistant.components.lg_netcast.LgNetCastClient"):
+        yield
+
+
 async def test_lg_netcast_turn_on_trigger_device_id(
-    hass: HomeAssistant, calls: list[ServiceCall], device_registry: dr.DeviceRegistry
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test for turn_on trigger by device_id firing."""
     await setup_lgnetcast(hass)
@@ -56,14 +66,14 @@ async def test_lg_netcast_turn_on_trigger_device_id(
     )
     await hass.async_block_till_done()
 
-    assert len(calls) == 1
-    assert calls[0].data["some"] == device.id
-    assert calls[0].data["id"] == 0
+    assert len(service_calls) == 2
+    assert service_calls[1].data["some"] == device.id
+    assert service_calls[1].data["id"] == 0
 
     with patch("homeassistant.config.load_yaml_dict", return_value={}):
         await hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True)
 
-    calls.clear()
+    service_calls.clear()
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -74,11 +84,11 @@ async def test_lg_netcast_turn_on_trigger_device_id(
         )
 
     await hass.async_block_till_done()
-    assert len(calls) == 0
+    assert len(service_calls) == 1
 
 
 async def test_lg_netcast_turn_on_trigger_entity_id(
-    hass: HomeAssistant, calls: list[ServiceCall]
+    hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
     """Test for turn_on triggers by entity firing."""
     await setup_lgnetcast(hass)
@@ -113,9 +123,9 @@ async def test_lg_netcast_turn_on_trigger_entity_id(
     )
     await hass.async_block_till_done()
 
-    assert len(calls) == 1
-    assert calls[0].data["some"] == ENTITY_ID
-    assert calls[0].data["id"] == 0
+    assert len(service_calls) == 2
+    assert service_calls[1].data["some"] == ENTITY_ID
+    assert service_calls[1].data["id"] == 0
 
 
 async def test_wrong_trigger_platform_type(

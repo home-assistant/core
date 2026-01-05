@@ -5,6 +5,7 @@ from __future__ import annotations
 from simplipy.device import DeviceTypes, DeviceV3
 from simplipy.device.sensor.v3 import SensorV3
 from simplipy.system.v3 import SystemV3
+from simplipy.websocket import EVENT_SECRET_ALERT_TRIGGERED, WebsocketEvent
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -13,10 +14,11 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SimpliSafe, SimpliSafeEntity
+from . import SimpliSafe
 from .const import DOMAIN, LOGGER
+from .entity import SimpliSafeEntity
 
 SUPPORTED_BATTERY_SENSOR_TYPES = [
     DeviceTypes.CARBON_MONOXIDE,
@@ -33,6 +35,7 @@ SUPPORTED_BATTERY_SENSOR_TYPES = [
     DeviceTypes.PANIC_BUTTON,
     DeviceTypes.REMOTE,
     DeviceTypes.SIREN,
+    DeviceTypes.OUTDOOR_ALARM_SECURITY_BELL_BOX,
     DeviceTypes.SMOKE,
     DeviceTypes.SMOKE_AND_CARBON_MONOXIDE,
     DeviceTypes.TEMPERATURE,
@@ -46,6 +49,7 @@ TRIGGERED_SENSOR_TYPES = {
     DeviceTypes.MOTION: BinarySensorDeviceClass.MOTION,
     DeviceTypes.MOTION_V2: BinarySensorDeviceClass.MOTION,
     DeviceTypes.SIREN: BinarySensorDeviceClass.SAFETY,
+    DeviceTypes.OUTDOOR_ALARM_SECURITY_BELL_BOX: BinarySensorDeviceClass.SAFETY,
     DeviceTypes.SMOKE: BinarySensorDeviceClass.SMOKE,
     # Although this sensor can technically apply to both smoke and carbon, we use the
     # SMOKE device class for simplicity:
@@ -54,7 +58,9 @@ TRIGGERED_SENSOR_TYPES = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SimpliSafe binary sensors based on a config entry."""
     simplisafe = hass.data[DOMAIN][entry.entry_id]
@@ -63,7 +69,7 @@ async def async_setup_entry(
 
     for system in simplisafe.systems.values():
         if system.version == 2:
-            LOGGER.info("Skipping sensor setup for V2 system: %s", system.system_id)
+            LOGGER.warning("Skipping sensor setup for V2 system: %s", system.system_id)
             continue
 
         for sensor in system.sensors.values():
@@ -98,7 +104,12 @@ class TriggeredBinarySensor(SimpliSafeEntity, BinarySensorEntity):
         device_class: BinarySensorDeviceClass,
     ) -> None:
         """Initialize."""
-        super().__init__(simplisafe, system, device=sensor)
+        super().__init__(
+            simplisafe,
+            system,
+            device=sensor,
+            additional_websocket_events=[EVENT_SECRET_ALERT_TRIGGERED],
+        )
 
         self._attr_device_class = device_class
         self._device: SensorV3
@@ -107,6 +118,18 @@ class TriggeredBinarySensor(SimpliSafeEntity, BinarySensorEntity):
     def async_update_from_rest_api(self) -> None:
         """Update the entity with the provided REST API data."""
         self._attr_is_on = self._device.triggered
+
+    @callback
+    def async_update_from_websocket_event(self, event: WebsocketEvent) -> None:
+        """Update the entity when new data comes from the websocket."""
+        LOGGER.debug(
+            "Binary sensor device serial # %s received event %s",
+            self._device.serial,
+            event.event_type,
+        )
+        # Secret Alerts can only set a sensor to on
+        self._attr_is_on = True
+        self.async_reset_error_count()
 
 
 class BatteryBinarySensor(SimpliSafeEntity, BinarySensorEntity):

@@ -34,8 +34,24 @@ from homeassistant.exceptions import (
     TemplateError,
     Unauthorized,
 )
-from homeassistant.helpers import config_validation as cv, entity, template
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity,
+    target as target_helpers,
+    template,
+)
+from homeassistant.helpers.condition import (
+    async_from_config as async_condition_from_config,
+    async_get_all_descriptions as async_get_all_condition_descriptions,
+    async_subscribe_platform_events as async_subscribe_condition_platform_events,
+    async_validate_condition_config,
+    async_validate_conditions_config,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entityfilter import (
+    INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
+    convert_include_exclude_filter,
+)
 from homeassistant.helpers.event import (
     TrackTemplate,
     TrackTemplateResult,
@@ -48,21 +64,40 @@ from homeassistant.helpers.json import (
     json_bytes,
     json_fragment,
 )
-from homeassistant.helpers.service import async_get_all_descriptions
+from homeassistant.helpers.service import (
+    async_get_all_descriptions as async_get_all_service_descriptions,
+)
+from homeassistant.helpers.trigger import (
+    async_get_all_descriptions as async_get_all_trigger_descriptions,
+    async_initialize_triggers,
+    async_subscribe_platform_events as async_subscribe_trigger_platform_events,
+    async_validate_trigger_config,
+)
 from homeassistant.loader import (
     IntegrationNotFound,
     async_get_integration,
     async_get_integration_descriptions,
     async_get_integrations,
 )
-from homeassistant.setup import async_get_loaded_integrations, async_get_setup_timings
+from homeassistant.setup import (
+    async_get_loaded_integrations,
+    async_get_setup_timings,
+    async_wait_component,
+)
 from homeassistant.util.json import format_unserializable_data
 
 from . import const, decorators, messages
+from .automation import (
+    async_get_conditions_for_target,
+    async_get_services_for_target,
+    async_get_triggers_for_target,
+)
 from .connection import ActiveConnection
-from .messages import construct_result_message
+from .messages import construct_event_message, construct_result_message
 
+ALL_CONDITION_DESCRIPTIONS_JSON_CACHE = "websocket_api_all_condition_descriptions_json"
 ALL_SERVICE_DESCRIPTIONS_JSON_CACHE = "websocket_api_all_service_descriptions_json"
+ALL_TRIGGER_DESCRIPTIONS_JSON_CACHE = "websocket_api_all_trigger_descriptions_json"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,24 +111,31 @@ def async_register_commands(
     async_reg(hass, handle_call_service)
     async_reg(hass, handle_entity_source)
     async_reg(hass, handle_execute_script)
+    async_reg(hass, handle_extract_from_target)
     async_reg(hass, handle_fire_event)
+    async_reg(hass, handle_get_conditions_for_target)
     async_reg(hass, handle_get_config)
     async_reg(hass, handle_get_services)
+    async_reg(hass, handle_get_services_for_target)
     async_reg(hass, handle_get_states)
+    async_reg(hass, handle_get_triggers_for_target)
     async_reg(hass, handle_manifest_get)
     async_reg(hass, handle_integration_setup_info)
     async_reg(hass, handle_manifest_list)
     async_reg(hass, handle_ping)
     async_reg(hass, handle_render_template)
     async_reg(hass, handle_subscribe_bootstrap_integrations)
+    async_reg(hass, handle_subscribe_condition_platforms)
     async_reg(hass, handle_subscribe_events)
     async_reg(hass, handle_subscribe_trigger)
+    async_reg(hass, handle_subscribe_trigger_platforms)
     async_reg(hass, handle_test_condition)
     async_reg(hass, handle_unsubscribe_events)
     async_reg(hass, handle_validate_config)
     async_reg(hass, handle_subscribe_entities)
     async_reg(hass, handle_supported_features)
     async_reg(hass, handle_integration_descriptions)
+    async_reg(hass, handle_integration_wait)
 
 
 def pong_message(iden: int) -> dict[str, Any]:
@@ -231,11 +273,6 @@ async def handle_call_service(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle call service command."""
-    # We do not support templates.
-    target = msg.get("target")
-    if template.is_complex(target):
-        raise vol.Invalid("Templates are not supported here")
-
     try:
         context = connection.context(msg)
         response = await hass.services.async_call(
@@ -244,7 +281,7 @@ async def handle_call_service(
             service_data=msg.get("service_data"),
             blocking=True,
             context=context,
-            target=target,
+            target=msg.get("target"),
             return_response=msg["return_response"],
         )
         result: dict[str, Context | ServiceResponse] = {"context": context}
@@ -271,10 +308,10 @@ async def handle_call_service(
                 translation_domain=const.DOMAIN,
                 translation_key="child_service_not_found",
                 translation_placeholders={
-                    "domain": err.domain,
-                    "service": err.service,
-                    "child_domain": msg["domain"],
-                    "child_service": msg["service"],
+                    "domain": msg["domain"],
+                    "service": msg["service"],
+                    "child_domain": err.domain,
+                    "child_service": err.service,
                 },
             )
     except vol.Invalid as err:
@@ -291,7 +328,9 @@ async def handle_call_service(
             translation_placeholders=err.translation_placeholders,
         )
     except HomeAssistantError as err:
-        connection.logger.exception("Unexpected exception")
+        connection.logger.error(
+            "Error during service call to %s.%s: %s", msg["domain"], msg["service"], err
+        )
         connection.send_error(
             msg["id"],
             const.ERR_HOME_ASSISTANT_ERROR,
@@ -366,14 +405,17 @@ def _send_handle_get_states_response(
 @callback
 def _forward_entity_changes(
     send_message: Callable[[str | bytes | dict[str, Any]], None],
-    entity_ids: set[str],
+    entity_ids: set[str] | None,
+    entity_filter: Callable[[str], bool] | None,
     user: User,
     message_id_as_bytes: bytes,
     event: Event[EventStateChangedData],
 ) -> None:
     """Forward entity state changed events to websocket."""
     entity_id = event.data["entity_id"]
-    if entity_ids and entity_id not in entity_ids:
+    if (entity_ids and entity_id not in entity_ids) or (
+        entity_filter and not entity_filter(entity_id)
+    ):
         return
     # We have to lookup the permissions again because the user might have
     # changed since the subscription was created.
@@ -381,7 +423,7 @@ def _forward_entity_changes(
     if (
         not user.is_admin
         and not permissions.access_all_entities(POLICY_READ)
-        and not permissions.check_entity(event.data["entity_id"], POLICY_READ)
+        and not permissions.check_entity(entity_id, POLICY_READ)
     ):
         return
     send_message(messages.cached_state_diff_message(message_id_as_bytes, event))
@@ -392,47 +434,63 @@ def _forward_entity_changes(
     {
         vol.Required("type"): "subscribe_entities",
         vol.Optional("entity_ids"): cv.entity_ids,
+        **INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA.schema,
     }
 )
 def handle_subscribe_entities(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle subscribe entities command."""
-    entity_ids = set(msg.get("entity_ids", []))
+    entity_ids = set(msg.get("entity_ids", [])) or None
+    _filter = convert_include_exclude_filter(msg)
+    entity_filter = None if _filter.empty_filter else _filter.get_filter()
     # We must never await between sending the states and listening for
     # state changed events or we will introduce a race condition
     # where some states are missed
     states = _async_get_allowed_states(hass, connection)
-    message_id_as_bytes = str(msg["id"]).encode()
-    connection.subscriptions[msg["id"]] = hass.bus.async_listen(
+    msg_id = msg["id"]
+    message_id_as_bytes = str(msg_id).encode()
+    connection.subscriptions[msg_id] = hass.bus.async_listen(
         EVENT_STATE_CHANGED,
         partial(
             _forward_entity_changes,
             connection.send_message,
             entity_ids,
+            entity_filter,
             connection.user,
             message_id_as_bytes,
         ),
     )
-    connection.send_result(msg["id"])
+    connection.send_result(msg_id)
 
     # JSON serialize here so we can recover if it blows up due to the
     # state machine containing unserializable data. This command is required
     # to succeed for the UI to show.
     try:
-        serialized_states = [
-            state.as_compressed_state_json
-            for state in states
-            if not entity_ids or state.entity_id in entity_ids
-        ]
+        if entity_ids or entity_filter:
+            serialized_states = [
+                state.as_compressed_state_json
+                for state in states
+                if (not entity_ids or state.entity_id in entity_ids)
+                and (not entity_filter or entity_filter(state.entity_id))
+            ]
+        else:
+            # Fast path when not filtering
+            serialized_states = [state.as_compressed_state_json for state in states]
     except (ValueError, TypeError):
         pass
     else:
-        _send_handle_entities_init_response(connection, msg["id"], serialized_states)
+        _send_handle_entities_init_response(
+            connection, message_id_as_bytes, serialized_states
+        )
         return
 
     serialized_states = []
     for state in states:
+        if entity_ids and state.entity_id not in entity_ids:
+            continue
+        if entity_filter and not entity_filter(state.entity_id):
+            continue
         try:
             serialized_states.append(state.as_compressed_state_json)
         except (ValueError, TypeError):
@@ -443,18 +501,22 @@ def handle_subscribe_entities(
                 ),
             )
 
-    _send_handle_entities_init_response(connection, msg["id"], serialized_states)
+    _send_handle_entities_init_response(
+        connection, message_id_as_bytes, serialized_states
+    )
 
 
 def _send_handle_entities_init_response(
-    connection: ActiveConnection, msg_id: int, serialized_states: list[bytes]
+    connection: ActiveConnection,
+    message_id_as_bytes: bytes,
+    serialized_states: list[bytes],
 ) -> None:
     """Send handle entities init response."""
     connection.send_message(
         b"".join(
             (
                 b'{"id":',
-                str(msg_id).encode(),
+                message_id_as_bytes,
                 b',"type":"event","event":{"a":{',
                 b",".join(serialized_states),
                 b"}}}",
@@ -463,9 +525,56 @@ def _send_handle_entities_init_response(
     )
 
 
-async def _async_get_all_descriptions_json(hass: HomeAssistant) -> bytes:
+async def _async_get_all_condition_descriptions_json(hass: HomeAssistant) -> bytes:
+    """Return JSON of descriptions (i.e. user documentation) for all condition."""
+    descriptions = await async_get_all_condition_descriptions(hass)
+    if ALL_CONDITION_DESCRIPTIONS_JSON_CACHE in hass.data:
+        cached_descriptions, cached_json_payload = hass.data[
+            ALL_CONDITION_DESCRIPTIONS_JSON_CACHE
+        ]
+        # If the descriptions are the same, return the cached JSON payload
+        if cached_descriptions is descriptions:
+            return cast(bytes, cached_json_payload)
+    json_payload = json_bytes(
+        {
+            condition: description
+            for condition, description in descriptions.items()
+            if description is not None
+        }
+    )
+    hass.data[ALL_CONDITION_DESCRIPTIONS_JSON_CACHE] = (descriptions, json_payload)
+    return json_payload
+
+
+@decorators.websocket_command({vol.Required("type"): "condition_platforms/subscribe"})
+@decorators.async_response
+async def handle_subscribe_condition_platforms(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle subscribe conditions command."""
+
+    async def on_new_conditions(new_conditions: set[str]) -> None:
+        """Forward new conditions to websocket."""
+        descriptions = await async_get_all_condition_descriptions(hass)
+        new_condition_descriptions = {}
+        for condition in new_conditions:
+            if (description := descriptions[condition]) is not None:
+                new_condition_descriptions[condition] = description
+        if not new_condition_descriptions:
+            return
+        connection.send_event(msg["id"], new_condition_descriptions)
+
+    connection.subscriptions[msg["id"]] = async_subscribe_condition_platform_events(
+        hass, on_new_conditions
+    )
+    connection.send_result(msg["id"])
+    conditions_json = await _async_get_all_condition_descriptions_json(hass)
+    connection.send_message(construct_event_message(msg["id"], conditions_json))
+
+
+async def _async_get_all_service_descriptions_json(hass: HomeAssistant) -> bytes:
     """Return JSON of descriptions (i.e. user documentation) for all service calls."""
-    descriptions = await async_get_all_descriptions(hass)
+    descriptions = await async_get_all_service_descriptions(hass)
     if ALL_SERVICE_DESCRIPTIONS_JSON_CACHE in hass.data:
         cached_descriptions, cached_json_payload = hass.data[
             ALL_SERVICE_DESCRIPTIONS_JSON_CACHE
@@ -484,8 +593,55 @@ async def handle_get_services(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle get services command."""
-    payload = await _async_get_all_descriptions_json(hass)
+    payload = await _async_get_all_service_descriptions_json(hass)
     connection.send_message(construct_result_message(msg["id"], payload))
+
+
+async def _async_get_all_trigger_descriptions_json(hass: HomeAssistant) -> bytes:
+    """Return JSON of descriptions (i.e. user documentation) for all triggers."""
+    descriptions = await async_get_all_trigger_descriptions(hass)
+    if ALL_TRIGGER_DESCRIPTIONS_JSON_CACHE in hass.data:
+        cached_descriptions, cached_json_payload = hass.data[
+            ALL_TRIGGER_DESCRIPTIONS_JSON_CACHE
+        ]
+        # If the descriptions are the same, return the cached JSON payload
+        if cached_descriptions is descriptions:
+            return cast(bytes, cached_json_payload)
+    json_payload = json_bytes(
+        {
+            trigger: description
+            for trigger, description in descriptions.items()
+            if description is not None
+        }
+    )
+    hass.data[ALL_TRIGGER_DESCRIPTIONS_JSON_CACHE] = (descriptions, json_payload)
+    return json_payload
+
+
+@decorators.websocket_command({vol.Required("type"): "trigger_platforms/subscribe"})
+@decorators.async_response
+async def handle_subscribe_trigger_platforms(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle subscribe triggers command."""
+
+    async def on_new_triggers(new_triggers: set[str]) -> None:
+        """Forward new triggers to websocket."""
+        descriptions = await async_get_all_trigger_descriptions(hass)
+        new_trigger_descriptions = {}
+        for trigger in new_triggers:
+            if (description := descriptions[trigger]) is not None:
+                new_trigger_descriptions[trigger] = description
+        if not new_trigger_descriptions:
+            return
+        connection.send_event(msg["id"], new_trigger_descriptions)
+
+    connection.subscriptions[msg["id"]] = async_subscribe_trigger_platform_events(
+        hass, on_new_triggers
+    )
+    connection.send_result(msg["id"])
+    triggers_json = await _async_get_all_trigger_descriptions_json(hass)
+    connection.send_message(construct_event_message(msg["id"], triggers_json))
 
 
 @callback
@@ -509,9 +665,14 @@ async def handle_manifest_list(
         hass, msg.get("integrations") or async_get_loaded_integrations(hass)
     )
     manifest_json_fragments: list[json_fragment] = []
-    for int_or_exc in ints_or_excs.values():
+    for domain, int_or_exc in ints_or_excs.items():
         if isinstance(int_or_exc, Exception):
-            raise int_or_exc
+            _LOGGER.error(
+                "Unable to get manifest for integration %s: %s",
+                domain,
+                int_or_exc,
+            )
+            continue
         manifest_json_fragments.append(int_or_exc.manifest_json_fragment)
     connection.send_result(msg["id"], manifest_json_fragments)
 
@@ -691,6 +852,108 @@ def handle_entity_source(
     connection.send_result(msg["id"], _serialize_entity_sources(entity_sources))
 
 
+@callback
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "extract_from_target",
+        vol.Required("target"): cv.TARGET_FIELDS,
+        vol.Optional("expand_group", default=False): bool,
+    }
+)
+def handle_extract_from_target(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle extract from target command."""
+
+    target_selection = target_helpers.TargetSelection(msg["target"])
+    extracted = target_helpers.async_extract_referenced_entity_ids(
+        hass, target_selection, expand_group=msg["expand_group"]
+    )
+
+    extracted_dict = {
+        "referenced_entities": extracted.referenced.union(
+            extracted.indirectly_referenced
+        ),
+        "referenced_devices": extracted.referenced_devices,
+        "referenced_areas": extracted.referenced_areas,
+        "missing_devices": extracted.missing_devices,
+        "missing_areas": extracted.missing_areas,
+        "missing_floors": extracted.missing_floors,
+        "missing_labels": extracted.missing_labels,
+    }
+
+    connection.send_result(msg["id"], extracted_dict)
+
+
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "get_triggers_for_target",
+        vol.Required("target"): cv.TARGET_FIELDS,
+        vol.Optional("expand_group", default=True): bool,
+    }
+)
+@decorators.async_response
+async def handle_get_triggers_for_target(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle get triggers for target command.
+
+    This command returns all triggers that can be used with any entities that are currently
+    part of a target.
+    """
+    triggers = await async_get_triggers_for_target(
+        hass, msg["target"], msg["expand_group"]
+    )
+
+    connection.send_result(msg["id"], triggers)
+
+
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "get_conditions_for_target",
+        vol.Required("target"): cv.TARGET_FIELDS,
+        vol.Optional("expand_group", default=True): bool,
+    }
+)
+@decorators.async_response
+async def handle_get_conditions_for_target(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle get conditions for target command.
+
+    This command returns all conditions that can be used with any entities that are currently
+    part of a target.
+    """
+    conditions = await async_get_conditions_for_target(
+        hass, msg["target"], msg["expand_group"]
+    )
+
+    connection.send_result(msg["id"], conditions)
+
+
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "get_services_for_target",
+        vol.Required("target"): cv.TARGET_FIELDS,
+        vol.Optional("expand_group", default=True): bool,
+    }
+)
+@decorators.async_response
+async def handle_get_services_for_target(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle get services for target command.
+
+    This command returns all services that can be used with any entities that are currently
+    part of a target.
+    """
+    services = await async_get_services_for_target(
+        hass, msg["target"], msg["expand_group"]
+    )
+
+    connection.send_result(msg["id"], services)
+
+
 @decorators.websocket_command(
     {
         vol.Required("type"): "subscribe_trigger",
@@ -704,11 +967,7 @@ async def handle_subscribe_trigger(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle subscribe trigger command."""
-    # Circular dep
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.helpers import trigger
-
-    trigger_config = await trigger.async_validate_trigger_config(hass, msg["trigger"])
+    trigger_config = await async_validate_trigger_config(hass, msg["trigger"])
 
     @callback
     def forward_triggers(
@@ -725,7 +984,7 @@ async def handle_subscribe_trigger(
         )
 
     connection.subscriptions[msg["id"]] = (
-        await trigger.async_initialize_triggers(
+        await async_initialize_triggers(
             hass,
             trigger_config,
             forward_triggers,
@@ -755,14 +1014,10 @@ async def handle_test_condition(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle test condition command."""
-    # Circular dep
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.helpers import condition
-
     # Do static + dynamic validation of the condition
-    config = await condition.async_validate_condition_config(hass, msg["condition"])
+    config = await async_validate_condition_config(hass, msg["condition"])
     # Test the condition
-    check_condition = await condition.async_from_config(hass, config)
+    check_condition = await async_condition_from_config(hass, config)
     connection.send_result(
         msg["id"], {"result": check_condition(hass, msg.get("variables"))}
     )
@@ -782,8 +1037,10 @@ async def handle_execute_script(
 ) -> None:
     """Handle execute script command."""
     # Circular dep
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.helpers.script import Script, async_validate_actions_config
+    from homeassistant.helpers.script import (  # noqa: PLC0415
+        Script,
+        async_validate_actions_config,
+    )
 
     script_config = await async_validate_actions_config(hass, msg["sequence"])
 
@@ -836,9 +1093,9 @@ def handle_fire_event(
 @decorators.websocket_command(
     {
         vol.Required("type"): "validate_config",
-        vol.Optional("trigger"): cv.match_all,
-        vol.Optional("condition"): cv.match_all,
-        vol.Optional("action"): cv.match_all,
+        vol.Optional("triggers"): cv.match_all,
+        vol.Optional("conditions"): cv.match_all,
+        vol.Optional("actions"): cv.match_all,
     }
 )
 @decorators.async_response
@@ -847,15 +1104,18 @@ async def handle_validate_config(
 ) -> None:
     """Handle validate config command."""
     # Circular dep
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.helpers import condition, script, trigger
+    from homeassistant.helpers import script  # noqa: PLC0415
 
     result = {}
 
     for key, schema, validator in (
-        ("trigger", cv.TRIGGER_SCHEMA, trigger.async_validate_trigger_config),
-        ("condition", cv.CONDITIONS_SCHEMA, condition.async_validate_conditions_config),
-        ("action", cv.SCRIPT_SCHEMA, script.async_validate_actions_config),
+        ("triggers", cv.TRIGGER_SCHEMA, async_validate_trigger_config),
+        (
+            "conditions",
+            cv.CONDITIONS_SCHEMA,
+            async_validate_conditions_config,
+        ),
+        ("actions", cv.SCRIPT_SCHEMA, script.async_validate_actions_config),
     ):
         if key not in msg:
             continue
@@ -896,3 +1156,21 @@ async def handle_integration_descriptions(
 ) -> None:
     """Get metadata for all brands and integrations."""
     connection.send_result(msg["id"], await async_get_integration_descriptions(hass))
+
+
+@decorators.websocket_command(
+    {
+        vol.Required("type"): "integration/wait",
+        vol.Required("domain"): str,
+    }
+)
+@decorators.async_response
+async def handle_integration_wait(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle wait for integration command."""
+
+    domain: str = msg["domain"]
+    connection.send_result(
+        msg["id"], {"integration_loaded": await async_wait_component(hass, domain)}
+    )

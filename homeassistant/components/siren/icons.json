@@ -5,8 +5,22 @@
     }
   },
   "services": {
-    "toggle": "mdi:bullhorn",
-    "turn_off": "mdi:bullhorn",
-    "turn_on": "mdi:bullhorn"
+    "toggle": {
+      "service": "mdi:bullhorn"
+    },
+    "turn_off": {
+      "service": "mdi:bullhorn"
+    },
+    "turn_on": {
+      "service": "mdi:bullhorn"
+    }
+  },
+  "triggers": {
+    "turned_off": {
+      "trigger": "mdi:bullhorn-outline"
+    },
+    "turned_on": {
+      "trigger": "mdi:bullhorn"
+    }
   }
 }

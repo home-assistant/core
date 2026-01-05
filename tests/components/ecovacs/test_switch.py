@@ -2,10 +2,10 @@
 
 from dataclasses import dataclass
 
-from deebot_client.capabilities import Capabilities
 from deebot_client.command import Command
 from deebot_client.commands.json import (
     SetAdvancedMode,
+    SetBorderSpin,
     SetBorderSwitch,
     SetCarpetAutoFanBoost,
     SetChildLock,
@@ -17,6 +17,7 @@ from deebot_client.commands.json import (
 )
 from deebot_client.events import (
     AdvancedModeEvent,
+    BorderSpinEvent,
     BorderSwitchEvent,
     CarpetAutoFanBoostEvent,
     ChildLockEvent,
@@ -28,7 +29,7 @@ from deebot_client.events import (
     TrueDetectEvent,
 )
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ecovacs.const import DOMAIN
 from homeassistant.components.ecovacs.controller import EcovacsController
@@ -128,8 +129,38 @@ class SwitchTestCase:
                 ),
             ],
         ),
+        (
+            "55uoqe",
+            [
+                SwitchTestCase(
+                    "switch.dbmini_continuous_cleaning",
+                    ContinuousCleaningEvent(True),
+                    SetContinuousCleaning,
+                ),
+                SwitchTestCase(
+                    "switch.dbmini_carpet_auto_boost_suction",
+                    CarpetAutoFanBoostEvent(True),
+                    SetCarpetAutoFanBoost,
+                ),
+                SwitchTestCase(
+                    "switch.dbmini_true_detect",
+                    TrueDetectEvent(True),
+                    SetTrueDetect,
+                ),
+                SwitchTestCase(
+                    "switch.dbmini_child_lock",
+                    ChildLockEvent(True),
+                    SetChildLock,
+                ),
+                SwitchTestCase(
+                    "switch.dbmini_border_spin",
+                    BorderSpinEvent(True),
+                    SetBorderSpin,
+                ),
+            ],
+        ),
     ],
-    ids=["yna5x1", "5xu9h3"],
+    ids=["yna5x1", "5xu9h3", "55uoqe"],
 )
 async def test_switch_entities(
     hass: HomeAssistant,
@@ -140,7 +171,7 @@ async def test_switch_entities(
     tests: list[SwitchTestCase],
 ) -> None:
     """Test switch entities."""
-    device = next(controller.devices(Capabilities))
+    device = controller.devices[0]
     event_bus = device.events
 
     assert hass.states.async_entity_ids() == [test.entity_id for test in tests]
@@ -205,8 +236,14 @@ async def test_switch_entities(
                 "switch.goat_g1_safe_protect",
             ],
         ),
+        (
+            "55uoqe",
+            [
+                "switch.dbmini_border_spin",
+            ],
+        ),
     ],
-    ids=["yna5x1", "5xu9h3"],
+    ids=["yna5x1", "5xu9h3", "55uoqe"],
 )
 async def test_disabled_by_default_switch_entities(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, entity_ids: list[str]
@@ -215,8 +252,8 @@ async def test_disabled_by_default_switch_entities(
     for entity_id in entity_ids:
         assert not hass.states.get(entity_id)
 
-        assert (
-            entry := entity_registry.async_get(entity_id)
-        ), f"Entity registry entry for {entity_id} is missing"
+        assert (entry := entity_registry.async_get(entity_id)), (
+            f"Entity registry entry for {entity_id} is missing"
+        )
         assert entry.disabled
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION

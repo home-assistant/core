@@ -1,10 +1,16 @@
 """Platform for eQ-3 climate entities."""
 
+from datetime import timedelta
 import logging
 from typing import Any
 
-from eq3btsmart import Thermostat
-from eq3btsmart.const import EQ3BT_MAX_TEMP, EQ3BT_OFF_TEMP, Eq3Preset, OperationMode
+from eq3btsmart.const import (
+    EQ3_DEFAULT_AWAY_TEMP,
+    EQ3_MAX_TEMP,
+    EQ3_OFF_TEMP,
+    Eq3OperationMode,
+    Eq3Preset,
+)
 from eq3btsmart.exceptions import Eq3Exception
 
 from homeassistant.components.climate import (
@@ -15,45 +21,37 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import slugify
+from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+import homeassistant.util.dt as dt_util
 
+from . import Eq3ConfigEntry
 from .const import (
-    DEVICE_MODEL,
-    DOMAIN,
+    DEFAULT_AWAY_HOURS,
     EQ_TO_HA_HVAC,
     HA_TO_EQ_HVAC,
-    MANUFACTURER,
-    SIGNAL_THERMOSTAT_CONNECTED,
-    SIGNAL_THERMOSTAT_DISCONNECTED,
     CurrentTemperatureSelector,
     Preset,
     TargetTemperatureSelector,
 )
 from .entity import Eq3Entity
-from .models import Eq3Config, Eq3ConfigEntryData
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: Eq3ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Handle config entry setup."""
 
-    eq3_config_entry: Eq3ConfigEntryData = hass.data[DOMAIN][config_entry.entry_id]
-
     async_add_entities(
-        [Eq3Climate(eq3_config_entry.eq3_config, eq3_config_entry.thermostat)],
+        [Eq3Climate(entry)],
     )
 
 
@@ -68,8 +66,8 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
         | ClimateEntityFeature.TURN_ON
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_min_temp = EQ3BT_OFF_TEMP
-    _attr_max_temp = EQ3BT_MAX_TEMP
+    _attr_min_temp = EQ3_OFF_TEMP
+    _attr_max_temp = EQ3_MAX_TEMP
     _attr_precision = PRECISION_HALVES
     _attr_hvac_modes = list(HA_TO_EQ_HVAC.keys())
     _attr_preset_modes = list(Preset)
@@ -80,78 +78,20 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
     _attr_preset_mode: str | None = None
     _target_temperature: float | None = None
 
-    def __init__(self, eq3_config: Eq3Config, thermostat: Thermostat) -> None:
-        """Initialize the climate entity."""
-
-        super().__init__(eq3_config, thermostat)
-        self._attr_unique_id = dr.format_mac(eq3_config.mac_address)
-        self._attr_device_info = DeviceInfo(
-            name=slugify(self._eq3_config.mac_address),
-            manufacturer=MANUFACTURER,
-            model=DEVICE_MODEL,
-            connections={(CONNECTION_BLUETOOTH, self._eq3_config.mac_address)},
-        )
-
-    async def async_added_to_hass(self) -> None:
-        """Run when entity about to be added to hass."""
-
-        self._thermostat.register_update_callback(self._async_on_updated)
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{SIGNAL_THERMOSTAT_DISCONNECTED}_{self._eq3_config.mac_address}",
-                self._async_on_disconnected,
-            )
-        )
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{SIGNAL_THERMOSTAT_CONNECTED}_{self._eq3_config.mac_address}",
-                self._async_on_connected,
-            )
-        )
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Run when entity will be removed from hass."""
-
-        self._thermostat.unregister_update_callback(self._async_on_updated)
-
     @callback
-    def _async_on_disconnected(self) -> None:
-        self._attr_available = False
-        self.async_write_ha_state()
-
-    @callback
-    def _async_on_connected(self) -> None:
-        self._attr_available = True
-        self.async_write_ha_state()
-
-    @callback
-    def _async_on_updated(self) -> None:
-        """Handle updated data from the thermostat."""
-
-        if self._thermostat.status is not None:
-            self._async_on_status_updated()
-
-        if self._thermostat.device_data is not None:
-            self._async_on_device_updated()
-
-        self.async_write_ha_state()
-
-    @callback
-    def _async_on_status_updated(self) -> None:
+    def _async_on_status_updated(self, data: Any) -> None:
         """Handle updated status from the thermostat."""
 
-        self._target_temperature = self._thermostat.status.target_temperature.value
+        self._target_temperature = self._thermostat.status.target_temperature
         self._attr_hvac_mode = EQ_TO_HA_HVAC[self._thermostat.status.operation_mode]
         self._attr_current_temperature = self._get_current_temperature()
         self._attr_target_temperature = self._get_target_temperature()
         self._attr_preset_mode = self._get_current_preset_mode()
         self._attr_hvac_action = self._get_current_hvac_action()
+        super()._async_on_status_updated(data)
 
     @callback
-    def _async_on_device_updated(self) -> None:
+    def _async_on_device_updated(self, data: Any) -> None:
         """Handle updated device data from the thermostat."""
 
         device_registry = dr.async_get(self.hass)
@@ -160,9 +100,10 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
         ):
             device_registry.async_update_device(
                 device.id,
-                sw_version=self._thermostat.device_data.firmware_version,
-                serial_number=self._thermostat.device_data.device_serial.value,
+                sw_version=str(self._thermostat.device_data.firmware_version),
+                serial_number=self._thermostat.device_data.device_serial,
             )
+        super()._async_on_device_updated(data)
 
     def _get_current_temperature(self) -> float | None:
         """Return the current temperature."""
@@ -171,17 +112,11 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
             case CurrentTemperatureSelector.NOTHING:
                 return None
             case CurrentTemperatureSelector.VALVE:
-                if self._thermostat.status is None:
-                    return None
-
                 return float(self._thermostat.status.valve_temperature)
             case CurrentTemperatureSelector.UI:
                 return self._target_temperature
             case CurrentTemperatureSelector.DEVICE:
-                if self._thermostat.status is None:
-                    return None
-
-                return float(self._thermostat.status.target_temperature.value)
+                return float(self._thermostat.status.target_temperature)
             case CurrentTemperatureSelector.ENTITY:
                 state = self.hass.states.get(self._eq3_config.external_temp_sensor)
                 if state is not None:
@@ -199,16 +134,12 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
             case TargetTemperatureSelector.TARGET:
                 return self._target_temperature
             case TargetTemperatureSelector.LAST_REPORTED:
-                if self._thermostat.status is None:
-                    return None
-
-                return float(self._thermostat.status.target_temperature.value)
+                return float(self._thermostat.status.target_temperature)
 
     def _get_current_preset_mode(self) -> str:
         """Return the current preset mode."""
 
-        if (status := self._thermostat.status) is None:
-            return PRESET_NONE
+        status = self._thermostat.status
         if status.is_window_open:
             return Preset.WINDOW_OPEN
         if status.is_boost:
@@ -217,7 +148,7 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
             return Preset.LOW_BATTERY
         if status.is_away:
             return Preset.AWAY
-        if status.operation_mode is OperationMode.ON:
+        if status.operation_mode is Eq3OperationMode.ON:
             return Preset.OPEN
         if status.presets is None:
             return PRESET_NONE
@@ -231,10 +162,7 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
     def _get_current_hvac_action(self) -> HVACAction:
         """Return the current hvac action."""
 
-        if (
-            self._thermostat.status is None
-            or self._thermostat.status.operation_mode is OperationMode.OFF
-        ):
+        if self._thermostat.status.operation_mode is Eq3OperationMode.OFF:
             return HVACAction.OFF
         if self._thermostat.status.valve == 0:
             return HVACAction.IDLE
@@ -265,7 +193,7 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
         self.async_write_ha_state()
 
         try:
-            await self._thermostat.async_set_temperature(self._target_temperature)
+            await self._thermostat.async_set_temperature(temperature)
         except Eq3Exception:
             _LOGGER.error(
                 "[%s] Failed setting temperature", self._eq3_config.mac_address
@@ -279,7 +207,7 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
         """Set new target hvac mode."""
 
         if hvac_mode is HVACMode.OFF:
-            await self.async_set_temperature(temperature=EQ3BT_OFF_TEMP)
+            await self.async_set_temperature(temperature=EQ3_OFF_TEMP)
 
         try:
             await self._thermostat.async_set_mode(HA_TO_EQ_HVAC[hvac_mode])
@@ -293,10 +221,11 @@ class Eq3Climate(Eq3Entity, ClimateEntity):
             case Preset.BOOST:
                 await self._thermostat.async_set_boost(True)
             case Preset.AWAY:
-                await self._thermostat.async_set_away(True)
+                away_until = dt_util.now() + timedelta(hours=DEFAULT_AWAY_HOURS)
+                await self._thermostat.async_set_away(away_until, EQ3_DEFAULT_AWAY_TEMP)
             case Preset.ECO:
                 await self._thermostat.async_set_preset(Eq3Preset.ECO)
             case Preset.COMFORT:
                 await self._thermostat.async_set_preset(Eq3Preset.COMFORT)
             case Preset.OPEN:
-                await self._thermostat.async_set_mode(OperationMode.ON)
+                await self._thermostat.async_set_mode(Eq3OperationMode.ON)

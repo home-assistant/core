@@ -1,0 +1,75 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_readings": "No readings received from the IOmeter. Please attach the IOmeter Core to the electricity meter and wait for the first reading.",
+      "no_status": "No status received from the IOmeter. Check your device status in the IOmeter app",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the IOmeter device to connect to."
+        },
+        "description": "Set up your IOmeter device for local data"
+      },
+      "zeroconf_confirm": {
+        "description": "Do you want to set up IOmeter on the meter with meter number: {meter_number}?",
+        "title": "Discovered IOmeter"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "attachment_status": {
+        "name": "Core attachment status"
+      },
+      "connection_status": {
+        "name": "Core/Bridge connection status"
+      }
+    },
+    "sensor": {
+      "battery_level": {
+        "name": "Battery level"
+      },
+      "core_bridge_rssi": {
+        "name": "Signal strength Core/Bridge"
+      },
+      "meter_number": {
+        "name": "Meter number"
+      },
+      "pin_status": {
+        "name": "PIN status",
+        "state": {
+          "entered": "Entered",
+          "missing": "Missing",
+          "pending": "Pending",
+          "unknown": "Unknown"
+        }
+      },
+      "power_status": {
+        "name": "Power supply",
+        "state": {
+          "battery": "Battery",
+          "wired": "Wired"
+        }
+      },
+      "total_consumption": {
+        "name": "Total consumption"
+      },
+      "total_production": {
+        "name": "Total production"
+      },
+      "wifi_rssi": {
+        "name": "Signal strength Wi-Fi"
+      }
+    }
+  }
+}

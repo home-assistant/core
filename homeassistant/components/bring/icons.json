@@ -1,5 +1,31 @@
 {
   "entity": {
+    "event": {
+      "activity": {
+        "default": "mdi:bell"
+      }
+    },
+    "sensor": {
+      "convenient": {
+        "default": "mdi:fridge-outline"
+      },
+      "discounted": {
+        "default": "mdi:brightness-percent"
+      },
+      "list_access": {
+        "default": "mdi:account-lock",
+        "state": {
+          "invitation": "mdi:account-multiple-plus",
+          "shared": "mdi:account-group"
+        }
+      },
+      "list_language": {
+        "default": "mdi:earth"
+      },
+      "urgent": {
+        "default": "mdi:run-fast"
+      }
+    },
     "todo": {
       "shopping_list": {
         "default": "mdi:cart"
@@ -7,6 +33,11 @@
     }
   },
   "services": {
-    "send_message": "mdi:cellphone-message"
+    "send_message": {
+      "service": "mdi:cellphone-message"
+    },
+    "send_reaction": {
+      "service": "mdi:thumb-up"
+    }
   }
 }

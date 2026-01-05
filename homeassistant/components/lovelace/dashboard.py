@@ -7,10 +7,11 @@ import logging
 import os
 from pathlib import Path
 import time
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
+from homeassistant.components import websocket_api
 from homeassistant.components.frontend import DATA_PANELS
 from homeassistant.const import CONF_FILENAME
 from homeassistant.core import HomeAssistant, callback
@@ -26,6 +27,7 @@ from .const import (
     DOMAIN,
     EVENT_LOVELACE_UPDATED,
     LOVELACE_CONFIG_FILE,
+    LOVELACE_DATA,
     MODE_STORAGE,
     MODE_YAML,
     STORAGE_DASHBOARD_CREATE_FIELDS,
@@ -55,7 +57,7 @@ class LovelaceConfig(ABC):
             self.config = None
 
     @property
-    def url_path(self) -> str:
+    def url_path(self) -> str | None:
         """Return url path."""
         return self.config[CONF_URL_PATH] if self.config else None
 
@@ -65,20 +67,24 @@ class LovelaceConfig(ABC):
         """Return mode of the lovelace config."""
 
     @abstractmethod
-    async def async_get_info(self):
+    async def async_get_info(self) -> dict[str, Any]:
         """Return the config info."""
 
     @abstractmethod
     async def async_load(self, force: bool) -> dict[str, Any]:
         """Load config."""
 
-    async def async_save(self, config):
+    async def async_save(self, config: dict[str, Any]) -> None:
         """Save config."""
         raise HomeAssistantError("Not supported")
 
-    async def async_delete(self):
+    async def async_delete(self) -> None:
         """Delete config."""
         raise HomeAssistantError("Not supported")
+
+    @abstractmethod
+    async def async_json(self, force: bool) -> json_fragment:
+        """Return JSON representation of the config."""
 
     @callback
     def _config_updated(self) -> None:
@@ -111,7 +117,7 @@ class LovelaceStorage(LovelaceConfig):
         """Return mode of the lovelace config."""
         return MODE_STORAGE
 
-    async def async_get_info(self):
+    async def async_get_info(self) -> dict[str, Any]:
         """Return the Lovelace storage info."""
         data = self._data or await self._load()
         if data["config"] is None:
@@ -127,7 +133,7 @@ class LovelaceStorage(LovelaceConfig):
         if (config := data["config"]) is None:
             raise ConfigNotFound
 
-        return config
+        return config  # type: ignore[no-any-return]
 
     async def async_json(self, force: bool) -> json_fragment:
         """Return JSON representation of the config."""
@@ -137,19 +143,21 @@ class LovelaceStorage(LovelaceConfig):
             await self._load()
         return self._json_config or self._async_build_json()
 
-    async def async_save(self, config):
+    async def async_save(self, config: dict[str, Any]) -> None:
         """Save config."""
         if self.hass.config.recovery_mode:
             raise HomeAssistantError("Saving not supported in recovery mode")
 
         if self._data is None:
             await self._load()
+            if TYPE_CHECKING:
+                assert self._data is not None
         self._data["config"] = config
         self._json_config = None
         self._config_updated()
         await self._store.async_save(self._data)
 
-    async def async_delete(self):
+    async def async_delete(self) -> None:
         """Delete config."""
         if self.hass.config.recovery_mode:
             raise HomeAssistantError("Deleting not supported in recovery mode")
@@ -193,7 +201,7 @@ class LovelaceYAML(LovelaceConfig):
         """Return mode of the lovelace config."""
         return MODE_YAML
 
-    async def async_get_info(self):
+    async def async_get_info(self) -> dict[str, Any]:
         """Return the YAML storage mode."""
         try:
             config = await self.async_load(False)
@@ -207,12 +215,12 @@ class LovelaceYAML(LovelaceConfig):
 
     async def async_load(self, force: bool) -> dict[str, Any]:
         """Load config."""
-        config, json = await self._async_load_or_cached(force)
+        config, _json = await self._async_load_or_cached(force)
         return config
 
     async def async_json(self, force: bool) -> json_fragment:
         """Return JSON representation of the config."""
-        config, json = await self._async_load_or_cached(force)
+        _config, json = await self._async_load_or_cached(force)
         return json
 
     async def _async_load_or_cached(
@@ -249,7 +257,7 @@ class LovelaceYAML(LovelaceConfig):
         return is_updated, config, json
 
 
-def _config_info(mode, config):
+def _config_info(mode: str, config: dict[str, Any]) -> dict[str, Any]:
     """Generate info about the config."""
     return {
         "mode": mode,
@@ -263,7 +271,7 @@ class DashboardsCollection(collection.DictStorageCollection):
     CREATE_SCHEMA = vol.Schema(STORAGE_DASHBOARD_CREATE_FIELDS)
     UPDATE_SCHEMA = vol.Schema(STORAGE_DASHBOARD_UPDATE_FIELDS)
 
-    def __init__(self, hass):
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the dashboards collection."""
         super().__init__(
             storage.Store(hass, DASHBOARDS_STORAGE_VERSION, DASHBOARDS_STORAGE_KEY),
@@ -279,14 +287,18 @@ class DashboardsCollection(collection.DictStorageCollection):
             raise vol.Invalid("Url path needs to contain a hyphen (-)")
 
         if url_path in self.hass.data[DATA_PANELS]:
-            raise vol.Invalid("Panel url path needs to be unique")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="url_already_exists",
+                translation_placeholders={"url": url_path},
+            )
 
-        return self.CREATE_SCHEMA(data)
+        return self.CREATE_SCHEMA(data)  # type: ignore[no-any-return]
 
     @callback
     def _get_suggested_id(self, info: dict) -> str:
         """Suggest an ID based on the config."""
-        return info[CONF_URL_PATH]
+        return info[CONF_URL_PATH]  # type: ignore[no-any-return]
 
     async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
@@ -297,3 +309,24 @@ class DashboardsCollection(collection.DictStorageCollection):
             updated.pop(CONF_ICON)
 
         return updated
+
+
+class DashboardsCollectionWebSocket(collection.DictStorageCollectionWebsocket):
+    """Class to expose storage collection management over websocket."""
+
+    @callback
+    def ws_list_item(
+        self,
+        hass: HomeAssistant,
+        connection: websocket_api.ActiveConnection,
+        msg: dict[str, Any],
+    ) -> None:
+        """Send Lovelace UI resources over WebSocket connection."""
+        connection.send_result(
+            msg["id"],
+            [
+                dashboard.config
+                for dashboard in hass.data[LOVELACE_DATA].dashboards.values()
+                if dashboard.config
+            ],
+        )

@@ -1,0 +1,42 @@
+[
+  {
+    "title": "Something",
+    "album": "Abbey Road",
+    "creator": "The Beatles",
+    "item_id": "Q:0/1",
+    "parent_id": "Q:0",
+    "original_track_number": 3,
+    "resources": [
+      {
+        "uri": "x-file-cifs://192.168.42.10/music/The%20Beatles/Abbey%20Road/03%20Something.mp3",
+        "protocol_info": "file:*:audio/mpegurl:*"
+      }
+    ]
+  },
+  {
+    "title": "Come Together",
+    "album": "Abbey Road",
+    "creator": "The Beatles",
+    "item_id": "Q:0/2",
+    "parent_id": "Q:0",
+    "original_track_number": 1,
+    "resources": [
+      {
+        "uri": "x-file-cifs://192.168.42.10/music/The%20Beatles/Abbey%20Road/01%20Come%20Together.mp3",
+        "protocol_info": "file:*:audio/mpegurl:*"
+      }
+    ]
+  },
+  {
+    "title": "Track with no album or creator",
+    "item_id": "Q:0/3",
+    "parent_id": "Q:0",
+    "original_track_number": 1,
+    "resources": [
+      {
+        "uri": "x-file-cifs://192.168.42.10/music/TrackWithNoAlbumOrCreator.mp3",
+        "protocol_info": "file:*:audio/mpegurl:*"
+      }
+    ]
+  }
+]

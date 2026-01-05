@@ -4,18 +4,14 @@ from collections.abc import Callable
 import time
 from typing import Any
 
-from aiohttp.test_utils import TestClient
-from freezegun import freeze_time
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.auth.models import Credentials
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_EVENT, ApiResult, ComponentSetup
 
-from tests.common import CLIENT_ID, MockConfigEntry, MockUser
+from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
@@ -30,47 +26,13 @@ def mock_test_setup(
     mock_calendars_list({"items": [test_api_calendar]})
 
 
-async def generate_new_hass_access_token(
-    hass: HomeAssistant, hass_admin_user: MockUser, hass_admin_credential: Credentials
-) -> str:
-    """Return an access token to access Home Assistant."""
-    await hass.auth.async_link_user(hass_admin_user, hass_admin_credential)
-
-    refresh_token = await hass.auth.async_create_refresh_token(
-        hass_admin_user, CLIENT_ID, credential=hass_admin_credential
-    )
-    return hass.auth.async_create_access_token(refresh_token)
-
-
-def _get_test_client_generator(
-    hass: HomeAssistant, aiohttp_client: ClientSessionGenerator, new_token: str
-):
-    """Return a test client generator.""."""
-
-    async def auth_client() -> TestClient:
-        return await aiohttp_client(
-            hass.http.app, headers={"Authorization": f"Bearer {new_token}"}
-        )
-
-    return auth_client
-
-
-@pytest.fixture(autouse=True)
-async def setup_diag(hass):
-    """Set up diagnostics platform."""
-    assert await async_setup_component(hass, "diagnostics", {})
-
-
-@freeze_time("2023-03-13 12:05:00-07:00")
-@pytest.mark.usefixtures("socket_enabled")
+@pytest.mark.freeze_time("2023-03-13 12:05:00-07:00")
 async def test_diagnostics(
     hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
     component_setup: ComponentSetup,
     mock_events_list_items: Callable[[list[dict[str, Any]]], None],
-    hass_admin_user: MockUser,
-    hass_admin_credential: Credentials,
     config_entry: MockConfigEntry,
-    aiohttp_client: ClientSessionGenerator,
     snapshot: SnapshotAssertion,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
@@ -110,13 +72,5 @@ async def test_diagnostics(
 
     assert await component_setup()
 
-    # Since we are freezing time only when we enter this test, we need to
-    # manually create a new token and clients since the token created by
-    # the fixtures would not be valid.
-    new_token = await generate_new_hass_access_token(
-        hass, hass_admin_user, hass_admin_credential
-    )
-    data = await get_diagnostics_for_config_entry(
-        hass, _get_test_client_generator(hass, aiohttp_client, new_token), config_entry
-    )
+    data = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
     assert data == snapshot

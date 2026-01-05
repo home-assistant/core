@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant.const import EVENT_LOGGING_CHANGED  # noqa: F401
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from . import websocket_api
@@ -24,8 +24,10 @@ from .const import (
     SERVICE_SET_LEVEL,
 )
 from .helpers import (
+    DATA_LOGGER,
     LoggerDomainConfig,
     LoggerSettings,
+    _clear_logger_overwrites,  # noqa: F401
     set_default_log_level,
     set_log_levels,
 )
@@ -54,7 +56,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     settings = LoggerSettings(hass, config)
 
-    domain_config = hass.data[DOMAIN] = LoggerDomainConfig({}, settings)
+    domain_config = hass.data[DATA_LOGGER] = LoggerDomainConfig({}, settings)
     logging.setLoggerClass(_get_logger_class(domain_config.overrides))
 
     websocket_api.async_load_websocket_api(hass)

@@ -10,19 +10,17 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfPower
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
-from . import name_short_mac
-from .const import DOMAIN
+from . import EmonitorConfigEntry, name_short_mac
 
 SENSORS = (
     SensorEntityDescription(key="inst_power"),
@@ -39,11 +37,11 @@ SENSORS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: EmonitorConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     channels = coordinator.data.channels
     entities: list[EmonitorPowerSensor] = []
     seen_channels = set()
@@ -95,6 +93,7 @@ class EmonitorPowerSensor(CoordinatorEntity[EmonitorStatus], SensorEntity):
             manufacturer="Powerhouse Dynamics, Inc.",
             name=device_name,
             sw_version=emonitor_status.hardware.firmware_version,
+            serial_number=emonitor_status.hardware.serial_number,
         )
         self._attr_extra_state_attributes = {"channel": channel_number}
         self._attr_native_value = self._paired_attr(self.entity_description.key)

@@ -1,6 +1,6 @@
 """Common fixtures for the Gardena Bluetooth tests."""
 
-from collections.abc import Callable, Coroutine
+from collections.abc import Callable, Coroutine, Generator
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -10,7 +10,6 @@ from gardena_bluetooth.const import DeviceInformation
 from gardena_bluetooth.exceptions import CharacteristicNotFound
 from gardena_bluetooth.parse import Characteristic
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.gardena_bluetooth.const import DOMAIN
 from homeassistant.components.gardena_bluetooth.coordinator import SCAN_INTERVAL
@@ -26,12 +25,24 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 def mock_entry():
     """Create hass config fixture."""
     return MockConfigEntry(
-        domain=DOMAIN, data={CONF_ADDRESS: WATER_TIMER_SERVICE_INFO.address}
+        domain=DOMAIN,
+        data={CONF_ADDRESS: WATER_TIMER_SERVICE_INFO.address},
+        unique_id=WATER_TIMER_SERVICE_INFO.address,
     )
 
 
-@pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock]:
+@pytest.fixture(scope="module")
+def mock_unload_entry() -> Generator[AsyncMock]:
+    """Override async_unload_entry."""
+    with patch(
+        "homeassistant.components.gardena_bluetooth.async_unload_entry",
+        return_value=True,
+    ) as mock_unload_entry:
+        yield mock_unload_entry
+
+
+@pytest.fixture(scope="module")
+def mock_setup_entry(mock_unload_entry) -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.gardena_bluetooth.async_setup_entry",
@@ -113,10 +124,5 @@ def mock_client(
 
 
 @pytest.fixture(autouse=True)
-def enable_all_entities():
+def enable_all_entities(entity_registry_enabled_by_default: None) -> None:
     """Make sure all entities are enabled."""
-    with patch(
-        "homeassistant.components.gardena_bluetooth.coordinator.GardenaBluetoothEntity.entity_registry_enabled_default",
-        new=Mock(return_value=True),
-    ):
-        yield

@@ -1,37 +1,47 @@
-"""Util for Conversation."""
+"""Utility functions for conversation integration."""
 
 from __future__ import annotations
 
-import re
+import logging
+
+from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import intent, llm
+
+from .chat_log import AssistantContent, ChatLog, ToolResultContent
+from .models import ConversationInput, ConversationResult
+
+_LOGGER = logging.getLogger(__name__)
 
 
-def create_matcher(utterance: str) -> re.Pattern[str]:
-    """Create a regex that matches the utterance."""
-    # Split utterance into parts that are type: NORMAL, GROUP or OPTIONAL
-    # Pattern matches (GROUP|OPTIONAL): Change light to [the color] {name}
-    parts = re.split(r"({\w+}|\[[\w\s]+\] *)", utterance)
-    # Pattern to extract name from GROUP part. Matches {name}
-    group_matcher = re.compile(r"{(\w+)}")
-    # Pattern to extract text from OPTIONAL part. Matches [the color]
-    optional_matcher = re.compile(r"\[([\w ]+)\] *")
+@callback
+def async_get_result_from_chat_log(
+    user_input: ConversationInput, chat_log: ChatLog
+) -> ConversationResult:
+    """Get the result from the chat log."""
+    tool_results = [
+        content.tool_result
+        for content in chat_log.content[chat_log.llm_input_provided_index :]
+        if isinstance(content, ToolResultContent)
+        and isinstance(content.tool_result, llm.IntentResponseDict)
+    ]
 
-    pattern = ["^"]
-    for part in parts:
-        group_match = group_matcher.match(part)
-        optional_match = optional_matcher.match(part)
+    if tool_results:
+        intent_response = tool_results[-1].original
+    else:
+        intent_response = intent.IntentResponse(language=user_input.language)
 
-        # Normal part
-        if group_match is None and optional_match is None:
-            pattern.append(part)
-            continue
+    if not isinstance((last_content := chat_log.content[-1]), AssistantContent):
+        _LOGGER.error(
+            "Last content in chat log is not an AssistantContent: %s. This could be due to the model not returning a valid response",
+            last_content,
+        )
+        raise HomeAssistantError("Unable to get response")
 
-        # Group part
-        if group_match is not None:
-            pattern.append(rf"(?P<{group_match.groups()[0]}>[\w ]+?)\s*")
+    intent_response.async_set_speech(last_content.content or "")
 
-        # Optional part
-        elif optional_match is not None:
-            pattern.append(rf"(?:{optional_match.groups()[0]} *)?")
-
-    pattern.append("$")
-    return re.compile("".join(pattern), re.I)
+    return ConversationResult(
+        response=intent_response,
+        conversation_id=chat_log.conversation_id,
+        continue_conversation=chat_log.continue_conversation,
+    )

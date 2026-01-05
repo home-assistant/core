@@ -2,21 +2,30 @@
 
 from __future__ import annotations
 
-from abc import abstractmethod
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
+import functools
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, Concatenate, cast
 
-from chip.clusters.Objects import ClusterAttributeDescriptor, NullValue
-from matter_server.common.helpers.util import create_attribute_path
+from chip.clusters import Objects as clusters
+from chip.clusters.Objects import ClusterAttributeDescriptor, ClusterCommand, NullValue
+from matter_server.common.errors import MatterError
+from matter_server.common.helpers.util import (
+    create_attribute_path,
+    create_attribute_path_from_attribute,
+)
 from matter_server.common.models import EventType, ServerInfoMessage
+from propcache.api import cached_property
 
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, EntityDescription
+from homeassistant.helpers.typing import UndefinedType
 
-from .const import DOMAIN, ID_TYPE_DEVICE_ID
+from .const import DOMAIN, FEATUREMAP_ATTRIBUTE_ID, ID_TYPE_DEVICE_ID
 from .helpers import get_device_id
 
 if TYPE_CHECKING:
@@ -27,19 +36,56 @@ if TYPE_CHECKING:
 
 LOGGER = logging.getLogger(__name__)
 
+# Due to variances in labeling implementations, labels are vendor and product specific.
+# This dictionary defines which labels to use for specific vendor/product combinations.
+# The keys are vendor IDs, the values are dictionaries with product IDs as keys
+# and lists of label names to use as values. If the value is None, no labels are used
+VENDOR_LABELING_LIST: dict[int, dict[int, list[str] | None]] = {
+    4488: {259: ["position"]},  # TP-Link Dual Outdoor Plug US
+    4874: {105: ["orientation"]},  # Eve Energy dual Outlet US
+    4961: {
+        1: ["inovelliname", "label", "name", "button"],  # Inovelli VTM31
+        2: ["label", "devicetype", "button"],  # Inovelli VTM35
+        4: None,  # Inovelli VTM36
+        16: ["label", "name", "button"],  # Inovelli VTM30
+    },
+}
 
-@dataclass(frozen=True)
+
+def catch_matter_error[_R, **P](
+    func: Callable[Concatenate[MatterEntity, P], Coroutine[Any, Any, _R]],
+) -> Callable[Concatenate[MatterEntity, P], Coroutine[Any, Any, _R]]:
+    """Catch Matter errors and convert to Home Assistant error."""
+
+    @functools.wraps(func)
+    async def wrapper(self: MatterEntity, *args: P.args, **kwargs: P.kwargs) -> _R:
+        """Catch Matter errors and convert to Home Assistant error."""
+        try:
+            return await func(self, *args, **kwargs)
+        except MatterError as err:
+            error_msg = str(err) or err.__class__.__name__
+            raise HomeAssistantError(error_msg) from err
+
+    return wrapper
+
+
+@dataclass(frozen=True, kw_only=True)
 class MatterEntityDescription(EntityDescription):
     """Describe the Matter entity."""
 
     # convert the value from the primary attribute to the value used by HA
-    measurement_to_ha: Callable[[Any], Any] | None = None
+    device_to_ha: Callable[[Any], Any] | None = None
+    ha_to_device: Callable[[Any], Any] | None = None
+    command_timeout: int | None = None
 
 
 class MatterEntity(Entity):
     """Entity class for Matter devices."""
 
     _attr_has_entity_name = True
+    _attr_should_poll = False
+    _name_postfix: str | None = None
+    _platform_translation_key: str | None = None
 
     def __init__(
         self,
@@ -70,9 +116,57 @@ class MatterEntity(Entity):
             identifiers={(DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")}
         )
         self._attr_available = self._endpoint.node.available
+        # mark endpoint postfix if the device has the primary attribute on multiple endpoints
+        if not self._endpoint.node.is_bridge_device and any(
+            ep
+            for ep in self._endpoint.node.endpoints.values()
+            if ep != self._endpoint
+            and ep.has_attribute(None, entity_info.primary_attribute)
+        ):
+            self._name_postfix = str(self._endpoint.endpoint_id)
+            if self._platform_translation_key and not self.translation_key:
+                self._attr_translation_key = self._platform_translation_key
+
+        # Matter labels can be used to modify the entity name
+        # by appending the text.
+        if name_modifier := self._get_name_modifier():
+            self._name_postfix = name_modifier
 
         # make sure to update the attributes once
         self._update_from_device()
+
+    def _find_matching_labels(self) -> list[str]:
+        """Find all labels for a Matter entity."""
+
+        device_info = self._endpoint.device_info
+        labeling_list = VENDOR_LABELING_LIST.get(device_info.vendorID, {}).get(
+            device_info.productID
+        )
+
+        # get the labels from the UserLabel and FixedLabel clusters
+        user_label_list: list[clusters.UserLabel.Structs.LabelStruct] = (
+            self.get_matter_attribute_value(clusters.UserLabel.Attributes.LabelList)
+            or []
+        )
+        fixed_label_list: list[clusters.FixedLabel.Structs.LabelStruct] = (
+            self.get_matter_attribute_value(clusters.FixedLabel.Attributes.LabelList)
+            or []
+        )
+
+        found_labels: list[str] = [
+            lbl.value
+            for label in labeling_list or []
+            for lbl in (*user_label_list, *fixed_label_list)
+            if lbl.label.lower() == label
+        ]
+        return found_labels
+
+    def _get_name_modifier(self) -> str | None:
+        """Get the name modifier for the entity."""
+
+        if found_labels := self._find_matching_labels():
+            return found_labels[0]
+        return None
 
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""
@@ -103,6 +197,30 @@ class MatterEntity(Entity):
                 node_filter=self._endpoint.node.node_id,
             )
         )
+        # subscribe to FeatureMap attribute (as that can dynamically change)
+        self._unsubscribes.append(
+            self.matter_client.subscribe_events(
+                callback=self._on_featuremap_update,
+                event_filter=EventType.ATTRIBUTE_UPDATED,
+                node_filter=self._endpoint.node.node_id,
+                attr_path_filter=create_attribute_path(
+                    endpoint=self._endpoint.endpoint_id,
+                    cluster_id=self._entity_info.primary_attribute.cluster_id,
+                    attribute_id=FEATUREMAP_ATTRIBUTE_ID,
+                ),
+            )
+        )
+
+    @cached_property
+    def name(self) -> str | UndefinedType | None:
+        """Return the name of the entity."""
+        if hasattr(self, "_attr_name"):
+            # an explicit entity name was defined, we use that
+            return self._attr_name
+        name = super().name
+        if name and self._name_postfix:
+            name = f"{name} ({self._name_postfix})"
+        return name
 
     @callback
     def _on_matter_event(self, event: EventType, data: Any = None) -> None:
@@ -112,7 +230,29 @@ class MatterEntity(Entity):
         self.async_write_ha_state()
 
     @callback
-    @abstractmethod
+    def _on_featuremap_update(
+        self, event: EventType, data: tuple[int, str, int] | None
+    ) -> None:
+        """Handle FeatureMap attribute updates."""
+        if data is None:
+            return
+        new_value = data[2]
+        # handle edge case where a Feature is removed from a cluster
+        if (
+            self._entity_info.discovery_schema.featuremap_contains is not None
+            and not bool(
+                new_value & self._entity_info.discovery_schema.featuremap_contains
+            )
+        ):
+            # this entity is no longer supported by the device
+            ent_reg = er.async_get(self.hass)
+            ent_reg.async_remove(self.entity_id)
+
+            return
+        # all other cases, just update the entity
+        self._on_matter_event(event, data)
+
+    @callback
     def _update_from_device(self) -> None:
         """Update data from Matter device."""
 
@@ -133,4 +273,39 @@ class MatterEntity(Entity):
         """Return AttributePath by providing the endpoint and Attribute class."""
         return create_attribute_path(
             self._endpoint.endpoint_id, attribute.cluster_id, attribute.attribute_id
+        )
+
+    @catch_matter_error
+    async def send_device_command(
+        self,
+        command: ClusterCommand,
+        **kwargs: Any,
+    ) -> None:
+        """Send device command on the primary attribute's endpoint."""
+        await self.matter_client.send_device_command(
+            node_id=self._endpoint.node.node_id,
+            endpoint_id=self._endpoint.endpoint_id,
+            command=command,
+            **kwargs,
+        )
+
+    @catch_matter_error
+    async def write_attribute(
+        self,
+        value: Any,
+        matter_attribute: type[ClusterAttributeDescriptor] | None = None,
+    ) -> Any:
+        """Write an attribute(value) on the primary endpoint.
+
+        If matter_attribute is not provided, the primary attribute of the entity is used.
+        """
+        if matter_attribute is None:
+            matter_attribute = self._entity_info.primary_attribute
+        return await self.matter_client.write_attribute(
+            node_id=self._endpoint.node.node_id,
+            attribute_path=create_attribute_path_from_attribute(
+                self._endpoint.endpoint_id,
+                matter_attribute,
+            ),
+            value=value,
         )

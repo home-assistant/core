@@ -1,11 +1,16 @@
 """Test floor registry API."""
 
+from datetime import datetime
+from typing import Any
+
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pytest_unordered import unordered
 
 from homeassistant.components.config import floor_registry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import floor_registry as fr
+from homeassistant.util.dt import utcnow
 
 from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
@@ -22,9 +27,15 @@ async def client_fixture(
 async def test_list_floors(
     client: MockHAClientWebSocket,
     floor_registry: fr.FloorRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test list entries."""
+    created_1 = datetime.fromisoformat("2024-07-16T13:30:00.900075+00:00")
+    freezer.move_to(created_1)
     floor_registry.async_create("First floor")
+
+    created_2 = datetime.fromisoformat("2024-07-16T13:45:00.900075+00:00")
+    freezer.move_to(created_2)
     floor_registry.async_create(
         name="Second floor",
         aliases={"top floor", "attic"},
@@ -34,6 +45,12 @@ async def test_list_floors(
 
     assert len(floor_registry.floors) == 2
 
+    # update first floor to change modified_at
+    floor_registry.async_update(
+        "first_floor",
+        name="First floor...",
+    )
+
     await client.send_json_auto_id({"type": "config/floor_registry/list"})
 
     msg = await client.receive_json()
@@ -41,20 +58,25 @@ async def test_list_floors(
     assert len(msg["result"]) == len(floor_registry.floors)
     assert msg["result"][0] == {
         "aliases": [],
+        "created_at": created_1.timestamp(),
         "icon": None,
         "floor_id": "first_floor",
-        "name": "First floor",
+        "modified_at": created_2.timestamp(),
+        "name": "First floor...",
         "level": None,
     }
     assert msg["result"][1] == {
         "aliases": unordered(["top floor", "attic"]),
+        "created_at": created_2.timestamp(),
         "icon": "mdi:home-floor-2",
         "floor_id": "second_floor",
+        "modified_at": created_2.timestamp(),
         "name": "Second floor",
         "level": 2,
     }
 
 
+@pytest.mark.usefixtures("freezer")
 async def test_create_floor(
     client: MockHAClientWebSocket,
     floor_registry: fr.FloorRegistry,
@@ -69,8 +91,10 @@ async def test_create_floor(
     assert len(floor_registry.floors) == 1
     assert msg["result"] == {
         "aliases": [],
+        "created_at": utcnow().timestamp(),
         "icon": None,
         "floor_id": "first_floor",
+        "modified_at": utcnow().timestamp(),
         "name": "First floor",
         "level": None,
     }
@@ -90,10 +114,36 @@ async def test_create_floor(
     assert len(floor_registry.floors) == 2
     assert msg["result"] == {
         "aliases": unordered(["top floor", "attic"]),
+        "created_at": utcnow().timestamp(),
         "icon": "mdi:home-floor-2",
         "floor_id": "second_floor",
+        "modified_at": utcnow().timestamp(),
         "name": "Second floor",
         "level": 2,
+    }
+
+    # Floor with invalid aliases
+    await client.send_json_auto_id(
+        {
+            "name": "Third floor",
+            "type": "config/floor_registry/create",
+            "aliases": ["", " "],
+            "icon": "mdi:home-floor-2",
+            "level": 3,
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert len(floor_registry.floors) == 3
+    assert msg["result"] == {
+        "aliases": [],
+        "created_at": utcnow().timestamp(),
+        "icon": "mdi:home-floor-2",
+        "floor_id": "third_floor",
+        "modified_at": utcnow().timestamp(),
+        "name": "Third floor",
+        "level": 3,
     }
 
 
@@ -163,10 +213,15 @@ async def test_delete_non_existing_floor(
 async def test_update_floor(
     client: MockHAClientWebSocket,
     floor_registry: fr.FloorRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test update entry."""
+    created_at = datetime.fromisoformat("2024-07-16T13:30:00.900075+00:00")
+    freezer.move_to(created_at)
     floor = floor_registry.async_create("First floor")
     assert len(floor_registry.floors) == 1
+    modified_at = datetime.fromisoformat("2024-07-16T13:45:00.900075+00:00")
+    freezer.move_to(modified_at)
 
     await client.send_json_auto_id(
         {
@@ -184,12 +239,16 @@ async def test_update_floor(
     assert len(floor_registry.floors) == 1
     assert msg["result"] == {
         "aliases": unordered(["top floor", "attic"]),
+        "created_at": created_at.timestamp(),
         "icon": "mdi:home-floor-2",
         "floor_id": floor.floor_id,
+        "modified_at": modified_at.timestamp(),
         "name": "Second floor",
         "level": 2,
     }
 
+    modified_at = datetime.fromisoformat("2024-07-16T13:50:00.900075+00:00")
+    freezer.move_to(modified_at)
     await client.send_json_auto_id(
         {
             "floor_id": floor.floor_id,
@@ -206,8 +265,64 @@ async def test_update_floor(
     assert len(floor_registry.floors) == 1
     assert msg["result"] == {
         "aliases": [],
+        "created_at": created_at.timestamp(),
         "icon": None,
         "floor_id": floor.floor_id,
+        "modified_at": modified_at.timestamp(),
+        "name": "First floor",
+        "level": None,
+    }
+
+    # Add invalid aliases
+    modified_at = datetime.fromisoformat("2024-07-16T13:55:00.900075+00:00")
+    freezer.move_to(modified_at)
+    await client.send_json_auto_id(
+        {
+            "floor_id": floor.floor_id,
+            "name": "First floor",
+            "aliases": ["top floor", "attic", "", " "],
+            "icon": None,
+            "level": None,
+            "type": "config/floor_registry/update",
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert len(floor_registry.floors) == 1
+    assert msg["result"] == {
+        "aliases": unordered(["top floor", "attic"]),
+        "created_at": created_at.timestamp(),
+        "icon": None,
+        "floor_id": floor.floor_id,
+        "modified_at": modified_at.timestamp(),
+        "name": "First floor",
+        "level": None,
+    }
+
+    # Add alias with trailing and leading whitespaces
+    modified_at = datetime.fromisoformat("2024-07-16T13:55:00.900075+00:00")
+    freezer.move_to(modified_at)
+    await client.send_json_auto_id(
+        {
+            "floor_id": floor.floor_id,
+            "name": "First floor",
+            "aliases": ["top floor", "attic", "solaio "],
+            "icon": None,
+            "level": None,
+            "type": "config/floor_registry/update",
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert len(floor_registry.floors) == 1
+    assert msg["result"] == {
+        "aliases": unordered(["top floor", "attic", "solaio"]),
+        "created_at": created_at.timestamp(),
+        "icon": None,
+        "floor_id": floor.floor_id,
+        "modified_at": modified_at.timestamp(),
         "name": "First floor",
         "level": None,
     }
@@ -239,3 +354,100 @@ async def test_update_with_name_already_in_use(
         == "The name Second floor (secondfloor) is already in use"
     )
     assert len(floor_registry.floors) == 2
+
+
+async def test_reorder_floors(
+    client: MockHAClientWebSocket, floor_registry: fr.FloorRegistry
+) -> None:
+    """Test reorder floors."""
+    floor1 = floor_registry.async_create("First floor")
+    floor2 = floor_registry.async_create("Second floor")
+    floor3 = floor_registry.async_create("Third floor")
+
+    await client.send_json_auto_id({"type": "config/floor_registry/list"})
+    msg = await client.receive_json()
+    assert [floor["floor_id"] for floor in msg["result"]] == [
+        floor1.floor_id,
+        floor2.floor_id,
+        floor3.floor_id,
+    ]
+
+    await client.send_json_auto_id(
+        {
+            "type": "config/floor_registry/reorder",
+            "floor_ids": [floor3.floor_id, floor1.floor_id, floor2.floor_id],
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    await client.send_json_auto_id({"type": "config/floor_registry/list"})
+    msg = await client.receive_json()
+    assert [floor["floor_id"] for floor in msg["result"]] == [
+        floor3.floor_id,
+        floor1.floor_id,
+        floor2.floor_id,
+    ]
+
+
+async def test_reorder_floors_invalid_floor_ids(
+    client: MockHAClientWebSocket, floor_registry: fr.FloorRegistry
+) -> None:
+    """Test reorder with invalid floor IDs."""
+    floor1 = floor_registry.async_create("First floor")
+    floor_registry.async_create("Second floor")
+
+    await client.send_json_auto_id(
+        {
+            "type": "config/floor_registry/reorder",
+            "floor_ids": [floor1.floor_id],
+        }
+    )
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == "invalid_format"
+    assert "must contain all existing floor IDs" in msg["error"]["message"]
+
+
+async def test_reorder_floors_with_nonexistent_id(
+    client: MockHAClientWebSocket, floor_registry: fr.FloorRegistry
+) -> None:
+    """Test reorder with nonexistent floor ID."""
+    floor1 = floor_registry.async_create("First floor")
+    floor2 = floor_registry.async_create("Second floor")
+
+    await client.send_json_auto_id(
+        {
+            "type": "config/floor_registry/reorder",
+            "floor_ids": [floor1.floor_id, floor2.floor_id, "nonexistent"],
+        }
+    )
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == "invalid_format"
+
+
+async def test_reorder_floors_persistence(
+    hass: HomeAssistant,
+    client: MockHAClientWebSocket,
+    floor_registry: fr.FloorRegistry,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test that floor reordering is persisted."""
+    floor1 = floor_registry.async_create("First floor")
+    floor2 = floor_registry.async_create("Second floor")
+    floor3 = floor_registry.async_create("Third floor")
+
+    await client.send_json_auto_id(
+        {
+            "type": "config/floor_registry/reorder",
+            "floor_ids": [floor2.floor_id, floor3.floor_id, floor1.floor_id],
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+
+    await hass.async_block_till_done()
+
+    floor_ids = [floor.floor_id for floor in floor_registry.async_list_floors()]
+    assert floor_ids == [floor2.floor_id, floor3.floor_id, floor1.floor_id]

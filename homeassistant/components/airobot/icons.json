@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "number": {
+      "hysteresis_band": {
+        "default": "mdi:delta"
+      }
+    }
+  }
+}

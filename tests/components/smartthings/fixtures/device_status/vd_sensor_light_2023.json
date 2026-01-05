@@ -1,0 +1,95 @@
+{
+  "components": {
+    "main": {
+      "ocf": {
+        "st": {
+          "value": "2025-01-14T08:07:36Z",
+          "timestamp": "2025-01-14T08:07:40.220Z"
+        },
+        "mndt": {
+          "value": "2023-01-01",
+          "timestamp": "2025-01-14T08:07:40.220Z"
+        },
+        "mnfv": {
+          "value": "latest",
+          "timestamp": "2025-01-14T08:07:40.220Z"
+        },
+        "mnhw": {
+          "value": "",
+          "timestamp": "2025-01-14T08:07:40.220Z"
+        },
+        "di": {
+          "value": "5cc1c096-98b9-460c-8f1c-1045509ec605",
+          "timestamp": "2025-01-14T08:07:40.220Z"
+        },
+        "mnsl": {
+          "value": "",
+          "timestamp": "2025-01-14T08:07:40.220Z"
+        },
+        "dmv": {
+          "value": "res.1.1.0,sh.1.1.0",
+          "timestamp": "2025-01-14T08:07:40.220Z"
+        },
+        "n": {
+          "value": "Light Sensor - 55 The Frame",
+          "timestamp": "2025-01-14T08:07:40.220Z"
+        },
+        "mnmo": {
+          "value": "QE55LS03DAUXXN",
+          "timestamp": "2025-01-14T08:07:40.220Z"
+        },
+        "vid": {
+          "value": "VD-Sensor.Light-2023",
+          "timestamp": "2025-01-14T08:07:40.220Z"
+        },
+        "mnmn": {
+          "value": "Samsung Electronics",
+          "timestamp": "2025-01-14T08:07:40.220Z"
+        },
+        "mnml": {
+          "value": "",
+          "timestamp": "2025-01-14T08:07:40.220Z"
+        },
+        "mnpv": {
+          "value": "8.0",
+          "timestamp": "2025-01-14T08:07:40.220Z"
+        },
+        "mnos": {
+          "value": "Tizen",
+          "timestamp": "2025-01-14T08:07:40.220Z"
+        },
+        "pi": {
+          "value": "5cc1c096-98b9-460c-8f1c-1045509ec605",
+          "timestamp": "2025-01-14T08:07:40.220Z"
+        },
+        "icv": {
+          "value": "core.1.1.0",
+          "timestamp": "2025-01-14T08:07:40.220Z"
+        }
+      },
+      "samsungvd.deviceCategory": {
+        "category": {
+          "value": null
+        }
+      },
+      "relativeBrightness": {
+        "brightnessIntensity": {
+          "value": 2,
+          "unit": "level",
+          "timestamp": "2025-02-11T19:08:25.539Z"
+        }
+      },
+      "refresh": {},
+      "execute": {
+        "data": {
+          "value": null
+        }
+      },
+      "switch": {
+        "switch": {
+          "value": null
+        }
+      }
+    }
+  }
+}

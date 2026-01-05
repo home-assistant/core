@@ -21,29 +21,37 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import RingData
-from .const import DOMAIN
+from . import RingConfigEntry
 from .coordinator import RingDataCoordinator
-from .entity import RingDeviceT, RingEntity
+from .entity import (
+    DeprecatedInfo,
+    RingDeviceT,
+    RingEntity,
+    RingEntityDescription,
+    async_check_create_deprecated,
+)
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: RingConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a sensor for a Ring device."""
-    ring_data: RingData = hass.data[DOMAIN][config_entry.entry_id]
+    ring_data = entry.runtime_data
     devices_coordinator = ring_data.devices_coordinator
 
     entities = [
@@ -51,6 +59,12 @@ async def async_setup_entry(
         for description in SENSOR_TYPES
         for device in ring_data.devices.all_devices
         if description.exists_fn(device)
+        and async_check_create_deprecated(
+            hass,
+            Platform.SENSOR,
+            f"{device.id}-{description.key}",
+            description,
+        )
     ]
 
     async_add_entities(entities)
@@ -122,7 +136,9 @@ def _get_last_event_attrs(
 
 
 @dataclass(frozen=True, kw_only=True)
-class RingSensorEntityDescription(SensorEntityDescription, Generic[RingDeviceT]):
+class RingSensorEntityDescription(
+    SensorEntityDescription, RingEntityDescription, Generic[RingDeviceT]
+):
     """Describes Ring sensor entity."""
 
     value_fn: Callable[[RingDeviceT], StateType] = lambda _: True
@@ -174,6 +190,9 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription[Any], ...] = (
         )
         else None,
         exists_fn=lambda device: device.has_capability(RingCapability.HISTORY),
+        deprecated_info=DeprecatedInfo(
+            new_platform=Platform.EVENT, breaks_in_ha_version="2025.4.0"
+        ),
     ),
     RingSensorEntityDescription[RingGeneric](
         key="last_motion",
@@ -190,30 +209,45 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription[Any], ...] = (
         )
         else None,
         exists_fn=lambda device: device.has_capability(RingCapability.HISTORY),
+        deprecated_info=DeprecatedInfo(
+            new_platform=Platform.EVENT, breaks_in_ha_version="2025.4.0"
+        ),
     ),
     RingSensorEntityDescription[RingDoorBell | RingChime](
         key="volume",
         translation_key="volume",
         value_fn=lambda device: device.volume,
         exists_fn=lambda device: isinstance(device, (RingDoorBell, RingChime)),
+        deprecated_info=DeprecatedInfo(
+            new_platform=Platform.NUMBER, breaks_in_ha_version="2025.4.0"
+        ),
     ),
     RingSensorEntityDescription[RingOther](
         key="doorbell_volume",
         translation_key="doorbell_volume",
         value_fn=lambda device: device.doorbell_volume,
         exists_fn=lambda device: isinstance(device, RingOther),
+        deprecated_info=DeprecatedInfo(
+            new_platform=Platform.NUMBER, breaks_in_ha_version="2025.4.0"
+        ),
     ),
     RingSensorEntityDescription[RingOther](
         key="mic_volume",
         translation_key="mic_volume",
         value_fn=lambda device: device.mic_volume,
         exists_fn=lambda device: isinstance(device, RingOther),
+        deprecated_info=DeprecatedInfo(
+            new_platform=Platform.NUMBER, breaks_in_ha_version="2025.4.0"
+        ),
     ),
     RingSensorEntityDescription[RingOther](
         key="voice_volume",
         translation_key="voice_volume",
         value_fn=lambda device: device.voice_volume,
         exists_fn=lambda device: isinstance(device, RingOther),
+        deprecated_info=DeprecatedInfo(
+            new_platform=Platform.NUMBER, breaks_in_ha_version="2025.4.0"
+        ),
     ),
     RingSensorEntityDescription[RingGeneric](
         key="wifi_signal_category",
@@ -224,7 +258,6 @@ SENSOR_TYPES: tuple[RingSensorEntityDescription[Any], ...] = (
     ),
     RingSensorEntityDescription[RingGeneric](
         key="wifi_signal_strength",
-        translation_key="wifi_signal_strength",
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         entity_category=EntityCategory.DIAGNOSTIC,

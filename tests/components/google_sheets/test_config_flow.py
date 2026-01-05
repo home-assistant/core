@@ -1,10 +1,10 @@
 """Test the Google Sheets config flow."""
 
+from collections.abc import Generator
 from unittest.mock import Mock, patch
 
 from gspread import GSpreadException
 import pytest
-from typing_extensions import Generator
 
 from homeassistant import config_entries
 from homeassistant.components.application_credentials import (
@@ -235,6 +235,7 @@ async def test_reauth(
         "homeassistant.components.google_sheets.async_setup_entry", return_value=True
     ) as mock_setup:
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        await hass.async_block_till_done()
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup.mock_calls) == 1

@@ -1,0 +1,64 @@
+{
+  "config": {
+    "error": {
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "Your ElevenLabs API key."
+        }
+      }
+    }
+  },
+  "entity": {
+    "stt": {
+      "elevenlabs_stt": {
+        "name": "Speech-to-Text"
+      }
+    },
+    "tts": {
+      "elevenlabs_tts": {
+        "name": "Text-to-Speech"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "configure_voice": "Configure advanced voice settings",
+          "model": "Model",
+          "stt_auto_language": "Auto-detect language",
+          "stt_model": "Speech-to-Text Model",
+          "voice": "Voice"
+        },
+        "data_description": {
+          "configure_voice": "Configure advanced voice settings. Find more information in the ElevenLabs documentation.",
+          "model": "ElevenLabs model to use. Please note that not all models support all languages equally well.",
+          "stt_auto_language": "Automatically detect the spoken language for speech-to-text.",
+          "stt_model": "Speech-to-Text model to use.",
+          "voice": "Voice to use for text-to-speech."
+        }
+      },
+      "voice_settings": {
+        "data": {
+          "similarity": "Similarity",
+          "stability": "Stability",
+          "style": "Style",
+          "use_speaker_boost": "Speaker boost"
+        },
+        "data_description": {
+          "similarity": "Similarity of the generated audio to the original voice. Higher values may result in more similar audio, but may also introduce background noise.",
+          "stability": "Stability of the generated audio. Higher values lead to less emotional audio.",
+          "style": "Style of the generated audio. Recommended to keep at 0 for most almost all use cases.",
+          "use_speaker_boost": "Use speaker boost to increase the similarity of the generated audio to the original voice."
+        }
+      }
+    }
+  }
+}

@@ -25,10 +25,11 @@ from .const import CONF_GIID, DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER
 class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
     """A Verisure Data Update Coordinator."""
 
+    config_entry: ConfigEntry
+
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the Verisure hub."""
         self.imageseries: list[dict[str, str]] = []
-        self.entry = entry
         self._overview: list[dict] = []
 
         self.verisure = Verisure(
@@ -40,7 +41,11 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
         )
 
         super().__init__(
-            hass, LOGGER, name=DOMAIN, update_interval=DEFAULT_SCAN_INTERVAL
+            hass,
+            LOGGER,
+            config_entry=entry,
+            name=DOMAIN,
+            update_interval=DEFAULT_SCAN_INTERVAL,
         )
 
     async def async_login(self) -> bool:
@@ -55,7 +60,7 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
             return False
 
         await self.hass.async_add_executor_job(
-            self.verisure.set_giid, self.entry.data[CONF_GIID]
+            self.verisure.set_giid, self.config_entry.data[CONF_GIID]
         )
 
         return True

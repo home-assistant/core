@@ -34,7 +34,7 @@ def short_address(address: str) -> str:
 
 def name_from_discovery(discovery: MicroBotAdvertisement) -> str:
     """Get the name from a discovery."""
-    return f'{discovery.data["local_name"]} {short_address(discovery.address)}'
+    return f"{discovery.data['local_name']} {short_address(discovery.address)}"
 
 
 class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -42,9 +42,9 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize."""
-        self._errors = {}
+        self._errors: dict[str, str] = {}
         self._discovered_adv: MicroBotAdvertisement | None = None
         self._discovered_advs: dict[str, MicroBotAdvertisement] = {}
         self._client: MicroBotApiClient | None = None
@@ -85,7 +85,7 @@ class MicroBotConfigFlow(ConfigFlow, domain=DOMAIN):
         if discovery := self._discovered_adv:
             self._discovered_advs[discovery.address] = discovery
         else:
-            current_addresses = self._async_current_ids()
+            current_addresses = self._async_current_ids(include_ignore=False)
             for discovery_info in async_discovered_service_info(self.hass):
                 self._ble_device = discovery_info.device
                 address = discovery_info.address

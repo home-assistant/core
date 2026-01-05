@@ -8,7 +8,11 @@ from wyoming.info import (
     AsrModel,
     AsrProgram,
     Attribution,
+    HandleModel,
+    HandleProgram,
     Info,
+    IntentModel,
+    IntentProgram,
     Satellite,
     TtsProgram,
     TtsVoice,
@@ -65,6 +69,29 @@ TTS_INFO = Info(
         )
     ]
 )
+TTS_STREAMING_INFO = Info(
+    tts=[
+        TtsProgram(
+            name="Test Streaming TTS",
+            description="Test Streaming TTS",
+            installed=True,
+            attribution=TEST_ATTR,
+            voices=[
+                TtsVoice(
+                    name="Test Voice",
+                    description="Test Voice",
+                    installed=True,
+                    attribution=TEST_ATTR,
+                    languages=["en-US"],
+                    speakers=[TtsVoiceSpeaker(name="Test Speaker")],
+                    version=None,
+                )
+            ],
+            version=None,
+            supports_synthesize_streaming=True,
+        )
+    ]
+)
 WAKE_WORD_INFO = Info(
     wake=[
         WakeProgram(
@@ -77,6 +104,48 @@ WAKE_WORD_INFO = Info(
                     name="Test Model",
                     description="Test Model",
                     phrase="Test Phrase",
+                    installed=True,
+                    attribution=TEST_ATTR,
+                    languages=["en-US"],
+                    version=None,
+                )
+            ],
+            version=None,
+        )
+    ]
+)
+INTENT_INFO = Info(
+    intent=[
+        IntentProgram(
+            name="Test Intent",
+            description="Test Intent",
+            installed=True,
+            attribution=TEST_ATTR,
+            models=[
+                IntentModel(
+                    name="Test Model",
+                    description="Test Model",
+                    installed=True,
+                    attribution=TEST_ATTR,
+                    languages=["en-US"],
+                    version=None,
+                )
+            ],
+            version=None,
+        )
+    ]
+)
+HANDLE_INFO = Info(
+    handle=[
+        HandleProgram(
+            name="Test Handle",
+            description="Test Handle",
+            installed=True,
+            attribution=TEST_ATTR,
+            models=[
+                HandleModel(
+                    name="Test Model",
+                    description="Test Model",
                     installed=True,
                     attribution=TEST_ATTR,
                     languages=["en-US"],
@@ -109,9 +178,15 @@ class MockAsyncTcpClient:
         self.port: int | None = None
         self.written: list[Event] = []
         self.responses = responses
+        self.is_connected: bool | None = None
 
     async def connect(self) -> None:
         """Connect."""
+        self.is_connected = True
+
+    async def disconnect(self) -> None:
+        """Disconnect."""
+        self.is_connected = False
 
     async def write_event(self, event: Event):
         """Send."""
@@ -150,10 +225,10 @@ async def reload_satellite(
             return_value=SATELLITE_INFO,
         ),
         patch(
-            "homeassistant.components.wyoming.satellite.WyomingSatellite.run"
+            "homeassistant.components.wyoming.assist_satellite.WyomingAssistSatellite.run"
         ) as _run_mock,
     ):
         # _run_mock: satellite task does not actually run
         await hass.config_entries.async_reload(config_entry_id)
 
-    return hass.data[DOMAIN][config_entry_id].satellite.device
+    return hass.data[DOMAIN][config_entry_id].device

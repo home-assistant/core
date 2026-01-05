@@ -1,0 +1,118 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "network_error": "The Mastodon instance was not found.",
+      "unauthorized_error": "The credentials are incorrect.",
+      "unknown": "Unknown error occurred when connecting to the Mastodon instance."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "access_token": "[%key:common::config_flow::data::access_token%]",
+          "base_url": "[%key:common::config_flow::data::url%]",
+          "client_id": "Client key",
+          "client_secret": "Client secret"
+        },
+        "data_description": {
+          "access_token": "The access token for the application created within your Mastodon account.",
+          "base_url": "The URL of your Mastodon instance e.g. {example_url}.",
+          "client_id": "The client key for the application created within your Mastodon account.",
+          "client_secret": "The client secret for the application created within your Mastodon account."
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "followers": {
+        "name": "Followers",
+        "unit_of_measurement": "accounts"
+      },
+      "following": {
+        "name": "Following",
+        "unit_of_measurement": "[%key:component::mastodon::entity::sensor::followers::unit_of_measurement%]"
+      },
+      "posts": {
+        "name": "Posts",
+        "unit_of_measurement": "posts"
+      }
+    }
+  },
+  "exceptions": {
+    "idempotency_key_too_short": {
+      "message": "Idempotency key must be at least 4 characters long."
+    },
+    "integration_not_found": {
+      "message": "Integration \"{target}\" not found in registry."
+    },
+    "not_loaded": {
+      "message": "{target} is not loaded."
+    },
+    "not_whitelisted_directory": {
+      "message": "{media} is not a whitelisted directory."
+    },
+    "unable_to_send_message": {
+      "message": "Unable to send message."
+    },
+    "unable_to_upload_image": {
+      "message": "Unable to upload image {media_path}."
+    }
+  },
+  "selector": {
+    "post_visibility": {
+      "options": {
+        "direct": "Direct - Mentioned accounts only",
+        "private": "Private - Followers only",
+        "public": "Public - Visible to everyone",
+        "unlisted": "Unlisted - Public but not shown in public timelines"
+      }
+    }
+  },
+  "services": {
+    "post": {
+      "description": "Posts a status on your Mastodon account.",
+      "fields": {
+        "config_entry_id": {
+          "description": "Select the Mastodon account to post to.",
+          "name": "Mastodon account"
+        },
+        "content_warning": {
+          "description": "A content warning will be shown before the status text is shown (default: no content warning).",
+          "name": "Content warning"
+        },
+        "idempotency_key": {
+          "description": "A unique key for this post. If specified then subsequent posts with the same key will be ignored by your Mastodon instance. Mastodon holds keys for up to one hour (default: no idempotency key, which allows duplication).",
+          "name": "Idempotency key"
+        },
+        "language": {
+          "description": "The language of the post (default: Mastodon account preference).",
+          "name": "Language"
+        },
+        "media": {
+          "description": "Attach an image or video to the post.",
+          "name": "Media"
+        },
+        "media_description": {
+          "description": "If an image or video is attached, will add a description for this media for people with visual impairments.",
+          "name": "Media description"
+        },
+        "media_warning": {
+          "description": "If an image or video is attached, will mark the media as sensitive (default: no media warning).",
+          "name": "Media warning"
+        },
+        "status": {
+          "description": "The status to post.",
+          "name": "Status"
+        },
+        "visibility": {
+          "description": "The visibility of the post (default: account setting).",
+          "name": "Visibility"
+        }
+      },
+      "name": "Post"
+    }
+  }
+}

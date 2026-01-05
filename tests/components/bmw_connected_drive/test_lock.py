@@ -4,7 +4,6 @@ from unittest.mock import AsyncMock, patch
 
 from bimmer_connected.models import MyBMWRemoteServiceError
 from bimmer_connected.vehicle.remote_services import RemoteServices
-from freezegun import freeze_time
 import pytest
 import respx
 from syrupy.assertion import SnapshotAssertion
@@ -16,13 +15,18 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from . import check_remote_service_call, setup_mocked_integration
+from . import (
+    REMOTE_SERVICE_EXC_REASON,
+    REMOTE_SERVICE_EXC_TRANSLATION,
+    check_remote_service_call,
+    setup_mocked_integration,
+)
 
 from tests.common import snapshot_platform
 from tests.components.recorder.common import async_wait_recording_done
 
 
-@freeze_time("2023-06-22 10:30:00+00:00")
+@pytest.mark.freeze_time("2023-06-22 10:30:00+00:00")
 @pytest.mark.usefixtures("bmw_fixture")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_entity_state_attrs(
@@ -118,11 +122,11 @@ async def test_service_call_fail(
     monkeypatch.setattr(
         RemoteServices,
         "trigger_remote_service",
-        AsyncMock(side_effect=MyBMWRemoteServiceError),
+        AsyncMock(side_effect=MyBMWRemoteServiceError(REMOTE_SERVICE_EXC_REASON)),
     )
 
     # Test
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError, match=REMOTE_SERVICE_EXC_TRANSLATION):
         await hass.services.async_call(
             "lock",
             service,

@@ -8,27 +8,36 @@ from typing import Any
 import switchbot
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import DOMAIN
-from .coordinator import SwitchbotDataUpdateCoordinator
-from .entity import SwitchbotSwitchedEntity
+from .coordinator import SwitchbotConfigEntry, SwitchbotDataUpdateCoordinator
+from .entity import SwitchbotSwitchedEntity, exception_handler
 
-# Initialize the logger
-_LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: SwitchbotConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Switchbot based on a config entry."""
-    coordinator: SwitchbotDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([SwitchBotSwitch(coordinator)])
+    coordinator = entry.runtime_data
+
+    if isinstance(coordinator.device, switchbot.SwitchbotRelaySwitch2PM):
+        entries = [
+            SwitchbotMultiChannelSwitch(coordinator, channel)
+            for channel in range(1, coordinator.device.channel + 1)
+        ]
+        async_add_entities(entries)
+    else:
+        async_add_entities([SwitchBotSwitch(coordinator)])
 
 
 class SwitchBotSwitch(SwitchbotSwitchedEntity, SwitchEntity, RestoreEntity):
@@ -71,3 +80,49 @@ class SwitchBotSwitch(SwitchbotSwitchedEntity, SwitchEntity, RestoreEntity):
             **super().extra_state_attributes,
             "switch_mode": self._device.switch_mode(),
         }
+
+
+class SwitchbotMultiChannelSwitch(SwitchbotSwitchedEntity, SwitchEntity):
+    """Representation of a Switchbot multi-channel switch."""
+
+    _attr_device_class = SwitchDeviceClass.SWITCH
+    _device: switchbot.Switchbot
+    _attr_name = None
+
+    def __init__(
+        self, coordinator: SwitchbotDataUpdateCoordinator, channel: int
+    ) -> None:
+        """Initialize the Switchbot."""
+        super().__init__(coordinator)
+        self._channel = channel
+        self._attr_unique_id = f"{coordinator.base_unique_id}-{channel}"
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{coordinator.base_unique_id}-channel-{channel}")},
+            manufacturer="SwitchBot",
+            model_id="RelaySwitch2PM",
+            name=f"{coordinator.device_name} Channel {channel}",
+        )
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return true if device is on."""
+        return self._device.is_on(self._channel)
+
+    @exception_handler
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn device on."""
+        _LOGGER.debug(
+            "Turn Switchbot device on %s, channel %d", self._address, self._channel
+        )
+        await self._device.turn_on(self._channel)
+        self.async_write_ha_state()
+
+    @exception_handler
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn device off."""
+        _LOGGER.debug(
+            "Turn Switchbot device off %s, channel %d", self._address, self._channel
+        )
+        await self._device.turn_off(self._channel)
+        self.async_write_ha_state()

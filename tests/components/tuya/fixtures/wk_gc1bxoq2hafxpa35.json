@@ -1,0 +1,110 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "\u041f\u043e\u043b\u043e\u0442\u0435\u043d\u0446\u043e\u0441\u0443\u0448\u0438\u0442\u0435\u043b\u044c",
+  "category": "wk",
+  "product_id": "gc1bxoq2hafxpa35",
+  "product_name": "ET-44W",
+  "online": true,
+  "sub": false,
+  "time_zone": "+03:00",
+  "active_time": "2025-02-08T21:08:00+00:00",
+  "create_time": "2025-02-08T21:08:00+00:00",
+  "update_time": "2025-02-08T21:08:00+00:00",
+  "function": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["holiday"]
+      }
+    },
+    "temp_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": 50,
+        "max": 400,
+        "scale": 1,
+        "step": 5
+      }
+    },
+    "temp_set_f": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2109",
+        "min": 410,
+        "max": 1040,
+        "scale": 1,
+        "step": 10
+      }
+    }
+  },
+  "status_range": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "mode": {
+      "type": "Enum",
+      "value": {
+        "range": ["holiday"]
+      }
+    },
+    "temp_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": 50,
+        "max": 400,
+        "scale": 1,
+        "step": 5
+      }
+    },
+    "temp_set_f": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2109",
+        "min": 410,
+        "max": 1040,
+        "scale": 1,
+        "step": 10
+      }
+    },
+    "temp_current": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2103",
+        "min": 0,
+        "max": 450,
+        "scale": 1,
+        "step": 5
+      }
+    },
+    "temp_current_f": {
+      "type": "Integer",
+      "value": {
+        "unit": "\u2109",
+        "min": 320,
+        "max": 1130,
+        "scale": 1,
+        "step": 10
+      }
+    }
+  },
+  "status": {
+    "switch": false,
+    "mode": "hold",
+    "temp_set": 50,
+    "temp_set_f": 410,
+    "temp_current": 253,
+    "temp_current_f": 320
+  },
+  "set_up": true,
+  "support_local": true
+}

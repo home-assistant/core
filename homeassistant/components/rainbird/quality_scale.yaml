@@ -1,0 +1,89 @@
+rules:
+  # Bronze
+  config-flow: done
+  brands: done
+  dependency-transparency: done
+  common-modules: done
+  has-entity-name: done
+  action-setup:
+    status: done
+    comment: |
+      The integration only has an entity service, registered in the platform.
+  appropriate-polling:
+    status: done
+    comment: |
+      Rainbird devices are local. Irrigation valve/controller status is polled
+      once per minute to get fast updates when turning on/off the valves.
+      The irrigation schedule uses a 15 minute poll interval since it rarely
+      changes.
+
+      Rainbird devices can only accept a single http connection, so this uses a
+      an aiohttp.ClientSession with a connection limit, and also uses a request
+      debouncer.
+  test-before-configure: done
+  entity-event-setup:
+    status: exempt
+    comment: Integration is polling and does not subscribe to events.
+  unique-config-entry: done
+  entity-unique-id: done
+  docs-installation-instructions:
+    status: todo
+    comment: |
+      The introduction can be improved and is missing pre-requisites such as
+      installing the app.
+  docs-removal-instructions: todo
+  test-before-setup: done
+  docs-high-level-description: done
+  config-flow-test-coverage:
+    status: todo
+    comment: |
+      All config flow tests should finish with CREATE_ENTRY and ABORT to
+      test they are able to recover from errors
+  docs-actions: done
+  runtime-data: done
+
+  # Silver
+  log-when-unavailable: done
+  config-entry-unloading: done
+  reauthentication-flow: done
+  action-exceptions: done
+  docs-installation-parameters:
+    status: todo
+    comment: The documentation does not mention installation parameters
+  integration-owner: done
+  parallel-updates:
+    status: todo
+    comment: The integration does not explicitly set a number of parallel updates.
+  test-coverage: done
+  docs-configuration-parameters:
+    status: todo
+    comment: The documentation for configuration parameters could be improved.
+  entity-unavailable: done
+
+  # Gold
+  docs-examples: todo
+  discovery-update-info: todo
+  entity-device-class: todo
+  entity-translations: todo
+  docs-data-update: todo
+  entity-disabled-by-default: todo
+  discovery: todo
+  exception-translations: todo
+  devices: todo
+  docs-supported-devices: todo
+  icon-translations: todo
+  docs-known-limitations: todo
+  stale-devices: todo
+  docs-supported-functions: todo
+  repair-issues: todo
+  reconfiguration-flow: todo
+  entity-category: todo
+  dynamic-devices: todo
+  docs-troubleshooting: todo
+  diagnostics: todo
+  docs-use-cases: todo
+
+  # Platinum
+  async-dependency: todo
+  strict-typing: todo
+  inject-websession: todo

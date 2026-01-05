@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Coroutine
 from typing import TYPE_CHECKING
 from unittest.mock import call, patch
 
@@ -11,7 +12,7 @@ import zigpy.state
 
 from homeassistant.components import zha
 from homeassistant.components.zha import silabs_multiprotocol
-from homeassistant.components.zha.core.helpers import get_zha_gateway
+from homeassistant.components.zha.helpers import get_zha_data
 from homeassistant.core import HomeAssistant
 
 if TYPE_CHECKING:
@@ -25,7 +26,9 @@ def required_platform_only():
         yield
 
 
-async def test_async_get_channel_active(hass: HomeAssistant, setup_zha) -> None:
+async def test_async_get_channel_active(
+    hass: HomeAssistant, setup_zha: Callable[..., Coroutine[None]]
+) -> None:
     """Test reading channel with an active ZHA installation."""
     await setup_zha()
 
@@ -33,13 +36,14 @@ async def test_async_get_channel_active(hass: HomeAssistant, setup_zha) -> None:
 
 
 async def test_async_get_channel_missing(
-    hass: HomeAssistant, setup_zha, zigpy_app_controller: ControllerApplication
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_app_controller: ControllerApplication,
 ) -> None:
     """Test reading channel with an inactive ZHA installation, no valid channel."""
     await setup_zha()
 
-    gateway = get_zha_gateway(hass)
-    await zha.async_unload_entry(hass, gateway.config_entry)
+    await zha.async_unload_entry(hass, get_zha_data(hass).config_entry)
 
     # Network settings were never loaded for whatever reason
     zigpy_app_controller.state.network_info = zigpy.state.NetworkInfo()
@@ -53,7 +57,9 @@ async def test_async_get_channel_no_zha(hass: HomeAssistant) -> None:
     assert await silabs_multiprotocol.async_get_channel(hass) is None
 
 
-async def test_async_using_multipan_active(hass: HomeAssistant, setup_zha) -> None:
+async def test_async_using_multipan_active(
+    hass: HomeAssistant, setup_zha: Callable[..., Coroutine[None]]
+) -> None:
     """Test async_using_multipan with an active ZHA installation."""
     await setup_zha()
 
@@ -66,7 +72,9 @@ async def test_async_using_multipan_no_zha(hass: HomeAssistant) -> None:
 
 
 async def test_change_channel(
-    hass: HomeAssistant, setup_zha, zigpy_app_controller: ControllerApplication
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_app_controller: ControllerApplication,
 ) -> None:
     """Test changing the channel."""
     await setup_zha()
@@ -90,7 +98,7 @@ async def test_change_channel_no_zha(
 @pytest.mark.parametrize(("delay", "sleep"), [(0, 0), (5, 0), (15, 15 - 10.27)])
 async def test_change_channel_delay(
     hass: HomeAssistant,
-    setup_zha,
+    setup_zha: Callable[..., Coroutine[None]],
     zigpy_app_controller: ControllerApplication,
     delay: float,
     sleep: float,

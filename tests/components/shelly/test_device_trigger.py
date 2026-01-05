@@ -7,8 +7,8 @@ import pytest
 from pytest_unordered import unordered
 
 from homeassistant.components import automation
-from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.device_automation.exceptions import (
+from homeassistant.components.device_automation import (
+    DeviceAutomationType,
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.components.shelly.const import (
@@ -25,7 +25,7 @@ from homeassistant.setup import async_setup_component
 
 from . import init_integration
 
-from tests.common import MockConfigEntry, async_get_device_automations
+from tests.common import async_get_device_automations
 
 
 @pytest.mark.parametrize(
@@ -68,7 +68,7 @@ async def test_get_triggers_block_device(
                 CONF_SUBTYPE: "button1",
                 "metadata": {},
             }
-            for type_ in ["single", "long"]
+            for type_ in ("single", "long")
         ]
 
     triggers = await async_get_device_automations(
@@ -94,14 +94,14 @@ async def test_get_triggers_rpc_device(
             CONF_SUBTYPE: "button1",
             "metadata": {},
         }
-        for trigger_type in [
+        for trigger_type in (
             "btn_down",
             "btn_up",
             "single_push",
             "double_push",
             "triple_push",
             "long_push",
-        ]
+        )
     ]
 
     triggers = await async_get_device_automations(
@@ -127,7 +127,7 @@ async def test_get_triggers_button(
             CONF_SUBTYPE: "button",
             "metadata": {},
         }
-        for trigger_type in ["single", "double", "triple", "long"]
+        for trigger_type in ("single", "double", "triple", "long")
     ]
 
     triggers = await async_get_device_automations(
@@ -162,14 +162,16 @@ async def test_get_triggers_for_invalid_device_id(
 ) -> None:
     """Test error raised for invalid shelly device_id."""
     await init_integration(hass, 1)
-    config_entry = MockConfigEntry(domain=DOMAIN, data={})
-    config_entry.add_to_hass(hass)
+    config_entry = await init_integration(hass, 1, data={}, skip_setup=True)
     invalid_device = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
 
-    with pytest.raises(InvalidDeviceAutomationConfig):
+    with pytest.raises(
+        InvalidDeviceAutomationConfig,
+        match="not found while configuring device automation triggers",
+    ):
         await async_get_device_automations(
             hass, DeviceAutomationType.TRIGGER, invalid_device.id
         )
@@ -178,7 +180,7 @@ async def test_get_triggers_for_invalid_device_id(
 async def test_if_fires_on_click_event_block_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
     mock_block_device: Mock,
 ) -> None:
     """Test for click_event trigger firing for block device."""
@@ -215,14 +217,14 @@ async def test_if_fires_on_click_event_block_device(
     hass.bus.async_fire(EVENT_SHELLY_CLICK, message)
     await hass.async_block_till_done()
 
-    assert len(calls) == 1
-    assert calls[0].data["some"] == "test_trigger_single_click"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "test_trigger_single_click"
 
 
 async def test_if_fires_on_click_event_rpc_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
     mock_rpc_device: Mock,
 ) -> None:
     """Test for click_event trigger firing for rpc device."""
@@ -259,14 +261,14 @@ async def test_if_fires_on_click_event_rpc_device(
     hass.bus.async_fire(EVENT_SHELLY_CLICK, message)
     await hass.async_block_till_done()
 
-    assert len(calls) == 1
-    assert calls[0].data["some"] == "test_trigger_single_push"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "test_trigger_single_push"
 
 
 async def test_validate_trigger_block_device_not_ready(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
     mock_block_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -304,14 +306,14 @@ async def test_validate_trigger_block_device_not_ready(
     hass.bus.async_fire(EVENT_SHELLY_CLICK, message)
     await hass.async_block_till_done()
 
-    assert len(calls) == 1
-    assert calls[0].data["some"] == "test_trigger_single_click"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "test_trigger_single_click"
 
 
 async def test_validate_trigger_rpc_device_not_ready(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -349,8 +351,8 @@ async def test_validate_trigger_rpc_device_not_ready(
     hass.bus.async_fire(EVENT_SHELLY_CLICK, message)
     await hass.async_block_till_done()
 
-    assert len(calls) == 1
-    assert calls[0].data["some"] == "test_trigger_single_push"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "test_trigger_single_push"
 
 
 async def test_validate_trigger_invalid_triggers(
@@ -385,13 +387,16 @@ async def test_validate_trigger_invalid_triggers(
         },
     )
 
-    assert "Invalid (type,subtype): ('single', 'button3')" in caplog.text
+    assert (
+        "Invalid device automation trigger (type, subtype): ('single', 'button3')"
+        in caplog.text
+    )
 
 
 async def test_rpc_no_runtime_data(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -429,14 +434,14 @@ async def test_rpc_no_runtime_data(
     hass.bus.async_fire(EVENT_SHELLY_CLICK, message)
     await hass.async_block_till_done()
 
-    assert len(calls) == 1
-    assert calls[0].data["some"] == "test_trigger_single_push"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "test_trigger_single_push"
 
 
 async def test_block_no_runtime_data(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
     mock_block_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -474,5 +479,5 @@ async def test_block_no_runtime_data(
     hass.bus.async_fire(EVENT_SHELLY_CLICK, message)
     await hass.async_block_till_done()
 
-    assert len(calls) == 1
-    assert calls[0].data["some"] == "test_trigger_single"
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == "test_trigger_single"

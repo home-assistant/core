@@ -2,27 +2,23 @@
 
 from __future__ import annotations
 
-import logging
-
 from quantum_gateway import QuantumGatewayScanner
 from requests.exceptions import RequestException
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN,
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_SSL
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-_LOGGER = logging.getLogger(__name__)
+from .const import DEFAULT_HOST, LOGGER
 
-DEFAULT_HOST = "myfiosgateway.com"
-
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Optional(CONF_SSL, default=True): cv.boolean,
@@ -35,7 +31,7 @@ def get_scanner(
     hass: HomeAssistant, config: ConfigType
 ) -> QuantumGatewayDeviceScanner | None:
     """Validate the configuration and return a Quantum Gateway scanner."""
-    scanner = QuantumGatewayDeviceScanner(config[DOMAIN])
+    scanner = QuantumGatewayDeviceScanner(config[DEVICE_TRACKER_DOMAIN])
 
     return scanner if scanner.success_init else None
 
@@ -43,13 +39,13 @@ def get_scanner(
 class QuantumGatewayDeviceScanner(DeviceScanner):
     """Class which queries a Quantum Gateway."""
 
-    def __init__(self, config):
+    def __init__(self, config) -> None:
         """Initialize the scanner."""
 
         self.host = config[CONF_HOST]
         self.password = config[CONF_PASSWORD]
         self.use_https = config[CONF_SSL]
-        _LOGGER.debug("Initializing")
+        LOGGER.debug("Initializing")
 
         try:
             self.quantum = QuantumGatewayScanner(
@@ -58,10 +54,10 @@ class QuantumGatewayDeviceScanner(DeviceScanner):
             self.success_init = self.quantum.success_init
         except RequestException:
             self.success_init = False
-            _LOGGER.error("Unable to connect to gateway. Check host")
+            LOGGER.error("Unable to connect to gateway. Check host")
 
         if not self.success_init:
-            _LOGGER.error("Unable to login to gateway. Check password and host")
+            LOGGER.error("Unable to login to gateway. Check password and host")
 
     def scan_devices(self):
         """Scan for new devices and return a list of found MACs."""
@@ -69,7 +65,7 @@ class QuantumGatewayDeviceScanner(DeviceScanner):
         try:
             connected_devices = self.quantum.scan_devices()
         except RequestException:
-            _LOGGER.error("Unable to scan devices. Check connection to router")
+            LOGGER.error("Unable to scan devices. Check connection to router")
         return connected_devices
 
     def get_device_name(self, device):

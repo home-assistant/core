@@ -6,11 +6,10 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.met_eireann import UPDATE_INTERVAL
 from homeassistant.components.met_eireann.const import DOMAIN
+from homeassistant.components.met_eireann.coordinator import UPDATE_INTERVAL
 from homeassistant.components.weather import (
     DOMAIN as WEATHER_DOMAIN,
-    LEGACY_SERVICE_GET_FORECAST,
     SERVICE_GET_FORECASTS,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -65,10 +64,7 @@ async def test_weather(hass: HomeAssistant, mock_weather) -> None:
 
 @pytest.mark.parametrize(
     ("service"),
-    [
-        SERVICE_GET_FORECASTS,
-        LEGACY_SERVICE_GET_FORECAST,
-    ],
+    [SERVICE_GET_FORECASTS],
 )
 async def test_forecast_service(
     hass: HomeAssistant,

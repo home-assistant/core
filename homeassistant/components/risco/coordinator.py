@@ -10,11 +10,13 @@ from pyrisco import CannotConnectError, OperationError, RiscoCloud, Unauthorized
 from pyrisco.cloud.alarm import Alarm
 from pyrisco.cloud.event import Event
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
 LAST_EVENT_STORAGE_VERSION = 1
 LAST_EVENT_TIMESTAMP_KEY = "last_event_timestamp"
@@ -24,17 +26,26 @@ _LOGGER = logging.getLogger(__name__)
 class RiscoDataUpdateCoordinator(DataUpdateCoordinator[Alarm]):
     """Class to manage fetching risco data."""
 
+    config_entry: ConfigEntry
+
     def __init__(
-        self, hass: HomeAssistant, risco: RiscoCloud, scan_interval: int
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        risco: RiscoCloud,
     ) -> None:
         """Initialize global risco data updater."""
         self.risco = risco
-        interval = timedelta(seconds=scan_interval)
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
-            update_interval=interval,
+            update_interval=timedelta(
+                seconds=config_entry.options.get(
+                    CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+                )
+            ),
         )
 
     async def _async_update_data(self) -> Alarm:
@@ -48,20 +59,27 @@ class RiscoDataUpdateCoordinator(DataUpdateCoordinator[Alarm]):
 class RiscoEventsDataUpdateCoordinator(DataUpdateCoordinator[list[Event]]):
     """Class to manage fetching risco data."""
 
+    config_entry: ConfigEntry
+
     def __init__(
-        self, hass: HomeAssistant, risco: RiscoCloud, eid: str, scan_interval: int
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        risco: RiscoCloud,
     ) -> None:
         """Initialize global risco data updater."""
         self.risco = risco
         self._store = Store[dict[str, Any]](
-            hass, LAST_EVENT_STORAGE_VERSION, f"risco_{eid}_last_event_timestamp"
+            hass,
+            LAST_EVENT_STORAGE_VERSION,
+            f"risco_{config_entry.entry_id}_last_event_timestamp",
         )
-        interval = timedelta(seconds=scan_interval)
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=f"{DOMAIN}_events",
-            update_interval=interval,
+            update_interval=timedelta(seconds=60),
         )
 
     async def _async_update_data(self) -> list[Event]:

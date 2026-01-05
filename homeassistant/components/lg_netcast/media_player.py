@@ -5,29 +5,23 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
-from pylgnetcast import LG_COMMAND, LgNetCastClient, LgNetCastError
+from pylgnetcast import LG_COMMAND, LgNetCastError
 from requests import RequestException
-import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA,
     MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_MODEL, CONF_NAME
+from homeassistant.const import CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.trigger import PluggableAction
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from . import LgNetCastConfigEntry
 from .const import ATTR_MANUFACTURER, DOMAIN
 from .triggers.turn_on import async_get_turn_on_trigger
 
@@ -49,55 +43,20 @@ SUPPORT_LGTV = (
     | MediaPlayerEntityFeature.STOP
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_ACCESS_TOKEN): vol.All(cv.string, vol.Length(max=6)),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: LgNetCastConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a LG Netcast Media Player from a config_entry."""
-
-    host = config_entry.data[CONF_HOST]
-    access_token = config_entry.data[CONF_ACCESS_TOKEN]
     unique_id = config_entry.unique_id
     name = config_entry.data.get(CONF_NAME, DEFAULT_NAME)
     model = config_entry.data[CONF_MODEL]
 
-    client = LgNetCastClient(host, access_token)
-
-    hass.data[DOMAIN][config_entry.entry_id] = client
+    client = config_entry.runtime_data
 
     async_add_entities([LgTVDevice(client, name, model, unique_id=unique_id)])
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up the LG TV platform."""
-
-    host = config.get(CONF_HOST)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-    )
-
-    if (
-        result.get("type") == FlowResultType.ABORT
-        and result.get("reason") == "cannot_connect"
-    ):
-        raise PlatformNotReady(f"Connection error while connecting to {host}")
 
 
 class LgTVDevice(MediaPlayerEntity):

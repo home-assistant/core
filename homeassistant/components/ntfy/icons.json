@@ -1,0 +1,81 @@
+{
+  "entity": {
+    "event": {
+      "subscribe": {
+        "default": "mdi:message-outline"
+      }
+    },
+    "notify": {
+      "publish": {
+        "default": "mdi:console-line"
+      }
+    },
+    "sensor": {
+      "attachment_bandwidth": {
+        "default": "mdi:cloud-upload"
+      },
+      "attachment_expiry_duration": {
+        "default": "mdi:cloud-clock"
+      },
+      "attachment_file_size": {
+        "default": "mdi:file-alert"
+      },
+      "attachment_total_size": {
+        "default": "mdi:database-arrow-right"
+      },
+      "attachment_total_size_limit": {
+        "default": "mdi:database-alert"
+      },
+      "attachment_total_size_remaining": {
+        "default": "mdi:database-plus"
+      },
+      "calls": {
+        "default": "mdi:phone-outgoing"
+      },
+      "calls_limit": {
+        "default": "mdi:phone-alert"
+      },
+      "calls_remaining": {
+        "default": "mdi:phone-plus"
+      },
+      "emails": {
+        "default": "mdi:email-arrow-right-outline"
+      },
+      "emails_limit": {
+        "default": "mdi:email-alert-outline"
+      },
+      "emails_remaining": {
+        "default": "mdi:email-plus-outline"
+      },
+      "messages": {
+        "default": "mdi:message-arrow-right-outline"
+      },
+      "messages_expiry_duration": {
+        "default": "mdi:message-text-clock"
+      },
+      "messages_limit": {
+        "default": "mdi:message-alert-outline"
+      },
+      "messages_remaining": {
+        "default": "mdi:message-plus-outline"
+      },
+      "reservations": {
+        "default": "mdi:lock"
+      },
+      "reservations_limit": {
+        "default": "mdi:lock-alert"
+      },
+      "reservations_remaining": {
+        "default": "mdi:lock-plus"
+      },
+      "tier": {
+        "default": "mdi:star"
+      }
+    }
+  },
+  "services": {
+    "publish": {
+      "service": "mdi:send"
+    }
+  }
+}

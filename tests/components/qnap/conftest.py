@@ -1,9 +1,9 @@
 """Setup the QNAP tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 TEST_HOST = "1.2.3.4"
 TEST_USERNAME = "admin"

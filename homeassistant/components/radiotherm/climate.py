@@ -20,7 +20,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DOMAIN
 from .coordinator import RadioThermUpdateCoordinator
@@ -32,9 +32,17 @@ PRESET_HOLIDAY = "holiday"
 
 PRESET_ALTERNATE = "alternate"
 
+PRESET_DEFAULT = "default"
+
 STATE_CIRCULATE = "circulate"
 
-PRESET_MODES = [PRESET_HOME, PRESET_ALTERNATE, PRESET_AWAY, PRESET_HOLIDAY]
+PRESET_MODES = [
+    PRESET_DEFAULT,
+    PRESET_HOME,
+    PRESET_ALTERNATE,
+    PRESET_AWAY,
+    PRESET_HOLIDAY,
+]
 
 OPERATION_LIST = [HVACMode.AUTO, HVACMode.COOL, HVACMode.HEAT, HVACMode.OFF]
 CT30_FAN_OPERATION_LIST = [FAN_ON, FAN_AUTO]
@@ -67,6 +75,7 @@ CODE_TO_TEMP_STATE = {0: HVACAction.IDLE, 1: HVACAction.HEATING, 2: HVACAction.C
 CODE_TO_FAN_STATE = {0: FAN_OFF, 1: FAN_ON}
 
 PRESET_MODE_TO_CODE = {
+    PRESET_DEFAULT: -1,
     PRESET_HOME: 0,
     PRESET_ALTERNATE: 1,
     PRESET_AWAY: 2,
@@ -93,7 +102,7 @@ def round_temp(temperature):
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up climate for a radiotherm device."""
     coordinator: RadioThermUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
@@ -107,7 +116,6 @@ class RadioThermostat(RadioThermostatEntity, ClimateEntity):
     _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
     _attr_precision = PRECISION_HALVES
     _attr_name = None
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, coordinator: RadioThermUpdateCoordinator) -> None:
         """Initialize the thermostat."""

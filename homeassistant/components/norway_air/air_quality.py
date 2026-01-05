@@ -8,11 +8,14 @@ import logging
 import metno
 import voluptuous as vol
 
-from homeassistant.components.air_quality import PLATFORM_SCHEMA, AirQualityEntity
+from homeassistant.components.air_quality import (
+    PLATFORM_SCHEMA as AIR_QUALITY_PLATFORM_SCHEMA,
+    AirQualityEntity,
+)
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -26,7 +29,7 @@ DEFAULT_NAME = "Air quality Norway"
 
 OVERRIDE_URL = "https://aa015h6buqvih86i1.api.met.no/weatherapi/airqualityforecast/0.1/"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = AIR_QUALITY_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_FORECAST, default=DEFAULT_FORECAST): vol.Coerce(int),
         vol.Optional(CONF_LATITUDE): cv.latitude,

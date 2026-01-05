@@ -9,7 +9,7 @@ from typing import Any, cast
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.helpers import config_entry_oauth2_flow
 
@@ -22,8 +22,6 @@ class OAuth2FlowHandler(
     """Config flow to handle Google Mail OAuth2 authentication."""
 
     DOMAIN = DOMAIN
-
-    reauth_entry: ConfigEntry | None = None
 
     @property
     def logger(self) -> logging.Logger:
@@ -44,9 +42,6 @@ class OAuth2FlowHandler(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
-        self.reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -68,18 +63,15 @@ class OAuth2FlowHandler(
         credentials = Credentials(data[CONF_TOKEN][CONF_ACCESS_TOKEN])
         email = await self.hass.async_add_executor_job(_get_profile)
 
-        if not self.reauth_entry:
-            await self.async_set_unique_id(email)
+        await self.async_set_unique_id(email)
+        if self.source != SOURCE_REAUTH:
             self._abort_if_unique_id_configured()
 
             return self.async_create_entry(title=email, data=data)
 
-        if self.reauth_entry.unique_id == email:
-            self.hass.config_entries.async_update_entry(self.reauth_entry, data=data)
-            await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
-            return self.async_abort(reason="reauth_successful")
-
-        return self.async_abort(
+        reauth_entry = self._get_reauth_entry()
+        self._abort_if_unique_id_mismatch(
             reason="wrong_account",
-            description_placeholders={"email": cast(str, self.reauth_entry.unique_id)},
+            description_placeholders={"email": cast(str, reauth_entry.unique_id)},
         )
+        return self.async_update_reload_and_abort(reauth_entry, data=data)

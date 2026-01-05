@@ -1,0 +1,62 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "indoor_unit_auxiliary_pump_state": {
+        "default": "mdi:pump"
+      },
+      "indoor_unit_dhw_valve_or_pump_state": {
+        "default": "mdi:pump"
+      },
+      "indoor_unit_electric_heater_state": {
+        "default": "mdi:heating-coil"
+      },
+      "indoor_unit_gas_boiler_state": {
+        "default": "mdi:toggle-switch"
+      },
+      "indoor_unit_water_pump_state": {
+        "default": "mdi:pump"
+      }
+    },
+    "sensor": {
+      "central_heating_flow_volume": {
+        "default": "mdi:pump"
+      },
+      "ch_inlet_temperature": {
+        "default": "mdi:radiator"
+      },
+      "compressor_percentage": {
+        "default": "mdi:fan"
+      },
+      "compressor_rpm": {
+        "default": "mdi:fan"
+      },
+      "cop": {
+        "default": "mdi:speedometer"
+      },
+      "dhw_flow_volume": {
+        "default": "mdi:pump"
+      },
+      "electricity_used": {
+        "default": "mdi:flash"
+      },
+      "heat_pump_state": {
+        "default": "mdi:state-machine"
+      },
+      "outside_temperature": {
+        "default": "mdi:home-thermometer-outline"
+      },
+      "power_input": {
+        "default": "mdi:lightning-bolt"
+      },
+      "power_output": {
+        "default": "mdi:heat-wave"
+      },
+      "thermostat_room_temperature": {
+        "default": "mdi:home-thermometer"
+      },
+      "thermostat_room_temperature_setpoint": {
+        "default": "mdi:home-thermometer"
+      }
+    }
+  }
+}

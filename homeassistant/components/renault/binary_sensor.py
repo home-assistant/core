@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from renault_api.kamereon.enums import ChargeState, PlugState
@@ -13,11 +14,24 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import RenaultConfigEntry
 from .entity import RenaultDataEntity, RenaultDataEntityDescription
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
+_PLUG_FROM_CHARGE_STATUS: set[ChargeState] = {
+    ChargeState.CHARGE_IN_PROGRESS,
+    ChargeState.WAITING_FOR_CURRENT_CHARGE,
+    ChargeState.CHARGE_ENDED,
+    ChargeState.V2G_CHARGING_NORMAL,
+    ChargeState.V2G_CHARGING_WAITING,
+    ChargeState.V2G_DISCHARGING,
+    ChargeState.WAITING_FOR_A_PLANNED_CHARGE,
+}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -27,14 +41,15 @@ class RenaultBinarySensorEntityDescription(
 ):
     """Class describing Renault binary sensor entities."""
 
-    on_key: str
-    on_value: StateType
+    on_key: str | None = None
+    on_value: StateType | None = None
+    value_lambda: Callable[[RenaultBinarySensor], bool | None] | None = None
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: RenaultConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Renault entities from config entry."""
     entities: list[RenaultBinarySensor] = [
@@ -56,9 +71,31 @@ class RenaultBinarySensor(
     @property
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
+
+        if self.entity_description.value_lambda is not None:
+            return self.entity_description.value_lambda(self)
+        if self.entity_description.on_key is None:
+            raise NotImplementedError("Either value_lambda or on_key must be set")
         if (data := self._get_data_attr(self.entity_description.on_key)) is None:
             return None
+
         return data == self.entity_description.on_value
+
+
+def _plugged_in_value_lambda(self: RenaultBinarySensor) -> bool | None:
+    """Return true if the vehicle is plugged in."""
+
+    data = self.coordinator.data
+    plug_status = data.get_plug_status() if data else None
+
+    if plug_status is not None:
+        return plug_status == PlugState.PLUGGED
+
+    charging_status = data.get_charging_status() if data else None
+    if charging_status is not None and charging_status in _PLUG_FROM_CHARGE_STATUS:
+        return True
+
+    return None
 
 
 BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = tuple(
@@ -67,8 +104,7 @@ BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = tuple(
             key="plugged_in",
             coordinator="battery",
             device_class=BinarySensorDeviceClass.PLUG,
-            on_key="plugStatus",
-            on_value=PlugState.PLUGGED.value,
+            value_lambda=_plugged_in_value_lambda,
         ),
         RenaultBinarySensorEntityDescription(
             key="charging",
@@ -81,7 +117,7 @@ BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = tuple(
             key="hvac_status",
             coordinator="hvac_status",
             on_key="hvacStatus",
-            on_value=2,
+            on_value="on",
             translation_key="hvac_status",
         ),
         RenaultBinarySensorEntityDescription(
@@ -104,13 +140,13 @@ BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = tuple(
     ]
     + [
         RenaultBinarySensorEntityDescription(
-            key=f"{door.replace(' ','_').lower()}_door_status",
+            key=f"{door.replace(' ', '_').lower()}_door_status",
             coordinator="lock_status",
             # On means open, Off means closed
             device_class=BinarySensorDeviceClass.DOOR,
-            on_key=f"doorStatus{door.replace(' ','')}",
+            on_key=f"doorStatus{door.replace(' ', '')}",
             on_value="open",
-            translation_key=f"{door.lower().replace(' ','_')}_door_status",
+            translation_key=f"{door.lower().replace(' ', '_')}_door_status",
         )
         for door in ("Rear Left", "Rear Right", "Driver", "Passenger")
     ],

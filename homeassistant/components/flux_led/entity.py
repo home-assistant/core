@@ -89,7 +89,9 @@ class FluxEntity(CoordinatorEntity[FluxLedUpdateCoordinator]):
             self._attr_unique_id = f"{base_unique_id}_{key}"
         else:
             self._attr_unique_id = base_unique_id
-        self._attr_device_info = _async_device_info(self._device, coordinator.entry)
+        self._attr_device_info = _async_device_info(
+            self._device, coordinator.config_entry
+        )
 
     async def _async_ensure_device_on(self) -> None:
         """Turn the device on if it needs to be turned on before a command."""

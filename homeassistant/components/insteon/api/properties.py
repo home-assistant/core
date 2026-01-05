@@ -22,7 +22,7 @@ import voluptuous_serialize
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 from ..const import (
     DEVICE_ADDRESS,
@@ -85,11 +85,11 @@ def get_schema(prop, name, groups):
     if name == LOAD_BUTTON:
         button_list = {group: groups[group].name for group in groups}
         return _list_schema(name, button_list)
-    if prop.value_type == bool:
+    if prop.value_type is bool:
         return _bool_schema(name)
-    if prop.value_type == int:
+    if prop.value_type is int:
         return _byte_schema(name)
-    if prop.value_type == float:
+    if prop.value_type is float:
         return _float_schema(name)
     if prop.value_type == ToggleMode:
         return _list_schema(name, TOGGLE_MODES)
@@ -282,6 +282,8 @@ async def websocket_reset_properties(
         notify_device_not_found(connection, msg, INSTEON_DEVICE_NOT_FOUND)
         return
 
+    for prop in device.configuration.values():
+        prop.new_value = None
     for prop in device.operating_flags:
         device.operating_flags[prop].new_value = None
     for prop in device.properties:

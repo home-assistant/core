@@ -1,7 +1,7 @@
 """Tests for the WLED switch platform."""
 
-import json
-from unittest.mock import MagicMock
+from collections.abc import Generator
+from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -9,7 +9,7 @@ from syrupy.assertion import SnapshotAssertion
 from wled import Device as WLEDDevice, WLEDConnectionError, WLEDError
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.components.wled.const import SCAN_INTERVAL
+from homeassistant.components.wled.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -17,14 +17,38 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import async_fire_time_changed, load_fixture
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_object_fixture,
+    snapshot_platform,
+)
 
 pytestmark = pytest.mark.usefixtures("init_integration")
+
+
+@pytest.fixture(autouse=True)
+def override_platforms() -> Generator[None]:
+    """Override PLATFORMS."""
+    with patch("homeassistant.components.wled.PLATFORMS", [Platform.SWITCH]):
+        yield
+
+
+@pytest.mark.parametrize("device_fixture", ["rgb_single_segment", "rgb"])
+async def test_snapshots(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test snapshot of the platform."""
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 @pytest.mark.parametrize(
@@ -67,24 +91,14 @@ async def test_switch_state(
     called_with_on: dict[str, bool | int],
     called_with_off: dict[str, bool | int],
 ) -> None:
-    """Test the creation and values of the WLED switches."""
-    assert (state := hass.states.get(entity_id))
-    assert state == snapshot
-
-    assert (entity_entry := entity_registry.async_get(state.entity_id))
-    assert entity_entry == snapshot
-
-    assert entity_entry.device_id
-    assert (device_entry := device_registry.async_get(entity_entry.device_id))
-    assert device_entry == snapshot
-
+    """Test the behavior of the switch."""
     # Test on/off services
     method_mock = getattr(mock_wled, method)
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: state.entity_id},
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -94,7 +108,7 @@ async def test_switch_state(
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: state.entity_id},
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -107,12 +121,12 @@ async def test_switch_state(
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: state.entity_id},
+            {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
 
     assert method_mock.call_count == 3
-    assert (state := hass.states.get(state.entity_id))
+    assert (state := hass.states.get(entity_id))
     assert state.state != STATE_UNAVAILABLE
 
     # Test connection error, leading to becoming unavailable
@@ -144,8 +158,8 @@ async def test_switch_dynamically_handle_segments(
 
     # Test adding a segment dynamically...
     return_value = mock_wled.update.return_value
-    mock_wled.update.return_value = WLEDDevice(
-        json.loads(load_fixture("wled/rgb.json"))
+    mock_wled.update.return_value = WLEDDevice.from_dict(
+        await async_load_json_object_fixture(hass, "rgb.json", DOMAIN)
     )
 
     freezer.tick(SCAN_INTERVAL)

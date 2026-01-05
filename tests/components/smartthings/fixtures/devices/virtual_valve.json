@@ -1,0 +1,49 @@
+{
+  "items": [
+    {
+      "deviceId": "612ab3c2-3bb0-48f7-b2c0-15b169cb2fc3",
+      "name": "volvo",
+      "label": "volvo",
+      "manufacturerName": "SmartThingsCommunity",
+      "presentationId": "916408b6-c94e-38b8-9fbf-03c8a48af5c3",
+      "locationId": "88a3a314-f0c8-40b4-bb44-44ba06c9c42f",
+      "ownerId": "12d4af93-cb68-b108-87f5-625437d7371f",
+      "roomId": "7715151d-0314-457a-a82c-5ce48900e065",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "valve",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "WaterValve",
+              "categoryType": "manufacturer"
+            }
+          ]
+        }
+      ],
+      "createTime": "2025-02-11T11:27:02.052Z",
+      "profile": {
+        "id": "f8e25992-7f5d-31da-b04d-497012590113"
+      },
+      "virtual": {
+        "name": "volvo",
+        "executingLocally": false
+      },
+      "type": "VIRTUAL",
+      "restrictionTier": 0,
+      "allowed": [],
+      "executionContext": "CLOUD"
+    }
+  ],
+  "_links": {}
+}

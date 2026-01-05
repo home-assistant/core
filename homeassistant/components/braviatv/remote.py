@@ -7,16 +7,16 @@ from typing import Any
 
 from homeassistant.components.remote import ATTR_NUM_REPEATS, RemoteEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import BraviaTVConfigEntry
+from .coordinator import BraviaTVConfigEntry
 from .entity import BraviaTVEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: BraviaTVConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Bravia TV Remote from a config entry."""
 
@@ -24,7 +24,7 @@ async def async_setup_entry(
     unique_id = config_entry.unique_id
     assert unique_id is not None
 
-    async_add_entities([BraviaTVRemote(coordinator, unique_id, config_entry.title)])
+    async_add_entities([BraviaTVRemote(coordinator, unique_id)])
 
 
 class BraviaTVRemote(BraviaTVEntity, RemoteEntity):

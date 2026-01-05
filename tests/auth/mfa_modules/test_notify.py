@@ -3,6 +3,8 @@
 import asyncio
 from unittest.mock import patch
 
+import voluptuous_serialize
+
 from homeassistant import data_entry_flow
 from homeassistant.auth import auth_manager_from_config, models as auth_models
 from homeassistant.auth.mfa_modules import auth_mfa_module_from_config
@@ -155,7 +157,7 @@ async def test_login_flow_validates_mfa(hass: HomeAssistant) -> None:
         )
         assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "mfa"
-        assert result["data_schema"].schema.get("code") == str
+        assert result["data_schema"].schema.get("code") is str
 
     # wait service call finished
     await hass.async_block_till_done()
@@ -165,8 +167,7 @@ async def test_login_flow_validates_mfa(hass: HomeAssistant) -> None:
     assert notify_call.domain == "notify"
     assert notify_call.service == "test-notify"
     message = notify_call.data["message"]
-    message.hass = hass
-    assert MOCK_CODE in message.async_render()
+    assert MOCK_CODE in message
 
     with patch("pyotp.HOTP.verify", return_value=False):
         result = await hass.auth.login_flow.async_configure(
@@ -214,7 +215,7 @@ async def test_login_flow_validates_mfa(hass: HomeAssistant) -> None:
         )
         assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "mfa"
-        assert result["data_schema"].schema.get("code") == str
+        assert result["data_schema"].schema.get("code") is str
 
     # wait service call finished
     await hass.async_block_till_done()
@@ -224,8 +225,7 @@ async def test_login_flow_validates_mfa(hass: HomeAssistant) -> None:
     assert notify_call.domain == "notify"
     assert notify_call.service == "test-notify"
     message = notify_call.data["message"]
-    message.hass = hass
-    assert MOCK_CODE in message.async_render()
+    assert MOCK_CODE in message
 
     with patch("pyotp.HOTP.verify", return_value=True):
         result = await hass.auth.login_flow.async_configure(
@@ -250,6 +250,30 @@ async def test_setup_user_notify_service(hass: HomeAssistant) -> None:
     assert step["step_id"] == "init"
     schema = step["data_schema"]
     schema({"notify_service": "test2"})
+    # ensure the schema can be serialized
+    assert voluptuous_serialize.convert(schema) == [
+        {
+            "name": "notify_service",
+            "options": [
+                (
+                    "test1",
+                    "test1",
+                ),
+                (
+                    "test2",
+                    "test2",
+                ),
+            ],
+            "required": True,
+            "type": "select",
+        },
+        {
+            "name": "target",
+            "optional": True,
+            "required": False,
+            "type": "string",
+        },
+    ]
 
     with patch("pyotp.HOTP.at", return_value=MOCK_CODE):
         step = await flow.async_step_init({"notify_service": "test1"})
@@ -264,8 +288,7 @@ async def test_setup_user_notify_service(hass: HomeAssistant) -> None:
     assert notify_call.domain == "notify"
     assert notify_call.service == "test1"
     message = notify_call.data["message"]
-    message.hass = hass
-    assert MOCK_CODE in message.async_render()
+    assert MOCK_CODE in message
 
     with patch("pyotp.HOTP.at", return_value=MOCK_CODE_2):
         step = await flow.async_step_setup({"code": "invalid"})
@@ -281,8 +304,7 @@ async def test_setup_user_notify_service(hass: HomeAssistant) -> None:
     assert notify_call.domain == "notify"
     assert notify_call.service == "test1"
     message = notify_call.data["message"]
-    message.hass = hass
-    assert MOCK_CODE_2 in message.async_render()
+    assert MOCK_CODE_2 in message
 
     with patch("pyotp.HOTP.verify", return_value=True):
         step = await flow.async_step_setup({"code": MOCK_CODE_2})

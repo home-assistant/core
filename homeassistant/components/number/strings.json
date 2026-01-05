@@ -1,8 +1,10 @@
 {
-  "title": "Number",
   "device_automation": {
     "action_type": {
       "set_value": "Set value for {entity_name}"
+    },
+    "extra_fields": {
+      "value": "[%key:common::device_automation::extra_fields::value%]"
     }
   },
   "entity_component": {
@@ -19,7 +21,7 @@
           "name": "Mode",
           "state": {
             "auto": "Automatic",
-            "box": "Box",
+            "box": "Input field",
             "slider": "Slider"
           }
         },
@@ -28,11 +30,17 @@
         }
       }
     },
+    "absolute_humidity": {
+      "name": "[%key:component::sensor::entity_component::absolute_humidity::name%]"
+    },
     "apparent_power": {
       "name": "[%key:component::sensor::entity_component::apparent_power::name%]"
     },
     "aqi": {
       "name": "[%key:component::sensor::entity_component::aqi::name%]"
+    },
+    "area": {
+      "name": "[%key:component::sensor::entity_component::area::name%]"
     },
     "atmospheric_pressure": {
       "name": "[%key:component::sensor::entity_component::atmospheric_pressure::name%]"
@@ -40,11 +48,17 @@
     "battery": {
       "name": "[%key:component::sensor::entity_component::battery::name%]"
     },
+    "blood_glucose_concentration": {
+      "name": "[%key:component::sensor::entity_component::blood_glucose_concentration::name%]"
+    },
     "carbon_dioxide": {
       "name": "[%key:component::sensor::entity_component::carbon_dioxide::name%]"
     },
     "carbon_monoxide": {
       "name": "[%key:component::sensor::entity_component::carbon_monoxide::name%]"
+    },
+    "conductivity": {
+      "name": "[%key:component::sensor::entity_component::conductivity::name%]"
     },
     "current": {
       "name": "[%key:component::sensor::entity_component::current::name%]"
@@ -103,11 +117,14 @@
     "pm25": {
       "name": "[%key:component::sensor::entity_component::pm25::name%]"
     },
-    "power_factor": {
-      "name": "[%key:component::sensor::entity_component::power_factor::name%]"
+    "pm4": {
+      "name": "[%key:component::sensor::entity_component::pm4::name%]"
     },
     "power": {
       "name": "[%key:component::sensor::entity_component::power::name%]"
+    },
+    "power_factor": {
+      "name": "[%key:component::sensor::entity_component::power_factor::name%]"
     },
     "precipitation": {
       "name": "[%key:component::sensor::entity_component::precipitation::name%]"
@@ -117,6 +134,9 @@
     },
     "pressure": {
       "name": "[%key:component::sensor::entity_component::pressure::name%]"
+    },
+    "reactive_energy": {
+      "name": "[%key:component::sensor::entity_component::reactive_energy::name%]"
     },
     "reactive_power": {
       "name": "[%key:component::sensor::entity_component::reactive_power::name%]"
@@ -136,6 +156,9 @@
     "temperature": {
       "name": "[%key:component::sensor::entity_component::temperature::name%]"
     },
+    "temperature_delta": {
+      "name": "[%key:component::sensor::entity_component::temperature_delta::name%]"
+    },
     "volatile_organic_compounds": {
       "name": "[%key:component::sensor::entity_component::volatile_organic_compounds::name%]"
     },
@@ -145,17 +168,20 @@
     "volume": {
       "name": "[%key:component::sensor::entity_component::volume::name%]"
     },
-    "volume_storage": {
-      "name": "[%key:component::sensor::entity_component::volume_storage::name%]"
-    },
     "volume_flow_rate": {
       "name": "[%key:component::sensor::entity_component::volume_flow_rate::name%]"
+    },
+    "volume_storage": {
+      "name": "[%key:component::sensor::entity_component::volume_storage::name%]"
     },
     "water": {
       "name": "[%key:component::sensor::entity_component::water::name%]"
     },
     "weight": {
       "name": "[%key:component::sensor::entity_component::weight::name%]"
+    },
+    "wind_direction": {
+      "name": "[%key:component::sensor::entity_component::wind_direction::name%]"
     },
     "wind_speed": {
       "name": "[%key:component::sensor::entity_component::wind_speed::name%]"
@@ -168,14 +194,15 @@
   },
   "services": {
     "set_value": {
-      "name": "Set",
       "description": "Sets the value of a number.",
       "fields": {
         "value": {
-          "name": "Value",
-          "description": "The target value to set."
+          "description": "The target value to set.",
+          "name": "Value"
         }
-      }
+      },
+      "name": "Set"
     }
-  }
+  },
+  "title": "Number"
 }

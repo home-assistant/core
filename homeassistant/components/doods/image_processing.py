@@ -6,6 +6,7 @@ import io
 import logging
 import os
 import time
+from typing import Any
 
 from PIL import Image, ImageDraw, UnidentifiedImageError
 from pydoods import PyDOODS
@@ -13,7 +14,7 @@ import voluptuous as vol
 
 from homeassistant.components.image_processing import (
     CONF_CONFIDENCE,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as IMAGE_PROCESSING_PLATFORM_SCHEMA,
     ImageProcessingEntity,
 )
 from homeassistant.const import (
@@ -25,8 +26,7 @@ from homeassistant.const import (
     CONF_URL,
 )
 from homeassistant.core import HomeAssistant, split_entity_id
-from homeassistant.helpers import template
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.pil import draw_box
@@ -66,7 +66,7 @@ LABEL_SCHEMA = vol.Schema(
     }
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = IMAGE_PROCESSING_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_URL): cv.string,
         vol.Required(CONF_DETECTOR): cv.string,
@@ -89,10 +89,11 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Doods client."""
-    url = config[CONF_URL]
-    auth_key = config[CONF_AUTH_KEY]
-    detector_name = config[CONF_DETECTOR]
-    timeout = config[CONF_TIMEOUT]
+    url: str = config[CONF_URL]
+    auth_key: str = config[CONF_AUTH_KEY]
+    detector_name: str = config[CONF_DETECTOR]
+    source: list[dict[str, str]] = config[CONF_SOURCE]
+    timeout: int = config[CONF_TIMEOUT]
 
     doods = PyDOODS(url, auth_key, timeout)
     response = doods.get_detectors()
@@ -114,31 +115,35 @@ def setup_platform(
 
     add_entities(
         Doods(
-            hass,
             camera[CONF_ENTITY_ID],
             camera.get(CONF_NAME),
             doods,
             detector,
             config,
         )
-        for camera in config[CONF_SOURCE]
+        for camera in source
     )
 
 
 class Doods(ImageProcessingEntity):
     """Doods image processing service client."""
 
-    def __init__(self, hass, camera_entity, name, doods, detector, config):
+    def __init__(
+        self,
+        camera_entity: str,
+        name: str | None,
+        doods: PyDOODS,
+        detector: dict[str, Any],
+        config: dict[str, Any],
+    ) -> None:
         """Initialize the DOODS entity."""
-        self.hass = hass
-        self._camera_entity = camera_entity
+        self._attr_camera_entity = camera_entity
         if name:
-            self._name = name
+            self._attr_name = name
         else:
-            name = split_entity_id(camera_entity)[1]
-            self._name = f"Doods {name}"
+            self._attr_name = f"Doods {split_entity_id(camera_entity)[1]}"
         self._doods = doods
-        self._file_out = config[CONF_FILE_OUT]
+        self._file_out: list[template.Template] = config[CONF_FILE_OUT]
         self._detector_name = detector["name"]
 
         # detector config and aspect ratio
@@ -151,16 +156,16 @@ class Doods(ImageProcessingEntity):
             self._aspect = self._width / self._height
 
         # the base confidence
-        dconfig = {}
-        confidence = config[CONF_CONFIDENCE]
+        dconfig: dict[str, float] = {}
+        confidence: float = config[CONF_CONFIDENCE]
 
         # handle labels and specific detection areas
-        labels = config[CONF_LABELS]
+        labels: list[str | dict[str, Any]] = config[CONF_LABELS]
         self._label_areas = {}
         self._label_covers = {}
         for label in labels:
             if isinstance(label, dict):
-                label_name = label[CONF_NAME]
+                label_name: str = label[CONF_NAME]
                 if label_name not in detector["labels"] and label_name != "*":
                     _LOGGER.warning("Detector does not support label %s", label_name)
                     continue
@@ -207,31 +212,19 @@ class Doods(ImageProcessingEntity):
             ]
             self._covers = area_config[CONF_COVERS]
 
-        template.attach(hass, self._file_out)
-
         self._dconfig = dconfig
-        self._matches = {}
+        self._matches: dict[str, list[dict[str, Any]]] = {}
         self._total_matches = 0
         self._last_image = None
-        self._process_time = 0
+        self._process_time = 0.0
 
     @property
-    def camera_entity(self):
-        """Return camera entity id from process pictures."""
-        return self._camera_entity
-
-    @property
-    def name(self):
-        """Return the name of the image processor."""
-        return self._name
-
-    @property
-    def state(self):
+    def state(self) -> int:
         """Return the state of the entity."""
         return self._total_matches
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
         return {
             ATTR_MATCHES: self._matches,
@@ -268,7 +261,7 @@ class Doods(ImageProcessingEntity):
 
             # Draw detected objects
             for instance in values:
-                box_label = f'{label} {instance["score"]:.1f}%'
+                box_label = f"{label} {instance['score']:.1f}%"
                 # Already scaled, use 1 for width and height
                 draw_box(
                     draw,
@@ -280,11 +273,11 @@ class Doods(ImageProcessingEntity):
                 )
 
         for path in paths:
-            _LOGGER.info("Saving results image to %s", path)
+            _LOGGER.debug("Saving results image to %s", path)
             os.makedirs(os.path.dirname(path), exist_ok=True)
             img.save(path)
 
-    def process_image(self, image):
+    def process_image(self, image: bytes) -> None:
         """Process the image."""
         try:
             img = Image.open(io.BytesIO(bytearray(image))).convert("RGB")
@@ -315,7 +308,7 @@ class Doods(ImageProcessingEntity):
             time.monotonic() - start,
         )
 
-        matches = {}
+        matches: dict[str, list[dict[str, Any]]] = {}
         total_matches = 0
 
         if not response or "error" in response:
@@ -385,9 +378,7 @@ class Doods(ImageProcessingEntity):
             paths = []
             for path_template in self._file_out:
                 if isinstance(path_template, template.Template):
-                    paths.append(
-                        path_template.render(camera_entity=self._camera_entity)
-                    )
+                    paths.append(path_template.render(camera_entity=self.camera_entity))
                 else:
                     paths.append(path_template)
             self._save_image(image, matches, paths)

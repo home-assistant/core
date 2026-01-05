@@ -60,25 +60,25 @@ async def test_numbers_implementation(
         blocking=True,
     )
 
-    mocked_method = getattr(mock_flexit_bacnet, "set_fan_setpoint_supply_air_fire")
+    mocked_method = mock_flexit_bacnet.set_fan_setpoint_supply_air_fire
     assert len(mocked_method.mock_calls) == 1
     assert hass.states.get(ENTITY_ID).state == "60"
 
-    mock_flexit_bacnet.fan_setpoint_supply_air_fire = 10
+    mock_flexit_bacnet.fan_setpoint_supply_air_fire = 40
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
         {
             ATTR_ENTITY_ID: ENTITY_ID,
-            ATTR_VALUE: 10,
+            ATTR_VALUE: 40,
         },
         blocking=True,
     )
 
-    mocked_method = getattr(mock_flexit_bacnet, "set_fan_setpoint_supply_air_fire")
+    mocked_method = mock_flexit_bacnet.set_fan_setpoint_supply_air_fire
     assert len(mocked_method.mock_calls) == 2
-    assert hass.states.get(ENTITY_ID).state == "10"
+    assert hass.states.get(ENTITY_ID).state == "40"
 
     # Error recovery, when setting the value
     mock_flexit_bacnet.set_fan_setpoint_supply_air_fire.side_effect = DecodingError
@@ -89,12 +89,12 @@ async def test_numbers_implementation(
             SERVICE_SET_VALUE,
             {
                 ATTR_ENTITY_ID: ENTITY_ID,
-                ATTR_VALUE: 10,
+                ATTR_VALUE: 40,
             },
             blocking=True,
         )
 
-    mocked_method = getattr(mock_flexit_bacnet, "set_fan_setpoint_supply_air_fire")
+    mocked_method = mock_flexit_bacnet.set_fan_setpoint_supply_air_fire
     assert len(mocked_method.mock_calls) == 3
 
     mock_flexit_bacnet.set_fan_setpoint_supply_air_fire.side_effect = None

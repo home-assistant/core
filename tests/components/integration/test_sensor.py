@@ -1,13 +1,16 @@
 """The tests for the integration sensor platform."""
 
 from datetime import timedelta
+from typing import Any
 
 from freezegun import freeze_time
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.integration.const import DOMAIN
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -16,22 +19,77 @@ from homeassistant.const import (
     UnitOfInformation,
     UnitOfPower,
     UnitOfTime,
+    UnitOfVolumeFlowRate,
 )
-from homeassistant.core import HomeAssistant, State
+from homeassistant.core import (
+    Event,
+    EventStateChangedData,
+    HomeAssistant,
+    State,
+    callback,
+)
 from homeassistant.helpers import (
     condition,
     device_registry as dr,
     entity_registry as er,
 )
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
-    mock_restore_cache,
     mock_restore_cache_with_extra_data,
 )
+
+DEFAULT_MAX_SUB_INTERVAL = {"minutes": 1}
+
+
+@pytest.mark.parametrize(
+    ("unit_of_measurement", "device_class", "unit_time"),
+    [
+        (UnitOfPower.KILO_WATT, SensorDeviceClass.POWER, "h"),
+        (UnitOfPower.KILO_WATT, None, "h"),
+        (UnitOfPower.BTU_PER_HOUR, SensorDeviceClass.POWER, "h"),
+        (
+            UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
+            SensorDeviceClass.VOLUME_FLOW_RATE,
+            "min",
+        ),
+    ],
+)
+async def test_initial_state(
+    hass: HomeAssistant,
+    unit_of_measurement: str,
+    device_class: SensorDeviceClass,
+    unit_time: str,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test integration sensor state."""
+    config = {
+        "sensor": {
+            "platform": "integration",
+            "name": "integration",
+            "source": "sensor.source",
+            "round": 2,
+            "method": "left",
+            "unit_time": unit_time,
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+    hass.states.async_set(
+        "sensor.source",
+        "1",
+        {
+            ATTR_DEVICE_CLASS: device_class,
+            ATTR_UNIT_OF_MEASUREMENT: unit_of_measurement,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.integration") == snapshot
 
 
 @pytest.mark.parametrize("method", ["trapezoidal", "left", "right"])
@@ -47,13 +105,23 @@ async def test_state(hass: HomeAssistant, method) -> None:
         }
     }
 
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.integration")
+    assert state is not None
+    assert state.attributes.get("state_class") is SensorStateClass.TOTAL
+    assert "device_class" not in state.attributes
+
     now = dt_util.utcnow()
     with freeze_time(now):
-        assert await async_setup_component(hass, "sensor", config)
-
         entity_id = config["sensor"]["source"]
         hass.states.async_set(
-            entity_id, 1, {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT}
+            entity_id,
+            1,
+            {
+                ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT,
+            },
         )
         await hass.async_block_till_done()
 
@@ -144,42 +212,6 @@ async def test_state(hass: HomeAssistant, method) -> None:
 
 async def test_restore_state(hass: HomeAssistant) -> None:
     """Test integration sensor state is restored correctly."""
-    mock_restore_cache(
-        hass,
-        (
-            State(
-                "sensor.integration",
-                "100.0",
-                {
-                    "device_class": SensorDeviceClass.ENERGY,
-                    "unit_of_measurement": UnitOfEnergy.KILO_WATT_HOUR,
-                },
-            ),
-        ),
-    )
-
-    config = {
-        "sensor": {
-            "platform": "integration",
-            "name": "integration",
-            "source": "sensor.power",
-            "round": 2,
-        }
-    }
-
-    assert await async_setup_component(hass, "sensor", config)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.integration")
-    assert state
-    assert state.state == "100.00"
-    assert state.attributes.get("unit_of_measurement") == UnitOfEnergy.KILO_WATT_HOUR
-    assert state.attributes.get("device_class") == SensorDeviceClass.ENERGY
-    assert state.attributes.get("last_good_state") is None
-
-
-async def test_restore_unavailable_state(hass: HomeAssistant) -> None:
-    """Test integration sensor state is restored correctly."""
     mock_restore_cache_with_extra_data(
         hass,
         [
@@ -234,9 +266,7 @@ async def test_restore_unavailable_state(hass: HomeAssistant) -> None:
         },
     ],
 )
-async def test_restore_unavailable_state_failed(
-    hass: HomeAssistant, extra_attributes
-) -> None:
+async def test_restore_state_failed(hass: HomeAssistant, extra_attributes) -> None:
     """Test integration sensor state is restored correctly."""
     mock_restore_cache_with_extra_data(
         hass,
@@ -268,46 +298,57 @@ async def test_restore_unavailable_state_failed(
 
     state = hass.states.get("sensor.integration")
     assert state
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == STATE_UNKNOWN
 
 
-async def test_restore_state_failed(hass: HomeAssistant) -> None:
-    """Test integration sensor state is restored correctly."""
-    mock_restore_cache(
-        hass,
+@pytest.mark.parametrize("extra_config", [{}, {"max_sub_interval": {"minutes": 9999}}])
+@pytest.mark.parametrize("force_update", [False, True])
+@pytest.mark.parametrize(
+    ("sequence", "expected_states"),
+    [
+        # time, value, attributes
         (
-            State(
-                "sensor.integration",
-                "INVALID",
-                {
-                    "last_reset": "2019-10-06T21:00:00.000000",
-                },
+            (
+                (0, 0, {}),
+                (20, 10, {}),
+                (30, 30, {}),
+                (40, 5, {}),
+                (50, 5, {}),  # This fires a state report
+                (60, 5, {}),  # This fires a state report
+                (70, 0, {}),
             ),
+            (0, 1.67, 5.0, 7.92, 8.75, 9.58, 10.0),
         ),
-    )
-
-    config = {
-        "sensor": {
-            "platform": "integration",
-            "name": "integration",
-            "source": "sensor.power",
-        }
-    }
-
-    assert await async_setup_component(hass, "sensor", config)
-    await hass.async_block_till_done()
-
-    state = hass.states.get("sensor.integration")
-    assert state
-    assert state.state == "unknown"
-    assert state.attributes.get("unit_of_measurement") is None
-    assert state.attributes.get("state_class") is SensorStateClass.TOTAL
-
-    assert "device_class" not in state.attributes
-
-
-async def test_trapezoidal(hass: HomeAssistant) -> None:
+        (
+            (
+                (0, 0, {}),
+                (20, 10, {}),
+                (30, 30, {}),
+                (40, 5, {}),
+                (50, 5, {"foo": "bar"}),  # This fires a state change
+                (60, 5, {"foo": "baz"}),  # This fires a state change
+                (70, 0, {}),
+            ),
+            (0, 1.67, 5.0, 7.92, 8.75, 9.58, 10.0),
+        ),
+    ],
+)
+async def test_trapezoidal(
+    hass: HomeAssistant,
+    sequence: tuple[tuple[float, float, dict[str, Any], float], ...],
+    force_update: bool,
+    extra_config: dict[str, Any],
+    expected_states: tuple[float, ...],
+) -> None:
     """Test integration sensor state."""
+    events: list[Event[EventStateChangedData]] = []
+
+    @callback
+    def _capture_event(event: Event) -> None:
+        events.append(event)
+
+    async_track_state_change_event(hass, "sensor.integration", _capture_event)
+
     config = {
         "sensor": {
             "platform": "integration",
@@ -315,37 +356,89 @@ async def test_trapezoidal(hass: HomeAssistant) -> None:
             "source": "sensor.power",
             "round": 2,
         }
+        | extra_config
     }
 
     assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.integration")
+    assert state.state == STATE_UNKNOWN
 
     entity_id = config["sensor"]["source"]
     hass.states.async_set(entity_id, 0, {})
     await hass.async_block_till_done()
+    state = hass.states.get("sensor.integration")
+    assert state.state == STATE_UNKNOWN
 
     start_time = dt_util.utcnow()
     with freeze_time(start_time) as freezer:
         # Testing a power sensor with non-monotonic intervals and values
-        for time, value in [(20, 10), (30, 30), (40, 5), (50, 0)]:
+        for time, value, extra_attributes in sequence:
             freezer.move_to(start_time + timedelta(minutes=time))
             hass.states.async_set(
                 entity_id,
                 value,
-                {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT},
-                force_update=True,
+                {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT} | extra_attributes,
+                force_update=force_update,
             )
-            await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.integration")
-    assert state is not None
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    states = [events[0].data["new_state"].state] + [
+        round(float(event.data["new_state"].state), config["sensor"]["round"])
+        for event in events[1:]
+    ]
+    assert states == ["unknown", *expected_states]
 
-    assert round(float(state.state), config["sensor"]["round"]) == 8.33
-
+    state = events[-1].data["new_state"]
     assert state.attributes.get("unit_of_measurement") == UnitOfEnergy.KILO_WATT_HOUR
 
 
-async def test_left(hass: HomeAssistant) -> None:
-    """Test integration sensor state with left reimann method."""
+@pytest.mark.parametrize("extra_config", [{}, {"max_sub_interval": {"minutes": 9999}}])
+@pytest.mark.parametrize("force_update", [False, True])
+@pytest.mark.parametrize(
+    ("sequence", "expected_states"),
+    [
+        (  # time, value, attributes, expected
+            (
+                (20, 10, {}),
+                (30, 30, {}),
+                (40, 5, {}),
+                (50, 5, {}),  # This fires a state report
+                (60, 5, {}),  # This fires a state report
+                (70, 0, {}),
+            ),
+            (0, 1.67, 6.67, 7.5, 8.33, 9.17),
+        ),
+        (
+            (
+                (20, 10, {}),
+                (30, 30, {}),
+                (40, 5, {}),
+                (50, 5, {"foo": "bar"}),
+                (60, 5, {"foo": "baz"}),
+                (70, 0, {}),
+            ),
+            (0, 1.67, 6.67, 7.5, 8.33, 9.17),
+        ),
+    ],
+)
+async def test_left(
+    hass: HomeAssistant,
+    sequence: tuple[tuple[float, float, dict[str, Any], float], ...],
+    force_update: bool,
+    extra_config: dict[str, Any],
+    expected_states: tuple[float, ...],
+) -> None:
+    """Test integration sensor state with left Riemann method."""
+    events: list[Event[EventStateChangedData]] = []
+
+    @callback
+    def _capture_event(event: Event) -> None:
+        events.append(event)
+
+    async_track_state_change_event(hass, "sensor.integration", _capture_event)
+
     config = {
         "sensor": {
             "platform": "integration",
@@ -354,38 +447,96 @@ async def test_left(hass: HomeAssistant) -> None:
             "source": "sensor.power",
             "round": 2,
         }
+        | extra_config
     }
 
     assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.integration")
+    assert state.state == STATE_UNKNOWN
 
     entity_id = config["sensor"]["source"]
     hass.states.async_set(
         entity_id, 0, {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT}
     )
     await hass.async_block_till_done()
+    state = hass.states.get("sensor.integration")
+    assert state.state == STATE_UNKNOWN
 
     # Testing a power sensor with non-monotonic intervals and values
-    for time, value in [(20, 10), (30, 30), (40, 5), (50, 0)]:
-        now = dt_util.utcnow() + timedelta(minutes=time)
-        with freeze_time(now):
+    start_time = dt_util.utcnow()
+    with freeze_time(start_time) as freezer:
+        for time, value, extra_attributes in sequence:
+            freezer.move_to(start_time + timedelta(minutes=time))
             hass.states.async_set(
                 entity_id,
                 value,
-                {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT},
-                force_update=True,
+                {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT} | extra_attributes,
+                force_update=force_update,
             )
-            await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.integration")
-    assert state is not None
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    states = (
+        [events[0].data["new_state"].state]
+        + [events[1].data["new_state"].state]
+        + [
+            round(float(event.data["new_state"].state), config["sensor"]["round"])
+            for event in events[2:]
+        ]
+    )
+    assert states == ["unknown", "unknown", *expected_states]
 
-    assert round(float(state.state), config["sensor"]["round"]) == 7.5
-
+    state = events[-1].data["new_state"]
     assert state.attributes.get("unit_of_measurement") == UnitOfEnergy.KILO_WATT_HOUR
 
 
-async def test_right(hass: HomeAssistant) -> None:
-    """Test integration sensor state with left reimann method."""
+@pytest.mark.parametrize("extra_config", [{}, {"max_sub_interval": {"minutes": 9999}}])
+@pytest.mark.parametrize("force_update", [False, True])
+@pytest.mark.parametrize(
+    ("sequence", "expected_states"),
+    [
+        # time, value, attributes, expected
+        (
+            (
+                (20, 10, {}),
+                (30, 30, {}),
+                (40, 5, {}),
+                (50, 5, {}),  # This fires a state report
+                (60, 5, {}),  # This fires a state report
+                (70, 0, {}),
+            ),
+            (3.33, 8.33, 9.17, 10.0, 10.83),
+        ),
+        (
+            (
+                (20, 10, {}),
+                (30, 30, {}),
+                (40, 5, {}),
+                (50, 5, {"foo": "bar"}),  # This fires a state change
+                (60, 5, {"foo": "baz"}),  # This fires a state change
+                (70, 0, {}),
+            ),
+            (3.33, 8.33, 9.17, 10.0, 10.83),
+        ),
+    ],
+)
+async def test_right(
+    hass: HomeAssistant,
+    sequence: tuple[tuple[float, float, dict[str, Any], float], ...],
+    force_update: bool,
+    extra_config: dict[str, Any],
+    expected_states: tuple[float, ...],
+) -> None:
+    """Test integration sensor state with right Riemann method."""
+    events: list[Event[EventStateChangedData]] = []
+
+    @callback
+    def _capture_event(event: Event) -> None:
+        events.append(event)
+
+    async_track_state_change_event(hass, "sensor.integration", _capture_event)
+
     config = {
         "sensor": {
             "platform": "integration",
@@ -394,33 +545,47 @@ async def test_right(hass: HomeAssistant) -> None:
             "source": "sensor.power",
             "round": 2,
         }
+        | extra_config
     }
 
     assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.integration")
+    assert state.state == STATE_UNKNOWN
 
     entity_id = config["sensor"]["source"]
     hass.states.async_set(
         entity_id, 0, {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT}
     )
     await hass.async_block_till_done()
+    state = hass.states.get("sensor.integration")
+    assert state.state == STATE_UNKNOWN
 
     # Testing a power sensor with non-monotonic intervals and values
-    for time, value in [(20, 10), (30, 30), (40, 5), (50, 0)]:
-        now = dt_util.utcnow() + timedelta(minutes=time)
-        with freeze_time(now):
+    start_time = dt_util.utcnow()
+    with freeze_time(start_time) as freezer:
+        for time, value, extra_attributes in sequence:
+            freezer.move_to(start_time + timedelta(minutes=time))
             hass.states.async_set(
                 entity_id,
                 value,
-                {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT},
-                force_update=True,
+                {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT} | extra_attributes,
+                force_update=force_update,
             )
-            await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.integration")
-    assert state is not None
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    states = (
+        [events[0].data["new_state"].state]
+        + [events[1].data["new_state"].state]
+        + [
+            round(float(event.data["new_state"].state), config["sensor"]["round"])
+            for event in events[2:]
+        ]
+    )
+    assert states == ["unknown", "unknown", *expected_states]
 
-    assert round(float(state.state), config["sensor"]["round"]) == 9.17
-
+    state = events[-1].data["new_state"]
     assert state.attributes.get("unit_of_measurement") == UnitOfEnergy.KILO_WATT_HOUR
 
 
@@ -752,7 +917,7 @@ async def test_device_id(
     assert integration_entity.device_id == source_entity.device_id
 
 
-def _integral_sensor_config(max_sub_interval: dict[str, int] | None = {"minutes": 1}):
+def _integral_sensor_config(max_sub_interval: dict[str, int] | None) -> dict[str, Any]:
     sensor = {
         "platform": "integration",
         "name": "integration",
@@ -765,7 +930,7 @@ def _integral_sensor_config(max_sub_interval: dict[str, int] | None = {"minutes"
 
 
 async def _setup_integral_sensor(
-    hass: HomeAssistant, max_sub_interval: dict[str, int] | None = {"minutes": 1}
+    hass: HomeAssistant, max_sub_interval: dict[str, int] | None
 ) -> None:
     await async_setup_component(
         hass, "sensor", _integral_sensor_config(max_sub_interval=max_sub_interval)
@@ -775,7 +940,9 @@ async def _setup_integral_sensor(
 
 async def _update_source_sensor(hass: HomeAssistant, value: int | str) -> None:
     hass.states.async_set(
-        _integral_sensor_config()["sensor"]["source"],
+        _integral_sensor_config(max_sub_interval=DEFAULT_MAX_SUB_INTERVAL)["sensor"][
+            "source"
+        ],
         value,
         {ATTR_UNIT_OF_MEASUREMENT: UnitOfPower.KILO_WATT},
         force_update=True,
@@ -790,7 +957,7 @@ async def test_on_valid_source_expect_update_on_time(
     start_time = dt_util.utcnow()
 
     with freeze_time(start_time) as freezer:
-        await _setup_integral_sensor(hass)
+        await _setup_integral_sensor(hass, max_sub_interval=DEFAULT_MAX_SUB_INTERVAL)
         await _update_source_sensor(hass, 100)
         state_before_max_sub_interval_exceeded = hass.states.get("sensor.integration")
 
@@ -809,6 +976,39 @@ async def test_on_valid_source_expect_update_on_time(
         assert float(state.state) < 1.8
 
 
+async def test_on_0_source_expect_0_and_update_when_source_gets_positive(
+    hass: HomeAssistant,
+) -> None:
+    """Test whether time based integration updates the integral on a valid zero source."""
+    start_time = dt_util.utcnow()
+
+    with freeze_time(start_time) as freezer:
+        await _setup_integral_sensor(hass, max_sub_interval=DEFAULT_MAX_SUB_INTERVAL)
+        await _update_source_sensor(hass, 0)
+        await hass.async_block_till_done()
+
+        # wait one minute and one second
+        freezer.tick(61)
+        async_fire_time_changed(hass, dt_util.now())
+        await hass.async_block_till_done()
+
+        state = hass.states.get("sensor.integration")
+
+        assert condition.async_numeric_state(hass, state) is True
+        assert float(state.state) == 0  # integral is 0 after integration of 0
+
+        # wait one second and update state
+        freezer.tick(1)
+        async_fire_time_changed(hass, dt_util.now())
+        await _update_source_sensor(hass, 100)
+        await hass.async_block_till_done()
+
+        state = hass.states.get("sensor.integration")
+
+        # approx 100*1/3600 (right method after 1 second since last integration)
+        assert 0.027 < float(state.state) < 0.029
+
+
 async def test_on_unvailable_source_expect_no_update_on_time(
     hass: HomeAssistant,
 ) -> None:
@@ -816,7 +1016,7 @@ async def test_on_unvailable_source_expect_no_update_on_time(
 
     start_time = dt_util.utcnow()
     with freeze_time(start_time) as freezer:
-        await _setup_integral_sensor(hass)
+        await _setup_integral_sensor(hass, max_sub_interval=DEFAULT_MAX_SUB_INTERVAL)
         await _update_source_sensor(hass, 100)
         freezer.tick(61)
         async_fire_time_changed(hass, dt_util.now())
@@ -843,7 +1043,7 @@ async def test_on_statechanges_source_expect_no_update_on_time(
 
     start_time = dt_util.utcnow()
     with freeze_time(start_time) as freezer:
-        await _setup_integral_sensor(hass)
+        await _setup_integral_sensor(hass, max_sub_interval=DEFAULT_MAX_SUB_INTERVAL)
         await _update_source_sensor(hass, 100)
 
         freezer.tick(30)

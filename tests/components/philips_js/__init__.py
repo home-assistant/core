@@ -5,6 +5,7 @@ MOCK_NAME = "Philips TV"
 
 MOCK_USERNAME = "mock_user"
 MOCK_PASSWORD = "mock_password"
+MOCK_HOSTNAME = "mock_hostname"
 
 MOCK_SYSTEM = {
     "menulanguage": "English",

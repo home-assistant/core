@@ -1,7 +1,17 @@
 """Hass.io const variables."""
 
+from __future__ import annotations
+
 from datetime import timedelta
 from enum import StrEnum
+from typing import TYPE_CHECKING
+
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from .config import HassioConfig
+    from .handler import HassIO
+
 
 DOMAIN = "hassio"
 
@@ -24,8 +34,10 @@ ATTR_ISSUES = "issues"
 ATTR_MESSAGE = "message"
 ATTR_METHOD = "method"
 ATTR_PANELS = "panels"
+ATTR_PARAMS = "params"
 ATTR_PASSWORD = "password"
 ATTR_RESULT = "result"
+ATTR_STARTUP = "startup"
 ATTR_SUGGESTIONS = "suggestions"
 ATTR_SUPPORTED = "supported"
 ATTR_TIMEOUT = "timeout"
@@ -58,12 +70,16 @@ EVENT_HEALTH_CHANGED = "health_changed"
 EVENT_SUPPORTED_CHANGED = "supported_changed"
 EVENT_ISSUE_CHANGED = "issue_changed"
 EVENT_ISSUE_REMOVED = "issue_removed"
+EVENT_JOB = "job"
 
 UPDATE_KEY_SUPERVISOR = "supervisor"
+STARTUP_COMPLETE = "complete"
 
 ADDONS_COORDINATOR = "hassio_addons_coordinator"
 
 
+DATA_COMPONENT: HassKey[HassIO] = HassKey(DOMAIN)
+DATA_CONFIG_STORE: HassKey[HassioConfig] = HassKey("hassio_config_store")
 DATA_CORE_INFO = "hassio_core_info"
 DATA_CORE_STATS = "hassio_core_stats"
 DATA_HOST_INFO = "hassio_host_info"
@@ -73,7 +89,6 @@ DATA_OS_INFO = "hassio_os_info"
 DATA_NETWORK_INFO = "hassio_network_info"
 DATA_SUPERVISOR_INFO = "hassio_supervisor_info"
 DATA_SUPERVISOR_STATS = "hassio_supervisor_stats"
-DATA_ADDONS_CHANGELOGS = "hassio_addons_changelogs"
 DATA_ADDONS_INFO = "hassio_addons_info"
 DATA_ADDONS_STATS = "hassio_addons_stats"
 HASSIO_UPDATE_INTERVAL = timedelta(minutes=5)
@@ -82,7 +97,6 @@ ATTR_AUTO_UPDATE = "auto_update"
 ATTR_VERSION = "version"
 ATTR_VERSION_LATEST = "version_latest"
 ATTR_CPU_PERCENT = "cpu_percent"
-ATTR_CHANGELOG = "changelog"
 ATTR_LOCATION = "location"
 ATTR_MEMORY_PERCENT = "memory_percent"
 ATTR_SLUG = "slug"
@@ -97,28 +111,37 @@ DATA_KEY_SUPERVISOR = "supervisor"
 DATA_KEY_CORE = "core"
 DATA_KEY_HOST = "host"
 DATA_KEY_SUPERVISOR_ISSUES = "supervisor_issues"
+DATA_KEY_MOUNTS = "mounts"
 
 PLACEHOLDER_KEY_ADDON = "addon"
+PLACEHOLDER_KEY_ADDON_INFO = "addon_info"
+PLACEHOLDER_KEY_ADDON_DOCUMENTATION = "addon_documentation"
 PLACEHOLDER_KEY_ADDON_URL = "addon_url"
 PLACEHOLDER_KEY_REFERENCE = "reference"
 PLACEHOLDER_KEY_COMPONENTS = "components"
+PLACEHOLDER_KEY_FREE_SPACE = "free_space"
 
+ISSUE_KEY_ADDON_BOOT_FAIL = "issue_addon_boot_fail"
 ISSUE_KEY_SYSTEM_DOCKER_CONFIG = "issue_system_docker_config"
 ISSUE_KEY_ADDON_DETACHED_ADDON_MISSING = "issue_addon_detached_addon_missing"
 ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED = "issue_addon_detached_addon_removed"
+ISSUE_KEY_ADDON_PWNED = "issue_addon_pwned"
+ISSUE_KEY_SYSTEM_FREE_SPACE = "issue_system_free_space"
+ISSUE_KEY_ADDON_DEPRECATED = "issue_addon_deprecated_addon"
+
+ISSUE_MOUNT_MOUNT_FAILED = "issue_mount_mount_failed"
 
 CORE_CONTAINER = "homeassistant"
 SUPERVISOR_CONTAINER = "hassio_supervisor"
 
 CONTAINER_STATS = "stats"
-CONTAINER_CHANGELOG = "changelog"
 CONTAINER_INFO = "info"
 
 # This is a mapping of which endpoint the key in the addon data
 # is obtained from so we know which endpoint to update when the
 # coordinator polls for updates.
 KEY_TO_UPDATE_TYPES: dict[str, set[str]] = {
-    ATTR_VERSION_LATEST: {CONTAINER_INFO, CONTAINER_CHANGELOG},
+    ATTR_VERSION_LATEST: {CONTAINER_INFO},
     ATTR_MEMORY_PERCENT: {CONTAINER_STATS},
     ATTR_CPU_PERCENT: {CONTAINER_STATS},
     ATTR_VERSION: {CONTAINER_INFO},
@@ -127,6 +150,26 @@ KEY_TO_UPDATE_TYPES: dict[str, set[str]] = {
 
 REQUEST_REFRESH_DELAY = 10
 
+HELP_URLS = {
+    "help_url": "https://www.home-assistant.io/help/",
+    "community_url": "https://community.home-assistant.io/",
+}
+
+EXTRA_PLACEHOLDERS = {
+    "issue_mount_mount_failed": {
+        "storage_url": "/config/storage",
+    },
+    ISSUE_KEY_ADDON_DETACHED_ADDON_REMOVED: HELP_URLS,
+    ISSUE_KEY_SYSTEM_FREE_SPACE: {
+        "more_info_free_space": "https://www.home-assistant.io/more-info/free-space",
+        "storage_url": "/config/storage",
+    },
+    ISSUE_KEY_ADDON_PWNED: {
+        "more_info_pwned": "https://www.home-assistant.io/more-info/pwned-passwords",
+    },
+    ISSUE_KEY_ADDON_DEPRECATED: HELP_URLS,
+}
+
 
 class SupervisorEntityModel(StrEnum):
     """Supervisor entity model."""
@@ -134,19 +177,6 @@ class SupervisorEntityModel(StrEnum):
     ADDON = "Home Assistant Add-on"
     OS = "Home Assistant Operating System"
     CORE = "Home Assistant Core"
-    SUPERVIOSR = "Home Assistant Supervisor"
+    SUPERVISOR = "Home Assistant Supervisor"
     HOST = "Home Assistant Host"
-
-
-class SupervisorIssueContext(StrEnum):
-    """Context for supervisor issues."""
-
-    ADDON = "addon"
-    CORE = "core"
-    DNS_SERVER = "dns_server"
-    MOUNT = "mount"
-    OS = "os"
-    PLUGIN = "plugin"
-    SUPERVISOR = "supervisor"
-    STORE = "store"
-    SYSTEM = "system"
+    MOUNT = "Home Assistant Mount"

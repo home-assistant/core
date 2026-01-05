@@ -3,25 +3,31 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from functools import partial
 from typing import Final
 
 import voluptuous as vol
 
 from homeassistant.const import (
+    CONCENTRATION_GRAMS_PER_CUBIC_METER,
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
+    DEGREE,
     LIGHT_LUX,
     PERCENTAGE,
-    POWER_VOLT_AMPERE_REACTIVE,
     SIGNAL_STRENGTH_DECIBELS,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     UnitOfApparentPower,
+    UnitOfArea,
+    UnitOfBloodGlucoseConcentration,
+    UnitOfConductivity,
     UnitOfDataRate,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
+    UnitOfEnergyDistance,
     UnitOfFrequency,
     UnitOfInformation,
     UnitOfIrradiance,
@@ -30,6 +36,8 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
+    UnitOfReactiveEnergy,
+    UnitOfReactivePower,
     UnitOfSoundPressure,
     UnitOfSpeed,
     UnitOfTemperature,
@@ -38,15 +46,11 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
     UnitOfVolumetricFlux,
 )
-from homeassistant.helpers.deprecation import (
-    DeprecatedConstantEnum,
-    all_with_deprecated_constants,
-    check_if_deprecated_constant,
-    dir_with_deprecated_constants,
-)
 from homeassistant.util.unit_conversion import (
     BaseUnitConverter,
+    ReactiveEnergyConverter,
     TemperatureConverter,
+    TemperatureDeltaConverter,
     VolumeFlowRateConverter,
 )
 
@@ -54,7 +58,6 @@ ATTR_VALUE = "value"
 ATTR_MIN = "min"
 ATTR_MAX = "max"
 ATTR_STEP = "step"
-ATTR_STEP_VALIDATION = "step_validation"
 
 DEFAULT_MIN_VALUE = 0.0
 DEFAULT_MAX_VALUE = 100.0
@@ -73,27 +76,32 @@ class NumberMode(StrEnum):
     SLIDER = "slider"
 
 
-# MODE_* are deprecated as of 2021.12, use the NumberMode enum instead.
-_DEPRECATED_MODE_AUTO: Final = DeprecatedConstantEnum(NumberMode.AUTO, "2025.1")
-_DEPRECATED_MODE_BOX: Final = DeprecatedConstantEnum(NumberMode.BOX, "2025.1")
-_DEPRECATED_MODE_SLIDER: Final = DeprecatedConstantEnum(NumberMode.SLIDER, "2025.1")
-
-
 class NumberDeviceClass(StrEnum):
     """Device class for numbers."""
 
     # NumberDeviceClass should be aligned with SensorDeviceClass
+    ABSOLUTE_HUMIDITY = "absolute_humidity"
+    """Absolute humidity.
+
+    Unit of measurement: `g/m³`, `mg/m³`
+    """
 
     APPARENT_POWER = "apparent_power"
     """Apparent power.
 
-    Unit of measurement: `VA`
+    Unit of measurement: `mVA`, `VA`, `kVA`
     """
 
     AQI = "aqi"
     """Air Quality Index.
 
     Unit of measurement: `None`
+    """
+
+    AREA = "area"
+    """Area
+
+    Unit of measurement: `UnitOfArea` units
     """
 
     ATMOSPHERIC_PRESSURE = "atmospheric_pressure"
@@ -108,16 +116,28 @@ class NumberDeviceClass(StrEnum):
     Unit of measurement: `%`
     """
 
+    BLOOD_GLUCOSE_CONCENTRATION = "blood_glucose_concentration"
+    """Blood glucose concentration.
+
+    Unit of measurement: `mg/dL`, `mmol/L`
+    """
+
     CO = "carbon_monoxide"
     """Carbon Monoxide gas concentration.
 
-    Unit of measurement: `ppm` (parts per million)
+    Unit of measurement: `ppm` (parts per million), `mg/m³`, `μg/m³`
     """
 
     CO2 = "carbon_dioxide"
     """Carbon Dioxide gas concentration.
 
     Unit of measurement: `ppm` (parts per million)
+    """
+
+    CONDUCTIVITY = "conductivity"
+    """Conductivity.
+
+    Unit of measurement: `S/cm`, `mS/cm`, `μS/cm`
     """
 
     CURRENT = "current"
@@ -149,13 +169,22 @@ class NumberDeviceClass(StrEnum):
     DURATION = "duration"
     """Fixed duration.
 
-    Unit of measurement: `d`, `h`, `min`, `s`, `ms`
+    Unit of measurement: `d`, `h`, `min`, `s`, `ms`, `μs`
     """
 
     ENERGY = "energy"
     """Energy.
 
-    Unit of measurement: `Wh`, `kWh`, `MWh`, `MJ`, `GJ`
+    Unit of measurement: `J`, `kJ`, `MJ`, `GJ`, `mWh`, `Wh`, `kWh`, `MWh`, `GWh`, `TWh`, `cal`, `kcal`, `Mcal`, `Gcal`
+    """
+
+    ENERGY_DISTANCE = "energy_distance"
+    """Energy distance.
+
+    Use this device class for sensors measuring energy by distance, for example the amount
+    of electric energy consumed by an electric car.
+
+    Unit of measurement: `kWh/100km`, `Wh/km`, `mi/kWh`, `km/kWh`
     """
 
     ENERGY_STORAGE = "energy_storage"
@@ -164,7 +193,7 @@ class NumberDeviceClass(StrEnum):
     Use this device class for sensors measuring stored energy, for example the amount
     of electric energy currently stored in a battery or the capacity of a battery.
 
-    Unit of measurement: `Wh`, `kWh`, `MWh`, `MJ`, `GJ`
+    Unit of measurement: `J`, `kJ`, `MJ`, `GJ`, `mWh`, `Wh`, `kWh`, `MWh`, `GWh`, `TWh`, `cal`, `kcal`, `Mcal`, `Gcal`
     """
 
     FREQUENCY = "frequency"
@@ -177,8 +206,8 @@ class NumberDeviceClass(StrEnum):
     """Gas.
 
     Unit of measurement:
-    - SI / metric: `m³`
-    - USCS / imperial: `ft³`, `CCF`
+    - SI / metric: `L`, `m³`
+    - USCS / imperial: `ft³`, `CCF`, `MCF`
     """
 
     HUMIDITY = "humidity"
@@ -218,25 +247,25 @@ class NumberDeviceClass(StrEnum):
     NITROGEN_DIOXIDE = "nitrogen_dioxide"
     """Amount of NO2.
 
-    Unit of measurement: `µg/m³`
+    Unit of measurement: `μg/m³`
     """
 
     NITROGEN_MONOXIDE = "nitrogen_monoxide"
     """Amount of NO.
 
-    Unit of measurement: `µg/m³`
+    Unit of measurement: `μg/m³`
     """
 
     NITROUS_OXIDE = "nitrous_oxide"
     """Amount of N2O.
 
-    Unit of measurement: `µg/m³`
+    Unit of measurement: `μg/m³`
     """
 
     OZONE = "ozone"
     """Amount of O3.
 
-    Unit of measurement: `µg/m³`
+    Unit of measurement: `μg/m³`
     """
 
     PH = "ph"
@@ -248,19 +277,25 @@ class NumberDeviceClass(StrEnum):
     PM1 = "pm1"
     """Particulate matter <= 1 μm.
 
-    Unit of measurement: `µg/m³`
+    Unit of measurement: `μg/m³`
     """
 
     PM10 = "pm10"
     """Particulate matter <= 10 μm.
 
-    Unit of measurement: `µg/m³`
+    Unit of measurement: `μg/m³`
     """
 
     PM25 = "pm25"
     """Particulate matter <= 2.5 μm.
 
-    Unit of measurement: `µg/m³`
+    Unit of measurement: `μg/m³`
+    """
+
+    PM4 = "pm4"
+    """Particulate matter <= 4 μm.
+
+    Unit of measurement: `μg/m³`
     """
 
     POWER_FACTOR = "power_factor"
@@ -272,7 +307,7 @@ class NumberDeviceClass(StrEnum):
     POWER = "power"
     """Power.
 
-    Unit of measurement: `W`, `kW`
+    Unit of measurement: `mW`, `W`, `kW`, `MW`, `GW`, `TW`, `BTU/h`
     """
 
     PRECIPITATION = "precipitation"
@@ -296,15 +331,22 @@ class NumberDeviceClass(StrEnum):
 
     Unit of measurement:
     - `mbar`, `cbar`, `bar`
-    - `Pa`, `hPa`, `kPa`
+    - `mPa`, `Pa`, `hPa`, `kPa`
     - `inHg`
     - `psi`
+    - `inH₂O`
+    """
+
+    REACTIVE_ENERGY = "reactive_energy"
+    """Reactive energy.
+
+    Unit of measurement: `varh`, `kvarh`
     """
 
     REACTIVE_POWER = "reactive_power"
     """Reactive power.
 
-    Unit of measurement: `var`
+    Unit of measurement: `mvar`, `var`, `kvar`
     """
 
     SIGNAL_STRENGTH = "signal_strength"
@@ -331,7 +373,7 @@ class NumberDeviceClass(StrEnum):
     SULPHUR_DIOXIDE = "sulphur_dioxide"
     """Amount of SO2.
 
-    Unit of measurement: `µg/m³`
+    Unit of measurement: `μg/m³`
     """
 
     TEMPERATURE = "temperature"
@@ -340,10 +382,16 @@ class NumberDeviceClass(StrEnum):
     Unit of measurement: `°C`, `°F`, `K`
     """
 
+    TEMPERATURE_DELTA = "temperature_delta"
+    """Difference of temperatures - Temperature range.
+
+    Unit of measurement: `°C`, `°F`, `K`
+    """
+
     VOLATILE_ORGANIC_COMPOUNDS = "volatile_organic_compounds"
     """Amount of VOC.
 
-    Unit of measurement: `µg/m³`
+    Unit of measurement: `μg/m³`, `mg/m³`
     """
 
     VOLATILE_ORGANIC_COMPOUNDS_PARTS = "volatile_organic_compounds_parts"
@@ -355,7 +403,7 @@ class NumberDeviceClass(StrEnum):
     VOLTAGE = "voltage"
     """Voltage.
 
-    Unit of measurement: `V`, `mV`
+    Unit of measurement: `V`, `mV`, `μV`, `kV`, `MV`
     """
 
     VOLUME = "volume"
@@ -363,7 +411,7 @@ class NumberDeviceClass(StrEnum):
 
     Unit of measurement: `VOLUME_*` units
     - SI / metric: `mL`, `L`, `m³`
-    - USCS / imperial: `ft³`, `CCF`, `fl. oz.`, `gal` (warning: volumes expressed in
+    - USCS / imperial: `ft³`, `CCF`, `MCF`, `fl. oz.`, `gal` (warning: volumes expressed in
     USCS/imperial units are currently assumed to be US volumes)
     """
 
@@ -375,7 +423,7 @@ class NumberDeviceClass(StrEnum):
 
     Unit of measurement: `VOLUME_*` units
     - SI / metric: `mL`, `L`, `m³`
-    - USCS / imperial: `ft³`, `CCF`, `fl. oz.`, `gal` (warning: volumes expressed in
+    - USCS / imperial: `ft³`, `CCF`, `MCF`, `fl. oz.`, `gal` (warning: volumes expressed in
     USCS/imperial units are currently assumed to be US volumes)
     """
 
@@ -383,8 +431,8 @@ class NumberDeviceClass(StrEnum):
     """Generic flow rate
 
     Unit of measurement: UnitOfVolumeFlowRate
-    - SI / metric: `m³/h`, `L/min`
-    - USCS / imperial: `ft³/min`, `gal/min`
+    - SI / metric: `m³/h`, `m³/min`, `m³/s`, `L/h`, `L/min`, `L/s`, `mL/s`
+    - USCS / imperial: `ft³/min`, `gal/min`, `gal/d`
     """
 
     WATER = "water"
@@ -392,7 +440,7 @@ class NumberDeviceClass(StrEnum):
 
     Unit of measurement:
     - SI / metric: `m³`, `L`
-    - USCS / imperial: `ft³`, `CCF`, `gal` (warning: volumes expressed in
+    - USCS / imperial: `ft³`, `CCF`, `MCF`, `gal` (warning: volumes expressed in
     USCS/imperial units are currently assumed to be US volumes)
     """
 
@@ -402,8 +450,14 @@ class NumberDeviceClass(StrEnum):
     Weight is used instead of mass to fit with every day language.
 
     Unit of measurement: `MASS_*` units
-    - SI / metric: `µg`, `mg`, `g`, `kg`
+    - SI / metric: `μg`, `mg`, `g`, `kg`
     - USCS / imperial: `oz`, `lb`
+    """
+
+    WIND_DIRECTION = "wind_direction"
+    """Wind direction.
+
+    Unit of measurement: `°`
     """
 
     WIND_SPEED = "wind_speed"
@@ -418,12 +472,23 @@ class NumberDeviceClass(StrEnum):
 
 DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(NumberDeviceClass))
 DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
+    NumberDeviceClass.ABSOLUTE_HUMIDITY: {
+        CONCENTRATION_GRAMS_PER_CUBIC_METER,
+        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+    },
     NumberDeviceClass.APPARENT_POWER: set(UnitOfApparentPower),
     NumberDeviceClass.AQI: {None},
+    NumberDeviceClass.AREA: set(UnitOfArea),
     NumberDeviceClass.ATMOSPHERIC_PRESSURE: set(UnitOfPressure),
     NumberDeviceClass.BATTERY: {PERCENTAGE},
-    NumberDeviceClass.CO: {CONCENTRATION_PARTS_PER_MILLION},
+    NumberDeviceClass.BLOOD_GLUCOSE_CONCENTRATION: set(UnitOfBloodGlucoseConcentration),
+    NumberDeviceClass.CO: {
+        CONCENTRATION_PARTS_PER_MILLION,
+        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    },
     NumberDeviceClass.CO2: {CONCENTRATION_PARTS_PER_MILLION},
+    NumberDeviceClass.CONDUCTIVITY: set(UnitOfConductivity),
     NumberDeviceClass.CURRENT: set(UnitOfElectricCurrent),
     NumberDeviceClass.DATA_RATE: set(UnitOfDataRate),
     NumberDeviceClass.DATA_SIZE: set(UnitOfInformation),
@@ -434,14 +499,18 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
         UnitOfTime.MINUTES,
         UnitOfTime.SECONDS,
         UnitOfTime.MILLISECONDS,
+        UnitOfTime.MICROSECONDS,
     },
     NumberDeviceClass.ENERGY: set(UnitOfEnergy),
+    NumberDeviceClass.ENERGY_DISTANCE: set(UnitOfEnergyDistance),
     NumberDeviceClass.ENERGY_STORAGE: set(UnitOfEnergy),
     NumberDeviceClass.FREQUENCY: set(UnitOfFrequency),
     NumberDeviceClass.GAS: {
         UnitOfVolume.CENTUM_CUBIC_FEET,
         UnitOfVolume.CUBIC_FEET,
         UnitOfVolume.CUBIC_METERS,
+        UnitOfVolume.LITERS,
+        UnitOfVolume.MILLE_CUBIC_FEET,
     },
     NumberDeviceClass.HUMIDITY: {PERCENTAGE},
     NumberDeviceClass.ILLUMINANCE: {LIGHT_LUX},
@@ -455,22 +524,33 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
     NumberDeviceClass.PM1: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     NumberDeviceClass.PM10: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     NumberDeviceClass.PM25: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
+    NumberDeviceClass.PM4: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     NumberDeviceClass.POWER_FACTOR: {PERCENTAGE, None},
-    NumberDeviceClass.POWER: {UnitOfPower.WATT, UnitOfPower.KILO_WATT},
+    NumberDeviceClass.POWER: {
+        UnitOfPower.MILLIWATT,
+        UnitOfPower.WATT,
+        UnitOfPower.KILO_WATT,
+        UnitOfPower.MEGA_WATT,
+        UnitOfPower.GIGA_WATT,
+        UnitOfPower.TERA_WATT,
+    },
     NumberDeviceClass.PRECIPITATION: set(UnitOfPrecipitationDepth),
     NumberDeviceClass.PRECIPITATION_INTENSITY: set(UnitOfVolumetricFlux),
     NumberDeviceClass.PRESSURE: set(UnitOfPressure),
-    NumberDeviceClass.REACTIVE_POWER: {POWER_VOLT_AMPERE_REACTIVE},
+    NumberDeviceClass.REACTIVE_ENERGY: set(UnitOfReactiveEnergy),
+    NumberDeviceClass.REACTIVE_POWER: set(UnitOfReactivePower),
     NumberDeviceClass.SIGNAL_STRENGTH: {
         SIGNAL_STRENGTH_DECIBELS,
         SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     },
     NumberDeviceClass.SOUND_PRESSURE: set(UnitOfSoundPressure),
-    NumberDeviceClass.SPEED: set(UnitOfSpeed).union(set(UnitOfVolumetricFlux)),
+    NumberDeviceClass.SPEED: {*UnitOfSpeed, *UnitOfVolumetricFlux},
     NumberDeviceClass.SULPHUR_DIOXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     NumberDeviceClass.TEMPERATURE: set(UnitOfTemperature),
+    NumberDeviceClass.TEMPERATURE_DELTA: set(UnitOfTemperature),
     NumberDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: {
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
     },
     NumberDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: {
         CONCENTRATION_PARTS_PER_BILLION,
@@ -486,19 +566,29 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
         UnitOfVolume.CUBIC_METERS,
         UnitOfVolume.GALLONS,
         UnitOfVolume.LITERS,
+        UnitOfVolume.MILLE_CUBIC_FEET,
     },
     NumberDeviceClass.WEIGHT: set(UnitOfMass),
+    NumberDeviceClass.WIND_DIRECTION: {DEGREE},
     NumberDeviceClass.WIND_SPEED: set(UnitOfSpeed),
 }
 
 UNIT_CONVERTERS: dict[NumberDeviceClass, type[BaseUnitConverter]] = {
+    NumberDeviceClass.REACTIVE_ENERGY: ReactiveEnergyConverter,
     NumberDeviceClass.TEMPERATURE: TemperatureConverter,
+    NumberDeviceClass.TEMPERATURE_DELTA: TemperatureDeltaConverter,
     NumberDeviceClass.VOLUME_FLOW_RATE: VolumeFlowRateConverter,
 }
 
-# These can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(
-    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
-)
-__all__ = all_with_deprecated_constants(globals())
+# We translate units that were using using the legacy coding of μ \u00b5
+# to units using recommended coding of μ \u03bc
+AMBIGUOUS_UNITS: dict[str | None, str] = {
+    "\u00b5Sv/h": "μSv/h",  # aranet: radiation rate
+    "\u00b5S/cm": UnitOfConductivity.MICROSIEMENS_PER_CM,
+    "\u00b5V": UnitOfElectricPotential.MICROVOLT,
+    "\u00b5g/ft³": CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT,
+    "\u00b5g/m³": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    "\u00b5mol/s⋅m²": "μmol/s⋅m²",  # fyta: light
+    "\u00b5g": UnitOfMass.MICROGRAMS,
+    "\u00b5s": UnitOfTime.MICROSECONDS,
+}

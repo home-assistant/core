@@ -1,10 +1,10 @@
-"""The tests for WebOS TV device triggers."""
+"""The tests for LG webOS TV device triggers."""
 
 import pytest
 
 from homeassistant.components import automation
-from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.device_automation.exceptions import (
+from homeassistant.components.device_automation import (
+    DeviceAutomationType,
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.components.webostv import DOMAIN, device_trigger
@@ -44,7 +44,7 @@ async def test_get_triggers(
 
 async def test_if_fires_on_turn_on_request(
     hass: HomeAssistant,
-    calls: list[ServiceCall],
+    service_calls: list[ServiceCall],
     device_registry: dr.DeviceRegistry,
     client,
 ) -> None:
@@ -97,21 +97,21 @@ async def test_if_fires_on_turn_on_request(
         blocking=True,
     )
 
-    assert len(calls) == 2
-    assert calls[0].data["some"] == device.id
-    assert calls[0].data["id"] == 0
-    assert calls[1].data["some"] == ENTITY_ID
-    assert calls[1].data["id"] == 0
+    assert len(service_calls) == 3
+    assert service_calls[1].data["some"] == device.id
+    assert service_calls[1].data["id"] == 0
+    assert service_calls[2].data["some"] == ENTITY_ID
+    assert service_calls[2].data["id"] == 0
 
 
-async def test_failure_scenarios(
+async def test_invalid_trigger_raises(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry, client
 ) -> None:
-    """Test failure scenarios."""
+    """Test invalid trigger platform or device id raises."""
     await setup_webostv(hass)
 
     # Test wrong trigger platform type
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError, match="Unhandled trigger type: wrong.type"):
         await device_trigger.async_attach_trigger(
             hass, {"type": "wrong.type", "device_id": "invalid_device_id"}, None, {}
         )
@@ -128,7 +128,26 @@ async def test_failure_scenarios(
             },
         )
 
-    entry = MockConfigEntry(domain="fake", state=ConfigEntryState.LOADED, data={})
+
+@pytest.mark.parametrize(
+    ("domain", "entry_state"),
+    [
+        (DOMAIN, ConfigEntryState.NOT_LOADED),
+        ("fake", ConfigEntryState.LOADED),
+    ],
+)
+async def test_invalid_entry_raises(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client,
+    domain: str,
+    entry_state: ConfigEntryState,
+) -> None:
+    """Test device id not loaded or from another domain raises."""
+    await setup_webostv(hass)
+
+    entry = MockConfigEntry(domain=domain, state=entry_state, data={})
+    entry.runtime_data = None
     entry.add_to_hass(hass)
 
     device = device_registry.async_get_or_create(

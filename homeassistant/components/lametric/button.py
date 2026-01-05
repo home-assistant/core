@@ -9,13 +9,11 @@ from typing import Any
 from demetriek import LaMetricDevice
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import LaMetricDataUpdateCoordinator
+from .coordinator import LaMetricConfigEntry, LaMetricDataUpdateCoordinator
 from .entity import LaMetricEntity
 from .helpers import lametric_exception_handler
 
@@ -57,11 +55,11 @@ BUTTONS = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: LaMetricConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up LaMetric button based on a config entry."""
-    coordinator: LaMetricDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         LaMetricButtonEntity(
             coordinator=coordinator,

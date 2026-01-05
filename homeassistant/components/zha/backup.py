@@ -4,7 +4,7 @@ import logging
 
 from homeassistant.core import HomeAssistant
 
-from .core.helpers import get_zha_gateway
+from .helpers import get_zha_gateway
 
 _LOGGER = logging.getLogger(__name__)
 

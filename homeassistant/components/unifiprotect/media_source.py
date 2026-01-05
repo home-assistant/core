@@ -3,18 +3,19 @@
 from __future__ import annotations
 
 import asyncio
+from calendar import monthrange
 from datetime import date, datetime, timedelta
 from enum import Enum
 from typing import Any, NoReturn, cast
 
-from uiprotect.data import Camera, Event, EventType, ModelType, SmartDetectObjectType
+from uiprotect.data import Camera, Event, EventType, SmartDetectObjectType
 from uiprotect.exceptions import NvrError
 from uiprotect.utils import from_js_time
 from yarl import URL
 
 from homeassistant.components.camera import CameraImageView
 from homeassistant.components.media_player import BrowseError, MediaClass
-from homeassistant.components.media_source.models import (
+from homeassistant.components.media_source import (
     BrowseMediaSource,
     MediaSource,
     MediaSourceItem,
@@ -26,7 +27,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
-from .data import ProtectData
+from .data import ProtectData, async_get_ufp_entries
 from .views import async_generate_event_video_url, async_generate_thumbnail_url
 
 VIDEO_FORMAT = "video/mp4"
@@ -81,30 +82,25 @@ EVENT_NAME_MAP = {
 }
 
 
-def get_ufp_event(event_type: SimpleEventType) -> set[EventType]:
-    """Get UniFi Protect event type from SimpleEventType."""
-
-    return EVENT_MAP[event_type]
-
-
 async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
     """Set up UniFi Protect media source."""
-
-    data_sources: dict[str, ProtectData] = {}
-    for data in hass.data.get(DOMAIN, {}).values():
-        if isinstance(data, ProtectData):
-            data_sources[data.api.bootstrap.nvr.id] = data
-
-    return ProtectMediaSource(hass, data_sources)
+    return ProtectMediaSource(
+        hass,
+        {
+            entry.runtime_data.api.bootstrap.nvr.id: entry.runtime_data
+            for entry in async_get_ufp_entries(hass)
+        },
+    )
 
 
 @callback
 def _get_month_start_end(start: datetime) -> tuple[datetime, datetime]:
+    """Get the first day of the month for start and current time."""
     start = dt_util.as_local(start)
     end = dt_util.now()
 
-    start = start.replace(day=1, hour=0, minute=0, second=1, microsecond=0)
-    end = end.replace(day=1, hour=0, minute=0, second=2, microsecond=0)
+    start = start.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    end = end.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
     return start, end
 
@@ -119,20 +115,19 @@ def _bad_identifier(identifier: str, err: Exception | None = None) -> NoReturn:
 
 @callback
 def _format_duration(duration: timedelta) -> str:
-    formatted = ""
     seconds = int(duration.total_seconds())
-    if seconds > 3600:
-        hours = seconds // 3600
-        formatted += f"{hours}h "
-        seconds -= hours * 3600
-    if seconds > 60:
-        minutes = seconds // 60
-        formatted += f"{minutes}m "
-        seconds -= minutes * 60
-    if seconds > 0:
-        formatted += f"{seconds}s "
+    hours, seconds = divmod(seconds, 3600)
+    minutes, seconds = divmod(seconds, 60)
 
-    return formatted.strip()
+    parts = []
+    if hours > 0:
+        parts.append(f"{hours}h")
+    if minutes > 0:
+        parts.append(f"{minutes}m")
+    if seconds > 0:
+        parts.append(f"{seconds}s")
+
+    return " ".join(parts) if parts else "0s"
 
 
 @callback
@@ -488,7 +483,7 @@ class ProtectMediaSource(MediaSource):
     ) -> list[BrowseMediaSource]:
         """Build media source for a given range of time and event type."""
 
-        event_types = event_types or get_ufp_event(SimpleEventType.ALL)
+        event_types = event_types or EVENT_MAP[SimpleEventType.ALL]
         types = list(event_types)
         sources: list[BrowseMediaSource] = []
         events = await data.api.get_events_raw(
@@ -543,21 +538,20 @@ class ProtectMediaSource(MediaSource):
             return source
 
         now = dt_util.now()
-
-        args = {
-            "data": data,
-            "start": now - timedelta(days=days),
-            "end": now,
-            "reserve": True,
-            "event_types": get_ufp_event(event_type),
-        }
-
         camera: Camera | None = None
+        event_camera_id: str | None = None
         if camera_id != "all":
             camera = data.api.bootstrap.cameras.get(camera_id)
-            args["camera_id"] = camera_id
+            event_camera_id = camera_id
 
-        events = await self._build_events(**args)  # type: ignore[arg-type]
+        events = await self._build_events(
+            data=data,
+            start=now - timedelta(days=days),
+            end=now,
+            camera_id=event_camera_id,
+            event_types=EVENT_MAP[event_type],
+            reserve=True,
+        )
         source.children = events
         source.title = self._breadcrumb(
             data,
@@ -600,7 +594,8 @@ class ProtectMediaSource(MediaSource):
         start = max(recording_start, start)
 
         recording_end = dt_util.now().date()
-        end = start.replace(month=start.month + 1) - timedelta(days=1)
+
+        end = start.replace(day=monthrange(start.year, start.month)[1])
         end = min(recording_end, end)
 
         children = [self._build_days(data, camera_id, event_type, start, is_all=True)]
@@ -667,28 +662,27 @@ class ProtectMediaSource(MediaSource):
             tzinfo=dt_util.get_default_time_zone(),
         )
         if is_all:
-            if start_dt.month < 12:
-                end_dt = start_dt.replace(month=start_dt.month + 1)
-            else:
-                end_dt = start_dt.replace(year=start_dt.year + 1, month=1)
+            # Move to first day of next month
+            days_in_month = monthrange(start_dt.year, start_dt.month)[1]
+            end_dt = start_dt + timedelta(days=days_in_month)
         else:
             end_dt = start_dt + timedelta(hours=24)
 
-        args = {
-            "data": data,
-            "start": start_dt,
-            "end": end_dt,
-            "reserve": False,
-            "event_types": get_ufp_event(event_type),
-        }
-
         camera: Camera | None = None
+        event_camera_id: str | None = None
         if camera_id != "all":
             camera = data.api.bootstrap.cameras.get(camera_id)
-            args["camera_id"] = camera_id
+            event_camera_id = camera_id
 
         title = f"{start.strftime('%B %Y')} > {title}"
-        events = await self._build_events(**args)  # type: ignore[arg-type]
+        events = await self._build_events(
+            data=data,
+            start=start_dt,
+            end=end_dt,
+            camera_id=event_camera_id,
+            reserve=False,
+            event_types=EVENT_MAP[event_type],
+        )
         source.children = events
         source.title = self._breadcrumb(
             data,
@@ -733,7 +727,7 @@ class ProtectMediaSource(MediaSource):
         ]
 
         start, end = _get_month_start_end(data.api.bootstrap.recording_start)
-        while end > start:
+        while end >= start:
             children.append(self._build_month(data, camera_id, event_type, end.date()))
             end = (end - timedelta(days=1)).replace(day=1)
 
@@ -849,8 +843,7 @@ class ProtectMediaSource(MediaSource):
 
         cameras: list[BrowseMediaSource] = [await self._build_camera(data, "all")]
 
-        for camera in data.get_by_types({ModelType.CAMERA}):
-            camera = cast(Camera, camera)
+        for camera in data.get_cameras():
             if not camera.can_read_media(data.api.bootstrap.auth_user):
                 continue
             cameras.append(await self._build_camera(data, camera.id))

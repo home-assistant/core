@@ -1,10 +1,10 @@
 """Tests for IPMA config flow."""
 
+from collections.abc import Generator
 from unittest.mock import patch
 
 from pyipma import IPMAException
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.ipma.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -13,6 +13,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import MockLocation
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="ipma_setup", autouse=True)
@@ -93,7 +95,9 @@ async def test_config_flow_failures(hass: HomeAssistant) -> None:
     }
 
 
-async def test_flow_entry_already_exists(hass: HomeAssistant, init_integration) -> None:
+async def test_flow_entry_already_exists(
+    hass: HomeAssistant, init_integration: MockConfigEntry
+) -> None:
     """Test user input for config_entry that already exists.
 
     Test when the form should show when user puts existing location

@@ -1,5 +1,7 @@
 """Constants for August devices."""
 
+from yalexs.const import Brand
+
 from homeassistant.const import Platform
 
 DEFAULT_TIMEOUT = 25
@@ -9,14 +11,14 @@ CONF_BRAND = "brand"
 CONF_LOGIN_METHOD = "login_method"
 CONF_INSTALL_ID = "install_id"
 
+DEFAULT_AUGUST_BRAND = Brand.YALE_AUGUST
+
 VERIFICATION_CODE_KEY = "verification_code"
 
 NOTIFICATION_ID = "august_notification"
 NOTIFICATION_TITLE = "August"
 
 MANUFACTURER = "August Home Inc."
-
-DEFAULT_AUGUST_CONFIG_FILE = ".august.conf"
 
 DEFAULT_NAME = "August"
 DOMAIN = "august"
@@ -42,6 +44,7 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CAMERA,
+    Platform.EVENT,
     Platform.LOCK,
     Platform.SENSOR,
 ]

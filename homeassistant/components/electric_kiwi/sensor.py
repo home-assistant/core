@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
-from electrickiwi_api.model import AccountBalance, Hop
+from electrickiwi_api.model import AccountSummary, Hop
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -14,18 +14,20 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CURRENCY_DOLLAR, PERCENTAGE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from .const import ACCOUNT_COORDINATOR, ATTRIBUTION, DOMAIN, HOP_COORDINATOR
+from .const import ATTRIBUTION
 from .coordinator import (
     ElectricKiwiAccountDataCoordinator,
+    ElectricKiwiConfigEntry,
     ElectricKiwiHOPDataCoordinator,
 )
+
+PARALLEL_UPDATES = 0
 
 ATTR_EK_HOP_START = "hop_power_start"
 ATTR_EK_HOP_END = "hop_power_end"
@@ -39,7 +41,15 @@ ATTR_HOP_PERCENTAGE = "hop_percentage"
 class ElectricKiwiAccountSensorEntityDescription(SensorEntityDescription):
     """Describes Electric Kiwi sensor entity."""
 
-    value_func: Callable[[AccountBalance], float | datetime]
+    value_func: Callable[[AccountSummary], float | datetime]
+
+
+def _get_hop_percentage(account_balance: AccountSummary) -> float:
+    """Return the hop percentage from account summary."""
+    if power := account_balance.services.get("power"):
+        if connection := power.connections[0]:
+            return float(connection.hop_percentage)
+    return 0.0
 
 
 ACCOUNT_SENSOR_TYPES: tuple[ElectricKiwiAccountSensorEntityDescription, ...] = (
@@ -72,9 +82,7 @@ ACCOUNT_SENSOR_TYPES: tuple[ElectricKiwiAccountSensorEntityDescription, ...] = (
         translation_key="hop_power_savings",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_func=lambda account_balance: float(
-            account_balance.connections[0].hop_percentage
-        ),
+        value_func=_get_hop_percentage,
     ),
 )
 
@@ -122,12 +130,12 @@ HOP_SENSOR_TYPES: tuple[ElectricKiwiHOPSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ElectricKiwiConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Electric Kiwi Sensors Setup."""
-    account_coordinator: ElectricKiwiAccountDataCoordinator = hass.data[DOMAIN][
-        entry.entry_id
-    ][ACCOUNT_COORDINATOR]
+    account_coordinator = entry.runtime_data.account
 
     entities: list[SensorEntity] = [
         ElectricKiwiAccountEntity(
@@ -137,9 +145,7 @@ async def async_setup_entry(
         for description in ACCOUNT_SENSOR_TYPES
     ]
 
-    hop_coordinator: ElectricKiwiHOPDataCoordinator = hass.data[DOMAIN][entry.entry_id][
-        HOP_COORDINATOR
-    ]
+    hop_coordinator = entry.runtime_data.hop
     entities.extend(
         [
             ElectricKiwiHOPEntity(hop_coordinator, description)
@@ -167,8 +173,8 @@ class ElectricKiwiAccountEntity(
         super().__init__(coordinator)
 
         self._attr_unique_id = (
-            f"{coordinator._ek_api.customer_number}"  # noqa: SLF001
-            f"_{coordinator._ek_api.connection_id}_{description.key}"  # noqa: SLF001
+            f"{coordinator.ek_api.customer_number}"
+            f"_{coordinator.ek_api.electricity.identifier}_{description.key}"
         )
         self.entity_description = description
 
@@ -196,8 +202,8 @@ class ElectricKiwiHOPEntity(
         super().__init__(coordinator)
 
         self._attr_unique_id = (
-            f"{coordinator._ek_api.customer_number}"  # noqa: SLF001
-            f"_{coordinator._ek_api.connection_id}_{description.key}"  # noqa: SLF001
+            f"{coordinator.ek_api.customer_number}"
+            f"_{coordinator.ek_api.electricity.identifier}_{description.key}"
         )
         self.entity_description = description
 

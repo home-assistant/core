@@ -2,111 +2,86 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
 import logging
 
-from pysmarty import Smarty
+from pysmarty2 import Smarty
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN, SIGNAL_UPDATE_SMARTY
+from .coordinator import SmartyConfigEntry, SmartyCoordinator
+from .entity import SmartyEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(
+@dataclass(frozen=True, kw_only=True)
+class SmartyBinarySensorEntityDescription(BinarySensorEntityDescription):
+    """Class describing Smarty binary sensor entities."""
+
+    value_fn: Callable[[Smarty], bool]
+
+
+ENTITIES: tuple[SmartyBinarySensorEntityDescription, ...] = (
+    SmartyBinarySensorEntityDescription(
+        key="alarm",
+        translation_key="alarm",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        value_fn=lambda smarty: smarty.alarm,
+    ),
+    SmartyBinarySensorEntityDescription(
+        key="warning",
+        translation_key="warning",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        value_fn=lambda smarty: smarty.warning,
+    ),
+    SmartyBinarySensorEntityDescription(
+        key="boost",
+        translation_key="boost_state",
+        value_fn=lambda smarty: smarty.boost,
+    ),
+)
+
+
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: SmartyConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Smarty Binary Sensor Platform."""
-    smarty: Smarty = hass.data[DOMAIN]["api"]
-    name: str = hass.data[DOMAIN]["name"]
 
-    sensors = [
-        AlarmSensor(name, smarty),
-        WarningSensor(name, smarty),
-        BoostSensor(name, smarty),
-    ]
+    coordinator = entry.runtime_data
 
-    async_add_entities(sensors, True)
+    async_add_entities(
+        SmartyBinarySensor(coordinator, description) for description in ENTITIES
+    )
 
 
-class SmartyBinarySensor(BinarySensorEntity):
+class SmartyBinarySensor(SmartyEntity, BinarySensorEntity):
     """Representation of a Smarty Binary Sensor."""
 
-    _attr_should_poll = False
+    entity_description: SmartyBinarySensorEntityDescription
 
     def __init__(
         self,
-        name: str,
-        device_class: BinarySensorDeviceClass | None,
-        smarty: Smarty,
+        coordinator: SmartyCoordinator,
+        entity_description: SmartyBinarySensorEntityDescription,
     ) -> None:
         """Initialize the entity."""
-        self._attr_name = name
-        self._attr_device_class = device_class
-        self._smarty = smarty
-
-    async def async_added_to_hass(self) -> None:
-        """Call to update."""
-        async_dispatcher_connect(self.hass, SIGNAL_UPDATE_SMARTY, self._update_callback)
-
-    @callback
-    def _update_callback(self) -> None:
-        """Call update method."""
-        self.async_schedule_update_ha_state(True)
-
-
-class BoostSensor(SmartyBinarySensor):
-    """Boost State Binary Sensor."""
-
-    def __init__(self, name: str, smarty: Smarty) -> None:
-        """Alarm Sensor Init."""
-        super().__init__(name=f"{name} Boost State", device_class=None, smarty=smarty)
-
-    def update(self) -> None:
-        """Update state."""
-        _LOGGER.debug("Updating sensor %s", self._attr_name)
-        self._attr_is_on = self._smarty.boost
-
-
-class AlarmSensor(SmartyBinarySensor):
-    """Alarm Binary Sensor."""
-
-    def __init__(self, name: str, smarty: Smarty) -> None:
-        """Alarm Sensor Init."""
-        super().__init__(
-            name=f"{name} Alarm",
-            device_class=BinarySensorDeviceClass.PROBLEM,
-            smarty=smarty,
+        super().__init__(coordinator)
+        self.entity_description = entity_description
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}_{entity_description.key}"
         )
 
-    def update(self) -> None:
-        """Update state."""
-        _LOGGER.debug("Updating sensor %s", self._attr_name)
-        self._attr_is_on = self._smarty.alarm
-
-
-class WarningSensor(SmartyBinarySensor):
-    """Warning Sensor."""
-
-    def __init__(self, name: str, smarty: Smarty) -> None:
-        """Warning Sensor Init."""
-        super().__init__(
-            name=f"{name} Warning",
-            device_class=BinarySensorDeviceClass.PROBLEM,
-            smarty=smarty,
-        )
-
-    def update(self) -> None:
-        """Update state."""
-        _LOGGER.debug("Updating sensor %s", self._attr_name)
-        self._attr_is_on = self._smarty.warning
+    @property
+    def is_on(self) -> bool:
+        """Return the state of the binary sensor."""
+        return self.entity_description.value_fn(self.coordinator.client)

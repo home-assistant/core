@@ -1,17 +1,20 @@
 # serializer version: 1
-# name: test_sensor[button.nettigo_air_monitor_restart-entry]
+# name: test_sensor[sensor.nettigo_air_monitor_bh1750_illuminance-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
-    'domain': 'button',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.nettigo_air_monitor_restart',
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.nettigo_air_monitor_bh1750_illuminance',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -20,30 +23,36 @@
     }),
     'name': None,
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
     }),
-    'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
+    'original_device_class': <SensorDeviceClass.ILLUMINANCE: 'illuminance'>,
     'original_icon': None,
-    'original_name': 'Restart',
+    'original_name': 'BH1750 illuminance',
     'platform': 'nam',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'aa:bb:cc:dd:ee:ff-restart',
-    'unit_of_measurement': None,
+    'translation_key': 'bh1750_illuminance',
+    'unique_id': 'aa:bb:cc:dd:ee:ff-bh1750_illuminance',
+    'unit_of_measurement': 'lx',
   })
 # ---
-# name: test_sensor[button.nettigo_air_monitor_restart-state]
+# name: test_sensor[sensor.nettigo_air_monitor_bh1750_illuminance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'Nettigo Air Monitor Restart',
+      'device_class': 'illuminance',
+      'friendly_name': 'Nettigo Air Monitor BH1750 illuminance',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'lx',
     }),
     'context': <ANY>,
-    'entity_id': 'button.nettigo_air_monitor_restart',
+    'entity_id': 'sensor.nettigo_air_monitor_bh1750_illuminance',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '298.45',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_bme280_humidity-entry]
@@ -55,6 +64,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -78,6 +88,7 @@
     'original_name': 'BME280 humidity',
     'platform': 'nam',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'bme280_humidity',
     'unique_id': 'aa:bb:cc:dd:ee:ff-bme280_humidity',
@@ -97,7 +108,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '45.7',
+    'state': '45.69',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_bme280_pressure-entry]
@@ -109,6 +120,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -132,6 +144,7 @@
     'original_name': 'BME280 pressure',
     'platform': 'nam',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'bme280_pressure',
     'unique_id': 'aa:bb:cc:dd:ee:ff-bme280_pressure',
@@ -151,7 +164,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1011.012',
+    'state': '1011.0117',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_bme280_temperature-entry]
@@ -163,6 +176,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -186,6 +200,7 @@
     'original_name': 'BME280 temperature',
     'platform': 'nam',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'bme280_temperature',
     'unique_id': 'aa:bb:cc:dd:ee:ff-bme280_temperature',
@@ -205,7 +220,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '7.6',
+    'state': '7.56',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_bmp180_pressure-entry]
@@ -217,6 +232,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -240,6 +256,7 @@
     'original_name': 'BMP180 pressure',
     'platform': 'nam',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'bmp180_pressure',
     'unique_id': 'aa:bb:cc:dd:ee:ff-bmp180_pressure',
@@ -259,7 +276,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1032.012',
+    'state': '1032.0118',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_bmp180_temperature-entry]
@@ -271,6 +288,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -294,6 +312,7 @@
     'original_name': 'BMP180 temperature',
     'platform': 'nam',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'bmp180_temperature',
     'unique_id': 'aa:bb:cc:dd:ee:ff-bmp180_temperature',
@@ -313,7 +332,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '7.6',
+    'state': '7.56',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_bmp280_pressure-entry]
@@ -325,6 +344,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -348,6 +368,7 @@
     'original_name': 'BMP280 pressure',
     'platform': 'nam',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'bmp280_pressure',
     'unique_id': 'aa:bb:cc:dd:ee:ff-bmp280_pressure',
@@ -367,7 +388,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1022.012',
+    'state': '1022.0118',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_bmp280_temperature-entry]
@@ -379,6 +400,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -402,6 +424,7 @@
     'original_name': 'BMP280 temperature',
     'platform': 'nam',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'bmp280_temperature',
     'unique_id': 'aa:bb:cc:dd:ee:ff-bmp280_temperature',
@@ -421,7 +444,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '5.6',
+    'state': '5.56',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_dht22_humidity-entry]
@@ -433,6 +456,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -456,6 +480,7 @@
     'original_name': 'DHT22 humidity',
     'platform': 'nam',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dht22_humidity',
     'unique_id': 'aa:bb:cc:dd:ee:ff-dht22_humidity',
@@ -475,7 +500,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '46.2',
+    'state': '46.23',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_dht22_temperature-entry]
@@ -487,6 +512,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -510,6 +536,7 @@
     'original_name': 'DHT22 temperature',
     'platform': 'nam',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'dht22_temperature',
     'unique_id': 'aa:bb:cc:dd:ee:ff-dht22_temperature',
@@ -529,7 +556,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '6.3',
+    'state': '6.26',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_ds18b20_temperature-entry]
@@ -541,6 +568,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -564,6 +592,7 @@
     'original_name': 'DS18B20 temperature',
     'platform': 'nam',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'ds18b20_temperature',
     'unique_id': 'aa:bb:cc:dd:ee:ff-ds18b20_temperature',
@@ -583,7 +612,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '12.6',
+    'state': '12.56',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_heca_humidity-entry]
@@ -595,6 +624,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -618,6 +648,7 @@
     'original_name': 'HECA humidity',
     'platform': 'nam',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'heca_humidity',
     'unique_id': 'aa:bb:cc:dd:ee:ff-heca_humidity',
@@ -637,7 +668,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '50.0',
+    'state': '49.97',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_heca_temperature-entry]
@@ -649,6 +680,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -672,6 +704,7 @@
     'original_name': 'HECA temperature',
     'platform': 'nam',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'heca_temperature',
     'unique_id': 'aa:bb:cc:dd:ee:ff-heca_temperature',
@@ -691,7 +724,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '8.0',
+    'state': '7.95',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_last_restart-entry]
@@ -701,6 +734,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -721,6 +755,7 @@
     'original_name': 'Last restart',
     'platform': 'nam',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'last_restart',
     'unique_id': 'aa:bb:cc:dd:ee:ff-uptime',
@@ -750,6 +785,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -773,6 +809,7 @@
     'original_name': 'MH-Z14A carbon dioxide',
     'platform': 'nam',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'mhz14a_carbon_dioxide',
     'unique_id': 'aa:bb:cc:dd:ee:ff-mhz14a_carbon_dioxide',
@@ -802,6 +839,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -822,6 +860,7 @@
     'original_name': 'PMSx003 common air quality index',
     'platform': 'nam',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pmsx003_caqi',
     'unique_id': 'aa:bb:cc:dd:ee:ff-pms_caqi',
@@ -856,6 +895,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -876,6 +916,7 @@
     'original_name': 'PMSx003 common air quality index level',
     'platform': 'nam',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pmsx003_caqi_level',
     'unique_id': 'aa:bb:cc:dd:ee:ff-pms_caqi_level',
@@ -912,6 +953,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -935,10 +977,11 @@
     'original_name': 'PMSx003 PM1',
     'platform': 'nam',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pmsx003_pm1',
     'unique_id': 'aa:bb:cc:dd:ee:ff-pms_p0',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_pmsx003_pm1-state]
@@ -947,7 +990,7 @@
       'device_class': 'pm1',
       'friendly_name': 'Nettigo Air Monitor PMSx003 PM1',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nettigo_air_monitor_pmsx003_pm1',
@@ -966,6 +1009,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -989,10 +1033,11 @@
     'original_name': 'PMSx003 PM10',
     'platform': 'nam',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pmsx003_pm10',
     'unique_id': 'aa:bb:cc:dd:ee:ff-pms_p1',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_pmsx003_pm10-state]
@@ -1001,7 +1046,7 @@
       'device_class': 'pm10',
       'friendly_name': 'Nettigo Air Monitor PMSx003 PM10',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nettigo_air_monitor_pmsx003_pm10',
@@ -1020,6 +1065,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1043,10 +1089,11 @@
     'original_name': 'PMSx003 PM2.5',
     'platform': 'nam',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'pmsx003_pm25',
     'unique_id': 'aa:bb:cc:dd:ee:ff-pms_p2',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_pmsx003_pm2_5-state]
@@ -1055,7 +1102,7 @@
       'device_class': 'pm25',
       'friendly_name': 'Nettigo Air Monitor PMSx003 PM2.5',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nettigo_air_monitor_pmsx003_pm2_5',
@@ -1072,6 +1119,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1092,6 +1140,7 @@
     'original_name': 'SDS011 common air quality index',
     'platform': 'nam',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sds011_caqi',
     'unique_id': 'aa:bb:cc:dd:ee:ff-sds011_caqi',
@@ -1126,6 +1175,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1146,6 +1196,7 @@
     'original_name': 'SDS011 common air quality index level',
     'platform': 'nam',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sds011_caqi_level',
     'unique_id': 'aa:bb:cc:dd:ee:ff-sds011_caqi_level',
@@ -1182,6 +1233,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1205,10 +1257,11 @@
     'original_name': 'SDS011 PM10',
     'platform': 'nam',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sds011_pm10',
     'unique_id': 'aa:bb:cc:dd:ee:ff-sds011_p1',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_sds011_pm10-state]
@@ -1217,14 +1270,14 @@
       'device_class': 'pm10',
       'friendly_name': 'Nettigo Air Monitor SDS011 PM10',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nettigo_air_monitor_sds011_pm10',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '18.6',
+    'state': '18.65',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_sds011_pm2_5-entry]
@@ -1236,6 +1289,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1259,10 +1313,11 @@
     'original_name': 'SDS011 PM2.5',
     'platform': 'nam',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sds011_pm25',
     'unique_id': 'aa:bb:cc:dd:ee:ff-sds011_p2',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_sds011_pm2_5-state]
@@ -1271,14 +1326,14 @@
       'device_class': 'pm25',
       'friendly_name': 'Nettigo Air Monitor SDS011 PM2.5',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nettigo_air_monitor_sds011_pm2_5',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '11.0',
+    'state': '11.03',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_sht3x_humidity-entry]
@@ -1290,6 +1345,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1313,6 +1369,7 @@
     'original_name': 'SHT3X humidity',
     'platform': 'nam',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sht3x_humidity',
     'unique_id': 'aa:bb:cc:dd:ee:ff-sht3x_humidity',
@@ -1332,7 +1389,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '34.7',
+    'state': '34.69',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_sht3x_temperature-entry]
@@ -1344,6 +1401,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1367,6 +1425,7 @@
     'original_name': 'SHT3X temperature',
     'platform': 'nam',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sht3x_temperature',
     'unique_id': 'aa:bb:cc:dd:ee:ff-sht3x_temperature',
@@ -1386,7 +1445,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '6.3',
+    'state': '6.28',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_signal_strength-entry]
@@ -1398,6 +1457,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1421,6 +1481,7 @@
     'original_name': 'Signal strength',
     'platform': 'nam',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'aa:bb:cc:dd:ee:ff-signal',
@@ -1450,6 +1511,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1470,6 +1532,7 @@
     'original_name': 'SPS30 common air quality index',
     'platform': 'nam',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sps30_caqi',
     'unique_id': 'aa:bb:cc:dd:ee:ff-sps30_caqi',
@@ -1504,6 +1567,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1524,6 +1588,7 @@
     'original_name': 'SPS30 common air quality index level',
     'platform': 'nam',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sps30_caqi_level',
     'unique_id': 'aa:bb:cc:dd:ee:ff-sps30_caqi_level',
@@ -1560,6 +1625,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1583,10 +1649,11 @@
     'original_name': 'SPS30 PM1',
     'platform': 'nam',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sps30_pm1',
     'unique_id': 'aa:bb:cc:dd:ee:ff-sps30_p0',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_sps30_pm1-state]
@@ -1595,14 +1662,14 @@
       'device_class': 'pm1',
       'friendly_name': 'Nettigo Air Monitor SPS30 PM1',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nettigo_air_monitor_sps30_pm1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '31.2',
+    'state': '31.23',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_sps30_pm10-entry]
@@ -1614,6 +1681,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1637,10 +1705,11 @@
     'original_name': 'SPS30 PM10',
     'platform': 'nam',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sps30_pm10',
     'unique_id': 'aa:bb:cc:dd:ee:ff-sps30_p1',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_sps30_pm10-state]
@@ -1649,14 +1718,14 @@
       'device_class': 'pm10',
       'friendly_name': 'Nettigo Air Monitor SPS30 PM10',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nettigo_air_monitor_sps30_pm10',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '21.2',
+    'state': '21.23',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_sps30_pm2_5-entry]
@@ -1668,6 +1737,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1691,10 +1761,11 @@
     'original_name': 'SPS30 PM2.5',
     'platform': 'nam',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sps30_pm25',
     'unique_id': 'aa:bb:cc:dd:ee:ff-sps30_p2',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_sps30_pm2_5-state]
@@ -1703,14 +1774,14 @@
       'device_class': 'pm25',
       'friendly_name': 'Nettigo Air Monitor SPS30 PM2.5',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nettigo_air_monitor_sps30_pm2_5',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '34.3',
+    'state': '34.32',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_sps30_pm4-entry]
@@ -1722,6 +1793,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1740,29 +1812,31 @@
         'suggested_display_precision': 0,
       }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.PM4: 'pm4'>,
     'original_icon': None,
     'original_name': 'SPS30 PM4',
     'platform': 'nam',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'sps30_pm4',
     'unique_id': 'aa:bb:cc:dd:ee:ff-sps30_p4',
-    'unit_of_measurement': 'µg/m³',
+    'unit_of_measurement': 'μg/m³',
   })
 # ---
 # name: test_sensor[sensor.nettigo_air_monitor_sps30_pm4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'pm4',
       'friendly_name': 'Nettigo Air Monitor SPS30 PM4',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'µg/m³',
+      'unit_of_measurement': 'μg/m³',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.nettigo_air_monitor_sps30_pm4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '24.7',
+    'state': '24.72',
   })
 # ---

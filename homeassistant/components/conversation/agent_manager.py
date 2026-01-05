@@ -4,16 +4,21 @@ from __future__ import annotations
 
 import dataclasses
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
-from homeassistant.core import Context, HomeAssistant, async_get_hass, callback
-from homeassistant.helpers import config_validation as cv, singleton
-from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Context,
+    HomeAssistant,
+    async_get_hass,
+    callback,
+)
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv, intent, singleton
 
-from .const import DOMAIN, HOME_ASSISTANT_AGENT, OLD_HOME_ASSISTANT_AGENT
-from .default_agent import async_get_default_agent
+from .const import DATA_COMPONENT, HOME_ASSISTANT_AGENT
 from .entity import ConversationEntity
 from .models import (
     AbstractConversationAgent,
@@ -28,6 +33,10 @@ from .trace import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+if TYPE_CHECKING:
+    from .default_agent import DefaultAgent
+    from .trigger import TriggerDetails
 
 
 @singleton.singleton("conversation_agent")
@@ -50,12 +59,13 @@ def async_get_agent(
     hass: HomeAssistant, agent_id: str | None = None
 ) -> AbstractConversationAgent | ConversationEntity | None:
     """Get specified agent."""
-    if agent_id is None or agent_id in (HOME_ASSISTANT_AGENT, OLD_HOME_ASSISTANT_AGENT):
-        return async_get_default_agent(hass)
+    manager = get_agent_manager(hass)
+
+    if agent_id is None or agent_id == HOME_ASSISTANT_AGENT:
+        return manager.default_agent
 
     if "." in agent_id:
-        entity_component: EntityComponent[ConversationEntity] = hass.data[DOMAIN]
-        return entity_component.get_entity(agent_id)
+        return hass.data[DATA_COMPONENT].get_entity(agent_id)
 
     manager = get_agent_manager(hass)
 
@@ -73,8 +83,13 @@ async def async_converse(
     language: str | None = None,
     agent_id: str | None = None,
     device_id: str | None = None,
+    satellite_id: str | None = None,
+    extra_system_prompt: str | None = None,
 ) -> ConversationResult:
     """Process text and get intent."""
+    if agent_id is None:
+        agent_id = HOME_ASSISTANT_AGENT
+
     agent = async_get_agent(hass, agent_id)
 
     if agent is None:
@@ -95,8 +110,10 @@ async def async_converse(
         context=context,
         conversation_id=conversation_id,
         device_id=device_id,
+        satellite_id=satellite_id,
         language=language,
         agent_id=agent_id,
+        extra_system_prompt=extra_system_prompt,
     )
     with async_conversation_trace() as trace:
         trace.add_event(
@@ -105,7 +122,19 @@ async def async_converse(
                 dataclasses.asdict(conversation_input),
             )
         )
-        result = await method(conversation_input)
+        try:
+            result = await method(conversation_input)
+        except HomeAssistantError as err:
+            intent_response = intent.IntentResponse(language=language)
+            intent_response.async_set_error(
+                intent.IntentResponseErrorCode.UNKNOWN,
+                str(err),
+            )
+            result = ConversationResult(
+                response=intent_response,
+                conversation_id=conversation_id,
+            )
+
         trace.set_result(**result.as_dict())
         return result
 
@@ -117,6 +146,9 @@ class AgentManager:
         """Initialize the conversation agents."""
         self.hass = hass
         self._agents: dict[str, AbstractConversationAgent] = {}
+        self.default_agent: DefaultAgent | None = None
+        self.config_intents: dict[str, Any] = {}
+        self.triggers_details: list[TriggerDetails] = []
 
     @callback
     def async_get_agent(self, agent_id: str) -> AbstractConversationAgent | None:
@@ -146,6 +178,7 @@ class AgentManager:
                 AgentInfo(
                     id=agent_id,
                     name=config_entry.title or config_entry.domain,
+                    supports_streaming=False,
                 )
             )
         return agents
@@ -164,3 +197,30 @@ class AgentManager:
     def async_unset_agent(self, agent_id: str) -> None:
         """Unset the agent."""
         self._agents.pop(agent_id, None)
+
+    async def async_setup_default_agent(self, agent: DefaultAgent) -> None:
+        """Set up the default agent."""
+        agent.update_config_intents(self.config_intents)
+        agent.update_triggers(self.triggers_details)
+        self.default_agent = agent
+
+    def update_config_intents(self, intents: dict[str, Any]) -> None:
+        """Update config intents."""
+        self.config_intents = intents
+        if self.default_agent is not None:
+            self.default_agent.update_config_intents(intents)
+
+    def register_trigger(self, trigger_details: TriggerDetails) -> CALLBACK_TYPE:
+        """Register a trigger."""
+        self.triggers_details.append(trigger_details)
+        if self.default_agent is not None:
+            self.default_agent.update_triggers(self.triggers_details)
+
+        @callback
+        def unregister_trigger() -> None:
+            """Unregister the trigger."""
+            self.triggers_details.remove(trigger_details)
+            if self.default_agent is not None:
+                self.default_agent.update_triggers(self.triggers_details)
+
+        return unregister_trigger

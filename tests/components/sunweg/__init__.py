@@ -1,1 +1,1 @@
-"""Tests for the sunweg component."""
+"""Tests for the Sun WEG integration."""

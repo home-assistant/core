@@ -10,11 +10,11 @@ from pytradfri.command import Command
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .base_class import TradfriBaseEntity
 from .const import CONF_GATEWAY_ID, COORDINATOR, COORDINATOR_LIST, DOMAIN, KEY_API
 from .coordinator import TradfriDeviceDataUpdateCoordinator
+from .entity import TradfriBaseEntity
 
 ATTR_AUTO = "Auto"
 ATTR_MAX_FAN_STEPS = 49
@@ -33,7 +33,7 @@ def _from_fan_speed(fan_speed: int) -> int:
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Load Tradfri switches based on a config entry."""
     gateway_id = config_entry.data[CONF_GATEWAY_ID]
@@ -55,7 +55,12 @@ class TradfriAirPurifierFan(TradfriBaseEntity, FanEntity):
     """The platform class required by Home Assistant."""
 
     _attr_name = None
-    _attr_supported_features = FanEntityFeature.PRESET_MODE | FanEntityFeature.SET_SPEED
+    _attr_supported_features = (
+        FanEntityFeature.PRESET_MODE
+        | FanEntityFeature.SET_SPEED
+        | FanEntityFeature.TURN_ON
+        | FanEntityFeature.TURN_OFF
+    )
     _attr_preset_modes = [ATTR_AUTO]
     # These are the steps:
     # 0 = Off

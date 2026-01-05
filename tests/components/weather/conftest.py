@@ -1,7 +1,8 @@
 """Fixtures for Weather platform tests."""
 
+from collections.abc import Generator
+
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.core import HomeAssistant

@@ -3,9 +3,9 @@
 from unittest.mock import patch
 
 from mcstatus import BedrockServer, JavaServer
-from mcstatus.status_response import BedrockStatusResponse, JavaStatusResponse
+from mcstatus.responses import BedrockStatusResponse, JavaStatusResponse
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 

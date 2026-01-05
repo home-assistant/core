@@ -1,9 +1,9 @@
 """Shared utilities for different supported platforms."""
 
-from asyncio import timeout
 from datetime import datetime, timedelta
 from http import HTTPStatus
 import logging
+from typing import Any
 
 import aiohttp
 from buienradar.buienradar import parse_data
@@ -12,6 +12,7 @@ from buienradar.constants import (
     CONDITION,
     CONTENT,
     DATA,
+    FEELTEMPERATURE,
     FORECAST,
     HUMIDITY,
     MESSAGE,
@@ -22,17 +23,18 @@ from buienradar.constants import (
     TEMPERATURE,
     VISIBILITY,
     WINDAZIMUTH,
+    WINDGUST,
     WINDSPEED,
 )
 from buienradar.urls import JSON_FEED_URL, json_precipitation_forecast_url
 
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
-from homeassistant.core import CALLBACK_TYPE, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
 
-from .const import SCHEDULE_NOK, SCHEDULE_OK
+from .const import DEFAULT_TIMEOUT, SCHEDULE_NOK, SCHEDULE_OK
 
 __all__ = ["BrData"]
 _LOGGER = logging.getLogger(__name__)
@@ -59,10 +61,10 @@ class BrData:
     load_error_count: int = WARN_THRESHOLD
     rain_error_count: int = WARN_THRESHOLD
 
-    def __init__(self, hass, coordinates, timeframe, devices):
+    def __init__(self, hass: HomeAssistant, coordinates, timeframe, devices) -> None:
         """Initialize the data object."""
         self.devices = devices
-        self.data = {}
+        self.data: dict[str, Any] | None = {}
         self.hass = hass
         self.coordinates = coordinates
         self.timeframe = timeframe
@@ -93,15 +95,15 @@ class BrData:
         resp = None
         try:
             websession = async_get_clientsession(self.hass)
-            async with timeout(10):
-                resp = await websession.get(url)
-
+            async with websession.get(
+                url, timeout=aiohttp.ClientTimeout(total=DEFAULT_TIMEOUT)
+            ) as resp:
                 result[STATUS_CODE] = resp.status
                 result[CONTENT] = await resp.text()
                 if resp.status == HTTPStatus.OK:
                     result[SUCCESS] = True
                 else:
-                    result[MESSAGE] = "Got http statuscode: %d" % (resp.status)
+                    result[MESSAGE] = f"Got http statuscode: {resp.status}"
 
                 return result
         except (TimeoutError, aiohttp.ClientError) as err:
@@ -201,6 +203,14 @@ class BrData:
             return None
 
     @property
+    def feeltemperature(self):
+        """Return the feeltemperature, or None."""
+        try:
+            return float(self.data.get(FEELTEMPERATURE))
+        except (ValueError, TypeError):
+            return None
+
+    @property
     def pressure(self):
         """Return the pressure, or None."""
         try:
@@ -221,6 +231,14 @@ class BrData:
         """Return the visibility, or None."""
         try:
             return int(self.data.get(VISIBILITY))
+        except (ValueError, TypeError):
+            return None
+
+    @property
+    def wind_gust(self):
+        """Return the windgust, or None."""
+        try:
+            return float(self.data.get(WINDGUST))
         except (ValueError, TypeError):
             return None
 

@@ -6,7 +6,7 @@ from anova_wifi import AnovaApi, InvalidLogin
 
 from homeassistant import config_entries
 from homeassistant.components.anova.const import DOMAIN
-from homeassistant.const import CONF_DEVICES, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -23,11 +23,10 @@ async def test_flow_user(hass: HomeAssistant, anova_api: AnovaApi) -> None:
         result["flow_id"],
         user_input=CONF_INPUT,
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_USERNAME: "sample@gmail.com",
         CONF_PASSWORD: "sample",
-        CONF_DEVICES: [],
     }
 
 

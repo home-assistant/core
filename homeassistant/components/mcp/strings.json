@@ -1,0 +1,59 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "missing_capabilities": "The MCP server does not support a required capability (Tools)",
+      "missing_credentials": "[%key:common::config_flow::abort::oauth2_missing_credentials%]",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "reauth_account_mismatch": "The authenticated user does not match the MCP Server user that needed re-authentication.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_url": "Must be a valid MCP server URL",
+      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "credentials_choice": {
+        "description": "You can either use existing credentials from another integration or set up new credentials.",
+        "menu_option_descriptions": {
+          "new_credentials": "You will be guided through setting up a new OAuth Client ID and secret.",
+          "pick_implementation": "You may use previously entered OAuth credentials."
+        },
+        "menu_options": {
+          "new_credentials": "Set up new credentials",
+          "pick_implementation": "Use existing credentials"
+        },
+        "title": "Choose how to authenticate with the MCP server"
+      },
+      "pick_implementation": {
+        "data": {
+          "implementation": "[%key:common::config_flow::data::implementation%]"
+        },
+        "data_description": {
+          "implementation": "[%key:common::config_flow::description::implementation%]"
+        },
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "user": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]"
+        },
+        "data_description": {
+          "url": "The remote MCP server URL for the SSE endpoint, for example {example_url}"
+        }
+      }
+    }
+  }
+}

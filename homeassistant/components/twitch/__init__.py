@@ -7,25 +7,32 @@ from typing import cast
 from aiohttp.client_exceptions import ClientError, ClientResponseError
 from twitchAPI.twitch import Twitch
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
     LocalOAuth2Implementation,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
 
-from .const import CLIENT, DOMAIN, OAUTH_SCOPES, PLATFORMS, SESSION
+from .const import DOMAIN, OAUTH_SCOPES, PLATFORMS
+from .coordinator import TwitchConfigEntry, TwitchCoordinator
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: TwitchConfigEntry) -> bool:
     """Set up Twitch from a config entry."""
-    implementation = cast(
-        LocalOAuth2Implementation,
-        await async_get_config_entry_implementation(hass, entry),
-    )
+    try:
+        implementation = cast(
+            LocalOAuth2Implementation,
+            await async_get_config_entry_implementation(hass, entry),
+        )
+    except ImplementationUnavailableError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="oauth2_implementation_unavailable",
+        ) from err
     session = OAuth2Session(hass, entry, implementation)
     try:
         await session.async_ensure_token_valid()
@@ -46,17 +53,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     client.auto_refresh_auth = False
     await client.set_user_authentication(access_token, scope=OAUTH_SCOPES)
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        CLIENT: client,
-        SESSION: session,
-    }
+    coordinator = TwitchCoordinator(hass, client, session, entry)
+    await coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TwitchConfigEntry) -> bool:
     """Unload Twitch config entry."""
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

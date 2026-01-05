@@ -3,9 +3,19 @@
     "binary_sensor": {
       "leaving_dock": {
         "default": "mdi:debug-step-out"
+      }
+    },
+    "button": {
+      "reset_cutting_blade_usage_time": {
+        "default": "mdi:saw-blade"
       },
-      "returning_to_dock": {
-        "default": "mdi:debug-step-into"
+      "sync_clock": {
+        "default": "mdi:clock-check-outline"
+      }
+    },
+    "event": {
+      "message": {
+        "default": "mdi:alert-circle-check-outline"
       }
     },
     "number": {
@@ -22,6 +32,15 @@
       "error": {
         "default": "mdi:alert-circle-outline"
       },
+      "inactive_reason": {
+        "default": "mdi:sleep"
+      },
+      "my_lawn_last_time_completed": {
+        "default": "mdi:clock-outline"
+      },
+      "my_lawn_progress": {
+        "default": "mdi:collage"
+      },
       "number_of_charging_cycles": {
         "default": "mdi:battery-sync-outline"
       },
@@ -30,7 +49,41 @@
       },
       "restricted_reason": {
         "default": "mdi:tooltip-question"
+      },
+      "work_area_last_time_completed": {
+        "default": "mdi:clock-outline"
+      },
+      "work_area_progress": {
+        "default": "mdi:collage"
       }
+    },
+    "switch": {
+      "my_lawn_work_area": {
+        "default": "mdi:square-outline",
+        "state": {
+          "on": "mdi:square"
+        }
+      },
+      "stay_out_zones": {
+        "default": "mdi:rhombus-outline",
+        "state": {
+          "on": "mdi:rhombus"
+        }
+      },
+      "work_area_work_area": {
+        "default": "mdi:square-outline",
+        "state": {
+          "on": "mdi:square"
+        }
+      }
+    }
+  },
+  "services": {
+    "override_schedule": {
+      "service": "mdi:debug-step-over"
+    },
+    "override_schedule_work_area": {
+      "service": "mdi:land-fields"
     }
   }
 }

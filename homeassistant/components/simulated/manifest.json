@@ -1,8 +1,0 @@
-{
-  "domain": "simulated",
-  "name": "Simulated",
-  "codeowners": [],
-  "documentation": "https://www.home-assistant.io/integrations/simulated",
-  "iot_class": "local_polling",
-  "quality_scale": "internal"
-}

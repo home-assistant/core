@@ -2,34 +2,29 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
-from typing import Any
+from typing import TYPE_CHECKING
 
 import aiohttp
-from aiohttp import ClientSession
 from uasiren.client import Client
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_REGION
+from homeassistant.const import CONF_NAME, CONF_REGION
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import ALERT_TYPES, DOMAIN, PLATFORMS
+from .const import DOMAIN, PLATFORMS
+from .coordinator import UkraineAlarmDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-
-UPDATE_INTERVAL = timedelta(seconds=10)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Ukraine Alarm as config entry."""
-    region_id = entry.data[CONF_REGION]
-
     websession = async_get_clientsession(hass)
 
-    coordinator = UkraineAlarmDataUpdateCoordinator(hass, websession, region_id)
+    coordinator = UkraineAlarmDataUpdateCoordinator(hass, entry, websession)
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
@@ -47,30 +42,54 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class UkraineAlarmDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):  # pylint: disable=hass-enforce-coordinator-module
-    """Class to manage fetching Ukraine Alarm API."""
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate old entry."""
+    _LOGGER.debug("Migrating from version %s", config_entry.version)
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        session: ClientSession,
-        region_id: str,
-    ) -> None:
-        """Initialize."""
-        self.region_id = region_id
-        self.uasiren = Client(session)
+    if config_entry.version == 1:
+        # Version 1 had states as first-class selections
+        # Version 2 only allows states w/o districts, districts and communities
+        region_id = config_entry.data[CONF_REGION]
 
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
-
-    async def _async_update_data(self) -> dict[str, Any]:
-        """Update data via library."""
+        websession = async_get_clientsession(hass)
         try:
-            res = await self.uasiren.get_alerts(self.region_id)
-        except aiohttp.ClientError as error:
-            raise UpdateFailed(f"Error fetching alerts from API: {error}") from error
+            regions_data = await Client(websession).get_regions()
+        except (aiohttp.ClientError, TimeoutError) as err:
+            _LOGGER.warning(
+                "Could not migrate config entry %s: failed to fetch current regions: %s",
+                config_entry.entry_id,
+                err,
+            )
+            return False
 
-        current = {alert_type: False for alert_type in ALERT_TYPES}
-        for alert in res[0]["activeAlerts"]:
-            current[alert["type"]] = True
+        if TYPE_CHECKING:
+            assert isinstance(regions_data, dict)
 
-        return current
+        state_with_districts = None
+        for state in regions_data["states"]:
+            if state["regionId"] == region_id and state.get("regionChildIds"):
+                state_with_districts = state
+                break
+
+        if state_with_districts:
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                f"deprecated_state_region_{config_entry.entry_id}",
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="deprecated_state_region",
+                translation_placeholders={
+                    "region_name": config_entry.data.get(CONF_NAME, region_id),
+                },
+            )
+
+            return False
+
+        hass.config_entries.async_update_entry(config_entry, version=2)
+        _LOGGER.info("Migration to version %s successful", 2)
+        return True
+
+    _LOGGER.error("Unknown version %s", config_entry.version)
+    return False

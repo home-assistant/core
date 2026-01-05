@@ -9,7 +9,7 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AdvantageAirDataConfigEntry
 from .const import ADVANTAGE_AIR_STATE_CLOSE, ADVANTAGE_AIR_STATE_OPEN
@@ -22,7 +22,7 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: AdvantageAirDataConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up AdvantageAir cover platform."""
 
@@ -41,7 +41,7 @@ async def async_setup_entry(
                 entities.append(
                     AdvantageAirThingCover(instance, thing, CoverDeviceClass.BLIND)
                 )
-            elif thing["channelDipState"] == 3:  # 3 = "Garage door"
+            elif thing["channelDipState"] in [3, 10]:  # 3 & 10 = "Garage door"
                 entities.append(
                     AdvantageAirThingCover(instance, thing, CoverDeviceClass.GARAGE)
                 )

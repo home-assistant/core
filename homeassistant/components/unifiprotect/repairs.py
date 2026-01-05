@@ -5,17 +5,15 @@ from __future__ import annotations
 from typing import cast
 
 from uiprotect import ProtectApiClient
-from uiprotect.data import Bootstrap, Camera, ModelType
-from uiprotect.data.types import FirmwareReleaseChannel
+from uiprotect.data import Bootstrap, Camera
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
 from homeassistant.components.repairs import ConfirmRepairFlow, RepairsFlow
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 
-from .const import CONF_ALLOW_EA
+from .data import UFPConfigEntry, async_get_data_for_entry_id
 from .utils import async_create_api_client
 
 
@@ -23,9 +21,9 @@ class ProtectRepair(RepairsFlow):
     """Handler for an issue fixing flow."""
 
     _api: ProtectApiClient
-    _entry: ConfigEntry
+    _entry: UFPConfigEntry
 
-    def __init__(self, *, api: ProtectApiClient, entry: ConfigEntry) -> None:
+    def __init__(self, *, api: ProtectApiClient, entry: UFPConfigEntry) -> None:
         """Create flow."""
 
         self._api = api
@@ -42,52 +40,6 @@ class ProtectRepair(RepairsFlow):
                 description_placeholders["learn_more"] = issue.learn_more_url
 
         return description_placeholders
-
-
-class EAConfirmRepair(ProtectRepair):
-    """Handler for an issue fixing flow."""
-
-    async def async_step_init(
-        self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
-        """Handle the first step of a fix flow."""
-
-        return await self.async_step_start()
-
-    async def async_step_start(
-        self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
-        """Handle the confirm step of a fix flow."""
-        if user_input is None:
-            placeholders = self._async_get_placeholders()
-            return self.async_show_form(
-                step_id="start",
-                data_schema=vol.Schema({}),
-                description_placeholders=placeholders,
-            )
-
-        nvr = await self._api.get_nvr()
-        if nvr.release_channel != FirmwareReleaseChannel.RELEASE:
-            return await self.async_step_confirm()
-        await self.hass.config_entries.async_reload(self._entry.entry_id)
-        return self.async_create_entry(data={})
-
-    async def async_step_confirm(
-        self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
-        """Handle the confirm step of a fix flow."""
-        if user_input is not None:
-            options = dict(self._entry.options)
-            options[CONF_ALLOW_EA] = True
-            self.hass.config_entries.async_update_entry(self._entry, options=options)
-            return self.async_create_entry(data={})
-
-        placeholders = self._async_get_placeholders()
-        return self.async_show_form(
-            step_id="confirm",
-            data_schema=vol.Schema({}),
-            description_placeholders=placeholders,
-        )
 
 
 class CloudAccountRepair(ProtectRepair):
@@ -128,7 +80,7 @@ class RTSPRepair(ProtectRepair):
         self,
         *,
         api: ProtectApiClient,
-        entry: ConfigEntry,
+        entry: UFPConfigEntry,
         camera_id: str,
     ) -> None:
         """Create flow."""
@@ -161,16 +113,7 @@ class RTSPRepair(ProtectRepair):
 
     async def _enable_rtsp(self) -> None:
         camera = await self._get_camera()
-        bootstrap = await self._get_boostrap()
-        user = bootstrap.users.get(bootstrap.auth_user_id)
-        if not user or not camera.can_write(user):
-            return
-
-        channel = camera.channels[0]
-        channel.is_rtsp_enabled = True
-        await self._api.update_device(
-            ModelType.CAMERA, camera.id, {"channels": camera.unifi_dict()["channels"]}
-        )
+        await camera.create_rtsps_streams(qualities="high")
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
@@ -219,29 +162,32 @@ class RTSPRepair(ProtectRepair):
         )
 
 
+@callback
+def _async_get_or_create_api_client(
+    hass: HomeAssistant, entry: UFPConfigEntry
+) -> ProtectApiClient:
+    """Get or create an API client."""
+    if data := async_get_data_for_entry_id(hass, entry.entry_id):
+        return data.api
+    return async_create_api_client(hass, entry)
+
+
 async def async_create_fix_flow(
     hass: HomeAssistant,
     issue_id: str,
     data: dict[str, str | int | float | None] | None,
 ) -> RepairsFlow:
     """Create flow."""
-    if data is not None and issue_id == "ea_channel_warning":
-        entry_id = cast(str, data["entry_id"])
-        if (entry := hass.config_entries.async_get_entry(entry_id)) is not None:
-            api = async_create_api_client(hass, entry)
-            return EAConfirmRepair(api=api, entry=entry)
-
-    elif data is not None and issue_id == "cloud_user":
-        entry_id = cast(str, data["entry_id"])
-        if (entry := hass.config_entries.async_get_entry(entry_id)) is not None:
-            api = async_create_api_client(hass, entry)
+    if (
+        data is not None
+        and "entry_id" in data
+        and (entry := hass.config_entries.async_get_entry(cast(str, data["entry_id"])))
+    ):
+        api = _async_get_or_create_api_client(hass, entry)
+        if issue_id == "cloud_user":
             return CloudAccountRepair(api=api, entry=entry)
-
-    elif data is not None and issue_id.startswith("rtsp_disabled_"):
-        entry_id = cast(str, data["entry_id"])
-        camera_id = cast(str, data["camera_id"])
-        if (entry := hass.config_entries.async_get_entry(entry_id)) is not None:
-            api = async_create_api_client(hass, entry)
-            return RTSPRepair(api=api, entry=entry, camera_id=camera_id)
-
+        if issue_id.startswith("rtsp_disabled_"):
+            return RTSPRepair(
+                api=api, entry=entry, camera_id=cast(str, data["camera_id"])
+            )
     return ConfirmRepairFlow()

@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import issue_registry as ir
 
-from ..core.const import DOMAIN
+from ..const import DOMAIN
 from ..radio_manager import ZhaRadioManager
 
 _LOGGER = logging.getLogger(__name__)
@@ -136,7 +136,7 @@ class NetworkSettingsInconsistentFlow(RepairsFlow):
         self, user_input: dict[str, str] | None = None
     ) -> FlowResult:
         """Step to use the new settings found on the radio."""
-        async with self._radio_mgr.connect_zigpy_app() as app:
+        async with self._radio_mgr.create_zigpy_app(connect=False) as app:
             app.backups.add_backup(self._new_state)
 
         await self.hass.config_entries.async_reload(self._entry_id)

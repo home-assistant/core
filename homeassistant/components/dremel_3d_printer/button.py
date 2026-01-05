@@ -8,12 +8,11 @@ from dataclasses import dataclass
 from dremel3dpy import Dremel3DPrinter
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .coordinator import DremelConfigEntry
 from .entity import Dremel3DPrinterEntity
 
 
@@ -45,13 +44,12 @@ BUTTON_TYPES: tuple[Dremel3DPrinterButtonEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: DremelConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Dremel 3D Printer control buttons."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
     async_add_entities(
-        Dremel3DPrinterButtonEntity(coordinator, description)
+        Dremel3DPrinterButtonEntity(config_entry.runtime_data, description)
         for description in BUTTON_TYPES
     )
 

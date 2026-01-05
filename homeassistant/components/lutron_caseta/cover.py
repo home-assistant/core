@@ -1,25 +1,32 @@
 """Support for Lutron Caseta shades."""
 
+from enum import Enum
 from typing import Any
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    DOMAIN,
+    DOMAIN as COVER_DOMAIN,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import LutronCasetaDeviceUpdatableEntity
-from .const import DOMAIN as CASETA_DOMAIN
-from .models import LutronCasetaData
+from .entity import LutronCasetaUpdatableEntity
+from .models import LutronCasetaConfigEntry
 
 
-class LutronCasetaShade(LutronCasetaDeviceUpdatableEntity, CoverEntity):
+class ShadeMovementDirection(Enum):
+    """Enum for shade movement direction."""
+
+    OPENING = "opening"
+    CLOSING = "closing"
+    STOPPED = "stopped"
+
+
+class LutronCasetaShade(LutronCasetaUpdatableEntity, CoverEntity):
     """Representation of a Lutron shade with open/close functionality."""
 
     _attr_supported_features = (
@@ -29,6 +36,8 @@ class LutronCasetaShade(LutronCasetaDeviceUpdatableEntity, CoverEntity):
         | CoverEntityFeature.SET_POSITION
     )
     _attr_device_class = CoverDeviceClass.SHADE
+    _previous_position: int | None = None
+    _movement_direction: ShadeMovementDirection | None = None
 
     @property
     def is_closed(self) -> bool:
@@ -40,19 +49,50 @@ class LutronCasetaShade(LutronCasetaDeviceUpdatableEntity, CoverEntity):
         """Return the current position of cover."""
         return self._device["current_state"]
 
+    def _handle_bridge_update(self) -> None:
+        """Handle updated data from the bridge and track movement direction."""
+        current_position = self.current_cover_position
+
+        # Track movement direction based on position changes or endpoint status
+        if self._previous_position is not None:
+            if current_position > self._previous_position or current_position >= 100:
+                # Moving up or at fully open
+                self._movement_direction = ShadeMovementDirection.OPENING
+            elif current_position < self._previous_position or current_position <= 0:
+                # Moving down or at fully closed
+                self._movement_direction = ShadeMovementDirection.CLOSING
+            else:
+                # Stopped
+                self._movement_direction = ShadeMovementDirection.STOPPED
+
+        self._previous_position = current_position
+        super()._handle_bridge_update()
+
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        await self._smartbridge.lower_cover(self.device_id)
+        # Use set_value to avoid the stuttering issue
+        await self._smartbridge.set_value(self.device_id, 0)
         await self.async_update()
         self.async_write_ha_state()
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
+        # Send appropriate directional command before stop to ensure it works correctly
+        # Use tracked direction if moving, otherwise use position-based heuristic
+        if self._movement_direction == ShadeMovementDirection.OPENING or (
+            self._movement_direction in (ShadeMovementDirection.STOPPED, None)
+            and self.current_cover_position >= 50
+        ):
+            await self._smartbridge.raise_cover(self.device_id)
+        else:
+            await self._smartbridge.lower_cover(self.device_id)
+
         await self._smartbridge.stop_cover(self.device_id)
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        await self._smartbridge.raise_cover(self.device_id)
+        # Use set_value to avoid the stuttering issue
+        await self._smartbridge.set_value(self.device_id, 100)
         await self.async_update()
         self.async_write_ha_state()
 
@@ -61,7 +101,7 @@ class LutronCasetaShade(LutronCasetaDeviceUpdatableEntity, CoverEntity):
         await self._smartbridge.set_value(self.device_id, kwargs[ATTR_POSITION])
 
 
-class LutronCasetaTiltOnlyBlind(LutronCasetaDeviceUpdatableEntity, CoverEntity):
+class LutronCasetaTiltOnlyBlind(LutronCasetaUpdatableEntity, CoverEntity):
     """Representation of a Lutron tilt only blind."""
 
     _attr_supported_features = (
@@ -101,6 +141,7 @@ class LutronCasetaTiltOnlyBlind(LutronCasetaDeviceUpdatableEntity, CoverEntity):
 
 PYLUTRON_TYPE_TO_CLASSES = {
     "SerenaTiltOnlyWoodBlind": LutronCasetaTiltOnlyBlind,
+    "Tilt": LutronCasetaTiltOnlyBlind,
     "SerenaHoneycombShade": LutronCasetaShade,
     "SerenaRollerShade": LutronCasetaShade,
     "TriathlonHoneycombShade": LutronCasetaShade,
@@ -109,22 +150,23 @@ PYLUTRON_TYPE_TO_CLASSES = {
     "QsWirelessHorizontalSheerBlind": LutronCasetaShade,
     "Shade": LutronCasetaShade,
     "PalladiomWireFreeShade": LutronCasetaShade,
+    "SerenaEssentialsRollerShade": LutronCasetaShade,
 }
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: LutronCasetaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Lutron Caseta cover platform.
 
     Adds shades from the Caseta bridge associated with the config_entry as
     cover entities.
     """
-    data: LutronCasetaData = hass.data[CASETA_DOMAIN][config_entry.entry_id]
+    data = config_entry.runtime_data
     bridge = data.bridge
-    cover_devices = bridge.get_devices_by_domain(DOMAIN)
+    cover_devices = bridge.get_devices_by_domain(COVER_DOMAIN)
     async_add_entities(
         # default to standard LutronCasetaCover type if the pylutron type is not yet mapped
         PYLUTRON_TYPE_TO_CLASSES.get(cover_device["type"], LutronCasetaShade)(

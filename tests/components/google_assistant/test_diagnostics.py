@@ -3,7 +3,7 @@
 from unittest.mock import patch
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
 from homeassistant import setup
@@ -50,4 +50,4 @@ async def test_diagnostics(
     config_entry = hass.config_entries.async_entries("google_assistant")[0]
     assert await get_diagnostics_for_config_entry(
         hass, hass_client, config_entry
-    ) == snapshot(exclude=props("entry_id"))
+    ) == snapshot(exclude=props("entry_id", "created_at", "modified_at"))

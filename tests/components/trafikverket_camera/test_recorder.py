@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import pytest
-from pytrafikverket.trafikverket_camera import CameraInfo
+from pytrafikverket import CameraInfoModel
 
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.history import get_significant_states
@@ -22,7 +22,7 @@ async def test_exclude_attributes(
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
     aioclient_mock: AiohttpClientMocker,
-    get_camera: CameraInfo,
+    get_camera: CameraInfoModel,
 ) -> None:
     """Test camera has description and location excluded from recording."""
     state1 = hass.states.get("camera.test_camera")

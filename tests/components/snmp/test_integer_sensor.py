@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from pysnmp.hlapi import Integer32
+from pysnmp.proto.rfc1902 import Integer32
 import pytest
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -16,7 +16,7 @@ def hlapi_mock():
     """Mock out 3rd party API."""
     mock_data = Integer32(13)
     with patch(
-        "homeassistant.components.snmp.sensor.getCmd",
+        "homeassistant.components.snmp.sensor.get_cmd",
         return_value=(None, None, None, [[mock_data]]),
     ):
         yield

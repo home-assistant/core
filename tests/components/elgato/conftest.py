@@ -1,13 +1,13 @@
 """Fixtures for Elgato integration tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from elgato import BatteryInfo, ElgatoNoBatteryError, Info, Settings, State
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.elgato.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, get_fixture_path, load_fixture
@@ -35,7 +35,6 @@ def mock_config_entry() -> MockConfigEntry:
         data={
             CONF_HOST: "127.0.0.1",
             CONF_MAC: "AA:BB:CC:DD:EE:FF",
-            CONF_PORT: 9123,
         },
         unique_id="CN11A1A00001",
     )

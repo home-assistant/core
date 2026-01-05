@@ -8,9 +8,10 @@ from urllib.parse import urlparse
 
 import voluptuous as vol
 
-from homeassistant.components import hassio, zeroconf
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.config_entries import SOURCE_HASSIO, ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
 from .data import WyomingService
@@ -30,7 +31,7 @@ class WyomingConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    _hassio_discovery: hassio.HassioServiceInfo
+    _hassio_discovery: HassioServiceInfo
     _service: WyomingService | None = None
     _name: str | None = None
 
@@ -61,12 +62,21 @@ class WyomingConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_abort(reason="no_services")
 
     async def async_step_hassio(
-        self, discovery_info: hassio.HassioServiceInfo
+        self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:
         """Handle Supervisor add-on discovery."""
         _LOGGER.debug("Supervisor discovery info: %s", discovery_info)
         await self.async_set_unique_id(discovery_info.uuid)
         self._abort_if_unique_id_configured()
+
+        uri = urlparse(discovery_info.config["uri"])
+        for entry in self._iter_entries(uri.hostname, uri.port):
+            return self.async_update_reload_and_abort(
+                entry,
+                unique_id=discovery_info.uuid,
+                reload_even_if_entry_is_unchanged=False,
+                reason="already_configured",
+            )
 
         self._hassio_discovery = discovery_info
         self.context.update(
@@ -103,7 +113,7 @@ class WyomingConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         _LOGGER.debug("Zeroconf discovery info: %s", discovery_info)
@@ -123,8 +133,16 @@ class WyomingConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
 
-        self.context[CONF_NAME] = self._name
         self.context["title_placeholders"] = {"name": self._name}
+
+        for entry in self._iter_entries(service.host, service.port):
+            if entry.source != SOURCE_HASSIO:
+                return self.async_update_reload_and_abort(
+                    entry,
+                    unique_id=unique_id,
+                    reload_even_if_entry_is_unchanged=False,
+                    reason="already_configured",
+                )
 
         self._service = service
         return await self.async_step_zeroconf_confirm()
@@ -150,3 +168,9 @@ class WyomingConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_PORT: self._service.port,
             },
         )
+
+    def _iter_entries(self, host: str, port: int):
+        """Yield entries with matching host/port."""
+        for entry in self._async_current_entries(include_ignore=True):
+            if entry.data.get(CONF_HOST) == host and entry.data.get(CONF_PORT) == port:
+                yield entry

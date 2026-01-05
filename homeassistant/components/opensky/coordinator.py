@@ -36,11 +36,14 @@ class OpenSkyDataUpdateCoordinator(DataUpdateCoordinator[int]):
 
     config_entry: ConfigEntry
 
-    def __init__(self, hass: HomeAssistant, opensky: OpenSky) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, opensky: OpenSky
+    ) -> None:
         """Initialize the OpenSky data coordinator."""
         super().__init__(
             hass,
             LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval={
                 True: timedelta(seconds=90),
@@ -50,11 +53,11 @@ class OpenSkyDataUpdateCoordinator(DataUpdateCoordinator[int]):
         self._opensky = opensky
         self._previously_tracked: set[str] | None = None
         self._bounding_box = OpenSky.get_bounding_box(
-            self.config_entry.data[CONF_LATITUDE],
-            self.config_entry.data[CONF_LONGITUDE],
-            self.config_entry.options[CONF_RADIUS],
+            config_entry.data[CONF_LATITUDE],
+            config_entry.data[CONF_LONGITUDE],
+            config_entry.options[CONF_RADIUS],
         )
-        self._altitude = self.config_entry.options.get(CONF_ALTITUDE, DEFAULT_ALTITUDE)
+        self._altitude = config_entry.options.get(CONF_ALTITUDE, DEFAULT_ALTITUDE)
 
     async def _async_update_data(self) -> int:
         try:

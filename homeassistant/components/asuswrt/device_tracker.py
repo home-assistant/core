@@ -2,15 +2,13 @@
 
 from __future__ import annotations
 
-from homeassistant.components.device_tracker import ScannerEntity, SourceType
+from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AsusWrtConfigEntry
 from .router import AsusWrtDevInfo, AsusWrtRouter
-
-ATTR_LAST_TIME_REACHABLE = "last_time_reachable"
 
 DEFAULT_DEVICE_NAME = "Unknown device"
 
@@ -18,7 +16,7 @@ DEFAULT_DEVICE_NAME = "Unknown device"
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AsusWrtConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up device tracker for AsusWrt component."""
     router = entry.runtime_data
@@ -38,7 +36,9 @@ async def async_setup_entry(
 
 @callback
 def add_entities(
-    router: AsusWrtRouter, async_add_entities: AddEntitiesCallback, tracked: set[str]
+    router: AsusWrtRouter,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    tracked: set[str],
 ) -> None:
     """Add new tracker entities from the router."""
     new_tracked = []
@@ -56,8 +56,6 @@ def add_entities(
 class AsusWrtDevice(ScannerEntity):
     """Representation of a AsusWrt device."""
 
-    _unrecorded_attributes = frozenset({ATTR_LAST_TIME_REACHABLE})
-
     _attr_should_poll = False
 
     def __init__(self, router: AsusWrtRouter, device: AsusWrtDevInfo) -> None:
@@ -70,11 +68,6 @@ class AsusWrtDevice(ScannerEntity):
     def is_connected(self) -> bool:
         """Return true if the device is connected to the network."""
         return self._device.is_connected
-
-    @property
-    def source_type(self) -> SourceType:
-        """Return the source type."""
-        return SourceType.ROUTER
 
     @property
     def hostname(self) -> str | None:
@@ -100,11 +93,6 @@ class AsusWrtDevice(ScannerEntity):
     def async_on_demand_update(self) -> None:
         """Update state."""
         self._device = self._router.devices[self._device.mac]
-        self._attr_extra_state_attributes = {}
-        if self._device.last_activity:
-            self._attr_extra_state_attributes[ATTR_LAST_TIME_REACHABLE] = (
-                self._device.last_activity.isoformat(timespec="seconds")
-            )
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:

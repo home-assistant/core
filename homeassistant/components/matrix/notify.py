@@ -10,11 +10,11 @@ from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_MESSAGE,
     ATTR_TARGET,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import RoomID
@@ -22,7 +22,9 @@ from .const import DOMAIN, SERVICE_SEND_MESSAGE
 
 CONF_DEFAULT_ROOM = "default_room"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_DEFAULT_ROOM): cv.string})
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
+    {vol.Required(CONF_DEFAULT_ROOM): cv.string}
+)
 
 
 def get_service(

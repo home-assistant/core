@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
@@ -10,14 +11,15 @@ from homeassistant.components.image_processing import (
     ATTR_AGE,
     ATTR_GENDER,
     ATTR_GLASSES,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as IMAGE_PROCESSING_PLATFORM_SCHEMA,
+    FaceInformation,
     ImageProcessingFaceEntity,
 )
-from homeassistant.components.microsoft_face import DATA_MICROSOFT_FACE
+from homeassistant.components.microsoft_face import DATA_MICROSOFT_FACE, MicrosoftFace
 from homeassistant.const import CONF_ENTITY_ID, CONF_NAME, CONF_SOURCE
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -37,7 +39,7 @@ def validate_attributes(list_attributes):
     return list_attributes
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = IMAGE_PROCESSING_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_ATTRIBUTES, default=DEFAULT_ATTRIBUTES): vol.All(
             cv.ensure_list, validate_attributes
@@ -54,43 +56,40 @@ async def async_setup_platform(
 ) -> None:
     """Set up the Microsoft Face detection platform."""
     api = hass.data[DATA_MICROSOFT_FACE]
-    attributes = config[CONF_ATTRIBUTES]
+    attributes: list[str] = config[CONF_ATTRIBUTES]
+    source: list[dict[str, str]] = config[CONF_SOURCE]
 
     async_add_entities(
         MicrosoftFaceDetectEntity(
             camera[CONF_ENTITY_ID], api, attributes, camera.get(CONF_NAME)
         )
-        for camera in config[CONF_SOURCE]
+        for camera in source
     )
 
 
 class MicrosoftFaceDetectEntity(ImageProcessingFaceEntity):
     """Microsoft Face API entity for identify."""
 
-    def __init__(self, camera_entity, api, attributes, name=None):
+    def __init__(
+        self,
+        camera_entity: str,
+        api: MicrosoftFace,
+        attributes: list[str],
+        name: str | None,
+    ) -> None:
         """Initialize Microsoft Face."""
         super().__init__()
 
         self._api = api
-        self._camera = camera_entity
+        self._attr_camera_entity = camera_entity
         self._attributes = attributes
 
         if name:
-            self._name = name
+            self._attr_name = name
         else:
-            self._name = f"MicrosoftFace {split_entity_id(camera_entity)[1]}"
+            self._attr_name = f"MicrosoftFace {split_entity_id(camera_entity)[1]}"
 
-    @property
-    def camera_entity(self):
-        """Return camera entity id from process pictures."""
-        return self._camera
-
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return self._name
-
-    async def async_process_image(self, image):
+    async def async_process_image(self, image: bytes) -> None:
         """Process image.
 
         This method is a coroutine.
@@ -112,12 +111,14 @@ class MicrosoftFaceDetectEntity(ImageProcessingFaceEntity):
         if not face_data:
             face_data = []
 
-        faces = []
+        faces: list[FaceInformation] = []
         for face in face_data:
-            face_attr = {}
+            face_attr = FaceInformation()
             for attr in self._attributes:
+                if TYPE_CHECKING:
+                    assert attr in SUPPORTED_ATTRIBUTES
                 if attr in face["faceAttributes"]:
-                    face_attr[attr] = face["faceAttributes"][attr]
+                    face_attr[attr] = face["faceAttributes"][attr]  # type: ignore[literal-required]
 
             if face_attr:
                 faces.append(face_attr)

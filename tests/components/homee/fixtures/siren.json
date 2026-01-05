@@ -1,0 +1,52 @@
+{
+  "id": 1,
+  "name": "Test Siren",
+  "profile": 4027,
+  "image": "default",
+  "favorite": 0,
+  "order": 2,
+  "protocol": 3,
+  "routing": 0,
+  "state": 1,
+  "state_changed": 1731094262,
+  "added": 1680027880,
+  "history": 1,
+  "cube_type": 3,
+  "note": "",
+  "services": 4,
+  "phonetic_name": "",
+  "owner": 2,
+  "security": 0,
+  "attributes": [
+    {
+      "id": 1,
+      "node_id": 1,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 1,
+      "current_value": 0.0,
+      "target_value": 0.0,
+      "last_value": 0.0,
+      "unit": "n/a",
+      "step_value": 1.0,
+      "editable": 1,
+      "type": 13,
+      "state": 1,
+      "last_changed": 1736003985,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": "",
+      "options": {
+        "automations": ["toggle"],
+        "history": {
+          "day": 35,
+          "week": 5,
+          "month": 1,
+          "stepped": true
+        }
+      }
+    }
+  ]
+}

@@ -3,22 +3,23 @@
 From http://doc.pytest.org/en/latest/example/simple.html#making-test-result-information-available-in-fixtures
 """
 
+from collections.abc import Generator, Iterable
+from contextlib import ExitStack
 from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
-from typing_extensions import Generator
 
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 
 from .common import (
     DEFAULT_LANG,
     TEST_DOMAIN,
-    MockProvider,
     MockTTS,
     MockTTSEntity,
+    MockTTSProvider,
     mock_config_entry_setup,
     mock_setup,
 )
@@ -66,9 +67,9 @@ async def mock_tts(hass: HomeAssistant, mock_provider) -> None:
 
 
 @pytest.fixture
-def mock_provider() -> MockProvider:
+def mock_provider() -> MockTTSProvider:
     """Test TTS provider."""
-    return MockProvider(DEFAULT_LANG)
+    return MockTTSProvider(DEFAULT_LANG)
 
 
 @pytest.fixture
@@ -81,12 +82,23 @@ class TTSFlow(ConfigFlow):
     """Test flow."""
 
 
-@pytest.fixture(autouse=True)
-def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
-    """Mock config flow."""
-    mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
+@pytest.fixture(name="config_flow_test_domains")
+def config_flow_test_domain_fixture() -> Iterable[str]:
+    """Test domain fixture."""
+    return (TEST_DOMAIN,)
 
-    with mock_config_flow(TEST_DOMAIN, TTSFlow):
+
+@pytest.fixture(autouse=True)
+def config_flow_fixture(
+    hass: HomeAssistant, config_flow_test_domains: Iterable[str]
+) -> Generator[None]:
+    """Mock config flow."""
+    for domain in config_flow_test_domains:
+        mock_platform(hass, f"{domain}.config_flow")
+
+    with ExitStack() as stack:
+        for domain in config_flow_test_domains:
+            stack.enter_context(mock_config_flow(domain, TTSFlow))
         yield
 
 
@@ -94,7 +106,7 @@ def config_flow_fixture(hass: HomeAssistant) -> Generator[None]:
 async def setup_fixture(
     hass: HomeAssistant,
     request: pytest.FixtureRequest,
-    mock_provider: MockProvider,
+    mock_provider: MockTTSProvider,
     mock_tts_entity: MockTTSEntity,
 ) -> None:
     """Set up the test environment."""

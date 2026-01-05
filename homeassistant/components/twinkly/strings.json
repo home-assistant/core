@@ -1,6 +1,16 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "flow_title": "{name}",
     "step": {
+      "discovery_confirm": {
+        "description": "Do you want to set up {name} - {model} ({host})?"
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
@@ -8,16 +18,23 @@
         "data_description": {
           "host": "Hostname or IP address of your Twinkly device."
         }
-      },
-      "discovery_confirm": {
-        "description": "Do you want to set up {name} - {model} ({host})?"
       }
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
-    },
-    "abort": {
-      "device_exists": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "entity": {
+    "select": {
+      "mode": {
+        "name": "Mode",
+        "state": {
+          "color": "Color",
+          "demo": "Demo",
+          "effect": "Effect",
+          "movie": "Uploaded effect",
+          "off": "[%key:common::state::off%]",
+          "playlist": "Playlist",
+          "rt": "Real time"
+        }
+      }
     }
   }
 }

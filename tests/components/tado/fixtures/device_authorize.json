@@ -1,0 +1,8 @@
+{
+  "device_code": "ABCD",
+  "expires_in": 300,
+  "interval": 5,
+  "user_code": "TEST",
+  "verification_uri": "https://login.tado.com/oauth2/device",
+  "verification_uri_complete": "https://login.tado.com/oauth2/device?user_code=TEST"
+}

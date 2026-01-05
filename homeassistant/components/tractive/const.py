@@ -16,6 +16,7 @@ ATTR_MINUTES_ACTIVE = "minutes_active"
 ATTR_MINUTES_DAY_SLEEP = "minutes_day_sleep"
 ATTR_MINUTES_NIGHT_SLEEP = "minutes_night_sleep"
 ATTR_MINUTES_REST = "minutes_rest"
+ATTR_POWER_SAVING = "power_saving"
 ATTR_SLEEP_LABEL = "sleep_label"
 ATTR_TRACKER_STATE = "tracker_state"
 
@@ -27,6 +28,7 @@ TRACKER_HARDWARE_STATUS_UPDATED = f"{DOMAIN}_tracker_hardware_status_updated"
 TRACKER_POSITION_UPDATED = f"{DOMAIN}_tracker_position_updated"
 TRACKER_SWITCH_STATUS_UPDATED = f"{DOMAIN}_tracker_switch_updated"
 TRACKER_WELLNESS_STATUS_UPDATED = f"{DOMAIN}_tracker_wellness_updated"
+TRACKER_HEALTH_OVERVIEW_UPDATED = f"{DOMAIN}_tracker_health_overview_updated"
 
 SERVER_UNAVAILABLE = f"{DOMAIN}_server_unavailable"
 

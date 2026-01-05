@@ -8,11 +8,10 @@ from typing import Any
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import WLEDConfigEntry
-from .const import ATTR_DURATION, ATTR_FADE, ATTR_TARGET_BRIGHTNESS, ATTR_UDP_PORT
-from .coordinator import WLEDDataUpdateCoordinator
+from .const import ATTR_DURATION, ATTR_TARGET_BRIGHTNESS, ATTR_UDP_PORT
+from .coordinator import WLEDConfigEntry, WLEDDataUpdateCoordinator
 from .entity import WLEDEntity
 from .helpers import wled_exception_handler
 
@@ -22,7 +21,7 @@ PARALLEL_UPDATES = 1
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: WLEDConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up WLED switch based on a config entry."""
     coordinator = entry.runtime_data
@@ -62,7 +61,6 @@ class WLEDNightlightSwitch(WLEDEntity, SwitchEntity):
         state = self.coordinator.data.state
         return {
             ATTR_DURATION: state.nightlight.duration,
-            ATTR_FADE: state.nightlight.fade,
             ATTR_TARGET_BRIGHTNESS: state.nightlight.target_brightness,
         }
 
@@ -169,12 +167,9 @@ class WLEDReverseSwitch(WLEDEntity, SwitchEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        try:
-            self.coordinator.data.state.segments[self._segment]
-        except IndexError:
-            return False
-
-        return super().available
+        return (
+            super().available and self._segment in self.coordinator.data.state.segments
+        )
 
     @property
     def is_on(self) -> bool:
@@ -196,10 +191,14 @@ class WLEDReverseSwitch(WLEDEntity, SwitchEntity):
 def async_update_segments(
     coordinator: WLEDDataUpdateCoordinator,
     current_ids: set[int],
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Update segments."""
-    segment_ids = {segment.segment_id for segment in coordinator.data.state.segments}
+    segment_ids = {
+        segment.segment_id
+        for segment in coordinator.data.state.segments.values()
+        if segment.segment_id is not None
+    }
 
     new_entities: list[WLEDReverseSwitch] = []
 

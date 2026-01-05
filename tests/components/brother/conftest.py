@@ -1,14 +1,18 @@
 """Test fixtures for brother."""
 
+from collections.abc import Generator
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, patch
 
 from brother import BrotherSensors
 import pytest
-from typing_extensions import Generator
 
-from homeassistant.components.brother.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_TYPE
+from homeassistant.components.brother.const import (
+    CONF_COMMUNITY,
+    DOMAIN,
+    SECTION_ADVANCED_SETTINGS,
+)
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
 
 from tests.common import MockConfigEntry
 
@@ -87,23 +91,26 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_brother_client() -> Generator[AsyncMock]:
-    """Mock Brother client."""
+def mock_brother() -> Generator[AsyncMock]:
+    """Mock the Brother class."""
     with (
-        patch("homeassistant.components.brother.Brother", autospec=True) as mock_client,
-        patch(
-            "homeassistant.components.brother.config_flow.Brother",
-            new=mock_client,
-        ),
+        patch("homeassistant.components.brother.Brother", autospec=True) as mock_class,
+        patch("homeassistant.components.brother.config_flow.Brother", new=mock_class),
     ):
-        client = mock_client.create.return_value
-        client.async_update.return_value = BROTHER_DATA
-        client.serial = "0123456789"
-        client.mac = "AA:BB:CC:DD:EE:FF"
-        client.model = "HL-L2340DW"
-        client.firmware = "1.2.3"
+        yield mock_class
 
-        yield client
+
+@pytest.fixture
+def mock_brother_client(mock_brother: AsyncMock) -> AsyncMock:
+    """Mock Brother client."""
+    client = mock_brother.create.return_value
+    client.async_update.return_value = BROTHER_DATA
+    client.serial = "0123456789"
+    client.mac = "AA:BB:CC:DD:EE:FF"
+    client.model = "HL-L2340DW"
+    client.firmware = "1.2.3"
+
+    return client
 
 
 @pytest.fixture
@@ -113,5 +120,10 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         title="HL-L2340DW 0123456789",
         unique_id="0123456789",
-        data={CONF_HOST: "localhost", CONF_TYPE: "laser"},
+        data={
+            CONF_HOST: "localhost",
+            CONF_TYPE: "laser",
+            SECTION_ADVANCED_SETTINGS: {CONF_PORT: 161, CONF_COMMUNITY: "public"},
+        },
+        minor_version=2,
     )

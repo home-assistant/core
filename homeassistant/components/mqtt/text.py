@@ -21,31 +21,35 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
+from homeassistant.helpers.typing import ConfigType, VolSchemaType
 
 from . import subscription
 from .config import MQTT_RW_SCHEMA
-from .const import CONF_COMMAND_TEMPLATE, CONF_COMMAND_TOPIC, CONF_STATE_TOPIC
-from .mixins import MqttEntity, async_setup_entity_entry_helper
+from .const import (
+    CONF_COMMAND_TEMPLATE,
+    CONF_COMMAND_TOPIC,
+    CONF_MAX,
+    CONF_MIN,
+    CONF_PATTERN,
+    CONF_STATE_TOPIC,
+)
+from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import (
     MqttCommandTemplate,
     MqttValueTemplate,
     PublishPayloadType,
     ReceiveMessage,
-    ReceivePayloadType,
 )
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import check_state_too_long
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_MAX = "max"
-CONF_MIN = "min"
-CONF_PATTERN = "pattern"
+PARALLEL_UPDATES = 0
 
 DEFAULT_NAME = "MQTT Text"
-DEFAULT_PAYLOAD_RESET = "None"
 
 MQTT_TEXT_ATTRIBUTES_BLOCKED = frozenset(
     {
@@ -93,7 +97,7 @@ PLATFORM_SCHEMA_MODERN = vol.All(_PLATFORM_SCHEMA_BASE, valid_text_size_configur
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MQTT text through YAML and through MQTT discovery."""
     async_setup_entity_entry_helper(
@@ -121,7 +125,7 @@ class MqttTextEntity(MqttEntity, TextEntity):
     _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
 
     @staticmethod
-    def config_schema() -> vol.Schema:
+    def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 

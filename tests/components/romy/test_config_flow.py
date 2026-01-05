@@ -1,16 +1,21 @@
 """Test the ROMY config flow."""
 
+from collections.abc import Generator
 from ipaddress import ip_address
-from unittest.mock import Mock, PropertyMock, patch
+from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
+import pytest
 from romy import RomyRobot
 
 from homeassistant import config_entries
-from homeassistant.components import zeroconf
 from homeassistant.components.romy.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import (
+    ATTR_PROPERTIES_ID,
+    ZeroconfServiceInfo,
+)
 
 
 def _create_mocked_romy(
@@ -39,6 +44,15 @@ CONFIG = {CONF_HOST: "1.2.3.4", CONF_PASSWORD: "12345678"}
 INPUT_CONFIG_HOST = {
     CONF_HOST: CONFIG[CONF_HOST],
 }
+
+
+@pytest.fixture(autouse=True)
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.romy.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
 
 
 async def test_show_user_form_robot_is_offline_and_locked(hass: HomeAssistant) -> None:
@@ -164,14 +178,14 @@ async def test_show_user_form_robot_reachable_again(hass: HomeAssistant) -> None
         assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
-DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
+DISCOVERY_INFO = ZeroconfServiceInfo(
     ip_address=ip_address("1.2.3.4"),
     ip_addresses=[ip_address("1.2.3.4")],
     port=8080,
     hostname="aicu-aicgsbksisfapcjqmqjq.local",
     type="mock_type",
     name="myROMY",
-    properties={zeroconf.ATTR_PROPERTIES_ID: "aicu-aicgsbksisfapcjqmqjqZERO"},
+    properties={ATTR_PROPERTIES_ID: "aicu-aicgsbksisfapcjqmqjqZERO"},
 )
 
 

@@ -1,0 +1,73 @@
+{
+  "items": [
+    {
+      "deviceId": "6602696a-1e48-49e4-919f-69406f5b5da1",
+      "name": "plug-energy-usage-report",
+      "label": "Sp\u00fclmaschine",
+      "manufacturerName": "0AI2",
+      "presentationId": "ST_8f2be0ec-1113-46e0-ad56-3e92eb27410f",
+      "deviceManufacturerCode": "TP-Link",
+      "locationId": "70da36b0-bd25-410c-beed-7f0dbf658448",
+      "ownerId": "be5d4173-dd49-1eee-56f5-f98306ee872c",
+      "roomId": "bd13616d-b7e2-44ff-914c-eb38ea18c4b4",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "healthCheck",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            },
+            {
+              "id": "switch",
+              "version": 1
+            },
+            {
+              "id": "powerConsumptionReport",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "SmartPlug",
+              "categoryType": "manufacturer"
+            },
+            {
+              "name": "SmartPlug",
+              "categoryType": "user"
+            }
+          ]
+        }
+      ],
+      "createTime": "2024-03-07T21:14:59.762Z",
+      "profile": {
+        "id": "a25b207e-cbb9-40ae-8a88-906637c22ab6"
+      },
+      "viper": {
+        "uniqueIdentifier": "8022F7F6FE0A6EACA52B5D89C0D667352136D8C6",
+        "manufacturerName": "TP-Link",
+        "modelName": "P110",
+        "swVersion": "1.3.1 Build 240621 Rel.162048",
+        "hwVersion": "1.0",
+        "endpointAppId": "viper_7ea6bb80-b876-11eb-be42-952f31ab3f7b"
+      },
+      "type": "VIPER",
+      "restrictionTier": 0,
+      "allowed": null,
+      "indoorMap": {
+        "coordinates": [0.0, 0.0, 0.0],
+        "rotation": [0.0, 180.0, 0.0],
+        "visible": false,
+        "data": null
+      },
+      "executionContext": "CLOUD",
+      "relationships": []
+    }
+  ],
+  "_links": {}
+}

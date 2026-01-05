@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
 from typing import TYPE_CHECKING, Any, Literal, TypedDict
 
@@ -10,31 +10,36 @@ import noaa_coops as coops
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import CONF_NAME, CONF_TIME_ZONE, CONF_UNIT_SYSTEM
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.unit_system import METRIC_SYSTEM
+
+from .const import (
+    ATTRIBUTION,
+    CONF_STATION_ID,
+    DEFAULT_NAME,
+    DEFAULT_PREDICTION_LENGTH,
+    DEFAULT_TIMEZONE,
+)
+from .helpers import get_station_unique_id
 
 if TYPE_CHECKING:
     from pandas import Timestamp
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_STATION_ID = "station_id"
-
-DEFAULT_NAME = "NOAA Tides"
-DEFAULT_TIMEZONE = "lst_ldt"
-
-SCAN_INTERVAL = timedelta(minutes=60)
-
 TIMEZONES = ["gmt", "lst", "lst_ldt"]
 UNIT_SYSTEMS = ["english", "metric"]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_STATION_ID): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -58,9 +63,9 @@ def setup_platform(
     if CONF_UNIT_SYSTEM in config:
         unit_system = config[CONF_UNIT_SYSTEM]
     elif hass.config.units is METRIC_SYSTEM:
-        unit_system = UNIT_SYSTEMS[1]
+        unit_system = "metric"
     else:
-        unit_system = UNIT_SYSTEMS[0]
+        unit_system = "english"
 
     try:
         station = coops.Station(station_id, unit_system)
@@ -92,7 +97,7 @@ class NOAATidesData(TypedDict):
 class NOAATidesAndCurrentsSensor(SensorEntity):
     """Representation of a NOAA Tides and Currents sensor."""
 
-    _attr_attribution = "Data provided by NOAA"
+    _attr_attribution = ATTRIBUTION
 
     def __init__(self, name, station_id, timezone, unit_system, station) -> None:
         """Initialize the sensor."""
@@ -102,6 +107,7 @@ class NOAATidesAndCurrentsSensor(SensorEntity):
         self._unit_system = unit_system
         self._station = station
         self.data: NOAATidesData | None = None
+        self._attr_unique_id = f"{get_station_unique_id(station_id)}_summary"
 
     @property
     def name(self) -> str:
@@ -135,8 +141,8 @@ class NOAATidesAndCurrentsSensor(SensorEntity):
         return attr
 
     @property
-    def native_value(self):
-        """Return the state of the device."""
+    def native_value(self) -> str | None:
+        """Return the state."""
         if self.data is None:
             return None
         api_time = self.data["time_stamp"][0]
@@ -151,8 +157,7 @@ class NOAATidesAndCurrentsSensor(SensorEntity):
     def update(self) -> None:
         """Get the latest data from NOAA Tides and Currents API."""
         begin = datetime.now()
-        delta = timedelta(days=2)
-        end = begin + delta
+        end = begin + DEFAULT_PREDICTION_LENGTH
         try:
             df_predictions = self._station.get_data(
                 begin_date=begin.strftime("%Y%m%d %H:%M"),
@@ -166,8 +171,8 @@ class NOAATidesAndCurrentsSensor(SensorEntity):
             api_data = df_predictions.head()
             self.data = NOAATidesData(
                 time_stamp=list(api_data.index),
-                hi_lo=list(api_data["hi_lo"].values),
-                predicted_wl=list(api_data["predicted_wl"].values),
+                hi_lo=list(api_data["type"].values),
+                predicted_wl=list(api_data["v"].values),
             )
             _LOGGER.debug("Data = %s", api_data)
             _LOGGER.debug(

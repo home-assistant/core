@@ -5,30 +5,38 @@ import logging
 from typing import Any
 
 import jwt
+import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
-from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
+from homeassistant.helpers import config_entry_oauth2_flow
 
-from .const import DOMAIN
+from .const import CONFIG_FLOW_MINOR_VERSION, CONFIG_FLOW_VERSION, DOMAIN
 
 
-class AladdinConnectOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
+class OAuth2FlowHandler(
+    config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
+):
     """Config flow to handle Aladdin Connect Genie OAuth2 authentication."""
 
     DOMAIN = DOMAIN
-    VERSION = 2
-    MINOR_VERSION = 1
+    VERSION = CONFIG_FLOW_VERSION
+    MINOR_VERSION = CONFIG_FLOW_MINOR_VERSION
 
-    reauth_entry: ConfigEntry | None = None
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Check we have the cloud integration set up."""
+        if "cloud" not in self.hass.config.components:
+            return self.async_abort(
+                reason="cloud_not_enabled",
+                description_placeholders={"default_config": "default_config"},
+            )
+        return await super().async_step_user(user_input)
 
     async def async_step_reauth(
         self, user_input: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon API auth error or upgrade from v1 to v2."""
-        self.reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -36,33 +44,29 @@ class AladdinConnectOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
         if user_input is None:
-            return self.async_show_form(step_id="reauth_confirm")
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                data_schema=vol.Schema({}),
+            )
         return await self.async_step_user()
 
-    async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
+    async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Create an oauth config entry or update existing entry for reauth."""
-        token_payload = jwt.decode(
-            data[CONF_TOKEN][CONF_ACCESS_TOKEN], options={"verify_signature": False}
+        # Extract the user ID from the JWT token's 'sub' field
+        token = jwt.decode(
+            data["token"]["access_token"], options={"verify_signature": False}
         )
-        if not self.reauth_entry:
-            await self.async_set_unique_id(token_payload["sub"])
-            self._abort_if_unique_id_configured()
+        user_id = token["sub"]
+        await self.async_set_unique_id(user_id)
 
-            return self.async_create_entry(
-                title=token_payload["username"],
-                data=data,
-            )
-
-        if self.reauth_entry.unique_id == token_payload["username"]:
+        if self.source == SOURCE_REAUTH:
+            self._abort_if_unique_id_mismatch(reason="wrong_account")
             return self.async_update_reload_and_abort(
-                self.reauth_entry,
-                data=data,
-                unique_id=token_payload["sub"],
+                self._get_reauth_entry(), data=data
             )
-        if self.reauth_entry.unique_id == token_payload["sub"]:
-            return self.async_update_reload_and_abort(self.reauth_entry, data=data)
 
-        return self.async_abort(reason="wrong_account")
+        self._abort_if_unique_id_configured()
+        return self.async_create_entry(title="Aladdin Connect", data=data)
 
     @property
     def logger(self) -> logging.Logger:

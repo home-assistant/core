@@ -1,0 +1,10 @@
+{
+  "data": [
+    {
+      "id": "unique_id_mehl",
+      "name": "Mehl",
+      "description": "200 g",
+      "is_owned": false
+    }
+  ]
+}

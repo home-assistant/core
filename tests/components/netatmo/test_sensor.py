@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.netatmo import sensor
 from homeassistant.const import Platform
@@ -81,6 +81,12 @@ async def test_public_weather_sensor(
     assert hass.states.get(f"{prefix}humidity").state == "76"
     assert hass.states.get(f"{prefix}atmospheric_pressure").state == "1014.4"
 
+    prefix = "sensor.home_min_"
+
+    assert hass.states.get(f"{prefix}temperature").state == "19.8"
+    assert hass.states.get(f"{prefix}humidity").state == "56"
+    assert hass.states.get(f"{prefix}atmospheric_pressure").state == "1005.4"
+
     prefix = "sensor.home_avg_"
 
     assert hass.states.get(f"{prefix}temperature").state == "22.7"
@@ -147,7 +153,7 @@ async def test_process_health(health: int, expected: str) -> None:
     ("uid", "name", "expected"),
     [
         ("12:34:56:03:1b:e4-reachable", "villa_garden_reachable", "True"),
-        ("12:34:56:03:1b:e4-rf_status", "villa_garden_radio", "Full"),
+        ("12:34:56:03:1b:e4-rf_status", "villa_garden_rf_strength", "Full"),
         (
             "12:34:56:80:bb:26-wifi_status",
             "villa_wifi_strength",
@@ -199,7 +205,7 @@ async def test_process_health(health: int, expected: str) -> None:
         ),
         (
             "12:34:56:26:68:92-wifi_status",
-            "baby_bedroom_wifi",
+            "baby_bedroom_wifi_strength",
             "High",
         ),
         ("Home-max-windangle_value", "home_max_wind_angle", "17"),

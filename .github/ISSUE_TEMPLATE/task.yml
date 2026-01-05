@@ -1,0 +1,53 @@
+name: Task
+description: For staff only - Create a task
+type: Task
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## ⚠️ RESTRICTED ACCESS
+
+        **This form is restricted to Open Home Foundation staff, authorized contributors, and integration code owners only.**
+
+        If you are a community member wanting to contribute, please:
+        - For bug reports: Use the [bug report form](https://github.com/home-assistant/core/issues/new?template=bug_report.yml)
+        - For feature requests: Submit to [Feature Requests](https://github.com/orgs/home-assistant/discussions)
+
+        ---
+
+        ### For authorized contributors
+
+        Use this form to create tasks for development work, improvements, or other actionable items that need to be tracked.
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: |
+        Provide a clear and detailed description of the task that needs to be accomplished.
+
+        Be specific about what needs to be done, why it's important, and any constraints or requirements.
+      placeholder: |
+        Describe the task, including:
+        - What needs to be done
+        - Why this task is needed
+        - Expected outcome
+        - Any constraints or requirements
+    validations:
+      required: true
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional context
+      description: |
+        Any additional information, links, research, or context that would be helpful.
+
+        Include links to related issues, research, prototypes, roadmap opportunities etc.
+      placeholder: |
+        - Roadmap opportunity: [link]
+        - Epic: [link]
+        - Feature request: [link]
+        - Technical design documents: [link]
+        - Prototype/mockup: [link]
+        - Dependencies: [links]
+    validations:
+      required: false

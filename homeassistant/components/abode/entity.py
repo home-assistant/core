@@ -105,7 +105,7 @@ class AbodeAutomation(AbodeEntity):
         super().__init__(data)
         self._automation = automation
         self._attr_name = automation.name
-        self._attr_unique_id = automation.automation_id
+        self._attr_unique_id = automation.id
         self._attr_extra_state_attributes = {
             "type": "CUE automation",
         }

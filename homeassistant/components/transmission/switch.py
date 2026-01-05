@@ -1,21 +1,19 @@
 """Support for setting the Transmission BitTorrent client Turtle Mode."""
 
+import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
-import logging
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import TransmissionDataUpdateCoordinator
+from .coordinator import TransmissionConfigEntry, TransmissionDataUpdateCoordinator
+from .entity import TransmissionEntity
 
-_LOGGING = logging.getLogger(__name__)
+PARALLEL_UPDATES = 0
+AFTER_WRITE_SLEEP = 2
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -47,44 +45,22 @@ SWITCH_TYPES: tuple[TransmissionSwitchEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: TransmissionConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Transmission switch."""
 
-    coordinator: TransmissionDataUpdateCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
+    coordinator = config_entry.runtime_data
 
     async_add_entities(
         TransmissionSwitch(coordinator, description) for description in SWITCH_TYPES
     )
 
 
-class TransmissionSwitch(
-    CoordinatorEntity[TransmissionDataUpdateCoordinator], SwitchEntity
-):
+class TransmissionSwitch(TransmissionEntity, SwitchEntity):
     """Representation of a Transmission switch."""
 
     entity_description: TransmissionSwitchEntityDescription
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        coordinator: TransmissionDataUpdateCoordinator,
-        entity_description: TransmissionSwitchEntityDescription,
-    ) -> None:
-        """Initialize the Transmission switch."""
-        super().__init__(coordinator)
-        self.entity_description = entity_description
-        self._attr_unique_id = (
-            f"{coordinator.config_entry.entry_id}-{entity_description.key}"
-        )
-        self._attr_device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
-            manufacturer="Transmission",
-        )
 
     @property
     def is_on(self) -> bool:
@@ -96,6 +72,7 @@ class TransmissionSwitch(
         await self.hass.async_add_executor_job(
             self.entity_description.on_func, self.coordinator
         )
+        await asyncio.sleep(AFTER_WRITE_SLEEP)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -103,4 +80,5 @@ class TransmissionSwitch(
         await self.hass.async_add_executor_job(
             self.entity_description.off_func, self.coordinator
         )
+        await asyncio.sleep(AFTER_WRITE_SLEEP)
         await self.coordinator.async_request_refresh()

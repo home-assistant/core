@@ -4,17 +4,11 @@ from dataclasses import dataclass
 import logging
 
 from pylutron import Button, Keypad, Led, Lutron, OccupancyGroup, Output
-import voluptuous as vol
 
-from homeassistant import config_entries
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 
@@ -35,68 +29,7 @@ ATTR_ACTION = "action"
 ATTR_FULL_ID = "full_id"
 ATTR_UUID = "uuid"
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_HOST): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-                vol.Required(CONF_USERNAME): cv.string,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-async def _async_import(hass: HomeAssistant, base_config: ConfigType) -> None:
-    """Import a config entry from configuration.yaml."""
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_IMPORT},
-        data=base_config[DOMAIN],
-    )
-    if (
-        result["type"] == FlowResultType.CREATE_ENTRY
-        or result["reason"] == "single_instance_allowed"
-    ):
-        async_create_issue(
-            hass,
-            HOMEASSISTANT_DOMAIN,
-            f"deprecated_yaml_{DOMAIN}",
-            breaks_in_ha_version="2024.7.0",
-            is_fixable=False,
-            issue_domain=DOMAIN,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": "Lutron",
-            },
-        )
-        return
-    async_create_issue(
-        hass,
-        DOMAIN,
-        f"deprecated_yaml_import_issue_{result['reason']}",
-        breaks_in_ha_version="2024.7.0",
-        is_fixable=False,
-        issue_domain=DOMAIN,
-        severity=IssueSeverity.WARNING,
-        translation_key=f"deprecated_yaml_import_issue_{result['reason']}",
-        translation_placeholders={
-            "domain": DOMAIN,
-            "integration_title": "Lutron",
-        },
-    )
-
-
-async def async_setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
-    """Set up the Lutron component."""
-    if DOMAIN in base_config:
-        hass.async_create_task(_async_import(hass, base_config))
-    return True
+type LutronConfigEntry = ConfigEntry[LutronData]
 
 
 @dataclass(slots=True, kw_only=True)
@@ -113,7 +46,9 @@ class LutronData:
     switches: list[tuple[str, Output]]
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: LutronConfigEntry
+) -> bool:
     """Set up the Lutron integration."""
 
     host = config_entry.data[CONF_HOST]
@@ -123,7 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     lutron_client = Lutron(host, uid, pwd)
     await hass.async_add_executor_job(lutron_client.load_xml_db)
     lutron_client.connect()
-    _LOGGER.info("Connected to main repeater at %s", host)
+    _LOGGER.debug("Connected to main repeater at %s", host)
 
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
@@ -151,8 +86,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             elif output.type == "CEILING_FAN_TYPE":
                 entry_data.fans.append((area.name, output))
                 platform = Platform.FAN
-                # Deprecated, should be removed in 2024.8
-                entry_data.lights.append((area.name, output))
             elif output.is_dimmable:
                 entry_data.lights.append((area.name, output))
                 platform = Platform.LIGHT
@@ -184,6 +117,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
                     "Toggle",
                     "SingleSceneRaiseLower",
                     "MasterRaiseLower",
+                    "AdvancedToggle",
                 ):
                     # Associate an LED with a button if there is one
                     led = next(
@@ -239,7 +173,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         name="Main repeater",
     )
 
-    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = entry_data
+    config_entry.runtime_data = entry_data
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
@@ -292,6 +226,6 @@ def _async_check_device_identifiers(
         )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LutronConfigEntry) -> bool:
     """Clean up resources and entities associated with the integration."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

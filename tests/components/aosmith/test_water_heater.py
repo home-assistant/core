@@ -1,11 +1,11 @@
 """Tests for the water heater platform of the A. O. Smith integration."""
 
+from collections.abc import AsyncGenerator
 from unittest.mock import MagicMock, patch
 
 from py_aosmith.models import OperationMode
 import pytest
 from syrupy.assertion import SnapshotAssertion
-from typing_extensions import AsyncGenerator
 
 from homeassistant.components.water_heater import (
     ATTR_AWAY_MODE,
@@ -29,7 +29,7 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture(autouse=True)
-async def platforms() -> AsyncGenerator[list[str]]:
+async def platforms() -> AsyncGenerator[None]:
     """Return the platforms to be loaded for this test."""
     with patch("homeassistant.components.aosmith.PLATFORMS", [Platform.WATER_HEATER]):
         yield

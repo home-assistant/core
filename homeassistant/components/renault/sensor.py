@@ -13,6 +13,7 @@ from renault_api.kamereon.models import (
     KamereonVehicleHvacStatusData,
     KamereonVehicleLocationData,
     KamereonVehicleResStateData,
+    KamereonVehicleTyrePressureData,
 )
 
 from homeassistant.components.sensor import (
@@ -26,12 +27,13 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfLength,
     UnitOfPower,
+    UnitOfPressure,
     UnitOfTemperature,
     UnitOfTime,
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import as_utc, parse_datetime
 
@@ -39,6 +41,9 @@ from . import RenaultConfigEntry
 from .coordinator import T
 from .entity import RenaultDataEntity, RenaultDataEntityDescription
 from .renault_vehicle import RenaultVehicleProxy
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -57,7 +62,7 @@ class RenaultSensorEntityDescription(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: RenaultConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Renault entities from config entry."""
     entities: list[RenaultSensor[Any]] = [
@@ -197,7 +202,13 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         translation_key="plug_state",
         device_class=SensorDeviceClass.ENUM,
         entity_class=RenaultSensor[KamereonVehicleBatteryStatusData],
-        options=["unplugged", "plugged", "plug_error", "plug_unknown"],
+        options=[
+            "unplugged",
+            "plugged",
+            "plugged_waiting_for_charge",
+            "plug_error",
+            "plug_unknown",
+        ],
         value_lambda=_get_plug_state_formatted,
     ),
     RenaultSensorEntityDescription(
@@ -327,5 +338,45 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
         entity_class=RenaultSensor[KamereonVehicleResStateData],
         entity_registry_enabled_default=False,
         translation_key="res_state_code",
+    ),
+    RenaultSensorEntityDescription(
+        key="front_left_pressure",
+        coordinator="pressure",
+        data_key="flPressure",
+        device_class=SensorDeviceClass.PRESSURE,
+        entity_class=RenaultSensor[KamereonVehicleTyrePressureData],
+        native_unit_of_measurement=UnitOfPressure.MBAR,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="front_left_pressure",
+    ),
+    RenaultSensorEntityDescription(
+        key="front_right_pressure",
+        coordinator="pressure",
+        data_key="frPressure",
+        device_class=SensorDeviceClass.PRESSURE,
+        entity_class=RenaultSensor[KamereonVehicleTyrePressureData],
+        native_unit_of_measurement=UnitOfPressure.MBAR,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="front_right_pressure",
+    ),
+    RenaultSensorEntityDescription(
+        key="rear_left_pressure",
+        coordinator="pressure",
+        data_key="rlPressure",
+        device_class=SensorDeviceClass.PRESSURE,
+        entity_class=RenaultSensor[KamereonVehicleTyrePressureData],
+        native_unit_of_measurement=UnitOfPressure.MBAR,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="rear_left_pressure",
+    ),
+    RenaultSensorEntityDescription(
+        key="rear_right_pressure",
+        coordinator="pressure",
+        data_key="rrPressure",
+        device_class=SensorDeviceClass.PRESSURE,
+        entity_class=RenaultSensor[KamereonVehicleTyrePressureData],
+        native_unit_of_measurement=UnitOfPressure.MBAR,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="rear_right_pressure",
     ),
 )

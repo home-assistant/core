@@ -3,15 +3,11 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Mapping
 from datetime import timedelta
-from functools import partial
 import logging
 from types import ModuleType
-from typing import Any, Generic
-
-from typing_extensions import TypeVar
-import voluptuous as vol
+from typing import Any
 
 from homeassistant import config as conf_util
 from homeassistant.config_entries import ConfigEntry
@@ -22,33 +18,29 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     Event,
-    HassJob,
     HassJobType,
     HomeAssistant,
     ServiceCall,
-    ServiceResponse,
     SupportsResponse,
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import async_get_integration, bind_hass
 from homeassistant.setup import async_prepare_setup_platform
+from homeassistant.util.hass_dict import HassKey
 
-from . import config_validation as cv, discovery, entity, service
-from .entity_platform import EntityPlatform
-from .typing import ConfigType, DiscoveryInfoType
+from . import device_registry as dr, discovery, entity, entity_registry as er, service
+from .entity_platform import EntityPlatform, async_calculate_suggested_object_id
+from .typing import ConfigType, DiscoveryInfoType, VolDictType, VolSchemaType
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=15)
-DATA_INSTANCES = "entity_components"
-
-_EntityT = TypeVar("_EntityT", bound=entity.Entity, default=entity.Entity)
+DATA_INSTANCES: HassKey[dict[str, EntityComponent]] = HassKey("entity_components")
 
 
 @bind_hass
 async def async_update_entity(hass: HomeAssistant, entity_id: str) -> None:
     """Trigger an update for an entity."""
     domain = entity_id.partition(".")[0]
-    entity_comp: EntityComponent[entity.Entity] | None
     entity_comp = hass.data.get(DATA_INSTANCES, {}).get(domain)
 
     if entity_comp is None:
@@ -66,11 +58,44 @@ async def async_update_entity(hass: HomeAssistant, entity_id: str) -> None:
     await entity_obj.async_update_ha_state(True)
 
 
-class EntityComponent(Generic[_EntityT]):
-    """The EntityComponent manages platforms that manages entities.
+@callback
+def async_get_entity_suggested_object_id(
+    hass: HomeAssistant, entity_id: str
+) -> str | None:
+    """Get the suggested object id for an entity.
+
+    Raises HomeAssistantError if the entity is not in the registry or
+    is not backed by an object.
+    """
+    entity_registry = er.async_get(hass)
+    if not (entity_entry := entity_registry.async_get(entity_id)):
+        raise HomeAssistantError(f"Entity {entity_id} is not in the registry.")
+
+    domain = entity_id.partition(".")[0]
+
+    if entity_entry.name:
+        return entity_entry.name
+
+    if entity_entry.suggested_object_id:
+        return entity_entry.suggested_object_id
+
+    entity_comp = hass.data.get(DATA_INSTANCES, {}).get(domain)
+    if not (entity_obj := entity_comp.get_entity(entity_id) if entity_comp else None):
+        raise HomeAssistantError(f"Entity {entity_id} has no object.")
+    device: dr.DeviceEntry | None = None
+    if device_id := entity_entry.device_id:
+        device = dr.async_get(hass).async_get(device_id)
+    return async_calculate_suggested_object_id(entity_obj, device)
+
+
+class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
+    """The EntityComponent manages platforms that manage entities.
+
+    An example of an entity component is 'light', which manages platforms such
+    as 'hue.light'.
 
     This class has the following responsibilities:
-     - Process the configuration and set up a platform based component.
+     - Process the configuration and set up a platform based component, for example light.
      - Manage the platforms and their entities.
      - Help extract the entities from a service call.
      - Listen for discovery events for platforms related to the domain.
@@ -98,7 +123,7 @@ class EntityComponent(Generic[_EntityT]):
         self.async_add_entities = domain_platform.async_add_entities
         self.add_entities = domain_platform.add_entities
         self._entities: dict[str, entity.Entity] = domain_platform.domain_entities
-        hass.data.setdefault(DATA_INSTANCES, {})[domain] = self
+        hass.data.setdefault(DATA_INSTANCES, {})[domain] = self  # type: ignore[assignment]
 
     @property
     def entities(self) -> Iterable[_EntityT]:
@@ -215,75 +240,32 @@ class EntityComponent(Generic[_EntityT]):
         This method must be run in the event loop.
         """
         return await service.async_extract_entities(
-            self.hass, self.entities, service_call, expand_group
-        )
-
-    @callback
-    def async_register_legacy_entity_service(
-        self,
-        name: str,
-        schema: dict[str | vol.Marker, Any] | vol.Schema,
-        func: str | Callable[..., Any],
-        required_features: list[int] | None = None,
-        supports_response: SupportsResponse = SupportsResponse.NONE,
-    ) -> None:
-        """Register an entity service with a legacy response format."""
-        if isinstance(schema, dict):
-            schema = cv.make_entity_service_schema(schema)
-
-        service_func: str | HassJob[..., Any]
-        service_func = func if isinstance(func, str) else HassJob(func)
-
-        async def handle_service(
-            call: ServiceCall,
-        ) -> ServiceResponse:
-            """Handle the service."""
-
-            result = await service.entity_service_call(
-                self.hass, self._entities, service_func, call, required_features
-            )
-
-            if result:
-                if len(result) > 1:
-                    raise HomeAssistantError(
-                        "Deprecated service call matched more than one entity"
-                    )
-                return result.popitem()[1]
-            return None
-
-        self.hass.services.async_register(
-            self.domain, name, handle_service, schema, supports_response
+            self.entities, service_call, expand_group
         )
 
     @callback
     def async_register_entity_service(
         self,
         name: str,
-        schema: dict[str | vol.Marker, Any] | vol.Schema,
+        schema: VolDictType | VolSchemaType | None,
         func: str | Callable[..., Any],
         required_features: list[int] | None = None,
         supports_response: SupportsResponse = SupportsResponse.NONE,
+        *,
+        description_placeholders: Mapping[str, str] | None = None,
     ) -> None:
         """Register an entity service."""
-        if isinstance(schema, dict):
-            schema = cv.make_entity_service_schema(schema)
-
-        service_func: str | HassJob[..., Any]
-        service_func = func if isinstance(func, str) else HassJob(func)
-
-        self.hass.services.async_register(
+        service.async_register_entity_service(
+            self.hass,
             self.domain,
             name,
-            partial(
-                service.entity_service_call,
-                self.hass,
-                self._entities,
-                service_func,
-                required_features=required_features,
-            ),
-            schema,
-            supports_response,
+            entities=self._entities,
+            func=func,
             job_type=HassJobType.Coroutinefunction,
+            required_features=required_features,
+            schema=schema,
+            supports_response=supports_response,
+            description_placeholders=description_placeholders,
         )
 
     async def async_setup_platform(

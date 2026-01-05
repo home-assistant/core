@@ -1,0 +1,355 @@
+{
+  "chain_names": [
+    {
+      "name": "Chain 0",
+      "number": 1
+    },
+    {
+      "name": "Chain 1",
+      "number": 2
+    }
+  ],
+  "derived": {
+    "access_point": true,
+    "mac": "01:23:45:67:89:AB",
+    "mac_interface": "br0",
+    "mode": "point_to_point",
+    "ptmp": false,
+    "ptp": true,
+    "role": "access_point",
+    "sku": "Loco5AC",
+    "station": false
+  },
+  "firewall": {
+    "eb6tables": false,
+    "ebtables": false,
+    "ip6tables": false,
+    "iptables": false
+  },
+  "genuine": "/images/genuine.png",
+  "gps": {
+    "alt": null,
+    "dim": null,
+    "dop": null,
+    "fix": 0,
+    "lat": 52.379894,
+    "lon": 4.901608,
+    "sats": null,
+    "time_synced": null
+  },
+  "host": {
+    "cpuload": 10.10101,
+    "device_id": "03aa0d0b40fed0a47088293584ef5432",
+    "devmodel": "NanoStation 5AC loco",
+    "freeram": 16564224,
+    "fwversion": "v8.7.17",
+    "height": 3,
+    "hostname": "NanoStation 5AC ap name",
+    "loadavg": 0.412598,
+    "netrole": "bridge",
+    "power_time": 268683,
+    "temperature": 0,
+    "time": "2025-06-23 23:06:42",
+    "timestamp": 2668313184,
+    "totalram": 63447040,
+    "uptime": 264888
+  },
+  "interfaces": [
+    {
+      "enabled": true,
+      "hwaddr": "01:23:45:67:89:AB",
+      "ifname": "eth0",
+      "mtu": 1500,
+      "status": {
+        "cable_len": 18,
+        "duplex": true,
+        "ip6addr": null,
+        "ipaddr": "0.0.0.0",
+        "plugged": true,
+        "rx_bytes": 3984971949,
+        "rx_dropped": 0,
+        "rx_errors": 4,
+        "rx_packets": 73564835,
+        "snr": [30, 30, 30, 30],
+        "speed": 1000,
+        "tx_bytes": 209900085624,
+        "tx_dropped": 10,
+        "tx_errors": 0,
+        "tx_packets": 185866883
+      }
+    },
+    {
+      "enabled": true,
+      "hwaddr": "01:23:45:67:89:AB",
+      "ifname": "ath0",
+      "mtu": 1500,
+      "status": {
+        "cable_len": null,
+        "duplex": false,
+        "ip6addr": null,
+        "ipaddr": "0.0.0.0",
+        "plugged": false,
+        "rx_bytes": 206938324766,
+        "rx_dropped": 0,
+        "rx_errors": 0,
+        "rx_packets": 149767200,
+        "snr": null,
+        "speed": 0,
+        "tx_bytes": 5265602738,
+        "tx_dropped": 2005,
+        "tx_errors": 0,
+        "tx_packets": 52980390
+      }
+    },
+    {
+      "enabled": true,
+      "hwaddr": "01:23:45:67:89:AB",
+      "ifname": "br0",
+      "mtu": 1500,
+      "status": {
+        "cable_len": null,
+        "duplex": false,
+        "ip6addr": [
+          {
+            "addr": "fe80::eea:14ff:fea4:89cd",
+            "plen": 64
+          }
+        ],
+        "ipaddr": "192.168.1.2",
+        "plugged": true,
+        "rx_bytes": 204802727,
+        "rx_dropped": 0,
+        "rx_errors": 0,
+        "rx_packets": 1791592,
+        "snr": null,
+        "speed": 0,
+        "tx_bytes": 236295176,
+        "tx_dropped": 0,
+        "tx_errors": 0,
+        "tx_packets": 298119
+      }
+    }
+  ],
+  "ntpclient": {},
+  "portfw": false,
+  "provmode": {},
+  "services": {
+    "airview": 2,
+    "dhcp6d_stateful": false,
+    "dhcpc": false,
+    "dhcpd": false,
+    "pppoe": false
+  },
+  "unms": {
+    "status": 0,
+    "timestamp": null
+  },
+  "wireless": {
+    "antenna_gain": 13,
+    "apmac": "01:23:45:67:89:AB",
+    "aprepeater": false,
+    "band": 2,
+    "cac_state": 0,
+    "cac_timeout": 0,
+    "center1_freq": 5530,
+    "chanbw": 80,
+    "compat_11n": 0,
+    "count": 1,
+    "dfs": 1,
+    "distance": 0,
+    "essid": "DemoSSID",
+    "frequency": 5500,
+    "hide_essid": 0,
+    "ieeemode": "11ACVHT80",
+    "mode": "ap-ptp",
+    "noisef": -89,
+    "nol_state": 0,
+    "nol_timeout": 0,
+    "polling": {
+      "atpc_status": 2,
+      "cb_capacity": 593970,
+      "dl_capacity": 647400,
+      "ff_cap_rep": false,
+      "fixed_frame": false,
+      "flex_mode": null,
+      "gps_sync": false,
+      "rx_use": 42,
+      "tx_use": 6,
+      "ul_capacity": 540540,
+      "use": 48
+    },
+    "rstatus": 5,
+    "rx_chainmask": 3,
+    "rx_idx": 8,
+    "rx_nss": 2,
+    "security": "WPA2",
+    "service": {
+      "link": 266003,
+      "time": 267181
+    },
+    "sta": [
+      {
+        "airmax": {
+          "actual_priority": 0,
+          "atpc_status": 2,
+          "beam": 0,
+          "cb_capacity": 593970,
+          "desired_priority": 0,
+          "dl_capacity": 647400,
+          "rx": {
+            "cinr": 31,
+            "evm": [
+              [
+                31, 28, 33, 32, 32, 32, 31, 31, 31, 29, 30, 32, 30, 27, 34, 31,
+                31, 30, 32, 29, 31, 29, 31, 33, 31, 31, 32, 30, 31, 34, 33, 31,
+                30, 31, 30, 31, 31, 32, 31, 30, 33, 31, 30, 31, 27, 31, 30, 30,
+                30, 30, 30, 29, 32, 34, 31, 30, 28, 30, 29, 35, 31, 33, 32, 29
+              ],
+              [
+                34, 34, 35, 34, 35, 35, 34, 34, 34, 34, 34, 34, 34, 34, 35, 35,
+                34, 34, 35, 34, 33, 33, 35, 34, 34, 35, 34, 35, 34, 34, 35, 34,
+                34, 33, 34, 34, 34, 34, 34, 35, 35, 35, 34, 35, 33, 34, 34, 34,
+                34, 35, 35, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 34, 35, 35
+              ]
+            ],
+            "usage": 42
+          },
+          "tx": {
+            "cinr": 31,
+            "evm": [
+              [
+                32, 34, 28, 33, 35, 30, 31, 33, 30, 30, 32, 30, 29, 33, 31, 29,
+                33, 31, 31, 30, 33, 34, 33, 31, 33, 32, 32, 31, 29, 31, 30, 32,
+                31, 30, 29, 32, 31, 32, 31, 31, 32, 29, 31, 29, 30, 32, 32, 31,
+                32, 32, 33, 31, 28, 29, 31, 31, 33, 32, 33, 32, 32, 32, 31, 33
+              ],
+              [
+                37, 37, 37, 38, 38, 37, 36, 38, 38, 37, 37, 37, 37, 37, 39, 37,
+                37, 37, 37, 37, 37, 36, 37, 37, 37, 37, 37, 37, 37, 38, 37, 37,
+                38, 37, 37, 37, 38, 37, 38, 37, 37, 37, 37, 37, 36, 37, 37, 37,
+                37, 37, 37, 38, 37, 37, 38, 37, 36, 37, 37, 37, 37, 37, 37, 37
+              ]
+            ],
+            "usage": 6
+          },
+          "ul_capacity": 540540
+        },
+        "airos_connected": true,
+        "cb_capacity_expect": 416000,
+        "chainrssi": [35, 32, 0],
+        "distance": 1,
+        "dl_avg_linkscore": 100,
+        "dl_capacity_expect": 208000,
+        "dl_linkscore": 100,
+        "dl_rate_expect": 3,
+        "dl_signal_expect": -80,
+        "last_disc": 1,
+        "lastip": "192.168.1.2",
+        "mac": "01:23:45:67:89:AB",
+        "noisefloor": -89,
+        "remote": {
+          "age": 1,
+          "airview": 2,
+          "antenna_gain": 13,
+          "cable_loss": 0,
+          "chainrssi": [33, 37, 0],
+          "compat_11n": 0,
+          "cpuload": 43.564301,
+          "device_id": "d4f4cdf82961e619328a8f72f8d7653b",
+          "distance": 1,
+          "ethlist": [
+            {
+              "cable_len": 14,
+              "duplex": true,
+              "enabled": true,
+              "ifname": "eth0",
+              "plugged": true,
+              "snr": [30, 30, 29, 30],
+              "speed": 1000
+            }
+          ],
+          "freeram": 14290944,
+          "gps": {
+            "alt": null,
+            "dim": null,
+            "dop": null,
+            "fix": 0,
+            "lat": 52.379894,
+            "lon": 4.901608,
+            "sats": null,
+            "time_synced": null
+          },
+          "height": 2,
+          "hostname": "NanoStation 5AC sta name",
+          "ip6addr": ["fe80::eea:14ff:fea4:89ab"],
+          "ipaddr": ["192.168.1.2"],
+          "mode": "sta-ptp",
+          "netrole": "bridge",
+          "noisefloor": -90,
+          "oob": false,
+          "platform": "NanoStation 5AC loco",
+          "power_time": 268512,
+          "rssi": 38,
+          "rx_bytes": 3624206478,
+          "rx_chainmask": 3,
+          "rx_throughput": 251,
+          "service": {
+            "link": 265996,
+            "time": 267195
+          },
+          "signal": -58,
+          "sys_id": "0xe7fa",
+          "temperature": 0,
+          "time": "2025-06-23 23:13:54",
+          "totalram": 63447040,
+          "tx_bytes": 212308148210,
+          "tx_power": -4,
+          "tx_ratedata": [
+            14, 4, 372, 2223, 4708, 4037, 8142, 485763, 29420892, 24748154
+          ],
+          "tx_throughput": 16023,
+          "unms": {
+            "status": 0,
+            "timestamp": null
+          },
+          "uptime": 265320,
+          "version": "WA.ar934x.v8.7.17.48152.250620.2132"
+        },
+        "rssi": 37,
+        "rx_idx": 8,
+        "rx_nss": 2,
+        "signal": -59,
+        "stats": {
+          "rx_bytes": 206938324814,
+          "rx_packets": 149767200,
+          "rx_pps": 846,
+          "tx_bytes": 5265602739,
+          "tx_packets": 52980390,
+          "tx_pps": 0
+        },
+        "tx_idx": 9,
+        "tx_latency": 0,
+        "tx_lretries": 0,
+        "tx_nss": 2,
+        "tx_packets": 0,
+        "tx_ratedata": [175, 4, 47, 200, 673, 158, 163, 138, 68895, 19577430],
+        "tx_sretries": 0,
+        "ul_avg_linkscore": 88,
+        "ul_capacity_expect": 624000,
+        "ul_linkscore": 86,
+        "ul_rate_expect": 8,
+        "ul_signal_expect": -55,
+        "uptime": 170281
+      }
+    ],
+    "sta_disconnected": [],
+    "throughput": {
+      "rx": 9907,
+      "tx": 222
+    },
+    "tx_chainmask": 3,
+    "tx_idx": 9,
+    "tx_nss": 2,
+    "txpower": -3
+  }
+}

@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.gdacs import CONF_CATEGORIES, DOMAIN
+from homeassistant.components.gdacs.const import CONF_CATEGORIES, DOMAIN
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,

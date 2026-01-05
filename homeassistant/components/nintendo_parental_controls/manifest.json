@@ -1,0 +1,12 @@
+{
+  "domain": "nintendo_parental_controls",
+  "name": "Nintendo Switch parental controls",
+  "codeowners": ["@pantherale0"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/nintendo_parental_controls",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "loggers": ["pynintendoauth", "pynintendoparental"],
+  "quality_scale": "bronze",
+  "requirements": ["pynintendoauth==1.0.2", "pynintendoparental==2.3.0"]
+}

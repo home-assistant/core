@@ -101,15 +101,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
 
         return update_forecast_hourly
 
-    coordinator_observation = NWSObservationDataUpdateCoordinator(
-        hass,
-        nws_data,
-    )
+    coordinator_observation = NWSObservationDataUpdateCoordinator(hass, entry, nws_data)
 
     # Don't use retries in setup
     coordinator_forecast = TimestampDataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=entry,
         name=f"NWS forecast station {station}",
         update_method=async_setup_update_forecast(0, 0),
         update_interval=DEFAULT_SCAN_INTERVAL,
@@ -121,6 +119,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
     coordinator_forecast_hourly = TimestampDataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=entry,
         name=f"NWS forecast hourly station {station}",
         update_method=async_setup_update_forecast_hourly(0, 0),
         update_interval=DEFAULT_SCAN_INTERVAL,

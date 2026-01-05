@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterable, Mapping
+from collections.abc import AsyncGenerator, Mapping
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
@@ -47,6 +47,7 @@ from homeassistant.const import (
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 from homeassistant.setup import async_setup_component
 
 from .conftest import (
@@ -95,7 +96,7 @@ async def mock_entity_id(
     config_entry_mock: MockConfigEntry,
     ssdp_scanner_mock: Mock,
     dmr_device_mock: Mock,
-) -> AsyncIterable[str]:
+) -> AsyncGenerator[str]:
     """Fixture to set up a mock DlnaDmrEntity in a connected state.
 
     Yields the entity ID. Cleans up the entity after the test is complete.
@@ -145,7 +146,7 @@ async def mock_disconnected_entity_id(
     config_entry_mock: MockConfigEntry,
     ssdp_scanner_mock: Mock,
     dmr_device_mock: Mock,
-) -> AsyncIterable[str]:
+) -> AsyncGenerator[str]:
     """Fixture to set up a mock DlnaDmrEntity in a disconnected state.
 
     Yields the entity ID. Cleans up the entity after the test is complete.
@@ -458,7 +459,7 @@ async def test_available_device(
     assert device.name == "device_name"
 
     # Check entity state gets updated when device changes state
-    for dev_state, ent_state in [
+    for dev_state, ent_state in (
         (None, MediaPlayerState.ON),
         (TransportState.STOPPED, MediaPlayerState.IDLE),
         (TransportState.PLAYING, MediaPlayerState.PLAYING),
@@ -468,7 +469,7 @@ async def test_available_device(
         (TransportState.RECORDING, MediaPlayerState.IDLE),
         (TransportState.NO_MEDIA_PRESENT, MediaPlayerState.IDLE),
         (TransportState.VENDOR_DEFINED, ha_const.STATE_UNKNOWN),
-    ]:
+    ):
         dmr_device_mock.profile_device.available = True
         dmr_device_mock.transport_state = dev_state
         await async_update_entity(hass, mock_entity_id)
@@ -595,7 +596,7 @@ async def test_attributes(
     assert attrs[mp.ATTR_MEDIA_EPISODE] == "S1E23"
 
     # shuffle and repeat is based on device's play mode
-    for play_mode, shuffle, repeat in [
+    for play_mode, shuffle, repeat in (
         (PlayMode.NORMAL, False, RepeatMode.OFF),
         (PlayMode.SHUFFLE, True, RepeatMode.OFF),
         (PlayMode.REPEAT_ONE, False, RepeatMode.ONE),
@@ -603,12 +604,12 @@ async def test_attributes(
         (PlayMode.RANDOM, True, RepeatMode.ALL),
         (PlayMode.DIRECT_1, False, RepeatMode.OFF),
         (PlayMode.INTRO, False, RepeatMode.OFF),
-    ]:
+    ):
         dmr_device_mock.play_mode = play_mode
         attrs = await get_attrs(hass, mock_entity_id)
         assert attrs[mp.ATTR_MEDIA_SHUFFLE] is shuffle
         assert attrs[mp.ATTR_MEDIA_REPEAT] == repeat
-    for bad_play_mode in [None, PlayMode.VENDOR_DEFINED]:
+    for bad_play_mode in (None, PlayMode.VENDOR_DEFINED):
         dmr_device_mock.play_mode = bad_play_mode
         attrs = await get_attrs(hass, mock_entity_id)
         assert mp.ATTR_MEDIA_SHUFFLE not in attrs
@@ -944,7 +945,7 @@ async def test_shuffle_repeat_modes(
     """Test setting repeat and shuffle modes."""
     # Test shuffle with all variations of existing play mode
     dmr_device_mock.valid_play_modes = {mode.value for mode in PlayMode}
-    for init_mode, shuffle_set, expect_mode in [
+    for init_mode, shuffle_set, expect_mode in (
         (PlayMode.NORMAL, False, PlayMode.NORMAL),
         (PlayMode.SHUFFLE, False, PlayMode.NORMAL),
         (PlayMode.REPEAT_ONE, False, PlayMode.REPEAT_ONE),
@@ -955,7 +956,7 @@ async def test_shuffle_repeat_modes(
         (PlayMode.REPEAT_ONE, True, PlayMode.RANDOM),
         (PlayMode.REPEAT_ALL, True, PlayMode.RANDOM),
         (PlayMode.RANDOM, True, PlayMode.RANDOM),
-    ]:
+    ):
         dmr_device_mock.play_mode = init_mode
         await hass.services.async_call(
             mp.DOMAIN,
@@ -966,7 +967,7 @@ async def test_shuffle_repeat_modes(
         dmr_device_mock.async_set_play_mode.assert_awaited_with(expect_mode)
 
     # Test repeat with all variations of existing play mode
-    for init_mode, repeat_set, expect_mode in [
+    for init_mode, repeat_set, expect_mode in (
         (PlayMode.NORMAL, RepeatMode.OFF, PlayMode.NORMAL),
         (PlayMode.SHUFFLE, RepeatMode.OFF, PlayMode.SHUFFLE),
         (PlayMode.REPEAT_ONE, RepeatMode.OFF, PlayMode.NORMAL),
@@ -982,7 +983,7 @@ async def test_shuffle_repeat_modes(
         (PlayMode.REPEAT_ONE, RepeatMode.ALL, PlayMode.REPEAT_ALL),
         (PlayMode.REPEAT_ALL, RepeatMode.ALL, PlayMode.REPEAT_ALL),
         (PlayMode.RANDOM, RepeatMode.ALL, PlayMode.RANDOM),
-    ]:
+    ):
         dmr_device_mock.play_mode = init_mode
         await hass.services.async_call(
             mp.DOMAIN,
@@ -1057,6 +1058,7 @@ async def test_browse_media(
         ),
         "can_play": True,
         "can_expand": False,
+        "can_search": False,
         "thumbnail": None,
         "children_media_class": None,
     }
@@ -1069,6 +1071,7 @@ async def test_browse_media(
         "media_content_id": "media-source://media_source/local/test.mp3",
         "can_play": True,
         "can_expand": False,
+        "can_search": False,
         "thumbnail": None,
         "children_media_class": None,
     }
@@ -1152,6 +1155,7 @@ async def test_browse_media_unfiltered(
         ),
         "can_play": True,
         "can_expand": False,
+        "can_search": False,
         "thumbnail": None,
         "children_media_class": None,
     }
@@ -1162,6 +1166,7 @@ async def test_browse_media_unfiltered(
         "media_content_id": "media-source://media_source/local/test.mp3",
         "can_play": True,
         "can_expand": False,
+        "can_search": False,
         "thumbnail": None,
         "children_media_class": None,
     }
@@ -1413,7 +1418,7 @@ async def test_become_available(
     # Send an SSDP notification from the now alive device
     ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0].target
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=NEW_DEVICE_LOCATION,
             ssdp_st=MOCK_DEVICE_TYPE,
@@ -1484,7 +1489,7 @@ async def test_alive_but_gone(
     # Send an SSDP notification from the still missing device
     ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0].target
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=NEW_DEVICE_LOCATION,
             ssdp_st=MOCK_DEVICE_TYPE,
@@ -1506,7 +1511,7 @@ async def test_alive_but_gone(
     # Send the same SSDP notification, expecting no extra connection attempts
     domain_data_mock.upnp_factory.async_create_device.reset_mock()
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=NEW_DEVICE_LOCATION,
             ssdp_st=MOCK_DEVICE_TYPE,
@@ -1525,7 +1530,7 @@ async def test_alive_but_gone(
     # Send an SSDP notification with a new BOOTID, indicating the device has rebooted
     domain_data_mock.upnp_factory.async_create_device.reset_mock()
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=NEW_DEVICE_LOCATION,
             ssdp_st=MOCK_DEVICE_TYPE,
@@ -1546,7 +1551,7 @@ async def test_alive_but_gone(
     # should result in a reconnect attempt even with same BOOTID.
     domain_data_mock.upnp_factory.async_create_device.reset_mock()
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_st=MOCK_DEVICE_TYPE,
             upnp={},
@@ -1554,7 +1559,7 @@ async def test_alive_but_gone(
         ssdp.SsdpChange.BYEBYE,
     )
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=NEW_DEVICE_LOCATION,
             ssdp_st=MOCK_DEVICE_TYPE,
@@ -1597,7 +1602,7 @@ async def test_multiple_ssdp_alive(
     # Send two SSDP notifications with the new device URL
     ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0].target
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=NEW_DEVICE_LOCATION,
             ssdp_st=MOCK_DEVICE_TYPE,
@@ -1606,7 +1611,7 @@ async def test_multiple_ssdp_alive(
         ssdp.SsdpChange.ALIVE,
     )
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=NEW_DEVICE_LOCATION,
             ssdp_st=MOCK_DEVICE_TYPE,
@@ -1637,7 +1642,7 @@ async def test_ssdp_byebye(
     # First byebye will cause a disconnect
     ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0].target
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_udn=MOCK_DEVICE_UDN,
             ssdp_headers={"NTS": "ssdp:byebye"},
@@ -1656,7 +1661,7 @@ async def test_ssdp_byebye(
 
     # Second byebye will do nothing
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_udn=MOCK_DEVICE_UDN,
             ssdp_headers={"NTS": "ssdp:byebye"},
@@ -1689,7 +1694,7 @@ async def test_ssdp_update_seen_bootid(
     # Send SSDP alive with boot ID
     ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0].target
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=MOCK_DEVICE_LOCATION,
             ssdp_headers={ssdp.ATTR_SSDP_BOOTID: "1"},
@@ -1702,7 +1707,7 @@ async def test_ssdp_update_seen_bootid(
 
     # Send SSDP update with next boot ID
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_udn=MOCK_DEVICE_UDN,
             ssdp_headers={
@@ -1727,7 +1732,7 @@ async def test_ssdp_update_seen_bootid(
 
     # Send SSDP update with same next boot ID, again
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_udn=MOCK_DEVICE_UDN,
             ssdp_headers={
@@ -1752,7 +1757,7 @@ async def test_ssdp_update_seen_bootid(
 
     # Send SSDP update with bad next boot ID
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_udn=MOCK_DEVICE_UDN,
             ssdp_headers={
@@ -1777,7 +1782,7 @@ async def test_ssdp_update_seen_bootid(
 
     # Send a new SSDP alive with the new boot ID, device should not reconnect
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=MOCK_DEVICE_LOCATION,
             ssdp_headers={ssdp.ATTR_SSDP_BOOTID: "2"},
@@ -1816,7 +1821,7 @@ async def test_ssdp_update_missed_bootid(
     # Send SSDP alive with boot ID
     ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0].target
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=MOCK_DEVICE_LOCATION,
             ssdp_headers={ssdp.ATTR_SSDP_BOOTID: "1"},
@@ -1829,7 +1834,7 @@ async def test_ssdp_update_missed_bootid(
 
     # Send SSDP update with skipped boot ID (not previously seen)
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_udn=MOCK_DEVICE_UDN,
             ssdp_headers={
@@ -1854,7 +1859,7 @@ async def test_ssdp_update_missed_bootid(
 
     # Send a new SSDP alive with the new boot ID, device should reconnect
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=MOCK_DEVICE_LOCATION,
             ssdp_headers={ssdp.ATTR_SSDP_BOOTID: "3"},
@@ -1893,7 +1898,7 @@ async def test_ssdp_bootid(
     # Send SSDP alive with boot ID
     ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0].target
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=MOCK_DEVICE_LOCATION,
             ssdp_headers={ssdp.ATTR_SSDP_BOOTID: "1"},
@@ -1913,7 +1918,7 @@ async def test_ssdp_bootid(
 
     # Send SSDP alive with same boot ID, nothing should happen
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=MOCK_DEVICE_LOCATION,
             ssdp_headers={ssdp.ATTR_SSDP_BOOTID: "1"},
@@ -1933,7 +1938,7 @@ async def test_ssdp_bootid(
 
     # Send a new SSDP alive with an incremented boot ID, device should be dis/reconnected
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=MOCK_DEVICE_LOCATION,
             ssdp_headers={ssdp.ATTR_SSDP_BOOTID: "2"},
@@ -2354,7 +2359,7 @@ async def test_connections_restored(
     # Send an SSDP notification from the now alive device
     ssdp_callback = ssdp_scanner_mock.async_register_callback.call_args.args[0].target
     await ssdp_callback(
-        ssdp.SsdpServiceInfo(
+        SsdpServiceInfo(
             ssdp_usn=MOCK_DEVICE_USN,
             ssdp_location=NEW_DEVICE_LOCATION,
             ssdp_st=MOCK_DEVICE_TYPE,

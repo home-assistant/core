@@ -1,31 +1,48 @@
-"""Test fixtures for the Aladdin Connect Garage Door integration."""
-
-from unittest.mock import AsyncMock, patch
+"""Fixtures for aladdin_connect tests."""
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.aladdin_connect import DOMAIN
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
+
+from .const import CLIENT_ID, CLIENT_SECRET, USER_ID
 
 from tests.common import MockConfigEntry
 
 
-@pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock]:
-    """Override async_setup_entry."""
-    with patch(
-        "homeassistant.components.aladdin_connect.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        yield mock_setup_entry
+@pytest.fixture(autouse=True)
+async def setup_credentials(hass: HomeAssistant) -> None:
+    """Fixture to setup credentials."""
+    assert await async_setup_component(hass, "application_credentials", {})
+    await async_import_client_credential(
+        hass,
+        DOMAIN,
+        ClientCredential(CLIENT_ID, CLIENT_SECRET),
+    )
 
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
-    """Return an Aladdin Connect config entry."""
+    """Define a mock config entry fixture."""
     return MockConfigEntry(
+        version=1,
+        minor_version=1,
         domain=DOMAIN,
-        data={},
-        title="test@test.com",
-        unique_id="aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
-        version=2,
+        title="Aladdin Connect",
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {
+                "access_token": "old-token",
+                "refresh_token": "old-refresh-token",
+                "expires_in": 3600,
+                "expires_at": 1234567890,
+            },
+        },
+        source="user",
+        unique_id=USER_ID,
     )

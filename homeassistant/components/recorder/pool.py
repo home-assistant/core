@@ -12,11 +12,12 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.pool import (
     ConnectionPoolEntry,
     NullPool,
+    PoolProxiedConnection,
     SingletonThreadPool,
     StaticPool,
 )
 
-from homeassistant.helpers.frame import report
+from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.util.loop import raise_for_blocking_call
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,9 +48,9 @@ class RecorderPool(SingletonThreadPool, NullPool):
     ) -> None:
         """Create the pool."""
         kw["pool_size"] = POOL_SIZE
-        assert (
-            recorder_and_worker_thread_ids is not None
-        ), "recorder_and_worker_thread_ids is required"
+        assert recorder_and_worker_thread_ids is not None, (
+            "recorder_and_worker_thread_ids is required"
+        )
         self.recorder_and_worker_thread_ids = recorder_and_worker_thread_ids
         SingletonThreadPool.__init__(self, creator, **kw)
 
@@ -71,7 +72,8 @@ class RecorderPool(SingletonThreadPool, NullPool):
 
     def _do_return_conn(self, record: ConnectionPoolEntry) -> None:
         if threading.get_ident() in self.recorder_and_worker_thread_ids:
-            return super()._do_return_conn(record)
+            super()._do_return_conn(record)
+            return
         record.close()
 
     def shutdown(self) -> None:
@@ -89,7 +91,7 @@ class RecorderPool(SingletonThreadPool, NullPool):
         if threading.get_ident() in self.recorder_and_worker_thread_ids:
             super().dispose()
 
-    def _do_get(self) -> ConnectionPoolEntry:  # type: ignore[return]
+    def _do_get(self) -> ConnectionPoolEntry:  # type: ignore[return]  # noqa: RET503
         if threading.get_ident() in self.recorder_and_worker_thread_ids:
             return super()._do_get()
         try:
@@ -107,16 +109,22 @@ class RecorderPool(SingletonThreadPool, NullPool):
         # raise_for_blocking_call will raise an exception
 
     def _do_get_db_connection_protected(self) -> ConnectionPoolEntry:
-        report(
+        report_usage(
             (
                 "accesses the database without the database executor; "
                 f"{ADVISE_MSG} "
                 "for faster database operations"
             ),
             exclude_integrations={"recorder"},
-            error_if_core=False,
+            core_behavior=ReportBehavior.LOG,
         )
         return NullPool._create_connection(self)  # noqa: SLF001
+
+    def connect(self) -> PoolProxiedConnection:
+        """Return a connection from the pool."""
+        if threading.get_ident() in self.recorder_and_worker_thread_ids:
+            return super().connect()
+        return NullPool.connect(self)
 
 
 class MutexPool(StaticPool):

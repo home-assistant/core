@@ -1,0 +1,31 @@
+{
+  "entity": {
+    "light": {
+      "openrgb_light": {
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "breathing": "mdi:heart-pulse",
+              "chase": "mdi:run-fast",
+              "chase_fade": "mdi:run",
+              "cram": "mdi:grid",
+              "flashing": "mdi:flash",
+              "music": "mdi:music-note",
+              "neon": "mdi:lightbulb-fluorescent-tube",
+              "rainbow": "mdi:looks",
+              "random": "mdi:dice-multiple",
+              "random_flicker": "mdi:shimmer",
+              "scan": "mdi:radar",
+              "spectrum_cycle": "mdi:gradient-horizontal",
+              "spring": "mdi:dna",
+              "stack": "mdi:layers",
+              "strobe": "mdi:led-strip-variant",
+              "water": "mdi:waves",
+              "wave": "mdi:sine-wave"
+            }
+          }
+        }
+      }
+    }
+  }
+}

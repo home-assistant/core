@@ -1,0 +1,59 @@
+# serializer version: 1
+# name: test_only_repairs_for_current_next_year
+  dict({
+    tuple(
+      'workday',
+      'bad_date_holiday-1-2024_08_15',
+    ): IssueRegistryItemSnapshot({
+      'active': True,
+      'breaks_in_ha_version': None,
+      'created': <ANY>,
+      'data': dict({
+        'country': 'DE',
+        'entry_id': '1',
+        'named_holiday': '2024-08-15',
+      }),
+      'dismissed_version': None,
+      'domain': 'workday',
+      'is_fixable': True,
+      'is_persistent': False,
+      'issue_domain': None,
+      'issue_id': 'bad_date_holiday-1-2024_08_15',
+      'learn_more_url': None,
+      'severity': <IssueSeverity.WARNING: 'warning'>,
+      'translation_key': 'bad_date_holiday',
+      'translation_placeholders': dict({
+        'country': 'DE',
+        'remove_holidays': '2024-08-15',
+        'title': 'Mock Title',
+      }),
+    }),
+    tuple(
+      'workday',
+      'bad_date_holiday-1-2025_08_15',
+    ): IssueRegistryItemSnapshot({
+      'active': True,
+      'breaks_in_ha_version': None,
+      'created': <ANY>,
+      'data': dict({
+        'country': 'DE',
+        'entry_id': '1',
+        'named_holiday': '2025-08-15',
+      }),
+      'dismissed_version': None,
+      'domain': 'workday',
+      'is_fixable': True,
+      'is_persistent': False,
+      'issue_domain': None,
+      'issue_id': 'bad_date_holiday-1-2025_08_15',
+      'learn_more_url': None,
+      'severity': <IssueSeverity.WARNING: 'warning'>,
+      'translation_key': 'bad_date_holiday',
+      'translation_placeholders': dict({
+        'country': 'DE',
+        'remove_holidays': '2025-08-15',
+        'title': 'Mock Title',
+      }),
+    }),
+  })
+# ---

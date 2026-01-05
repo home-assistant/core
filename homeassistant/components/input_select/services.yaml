@@ -17,7 +17,10 @@ select_option:
       required: true
       example: '"Item A"'
       selector:
-        text:
+        state:
+          hide_states:
+            - unavailable
+            - unknown
 
 select_previous:
   target:
@@ -48,6 +51,7 @@ set_options:
       required: true
       example: '["Item A", "Item B", "Item C"]'
       selector:
-        object:
+        text:
+          multiple: true
 
 reload:

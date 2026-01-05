@@ -3,7 +3,7 @@
 from homeassistant.const import CONF_UNIT_OF_MEASUREMENT, UnitOfPower
 from homeassistant.core import HomeAssistant
 
-from . import setup_integration
+from .conftest import setup_integration
 from .const import (
     MOCK_SENSOR_CHARGING_POWER_ID,
     MOCK_SENSOR_CHARGING_SPEED_ID,
@@ -14,7 +14,7 @@ from tests.common import MockConfigEntry
 
 
 async def test_wallbox_sensor_class(
-    hass: HomeAssistant, entry: MockConfigEntry
+    hass: HomeAssistant, entry: MockConfigEntry, mock_wallbox
 ) -> None:
     """Test wallbox sensor class."""
 
@@ -30,5 +30,3 @@ async def test_wallbox_sensor_class(
     # Test round with precision '0' works
     state = hass.states.get(MOCK_SENSOR_MAX_AVAILABLE_POWER)
     assert state.state == "25.0"
-
-    await hass.config_entries.async_unload(entry.entry_id)

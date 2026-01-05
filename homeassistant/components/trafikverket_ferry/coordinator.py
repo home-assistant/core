@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any
 
 from pytrafikverket import TrafikverketFerry
 from pytrafikverket.exceptions import InvalidAuthentication, NoFerryFound
-from pytrafikverket.trafikverket_ferry import FerryStop
+from pytrafikverket.models import FerryStopModel
 
 from homeassistant.const import CONF_API_KEY, CONF_WEEKDAY, WEEKDAYS
 from homeassistant.core import HomeAssistant
@@ -52,21 +52,22 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator):
 
     config_entry: TVFerryConfigEntry
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: TVFerryConfigEntry) -> None:
         """Initialize the Trafikverket coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=TIME_BETWEEN_UPDATES,
         )
         self._ferry_api = TrafikverketFerry(
-            async_get_clientsession(hass), self.config_entry.data[CONF_API_KEY]
+            async_get_clientsession(hass), config_entry.data[CONF_API_KEY]
         )
-        self._from: str = self.config_entry.data[CONF_FROM]
-        self._to: str = self.config_entry.data[CONF_TO]
-        self._time: time | None = dt_util.parse_time(self.config_entry.data[CONF_TIME])
-        self._weekdays: list[str] = self.config_entry.data[CONF_WEEKDAY]
+        self._from: str = config_entry.data[CONF_FROM]
+        self._to: str = config_entry.data[CONF_TO]
+        self._time: time | None = dt_util.parse_time(config_entry.data[CONF_TIME])
+        self._weekdays: list[str] = config_entry.data[CONF_WEEKDAY]
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from Trafikverket."""
@@ -86,7 +87,7 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator):
 
         try:
             routedata: list[
-                FerryStop
+                FerryStopModel
             ] = await self._ferry_api.async_get_next_ferry_stops(
                 self._from, self._to, when, 3
             )

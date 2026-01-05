@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import AsyncGenerator, Callable, Generator
 from copy import deepcopy
 import json
 from typing import Any
@@ -12,7 +12,6 @@ from mysensors import BaseSyncGateway
 from mysensors.persistence import MySensorsJSONDecoder
 from mysensors.sensor import Sensor
 import pytest
-from typing_extensions import AsyncGenerator, Generator
 
 from homeassistant.components.mqtt import DOMAIN as MQTT_DOMAIN
 from homeassistant.components.mysensors.config_flow import DEFAULT_BAUD_RATE
@@ -54,7 +53,7 @@ def gateway_nodes_fixture() -> dict[int, Sensor]:
 async def serial_transport_fixture(
     gateway_nodes: dict[int, Sensor],
     is_serial_port: MagicMock,
-) -> AsyncGenerator[dict[int, Sensor]]:
+) -> AsyncGenerator[MagicMock]:
     """Mock a serial transport."""
     with (
         patch(
@@ -142,7 +141,7 @@ async def integration_fixture(
     config: dict[str, Any] = {}
     config_entry.add_to_hass(hass)
     with patch(
-        "homeassistant.components.mysensors.device.Debouncer", autospec=True
+        "homeassistant.components.mysensors.entity.Debouncer", autospec=True
     ) as debouncer_class:
 
         def debouncer(
@@ -318,6 +317,21 @@ def hvac_node_heat(
 ) -> Sensor:
     """Load the hvac heat child node."""
     nodes = update_gateway_nodes(gateway_nodes, deepcopy(hvac_node_heat_state))
+    return nodes[1]
+
+
+@pytest.fixture(name="hvac_node_only_hvac_state", scope="package")
+def hvac_node_only_hvac_state_fixture() -> dict:
+    """Load the hvac node only hvac state."""
+    return load_nodes_state("hvac_node_only_hvac_state.json")
+
+
+@pytest.fixture
+def hvac_node_only_hvac(
+    gateway_nodes: dict[int, Sensor], hvac_node_only_hvac_state: dict
+) -> Sensor:
+    """Load the hvac only hvac child node."""
+    nodes = update_gateway_nodes(gateway_nodes, deepcopy(hvac_node_only_hvac_state))
     return nodes[1]
 
 

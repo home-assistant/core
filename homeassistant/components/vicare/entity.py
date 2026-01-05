@@ -2,11 +2,14 @@
 
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
+from PyViCare.PyViCareHeatingDevice import (
+    HeatingDeviceWithComponent as PyViCareHeatingDeviceComponent,
+)
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
-from .const import DOMAIN
+from .const import DOMAIN, VIESSMANN_DEVELOPER_PORTAL
 
 
 class ViCareEntity(Entity):
@@ -16,23 +19,52 @@ class ViCareEntity(Entity):
 
     def __init__(
         self,
+        unique_id_suffix: str,
+        device_serial: str | None,
         device_config: PyViCareDeviceConfig,
         device: PyViCareDevice,
-        unique_id_suffix: str,
+        component: PyViCareHeatingDeviceComponent | None = None,
     ) -> None:
         """Initialize the entity."""
-        self._api = device
+        gateway_serial = device_config.getConfig().serial
+        device_id = device_config.getId()
+        model = device_config.getModel().replace("_", " ")
 
-        self._attr_unique_id = f"{device_config.getConfig().serial}-{unique_id_suffix}"
-        # valid for compressors, circuits, burners (HeatingDeviceWithComponent)
-        if hasattr(device, "id"):
-            self._attr_unique_id += f"-{device.id}"
+        identifier = (
+            f"{gateway_serial}_{device_serial.replace('-', '_')}"
+            if device_serial is not None
+            else f"{gateway_serial}_{device_id}"
+        )
+
+        self._api: PyViCareDevice | PyViCareHeatingDeviceComponent = (
+            component if component else device
+        )
+        self._attr_unique_id = f"{identifier}-{unique_id_suffix}"
+        if component:
+            self._attr_unique_id += f"-{component.id}"
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device_config.getConfig().serial)},
-            serial_number=device_config.getConfig().serial,
-            name=device_config.getModel(),
+            identifiers={(DOMAIN, identifier)},
+            name=model,
             manufacturer="Viessmann",
-            model=device_config.getModel(),
-            configuration_url="https://developer.viessmann.com/",
+            model=model,
+            configuration_url=VIESSMANN_DEVELOPER_PORTAL,
         )
+
+        if device_serial and device_serial.startswith("zigbee-"):
+            parts = device_serial.split("-", 2)
+            if len(parts) == 3:
+                _, zigbee_ieee, _ = parts
+                self._attr_device_info["via_device"] = (
+                    DOMAIN,
+                    f"{gateway_serial}_zigbee_{zigbee_ieee}",
+                )
+            elif (
+                len(parts) == 2
+                and len(zigbee_ieee := device_serial.removeprefix("zigbee-")) == 16
+            ):
+                self._attr_device_info["serial_number"] = "-".join(
+                    zigbee_ieee.upper()[i : i + 2] for i in range(0, 16, 2)
+                )
+        else:
+            self._attr_device_info["serial_number"] = device_serial

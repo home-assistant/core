@@ -10,7 +10,9 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@pytest.mark.usefixtures("mock_ista", "entity_registry_enabled_by_default")
+@pytest.mark.usefixtures(
+    "mock_ista", "recorder_mock", "entity_registry_enabled_by_default"
+)
 async def test_setup(
     hass: HomeAssistant,
     ista_config_entry: MockConfigEntry,

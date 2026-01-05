@@ -83,6 +83,7 @@ class AirQConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(device_info["id"])
             self._abort_if_unique_id_configured()
 
+            _LOGGER.debug("Creating an entry for %s", device_info["name"])
             return self.async_create_entry(title=device_info["name"], data=user_input)
 
         return self.async_show_form(

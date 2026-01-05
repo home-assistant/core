@@ -1,16 +1,17 @@
 """Tests for the arcam_fmj component."""
 
+from collections.abc import AsyncGenerator
 from unittest.mock import Mock, patch
 
 from arcam.fmj.client import Client
 from arcam.fmj.state import State
 import pytest
-from typing_extensions import AsyncGenerator
 
 from homeassistant.components.arcam_fmj.const import DEFAULT_NAME
 from homeassistant.components.arcam_fmj.media_player import ArcamFmj
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityPlatformState
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, MockEntityPlatform
@@ -80,6 +81,7 @@ def player_fixture(hass: HomeAssistant, state: State) -> ArcamFmj:
     player.entity_id = MOCK_ENTITY_ID
     player.hass = hass
     player.platform = MockEntityPlatform(hass)
+    player._platform_state = EntityPlatformState.ADDED
     player.async_write_ha_state = Mock()
     return player
 
@@ -99,6 +101,7 @@ async def player_setup_fixture(
             return state_1
         if zone == 2:
             return state_2
+        raise ValueError(f"Unknown player zone: {zone}")
 
     await async_setup_component(hass, "homeassistant", {})
 

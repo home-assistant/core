@@ -16,6 +16,7 @@ from pykoplenti import (
     ExtendedApiClient,
 )
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -24,10 +25,12 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN
+from .const import CONF_SERVICE_CODE, DOMAIN
 from .helper import get_hostname_id
 
 _LOGGER = logging.getLogger(__name__)
+
+type PlenticoreConfigEntry = ConfigEntry[Plenticore]
 
 
 class Plenticore:
@@ -59,7 +62,10 @@ class Plenticore:
             async_get_clientsession(self.hass), host=self.host
         )
         try:
-            await self._client.login(self.config_entry.data[CONF_PASSWORD])
+            await self._client.login(
+                self.config_entry.data[CONF_PASSWORD],
+                service_code=self.config_entry.data.get(CONF_SERVICE_CODE),
+            )
         except AuthenticationException as err:
             _LOGGER.error(
                 "Authentication exception connecting to %s: %s", self.host, err
@@ -101,8 +107,8 @@ class Plenticore:
             model=f"{prod1} {prod2}",
             name=settings["scb:network"][hostname_id],
             sw_version=(
-                f'IOC: {device_local["Properties:VersionIOC"]}'
-                f' MC: {device_local["Properties:VersionMC"]}'
+                f"IOC: {device_local['Properties:VersionIOC']}"
+                f" MC: {device_local['Properties:VersionMC']}"
             ),
         )
 
@@ -162,9 +168,12 @@ class DataUpdateCoordinatorMixin:
 class PlenticoreUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     """Base implementation of DataUpdateCoordinator for Plenticore data."""
 
+    config_entry: PlenticoreConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: PlenticoreConfigEntry,
         logger: logging.Logger,
         name: str,
         update_inverval: timedelta,
@@ -174,6 +183,7 @@ class PlenticoreUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         super().__init__(
             hass=hass,
             logger=logger,
+            config_entry=config_entry,
             name=name,
             update_interval=update_inverval,
         )
@@ -227,22 +237,34 @@ class SettingDataUpdateCoordinator(
     """Implementation of PlenticoreUpdateCoordinator for settings data."""
 
     async def _async_update_data(self) -> Mapping[str, Mapping[str, str]]:
-        client = self._plenticore.client
-
-        if not self._fetch or client is None:
+        if (client := self._plenticore.client) is None:
             return {}
 
-        _LOGGER.debug("Fetching %s for %s", self.name, self._fetch)
+        fetch = defaultdict(set)
 
-        return await client.get_setting_values(self._fetch)
+        for module_id, data_ids in self._fetch.items():
+            fetch[module_id].update(data_ids)
+
+        for module_id, data_id in self.async_contexts():
+            fetch[module_id].add(data_id)
+
+        if not fetch:
+            return {}
+
+        _LOGGER.debug("Fetching %s for %s", self.name, fetch)
+
+        return await client.get_setting_values(fetch)
 
 
 class PlenticoreSelectUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     """Base implementation of DataUpdateCoordinator for Plenticore data."""
 
+    config_entry: PlenticoreConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: PlenticoreConfigEntry,
         logger: logging.Logger,
         name: str,
         update_inverval: timedelta,
@@ -252,6 +274,7 @@ class PlenticoreSelectUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         super().__init__(
             hass=hass,
             logger=logger,
+            config_entry=config_entry,
             name=name,
             update_interval=update_inverval,
         )

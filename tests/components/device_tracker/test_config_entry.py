@@ -1,9 +1,9 @@
 """Test Device Tracker config entry things."""
 
+from collections.abc import Generator
 from typing import Any
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.device_tracker import (
     ATTR_HOST_NAME,
@@ -35,7 +35,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from tests.common import (
     MockConfigEntry,
@@ -114,7 +114,7 @@ async def create_mock_platform(
     async def async_setup_entry_platform(
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Set up test event platform via config entry."""
         async_add_entities(entities)
@@ -146,12 +146,14 @@ class MockTrackerEntity(TrackerEntity):
         location_name: str | None = None,
         latitude: float | None = None,
         longitude: float | None = None,
+        location_accuracy: float = 0,
     ) -> None:
         """Initialize entity."""
         self._battery_level = battery_level
         self._location_name = location_name
         self._latitude = latitude
         self._longitude = longitude
+        self._location_accuracy = location_accuracy
 
     @property
     def battery_level(self) -> int | None:
@@ -162,7 +164,7 @@ class MockTrackerEntity(TrackerEntity):
         return self._battery_level
 
     @property
-    def source_type(self) -> SourceType | str:
+    def source_type(self) -> SourceType:
         """Return the source type, eg gps or router, of the device."""
         return SourceType.GPS
 
@@ -180,6 +182,11 @@ class MockTrackerEntity(TrackerEntity):
     def longitude(self) -> float | None:
         """Return longitude value of the device."""
         return self._longitude
+
+    @property
+    def location_accuracy(self) -> float:
+        """Return the accuracy of the location in meters."""
+        return self._location_accuracy
 
 
 @pytest.fixture(name="battery_level")
@@ -206,6 +213,12 @@ def longitude_fixture() -> float | None:
     return None
 
 
+@pytest.fixture(name="location_accuracy")
+def accuracy_fixture() -> float:
+    """Return the location accuracy of the entity for the test."""
+    return 0
+
+
 @pytest.fixture(name="tracker_entity")
 def tracker_entity_fixture(
     entity_id: str,
@@ -213,6 +226,7 @@ def tracker_entity_fixture(
     location_name: str | None,
     latitude: float | None,
     longitude: float | None,
+    location_accuracy: float = 0,
 ) -> MockTrackerEntity:
     """Create a test tracker entity."""
     entity = MockTrackerEntity(
@@ -220,6 +234,7 @@ def tracker_entity_fixture(
         location_name=location_name,
         latitude=latitude,
         longitude=longitude,
+        location_accuracy=location_accuracy,
     )
     entity.entity_id = entity_id
     return entity
@@ -249,7 +264,7 @@ class MockScannerEntity(ScannerEntity):
         return False
 
     @property
-    def source_type(self) -> SourceType | str:
+    def source_type(self) -> SourceType:
         """Return the source type, eg gps or router, of the device."""
         return SourceType.ROUTER
 
@@ -505,8 +520,7 @@ async def test_scanner_entity_state(
 def test_tracker_entity() -> None:
     """Test coverage for base TrackerEntity class."""
     entity = TrackerEntity()
-    with pytest.raises(NotImplementedError):
-        assert entity.source_type is None
+    assert entity.source_type is SourceType.GPS
     assert entity.latitude is None
     assert entity.longitude is None
     assert entity.location_name is None
@@ -514,6 +528,7 @@ def test_tracker_entity() -> None:
     assert entity.battery_level is None
     assert entity.should_poll is False
     assert entity.force_update is True
+    assert entity.location_accuracy == 0
 
     class MockEntity(TrackerEntity):
         """Mock tracker class."""
@@ -539,8 +554,7 @@ def test_tracker_entity() -> None:
 def test_scanner_entity() -> None:
     """Test coverage for base ScannerEntity entity class."""
     entity = ScannerEntity()
-    with pytest.raises(NotImplementedError):
-        assert entity.source_type is None
+    assert entity.source_type is SourceType.ROUTER
     with pytest.raises(NotImplementedError):
         assert entity.is_connected is None
     with pytest.raises(NotImplementedError):

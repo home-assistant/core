@@ -1,10 +1,10 @@
 """Common fixtures for testing greeneye_monitor."""
 
+from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.greeneye_monitor import DOMAIN
 from homeassistant.components.sensor import SensorDeviceClass
@@ -19,13 +19,15 @@ def assert_sensor_state(
     hass: HomeAssistant,
     entity_id: str,
     expected_state: str,
-    attributes: dict[str, Any] = {},
+    attributes: dict[str, Any] | None = None,
 ) -> None:
     """Assert that the given entity has the expected state and at least the provided attributes."""
     state = hass.states.get(entity_id)
     assert state
     actual_state = state.state
     assert actual_state == expected_state
+    if not attributes:
+        return
     for key, value in attributes.items():
         assert key in state.attributes
         assert state.attributes[key] == value

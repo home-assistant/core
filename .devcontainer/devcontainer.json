@@ -2,36 +2,45 @@
   "name": "Home Assistant Dev",
   "context": "..",
   "dockerFile": "../Dockerfile.dev",
-  "postCreateCommand": "script/setup",
+  "postCreateCommand": "git config --global --add safe.directory ${containerWorkspaceFolder} && script/setup",
   "postStartCommand": "script/bootstrap",
   "containerEnv": {
     "PYTHONASYNCIODEBUG": "1"
   },
   "features": {
+    // Node feature required for Claude Code until fixed https://github.com/anthropics/devcontainer-features/issues/28
+    "ghcr.io/devcontainers/features/node:1": {},
+    "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {},
     "ghcr.io/devcontainers/features/github-cli:1": {}
   },
   // Port 5683 udp is used by Shelly integration
   "appPort": ["8123:8123", "5683:5683/udp"],
-  "runArgs": ["-e", "GIT_EDITOR=code --wait"],
+  "runArgs": [
+    "-e",
+    "GIT_EDITOR=code --wait",
+    "--security-opt",
+    "label=disable"
+  ],
   "customizations": {
     "vscode": {
       "extensions": [
         "charliermarsh.ruff",
         "ms-python.pylint",
         "ms-python.vscode-pylance",
-        "visualstudioexptteam.vscodeintellicode",
         "redhat.vscode-yaml",
         "esbenp.prettier-vscode",
         "GitHub.vscode-pull-request-github",
         "GitHub.copilot"
       ],
-      // Please keep this file in sync with settings in home-assistant/.vscode/settings.default.json
+      // Please keep this file in sync with settings in home-assistant/.vscode/settings.default.jsonc
       "settings": {
         "python.experiments.optOutFrom": ["pythonTestAdapter"],
         "python.defaultInterpreterPath": "/home/vscode/.local/ha-venv/bin/python",
         "python.pythonPath": "/home/vscode/.local/ha-venv/bin/python",
         "python.terminal.activateEnvInCurrentTerminal": true,
         "python.testing.pytestArgs": ["--no-cov"],
+        "pylint.importStrategy": "fromEnvironment",
+        "python.analysis.typeCheckingMode": "basic",
         "editor.formatOnPaste": false,
         "editor.formatOnSave": true,
         "editor.formatOnType": true,
@@ -52,7 +61,16 @@
         ],
         "[python]": {
           "editor.defaultFormatter": "charliermarsh.ruff"
-        }
+        },
+        "[json][jsonc][yaml]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "json.schemas": [
+          {
+            "fileMatch": ["homeassistant/components/*/manifest.json"],
+            "url": "${containerWorkspaceFolder}/script/json_schemas/manifest_schema.json"
+          }
+        ]
       }
     }
   }

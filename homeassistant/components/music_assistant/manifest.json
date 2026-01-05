@@ -1,0 +1,15 @@
+{
+  "domain": "music_assistant",
+  "name": "Music Assistant",
+  "after_dependencies": ["media_source"],
+  "codeowners": ["@music-assistant", "@arturpragacz"],
+  "config_flow": true,
+  "dependencies": ["auth"],
+  "documentation": "https://www.home-assistant.io/integrations/music_assistant",
+  "integration_type": "service",
+  "iot_class": "local_push",
+  "loggers": ["music_assistant"],
+  "quality_scale": "bronze",
+  "requirements": ["music-assistant-client==1.3.2"],
+  "zeroconf": ["_mass._tcp.local."]
+}

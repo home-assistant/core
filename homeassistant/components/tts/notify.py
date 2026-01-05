@@ -7,10 +7,13 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
+from homeassistant.components.notify import (
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
+    BaseNotificationService,
+)
 from homeassistant.const import ATTR_ENTITY_ID, CONF_ENTITY_ID, CONF_NAME
 from homeassistant.core import HomeAssistant, split_entity_id
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import ATTR_LANGUAGE, ATTR_MEDIA_PLAYER_ENTITY_ID, ATTR_MESSAGE, DOMAIN
@@ -23,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = vol.All(
     cv.has_at_least_one_key(CONF_TTS_SERVICE, CONF_ENTITY_ID),
-    PLATFORM_SCHEMA.extend(
+    NOTIFY_PLATFORM_SCHEMA.extend(
         {
             vol.Required(CONF_NAME): cv.string,
             vol.Exclusive(CONF_TTS_SERVICE, ENTITY_LEGACY_PROVIDER_GROUP): cv.entity_id,

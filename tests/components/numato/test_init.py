@@ -11,7 +11,7 @@ from .common import NUMATO_CFG, mockup_raise, mockup_return
 
 
 async def test_setup_no_devices(
-    hass: HomeAssistant, numato_fixture, monkeypatch
+    hass: HomeAssistant, numato_fixture, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test handling of an 'empty' discovery.
 
@@ -24,7 +24,7 @@ async def test_setup_no_devices(
 
 
 async def test_fail_setup_raising_discovery(
-    hass: HomeAssistant, numato_fixture, caplog: pytest.LogCaptureFixture, monkeypatch
+    hass: HomeAssistant, numato_fixture, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test handling of an exception during discovery.
 
@@ -57,7 +57,7 @@ async def test_hass_numato_api_wrong_port_directions(
 
 
 async def test_hass_numato_api_errors(
-    hass: HomeAssistant, numato_fixture, monkeypatch
+    hass: HomeAssistant, numato_fixture, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test whether Home Assistant numato API (re-)raises errors."""
     numato_fixture.discover()

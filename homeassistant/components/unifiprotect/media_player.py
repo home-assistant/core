@@ -3,15 +3,9 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, cast
+from typing import Any
 
-from uiprotect.data import (
-    Camera,
-    ModelType,
-    ProtectAdoptableDeviceModel,
-    ProtectModelWithId,
-    StateType,
-)
+from uiprotect.data import Camera, ProtectAdoptableDeviceModel, StateType
 from uiprotect.exceptions import StreamError
 
 from homeassistant.components import media_source
@@ -25,27 +19,31 @@ from homeassistant.components.media_player import (
     MediaType,
     async_process_play_media_url,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DISPATCH_ADOPT, DOMAIN
-from .data import ProtectData
+from .const import DOMAIN
+from .data import ProtectDeviceType, UFPConfigEntry
 from .entity import ProtectDeviceEntity
-from .utils import async_dispatch_id as _ufpd
 
 _LOGGER = logging.getLogger(__name__)
+PARALLEL_UPDATES = 0
+
+_SPEAKER_DESCRIPTION = MediaPlayerEntityDescription(
+    key="speaker",
+    translation_key="speaker",
+    device_class=MediaPlayerDeviceClass.SPEAKER,
+)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: UFPConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Discover cameras with speakers on a UniFi Protect NVR."""
-    data: ProtectData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
     @callback
     def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
@@ -54,17 +52,12 @@ async def async_setup_entry(
         ):
             async_add_entities([ProtectMediaPlayer(data, device)])
 
-    entry.async_on_unload(
-        async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
+    data.async_subscribe_adopt(_add_new_device)
+    async_add_entities(
+        ProtectMediaPlayer(data, device, _SPEAKER_DESCRIPTION)
+        for device in data.get_cameras()
+        if device.has_speaker or device.has_removable_speaker
     )
-
-    entities = []
-    for device in data.get_by_types({ModelType.CAMERA}):
-        device = cast(Camera, device)
-        if device.has_speaker or device.has_removable_speaker:
-            entities.append(ProtectMediaPlayer(data, device))
-
-    async_add_entities(entities)
 
 
 class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
@@ -79,29 +72,20 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
         | MediaPlayerEntityFeature.STOP
         | MediaPlayerEntityFeature.BROWSE_MEDIA
     )
-
-    def __init__(
-        self,
-        data: ProtectData,
-        camera: Camera,
-    ) -> None:
-        """Initialize an UniFi speaker."""
-        super().__init__(
-            data,
-            camera,
-            MediaPlayerEntityDescription(
-                key="speaker", device_class=MediaPlayerDeviceClass.SPEAKER
-            ),
-        )
-
-        self._attr_name = f"{self.device.display_name} Speaker"
-        self._attr_media_content_type = MediaType.MUSIC
+    _attr_media_content_type = MediaType.MUSIC
+    _state_attrs = ("_attr_available", "_attr_state", "_attr_volume_level")
 
     @callback
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+    def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         updated_device = self.device
-        self._attr_volume_level = float(updated_device.speaker_settings.volume / 100)
+        speaker_settings = updated_device.speaker_settings
+        volume = (
+            speaker_settings.speaker_volume
+            if speaker_settings.speaker_volume is not None
+            else speaker_settings.volume
+        )
+        self._attr_volume_level = float(volume / 100)
 
         if (
             updated_device.talkback_stream is not None
@@ -116,16 +100,6 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
             or (not updated_device.is_adopted_by_us and updated_device.can_adopt)
         )
         self._attr_available = is_connected and updated_device.feature_flags.has_speaker
-
-    @callback
-    def _async_get_state_attrs(self) -> tuple[Any, ...]:
-        """Retrieve data that goes into the current state of the entity.
-
-        Called before and after updating entity and state is only written if there
-        is a change.
-        """
-
-        return (self._attr_available, self._attr_state, self._attr_volume_level)
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
@@ -156,7 +130,10 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
             media_id = async_process_play_media_url(self.hass, play_item.url)
 
         if media_type != MediaType.MUSIC:
-            raise HomeAssistantError("Only music media type is supported")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="only_music_supported",
+            )
 
         _LOGGER.debug(
             "Playing Media %s for %s Speaker", media_id, self.device.display_name
@@ -165,7 +142,11 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
         try:
             await self.device.play_audio(media_id, blocking=False)
         except StreamError as err:
-            raise HomeAssistantError(err) from err
+            _LOGGER.debug("Error playing audio: %s", err)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="stream_error",
+            ) from err
 
         # update state after starting player
         self._async_updated_event(self.device)

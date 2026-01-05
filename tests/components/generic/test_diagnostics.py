@@ -6,12 +6,15 @@ from homeassistant.components.diagnostics import REDACTED
 from homeassistant.components.generic.diagnostics import redact_url
 from homeassistant.core import HomeAssistant
 
+from tests.common import MockConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
 async def test_entry_diagnostics(
-    hass: HomeAssistant, hass_client: ClientSessionGenerator, setup_entry
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    setup_entry: MockConfigEntry,
 ) -> None:
     """Test config entry diagnostics."""
 
@@ -23,11 +26,13 @@ async def test_entry_diagnostics(
             "stream_source": "http://****:****@example.com/****",
             "username": REDACTED,
             "password": REDACTED,
-            "limit_refetch_to_url_change": False,
-            "authentication": "basic",
-            "framerate": 2.0,
-            "verify_ssl": True,
             "content_type": "image/jpeg",
+            "advanced": {
+                "limit_refetch_to_url_change": False,
+                "authentication": "basic",
+                "framerate": 2.0,
+                "verify_ssl": True,
+            },
         },
     }
 

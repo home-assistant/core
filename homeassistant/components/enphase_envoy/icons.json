@@ -1,0 +1,77 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "grid_status": {
+        "default": "mdi:transmission-tower",
+        "state": {
+          "off": "mdi:transmission-tower-off"
+        }
+      }
+    },
+    "sensor": {
+      "admin_state": {
+        "default": "mdi:transmission-tower",
+        "state": {
+          "off_grid": "mdi:transmission-tower-off"
+        }
+      },
+      "available_energy": {
+        "default": "mdi:battery-50"
+      },
+      "current_power_production": {
+        "default": "mdi:solar-power"
+      },
+      "current_power_production_phase": {
+        "default": "mdi:solar-power"
+      },
+      "daily_production": {
+        "default": "mdi:solar-power"
+      },
+      "daily_production_phase": {
+        "default": "mdi:solar-power"
+      },
+      "grid_status": {
+        "default": "mdi:transmission-tower",
+        "state": {
+          "off_grid": "mdi:transmission-tower-off",
+          "synchronizing": "mdi:sync-alert"
+        }
+      },
+      "lifetime_production": {
+        "default": "mdi:solar-power"
+      },
+      "lifetime_production_phase": {
+        "default": "mdi:solar-power"
+      },
+      "max_capacity": {
+        "default": "mdi:battery-charging-100"
+      },
+      "mid_state": {
+        "default": "mdi:electric-switch-closed",
+        "state": {
+          "open": "mdi:electric-switch"
+        }
+      },
+      "seven_days_production": {
+        "default": "mdi:solar-power"
+      },
+      "seven_days_production_phase": {
+        "default": "mdi:solar-power"
+      }
+    },
+    "switch": {
+      "grid_enabled": {
+        "default": "mdi:transmission-tower",
+        "state": {
+          "off": "mdi:transmission-tower-off"
+        }
+      },
+      "relay_status": {
+        "default": "mdi:electric-switch-closed",
+        "state": {
+          "off": "mdi:electric-switch"
+        }
+      }
+    }
+  }
+}

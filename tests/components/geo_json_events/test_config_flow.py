@@ -3,7 +3,7 @@
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.geo_json_events import DOMAIN
+from homeassistant.components.geo_json_events.const import DOMAIN
 from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LOCATION,

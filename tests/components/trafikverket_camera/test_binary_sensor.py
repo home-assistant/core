@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import pytest
-from pytrafikverket.trafikverket_camera import CameraInfo
+from pytrafikverket import CameraInfoModel
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON
@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 async def test_sensor(
     hass: HomeAssistant,
     load_int: ConfigEntry,
-    get_camera: CameraInfo,
+    get_camera: CameraInfoModel,
 ) -> None:
     """Test the Trafikverket Camera binary sensor."""
 

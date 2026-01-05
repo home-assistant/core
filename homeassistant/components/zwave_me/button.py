@@ -4,10 +4,10 @@ from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import ZWaveMeEntity
 from .const import DOMAIN, ZWaveMePlatform
+from .entity import ZWaveMeEntity
 
 DEVICE_NAME = ZWaveMePlatform.BUTTON
 
@@ -15,7 +15,7 @@ DEVICE_NAME = ZWaveMePlatform.BUTTON
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the number platform."""
 

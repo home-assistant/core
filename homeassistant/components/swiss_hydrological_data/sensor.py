@@ -8,10 +8,13 @@ import logging
 from swisshydrodata import SwissHydroData
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
@@ -46,7 +49,7 @@ CONDITION_DETAILS = [
     ATTR_MIN_24H,
 ]
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_STATION): vol.Coerce(int),
         vol.Optional(CONF_MONITORED_CONDITIONS, default=[SENSOR_TEMPERATURE]): vol.All(
@@ -100,7 +103,7 @@ class SwissHydrologicalDataSensor(SensorEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self._data["water-body-name"], self._condition)
+        return f"{self._data['water-body-name']} {self._condition}"
 
     @property
     def unique_id(self) -> str:

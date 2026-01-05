@@ -1,15 +1,16 @@
 """Common fixtures for the Tractive tests."""
 
+from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiotractive.trackable_object import TrackableObject
 from aiotractive.tracker import Tracker
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.tractive.const import DOMAIN, SERVER_UNAVAILABLE
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from tests.common import MockConfigEntry, load_json_object_fixture
@@ -28,6 +29,7 @@ def mock_tractive_client() -> Generator[AsyncMock]:
                 "tracker_id": "device_id_123",
                 "hardware": {"battery_level": 88},
                 "tracker_state": "operational",
+                "tracker_state_reason": "POWER_SAVING",
                 "charging_state": "CHARGING",
             }
         entry.runtime_data.client._send_hardware_update(event)
@@ -49,6 +51,22 @@ def mock_tractive_client() -> Generator[AsyncMock]:
                 },
             }
         entry.runtime_data.client._send_wellness_update(event)
+
+    def send_health_overview_event(
+        entry: MockConfigEntry, event: dict[str, Any] | None = None
+    ):
+        """Send health overview event."""
+        if event is None:
+            event = {
+                "petId": "pet_id_123",
+                "sleep": {
+                    "minutesDaySleep": 100,
+                    "minutesNightSleep": 300,
+                    "minutesCalm": 122,
+                },
+                "activity": {"minutesGoal": 200, "minutesActive": 150},
+            }
+        entry.runtime_data.client.send_health_overview_update(event)
 
     def send_position_event(
         entry: MockConfigEntry, event: dict[str, Any] | None = None
@@ -76,7 +94,7 @@ def mock_tractive_client() -> Generator[AsyncMock]:
             }
         entry.runtime_data.client._send_switch_update(event)
 
-    def send_server_unavailable_event(hass):
+    def send_server_unavailable_event(hass: HomeAssistant) -> None:
         """Send server unavailable event."""
         async_dispatcher_send(hass, f"{SERVER_UNAVAILABLE}-12345")
 
@@ -110,8 +128,24 @@ def mock_tractive_client() -> Generator[AsyncMock]:
             set_led_active=AsyncMock(return_value={"pending": True}),
         )
 
+        client.trackable_object.return_value = Mock(
+            spec=TrackableObject,
+            health_overview=AsyncMock(
+                return_value={
+                    "petId": "pet_id_123",
+                    "sleep": {
+                        "minutesDaySleep": 100,
+                        "minutesNightSleep": 300,
+                        "minutesCalm": 122,
+                    },
+                    "activity": {"minutesGoal": 200, "minutesActive": 150},
+                }
+            ),
+        )
+
         client.send_hardware_event = send_hardware_event
         client.send_wellness_event = send_wellness_event
+        client.send_health_overview_event = send_health_overview_event
         client.send_position_event = send_position_event
         client.send_switch_event = send_switch_event
         client.send_server_unavailable_event = send_server_unavailable_event

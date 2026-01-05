@@ -16,14 +16,14 @@ from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
-    PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
 from homeassistant.const import CONF_API_KEY, CONF_DOMAIN, CONF_RECIPIENT, CONF_SENDER
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import CONF_SANDBOX, DOMAIN as MAILGUN_DOMAIN
+from . import CONF_SANDBOX, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ ATTR_IMAGES = "images"
 
 DEFAULT_SANDBOX = False
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_RECIPIENT): vol.Email(), vol.Optional(CONF_SENDER): vol.Email()}
 )
 
@@ -43,7 +43,7 @@ def get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> MailgunNotificationService | None:
     """Get the Mailgun notification service."""
-    data = hass.data[MAILGUN_DOMAIN]
+    data = hass.data[DOMAIN]
     mailgun_service = MailgunNotificationService(
         data.get(CONF_DOMAIN),
         data.get(CONF_SANDBOX),

@@ -1,0 +1,94 @@
+{
+  "components": {
+    "main": {
+      "colorControl": {
+        "saturation": {
+          "value": 60,
+          "timestamp": "2025-02-07T15:14:53.812Z"
+        },
+        "color": {
+          "value": null
+        },
+        "hue": {
+          "value": 60.8072,
+          "timestamp": "2025-02-07T15:14:53.812Z"
+        }
+      },
+      "healthCheck": {
+        "checkInterval": {
+          "value": 60,
+          "unit": "s",
+          "data": {
+            "deviceScheme": "UNTRACKED",
+            "protocol": "cloud"
+          },
+          "timestamp": "2023-12-17T18:11:41.678Z"
+        },
+        "healthStatus": {
+          "value": null
+        },
+        "DeviceWatch-Enroll": {
+          "value": null
+        },
+        "DeviceWatch-DeviceStatus": {
+          "value": "online",
+          "data": {},
+          "timestamp": "2025-02-07T15:14:53.812Z"
+        }
+      },
+      "switchLevel": {
+        "levelRange": {
+          "value": {
+            "minimum": 1,
+            "maximum": 100
+          },
+          "unit": "%",
+          "timestamp": "2025-02-07T15:14:53.812Z"
+        },
+        "level": {
+          "value": 70,
+          "unit": "%",
+          "timestamp": "2025-02-07T21:56:02.381Z"
+        }
+      },
+      "refresh": {},
+      "synthetic.lightingEffectFade": {
+        "fade": {
+          "value": null
+        }
+      },
+      "samsungim.hueSyncMode": {
+        "mode": {
+          "value": "normal",
+          "timestamp": "2025-02-07T15:14:53.812Z"
+        }
+      },
+      "switch": {
+        "switch": {
+          "value": "off",
+          "timestamp": "2025-02-08T07:08:19.519Z"
+        }
+      },
+      "colorTemperature": {
+        "colorTemperatureRange": {
+          "value": {
+            "minimum": 2000,
+            "maximum": 6535
+          },
+          "unit": "K",
+          "timestamp": "2025-02-06T15:14:52.807Z"
+        },
+        "colorTemperature": {
+          "value": 3000,
+          "unit": "K",
+          "timestamp": "2025-02-07T21:56:02.381Z"
+        }
+      },
+      "synthetic.lightingEffectCircadian": {
+        "circadian": {
+          "value": null
+        }
+      }
+    }
+  }
+}

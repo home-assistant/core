@@ -9,6 +9,7 @@ from homeassistant import config as hass_config
 from homeassistant.components.min_max.const import DOMAIN
 from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
     PERCENTAGE,
     SERVICE_RELOAD,
@@ -17,7 +18,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from tests.common import get_fixture_path
@@ -59,6 +60,7 @@ async def test_default_name_sensor(hass: HomeAssistant) -> None:
 
     assert str(float(MIN_VALUE)) == state.state
     assert entity_ids[2] == state.attributes.get("min_entity_id")
+    assert state.attributes.get(ATTR_ENTITY_ID) == entity_ids
 
 
 async def test_min_sensor(

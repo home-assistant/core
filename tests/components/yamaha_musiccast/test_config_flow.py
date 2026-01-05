@@ -1,23 +1,28 @@
 """Test config flow."""
 
+from collections.abc import Generator
 from unittest.mock import patch
 
 from aiomusiccast import MusicCastConnectionException
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import ssdp
 from homeassistant.components.yamaha_musiccast.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_MODEL_NAME,
+    ATTR_UPNP_SERIAL,
+    SsdpServiceInfo,
+)
 
 from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
-async def silent_ssdp_scanner(hass):
+def silent_ssdp_scanner() -> Generator[None]:
     """Start SSDP component and get Scanner, prevent actual SSDP traffic."""
     with (
         patch("homeassistant.components.ssdp.Scanner._async_start_ssdp_listeners"),
@@ -102,7 +107,7 @@ def mock_valid_discovery_information():
     with patch(
         "homeassistant.components.ssdp.async_get_discovery_info_by_st",
         return_value=[
-            ssdp.SsdpServiceInfo(
+            SsdpServiceInfo(
                 ssdp_usn="mock_usn",
                 ssdp_st="mock_st",
                 ssdp_location="http://127.0.0.1:9000/MediaRenderer/desc.xml",
@@ -264,13 +269,13 @@ async def test_ssdp_discovery_failed(hass: HomeAssistant, mock_ssdp_no_yamaha) -
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data=ssdp.SsdpServiceInfo(
+        data=SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="mock_st",
             ssdp_location="http://127.0.0.1/desc.xml",
             upnp={
-                ssdp.ATTR_UPNP_MODEL_NAME: "MC20",
-                ssdp.ATTR_UPNP_SERIAL: "123456789",
+                ATTR_UPNP_MODEL_NAME: "MC20",
+                ATTR_UPNP_SERIAL: "123456789",
             },
         ),
     )
@@ -286,13 +291,13 @@ async def test_ssdp_discovery_successful_add_device(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data=ssdp.SsdpServiceInfo(
+        data=SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="mock_st",
             ssdp_location="http://127.0.0.1/desc.xml",
             upnp={
-                ssdp.ATTR_UPNP_MODEL_NAME: "MC20",
-                ssdp.ATTR_UPNP_SERIAL: "1234567890",
+                ATTR_UPNP_MODEL_NAME: "MC20",
+                ATTR_UPNP_SERIAL: "1234567890",
             },
         ),
     )
@@ -328,13 +333,13 @@ async def test_ssdp_discovery_existing_device_update(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_SSDP},
-        data=ssdp.SsdpServiceInfo(
+        data=SsdpServiceInfo(
             ssdp_usn="mock_usn",
             ssdp_st="mock_st",
             ssdp_location="http://127.0.0.1/desc.xml",
             upnp={
-                ssdp.ATTR_UPNP_MODEL_NAME: "MC20",
-                ssdp.ATTR_UPNP_SERIAL: "1234567890",
+                ATTR_UPNP_MODEL_NAME: "MC20",
+                ATTR_UPNP_SERIAL: "1234567890",
             },
         ),
     )

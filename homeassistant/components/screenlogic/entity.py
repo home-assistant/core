@@ -55,7 +55,8 @@ class ScreenLogicEntity(CoordinatorEntity[ScreenlogicDataUpdateCoordinator]):
         self._data_path = (*self.entity_description.data_root, self._data_key)
         mac = self.mac
         self._attr_unique_id = f"{mac}_{generate_unique_id(*self._data_path)}"
-        self._attr_name = self.entity_data[ATTR.NAME]
+        if not entity_description.translation_key:
+            self._attr_name = self.entity_data[ATTR.NAME]
         assert mac is not None
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, mac)},

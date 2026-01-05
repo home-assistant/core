@@ -1,17 +1,36 @@
 """The tests for the hassio update entities."""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import os
-from unittest.mock import patch
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock, patch
+from uuid import uuid4
 
+from aiohasupervisor import (
+    SupervisorBadRequestError,
+    SupervisorError,
+    SupervisorNotFoundError,
+)
+from aiohasupervisor.models import (
+    HomeAssistantUpdateOptions,
+    Job,
+    JobsInfo,
+    OSUpdate,
+    StoreAddonUpdate,
+)
 import pytest
 
-from homeassistant.components.hassio import DOMAIN, HassioAPIError
+from homeassistant.components.backup import BackupManagerError, ManagerBackup
+
+# pylint: disable-next=hass-component-root-import
+from homeassistant.components.backup.manager import AgentBackupStatus
+from homeassistant.components.hassio import DOMAIN
 from homeassistant.components.hassio.const import REQUEST_REFRESH_DELAY
+from homeassistant.const import __version__ as HAVERSION
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -21,10 +40,17 @@ MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 
 
 @pytest.fixture(autouse=True)
-def mock_all(aioclient_mock: AiohttpClientMocker) -> None:
+def mock_all(
+    aioclient_mock: AiohttpClientMocker,
+    addon_installed: AsyncMock,
+    store_info: AsyncMock,
+    addon_stats: AsyncMock,
+    addon_changelog: AsyncMock,
+    resolution_info: AsyncMock,
+    jobs_info: AsyncMock,
+) -> None:
     """Mock all setup requests."""
     aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
-    aioclient_mock.get("http://127.0.0.1/supervisor/ping", json={"result": "ok"})
     aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
     aioclient_mock.get(
         "http://127.0.0.1/info",
@@ -35,13 +61,6 @@ def mock_all(aioclient_mock: AiohttpClientMocker) -> None:
                 "homeassistant": "0.110.0",
                 "hassos": "1.2.3",
             },
-        },
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/store",
-        json={
-            "result": "ok",
-            "data": {"addons": [], "repositories": []},
         },
     )
     aioclient_mock.get(
@@ -115,22 +134,6 @@ def mock_all(aioclient_mock: AiohttpClientMocker) -> None:
         },
     )
     aioclient_mock.get(
-        "http://127.0.0.1/addons/test/stats",
-        json={
-            "result": "ok",
-            "data": {
-                "cpu_percent": 0.99,
-                "memory_usage": 182611968,
-                "memory_limit": 3977146368,
-                "memory_percent": 4.59,
-                "network_rx": 362570232,
-                "network_tx": 82374138,
-                "blk_read": 46010945536,
-                "blk_write": 15051526144,
-            },
-        },
-    )
-    aioclient_mock.get(
         "http://127.0.0.1/core/stats",
         json={
             "result": "ok",
@@ -162,32 +165,8 @@ def mock_all(aioclient_mock: AiohttpClientMocker) -> None:
             },
         },
     )
-    aioclient_mock.get("http://127.0.0.1/addons/test/changelog", text="")
-    aioclient_mock.get(
-        "http://127.0.0.1/addons/test/info",
-        json={"result": "ok", "data": {"auto_update": True}},
-    )
-    aioclient_mock.get("http://127.0.0.1/addons/test2/changelog", text="")
-    aioclient_mock.get(
-        "http://127.0.0.1/addons/test2/info",
-        json={"result": "ok", "data": {"auto_update": False}},
-    )
     aioclient_mock.get(
         "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
-    )
-    aioclient_mock.post("http://127.0.0.1/refresh_updates", json={"result": "ok"})
-    aioclient_mock.get(
-        "http://127.0.0.1/resolution/info",
-        json={
-            "result": "ok",
-            "data": {
-                "unsupported": [],
-                "unhealthy": [],
-                "suggestions": [],
-                "issues": [],
-                "checks": [],
-            },
-        },
     )
     aioclient_mock.get(
         "http://127.0.0.1/network/info",
@@ -217,8 +196,10 @@ async def test_update_entities(
     expected_state,
     auto_update,
     aioclient_mock: AiohttpClientMocker,
+    addon_installed: AsyncMock,
 ) -> None:
     """Test update entities."""
+    addon_installed.return_value.auto_update = auto_update
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
 
@@ -239,9 +220,7 @@ async def test_update_entities(
     assert state.attributes["auto_update"] is auto_update
 
 
-async def test_update_addon(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
-) -> None:
+async def test_update_addon(hass: HomeAssistant, update_addon: AsyncMock) -> None:
     """Test updating addon update entity."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
@@ -255,22 +234,368 @@ async def test_update_addon(
         assert result
     await hass.async_block_till_done()
 
-    aioclient_mock.post(
-        "http://127.0.0.1/addons/test/update",
-        json={"result": "ok", "data": {}},
-    )
+    with patch(
+        "homeassistant.components.backup.manager.BackupManager.async_create_backup",
+    ) as mock_create_backup:
+        await hass.services.async_call(
+            "update",
+            "install",
+            {"entity_id": "update.test_update"},
+            blocking=True,
+        )
+    mock_create_backup.assert_not_called()
+    update_addon.assert_called_once_with("test", StoreAddonUpdate(backup=False))
 
-    await hass.services.async_call(
-        "update",
-        "install",
-        {"entity_id": "update.test_update"},
-        blocking=True,
-    )
 
-
-async def test_update_os(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+async def test_update_addon_progress(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
+    """Test progress reporting for addon update."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        result = await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+        assert result
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+    message_id = 0
+    job_uuid = uuid4().hex
+
+    def make_job_message(progress: float, done: bool | None):
+        nonlocal message_id
+        message_id += 1
+        return {
+            "id": message_id,
+            "type": "supervisor/event",
+            "data": {
+                "event": "job",
+                "data": {
+                    "uuid": job_uuid,
+                    "created": "2025-09-29T00:00:00.000000+00:00",
+                    "name": "addon_manager_update",
+                    "reference": "test",
+                    "progress": progress,
+                    "done": done,
+                    "stage": None,
+                    "extra": {"total": 1234567890} if progress > 0 else None,
+                    "errors": [],
+                },
+            },
+        }
+
+    await client.send_json(make_job_message(progress=0, done=None))
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    assert hass.states.get("update.test_update").attributes.get("in_progress") is False
+    assert (
+        hass.states.get("update.test_update").attributes.get("update_percentage")
+        is None
+    )
+
+    await client.send_json(make_job_message(progress=5, done=False))
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    assert hass.states.get("update.test_update").attributes.get("in_progress") is True
+    assert (
+        hass.states.get("update.test_update").attributes.get("update_percentage") == 5
+    )
+
+    await client.send_json(make_job_message(progress=50, done=False))
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    assert hass.states.get("update.test_update").attributes.get("in_progress") is True
+    assert (
+        hass.states.get("update.test_update").attributes.get("update_percentage") == 50
+    )
+
+    await client.send_json(make_job_message(progress=100, done=True))
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    assert hass.states.get("update.test_update").attributes.get("in_progress") is False
+    assert (
+        hass.states.get("update.test_update").attributes.get("update_percentage")
+        is None
+    )
+
+
+async def test_addon_update_progress_startup(
+    hass: HomeAssistant, jobs_info: AsyncMock
+) -> None:
+    """Test addon update in progress during home assistant startup."""
+    jobs_info.return_value = JobsInfo(
+        ignore_conditions=[],
+        jobs=[
+            Job(
+                name="addon_manager_update",
+                reference="test",
+                uuid=uuid4().hex,
+                progress=50,
+                stage=None,
+                done=False,
+                errors=[],
+                created=datetime.now(),
+                child_jobs=[],
+                extra={"total": 1234567890},
+            )
+        ],
+    )
+
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        result = await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+        assert result
+    await hass.async_block_till_done()
+
+    assert hass.states.get("update.test_update").attributes.get("in_progress") is True
+    assert (
+        hass.states.get("update.test_update").attributes.get("update_percentage") == 50
+    )
+
+
+async def setup_backup_integration(hass: HomeAssistant) -> None:
+    """Set up the backup integration."""
+    assert await async_setup_component(hass, "backup", {})
+    await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    ("commands", "default_mount", "expected_kwargs"),
+    [
+        (
+            [],
+            None,
+            {
+                "agent_ids": ["hassio.local"],
+                "extra_metadata": {"supervisor.addon_update": "test"},
+                "include_addons": ["test"],
+                "include_all_addons": False,
+                "include_database": False,
+                "include_folders": None,
+                "include_homeassistant": False,
+                "name": "test 2.0.0",
+                "password": None,
+            },
+        ),
+        (
+            [],
+            "my_nas",
+            {
+                "agent_ids": ["hassio.my_nas"],
+                "extra_metadata": {"supervisor.addon_update": "test"},
+                "include_addons": ["test"],
+                "include_all_addons": False,
+                "include_database": False,
+                "include_folders": None,
+                "include_homeassistant": False,
+                "name": "test 2.0.0",
+                "password": None,
+            },
+        ),
+        (
+            [
+                {
+                    "type": "backup/config/update",
+                    "create_backup": {
+                        "agent_ids": ["test-agent"],
+                        "include_addons": ["my-addon"],
+                        "include_all_addons": True,
+                        "include_database": False,
+                        "include_folders": ["share"],
+                        "name": "cool_backup",
+                        "password": "hunter2",
+                    },
+                },
+            ],
+            None,
+            {
+                "agent_ids": ["hassio.local"],
+                "extra_metadata": {"supervisor.addon_update": "test"},
+                "include_addons": ["test"],
+                "include_all_addons": False,
+                "include_database": False,
+                "include_folders": None,
+                "include_homeassistant": False,
+                "name": "test 2.0.0",
+                "password": "hunter2",
+            },
+        ),
+    ],
+)
+async def test_update_addon_with_backup(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    supervisor_client: AsyncMock,
+    update_addon: AsyncMock,
+    commands: list[dict[str, Any]],
+    default_mount: str | None,
+    expected_kwargs: dict[str, Any],
+) -> None:
+    """Test updating addon update entity."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        result = await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+        assert result
+    await setup_backup_integration(hass)
+
+    client = await hass_ws_client(hass)
+    for command in commands:
+        await client.send_json_auto_id(command)
+        result = await client.receive_json()
+        assert result["success"]
+
+    supervisor_client.mounts.info.return_value.default_backup_mount = default_mount
+    with patch(
+        "homeassistant.components.backup.manager.BackupManager.async_create_backup",
+    ) as mock_create_backup:
+        await hass.services.async_call(
+            "update",
+            "install",
+            {"entity_id": "update.test_update", "backup": True},
+            blocking=True,
+        )
+    mock_create_backup.assert_called_once_with(**expected_kwargs)
+    update_addon.assert_called_once_with("test", StoreAddonUpdate(backup=False))
+
+
+@pytest.mark.parametrize(
+    ("backups", "removed_backups"),
+    [
+        (
+            {},
+            [],
+        ),
+        (
+            {
+                "backup-1": MagicMock(
+                    agents={"hassio.local": MagicMock(spec=AgentBackupStatus)},
+                    date="2024-11-10T04:45:00+01:00",
+                    with_automatic_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-2": MagicMock(
+                    agents={"hassio.local": MagicMock(spec=AgentBackupStatus)},
+                    date="2024-11-11T04:45:00+01:00",
+                    with_automatic_settings=False,
+                    spec=ManagerBackup,
+                ),
+                "backup-3": MagicMock(
+                    agents={"hassio.local": MagicMock(spec=AgentBackupStatus)},
+                    date="2024-11-11T04:45:00+01:00",
+                    extra_metadata={"supervisor.addon_update": "other"},
+                    with_automatic_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-4": MagicMock(
+                    agents={"hassio.local": MagicMock(spec=AgentBackupStatus)},
+                    date="2024-11-11T04:45:00+01:00",
+                    extra_metadata={"supervisor.addon_update": "other"},
+                    with_automatic_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-5": MagicMock(
+                    agents={"hassio.local": MagicMock(spec=AgentBackupStatus)},
+                    date="2024-11-11T04:45:00+01:00",
+                    extra_metadata={"supervisor.addon_update": "test"},
+                    with_automatic_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-6": MagicMock(
+                    agents={"hassio.local": MagicMock(spec=AgentBackupStatus)},
+                    date="2024-11-12T04:45:00+01:00",
+                    extra_metadata={"supervisor.addon_update": "test"},
+                    with_automatic_settings=True,
+                    spec=ManagerBackup,
+                ),
+            },
+            ["backup-5"],
+        ),
+    ],
+)
+async def test_update_addon_with_backup_removes_old_backups(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    update_addon: AsyncMock,
+    backups: dict[str, ManagerBackup],
+    removed_backups: list[str],
+) -> None:
+    """Test updating addon update entity."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        result = await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+        assert result
+    await setup_backup_integration(hass)
+
+    supervisor_client.mounts.info.return_value.default_backup_mount = None
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_create_backup",
+        ) as mock_create_backup,
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_delete_backup",
+            autospec=True,
+            return_value={},
+        ) as async_delete_backup,
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backups",
+            return_value=(backups, {}),
+        ),
+    ):
+        await hass.services.async_call(
+            "update",
+            "install",
+            {"entity_id": "update.test_update", "backup": True},
+            blocking=True,
+        )
+    mock_create_backup.assert_called_once_with(
+        agent_ids=["hassio.local"],
+        extra_metadata={"supervisor.addon_update": "test"},
+        include_addons=["test"],
+        include_all_addons=False,
+        include_database=False,
+        include_folders=None,
+        include_homeassistant=False,
+        name="test 2.0.0",
+        password=None,
+    )
+    assert len(async_delete_backup.mock_calls) == len(removed_backups)
+    for call in async_delete_backup.mock_calls:
+        assert call.args[1] in removed_backups
+    update_addon.assert_called_once_with("test", StoreAddonUpdate(backup=False))
+
+
+async def test_update_os(hass: HomeAssistant, supervisor_client: AsyncMock) -> None:
     """Test updating OS update entity."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
@@ -284,22 +609,127 @@ async def test_update_os(
         assert result
     await hass.async_block_till_done()
 
-    aioclient_mock.post(
-        "http://127.0.0.1/os/update",
-        json={"result": "ok", "data": {}},
-    )
+    supervisor_client.os.update.return_value = None
+    with patch(
+        "homeassistant.components.backup.manager.BackupManager.async_create_backup",
+    ) as mock_create_backup:
+        await hass.services.async_call(
+            "update",
+            "install",
+            {"entity_id": "update.home_assistant_operating_system_update"},
+            blocking=True,
+        )
+    mock_create_backup.assert_not_called()
+    supervisor_client.os.update.assert_called_once_with(OSUpdate(version=None))
 
-    await hass.services.async_call(
-        "update",
-        "install",
-        {"entity_id": "update.home_assistant_operating_system_update"},
-        blocking=True,
-    )
 
-
-async def test_update_core(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+@pytest.mark.parametrize(
+    ("commands", "default_mount", "expected_kwargs"),
+    [
+        (
+            [],
+            None,
+            {
+                "agent_ids": ["hassio.local"],
+                "include_addons": None,
+                "include_all_addons": False,
+                "include_database": True,
+                "include_folders": None,
+                "include_homeassistant": True,
+                "name": f"Home Assistant Core {HAVERSION}",
+                "password": None,
+            },
+        ),
+        (
+            [],
+            "my_nas",
+            {
+                "agent_ids": ["hassio.my_nas"],
+                "include_addons": None,
+                "include_all_addons": False,
+                "include_database": True,
+                "include_folders": None,
+                "include_homeassistant": True,
+                "name": f"Home Assistant Core {HAVERSION}",
+                "password": None,
+            },
+        ),
+        (
+            [
+                {
+                    "type": "backup/config/update",
+                    "create_backup": {
+                        "agent_ids": ["test-agent"],
+                        "include_addons": ["my-addon"],
+                        "include_all_addons": True,
+                        "include_database": False,
+                        "include_folders": ["share"],
+                        "name": "cool_backup",
+                        "password": "hunter2",
+                    },
+                },
+            ],
+            None,
+            {
+                "agent_ids": ["test-agent"],
+                "include_addons": ["my-addon"],
+                "include_all_addons": True,
+                "include_database": False,
+                "include_folders": ["share"],
+                "include_homeassistant": True,
+                "name": "cool_backup",
+                "password": "hunter2",
+                "with_automatic_settings": True,
+            },
+        ),
+    ],
+)
+async def test_update_os_with_backup(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    supervisor_client: AsyncMock,
+    commands: list[dict[str, Any]],
+    default_mount: str | None,
+    expected_kwargs: dict[str, Any],
 ) -> None:
+    """Test updating OS update entity."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        result = await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+        assert result
+    await setup_backup_integration(hass)
+
+    client = await hass_ws_client(hass)
+    for command in commands:
+        await client.send_json_auto_id(command)
+        result = await client.receive_json()
+        assert result["success"]
+
+    supervisor_client.os.update.return_value = None
+    supervisor_client.mounts.info.return_value.default_backup_mount = default_mount
+    with patch(
+        "homeassistant.components.backup.manager.BackupManager.async_create_backup",
+    ) as mock_create_backup:
+        await hass.services.async_call(
+            "update",
+            "install",
+            {
+                "entity_id": "update.home_assistant_operating_system_update",
+                "backup": True,
+            },
+            blocking=True,
+        )
+    mock_create_backup.assert_called_once_with(**expected_kwargs)
+    supervisor_client.os.update.assert_called_once_with(OSUpdate(version=None))
+
+
+async def test_update_core(hass: HomeAssistant, supervisor_client: AsyncMock) -> None:
     """Test updating core update entity."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
@@ -313,21 +743,309 @@ async def test_update_core(
         assert result
     await hass.async_block_till_done()
 
-    aioclient_mock.post(
-        "http://127.0.0.1/core/update",
-        json={"result": "ok", "data": {}},
+    supervisor_client.homeassistant.update.return_value = None
+    with patch(
+        "homeassistant.components.backup.manager.BackupManager.async_create_backup",
+    ) as mock_create_backup:
+        await hass.services.async_call(
+            "update",
+            "install",
+            {"entity_id": "update.home_assistant_core_update"},
+            blocking=True,
+        )
+    mock_create_backup.assert_not_called()
+    supervisor_client.homeassistant.update.assert_called_once_with(
+        HomeAssistantUpdateOptions(version=None, backup=False)
     )
 
-    await hass.services.async_call(
-        "update",
-        "install",
-        {"entity_id": "update.home_assistant_os_update"},
-        blocking=True,
+
+async def test_update_core_progress(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test progress reporting for core update."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        result = await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+        assert result
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+    message_id = 0
+    job_uuid = uuid4().hex
+
+    def make_job_message(
+        progress: float, done: bool | None, errors: list[dict[str, str]] | None = None
+    ):
+        nonlocal message_id
+        message_id += 1
+        return {
+            "id": message_id,
+            "type": "supervisor/event",
+            "data": {
+                "event": "job",
+                "data": {
+                    "uuid": job_uuid,
+                    "created": "2025-09-29T00:00:00.000000+00:00",
+                    "name": "home_assistant_core_update",
+                    "reference": None,
+                    "progress": progress,
+                    "done": done,
+                    "stage": None,
+                    "extra": {"total": 1234567890} if progress > 0 else None,
+                    "errors": errors if errors else [],
+                },
+            },
+        }
+
+    await client.send_json(make_job_message(progress=0, done=None))
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("update.home_assistant_core_update").attributes.get(
+            "in_progress"
+        )
+        is False
+    )
+    assert (
+        hass.states.get("update.home_assistant_core_update").attributes.get(
+            "update_percentage"
+        )
+        is None
+    )
+
+    await client.send_json(make_job_message(progress=5, done=False))
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("update.home_assistant_core_update").attributes.get(
+            "in_progress"
+        )
+        is True
+    )
+    assert (
+        hass.states.get("update.home_assistant_core_update").attributes.get(
+            "update_percentage"
+        )
+        == 5
+    )
+
+    await client.send_json(make_job_message(progress=50, done=False))
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("update.home_assistant_core_update").attributes.get(
+            "in_progress"
+        )
+        is True
+    )
+    assert (
+        hass.states.get("update.home_assistant_core_update").attributes.get(
+            "update_percentage"
+        )
+        == 50
+    )
+
+    # During a successful update Home Assistant is stopped before the update job
+    # reaches the end. An error ends it early so we use that for test
+    await client.send_json(
+        make_job_message(
+            progress=70,
+            done=True,
+            errors=[
+                {"type": "HomeAssistantUpdateError", "message": "bad", "stage": None}
+            ],
+        )
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("update.home_assistant_core_update").attributes.get(
+            "in_progress"
+        )
+        is False
+    )
+    assert (
+        hass.states.get("update.home_assistant_core_update").attributes.get(
+            "update_percentage"
+        )
+        is None
+    )
+
+
+async def test_core_update_progress_startup(
+    hass: HomeAssistant, jobs_info: AsyncMock
+) -> None:
+    """Test core update in progress during home assistant startup.
+
+    This is an odd test, it's very unlikely core will be starting during an update.
+    It is technically possible though as core isn't stopped until the docker portion
+    is complete and updates can be started from CLI.
+    """
+    jobs_info.return_value = JobsInfo(
+        ignore_conditions=[],
+        jobs=[
+            Job(
+                name="home_assistant_core_update",
+                reference=None,
+                uuid=uuid4().hex,
+                progress=50,
+                stage=None,
+                done=False,
+                errors=[],
+                created=datetime.now(),
+                child_jobs=[],
+                extra={"total": 1234567890},
+            )
+        ],
+    )
+
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        result = await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+        assert result
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("update.home_assistant_core_update").attributes.get(
+            "in_progress"
+        )
+        is True
+    )
+    assert (
+        hass.states.get("update.home_assistant_core_update").attributes.get(
+            "update_percentage"
+        )
+        == 50
+    )
+
+
+@pytest.mark.parametrize(
+    ("commands", "default_mount", "expected_kwargs"),
+    [
+        (
+            [],
+            None,
+            {
+                "agent_ids": ["hassio.local"],
+                "include_addons": None,
+                "include_all_addons": False,
+                "include_database": True,
+                "include_folders": None,
+                "include_homeassistant": True,
+                "name": f"Home Assistant Core {HAVERSION}",
+                "password": None,
+            },
+        ),
+        (
+            [],
+            "my_nas",
+            {
+                "agent_ids": ["hassio.my_nas"],
+                "include_addons": None,
+                "include_all_addons": False,
+                "include_database": True,
+                "include_folders": None,
+                "include_homeassistant": True,
+                "name": f"Home Assistant Core {HAVERSION}",
+                "password": None,
+            },
+        ),
+        (
+            [
+                {
+                    "type": "backup/config/update",
+                    "create_backup": {
+                        "agent_ids": ["test-agent"],
+                        "include_addons": ["my-addon"],
+                        "include_all_addons": True,
+                        "include_database": False,
+                        "include_folders": ["share"],
+                        "name": "cool_backup",
+                        "password": "hunter2",
+                    },
+                },
+            ],
+            None,
+            {
+                "agent_ids": ["test-agent"],
+                "include_addons": ["my-addon"],
+                "include_all_addons": True,
+                "include_database": False,
+                "include_folders": ["share"],
+                "include_homeassistant": True,
+                "name": "cool_backup",
+                "password": "hunter2",
+                "with_automatic_settings": True,
+            },
+        ),
+    ],
+)
+async def test_update_core_with_backup(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    supervisor_client: AsyncMock,
+    commands: list[dict[str, Any]],
+    default_mount: str | None,
+    expected_kwargs: dict[str, Any],
+) -> None:
+    """Test updating core update entity."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        result = await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+        assert result
+    await setup_backup_integration(hass)
+
+    client = await hass_ws_client(hass)
+    for command in commands:
+        await client.send_json_auto_id(command)
+        result = await client.receive_json()
+        assert result["success"]
+
+    supervisor_client.homeassistant.update.return_value = None
+    supervisor_client.mounts.info.return_value.default_backup_mount = default_mount
+    with patch(
+        "homeassistant.components.backup.manager.BackupManager.async_create_backup",
+    ) as mock_create_backup:
+        await hass.services.async_call(
+            "update",
+            "install",
+            {"entity_id": "update.home_assistant_core_update", "backup": True},
+            blocking=True,
+        )
+    mock_create_backup.assert_called_once_with(**expected_kwargs)
+    supervisor_client.homeassistant.update.assert_called_once_with(
+        HomeAssistantUpdateOptions(version=None, backup=False)
     )
 
 
 async def test_update_supervisor(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, supervisor_client: AsyncMock
 ) -> None:
     """Test updating supervisor update entity."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
@@ -342,21 +1060,19 @@ async def test_update_supervisor(
         assert result
     await hass.async_block_till_done()
 
-    aioclient_mock.post(
-        "http://127.0.0.1/supervisor/update",
-        json={"result": "ok", "data": {}},
-    )
-
+    supervisor_client.supervisor.update.return_value = None
     await hass.services.async_call(
         "update",
         "install",
         {"entity_id": "update.home_assistant_supervisor_update"},
         blocking=True,
     )
+    supervisor_client.supervisor.update.assert_called_once()
 
 
 async def test_update_addon_with_error(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    update_addon: AsyncMock,
 ) -> None:
     """Test updating addon update entity with error."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
@@ -370,13 +1086,9 @@ async def test_update_addon_with_error(
         )
     await hass.async_block_till_done()
 
-    aioclient_mock.post(
-        "http://127.0.0.1/addons/test/update",
-        exc=HassioAPIError,
-    )
-
-    with pytest.raises(HomeAssistantError):
-        assert not await hass.services.async_call(
+    update_addon.side_effect = SupervisorError
+    with pytest.raises(HomeAssistantError, match=r"^Error updating test:"):
+        await hass.services.async_call(
             "update",
             "install",
             {"entity_id": "update.test_update"},
@@ -384,8 +1096,56 @@ async def test_update_addon_with_error(
         )
 
 
+@pytest.mark.parametrize(
+    ("create_backup_error", "delete_filtered_backups_error", "message"),
+    [
+        (BackupManagerError, None, r"^Error creating backup: "),
+        (None, BackupManagerError, r"^Error deleting old backups: "),
+    ],
+)
+async def test_update_addon_with_backup_and_error(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    create_backup_error: Exception | None,
+    delete_filtered_backups_error: Exception | None,
+    message: str,
+) -> None:
+    """Test updating addon update entity with error."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        result = await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+        assert result
+    await setup_backup_integration(hass)
+
+    supervisor_client.homeassistant.update.return_value = None
+    supervisor_client.mounts.info.return_value.default_backup_mount = None
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_create_backup",
+            side_effect=create_backup_error,
+        ),
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_delete_filtered_backups",
+            side_effect=delete_filtered_backups_error,
+        ),
+        pytest.raises(HomeAssistantError, match=message),
+    ):
+        await hass.services.async_call(
+            "update",
+            "install",
+            {"entity_id": "update.test_update", "backup": True},
+            blocking=True,
+        )
+
+
 async def test_update_os_with_error(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, supervisor_client: AsyncMock
 ) -> None:
     """Test updating OS update entity with error."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
@@ -399,13 +1159,11 @@ async def test_update_os_with_error(
         )
     await hass.async_block_till_done()
 
-    aioclient_mock.post(
-        "http://127.0.0.1/os/update",
-        exc=HassioAPIError,
-    )
-
-    with pytest.raises(HomeAssistantError):
-        assert not await hass.services.async_call(
+    supervisor_client.os.update.side_effect = SupervisorError
+    with pytest.raises(
+        HomeAssistantError, match=r"^Error updating Home Assistant Operating System:"
+    ):
+        await hass.services.async_call(
             "update",
             "install",
             {"entity_id": "update.home_assistant_operating_system_update"},
@@ -413,8 +1171,45 @@ async def test_update_os_with_error(
         )
 
 
+async def test_update_os_with_backup_and_error(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test updating OS update entity with error."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        result = await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+        assert result
+    await setup_backup_integration(hass)
+
+    supervisor_client.os.update.return_value = None
+    supervisor_client.mounts.info.return_value.default_backup_mount = None
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_create_backup",
+            side_effect=BackupManagerError,
+        ),
+        pytest.raises(HomeAssistantError, match=r"^Error creating backup:"),
+    ):
+        await hass.services.async_call(
+            "update",
+            "install",
+            {
+                "entity_id": "update.home_assistant_operating_system_update",
+                "backup": True,
+            },
+            blocking=True,
+        )
+
+
 async def test_update_supervisor_with_error(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, supervisor_client: AsyncMock
 ) -> None:
     """Test updating supervisor update entity with error."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
@@ -428,13 +1223,11 @@ async def test_update_supervisor_with_error(
         )
     await hass.async_block_till_done()
 
-    aioclient_mock.post(
-        "http://127.0.0.1/supervisor/update",
-        exc=HassioAPIError,
-    )
-
-    with pytest.raises(HomeAssistantError):
-        assert not await hass.services.async_call(
+    supervisor_client.supervisor.update.side_effect = SupervisorError
+    with pytest.raises(
+        HomeAssistantError, match=r"^Error updating Home Assistant Supervisor:"
+    ):
+        await hass.services.async_call(
             "update",
             "install",
             {"entity_id": "update.home_assistant_supervisor_update"},
@@ -443,7 +1236,7 @@ async def test_update_supervisor_with_error(
 
 
 async def test_update_core_with_error(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant, supervisor_client: AsyncMock
 ) -> None:
     """Test updating core update entity with error."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
@@ -457,13 +1250,11 @@ async def test_update_core_with_error(
         )
     await hass.async_block_till_done()
 
-    aioclient_mock.post(
-        "http://127.0.0.1/core/update",
-        exc=HassioAPIError,
-    )
-
-    with pytest.raises(HomeAssistantError):
-        assert not await hass.services.async_call(
+    supervisor_client.homeassistant.update.side_effect = SupervisorError
+    with pytest.raises(
+        HomeAssistantError, match=r"^Error updating Home Assistant Core:"
+    ):
+        await hass.services.async_call(
             "update",
             "install",
             {"entity_id": "update.home_assistant_core_update"},
@@ -471,8 +1262,43 @@ async def test_update_core_with_error(
         )
 
 
+async def test_update_core_with_backup_and_error(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test updating core update entity with error."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        result = await async_setup_component(
+            hass,
+            "hassio",
+            {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
+        )
+        assert result
+    await setup_backup_integration(hass)
+
+    supervisor_client.homeassistant.update.return_value = None
+    supervisor_client.mounts.info.return_value.default_backup_mount = None
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_create_backup",
+            side_effect=BackupManagerError,
+        ),
+        pytest.raises(HomeAssistantError, match=r"^Error creating backup:"),
+    ):
+        await hass.services.async_call(
+            "update",
+            "install",
+            {"entity_id": "update.home_assistant_core_update", "backup": True},
+            blocking=True,
+        )
+
+
 async def test_release_notes_between_versions(
     hass: HomeAssistant,
+    addon_changelog: AsyncMock,
     aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
@@ -480,12 +1306,10 @@ async def test_release_notes_between_versions(
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
 
+    addon_changelog.return_value = "# 2.0.1\nNew updates\n# 2.0.0\nOld updates"
+
     with (
         patch.dict(os.environ, MOCK_ENVIRON),
-        patch(
-            "homeassistant.components.hassio.coordinator.get_addons_changelogs",
-            return_value={"test": "# 2.0.1\nNew updates\n# 2.0.0\nOld updates"},
-        ),
     ):
         result = await async_setup_component(
             hass,
@@ -512,6 +1336,7 @@ async def test_release_notes_between_versions(
 
 async def test_release_notes_full(
     hass: HomeAssistant,
+    addon_changelog: AsyncMock,
     aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
@@ -519,12 +1344,11 @@ async def test_release_notes_full(
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
 
+    full_changelog = "# 2.0.0\nNew updates\n# 2.0.0\nOld updates"
+    addon_changelog.return_value = full_changelog
+
     with (
         patch.dict(os.environ, MOCK_ENVIRON),
-        patch(
-            "homeassistant.components.hassio.coordinator.get_addons_changelogs",
-            return_value={"test": "# 2.0.0\nNew updates\n# 2.0.0\nOld updates"},
-        ),
     ):
         result = await async_setup_component(
             hass,
@@ -548,9 +1372,21 @@ async def test_release_notes_full(
     assert "Old updates" in result["result"]
     assert "New updates" in result["result"]
 
+    # Update entity without update should returns full changelog
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "update/release_notes",
+            "entity_id": "update.test2_update",
+        }
+    )
+    result = await client.receive_json()
+    assert result["result"] == full_changelog
+
 
 async def test_not_release_notes(
     hass: HomeAssistant,
+    addon_changelog: AsyncMock,
     aioclient_mock: AiohttpClientMocker,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
@@ -558,12 +1394,10 @@ async def test_not_release_notes(
     config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
     config_entry.add_to_hass(hass)
 
+    addon_changelog.side_effect = SupervisorNotFoundError()
+
     with (
         patch.dict(os.environ, MOCK_ENVIRON),
-        patch(
-            "homeassistant.components.hassio.coordinator.get_addons_changelogs",
-            return_value={"test": None},
-        ),
     ):
         result = await async_setup_component(
             hass,
@@ -613,23 +1447,18 @@ async def test_no_os_entity(hass: HomeAssistant) -> None:
 
 
 async def test_setting_up_core_update_when_addon_fails(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    addon_installed: AsyncMock,
+    addon_stats: AsyncMock,
+    addon_changelog: AsyncMock,
 ) -> None:
     """Test setting up core update when single addon fails."""
+    addon_installed.side_effect = SupervisorBadRequestError("Addon Test does not exist")
+    addon_stats.side_effect = SupervisorBadRequestError("add-on is not running")
+    addon_changelog.side_effect = SupervisorBadRequestError("add-on is not running")
     with (
         patch.dict(os.environ, MOCK_ENVIRON),
-        patch(
-            "homeassistant.components.hassio.HassIO.get_addon_stats",
-            side_effect=HassioAPIError("add-on is not running"),
-        ),
-        patch(
-            "homeassistant.components.hassio.HassIO.get_addon_changelog",
-            side_effect=HassioAPIError("add-on is not running"),
-        ),
-        patch(
-            "homeassistant.components.hassio.HassIO.get_addon_info",
-            side_effect=HassioAPIError("add-on is not running"),
-        ),
     ):
         result = await async_setup_component(
             hass,

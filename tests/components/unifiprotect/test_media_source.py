@@ -10,6 +10,7 @@ from uiprotect.data import (
     Camera,
     Event,
     EventType,
+    ModelType,
     Permission,
     SmartDetectObjectType,
 )
@@ -20,6 +21,7 @@ from homeassistant.components.media_source import MediaSourceItem
 from homeassistant.components.unifiprotect.const import DOMAIN
 from homeassistant.components.unifiprotect.media_source import (
     ProtectMediaSource,
+    SimpleEventType,
     async_get_media_source,
 )
 from homeassistant.core import HomeAssistant
@@ -72,6 +74,7 @@ async def test_resolve_media_thumbnail(
     await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
 
     event = Event(
+        model=ModelType.EVENT,
         id="test_event_id",
         type=EventType.MOTION,
         start=fixed_now - timedelta(seconds=20),
@@ -103,6 +106,7 @@ async def test_resolve_media_event(
     await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
 
     event = Event(
+        model=ModelType.EVENT,
         id="test_event_id",
         type=EventType.MOTION,
         start=fixed_now - timedelta(seconds=20),
@@ -172,6 +176,7 @@ async def test_browse_media_event_ongoing(
     await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
 
     event = Event(
+        model=ModelType.EVENT,
         id="test_event_id",
         type=EventType.MOTION,
         start=fixed_now - timedelta(seconds=20),
@@ -200,9 +205,9 @@ async def test_browse_media_root_multiple_consoles(
     await hass.config_entries.async_setup(ufp.entry.entry_id)
     await hass.async_block_till_done()
 
-    bootstrap2 = bootstrap.copy()
+    bootstrap2 = bootstrap.model_copy()
     bootstrap2._has_media = True
-    bootstrap2.nvr = bootstrap.nvr.copy()
+    bootstrap2.nvr = bootstrap.nvr.model_copy()
     bootstrap2.nvr.id = "test_id2"
     bootstrap2.nvr.mac = "A2E00C826924"
     bootstrap2.nvr.name = "UnifiProtect2"
@@ -230,6 +235,7 @@ async def test_browse_media_root_multiple_consoles(
                 "host": "1.1.1.2",
                 "username": "test-username",
                 "password": "test-password",
+                "api_key": "test-api-key",
                 "id": "UnifiProtect2",
                 "port": 443,
                 "verify_ssl": False,
@@ -266,9 +272,9 @@ async def test_browse_media_root_multiple_consoles_only_one_media(
     await hass.config_entries.async_setup(ufp.entry.entry_id)
     await hass.async_block_till_done()
 
-    bootstrap2 = bootstrap.copy()
+    bootstrap2 = bootstrap.model_copy()
     bootstrap2._has_media = False
-    bootstrap2.nvr = bootstrap.nvr.copy()
+    bootstrap2.nvr = bootstrap.nvr.model_copy()
     bootstrap2.nvr.id = "test_id2"
     bootstrap2.nvr.mac = "A2E00C826924"
     bootstrap2.nvr.name = "UnifiProtect2"
@@ -591,6 +597,7 @@ async def test_browse_media_recent(
     await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
 
     event = Event(
+        model=ModelType.EVENT,
         id="test_event_id",
         type=EventType.MOTION,
         start=fixed_now - timedelta(seconds=20),
@@ -628,6 +635,7 @@ async def test_browse_media_recent_truncated(
     await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
 
     event = Event(
+        model=ModelType.EVENT,
         id="test_event_id",
         type=EventType.MOTION,
         start=fixed_now - timedelta(seconds=20),
@@ -660,9 +668,10 @@ async def test_browse_media_recent_truncated(
     [
         (
             Event(
+                model=ModelType.EVENT,
                 id="test_event_id",
                 type=EventType.RING,
-                start=datetime(1000, 1, 1, 0, 0, 0),
+                start=datetime(2000, 1, 1, 0, 0, 0),
                 end=None,
                 score=100,
                 smart_detect_types=[],
@@ -673,9 +682,10 @@ async def test_browse_media_recent_truncated(
         ),
         (
             Event(
+                model=ModelType.EVENT,
                 id="test_event_id",
                 type=EventType.MOTION,
-                start=datetime(1000, 1, 1, 0, 0, 0),
+                start=datetime(2000, 1, 1, 0, 0, 0),
                 end=None,
                 score=100,
                 smart_detect_types=[],
@@ -686,9 +696,10 @@ async def test_browse_media_recent_truncated(
         ),
         (
             Event(
+                model=ModelType.EVENT,
                 id="test_event_id",
                 type=EventType.SMART_DETECT,
-                start=datetime(1000, 1, 1, 0, 0, 0),
+                start=datetime(2000, 1, 1, 0, 0, 0),
                 end=None,
                 score=100,
                 smart_detect_types=["person"],
@@ -697,7 +708,7 @@ async def test_browse_media_recent_truncated(
                 metadata={
                     "detected_thumbnails": [
                         {
-                            "clock_best_wall": datetime(1000, 1, 1, 0, 0, 0),
+                            "clock_best_wall": datetime(2000, 1, 1, 0, 0, 0),
                             "type": "person",
                             "cropped_id": "event_id",
                         }
@@ -708,9 +719,10 @@ async def test_browse_media_recent_truncated(
         ),
         (
             Event(
+                model=ModelType.EVENT,
                 id="test_event_id",
                 type=EventType.SMART_DETECT,
-                start=datetime(1000, 1, 1, 0, 0, 0),
+                start=datetime(2000, 1, 1, 0, 0, 0),
                 end=None,
                 score=100,
                 smart_detect_types=["vehicle", "person"],
@@ -721,108 +733,10 @@ async def test_browse_media_recent_truncated(
         ),
         (
             Event(
+                model=ModelType.EVENT,
                 id="test_event_id",
                 type=EventType.SMART_DETECT,
-                start=datetime(1000, 1, 1, 0, 0, 0),
-                end=None,
-                score=100,
-                smart_detect_types=["vehicle", "licensePlate"],
-                smart_detect_event_ids=[],
-                camera_id="test",
-            ),
-            "Object Detection - License Plate, Vehicle",
-        ),
-        (
-            Event(
-                id="test_event_id",
-                type=EventType.SMART_DETECT,
-                start=datetime(1000, 1, 1, 0, 0, 0),
-                end=None,
-                score=100,
-                smart_detect_types=["vehicle", "licensePlate"],
-                smart_detect_event_ids=[],
-                camera_id="test",
-                metadata={
-                    "license_plate": {"name": "ABC1234", "confidence_level": 95},
-                    "detected_thumbnails": [
-                        {
-                            "clock_best_wall": datetime(1000, 1, 1, 0, 0, 0),
-                            "type": "vehicle",
-                            "cropped_id": "event_id",
-                        }
-                    ],
-                },
-            ),
-            "Object Detection - Vehicle: ABC1234",
-        ),
-        (
-            Event(
-                id="test_event_id",
-                type=EventType.SMART_DETECT,
-                start=datetime(1000, 1, 1, 0, 0, 0),
-                end=None,
-                score=100,
-                smart_detect_types=["vehicle", "licensePlate"],
-                smart_detect_event_ids=[],
-                camera_id="test",
-                metadata={
-                    "license_plate": {"name": "ABC1234", "confidence_level": 95},
-                    "detected_thumbnails": [
-                        {
-                            "clock_best_wall": datetime(1000, 1, 1, 0, 0, 0),
-                            "type": "vehicle",
-                            "cropped_id": "event_id",
-                            "attributes": {
-                                "vehicle_type": {
-                                    "val": "car",
-                                    "confidence": 95,
-                                }
-                            },
-                        }
-                    ],
-                },
-            ),
-            "Object Detection - Car: ABC1234",
-        ),
-        (
-            Event(
-                id="test_event_id",
-                type=EventType.SMART_DETECT,
-                start=datetime(1000, 1, 1, 0, 0, 0),
-                end=None,
-                score=100,
-                smart_detect_types=["vehicle", "licensePlate"],
-                smart_detect_event_ids=[],
-                camera_id="test",
-                metadata={
-                    "license_plate": {"name": "ABC1234", "confidence_level": 95},
-                    "detected_thumbnails": [
-                        {
-                            "clock_best_wall": datetime(1000, 1, 1, 0, 0, 0),
-                            "type": "vehicle",
-                            "cropped_id": "event_id",
-                            "attributes": {
-                                "color": {
-                                    "val": "black",
-                                    "confidence": 95,
-                                }
-                            },
-                        },
-                        {
-                            "clock_best_wall": datetime(1000, 1, 1, 0, 0, 0),
-                            "type": "person",
-                            "cropped_id": "event_id",
-                        },
-                    ],
-                },
-            ),
-            "Object Detection - Black Vehicle: ABC1234",
-        ),
-        (
-            Event(
-                id="test_event_id",
-                type=EventType.SMART_DETECT,
-                start=datetime(1000, 1, 1, 0, 0, 0),
+                start=datetime(2000, 1, 1, 0, 0, 0),
                 end=None,
                 score=100,
                 smart_detect_types=["vehicle"],
@@ -831,7 +745,7 @@ async def test_browse_media_recent_truncated(
                 metadata={
                     "detected_thumbnails": [
                         {
-                            "clock_best_wall": datetime(1000, 1, 1, 0, 0, 0),
+                            "clock_best_wall": datetime(2000, 1, 1, 0, 0, 0),
                             "type": "vehicle",
                             "cropped_id": "event_id",
                             "attributes": {
@@ -852,9 +766,10 @@ async def test_browse_media_recent_truncated(
         ),
         (
             Event(
+                model=ModelType.EVENT,
                 id="test_event_id",
                 type=EventType.SMART_AUDIO_DETECT,
-                start=datetime(1000, 1, 1, 0, 0, 0),
+                start=datetime(2000, 1, 1, 0, 0, 0),
                 end=None,
                 score=100,
                 smart_detect_types=["alrmSpeak"],
@@ -906,6 +821,7 @@ async def test_browse_media_eventthumb(
     await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
 
     event = Event(
+        model=ModelType.EVENT,
         id="test_event_id",
         type=EventType.SMART_DETECT,
         start=fixed_now - timedelta(seconds=20),
@@ -969,6 +885,7 @@ async def test_browse_media_browse_day(
     await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
 
     event = Event(
+        model=ModelType.EVENT,
         id="test_event_id",
         type=EventType.MOTION,
         start=fixed_now - timedelta(seconds=20),
@@ -1010,6 +927,7 @@ async def test_browse_media_browse_whole_month(
     await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
 
     event = Event(
+        model=ModelType.EVENT,
         id="test_event_id",
         type=EventType.MOTION,
         start=fixed_now - timedelta(seconds=20),
@@ -1052,6 +970,7 @@ async def test_browse_media_browse_whole_month_december(
     await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
 
     event1 = Event(
+        model=ModelType.EVENT,
         id="test_event_id",
         type=EventType.SMART_DETECT,
         start=fixed_now - timedelta(seconds=3663),
@@ -1063,6 +982,7 @@ async def test_browse_media_browse_whole_month_december(
     )
     event1._api = ufp.api
     event2 = Event(
+        model=ModelType.EVENT,
         id="test_event_id2",
         type=EventType.MOTION,
         start=fixed_now - timedelta(seconds=20),
@@ -1074,6 +994,7 @@ async def test_browse_media_browse_whole_month_december(
     )
     event2._api = ufp.api
     event3 = Event(
+        model=ModelType.EVENT,
         id="test_event_id3",
         type=EventType.MOTION,
         start=fixed_now - timedelta(seconds=20),
@@ -1085,6 +1006,7 @@ async def test_browse_media_browse_whole_month_december(
     )
     event3._api = ufp.api
     event4 = Event(
+        model=ModelType.EVENT,
         id="test_event_id4",
         type=EventType.MOTION,
         start=fixed_now - timedelta(seconds=20),
@@ -1120,3 +1042,66 @@ async def test_browse_media_browse_whole_month_december(
     assert browse.identifier == base_id
     assert len(browse.children) == 1
     assert browse.children[0].identifier == "test_id:event:test_event_id"
+
+
+@pytest.mark.parametrize(
+    ("year", "month", "expected_days", "expected_end_month", "expected_end_year"),
+    [
+        (2024, 1, 31, 2, 2024),  # January
+        (2024, 2, 29, 3, 2024),  # February (leap year)
+        (2023, 2, 28, 3, 2023),  # February (non-leap year)
+        (2024, 4, 30, 5, 2024),  # April
+        (2024, 12, 31, 1, 2025),  # December - critical edge case
+    ],
+)
+async def test_build_days_whole_month_date_calculation(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    year: int,
+    month: int,
+    expected_days: int,
+    expected_end_month: int,
+    expected_end_year: int,
+) -> None:
+    """Test that whole month date calculation works for all month types.
+
+    This test verifies the monthrange-based date calculation in _build_days,
+    especially for December which previously used manual year/month increment logic.
+    """
+    # Initialize the integration entry to get ProtectData
+    await init_entry(hass, ufp, [], regenerate_ids=False)
+
+    # Create a start date for the first day of the month
+    start = datetime(year=year, month=month, day=1).date()
+    start_dt = datetime(
+        year=start.year,
+        month=start.month,
+        day=start.day,
+        hour=0,
+        minute=0,
+        second=0,
+        tzinfo=dt_util.get_default_time_zone(),
+    )
+
+    # Verify we got the expected number of days
+    expected_end = start_dt + timedelta(days=expected_days)
+
+    # Verify it correctly goes to the expected month/year
+    assert expected_end.month == expected_end_month
+    assert expected_end.year == expected_end_year
+    assert expected_end.day == 1
+
+    # Build the media source with is_all=True (whole month)
+    source = ProtectMediaSource(hass, {})
+    result = await source._build_days(
+        data=ufp.entry.runtime_data,
+        camera_id="test_camera",
+        event_type=SimpleEventType.ALL,
+        start=start,
+        is_all=True,
+        build_children=False,  # We only care about the identifier, not children
+    )
+
+    # Verify the identifier format is correct
+    assert result.identifier.endswith(f"range:{year}:{month}:all")
+    assert "Whole Month" in result.title

@@ -15,6 +15,7 @@
       'target_temp_step': 5,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -35,9 +36,10 @@
     'original_name': 'Cabin overheat protection',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 385>,
     'translation_key': 'climate_state_cabin_overheat_protection',
-    'unique_id': 'LRWXF7EK4KC700000-climate_state_cabin_overheat_protection',
+    'unique_id': 'LRW3F7EK4NC700000-climate_state_cabin_overheat_protection',
     'unit_of_measurement': None,
   })
 # ---
@@ -71,6 +73,10 @@
     }),
     'area_id': None,
     'capabilities': dict({
+      'fan_modes': list([
+        'off',
+        'bioweapon',
+      ]),
       'hvac_modes': list([
         <HVACMode.HEAT_COOL: 'heat_cool'>,
         <HVACMode.OFF: 'off'>,
@@ -85,6 +91,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -105,9 +112,10 @@
     'original_name': 'Climate',
     'platform': 'teslemetry',
     'previous_unique_id': None,
-    'supported_features': <ClimateEntityFeature: 401>,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 409>,
     'translation_key': <TeslemetryClimateSide.DRIVER: 'driver_temp'>,
-    'unique_id': 'LRWXF7EK4KC700000-driver_temp',
+    'unique_id': 'LRW3F7EK4NC700000-driver_temp',
     'unit_of_measurement': None,
   })
 # ---
@@ -115,6 +123,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 30.0,
+      'fan_mode': 'off',
+      'fan_modes': list([
+        'off',
+        'bioweapon',
+      ]),
       'friendly_name': 'Test Climate',
       'hvac_modes': list([
         <HVACMode.HEAT_COOL: 'heat_cool'>,
@@ -129,7 +142,7 @@
         'dog',
         'camp',
       ]),
-      'supported_features': <ClimateEntityFeature: 401>,
+      'supported_features': <ClimateEntityFeature: 409>,
       'temperature': 22.0,
     }),
     'context': <ANY>,
@@ -156,6 +169,7 @@
       'target_temp_step': 5,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -176,9 +190,10 @@
     'original_name': 'Cabin overheat protection',
     'platform': 'teslemetry',
     'previous_unique_id': None,
+    'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 384>,
     'translation_key': 'climate_state_cabin_overheat_protection',
-    'unique_id': 'LRWXF7EK4KC700000-climate_state_cabin_overheat_protection',
+    'unique_id': 'LRW3F7EK4NC700000-climate_state_cabin_overheat_protection',
     'unit_of_measurement': None,
   })
 # ---
@@ -202,7 +217,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'unknown',
   })
 # ---
 # name: test_climate_alt[climate.test_climate-entry]
@@ -211,6 +226,10 @@
     }),
     'area_id': None,
     'capabilities': dict({
+      'fan_modes': list([
+        'off',
+        'bioweapon',
+      ]),
       'hvac_modes': list([
         <HVACMode.HEAT_COOL: 'heat_cool'>,
         <HVACMode.OFF: 'off'>,
@@ -225,6 +244,7 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -245,9 +265,10 @@
     'original_name': 'Climate',
     'platform': 'teslemetry',
     'previous_unique_id': None,
-    'supported_features': <ClimateEntityFeature: 401>,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 409>,
     'translation_key': <TeslemetryClimateSide.DRIVER: 'driver_temp'>,
-    'unique_id': 'LRWXF7EK4KC700000-driver_temp',
+    'unique_id': 'LRW3F7EK4NC700000-driver_temp',
     'unit_of_measurement': None,
   })
 # ---
@@ -255,6 +276,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 30.0,
+      'fan_mode': 'off',
+      'fan_modes': list([
+        'off',
+        'bioweapon',
+      ]),
       'friendly_name': 'Test Climate',
       'hvac_modes': list([
         <HVACMode.HEAT_COOL: 'heat_cool'>,
@@ -269,7 +295,7 @@
         'dog',
         'camp',
       ]),
-      'supported_features': <ClimateEntityFeature: 401>,
+      'supported_features': <ClimateEntityFeature: 409>,
       'temperature': 22.0,
     }),
     'context': <ANY>,
@@ -280,7 +306,7 @@
     'state': 'off',
   })
 # ---
-# name: test_climate_offline[climate.test_cabin_overheat_protection-entry]
+# name: test_climate_noscope[climate.test_cabin_overheat_protection-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -296,9 +322,10 @@
       'target_temp_step': 5,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
-    'disabled_by': None,
+    'disabled_by': <RegistryEntryDisabler.INTEGRATION: 'integration'>,
     'domain': 'climate',
     'entity_category': None,
     'entity_id': 'climate.test_cabin_overheat_protection',
@@ -316,13 +343,59 @@
     'original_name': 'Cabin overheat protection',
     'platform': 'teslemetry',
     'previous_unique_id': None,
-    'supported_features': <ClimateEntityFeature: 384>,
+    'suggested_object_id': None,
+    'supported_features': 0,
     'translation_key': 'climate_state_cabin_overheat_protection',
-    'unique_id': 'LRWXF7EK4KC700000-climate_state_cabin_overheat_protection',
+    'unique_id': 'LRW3F7EK4NC700000-climate_state_cabin_overheat_protection',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_climate_offline[climate.test_cabin_overheat_protection-state]
+# name: test_climate_noscope[climate.test_climate-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 28.0,
+      'min_temp': 15.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.test_climate',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Climate',
+    'platform': 'teslemetry',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': <TeslemetryClimateSide.DRIVER: 'driver_temp'>,
+    'unique_id': 'LRW3F7EK4NC700000-driver_temp',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_invalid_error[error]
+  'Command returned exception: The data request or command is unknown.'
+# ---
+# name: test_select_streaming[climate.test_cabin_overheat_protection]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': None,
@@ -342,59 +415,13 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'cool',
   })
 # ---
-# name: test_climate_offline[climate.test_climate-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'hvac_modes': list([
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
-        <HVACMode.OFF: 'off'>,
-      ]),
-      'max_temp': 28.0,
-      'min_temp': 15.0,
-      'preset_modes': list([
-        'off',
-        'keep',
-        'dog',
-        'camp',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'climate',
-    'entity_category': None,
-    'entity_id': 'climate.test_climate',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Climate',
-    'platform': 'teslemetry',
-    'previous_unique_id': None,
-    'supported_features': <ClimateEntityFeature: 401>,
-    'translation_key': <TeslemetryClimateSide.DRIVER: 'driver_temp'>,
-    'unique_id': 'LRWXF7EK4KC700000-driver_temp',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_climate_offline[climate.test_climate-state]
+# name: test_select_streaming[climate.test_climate LHD]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': None,
+      'current_temperature': 26.0,
       'friendly_name': 'Test Climate',
       'hvac_modes': list([
         <HVACMode.HEAT_COOL: 'heat_cool'>,
@@ -410,13 +437,42 @@
         'camp',
       ]),
       'supported_features': <ClimateEntityFeature: 401>,
-      'temperature': None,
+      'temperature': 21.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.test_climate',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'heat_cool',
+  })
+# ---
+# name: test_select_streaming[climate.test_climate]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 26.0,
+      'friendly_name': 'Test Climate',
+      'hvac_modes': list([
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 28.0,
+      'min_temp': 15.0,
+      'preset_mode': None,
+      'preset_modes': list([
+        'off',
+        'keep',
+        'dog',
+        'camp',
+      ]),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'temperature': 21.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.test_climate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat_cool',
   })
 # ---

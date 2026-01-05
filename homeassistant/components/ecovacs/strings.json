@@ -7,23 +7,23 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_url": "Invalid URL",
-      "invalid_url_schema_override_rest_url": "Invalid REST URL scheme.\nThe URL should start with `http://` or `https://`.",
       "invalid_url_schema_override_mqtt_url": "Invalid MQTT URL scheme.\nThe URL should start with `mqtt://` or `mqtts://`.",
+      "invalid_url_schema_override_rest_url": "Invalid REST URL scheme.\nThe URL should start with `http://` or `https://`.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "auth": {
         "data": {
-          "country": "Country",
-          "override_rest_url": "REST URL",
+          "country": "[%key:common::config_flow::data::country%]",
           "override_mqtt_url": "MQTT URL",
+          "override_rest_url": "REST URL",
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]",
           "verify_mqtt_certificate": "Verify MQTT SSL certificate"
         },
         "data_description": {
-          "override_rest_url": "Enter the REST URL of your self-hosted instance including the scheme (http/https).",
-          "override_mqtt_url": "Enter the MQTT URL of your self-hosted instance including the scheme (mqtt/mqtts)."
+          "override_mqtt_url": "Enter the MQTT URL of your self-hosted instance including the scheme (mqtt/mqtts).",
+          "override_rest_url": "Enter the REST URL of your self-hosted instance including the scheme (http/https)."
         }
       },
       "user": {
@@ -31,7 +31,7 @@
           "mode": "[%key:common::config_flow::data::mode%]"
         },
         "data_description": {
-          "mode": "Select the mode you want to use to connect to Ecovacs. If you are unsure, select 'Cloud'.\n\nSelect 'Self-hosted' only if you have a working self-hosted instance."
+          "mode": "Select the mode you want to use to connect to Ecovacs. If you are unsure, select **Cloud**.\n\nSelect **Self-hosted** only if you have a working self-hosted instance."
         }
       }
     }
@@ -46,14 +46,23 @@
       "relocate": {
         "name": "Relocate"
       },
+      "reset_lifespan_air_freshener": {
+        "name": "Reset air freshener lifespan"
+      },
       "reset_lifespan_blade": {
         "name": "Reset blade lifespan"
       },
       "reset_lifespan_brush": {
         "name": "Reset main brush lifespan"
       },
+      "reset_lifespan_dust_bag": {
+        "name": "Reset dust bag lifespan"
+      },
       "reset_lifespan_filter": {
         "name": "Reset filter lifespan"
+      },
+      "reset_lifespan_hand_filter": {
+        "name": "Reset hand filter lifespan"
       },
       "reset_lifespan_lens_brush": {
         "name": "Reset lens brush lifespan"
@@ -61,11 +70,26 @@
       "reset_lifespan_round_mop": {
         "name": "Reset round mop lifespan"
       },
+      "reset_lifespan_side_brush": {
+        "name": "Reset side brush lifespan"
+      },
+      "reset_lifespan_station_filter": {
+        "name": "Reset station filter lifespan"
+      },
       "reset_lifespan_unit_care": {
         "name": "Reset unit care lifespan"
       },
-      "reset_lifespan_side_brush": {
-        "name": "Reset side brushes lifespan"
+      "reset_lifespan_uv_sanitizer": {
+        "name": "Reset UV sanitizer lifespan"
+      },
+      "station_action_clean_base": {
+        "name": "Clean base"
+      },
+      "station_action_dry_mop": {
+        "name": "Dry mop"
+      },
+      "station_action_empty_dustbin": {
+        "name": "Empty dustbin"
       }
     },
     "event": {
@@ -91,8 +115,47 @@
       "clean_count": {
         "name": "Clean count"
       },
+      "cut_direction": {
+        "name": "Cut direction"
+      },
       "volume": {
         "name": "Volume"
+      },
+      "water_amount": {
+        "name": "Water flow level"
+      }
+    },
+    "select": {
+      "active_map": {
+        "name": "Active map"
+      },
+      "auto_empty": {
+        "name": "Auto-empty frequency",
+        "state": {
+          "auto": "Auto",
+          "min_10": "10 minutes",
+          "min_15": "15 minutes",
+          "min_25": "25 minutes",
+          "smart": "Smart"
+        }
+      },
+      "water_amount": {
+        "name": "[%key:component::ecovacs::entity::number::water_amount::name%]",
+        "state": {
+          "high": "[%key:common::state::high%]",
+          "low": "[%key:common::state::low%]",
+          "medium": "[%key:common::state::medium%]",
+          "ultrahigh": "Ultrahigh"
+        }
+      },
+      "work_mode": {
+        "name": "Work mode",
+        "state": {
+          "mop": "Mop",
+          "mop_after_vacuum": "Mop after vacuum",
+          "vacuum": "Vacuum",
+          "vacuum_and_mop": "Vacuum & mop"
+        }
       }
     },
     "sensor": {
@@ -104,26 +167,41 @@
           }
         }
       },
+      "lifespan_air_freshener": {
+        "name": "Air freshener lifespan"
+      },
       "lifespan_blade": {
         "name": "Blade lifespan"
       },
       "lifespan_brush": {
         "name": "Main brush lifespan"
       },
+      "lifespan_dust_bag": {
+        "name": "Dust bag lifespan"
+      },
       "lifespan_filter": {
         "name": "Filter lifespan"
+      },
+      "lifespan_hand_filter": {
+        "name": "Hand filter lifespan"
       },
       "lifespan_lens_brush": {
         "name": "Lens brush lifespan"
       },
+      "lifespan_main_brush": {
+        "name": "[%key:component::ecovacs::entity::sensor::lifespan_brush::name%]"
+      },
+      "lifespan_round_mop": {
+        "name": "Round mop lifespan"
+      },
       "lifespan_side_brush": {
-        "name": "Side brushes lifespan"
+        "name": "Side brush lifespan"
       },
       "lifespan_unit_care": {
         "name": "Unit care lifespan"
       },
-      "lifespan_round_mop": {
-        "name": "Round mop lifespan"
+      "lifespan_uv_sanitizer": {
+        "name": "UV sanitizer lifespan"
       },
       "network_ip": {
         "name": "IP address"
@@ -133,6 +211,15 @@
       },
       "network_ssid": {
         "name": "Wi-Fi SSID"
+      },
+      "station_state": {
+        "name": "Station state",
+        "state": {
+          "drying_mop": "Drying mop",
+          "emptying_dustbin": "Emptying dustbin",
+          "idle": "[%key:common::state::idle%]",
+          "washing_mop": "Washing mop"
+        }
       },
       "stats_area": {
         "name": "Area cleaned"
@@ -150,29 +237,12 @@
         "name": "Total cleaning duration"
       }
     },
-    "select": {
-      "water_amount": {
-        "name": "Water flow level",
-        "state": {
-          "high": "High",
-          "low": "Low",
-          "medium": "Medium",
-          "ultrahigh": "Ultrahigh"
-        }
-      },
-      "work_mode": {
-        "name": "Work mode",
-        "state": {
-          "mop": "Mop",
-          "mop_after_vacuum": "Mop after vacuum",
-          "vacuum": "Vacuum",
-          "vacuum_and_mop": "Vacuum & mop"
-        }
-      }
-    },
     "switch": {
       "advanced_mode": {
         "name": "Advanced mode"
+      },
+      "border_spin": {
+        "name": "Border spin"
       },
       "border_switch": {
         "name": "Border switch"
@@ -186,11 +256,11 @@
       "clean_preference": {
         "name": "Clean preference"
       },
-      "cross_map_border_warning": {
-        "name": "Cross map border warning"
-      },
       "continuous_cleaning": {
         "name": "Continuous cleaning"
+      },
+      "cross_map_border_warning": {
+        "name": "Cross map border warning"
       },
       "move_up_warning": {
         "name": "Move up warning"
@@ -209,7 +279,7 @@
             "state": {
               "max": "Max",
               "max_plus": "Max+",
-              "normal": "Normal",
+              "normal": "[%key:common::state::normal%]",
               "quiet": "Quiet"
             }
           },
@@ -221,40 +291,14 @@
     }
   },
   "exceptions": {
+    "vacuum_raw_get_positions_not_supported": {
+      "message": "Retrieving the positions of the chargers and the device itself is not supported"
+    },
     "vacuum_send_command_params_dict": {
       "message": "Params must be a dictionary and not a list"
     },
     "vacuum_send_command_params_required": {
       "message": "Params are required for the command: {command}"
-    },
-    "vacuum_raw_get_positions_not_supported": {
-      "message": "Getting the positions of the chargers and the device itself is not supported"
-    }
-  },
-  "issues": {
-    "deprecated_yaml_import_issue_cannot_connect": {
-      "title": "The Ecovacs YAML configuration import failed",
-      "description": "Configuring Ecovacs using YAML is being removed but there was a connection error when trying to import the YAML configuration.\n\nPlease verify that you have a stable internet connection and restart Home Assistant to try again or remove the Ecovacs YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
-    },
-    "deprecated_yaml_import_issue_invalid_auth": {
-      "title": "The Ecovacs YAML configuration import failed",
-      "description": "Configuring Ecovacs using YAML is being removed but there was an authentication error when trying to import the YAML configuration.\n\nCorrect the YAML configuration and restart Home Assistant to try again or remove the Ecovacs YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
-    },
-    "deprecated_yaml_import_issue_unknown": {
-      "title": "The Ecovacs YAML configuration import failed",
-      "description": "Configuring Ecovacs using YAML is being removed but there was an unknown error when trying to import the YAML configuration.\n\nEnsure the YAML configuration is correct and restart Home Assistant to try again or remove the Ecovacs YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
-    },
-    "deprecated_yaml_import_issue_invalid_country_length": {
-      "title": "The Ecovacs YAML configuration import failed",
-      "description": "Configuring Ecovacs using YAML is being removed but there is an invalid country specified in the YAML configuration.\n\nPlease change the country to the [Alpha-2 code of your country]({countries_url}) and restart Home Assistant to try again or remove the Ecovacs YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
-    },
-    "deprecated_yaml_import_issue_invalid_continent_length": {
-      "title": "The Ecovacs YAML configuration import failed",
-      "description": "Configuring Ecovacs using YAML is being removed but there is an invalid continent specified in the YAML configuration.\n\nPlease correct the continent to be one of {continent_list} and restart Home Assistant to try again or remove the Ecovacs YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
-    },
-    "deprecated_yaml_import_issue_continent_not_match": {
-      "title": "The Ecovacs YAML configuration import failed",
-      "description": "Configuring Ecovacs using YAML is being removed but there is an unexpected continent specified in the YAML configuration.\n\nFrom the given country, the continent \"{continent}\" is expected. Change the continent and restart Home Assistant to try again or remove the Ecovacs YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually.\n\nIf the contintent \"{continent}\" is not applicable, please open an issue on [GitHub]({github_issue_url})."
     }
   },
   "selector": {
@@ -267,8 +311,8 @@
   },
   "services": {
     "raw_get_positions": {
-      "name": "Get raw positions",
-      "description": "Get the raw response for the positions of the chargers and the device itself."
+      "description": "Retrieves a raw response containing the positions of the chargers and the device itself.",
+      "name": "Get raw positions"
     }
   }
 }

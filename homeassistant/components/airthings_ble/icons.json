@@ -4,10 +4,10 @@
       "radon_1day_avg": {
         "default": "mdi:radioactive"
       },
-      "radon_longterm_avg": {
+      "radon_1day_level": {
         "default": "mdi:radioactive"
       },
-      "radon_1day_level": {
+      "radon_longterm_avg": {
         "default": "mdi:radioactive"
       },
       "radon_longterm_level": {

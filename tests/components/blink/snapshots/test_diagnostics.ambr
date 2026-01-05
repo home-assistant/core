@@ -28,7 +28,7 @@
       'data': dict({
         'account_id': 654321,
         'client_id': 123456,
-        'device_id': 'Home Assistant',
+        'hardware_id': 'Home Assistant',
         'host': 'u034.immedia-semi.com',
         'password': '**REDACTED**',
         'region_id': 'u034',
@@ -38,6 +38,8 @@
         'username': '**REDACTED**',
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'blink',
       'minor_version': 1,
       'options': dict({
@@ -46,9 +48,11 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': 'Mock Title',
       'unique_id': None,
-      'version': 3,
+      'version': 4,
     }),
   })
 # ---

@@ -5,11 +5,11 @@ from unittest.mock import patch
 from tesla_wall_connector.exceptions import WallConnectorConnectionError
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp
 from homeassistant.components.tesla_wall_connector.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from tests.common import MockConfigEntry
 
@@ -113,7 +113,7 @@ async def test_dhcp_can_finish(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
-        data=dhcp.DhcpServiceInfo(
+        data=DhcpServiceInfo(
             hostname="teslawallconnector_abc",
             ip="1.2.3.4",
             macaddress="aadc44271212",
@@ -146,7 +146,7 @@ async def test_dhcp_already_exists(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_DHCP},
-        data=dhcp.DhcpServiceInfo(
+        data=DhcpServiceInfo(
             hostname="teslawallconnector_aabbcc",
             ip="1.2.3.4",
             macaddress="aabbccddeeff",
@@ -170,7 +170,7 @@ async def test_dhcp_error_from_wall_connector(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 hostname="teslawallconnector_aabbcc",
                 ip="1.2.3.4",
                 macaddress="aabbccddeeff",

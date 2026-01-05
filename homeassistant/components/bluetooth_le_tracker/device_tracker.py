@@ -13,7 +13,7 @@ from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.match import BluetoothCallbackMatcher
 from homeassistant.components.device_tracker import (
     CONF_TRACK_NEW,
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     SCAN_INTERVAL,
     SourceType,
 )
@@ -24,10 +24,10 @@ from homeassistant.components.device_tracker.legacy import (
 )
 from homeassistant.const import CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +42,7 @@ DATA_BLE_ADAPTER = "ADAPTER"
 BLE_PREFIX = "BLE_"
 MIN_SEEN_NEW = 5
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_TRACK_BATTERY, default=False): cv.boolean,
         vol.Optional(
@@ -194,7 +194,7 @@ async def async_setup_scanner(  # noqa: C901
 
         if track_new:
             if mac not in devs_to_track and mac not in devs_no_track:
-                _LOGGER.info("Discovered Bluetooth LE device %s", mac)
+                _LOGGER.debug("Discovered Bluetooth LE device %s", mac)
                 hass.async_create_task(
                     async_see_device(mac, service_info.name, new_device=True)
                 )

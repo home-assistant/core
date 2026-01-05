@@ -1,11 +1,11 @@
 """Test the CalDAV config flow."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, patch
 
 from caldav.lib.error import AuthorizationError, DAVError
 import pytest
 import requests
-from typing_extensions import Generator
 
 from homeassistant import config_entries
 from homeassistant.components.caldav.const import DOMAIN
@@ -106,13 +106,7 @@ async def test_reauth_success(
 
     config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": config_entry.entry_id,
-        },
-    )
+    result = await config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
@@ -147,13 +141,7 @@ async def test_reauth_failure(
 
     config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": config_entry.entry_id,
-        },
-    )
+    result = await config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 

@@ -1,12 +1,25 @@
 """The tests for the apprise notification platform."""
 
+import logging
 from pathlib import Path
 from unittest.mock import MagicMock, patch
+
+import pytest
 
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 BASE_COMPONENT = "notify"
+
+
+@pytest.fixture(autouse=True)
+def reset_log_level():
+    """Set and reset log level after each test case."""
+    logger = logging.getLogger("apprise")
+    orig_level = logger.level
+    logger.setLevel(logging.DEBUG)
+    yield
+    logger.setLevel(orig_level)
 
 
 async def test_apprise_config_load_fail01(hass: HomeAssistant) -> None:

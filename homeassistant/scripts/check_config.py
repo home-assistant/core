@@ -7,10 +7,14 @@ import asyncio
 from collections import OrderedDict
 from collections.abc import Callable, Mapping, Sequence
 from glob import glob
+import json
 import logging
 import os
 from typing import Any
 from unittest.mock import patch
+
+from annotatedyaml import loader as yaml_loader
+from annotatedyaml.loader import Secrets
 
 from homeassistant import core, loader
 from homeassistant.config import get_default_config_dir
@@ -23,18 +27,16 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 from homeassistant.helpers.check_config import async_check_ha_config_file
-from homeassistant.util.yaml import Secrets
-import homeassistant.util.yaml.loader as yaml_loader
 
 # mypy: allow-untyped-calls, allow-untyped-defs
 
-REQUIREMENTS = ("colorlog==6.8.2",)
+REQUIREMENTS = ("colorlog==6.10.1",)
 
 _LOGGER = logging.getLogger(__name__)
 MOCKS: dict[str, tuple[str, Callable]] = {
-    "load": ("homeassistant.util.yaml.loader.load_yaml", yaml_loader.load_yaml),
+    "load": ("annotatedyaml.loader.load_yaml", yaml_loader.load_yaml),
     "load*": ("homeassistant.config.load_yaml_dict", yaml_loader.load_yaml_dict),
-    "secrets": ("homeassistant.util.yaml.loader.secret_yaml", yaml_loader.secret_yaml),
+    "secrets": ("annotatedyaml.loader.secret_yaml", yaml_loader.secret_yaml),
 }
 
 PATCHES: dict[str, Any] = {}
@@ -46,8 +48,7 @@ WARNING_STR = "General Warnings"
 
 def color(the_color, *args, reset=None):
     """Color helper."""
-    # pylint: disable-next=import-outside-toplevel
-    from colorlog.escape_codes import escape_codes, parse_colors
+    from colorlog.escape_codes import escape_codes, parse_colors  # noqa: PLC0415
 
     try:
         if not args:
@@ -82,16 +83,61 @@ def run(script_args: list) -> int:
     parser.add_argument(
         "-s", "--secrets", action="store_true", help="Show secret information"
     )
+    parser.add_argument("--json", action="store_true", help="Output JSON format")
+    parser.add_argument(
+        "--fail-on-warnings",
+        action="store_true",
+        help="Exit non-zero if warnings are present",
+    )
 
+    # Parse all args including --config & --script. Do not use script_args.
+    # Example: python -m homeassistant --config "." --script check_config
     args, unknown = parser.parse_known_args()
     if unknown:
         print(color("red", "Unknown arguments:", ", ".join(unknown)))
 
     config_dir = os.path.join(os.getcwd(), args.config)
 
-    print(color("bold", "Testing configuration at", config_dir))
+    if not args.json:
+        print(color("bold", "Testing configuration at", config_dir))
 
     res = check(config_dir, args.secrets)
+
+    # JSON output branch
+    if args.json:
+        json_object = {
+            "config_dir": config_dir,
+            "total_errors": sum(len(errors) for errors in res["except"].values()),
+            "total_warnings": sum(len(warnings) for warnings in res["warn"].values()),
+            "errors": res["except"],
+            "warnings": res["warn"],
+            "components": list(res["components"].keys()),
+        }
+
+        # Include secrets information if requested
+        if args.secrets:
+            # Build list of missing secrets (referenced but not found)
+            missing_secrets = [
+                key for key, val in res["secrets"].items() if val is None
+            ]
+
+            # Build list of used secrets (found and used)
+            used_secrets = [
+                key for key, val in res["secrets"].items() if val is not None
+            ]
+
+            json_object["secrets"] = {
+                "secret_files": res["secret_cache"],
+                "used_secrets": used_secrets,
+                "missing_secrets": missing_secrets,
+                "total_secrets": len(res["secrets"]),
+                "total_missing": len(missing_secrets),
+            }
+
+        print(json.dumps(json_object, indent=2))
+
+        # Determine exit code for JSON mode
+        return 1 if res["except"] or (args.fail_on_warnings and res["warn"]) else 0
 
     domain_info: list[str] = []
     if args.info:
@@ -165,7 +211,8 @@ def run(script_args: list) -> int:
                 continue
             print(" -", skey + ":", sval)
 
-    return len(res["except"])
+    # Determine final exit code
+    return 1 if res["except"] or (args.fail_on_warnings and res["warn"]) else 0
 
 
 def check(config_dir, secrets=False):

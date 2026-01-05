@@ -5,11 +5,20 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from pytrafikverket.exceptions import InvalidAuthentication, NoCameraFound, UnknownError
-from pytrafikverket.trafikverket_camera import CameraInfo, TrafikverketCamera
+from pytrafikverket import (
+    CameraInfoModel,
+    InvalidAuthentication,
+    NoCameraFound,
+    TrafikverketCamera,
+    UnknownError,
+)
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_API_KEY, CONF_ID, CONF_LOCATION
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
@@ -28,16 +37,15 @@ class TVCameraConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 3
 
-    entry: ConfigEntry | None
-    cameras: list[CameraInfo]
+    cameras: list[CameraInfoModel]
     api_key: str
 
     async def validate_input(
         self, sensor_api: str, location: str
-    ) -> tuple[dict[str, str], list[CameraInfo] | None]:
+    ) -> tuple[dict[str, str], list[CameraInfoModel] | None]:
         """Validate input from user input."""
         errors: dict[str, str] = {}
-        cameras: list[CameraInfo] | None = None
+        cameras: list[CameraInfoModel] | None = None
 
         web_session = async_get_clientsession(self.hass)
         camera_api = TrafikverketCamera(web_session, sensor_api)
@@ -57,7 +65,6 @@ class TVCameraConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle re-authentication with Trafikverket."""
 
-        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -69,19 +76,13 @@ class TVCameraConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input:
             api_key = user_input[CONF_API_KEY]
 
-            assert self.entry is not None
-            errors, _ = await self.validate_input(api_key, self.entry.data[CONF_ID])
+            reauth_entry = self._get_reauth_entry()
+            errors, _ = await self.validate_input(api_key, reauth_entry.data[CONF_ID])
 
             if not errors:
-                self.hass.config_entries.async_update_entry(
-                    self.entry,
-                    data={
-                        **self.entry.data,
-                        CONF_API_KEY: api_key,
-                    },
+                return self.async_update_reload_and_abort(
+                    reauth_entry, data_updates={CONF_API_KEY: api_key}
                 )
-                await self.hass.config_entries.async_reload(self.entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="reauth_confirm",
@@ -90,6 +91,49 @@ class TVCameraConfigFlow(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_API_KEY): TextSelector(),
                 }
             ),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle re-configuration with Trafikverket."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input:
+            api_key = user_input[CONF_API_KEY]
+            location = user_input[CONF_LOCATION]
+
+            errors, cameras = await self.validate_input(api_key, location)
+
+            if not errors and cameras:
+                if len(cameras) > 1:
+                    self.cameras = cameras
+                    self.api_key = api_key
+                    return await self.async_step_multiple_cameras()
+                await self.async_set_unique_id(f"{DOMAIN}-{cameras[0].camera_id}")
+                self._abort_if_unique_id_configured()
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    unique_id=f"{DOMAIN}-{cameras[0].camera_id}",
+                    title=cameras[0].camera_name or "Trafikverket Camera",
+                    data={CONF_API_KEY: api_key, CONF_ID: cameras[0].camera_id},
+                )
+
+        schema = self.add_suggested_values_to_schema(
+            vol.Schema(
+                {
+                    vol.Required(CONF_API_KEY): TextSelector(),
+                    vol.Required(CONF_LOCATION): TextSelector(),
+                }
+            ),
+            {**reconfigure_entry.data, **(user_input or {})},
+        )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=schema,
             errors=errors,
         )
 
@@ -139,6 +183,16 @@ class TVCameraConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
             if not errors and cameras:
+                if self.source == SOURCE_RECONFIGURE:
+                    return self.async_update_reload_and_abort(
+                        self._get_reconfigure_entry(),
+                        unique_id=f"{DOMAIN}-{cameras[0].camera_id}",
+                        title=cameras[0].camera_name or "Trafikverket Camera",
+                        data={
+                            CONF_API_KEY: self.api_key,
+                            CONF_ID: cameras[0].camera_id,
+                        },
+                    )
                 await self.async_set_unique_id(f"{DOMAIN}-{cameras[0].camera_id}")
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(

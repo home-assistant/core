@@ -1,11 +1,16 @@
 {
   "entity": {
+    "select": {
+      "ecosmart": {
+        "default": "mdi:solar-power"
+      }
+    },
     "sensor": {
-      "charging_speed": {
-        "default": "mdi:speedometer"
-      },
       "added_range": {
         "default": "mdi:map-marker-distance"
+      },
+      "charging_speed": {
+        "default": "mdi:speedometer"
       },
       "cost": {
         "default": "mdi:ev-station"

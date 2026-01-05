@@ -131,34 +131,6 @@ def test_json_loads_object() -> None:
         json_loads_object("null")
 
 
-async def test_deprecated_test_find_unserializable_data(
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test deprecated test_find_unserializable_data logs a warning."""
-    # pylint: disable-next=hass-deprecated-import,import-outside-toplevel
-    from homeassistant.util.json import find_paths_unserializable_data
-
-    find_paths_unserializable_data(1)
-    assert (
-        "uses find_paths_unserializable_data from homeassistant.util.json"
-        in caplog.text
-    )
-    assert "should be updated to use homeassistant.helpers.json module" in caplog.text
-
-
-async def test_deprecated_save_json(
-    caplog: pytest.LogCaptureFixture, tmp_path: Path
-) -> None:
-    """Test deprecated save_json logs a warning."""
-    # pylint: disable-next=hass-deprecated-import,import-outside-toplevel
-    from homeassistant.util.json import save_json
-
-    fname = tmp_path / "test1.json"
-    save_json(fname, TEST_JSON_A)
-    assert "uses save_json from homeassistant.util.json" in caplog.text
-    assert "should be updated to use homeassistant.helpers.json module" in caplog.text
-
-
 async def test_loading_derived_class() -> None:
     """Test loading data from classes derived from str."""
 

@@ -1,6 +1,6 @@
 """Tests for the diagnostics data provided by the A. O. Smith integration."""
 
-from syrupy import SnapshotAssertion
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
 

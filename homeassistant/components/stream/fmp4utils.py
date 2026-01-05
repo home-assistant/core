@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from typing import TYPE_CHECKING
-
-from typing_extensions import Generator
 
 from homeassistant.exceptions import HomeAssistantError
 
@@ -147,9 +146,10 @@ def get_codec_string(mp4_bytes: bytes) -> str:
     return ",".join(codecs)
 
 
-def find_moov(mp4_io: BufferedIOBase) -> int:
+def find_moov(mp4_io: BufferedIOBase) -> int:  # noqa: RET503
     """Find location of moov atom in a BufferedIOBase mp4."""
     index = 0
+    # Ruff doesn't understand this loop - the exception is always raised at the end
     while 1:
         mp4_io.seek(index)
         box_header = mp4_io.read(8)

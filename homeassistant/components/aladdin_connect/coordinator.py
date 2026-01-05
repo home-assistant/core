@@ -1,4 +1,6 @@
-"""Define an object to coordinate fetching Aladdin Connect data."""
+"""Coordinator for Aladdin Connect integration."""
+
+from __future__ import annotations
 
 from datetime import timedelta
 import logging
@@ -6,33 +8,43 @@ import logging
 from genie_partner_sdk.client import AladdinConnectClient
 from genie_partner_sdk.model import GarageDoor
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN
-
 _LOGGER = logging.getLogger(__name__)
+type AladdinConnectConfigEntry = ConfigEntry[dict[str, AladdinConnectCoordinator]]
+SCAN_INTERVAL = timedelta(seconds=15)
 
 
-class AladdinConnectCoordinator(DataUpdateCoordinator[None]):
-    """Aladdin Connect Data Update Coordinator."""
+class AladdinConnectCoordinator(DataUpdateCoordinator[GarageDoor]):
+    """Coordinator for Aladdin Connect integration."""
 
-    def __init__(self, hass: HomeAssistant, acc: AladdinConnectClient) -> None:
-        """Initialize."""
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: AladdinConnectConfigEntry,
+        client: AladdinConnectClient,
+        garage_door: GarageDoor,
+    ) -> None:
+        """Initialize the coordinator."""
         super().__init__(
             hass,
             logger=_LOGGER,
-            name=DOMAIN,
-            update_interval=timedelta(seconds=15),
+            config_entry=entry,
+            name="Aladdin Connect Coordinator",
+            update_interval=SCAN_INTERVAL,
         )
-        self.acc = acc
-        self.doors: list[GarageDoor] = []
+        self.client = client
+        self.data = garage_door
 
-    async def async_setup(self) -> None:
-        """Fetch initial data."""
-        self.doors = await self.acc.get_doors()
-
-    async def _async_update_data(self) -> None:
-        """Fetch data from API endpoint."""
-        for door in self.doors:
-            await self.acc.update_door(door.device_id, door.door_number)
+    async def _async_update_data(self) -> GarageDoor:
+        """Fetch data from the Aladdin Connect API."""
+        await self.client.update_door(self.data.device_id, self.data.door_number)
+        self.data.status = self.client.get_door_status(
+            self.data.device_id, self.data.door_number
+        )
+        self.data.battery_level = self.client.get_battery_status(
+            self.data.device_id, self.data.door_number
+        )
+        return self.data

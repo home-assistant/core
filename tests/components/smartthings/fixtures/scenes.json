@@ -1,0 +1,34 @@
+{
+  "items": [
+    {
+      "sceneId": "743b0f37-89b8-476c-aedf-eea8ad8cd29d",
+      "sceneName": "Away",
+      "sceneIcon": "203",
+      "sceneColor": null,
+      "locationId": "88a3a314-f0c8-40b4-bb44-44ba06c9c42f",
+      "createdBy": "12d4af93-cb68-b108-87f5-625437d7371f",
+      "createdDate": 1738964737000,
+      "lastUpdatedDate": 1738964737000,
+      "lastExecutedDate": null,
+      "editable": false,
+      "apiVersion": "20200501"
+    },
+    {
+      "sceneId": "f3341e8b-9b32-4509-af2e-4f7c952e98ba",
+      "sceneName": "Home",
+      "sceneIcon": "204",
+      "sceneColor": null,
+      "locationId": "88a3a314-f0c8-40b4-bb44-44ba06c9c42f",
+      "createdBy": "12d4af93-cb68-b108-87f5-625437d7371f",
+      "createdDate": 1738964731000,
+      "lastUpdatedDate": 1738964731000,
+      "lastExecutedDate": null,
+      "editable": false,
+      "apiVersion": "20200501"
+    }
+  ],
+  "_links": {
+    "next": null,
+    "previous": null
+  }
+}

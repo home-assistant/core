@@ -27,10 +27,11 @@ from homeassistant.const import (
     CONF_STATE,
 )
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.template import Template
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolSchemaType
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage,
@@ -42,54 +43,53 @@ from .config import MQTT_RW_SCHEMA
 from .const import (
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
+    CONF_DIRECTION_COMMAND_TEMPLATE,
+    CONF_DIRECTION_COMMAND_TOPIC,
+    CONF_DIRECTION_STATE_TOPIC,
+    CONF_DIRECTION_VALUE_TEMPLATE,
+    CONF_OSCILLATION_COMMAND_TEMPLATE,
+    CONF_OSCILLATION_COMMAND_TOPIC,
+    CONF_OSCILLATION_STATE_TOPIC,
+    CONF_OSCILLATION_VALUE_TEMPLATE,
+    CONF_PAYLOAD_OSCILLATION_OFF,
+    CONF_PAYLOAD_OSCILLATION_ON,
+    CONF_PAYLOAD_RESET_PERCENTAGE,
+    CONF_PAYLOAD_RESET_PRESET_MODE,
+    CONF_PERCENTAGE_COMMAND_TEMPLATE,
+    CONF_PERCENTAGE_COMMAND_TOPIC,
+    CONF_PERCENTAGE_STATE_TOPIC,
+    CONF_PERCENTAGE_VALUE_TEMPLATE,
+    CONF_PRESET_MODE_COMMAND_TEMPLATE,
+    CONF_PRESET_MODE_COMMAND_TOPIC,
+    CONF_PRESET_MODE_STATE_TOPIC,
+    CONF_PRESET_MODE_VALUE_TEMPLATE,
+    CONF_PRESET_MODES_LIST,
+    CONF_SPEED_RANGE_MAX,
+    CONF_SPEED_RANGE_MIN,
     CONF_STATE_TOPIC,
     CONF_STATE_VALUE_TEMPLATE,
+    DEFAULT_PAYLOAD_OFF,
+    DEFAULT_PAYLOAD_ON,
+    DEFAULT_PAYLOAD_OSCILLATE_OFF,
+    DEFAULT_PAYLOAD_OSCILLATE_ON,
+    DEFAULT_PAYLOAD_RESET,
+    DEFAULT_SPEED_RANGE_MAX,
+    DEFAULT_SPEED_RANGE_MIN,
     PAYLOAD_NONE,
 )
-from .mixins import MqttEntity, async_setup_entity_entry_helper
+from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import (
     MqttCommandTemplate,
     MqttValueTemplate,
     PublishPayloadType,
     ReceiveMessage,
-    ReceivePayloadType,
 )
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_publish_topic, valid_subscribe_topic
 
-CONF_DIRECTION_STATE_TOPIC = "direction_state_topic"
-CONF_DIRECTION_COMMAND_TOPIC = "direction_command_topic"
-CONF_DIRECTION_VALUE_TEMPLATE = "direction_value_template"
-CONF_DIRECTION_COMMAND_TEMPLATE = "direction_command_template"
-CONF_PERCENTAGE_STATE_TOPIC = "percentage_state_topic"
-CONF_PERCENTAGE_COMMAND_TOPIC = "percentage_command_topic"
-CONF_PERCENTAGE_VALUE_TEMPLATE = "percentage_value_template"
-CONF_PERCENTAGE_COMMAND_TEMPLATE = "percentage_command_template"
-CONF_PAYLOAD_RESET_PERCENTAGE = "payload_reset_percentage"
-CONF_SPEED_RANGE_MIN = "speed_range_min"
-CONF_SPEED_RANGE_MAX = "speed_range_max"
-CONF_PRESET_MODE_STATE_TOPIC = "preset_mode_state_topic"
-CONF_PRESET_MODE_COMMAND_TOPIC = "preset_mode_command_topic"
-CONF_PRESET_MODE_VALUE_TEMPLATE = "preset_mode_value_template"
-CONF_PRESET_MODE_COMMAND_TEMPLATE = "preset_mode_command_template"
-CONF_PRESET_MODES_LIST = "preset_modes"
-CONF_PAYLOAD_RESET_PRESET_MODE = "payload_reset_preset_mode"
-CONF_OSCILLATION_STATE_TOPIC = "oscillation_state_topic"
-CONF_OSCILLATION_COMMAND_TOPIC = "oscillation_command_topic"
-CONF_OSCILLATION_VALUE_TEMPLATE = "oscillation_value_template"
-CONF_OSCILLATION_COMMAND_TEMPLATE = "oscillation_command_template"
-CONF_PAYLOAD_OSCILLATION_ON = "payload_oscillation_on"
-CONF_PAYLOAD_OSCILLATION_OFF = "payload_oscillation_off"
+PARALLEL_UPDATES = 0
 
 DEFAULT_NAME = "MQTT Fan"
-DEFAULT_PAYLOAD_ON = "ON"
-DEFAULT_PAYLOAD_OFF = "OFF"
-DEFAULT_PAYLOAD_RESET = "None"
-DEFAULT_SPEED_RANGE_MIN = 1
-DEFAULT_SPEED_RANGE_MAX = 100
-
-OSCILLATE_ON_PAYLOAD = "oscillate_on"
-OSCILLATE_OFF_PAYLOAD = "oscillate_off"
 
 MQTT_FAN_ATTRIBUTES_BLOCKED = frozenset(
     {
@@ -163,10 +163,10 @@ _PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
         vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
         vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
         vol.Optional(
-            CONF_PAYLOAD_OSCILLATION_OFF, default=OSCILLATE_OFF_PAYLOAD
+            CONF_PAYLOAD_OSCILLATION_OFF, default=DEFAULT_PAYLOAD_OSCILLATE_OFF
         ): cv.string,
         vol.Optional(
-            CONF_PAYLOAD_OSCILLATION_ON, default=OSCILLATE_ON_PAYLOAD
+            CONF_PAYLOAD_OSCILLATION_ON, default=DEFAULT_PAYLOAD_OSCILLATE_ON
         ): cv.string,
         vol.Optional(CONF_STATE_VALUE_TEMPLATE): cv.template,
     }
@@ -188,7 +188,7 @@ DISCOVERY_SCHEMA = vol.All(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MQTT fan through YAML and through MQTT discovery."""
     async_setup_entity_entry_helper(
@@ -226,7 +226,7 @@ class MqttFan(MqttEntity, FanEntity):
     _speed_range: tuple[int, int]
 
     @staticmethod
-    def config_schema() -> vol.Schema:
+    def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
@@ -289,7 +289,9 @@ class MqttFan(MqttEntity, FanEntity):
             optimistic or self._topic[CONF_PRESET_MODE_STATE_TOPIC] is None
         )
 
-        self._attr_supported_features = FanEntityFeature(0)
+        self._attr_supported_features = (
+            FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
+        )
         self._attr_supported_features |= (
             self._topic[CONF_OSCILLATION_COMMAND_TOPIC] is not None
             and FanEntityFeature.OSCILLATE

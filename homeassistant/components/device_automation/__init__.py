@@ -15,7 +15,7 @@ import voluptuous as vol
 import voluptuous_serialize
 
 from homeassistant.components import websocket_api
-from homeassistant.components.websocket_api.connection import ActiveConnection
+from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_ID,
@@ -29,7 +29,7 @@ from homeassistant.helpers import (
     device_registry as dr,
     entity_registry as er,
 )
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, VolSchemaType
 from homeassistant.loader import IntegrationNotFound
 from homeassistant.requirements import (
     RequirementsNotFound,
@@ -340,7 +340,7 @@ def async_get_entity_registry_entry_or_raise(
 
 @callback
 def async_validate_entity_schema(
-    hass: HomeAssistant, config: ConfigType, schema: vol.Schema
+    hass: HomeAssistant, config: ConfigType, schema: VolSchemaType
 ) -> ConfigType:
     """Validate schema and resolve entity registry entry id to entity_id."""
     config = schema(config)
@@ -481,8 +481,11 @@ async def websocket_device_automation_get_condition_capabilities(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "device_automation/trigger/capabilities",
-        vol.Required("trigger"): DEVICE_TRIGGER_BASE_SCHEMA.extend(
-            {}, extra=vol.ALLOW_EXTRA
+        # The frontend responds with `trigger` as key, while the
+        # `DEVICE_TRIGGER_BASE_SCHEMA` expects `platform1` as key.
+        vol.Required("trigger"): vol.All(
+            cv._trigger_pre_validator,  # noqa: SLF001
+            DEVICE_TRIGGER_BASE_SCHEMA.extend({}, extra=vol.ALLOW_EXTRA),
         ),
     }
 )

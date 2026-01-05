@@ -3,9 +3,10 @@
 from unittest.mock import patch
 
 import pytest
-from pyuptimerobot import UptimeRobotAuthenticationException
+from pyuptimerobot import UptimeRobotAuthenticationException, UptimeRobotException
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.uptimerobot.const import COORDINATOR_UPDATE_INTERVAL
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -14,10 +15,13 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util import dt as dt_util
 
 from .common import (
     MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA,
     MOCK_UPTIMEROBOT_MONITOR,
+    MOCK_UPTIMEROBOT_MONITOR_2,
     MOCK_UPTIMEROBOT_MONITOR_PAUSED,
     UPTIMEROBOT_SWITCH_TEST_ENTITY,
     MockApiResponseKey,
@@ -25,15 +29,14 @@ from .common import (
     setup_uptimerobot_integration,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_presentation(hass: HomeAssistant) -> None:
     """Test the presentation of UptimeRobot switches."""
     await setup_uptimerobot_integration(hass)
 
-    entity = hass.states.get(UPTIMEROBOT_SWITCH_TEST_ENTITY)
-
+    assert (entity := hass.states.get(UPTIMEROBOT_SWITCH_TEST_ENTITY)) is not None
     assert entity.state == STATE_ON
     assert entity.attributes["target"] == MOCK_UPTIMEROBOT_MONITOR["url"]
 
@@ -66,12 +69,12 @@ async def test_switch_off(hass: HomeAssistant) -> None:
             blocking=True,
         )
 
-    entity = hass.states.get(UPTIMEROBOT_SWITCH_TEST_ENTITY)
+    assert (entity := hass.states.get(UPTIMEROBOT_SWITCH_TEST_ENTITY)) is not None
     assert entity.state == STATE_OFF
 
 
 async def test_switch_on(hass: HomeAssistant) -> None:
-    """Test entity unaviable on update failure."""
+    """Test entity unavailable on update failure."""
 
     mock_entry = MockConfigEntry(**MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA)
     mock_entry.add_to_hass(hass)
@@ -96,7 +99,7 @@ async def test_switch_on(hass: HomeAssistant) -> None:
             blocking=True,
         )
 
-        entity = hass.states.get(UPTIMEROBOT_SWITCH_TEST_ENTITY)
+        assert (entity := hass.states.get(UPTIMEROBOT_SWITCH_TEST_ENTITY)) is not None
         assert entity.state == STATE_ON
 
 
@@ -106,7 +109,7 @@ async def test_authentication_error(
     """Test authentication error turning switch on/off."""
     await setup_uptimerobot_integration(hass)
 
-    entity = hass.states.get(UPTIMEROBOT_SWITCH_TEST_ENTITY)
+    assert (entity := hass.states.get(UPTIMEROBOT_SWITCH_TEST_ENTITY)) is not None
     assert entity.state == STATE_ON
 
     with (
@@ -128,18 +131,20 @@ async def test_authentication_error(
         assert config_entry_reauth.assert_called
 
 
-async def test_refresh_data(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
-    """Test authentication error turning switch on/off."""
+async def test_action_execution_failure(hass: HomeAssistant) -> None:
+    """Test turning switch on/off failure."""
     await setup_uptimerobot_integration(hass)
 
-    entity = hass.states.get(UPTIMEROBOT_SWITCH_TEST_ENTITY)
+    assert (entity := hass.states.get(UPTIMEROBOT_SWITCH_TEST_ENTITY)) is not None
     assert entity.state == STATE_ON
 
-    with patch(
-        "homeassistant.helpers.update_coordinator.DataUpdateCoordinator.async_request_refresh"
-    ) as coordinator_refresh:
+    with (
+        patch(
+            "pyuptimerobot.UptimeRobot.async_edit_monitor",
+            side_effect=UptimeRobotException,
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
@@ -147,27 +152,62 @@ async def test_refresh_data(
             blocking=True,
         )
 
-        assert coordinator_refresh.assert_called
+    assert exc_info.value.translation_domain == "uptimerobot"
+    assert exc_info.value.translation_key == "api_exception"
+    assert exc_info.value.translation_placeholders == {
+        "error": "UptimeRobotException()"
+    }
 
 
-async def test_switch_api_failure(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
-) -> None:
+async def test_switch_api_failure(hass: HomeAssistant) -> None:
     """Test general exception turning switch on/off."""
     await setup_uptimerobot_integration(hass)
 
-    entity = hass.states.get(UPTIMEROBOT_SWITCH_TEST_ENTITY)
+    assert (entity := hass.states.get(UPTIMEROBOT_SWITCH_TEST_ENTITY)) is not None
     assert entity.state == STATE_ON
 
     with patch(
         "pyuptimerobot.UptimeRobot.async_edit_monitor",
         return_value=mock_uptimerobot_api_response(key=MockApiResponseKey.ERROR),
     ):
-        await hass.services.async_call(
-            SWITCH_DOMAIN,
-            SERVICE_TURN_OFF,
-            {ATTR_ENTITY_ID: UPTIMEROBOT_SWITCH_TEST_ENTITY},
-            blocking=True,
-        )
+        with pytest.raises(HomeAssistantError) as exc_info:
+            await hass.services.async_call(
+                SWITCH_DOMAIN,
+                SERVICE_TURN_OFF,
+                {ATTR_ENTITY_ID: UPTIMEROBOT_SWITCH_TEST_ENTITY},
+                blocking=True,
+            )
 
-        assert "API exception" in caplog.text
+        assert exc_info.value.translation_domain == "uptimerobot"
+        assert exc_info.value.translation_key == "api_exception"
+        assert exc_info.value.translation_placeholders == {
+            "error": "test error from API."
+        }
+
+
+async def test_switch_dynamic(hass: HomeAssistant) -> None:
+    """Test switch dynamically added."""
+    await setup_uptimerobot_integration(hass)
+
+    assert (entity := hass.states.get(UPTIMEROBOT_SWITCH_TEST_ENTITY))
+    assert entity.state == STATE_ON
+
+    entity_id_2 = "switch.test_monitor_2"
+
+    with patch(
+        "pyuptimerobot.UptimeRobot.async_get_monitors",
+        return_value=mock_uptimerobot_api_response(
+            data=[
+                MOCK_UPTIMEROBOT_MONITOR,
+                MOCK_UPTIMEROBOT_MONITOR_2,
+            ]
+        ),
+    ):
+        async_fire_time_changed(hass, dt_util.utcnow() + COORDINATOR_UPDATE_INTERVAL)
+        await hass.async_block_till_done()
+
+        assert (entity := hass.states.get(UPTIMEROBOT_SWITCH_TEST_ENTITY))
+        assert entity.state == STATE_ON
+
+        assert (entity := hass.states.get(entity_id_2))
+        assert entity.state == STATE_ON

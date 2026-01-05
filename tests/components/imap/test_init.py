@@ -1,6 +1,7 @@
 """Test the imap entry initialization."""
 
 import asyncio
+from base64 import b64decode
 from datetime import datetime, timedelta, timezone
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, call, patch
@@ -20,6 +21,7 @@ from homeassistant.util.dt import utcnow
 from .const import (
     BAD_RESPONSE,
     EMPTY_SEARCH_RESPONSE,
+    EMPTY_SEARCH_RESPONSE_ALT,
     TEST_BADLY_ENCODED_CONTENT,
     TEST_FETCH_RESPONSE_BINARY,
     TEST_FETCH_RESPONSE_HTML,
@@ -30,6 +32,7 @@ from .const import (
     TEST_FETCH_RESPONSE_MULTIPART_BASE64,
     TEST_FETCH_RESPONSE_MULTIPART_BASE64_INVALID,
     TEST_FETCH_RESPONSE_MULTIPART_EMPTY_PLAIN,
+    TEST_FETCH_RESPONSE_MULTIPART_WITH_ATTACHMENT,
     TEST_FETCH_RESPONSE_NO_SUBJECT_TO_FROM,
     TEST_FETCH_RESPONSE_TEXT_BARE,
     TEST_FETCH_RESPONSE_TEXT_OTHER,
@@ -106,20 +109,72 @@ async def test_entry_startup_fails(
 
 @pytest.mark.parametrize("imap_search", [TEST_SEARCH_RESPONSE])
 @pytest.mark.parametrize(
-    ("imap_fetch", "valid_date"),
+    ("imap_fetch", "valid_date", "parts"),
     [
-        (TEST_FETCH_RESPONSE_TEXT_BARE, True),
-        (TEST_FETCH_RESPONSE_TEXT_PLAIN, True),
-        (TEST_FETCH_RESPONSE_TEXT_PLAIN_ALT, True),
-        (TEST_FETCH_RESPONSE_INVALID_DATE1, False),
-        (TEST_FETCH_RESPONSE_INVALID_DATE2, False),
-        (TEST_FETCH_RESPONSE_INVALID_DATE3, False),
-        (TEST_FETCH_RESPONSE_TEXT_OTHER, True),
-        (TEST_FETCH_RESPONSE_HTML, True),
-        (TEST_FETCH_RESPONSE_MULTIPART, True),
-        (TEST_FETCH_RESPONSE_MULTIPART_EMPTY_PLAIN, True),
-        (TEST_FETCH_RESPONSE_MULTIPART_BASE64, True),
-        (TEST_FETCH_RESPONSE_BINARY, True),
+        (TEST_FETCH_RESPONSE_TEXT_BARE, True, {}),
+        (TEST_FETCH_RESPONSE_TEXT_PLAIN, True, {}),
+        (TEST_FETCH_RESPONSE_TEXT_PLAIN_ALT, True, {}),
+        (TEST_FETCH_RESPONSE_INVALID_DATE1, False, {}),
+        (TEST_FETCH_RESPONSE_INVALID_DATE2, False, {}),
+        (TEST_FETCH_RESPONSE_INVALID_DATE3, False, {}),
+        (TEST_FETCH_RESPONSE_TEXT_OTHER, True, {}),
+        (TEST_FETCH_RESPONSE_HTML, True, {}),
+        (
+            TEST_FETCH_RESPONSE_MULTIPART,
+            True,
+            {
+                "0": {
+                    "content_type": "text/plain",
+                    "content_transfer_encoding": "7bit",
+                },
+                "1": {"content_type": "text/html", "content_transfer_encoding": "7bit"},
+            },
+        ),
+        (
+            TEST_FETCH_RESPONSE_MULTIPART_EMPTY_PLAIN,
+            True,
+            {
+                "0": {
+                    "content_type": "text/plain",
+                    "content_transfer_encoding": "7bit",
+                },
+                "1": {"content_type": "text/html", "content_transfer_encoding": "7bit"},
+            },
+        ),
+        (
+            TEST_FETCH_RESPONSE_MULTIPART_BASE64,
+            True,
+            {
+                "0": {
+                    "content_type": "text/plain",
+                    "content_transfer_encoding": "base64",
+                },
+                "1": {
+                    "content_type": "text/html",
+                    "content_transfer_encoding": "base64",
+                },
+            },
+        ),
+        (
+            TEST_FETCH_RESPONSE_MULTIPART_WITH_ATTACHMENT,
+            True,
+            {
+                "0,0": {
+                    "content_type": "text/plain",
+                    "content_transfer_encoding": "7bit",
+                },
+                "0,1": {
+                    "content_type": "text/html",
+                    "content_transfer_encoding": "7bit",
+                },
+                "1": {
+                    "content_type": "text/plain",
+                    "filename": "Text attachment content.txt",
+                    "content_transfer_encoding": "base64",
+                },
+            },
+        ),
+        (TEST_FETCH_RESPONSE_BINARY, True, {}),
     ],
     ids=[
         "bare",
@@ -133,13 +188,18 @@ async def test_entry_startup_fails(
         "multipart",
         "multipart_empty_plain",
         "multipart_base64",
+        "multipart_attachment",
         "binary",
     ],
 )
 @pytest.mark.parametrize("imap_has_capability", [True, False], ids=["push", "poll"])
 @pytest.mark.parametrize("charset", ["utf-8", "us-ascii"], ids=["utf-8", "us-ascii"])
 async def test_receiving_message_successfully(
-    hass: HomeAssistant, mock_imap_protocol: MagicMock, valid_date: bool, charset: str
+    hass: HomeAssistant,
+    mock_imap_protocol: MagicMock,
+    valid_date: bool,
+    charset: str,
+    parts: dict[str, Any],
 ) -> None:
     """Test receiving a message successfully."""
     event_called = async_capture_events(hass, "imap_content")
@@ -153,7 +213,7 @@ async def test_receiving_message_successfully(
     # Make sure we have had one update (when polling)
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))
     await hass.async_block_till_done()
-    state = hass.states.get("sensor.imap_email_email_com")
+    state = hass.states.get("sensor.imap_email_email_com_messages")
     # we should have received one message
     assert state is not None
     assert state.state == "1"
@@ -169,12 +229,10 @@ async def test_receiving_message_successfully(
     assert data["sender"] == "john.doe@example.com"
     assert data["subject"] == "Test subject"
     assert data["uid"] == "1"
+    assert data["parts"] == parts
     assert "Test body" in data["text"]
-    assert (
-        valid_date
-        and isinstance(data["date"], datetime)
-        or not valid_date
-        and data["date"] is None
+    assert (valid_date and isinstance(data["date"], datetime)) or (
+        not valid_date and data["date"] is None
     )
 
 
@@ -202,7 +260,7 @@ async def test_receiving_message_with_invalid_encoding(
     # Make sure we have had one update (when polling)
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))
     await hass.async_block_till_done()
-    state = hass.states.get("sensor.imap_email_email_com")
+    state = hass.states.get("sensor.imap_email_email_com_messages")
     # we should have received one message
     assert state is not None
     assert state.state == "1"
@@ -237,7 +295,7 @@ async def test_receiving_message_no_subject_to_from(
     # Make sure we have had one update (when polling)
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))
     await hass.async_block_till_done()
-    state = hass.states.get("sensor.imap_email_email_com")
+    state = hass.states.get("sensor.imap_email_email_com_messages")
     # we should have received one message
     assert state is not None
     assert state.state == "1"
@@ -273,7 +331,7 @@ async def test_initial_authentication_error(
     assert await hass.config_entries.async_setup(config_entry.entry_id) == success
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.imap_email_email_com")
+    state = hass.states.get("sensor.imap_email_email_com_messages")
     assert (state is not None) == success
 
 
@@ -290,7 +348,7 @@ async def test_initial_invalid_folder_error(
     assert await hass.config_entries.async_setup(config_entry.entry_id) == success
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.imap_email_email_com")
+    state = hass.states.get("sensor.imap_email_email_com_messages")
     assert (state is not None) == success
 
 
@@ -330,7 +388,7 @@ async def test_late_authentication_retry(
     assert "Authentication failed, retrying" in caplog.text
 
     # we still should have an entity with an unavailable state
-    state = hass.states.get("sensor.imap_email_email_com")
+    state = hass.states.get("sensor.imap_email_email_com_messages")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
@@ -371,7 +429,7 @@ async def test_late_authentication_error(
     assert "Username or password incorrect, starting reauthentication" in caplog.text
 
     # we still should have an entity with an unavailable state
-    state = hass.states.get("sensor.imap_email_email_com")
+    state = hass.states.get("sensor.imap_email_email_com_messages")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
@@ -415,7 +473,7 @@ async def test_late_folder_error(
     assert "Selected mailbox folder is invalid" in caplog.text
 
     # we still should have an entity with an unavailable state
-    state = hass.states.get("sensor.imap_email_email_com")
+    state = hass.states.get("sensor.imap_email_email_com_messages")
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
@@ -444,7 +502,7 @@ async def test_handle_cleanup_exception(
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.imap_email_email_com")
+    state = hass.states.get("sensor.imap_email_email_com_messages")
     # we should have an entity
     assert state is not None
     assert state.state == "0"
@@ -456,7 +514,7 @@ async def test_handle_cleanup_exception(
     await hass.async_block_till_done()
     assert "Error while cleaning up imap connection" in caplog.text
 
-    state = hass.states.get("sensor.imap_email_email_com")
+    state = hass.states.get("sensor.imap_email_email_com_messages")
 
     # we should have an entity with an unavailable state
     assert state is not None
@@ -487,7 +545,7 @@ async def test_lost_connection_with_imap_push(
     await hass.async_block_till_done()
     assert "Lost imap.server.com (will attempt to reconnect after 10 s)" in caplog.text
 
-    state = hass.states.get("sensor.imap_email_email_com")
+    state = hass.states.get("sensor.imap_email_email_com_messages")
     # Our entity should keep its current state as this
     assert state is not None
     assert state.state == "0"
@@ -511,12 +569,17 @@ async def test_fetch_number_of_messages(
     await hass.async_block_till_done()
     assert "Invalid response for search" in caplog.text
 
-    state = hass.states.get("sensor.imap_email_email_com")
+    state = hass.states.get("sensor.imap_email_email_com_messages")
     # we should have an entity with an unavailable state
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
 
+@pytest.mark.parametrize(
+    "empty_search_reponse",
+    [EMPTY_SEARCH_RESPONSE, EMPTY_SEARCH_RESPONSE_ALT],
+    ids=["regular_empty_search_response", "alt_empty_search_response"],
+)
 @pytest.mark.parametrize("imap_search", [TEST_SEARCH_RESPONSE])
 @pytest.mark.parametrize(
     ("imap_fetch", "valid_date"),
@@ -525,7 +588,10 @@ async def test_fetch_number_of_messages(
 )
 @pytest.mark.parametrize("imap_has_capability", [True, False], ids=["push", "poll"])
 async def test_reset_last_message(
-    hass: HomeAssistant, mock_imap_protocol: MagicMock, valid_date: bool
+    hass: HomeAssistant,
+    mock_imap_protocol: MagicMock,
+    valid_date: bool,
+    empty_search_reponse: tuple[str, list[bytes]],
 ) -> None:
     """Test receiving a message successfully."""
     event = asyncio.Event()  # needed for pushed coordinator to make a new loop
@@ -556,7 +622,7 @@ async def test_reset_last_message(
     # Make sure we have had one update (when polling)
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))
     await hass.async_block_till_done()
-    state = hass.states.get("sensor.imap_email_email_com")
+    state = hass.states.get("sensor.imap_email_email_com_messages")
     # We should have received one message
     assert state is not None
     assert state.state == "1"
@@ -572,15 +638,12 @@ async def test_reset_last_message(
     assert data["subject"] == "Test subject"
     assert data["text"]
     assert data["initial"]
-    assert (
-        valid_date
-        and isinstance(data["date"], datetime)
-        or not valid_date
-        and data["date"] is None
+    assert (valid_date and isinstance(data["date"], datetime)) or (
+        not valid_date and data["date"] is None
     )
 
     # Simulate an update where no messages are found (needed for pushed coordinator)
-    mock_imap_protocol.search.return_value = Response(*EMPTY_SEARCH_RESPONSE)
+    mock_imap_protocol.search.return_value = Response(*empty_search_reponse)
 
     # Make sure we have an update
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
@@ -590,7 +653,7 @@ async def test_reset_last_message(
 
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.imap_email_email_com")
+    state = hass.states.get("sensor.imap_email_email_com_messages")
     # We should have message
     assert state is not None
     assert state.state == "0"
@@ -607,7 +670,7 @@ async def test_reset_last_message(
 
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.imap_email_email_com")
+    state = hass.states.get("sensor.imap_email_email_com_messages")
     # We should have received one message
     assert state is not None
     assert state.state == "1"
@@ -637,7 +700,7 @@ async def test_event_skipped_message_too_large(
     # Make sure we have had one update (when polling)
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))
     await hass.async_block_till_done()
-    state = hass.states.get("sensor.imap_email_email_com")
+    state = hass.states.get("sensor.imap_email_email_com_messages")
     # We should have received one message
     assert state is not None
     assert state.state == "1"
@@ -667,7 +730,7 @@ async def test_message_is_truncated(
     # Make sure we have had one update (when polling)
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))
     await hass.async_block_till_done()
-    state = hass.states.get("sensor.imap_email_email_com")
+    state = hass.states.get("sensor.imap_email_email_com_messages")
     # We should have received one message
     assert state is not None
     assert state.state == "1"
@@ -702,7 +765,7 @@ async def test_message_data(
     # Make sure we have had one update (when polling)
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))
     await hass.async_block_till_done()
-    state = hass.states.get("sensor.imap_email_email_com")
+    state = hass.states.get("sensor.imap_email_email_com_messages")
     # We should have received one message
     assert state is not None
     assert state.state == "1"
@@ -723,9 +786,10 @@ async def test_message_data(
     [
         ("{{ subject }}", "Test subject", None),
         ('{{ "@example.com" in sender }}', True, None),
+        ('{{ "body" in text }}', True, None),
         ("{% bad template }}", None, "Error rendering IMAP custom template"),
     ],
-    ids=["subject_test", "sender_filter", "template_error"],
+    ids=["subject_test", "sender_filter", "body_filter", "template_error"],
 )
 async def test_custom_template(
     hass: HomeAssistant,
@@ -747,7 +811,7 @@ async def test_custom_template(
     # Make sure we have had one update (when polling)
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))
     await hass.async_block_till_done()
-    state = hass.states.get("sensor.imap_email_email_com")
+    state = hass.states.get("sensor.imap_email_email_com_messages")
     # we should have received one message
     assert state is not None
     assert state.state == "1"
@@ -798,7 +862,7 @@ async def test_enforce_polling(
     # Make sure we have had one update (when polling)
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))
     await hass.async_block_till_done()
-    state = hass.states.get("sensor.imap_email_email_com")
+    state = hass.states.get("sensor.imap_email_email_com_messages")
     # we should have received one message
     assert state is not None
     assert state.state == "1"
@@ -822,11 +886,33 @@ async def test_enforce_polling(
 
 
 @pytest.mark.parametrize(
-    ("imap_search", "imap_fetch"),
-    [(TEST_SEARCH_RESPONSE, TEST_FETCH_RESPONSE_TEXT_PLAIN)],
+    ("imap_search", "imap_fetch", "message_parts"),
+    [
+        (
+            TEST_SEARCH_RESPONSE,
+            TEST_FETCH_RESPONSE_MULTIPART_WITH_ATTACHMENT,
+            {
+                "0,0": {
+                    "content_type": "text/plain",
+                    "content_transfer_encoding": "7bit",
+                },
+                "0,1": {
+                    "content_type": "text/html",
+                    "content_transfer_encoding": "7bit",
+                },
+                "1": {
+                    "content_type": "text/plain",
+                    "filename": "Text attachment content.txt",
+                    "content_transfer_encoding": "base64",
+                },
+            },
+        )
+    ],
 )
 @pytest.mark.parametrize("imap_has_capability", [True, False], ids=["push", "poll"])
-async def test_services(hass: HomeAssistant, mock_imap_protocol: MagicMock) -> None:
+async def test_services(
+    hass: HomeAssistant, mock_imap_protocol: MagicMock, message_parts: dict[str, Any]
+) -> None:
     """Test receiving a message successfully."""
     event_called = async_capture_events(hass, "imap_content")
 
@@ -838,7 +924,7 @@ async def test_services(hass: HomeAssistant, mock_imap_protocol: MagicMock) -> N
     # Make sure we have had one update (when polling)
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=5))
     await hass.async_block_till_done()
-    state = hass.states.get("sensor.imap_email_email_com")
+    state = hass.states.get("sensor.imap_email_email_com_messages")
     # we should have received one message
     assert state is not None
     assert state.state == "1"
@@ -855,6 +941,7 @@ async def test_services(hass: HomeAssistant, mock_imap_protocol: MagicMock) -> N
     assert data["subject"] == "Test subject"
     assert data["uid"] == "1"
     assert data["entry_id"] == config_entry.entry_id
+    assert data["parts"] == message_parts
 
     # Test seen service
     data = {"entry": config_entry.entry_id, "uid": "1"}
@@ -885,16 +972,42 @@ async def test_services(hass: HomeAssistant, mock_imap_protocol: MagicMock) -> N
     mock_imap_protocol.store.assert_called_with("1", "+FLAGS (\\Deleted)")
     mock_imap_protocol.protocol.expunge.assert_called_once()
 
-    # Test fetch service
+    # Test fetch service with text response
+    mock_imap_protocol.reset_mock()
     data = {"entry": config_entry.entry_id, "uid": "1"}
     response = await hass.services.async_call(
         DOMAIN, "fetch", data, blocking=True, return_response=True
     )
     mock_imap_protocol.fetch.assert_called_with("1", "BODY.PEEK[]")
-    assert response["text"] == "Test body\r\n"
+    assert response["text"] == "*Multi* part Test body\n"
     assert response["sender"] == "john.doe@example.com"
     assert response["subject"] == "Test subject"
     assert response["uid"] == "1"
+    assert response["parts"] == message_parts
+
+    # Test fetch part service with attachment response
+    mock_imap_protocol.reset_mock()
+    data = {"entry": config_entry.entry_id, "uid": "1", "part": "1"}
+    response = await hass.services.async_call(
+        DOMAIN, "fetch_part", data, blocking=True, return_response=True
+    )
+    mock_imap_protocol.fetch.assert_called_with("1", "BODY.PEEK[]")
+    assert response["part_data"] == "VGV4dCBhdHRhY2htZW50IGNvbnRlbnQ=\n"
+    assert response["content_type"] == "text/plain"
+    assert response["content_transfer_encoding"] == "base64"
+    assert response["filename"] == "Text attachment content.txt"
+    assert response["part"] == "1"
+    assert response["uid"] == "1"
+    assert b64decode(response["part_data"]) == b"Text attachment content"
+
+    # Test fetch part service with invalid part index
+    for part in ("A", "2", "0"):
+        data = {"entry": config_entry.entry_id, "uid": "1", "part": part}
+        with pytest.raises(ServiceValidationError) as exc:
+            await hass.services.async_call(
+                DOMAIN, "fetch_part", data, blocking=True, return_response=True
+            )
+        assert exc.value.translation_key == "invalid_part_index"
 
     # Test with invalid entry_id
     data = {"entry": "invalid", "uid": "1"}
@@ -939,12 +1052,14 @@ async def test_services(hass: HomeAssistant, mock_imap_protocol: MagicMock) -> N
         ),
         "delete": ({"entry": config_entry.entry_id, "uid": "1"}, False),
         "fetch": ({"entry": config_entry.entry_id, "uid": "1"}, True),
+        "fetch_part": ({"entry": config_entry.entry_id, "uid": "1", "part": "1"}, True),
     }
     patch_error_translation_key = {
         "seen": ("store", "seen_failed"),
         "move": ("copy", "copy_failed"),
         "delete": ("store", "delete_failed"),
         "fetch": ("fetch", "fetch_failed"),
+        "fetch_part": ("fetch", "fetch_failed"),
     }
     for service, (data, response) in service_calls_response.items():
         with (

@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import AsyncGenerator
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from matter_server.client.models.node import MatterNode
 from matter_server.common.const import SCHEMA_VERSION
 from matter_server.common.models import ServerInfoMessage
 import pytest
-from typing_extensions import AsyncGenerator, Generator
 
 from homeassistant.core import HomeAssistant
 
@@ -42,6 +43,7 @@ async def matter_client_fixture() -> AsyncGenerator[MagicMock]:
             pytest.fail("Listen was not cancelled!")
 
         client.connect = AsyncMock(side_effect=connect)
+        client.check_node_update = AsyncMock(return_value=None)
         client.start_listening = AsyncMock(side_effect=listen)
         client.server_info = ServerInfoMessage(
             fabric_id=MOCK_FABRIC_ID,
@@ -51,6 +53,7 @@ async def matter_client_fixture() -> AsyncGenerator[MagicMock]:
             wifi_credentials_set=True,
             thread_credentials_set=True,
             min_supported_schema_version=SCHEMA_VERSION,
+            bluetooth_enabled=False,
         )
 
         yield client
@@ -69,176 +72,110 @@ async def integration_fixture(
     return entry
 
 
-@pytest.fixture(name="create_backup")
-def create_backup_fixture() -> Generator[AsyncMock]:
-    """Mock Supervisor create backup of add-on."""
-    with patch(
-        "homeassistant.components.hassio.addon_manager.async_create_backup"
-    ) as create_backup:
-        yield create_backup
-
-
-@pytest.fixture(name="addon_store_info")
-def addon_store_info_fixture() -> Generator[AsyncMock]:
-    """Mock Supervisor add-on store info."""
-    with patch(
-        "homeassistant.components.hassio.addon_manager.async_get_addon_store_info"
-    ) as addon_store_info:
-        addon_store_info.return_value = {
-            "available": False,
-            "installed": None,
-            "state": None,
-            "version": "1.0.0",
-        }
-        yield addon_store_info
-
-
-@pytest.fixture(name="addon_info")
-def addon_info_fixture() -> Generator[AsyncMock]:
-    """Mock Supervisor add-on info."""
-    with patch(
-        "homeassistant.components.hassio.addon_manager.async_get_addon_info",
-    ) as addon_info:
-        addon_info.return_value = {
-            "available": False,
-            "hostname": None,
-            "options": {},
-            "state": None,
-            "update_available": False,
-            "version": None,
-        }
-        yield addon_info
-
-
-@pytest.fixture(name="addon_not_installed")
-def addon_not_installed_fixture(
-    addon_store_info: AsyncMock, addon_info: AsyncMock
-) -> AsyncMock:
-    """Mock add-on not installed."""
-    addon_store_info.return_value["available"] = True
-    return addon_info
-
-
-@pytest.fixture(name="addon_installed")
-def addon_installed_fixture(
-    addon_store_info: AsyncMock, addon_info: AsyncMock
-) -> AsyncMock:
-    """Mock add-on already installed but not running."""
-    addon_store_info.return_value = {
-        "available": True,
-        "installed": "1.0.0",
-        "state": "stopped",
-        "version": "1.0.0",
-    }
-    addon_info.return_value["available"] = True
-    addon_info.return_value["hostname"] = "core-matter-server"
-    addon_info.return_value["state"] = "stopped"
-    addon_info.return_value["version"] = "1.0.0"
-    return addon_info
-
-
-@pytest.fixture(name="addon_running")
-def addon_running_fixture(
-    addon_store_info: AsyncMock, addon_info: AsyncMock
-) -> AsyncMock:
-    """Mock add-on already running."""
-    addon_store_info.return_value = {
-        "available": True,
-        "installed": "1.0.0",
-        "state": "started",
-        "version": "1.0.0",
-    }
-    addon_info.return_value["available"] = True
-    addon_info.return_value["hostname"] = "core-matter-server"
-    addon_info.return_value["state"] = "started"
-    addon_info.return_value["version"] = "1.0.0"
-    return addon_info
-
-
-@pytest.fixture(name="install_addon")
-def install_addon_fixture(
-    addon_store_info: AsyncMock, addon_info: AsyncMock
-) -> Generator[AsyncMock]:
-    """Mock install add-on."""
-
-    async def install_addon_side_effect(hass: HomeAssistant, slug: str) -> None:
-        """Mock install add-on."""
-        addon_store_info.return_value = {
-            "available": True,
-            "installed": "1.0.0",
-            "state": "stopped",
-            "version": "1.0.0",
-        }
-        addon_info.return_value["available"] = True
-        addon_info.return_value["state"] = "stopped"
-        addon_info.return_value["version"] = "1.0.0"
-
-    with patch(
-        "homeassistant.components.hassio.addon_manager.async_install_addon"
-    ) as install_addon:
-        install_addon.side_effect = install_addon_side_effect
-        yield install_addon
-
-
-@pytest.fixture(name="start_addon")
-def start_addon_fixture() -> Generator[AsyncMock]:
-    """Mock start add-on."""
-    with patch(
-        "homeassistant.components.hassio.addon_manager.async_start_addon"
-    ) as start_addon:
-        yield start_addon
-
-
-@pytest.fixture(name="stop_addon")
-def stop_addon_fixture() -> Generator[AsyncMock]:
-    """Mock stop add-on."""
-    with patch(
-        "homeassistant.components.hassio.addon_manager.async_stop_addon"
-    ) as stop_addon:
-        yield stop_addon
-
-
-@pytest.fixture(name="uninstall_addon")
-def uninstall_addon_fixture() -> Generator[AsyncMock]:
-    """Mock uninstall add-on."""
-    with patch(
-        "homeassistant.components.hassio.addon_manager.async_uninstall_addon"
-    ) as uninstall_addon:
-        yield uninstall_addon
-
-
-@pytest.fixture(name="update_addon")
-def update_addon_fixture() -> Generator[AsyncMock]:
-    """Mock update add-on."""
-    with patch(
-        "homeassistant.components.hassio.addon_manager.async_update_addon"
-    ) as update_addon:
-        yield update_addon
-
-
-@pytest.fixture(name="door_lock")
-async def door_lock_fixture(
-    hass: HomeAssistant, matter_client: MagicMock
+@pytest.fixture(
+    params=[
+        "air_purifier",
+        "air_quality_sensor",
+        "aqara_door_window_p2",
+        "aqara_motion_p2",
+        "aqara_presence_fp300",
+        "aqara_sensor_w100",
+        "aqara_thermostat_w500",
+        "aqara_u200",
+        "battery_storage",
+        "color_temperature_light",
+        "cooktop",
+        "dimmable_light",
+        "dimmable_plugin_unit",
+        "door_lock",
+        "door_lock_with_unbolt",
+        "eberle_ute3000",
+        "ecovacs_deebot",
+        "eufy_vacuum_omni_e28",
+        "eve_contact_sensor",
+        "eve_energy_20ecn4101",
+        "eve_energy_plug",
+        "eve_energy_plug_patched",
+        "eve_thermo",
+        "eve_shutter",
+        "eve_weather_sensor",
+        "extended_color_light",
+        "extractor_hood",
+        "fan",
+        "flow_sensor",
+        "generic_switch",
+        "generic_switch_multi",
+        "haojai_switch",
+        "heiman_motion_sensor_m1",
+        "humidity_sensor",
+        "ikea_air_quality_monitor",
+        "ikea_scroll_wheel",
+        "inovelli_vtm30",
+        "laundry_dryer",
+        "leak_sensor",
+        "light_sensor",
+        "microwave_oven",
+        "mock_lock",
+        "mock_thermostat",
+        "mounted_dimmable_load_control_fixture",
+        "multi_endpoint_light",
+        "occupancy_sensor",
+        "on_off_plugin_unit",
+        "onoff_light",
+        "onoff_light_alt_name",
+        "onoff_light_no_name",
+        "onoff_light_with_levelcontrol_present",
+        "oven",
+        "pressure_sensor",
+        "pump",
+        "room_airconditioner",
+        "secuyou_smart_lock",
+        "silabs_dishwasher",
+        "silabs_evse_charging",
+        "silabs_laundrywasher",
+        "silabs_light_switch",
+        "silabs_refrigerator",
+        "silabs_water_heater",
+        "smoke_detector",
+        "solar_inverter",
+        "speaker",
+        "switchbot_k11_plus",
+        "switch_unit",
+        "tado_smart_radiator_thermostat_x",
+        "temperature_sensor",
+        "longan_link_thermostat",
+        "vacuum_cleaner",
+        "valve",
+        "window_covering_full",
+        "window_covering_lift",
+        "window_covering_pa_lift",
+        "window_covering_pa_tilt",
+        "window_covering_tilt",
+        "yandex_smart_socket",
+        "zemismart_mt25b",
+    ]
+)
+async def matter_devices(
+    hass: HomeAssistant, matter_client: MagicMock, request: pytest.FixtureRequest
 ) -> MatterNode:
-    """Fixture for a door lock node."""
-    return await setup_integration_with_node_fixture(hass, "door-lock", matter_client)
+    """Fixture for a Matter device."""
+    return await setup_integration_with_node_fixture(hass, request.param, matter_client)
 
 
-@pytest.fixture(name="door_lock_with_unbolt")
-async def door_lock_with_unbolt_fixture(
-    hass: HomeAssistant, matter_client: MagicMock
+@pytest.fixture
+def attributes() -> dict[str, Any]:
+    """Return common attributes for all nodes."""
+    return {}
+
+
+@pytest.fixture
+async def matter_node(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    node_fixture: str,
+    attributes: dict[str, Any],
 ) -> MatterNode:
-    """Fixture for a door lock node with unbolt feature."""
+    """Fixture for a Matter node."""
     return await setup_integration_with_node_fixture(
-        hass, "door-lock-with-unbolt", matter_client
-    )
-
-
-@pytest.fixture(name="eve_contact_sensor_node")
-async def eve_contact_sensor_node_fixture(
-    hass: HomeAssistant, matter_client: MagicMock
-) -> MatterNode:
-    """Fixture for a contact sensor node."""
-    return await setup_integration_with_node_fixture(
-        hass, "eve-contact-sensor", matter_client
+        hass, node_fixture, matter_client, attributes
     )

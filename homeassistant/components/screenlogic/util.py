@@ -6,7 +6,7 @@ from screenlogicpy.const.data import SHARED_VALUES
 
 from homeassistant.helpers import entity_registry as er
 
-from .const import DOMAIN as SL_DOMAIN, SL_UNIT_TO_HA_UNIT, ScreenLogicDataPath
+from .const import DOMAIN, SL_UNIT_TO_HA_UNIT, ScreenLogicDataPath
 from .coordinator import ScreenlogicDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,7 +41,7 @@ def cleanup_excluded_entity(
     entity_registry = er.async_get(coordinator.hass)
     unique_id = f"{coordinator.config_entry.unique_id}_{generate_unique_id(*data_path)}"
     if entity_id := entity_registry.async_get_entity_id(
-        platform_domain, SL_DOMAIN, unique_id
+        platform_domain, DOMAIN, unique_id
     ):
         _LOGGER.debug(
             "Removing existing entity '%s' per data inclusion rule", entity_id

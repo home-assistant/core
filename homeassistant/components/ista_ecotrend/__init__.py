@@ -4,28 +4,18 @@ from __future__ import annotations
 
 import logging
 
-from pyecotrend_ista.exception_classes import (
-    InternalServerError,
-    KeycloakError,
-    LoginError,
-    ServerError,
-)
-from pyecotrend_ista.pyecotrend_ista import PyEcotrendIsta
-from requests.exceptions import RequestException
+from pyecotrend_ista import PyEcotrendIsta
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.recorder import get_instance
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
 from .const import DOMAIN
-from .coordinator import IstaCoordinator
+from .coordinator import IstaConfigEntry, IstaCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
-
-type IstaConfigEntry = ConfigEntry[IstaCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: IstaConfigEntry) -> bool:
@@ -35,21 +25,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: IstaConfigEntry) -> bool
         entry.data[CONF_PASSWORD],
         _LOGGER,
     )
-    try:
-        await hass.async_add_executor_job(ista.login)
-    except (ServerError, InternalServerError, RequestException, TimeoutError) as e:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="connection_exception",
-        ) from e
-    except (LoginError, KeycloakError) as e:
-        raise ConfigEntryError(
-            translation_domain=DOMAIN,
-            translation_key="authentication_exception",
-            translation_placeholders={CONF_EMAIL: entry.data[CONF_EMAIL]},
-        ) from e
 
-    coordinator = IstaCoordinator(hass, ista)
+    coordinator = IstaCoordinator(hass, entry, ista)
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
@@ -62,3 +39,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: IstaConfigEntry) -> bool
 async def async_unload_entry(hass: HomeAssistant, entry: IstaConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: IstaConfigEntry) -> None:
+    """Handle removal of an entry."""
+    statistic_ids = [f"{DOMAIN}:{name}" for name in entry.options.values()]
+    get_instance(hass).async_clear_statistics(statistic_ids)

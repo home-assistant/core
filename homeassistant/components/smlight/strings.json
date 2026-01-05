@@ -1,0 +1,162 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "reauth_failed": "[%key:common::config_flow::error::invalid_auth%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unsupported_device": "This device is not yet supported by the SMLIGHT integration"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "auth": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "Password for the device's web login.",
+          "username": "Username for the device's web login."
+        },
+        "description": "Please enter the username and password"
+      },
+      "confirm_discovery": {
+        "description": "Do you want to set up SMLIGHT at {host}?"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "[%key:component::smlight::config::step::auth::data_description::password%]",
+          "username": "[%key:component::smlight::config::step::auth::data_description::username%]"
+        },
+        "description": "Please enter the correct username and password",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the SMLIGHT SLZB-06x device"
+        },
+        "description": "Set up SMLIGHT Zigbee integration"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "ethernet": {
+        "name": "Ethernet"
+      },
+      "internet": {
+        "name": "Internet"
+      },
+      "vpn": {
+        "name": "VPN"
+      },
+      "wifi": {
+        "name": "Wi-Fi"
+      }
+    },
+    "button": {
+      "core_restart": {
+        "name": "Core restart"
+      },
+      "reconnect_zigbee_router": {
+        "name": "Reconnect Zigbee router"
+      },
+      "zigbee_flash_mode": {
+        "name": "Zigbee flash mode"
+      },
+      "zigbee_restart": {
+        "name": "Zigbee restart"
+      }
+    },
+    "sensor": {
+      "core_temperature": {
+        "name": "Core chip temp"
+      },
+      "core_uptime": {
+        "name": "Core uptime"
+      },
+      "device_mode": {
+        "name": "Connection mode",
+        "state": {
+          "eth": "Ethernet",
+          "usb": "USB",
+          "wifi": "Wi-Fi"
+        }
+      },
+      "firmware_channel": {
+        "name": "Firmware channel",
+        "state": {
+          "dev": "Development",
+          "release": "Stable"
+        }
+      },
+      "fs_usage": {
+        "name": "Filesystem usage"
+      },
+      "ram_usage": {
+        "name": "RAM usage"
+      },
+      "socket_uptime": {
+        "name": "Zigbee uptime"
+      },
+      "zigbee_temperature": {
+        "name": "Zigbee chip temp"
+      },
+      "zigbee_type": {
+        "name": "Zigbee type",
+        "state": {
+          "coordinator": "Coordinator",
+          "router": "Router",
+          "thread": "Thread"
+        }
+      }
+    },
+    "switch": {
+      "auto_zigbee_update": {
+        "name": "Auto Zigbee update"
+      },
+      "disable_led": {
+        "name": "Disable LEDs"
+      },
+      "night_mode": {
+        "name": "LED night mode"
+      },
+      "vpn_enabled": {
+        "name": "VPN enabled"
+      }
+    },
+    "update": {
+      "core_update": {
+        "name": "Core firmware"
+      },
+      "zigbee_update": {
+        "name": "Zigbee firmware"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect_device": {
+      "message": "An error occurred while connecting to the SMLIGHT device: {error}."
+    },
+    "firmware_update_failed": {
+      "message": "Firmware update failed for {device_name}."
+    }
+  },
+  "issues": {
+    "unsupported_firmware": {
+      "description": "Your SMLIGHT SLZB-06x device is running an unsupported core firmware version. Please update it to the latest version to enjoy all the features of this integration.",
+      "title": "SLZB core firmware update required"
+    }
+  }
+}

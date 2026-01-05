@@ -6,19 +6,19 @@ from datetime import datetime, timedelta
 from unittest.mock import Mock
 
 import pytest
-from uiprotect.data import NVR, Camera, Event, EventType, Sensor, SmartDetectObjectType
-from uiprotect.data.nvr import EventMetadata, LicensePlateMetadata
+from uiprotect.data import NVR, Camera, Event, EventType, ModelType, Sensor
+from uiprotect.data.nvr import EventMetadata
 
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
 from homeassistant.components.unifiprotect.sensor import (
     ALL_DEVICES_SENSORS,
     CAMERA_DISABLED_SENSORS,
     CAMERA_SENSORS,
-    EVENT_SENSORS,
     MOTION_TRIP_SENSORS,
     NVR_DISABLED_SENSORS,
     NVR_SENSORS,
     SENSE_SENSORS,
+    ProtectSensorEntityDescription,
 )
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -41,6 +41,16 @@ from .utils import (
     time_changed,
 )
 
+
+def get_sensor_by_key(sensors: tuple, key: str) -> ProtectSensorEntityDescription:
+    """Get sensor description by key."""
+    for sensor in sensors:
+        if sensor.key == key:
+            return sensor
+    raise ValueError(f"Sensor with key '{key}' not found")
+
+
+# Constants for test slicing (subsets of sensor tuples)
 CAMERA_SENSORS_WRITE = CAMERA_SENSORS[:5]
 SENSE_SENSORS_WRITE = SENSE_SENSORS[:8]
 
@@ -94,8 +104,8 @@ async def test_sensor_setup_sensor(
     for index, description in enumerate(SENSE_SENSORS_WRITE):
         if not description.entity_registry_enabled_default:
             continue
-        unique_id, entity_id = ids_from_device_description(
-            Platform.SENSOR, sensor_all, description
+        unique_id, entity_id = await ids_from_device_description(
+            hass, Platform.SENSOR, sensor_all, description
         )
 
         entity = entity_registry.async_get(entity_id)
@@ -108,8 +118,11 @@ async def test_sensor_setup_sensor(
         assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
     # BLE signal
-    unique_id, entity_id = ids_from_device_description(
-        Platform.SENSOR, sensor_all, ALL_DEVICES_SENSORS[1]
+    unique_id, entity_id = await ids_from_device_description(
+        hass,
+        Platform.SENSOR,
+        sensor_all,
+        get_sensor_by_key(ALL_DEVICES_SENSORS, "ble_signal"),
     )
 
     entity = entity_registry.async_get(entity_id)
@@ -146,8 +159,8 @@ async def test_sensor_setup_sensor_none(
     for index, description in enumerate(SENSE_SENSORS_WRITE):
         if not description.entity_registry_enabled_default:
             continue
-        unique_id, entity_id = ids_from_device_description(
-            Platform.SENSOR, sensor, description
+        unique_id, entity_id = await ids_from_device_description(
+            hass, Platform.SENSOR, sensor, description
         )
 
         entity = entity_registry.async_get(entity_id)
@@ -201,8 +214,8 @@ async def test_sensor_setup_nvr(
         "50",
     )
     for index, description in enumerate(NVR_SENSORS):
-        unique_id, entity_id = ids_from_device_description(
-            Platform.SENSOR, nvr, description
+        unique_id, entity_id = await ids_from_device_description(
+            hass, Platform.SENSOR, nvr, description
         )
 
         entity = entity_registry.async_get(entity_id)
@@ -220,8 +233,8 @@ async def test_sensor_setup_nvr(
 
     expected_values = ("50.0", "50.0", "50.0")
     for index, description in enumerate(NVR_DISABLED_SENSORS):
-        unique_id, entity_id = ids_from_device_description(
-            Platform.SENSOR, nvr, description
+        unique_id, entity_id = await ids_from_device_description(
+            hass, Platform.SENSOR, nvr, description
         )
 
         entity = entity_registry.async_get(entity_id)
@@ -255,9 +268,9 @@ async def test_sensor_nvr_missing_values(
     assert_entity_counts(hass, Platform.SENSOR, 12, 9)
 
     # Uptime
-    description = NVR_SENSORS[0]
-    unique_id, entity_id = ids_from_device_description(
-        Platform.SENSOR, nvr, description
+    description = get_sensor_by_key(NVR_SENSORS, "uptime")
+    unique_id, entity_id = await ids_from_device_description(
+        hass, Platform.SENSOR, nvr, description
     )
 
     entity = entity_registry.async_get(entity_id)
@@ -271,10 +284,10 @@ async def test_sensor_nvr_missing_values(
     assert state.state == STATE_UNKNOWN
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
-    # Memory
-    description = NVR_SENSORS[8]
-    unique_id, entity_id = ids_from_device_description(
-        Platform.SENSOR, nvr, description
+    # Recording capacity
+    description = get_sensor_by_key(NVR_SENSORS, "record_capacity")
+    unique_id, entity_id = await ids_from_device_description(
+        hass, Platform.SENSOR, nvr, description
     )
 
     entity = entity_registry.async_get(entity_id)
@@ -286,10 +299,10 @@ async def test_sensor_nvr_missing_values(
     assert state.state == "0"
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
-    # Memory
-    description = NVR_DISABLED_SENSORS[2]
-    unique_id, entity_id = ids_from_device_description(
-        Platform.SENSOR, nvr, description
+    # Memory utilization
+    description = get_sensor_by_key(NVR_DISABLED_SENSORS, "memory_utilization")
+    unique_id, entity_id = await ids_from_device_description(
+        hass, Platform.SENSOR, nvr, description
     )
 
     entity = entity_registry.async_get(entity_id)
@@ -319,15 +332,15 @@ async def test_sensor_setup_camera(
 
     expected_values = (
         fixed_now.replace(microsecond=0).isoformat(),
-        "100",
-        "100.0",
+        "0.0001",
+        "0.0001",
         "20.0",
     )
     for index, description in enumerate(CAMERA_SENSORS_WRITE):
         if not description.entity_registry_enabled_default:
             continue
-        unique_id, entity_id = ids_from_device_description(
-            Platform.SENSOR, doorbell, description
+        unique_id, entity_id = await ids_from_device_description(
+            hass, Platform.SENSOR, doorbell, description
         )
 
         entity = entity_registry.async_get(entity_id)
@@ -340,10 +353,10 @@ async def test_sensor_setup_camera(
         assert state.state == expected_values[index]
         assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
-    expected_values = ("100", "100")
+    expected_values = ("0.0001", "0.0001")
     for index, description in enumerate(CAMERA_DISABLED_SENSORS):
-        unique_id, entity_id = ids_from_device_description(
-            Platform.SENSOR, doorbell, description
+        unique_id, entity_id = await ids_from_device_description(
+            hass, Platform.SENSOR, doorbell, description
         )
 
         entity = entity_registry.async_get(entity_id)
@@ -358,9 +371,12 @@ async def test_sensor_setup_camera(
         assert state.state == expected_values[index]
         assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
-    # Wired signal
-    unique_id, entity_id = ids_from_device_description(
-        Platform.SENSOR, doorbell, ALL_DEVICES_SENSORS[2]
+    # Wired signal (phy_rate / link speed)
+    unique_id, entity_id = await ids_from_device_description(
+        hass,
+        Platform.SENSOR,
+        doorbell,
+        get_sensor_by_key(ALL_DEVICES_SENSORS, "phy_rate"),
     )
 
     entity = entity_registry.async_get(entity_id)
@@ -375,9 +391,12 @@ async def test_sensor_setup_camera(
     assert state.state == "1000"
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
-    # WiFi signal
-    unique_id, entity_id = ids_from_device_description(
-        Platform.SENSOR, doorbell, ALL_DEVICES_SENSORS[3]
+    # Wi-Fi signal
+    unique_id, entity_id = await ids_from_device_description(
+        hass,
+        Platform.SENSOR,
+        doorbell,
+        get_sensor_by_key(ALL_DEVICES_SENSORS, "wifi_signal"),
     )
 
     entity = entity_registry.async_get(entity_id)
@@ -407,8 +426,11 @@ async def test_sensor_setup_camera_with_last_trip_time(
     assert_entity_counts(hass, Platform.SENSOR, 24, 24)
 
     # Last Trip Time
-    unique_id, entity_id = ids_from_device_description(
-        Platform.SENSOR, doorbell, MOTION_TRIP_SENSORS[0]
+    unique_id, entity_id = await ids_from_device_description(
+        hass,
+        Platform.SENSOR,
+        doorbell,
+        get_sensor_by_key(MOTION_TRIP_SENSORS, "motion_last_trip_time"),
     )
 
     entity = entity_registry.async_get(entity_id)
@@ -432,12 +454,16 @@ async def test_sensor_update_alarm(
     await init_entry(hass, ufp, [sensor_all])
     assert_entity_counts(hass, Platform.SENSOR, 22, 14)
 
-    _, entity_id = ids_from_device_description(
-        Platform.SENSOR, sensor_all, SENSE_SENSORS_WRITE[4]
+    _, entity_id = await ids_from_device_description(
+        hass,
+        Platform.SENSOR,
+        sensor_all,
+        get_sensor_by_key(SENSE_SENSORS, "alarm_sound"),
     )
 
     event_metadata = EventMetadata(sensor_id=sensor_all.id, alarm_type="smoke")
     event = Event(
+        model=ModelType.EVENT,
         id="test_event_id",
         type=EventType.SENSOR_ALARM,
         start=fixed_now - timedelta(seconds=1),
@@ -449,7 +475,7 @@ async def test_sensor_update_alarm(
         api=ufp.api,
     )
 
-    new_sensor = sensor_all.copy()
+    new_sensor = sensor_all.model_copy()
     new_sensor.set_alarm_timeout()
     new_sensor.last_alarm_event_id = event.id
 
@@ -482,8 +508,11 @@ async def test_sensor_update_alarm_with_last_trip_time(
     assert_entity_counts(hass, Platform.SENSOR, 22, 22)
 
     # Last Trip Time
-    unique_id, entity_id = ids_from_device_description(
-        Platform.SENSOR, sensor_all, SENSE_SENSORS_WRITE[-3]
+    unique_id, entity_id = await ids_from_device_description(
+        hass,
+        Platform.SENSOR,
+        sensor_all,
+        get_sensor_by_key(SENSE_SENSORS, "door_last_trip_time"),
     )
 
     entity = entity_registry.async_get(entity_id)
@@ -499,54 +528,17 @@ async def test_sensor_update_alarm_with_last_trip_time(
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
 
-async def test_camera_update_licenseplate(
-    hass: HomeAssistant, ufp: MockUFPFixture, camera: Camera, fixed_now: datetime
+async def test_sensor_precision(
+    hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor, fixed_now: datetime
 ) -> None:
-    """Test sensor motion entity."""
+    """Test sensor precision value is respected."""
 
-    camera.feature_flags.smart_detect_types.append(SmartDetectObjectType.LICENSE_PLATE)
-    camera.feature_flags.has_smart_detect = True
-    camera.smart_detect_settings.object_types.append(
-        SmartDetectObjectType.LICENSE_PLATE
+    await init_entry(hass, ufp, [sensor_all])
+    assert_entity_counts(hass, Platform.SENSOR, 22, 14)
+    nvr: NVR = ufp.api.bootstrap.nvr
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SENSOR, nvr, get_sensor_by_key(NVR_SENSORS, "resolution_4K")
     )
 
-    await init_entry(hass, ufp, [camera])
-    assert_entity_counts(hass, Platform.SENSOR, 23, 13)
-
-    _, entity_id = ids_from_device_description(
-        Platform.SENSOR, camera, EVENT_SENSORS[0]
-    )
-
-    event_metadata = EventMetadata(
-        license_plate=LicensePlateMetadata(name="ABCD1234", confidence_level=95)
-    )
-    event = Event(
-        id="test_event_id",
-        type=EventType.SMART_DETECT,
-        start=fixed_now - timedelta(seconds=1),
-        end=None,
-        score=100,
-        smart_detect_types=[SmartDetectObjectType.LICENSE_PLATE],
-        smart_detect_event_ids=[],
-        metadata=event_metadata,
-        api=ufp.api,
-    )
-
-    new_camera = camera.copy()
-    new_camera.is_smart_detected = True
-    new_camera.last_smart_detect_event_ids[SmartDetectObjectType.LICENSE_PLATE] = (
-        event.id
-    )
-
-    mock_msg = Mock()
-    mock_msg.changed_data = {}
-    mock_msg.new_obj = new_camera
-
-    ufp.api.bootstrap.cameras = {new_camera.id: new_camera}
-    ufp.api.bootstrap.events = {event.id: event}
-    ufp.ws_msg(mock_msg)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == "ABCD1234"
+    assert hass.states.get(entity_id).state == "17.49"

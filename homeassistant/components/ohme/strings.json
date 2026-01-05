@@ -1,0 +1,158 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "Enter the password for your Ohme account"
+        },
+        "description": "Please update your password for {email}",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "reconfigure": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "Enter the password for your Ohme account"
+        },
+        "description": "Update your password for {email}",
+        "title": "Reconfigure Ohme Account"
+      },
+      "user": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "Enter the email address associated with your Ohme account.",
+          "password": "Enter the password for your Ohme account"
+        },
+        "description": "Configure your Ohme account. If you signed up to Ohme with a third party account like Google, please reset your password via Ohme before configuring this integration."
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "approve": {
+        "name": "Approve charge"
+      }
+    },
+    "number": {
+      "preconditioning_duration": {
+        "name": "Preconditioning duration"
+      },
+      "target_percentage": {
+        "name": "Target percentage"
+      }
+    },
+    "select": {
+      "charge_mode": {
+        "name": "Charge mode",
+        "state": {
+          "max_charge": "Max charge",
+          "paused": "[%key:common::state::paused%]",
+          "smart_charge": "Smart charge"
+        }
+      },
+      "vehicle": {
+        "name": "Vehicle"
+      }
+    },
+    "sensor": {
+      "ct_current": {
+        "name": "CT current"
+      },
+      "slot_list": {
+        "name": "Charge slots"
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "charging": "[%key:common::state::charging%]",
+          "finished": "Finished charging",
+          "paused": "[%key:common::state::paused%]",
+          "pending_approval": "Pending approval",
+          "plugged_in": "[%key:component::binary_sensor::entity_component::plug::state::on%]",
+          "unplugged": "[%key:component::binary_sensor::entity_component::plug::state::off%]"
+        }
+      },
+      "vehicle_battery": {
+        "name": "Vehicle battery"
+      }
+    },
+    "switch": {
+      "lock_buttons": {
+        "name": "Lock buttons"
+      },
+      "price_cap": {
+        "name": "Price cap"
+      },
+      "require_approval": {
+        "name": "Require approval"
+      },
+      "sleep_when_inactive": {
+        "name": "Sleep when inactive"
+      }
+    },
+    "time": {
+      "target_time": {
+        "name": "Target time"
+      }
+    }
+  },
+  "exceptions": {
+    "api_failed": {
+      "message": "Error communicating with Ohme API"
+    },
+    "auth_failed": {
+      "message": "Unable to log in to Ohme"
+    },
+    "device_info_failed": {
+      "message": "Unable to get Ohme device information"
+    },
+    "invalid_config_entry": {
+      "message": "Invalid config entry provided. Got {config_entry}"
+    },
+    "unloaded_config_entry": {
+      "message": "Invalid config entry provided. {config_entry} is not loaded."
+    }
+  },
+  "services": {
+    "list_charge_slots": {
+      "description": "Return a list of charge slots.",
+      "fields": {
+        "config_entry": {
+          "description": "The Ohme config entry for which to return charge slots.",
+          "name": "Ohme account"
+        }
+      },
+      "name": "List charge slots"
+    },
+    "set_price_cap": {
+      "description": "Prevents charging when the electricity price exceeds a defined threshold.",
+      "fields": {
+        "config_entry": {
+          "description": "The Ohme config entry for which to return charge slots.",
+          "name": "Ohme account"
+        },
+        "price_cap": {
+          "description": "Threshold in 1/100ths of your local currency.",
+          "name": "Price cap"
+        }
+      },
+      "name": "Set price cap"
+    }
+  }
+}

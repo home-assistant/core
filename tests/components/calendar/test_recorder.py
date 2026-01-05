@@ -1,7 +1,6 @@
 """The tests for calendar recorder."""
 
 from datetime import timedelta
-from typing import Any
 
 import pytest
 
@@ -19,7 +18,7 @@ from tests.components.recorder.common import async_wait_recording_done
 async def mock_setup_dependencies(
     recorder_mock: Recorder,
     hass: HomeAssistant,
-    set_time_zone: Any,
+    set_time_zone: None,
     mock_setup_integration: None,
     config_entry: MockConfigEntry,
 ) -> None:

@@ -2,15 +2,20 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, patch
 import uuid
 
 import pytest
-from typing_extensions import Generator
 
-from homeassistant.components.rest.data import DEFAULT_TIMEOUT
-from homeassistant.components.rest.schema import DEFAULT_METHOD, DEFAULT_VERIFY_SSL
+from homeassistant.components.rest.data import (  # pylint: disable=hass-component-root-import
+    DEFAULT_TIMEOUT,
+)
+from homeassistant.components.rest.schema import (  # pylint: disable=hass-component-root-import
+    DEFAULT_METHOD,
+    DEFAULT_VERIFY_SSL,
+)
 from homeassistant.components.scrape.const import (
     CONF_ENCODING,
     CONF_INDEX,

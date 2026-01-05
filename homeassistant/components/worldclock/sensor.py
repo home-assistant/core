@@ -4,44 +4,31 @@ from __future__ import annotations
 
 from datetime import tzinfo
 
-import voluptuous as vol
-
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_TIME_ZONE
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
-CONF_TIME_FORMAT = "time_format"
-
-DEFAULT_NAME = "Worldclock Sensor"
-DEFAULT_TIME_STR_FORMAT = "%H:%M"
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_TIME_ZONE): cv.time_zone,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_TIME_FORMAT, default=DEFAULT_TIME_STR_FORMAT): cv.string,
-    }
-)
+from .const import CONF_TIME_FORMAT, DOMAIN
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the World clock sensor."""
-    time_zone = dt_util.get_time_zone(config[CONF_TIME_ZONE])
+    """Set up the World clock sensor entry."""
+    time_zone = await dt_util.async_get_time_zone(entry.options[CONF_TIME_ZONE])
     async_add_entities(
         [
             WorldClockSensor(
                 time_zone,
-                config[CONF_NAME],
-                config[CONF_TIME_FORMAT],
+                entry.options[CONF_NAME],
+                entry.options[CONF_TIME_FORMAT],
+                entry.entry_id,
             )
         ],
         True,
@@ -52,12 +39,22 @@ class WorldClockSensor(SensorEntity):
     """Representation of a World clock sensor."""
 
     _attr_icon = "mdi:clock"
+    _attr_has_entity_name = True
+    _attr_name = None
 
-    def __init__(self, time_zone: tzinfo | None, name: str, time_format: str) -> None:
+    def __init__(
+        self, time_zone: tzinfo | None, name: str, time_format: str, unique_id: str
+    ) -> None:
         """Initialize the sensor."""
-        self._attr_name = name
         self._time_zone = time_zone
         self._time_format = time_format
+        self._attr_unique_id = unique_id
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, unique_id)},
+            name=name,
+            entry_type=DeviceEntryType.SERVICE,
+            manufacturer="Worldclock",
+        )
 
     async def async_update(self) -> None:
         """Get the time and updates the states."""

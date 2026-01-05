@@ -3,7 +3,7 @@
 import asyncio
 import logging
 
-from pywaze.route_calculator import CalcRoutesResponse, WazeRouteCalculator, WRCError
+from pywaze.route_calculator import WazeRouteCalculator
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -15,12 +15,15 @@ from homeassistant.core import (
     SupportsResponse,
 )
 from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.location import find_coordinates
 from homeassistant.helpers.selector import (
     BooleanSelector,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
     TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
 )
 
 from .const import (
@@ -28,10 +31,13 @@ from .const import (
     CONF_AVOID_SUBSCRIPTION_ROADS,
     CONF_AVOID_TOLL_ROADS,
     CONF_DESTINATION,
+    CONF_EXCL_FILTER,
+    CONF_INCL_FILTER,
     CONF_ORIGIN,
     CONF_REALTIME,
     CONF_UNITS,
     CONF_VEHICLE_TYPE,
+    DEFAULT_FILTER,
     DEFAULT_VEHICLE_TYPE,
     DOMAIN,
     METRIC_UNITS,
@@ -40,6 +46,7 @@ from .const import (
     UNITS,
     VEHICLE_TYPES,
 )
+from .coordinator import WazeTravelTimeCoordinator, async_get_travel_times
 
 PLATFORMS = [Platform.SENSOR]
 
@@ -76,6 +83,18 @@ SERVICE_GET_TRAVEL_TIMES_SCHEMA = vol.Schema(
         vol.Optional(CONF_AVOID_TOLL_ROADS, default=False): BooleanSelector(),
         vol.Optional(CONF_AVOID_SUBSCRIPTION_ROADS, default=False): BooleanSelector(),
         vol.Optional(CONF_AVOID_FERRIES, default=False): BooleanSelector(),
+        vol.Optional(CONF_INCL_FILTER): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.TEXT,
+                multiple=True,
+            ),
+        ),
+        vol.Optional(CONF_EXCL_FILTER): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.TEXT,
+                multiple=True,
+            ),
+        ),
     }
 )
 
@@ -86,6 +105,17 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     """Load the saved entities."""
     if SEMAPHORE not in hass.data.setdefault(DOMAIN, {}):
         hass.data.setdefault(DOMAIN, {})[SEMAPHORE] = asyncio.Semaphore(1)
+
+    httpx_client = get_async_client(hass)
+    client = WazeRouteCalculator(
+        region=config_entry.data[CONF_REGION].upper(), client=httpx_client
+    )
+
+    coordinator = WazeTravelTimeCoordinator(hass, config_entry, client)
+    config_entry.runtime_data = coordinator
+
+    await coordinator.async_config_entry_first_refresh()
+
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     async def async_get_travel_times_service(service: ServiceCall) -> ServiceResponse:
@@ -93,17 +123,31 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         client = WazeRouteCalculator(
             region=service.data[CONF_REGION].upper(), client=httpx_client
         )
+
+        origin_coordinates = find_coordinates(hass, service.data[CONF_ORIGIN])
+        destination_coordinates = find_coordinates(hass, service.data[CONF_DESTINATION])
+
+        origin = origin_coordinates if origin_coordinates else service.data[CONF_ORIGIN]
+        destination = (
+            destination_coordinates
+            if destination_coordinates
+            else service.data[CONF_DESTINATION]
+        )
+
         response = await async_get_travel_times(
             client=client,
-            origin=service.data[CONF_ORIGIN],
-            destination=service.data[CONF_DESTINATION],
+            origin=origin,
+            destination=destination,
             vehicle_type=service.data[CONF_VEHICLE_TYPE],
             avoid_toll_roads=service.data[CONF_AVOID_TOLL_ROADS],
             avoid_subscription_roads=service.data[CONF_AVOID_SUBSCRIPTION_ROADS],
             avoid_ferries=service.data[CONF_AVOID_FERRIES],
             realtime=service.data[CONF_REALTIME],
+            units=service.data[CONF_UNITS],
+            incl_filters=service.data.get(CONF_INCL_FILTER, DEFAULT_FILTER),
+            excl_filters=service.data.get(CONF_EXCL_FILTER, DEFAULT_FILTER),
         )
-        return {"routes": [vars(route) for route in response]} if response else None
+        return {"routes": [vars(route) for route in response]}
 
     hass.services.async_register(
         DOMAIN,
@@ -115,70 +159,33 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     return True
 
 
-async def async_get_travel_times(
-    client: WazeRouteCalculator,
-    origin: str,
-    destination: str,
-    vehicle_type: str,
-    avoid_toll_roads: bool,
-    avoid_subscription_roads: bool,
-    avoid_ferries: bool,
-    realtime: bool,
-    incl_filter: str | None = None,
-    excl_filter: str | None = None,
-) -> list[CalcRoutesResponse] | None:
-    """Get all available routes."""
-
-    _LOGGER.debug(
-        "Getting update for origin: %s destination: %s",
-        origin,
-        destination,
-    )
-    routes = []
-    vehicle_type = "" if vehicle_type.upper() == "CAR" else vehicle_type.upper()
-    try:
-        routes = await client.calc_routes(
-            origin,
-            destination,
-            vehicle_type=vehicle_type,
-            avoid_toll_roads=avoid_toll_roads,
-            avoid_subscription_roads=avoid_subscription_roads,
-            avoid_ferries=avoid_ferries,
-            real_time=realtime,
-            alternatives=3,
-        )
-
-        if incl_filter not in {None, ""}:
-            routes = [
-                r
-                for r in routes
-                if any(
-                    incl_filter.lower() == street_name.lower()  # type: ignore[union-attr]
-                    for street_name in r.street_names
-                )
-            ]
-
-        if excl_filter not in {None, ""}:
-            routes = [
-                r
-                for r in routes
-                if not any(
-                    excl_filter.lower() == street_name.lower()  # type: ignore[union-attr]
-                    for street_name in r.street_names
-                )
-            ]
-
-        if len(routes) < 1:
-            _LOGGER.warning("No routes found")
-            return None
-    except WRCError as exp:
-        _LOGGER.warning("Error on retrieving data: %s", exp)
-        return None
-
-    else:
-        return routes
-
-
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate an old config entry."""
+
+    if config_entry.version == 1:
+        _LOGGER.debug(
+            "Migrating from version %s.%s",
+            config_entry.version,
+            config_entry.minor_version,
+        )
+        options = dict(config_entry.options)
+        if (incl_filters := options.pop(CONF_INCL_FILTER, None)) not in {None, ""}:
+            options[CONF_INCL_FILTER] = [incl_filters]
+        else:
+            options[CONF_INCL_FILTER] = DEFAULT_FILTER
+        if (excl_filters := options.pop(CONF_EXCL_FILTER, None)) not in {None, ""}:
+            options[CONF_EXCL_FILTER] = [excl_filters]
+        else:
+            options[CONF_EXCL_FILTER] = DEFAULT_FILTER
+        hass.config_entries.async_update_entry(config_entry, options=options, version=2)
+        _LOGGER.debug(
+            "Migration to version %s.%s successful",
+            config_entry.version,
+            config_entry.minor_version,
+        )
+    return True

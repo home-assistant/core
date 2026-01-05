@@ -12,6 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.loader import async_get_integration
 from homeassistant.requirements import (
     CONSTRAINT_FILE,
+    DEPRECATED_PACKAGES,
     RequirementsNotFound,
     _async_get_manager,
     async_clear_install_history,
@@ -585,7 +586,8 @@ async def test_discovery_requirements_mqtt(hass: HomeAssistant) -> None:
     ) as mock_process:
         await async_get_integration_with_requirements(hass, "mqtt_comp")
 
-    assert len(mock_process.mock_calls) == 1
+    assert len(mock_process.mock_calls) == 2
+    # one for mqtt and one for hassio
     assert mock_process.mock_calls[0][1][1] == mqtt.requirements
 
 
@@ -602,12 +604,12 @@ async def test_discovery_requirements_ssdp(hass: HomeAssistant) -> None:
     ) as mock_process:
         await async_get_integration_with_requirements(hass, "ssdp_comp")
 
-    assert len(mock_process.mock_calls) == 3
+    assert len(mock_process.mock_calls) == 2
     assert mock_process.mock_calls[0][1][1] == ssdp.requirements
     assert {
+        mock_process.mock_calls[0][1][0],
         mock_process.mock_calls[1][1][0],
-        mock_process.mock_calls[2][1][0],
-    } == {"network", "recorder"}
+    } == {"network", "ssdp"}
 
 
 @pytest.mark.parametrize(
@@ -631,7 +633,7 @@ async def test_discovery_requirements_zeroconf(
     ) as mock_process:
         await async_get_integration_with_requirements(hass, "comp")
 
-    assert len(mock_process.mock_calls) == 3
+    assert len(mock_process.mock_calls) == 2
     assert mock_process.mock_calls[0][1][1] == zeroconf.requirements
 
 
@@ -654,5 +656,64 @@ async def test_discovery_requirements_dhcp(hass: HomeAssistant) -> None:
     ) as mock_process:
         await async_get_integration_with_requirements(hass, "comp")
 
-    assert len(mock_process.mock_calls) == 1  # dhcp does not depend on http
+    assert len(mock_process.mock_calls) == 2  # dhcp does not depend on http
     assert mock_process.mock_calls[0][1][1] == dhcp.requirements
+
+
+@pytest.mark.parametrize(
+    ("requirement", "is_built_in", "deprecation_info"),
+    [
+        (
+            "hello",
+            True,
+            "which is deprecated for testing. This will stop working in Home Assistant"
+            " 2020.12, please create a bug report at https://github.com/home-assistant/"
+            "core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+test_component%22",
+        ),
+        (
+            "hello>=1.0.0",
+            False,
+            "which is deprecated for testing. This will stop working in Home Assistant"
+            " 2020.12, please create a bug report at https://github.com/home-assistant/"
+            "core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+test_component%22",
+        ),
+        (
+            "pyserial-asyncio",
+            False,
+            "which should be replaced by pyserial-asyncio-fast. This will stop"
+            " working in Home Assistant 2026.7, please create a bug report at "
+            "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+"
+            "label%3A%22integration%3A+test_component%22",
+        ),
+        (
+            "pyserial-asyncio>=0.6",
+            True,
+            "which should be replaced by pyserial-asyncio-fast. This will stop"
+            " working in Home Assistant 2026.7, please create a bug report at "
+            "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+"
+            "label%3A%22integration%3A+test_component%22",
+        ),
+    ],
+)
+async def test_install_deprecated_package(
+    hass: HomeAssistant,
+    requirement: str,
+    is_built_in: bool,
+    deprecation_info: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test installation of a deprecated package."""
+    with (
+        patch.dict(
+            DEPRECATED_PACKAGES, {"hello": ("is deprecated for testing", "2020.12")}
+        ),
+        patch("homeassistant.util.package.install_package", return_value=True),
+    ):
+        await async_process_requirements(
+            hass, "test_component", [requirement], is_built_in
+        )
+
+    assert (
+        f"Detected that {'' if is_built_in else 'custom '}integration "
+        f"'test_component' has requirement '{requirement}' {deprecation_info}"
+    ) in caplog.text

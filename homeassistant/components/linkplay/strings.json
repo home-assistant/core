@@ -1,0 +1,61 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "flow_title": "{name}",
+    "step": {
+      "discovery_confirm": {
+        "description": "Do you want to set up {name}?"
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the LinkPlay device."
+        }
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "timesync": {
+        "name": "Sync time"
+      }
+    },
+    "select": {
+      "audio_output_hardware_mode": {
+        "name": "Audio output hardware mode",
+        "state": {
+          "coaxial": "Coaxial",
+          "headphones": "Headphones",
+          "line_out": "Line out",
+          "optical": "Optical"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "invalid_grouping_entity": {
+      "message": "Entity with ID {entity_id} can't be added to the LinkPlay multiroom. Is the entity a LinkPlay media player?"
+    }
+  },
+  "services": {
+    "play_preset": {
+      "description": "Plays a preset on the device.",
+      "fields": {
+        "preset_number": {
+          "description": "The number of the preset to play.",
+          "name": "Preset number"
+        }
+      },
+      "name": "Play preset"
+    }
+  }
+}

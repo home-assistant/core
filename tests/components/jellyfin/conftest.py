@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, create_autospec, patch
 
 from jellyfin_apiclient_python import JellyfinClient
@@ -9,7 +10,6 @@ from jellyfin_apiclient_python.api import API
 from jellyfin_apiclient_python.configuration import Config
 from jellyfin_apiclient_python.connection_manager import ConnectionManager
 import pytest
-from typing_extensions import Generator
 
 from homeassistant.components.jellyfin.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
@@ -81,6 +81,7 @@ def mock_api() -> MagicMock:
     jf_api.get_item.side_effect = api_get_item_side_effect
     jf_api.get_media_folders.return_value = load_json_fixture("get-media-folders.json")
     jf_api.user_items.side_effect = api_user_items_side_effect
+    jf_api.search_media_items.return_value = load_json_fixture("user-items.json")
 
     return jf_api
 

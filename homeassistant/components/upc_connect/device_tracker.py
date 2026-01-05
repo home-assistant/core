@@ -9,21 +9,21 @@ from connect_box.exceptions import ConnectBoxError, ConnectBoxLoginError
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    DOMAIN,
-    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
+    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
     DeviceScanner,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_IP = "192.168.0.1"
 
-PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_HOST, default=DEFAULT_IP): cv.string,
@@ -35,7 +35,7 @@ async def async_get_scanner(
     hass: HomeAssistant, config: ConfigType
 ) -> UPCDeviceScanner | None:
     """Return the UPC device scanner."""
-    conf = config[DOMAIN]
+    conf = config[DEVICE_TRACKER_DOMAIN]
     session = async_get_clientsession(hass)
     connect_box = ConnectBox(session, conf[CONF_PASSWORD], host=conf[CONF_HOST])
 

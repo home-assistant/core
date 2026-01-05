@@ -11,12 +11,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     CONF_DEVICE_TYPE,
+    DEV_ALERT,
     DEV_HUB,
     DEV_LEAK_DETECTOR,
     DEV_PROTECTION_VALVE,
@@ -24,17 +24,18 @@ from .const import (
     DEV_RO_FILTER,
     DEV_SALT_SENSOR,
     DEV_SOFTENER,
-    DOMAIN,
 )
-from .coordinator import DROPDeviceDataUpdateCoordinator
+from .coordinator import DROPConfigEntry, DROPDeviceDataUpdateCoordinator
 from .entity import DROPEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
 # Binary sensor type constants
+ALERT_SENSOR = "alert_sensor"
 LEAK_DETECTED = "leak"
 PENDING_NOTIFICATION = "pending_notification"
+POWER = "power"
 PUMP_STATUS = "pump"
 RESERVE_IN_USE = "reserve_in_use"
 SALT_LOW = "salt"
@@ -74,10 +75,23 @@ BINARY_SENSORS: list[DROPBinarySensorEntityDescription] = [
         translation_key=PUMP_STATUS,
         value_fn=lambda device: device.drop_api.pump_status(),
     ),
+    DROPBinarySensorEntityDescription(
+        key=ALERT_SENSOR,
+        translation_key=ALERT_SENSOR,
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        value_fn=lambda device: device.drop_api.sensor_high(),
+    ),
+    DROPBinarySensorEntityDescription(
+        key=POWER,
+        translation_key=None,  # Use name provided by binary sensor device class
+        device_class=BinarySensorDeviceClass.POWER,
+        value_fn=lambda device: device.drop_api.power(),
+    ),
 ]
 
 # Defines which binary sensors are used by each device type
 DEVICE_BINARY_SENSORS: dict[str, list[str]] = {
+    DEV_ALERT: [ALERT_SENSOR, POWER],
     DEV_HUB: [LEAK_DETECTED, PENDING_NOTIFICATION],
     DEV_LEAK_DETECTOR: [LEAK_DETECTED],
     DEV_PROTECTION_VALVE: [LEAK_DETECTED],
@@ -90,8 +104,8 @@ DEVICE_BINARY_SENSORS: dict[str, list[str]] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: DROPConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the DROP binary sensors from config entry."""
     _LOGGER.debug(
@@ -100,9 +114,10 @@ async def async_setup_entry(
         config_entry.entry_id,
     )
 
+    coordinator = config_entry.runtime_data
     if config_entry.data[CONF_DEVICE_TYPE] in DEVICE_BINARY_SENSORS:
         async_add_entities(
-            DROPBinarySensor(hass.data[DOMAIN][config_entry.entry_id], sensor)
+            DROPBinarySensor(coordinator, sensor)
             for sensor in BINARY_SENSORS
             if sensor.key in DEVICE_BINARY_SENSORS[config_entry.data[CONF_DEVICE_TYPE]]
         )

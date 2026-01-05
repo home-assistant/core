@@ -1,9 +1,6 @@
 {
   "entity": {
     "button": {
-      "ptz_up": {
-        "default": "mdi:pan"
-      },
       "ptz_down": {
         "default": "mdi:pan"
       },
@@ -11,6 +8,9 @@
         "default": "mdi:pan"
       },
       "ptz_right": {
+        "default": "mdi:pan"
+      },
+      "ptz_up": {
         "default": "mdi:pan"
       }
     },
@@ -26,7 +26,11 @@
     }
   },
   "services": {
-    "set_alarm_detection_sensibility": "mdi:motion-sensor",
-    "wake_device": "mdi:sleep-off"
+    "set_alarm_detection_sensibility": {
+      "service": "mdi:motion-sensor"
+    },
+    "wake_device": {
+      "service": "mdi:sleep-off"
+    }
   }
 }

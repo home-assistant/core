@@ -4,8 +4,8 @@ from datetime import timedelta
 from http import HTTPStatus
 import io
 
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 

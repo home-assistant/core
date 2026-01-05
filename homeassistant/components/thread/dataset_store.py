@@ -5,10 +5,10 @@ from __future__ import annotations
 from asyncio import Event, Task, wait
 import dataclasses
 from datetime import datetime
-from functools import cached_property
 import logging
 from typing import Any, cast
 
+from propcache.api import cached_property
 from python_otbr_api import tlv_parser
 from python_otbr_api.tlv_parser import MeshcopTLVType
 
@@ -143,9 +143,9 @@ class DatasetStoreStore(Store):
                                 MeshcopTLVType.ACTIVETIMESTAMP
                             ],
                         )
-                        if old_timestamp.seconds >= new_timestamp.seconds or (
-                            old_timestamp.seconds == new_timestamp.seconds
-                            and old_timestamp.ticks >= new_timestamp.ticks
+                        if (old_timestamp.seconds, old_timestamp.ticks) >= (
+                            new_timestamp.seconds,
+                            new_timestamp.ticks,
                         ):
                             _LOGGER.warning(
                                 (
@@ -256,9 +256,9 @@ class DatasetStore:
                 tlv_parser.Timestamp,
                 entry.dataset[MeshcopTLVType.ACTIVETIMESTAMP],
             )
-            if old_timestamp.seconds >= new_timestamp.seconds or (
-                old_timestamp.seconds == new_timestamp.seconds
-                and old_timestamp.ticks >= new_timestamp.ticks
+            if (old_timestamp.seconds, old_timestamp.ticks) >= (
+                new_timestamp.seconds,
+                new_timestamp.ticks,
             ):
                 _LOGGER.warning(
                     (

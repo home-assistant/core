@@ -5,7 +5,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.components.websocket_api.connection import ActiveConnection
+from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import floor_registry as fr
 from homeassistant.helpers.floor_registry import FloorEntry
@@ -18,6 +18,7 @@ def async_setup(hass: HomeAssistant) -> bool:
     websocket_api.async_register_command(hass, websocket_create_floor)
     websocket_api.async_register_command(hass, websocket_delete_floor)
     websocket_api.async_register_command(hass, websocket_update_floor)
+    websocket_api.async_register_command(hass, websocket_reorder_floors)
     return True
 
 
@@ -60,8 +61,10 @@ def websocket_create_floor(
     data.pop("id")
 
     if "aliases" in data:
-        # Convert aliases to a set
-        data["aliases"] = set(data["aliases"])
+        # Create a set for the aliases without:
+        #   - Empty strings
+        #   - Trailing and leading whitespace characters in the individual aliases
+        data["aliases"] = {s_strip for s in data["aliases"] if (s_strip := s.strip())}
 
     try:
         entry = registry.async_create(**data)
@@ -116,8 +119,10 @@ def websocket_update_floor(
     data.pop("id")
 
     if "aliases" in data:
-        # Convert aliases to a set
-        data["aliases"] = set(data["aliases"])
+        # Create a set for the aliases without:
+        #   - Empty strings
+        #   - Trailing and leading whitespace characters in the individual aliases
+        data["aliases"] = {s_strip for s in data["aliases"] if (s_strip := s.strip())}
 
     try:
         entry = registry.async_update(**data)
@@ -127,13 +132,37 @@ def websocket_update_floor(
         connection.send_result(msg["id"], _entry_dict(entry))
 
 
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "config/floor_registry/reorder",
+        vol.Required("floor_ids"): [str],
+    }
+)
+@websocket_api.require_admin
+@callback
+def websocket_reorder_floors(
+    hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """Handle reorder floors websocket command."""
+    registry = fr.async_get(hass)
+
+    try:
+        registry.async_reorder(msg["floor_ids"])
+    except ValueError as err:
+        connection.send_error(msg["id"], websocket_api.ERR_INVALID_FORMAT, str(err))
+    else:
+        connection.send_result(msg["id"])
+
+
 @callback
 def _entry_dict(entry: FloorEntry) -> dict[str, Any]:
     """Convert entry to API format."""
     return {
         "aliases": list(entry.aliases),
+        "created_at": entry.created_at.timestamp(),
         "floor_id": entry.floor_id,
         "icon": entry.icon,
         "level": entry.level,
         "name": entry.name,
+        "modified_at": entry.modified_at.timestamp(),
     }

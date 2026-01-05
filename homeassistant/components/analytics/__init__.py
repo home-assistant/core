@@ -6,53 +6,75 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import Event, HassJob, HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import async_call_later, async_track_time_interval
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
 
-from .analytics import Analytics
-from .const import ATTR_ONBOARDED, ATTR_PREFERENCES, DOMAIN, INTERVAL, PREFERENCE_SCHEMA
+from .analytics import (
+    Analytics,
+    AnalyticsInput,
+    AnalyticsModifications,
+    DeviceAnalyticsModifications,
+    EntityAnalyticsModifications,
+    async_devices_payload,
+)
+from .const import ATTR_ONBOARDED, ATTR_PREFERENCES, DOMAIN, PREFERENCE_SCHEMA
+from .http import AnalyticsDevicesView
 
-CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+__all__ = [
+    "AnalyticsInput",
+    "AnalyticsModifications",
+    "DeviceAnalyticsModifications",
+    "EntityAnalyticsModifications",
+    "async_devices_payload",
+]
+
+CONF_SNAPSHOTS_URL = "snapshots_url"
+
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Optional(CONF_SNAPSHOTS_URL): vol.Any(str, None),
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
+DATA_COMPONENT: HassKey[Analytics] = HassKey(DOMAIN)
 
 
-async def async_setup(hass: HomeAssistant, _: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the analytics integration."""
-    analytics = Analytics(hass)
+    analytics_config = config.get(DOMAIN, {})
+
+    # For now we want to enable device analytics only if the url option
+    # is explicitly listed in YAML.
+    if CONF_SNAPSHOTS_URL in analytics_config:
+        disable_snapshots = False
+        snapshots_url = analytics_config[CONF_SNAPSHOTS_URL]
+    else:
+        disable_snapshots = True
+        snapshots_url = None
+
+    analytics = Analytics(hass, snapshots_url, disable_snapshots)
 
     # Load stored data
     await analytics.load()
 
-    @callback
-    def start_schedule(_event: Event) -> None:
+    async def start_schedule(_event: Event) -> None:
         """Start the send schedule after the started event."""
-        # Wait 15 min after started
-        async_call_later(
-            hass,
-            900,
-            HassJob(
-                analytics.send_analytics,
-                name="analytics schedule",
-                cancel_on_shutdown=True,
-            ),
-        )
-
-        # Send every day
-        async_track_time_interval(
-            hass,
-            analytics.send_analytics,
-            INTERVAL,
-            name="analytics daily",
-            cancel_on_shutdown=True,
-        )
+        await analytics.async_schedule()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, start_schedule)
 
     websocket_api.async_register_command(hass, websocket_analytics)
     websocket_api.async_register_command(hass, websocket_analytics_preferences)
 
-    hass.data[DOMAIN] = analytics
+    hass.http.register_view(AnalyticsDevicesView)
+
+    hass.data[DATA_COMPONENT] = analytics
     return True
 
 
@@ -65,7 +87,7 @@ def websocket_analytics(
     msg: dict[str, Any],
 ) -> None:
     """Return analytics preferences."""
-    analytics: Analytics = hass.data[DOMAIN]
+    analytics = hass.data[DATA_COMPONENT]
     connection.send_result(
         msg["id"],
         {ATTR_PREFERENCES: analytics.preferences, ATTR_ONBOARDED: analytics.onboarded},
@@ -87,10 +109,10 @@ async def websocket_analytics_preferences(
 ) -> None:
     """Update analytics preferences."""
     preferences = msg[ATTR_PREFERENCES]
-    analytics: Analytics = hass.data[DOMAIN]
+    analytics = hass.data[DATA_COMPONENT]
 
     await analytics.save_preferences(preferences)
-    await analytics.send_analytics()
+    await analytics.async_schedule()
 
     connection.send_result(
         msg["id"],

@@ -8,13 +8,12 @@ from dataclasses import dataclass
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import HomeAssistantOverkizData
-from .const import DOMAIN, IGNORED_OVERKIZ_DEVICES
+from . import OverkizDataConfigEntry
+from .const import IGNORED_OVERKIZ_DEVICES
 from .entity import OverkizDescriptiveEntity
 
 
@@ -73,7 +72,6 @@ SELECT_DESCRIPTIONS: list[OverkizSelectDescription] = [
     OverkizSelectDescription(
         key=OverkizState.CORE_OPEN_CLOSED_PEDESTRIAN,
         name="Position",
-        icon="mdi:content-save-cog",
         options=[
             OverkizCommandParam.OPEN,
             OverkizCommandParam.PEDESTRIAN,
@@ -85,7 +83,6 @@ SELECT_DESCRIPTIONS: list[OverkizSelectDescription] = [
     OverkizSelectDescription(
         key=OverkizState.CORE_OPEN_CLOSED_PARTIAL,
         name="Position",
-        icon="mdi:content-save-cog",
         options=[
             OverkizCommandParam.OPEN,
             OverkizCommandParam.PARTIAL,
@@ -97,7 +94,6 @@ SELECT_DESCRIPTIONS: list[OverkizSelectDescription] = [
     OverkizSelectDescription(
         key=OverkizState.IO_MEMORIZED_SIMPLE_VOLUME,
         name="Memorized simple volume",
-        icon="mdi:volume-high",
         options=[OverkizCommandParam.STANDARD, OverkizCommandParam.HIGHEST],
         select_option=_select_option_memorized_simple_volume,
         entity_category=EntityCategory.CONFIG,
@@ -107,20 +103,20 @@ SELECT_DESCRIPTIONS: list[OverkizSelectDescription] = [
     OverkizSelectDescription(
         key=OverkizState.OVP_HEATING_TEMPERATURE_INTERFACE_OPERATING_MODE,
         name="Operating mode",
-        icon="mdi:sun-snowflake",
         options=[OverkizCommandParam.HEATING, OverkizCommandParam.COOLING],
         select_option=lambda option, execute_command: execute_command(
             OverkizCommand.SET_OPERATING_MODE, option
         ),
         entity_category=EntityCategory.CONFIG,
+        translation_key="operating_mode",
     ),
     # StatefulAlarmController
     OverkizSelectDescription(
         key=OverkizState.CORE_ACTIVE_ZONES,
         name="Active zones",
-        icon="mdi:shield-lock",
         options=["", "A", "B", "C", "A,B", "B,C", "A,C", "A,B,C"],
         select_option=_select_option_active_zone,
+        translation_key="active_zones",
     ),
 ]
 
@@ -129,11 +125,11 @@ SUPPORTED_STATES = {description.key: description for description in SELECT_DESCR
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: OverkizDataConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Overkiz select from a config entry."""
-    data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
     entities: list[OverkizSelect] = []
 
     for device in data.coordinator.data.values():

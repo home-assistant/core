@@ -8,7 +8,7 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 
-from . import AccuWeatherConfigEntry, AccuWeatherData
+from .coordinator import AccuWeatherConfigEntry, AccuWeatherData
 
 TO_REDACT = {CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE}
 

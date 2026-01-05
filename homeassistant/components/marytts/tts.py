@@ -5,9 +5,13 @@ from __future__ import annotations
 from speak2mary import MaryTTS
 import voluptuous as vol
 
-from homeassistant.components.tts import CONF_LANG, PLATFORM_SCHEMA, Provider
+from homeassistant.components.tts import (
+    CONF_LANG,
+    PLATFORM_SCHEMA as TTS_PLATFORM_SCHEMA,
+    Provider,
+)
 from homeassistant.const import CONF_EFFECT, CONF_HOST, CONF_PORT
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 CONF_VOICE = "voice"
 CONF_CODEC = "codec"
@@ -26,7 +30,7 @@ DEFAULT_EFFECTS: dict[str, str] = {}
 
 MAP_MARYTTS_CODEC = {"WAVE_FILE": "wav", "AIFF_FILE": "aiff", "AU_FILE": "au"}
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = TTS_PLATFORM_SCHEMA.extend(
     {
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,

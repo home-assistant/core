@@ -1,104 +1,117 @@
 """Test configuration and mocks for LCN component."""
 
 import json
-from unittest.mock import AsyncMock, patch
+from typing import Any
+from unittest.mock import AsyncMock, Mock, patch
 
 import pypck
-from pypck.connection import PchkConnectionManager
-import pypck.module
-from pypck.module import GroupConnection, ModuleConnection
+from pypck import lcn_defs
+from pypck.device import DeviceConnection, Serials
 import pytest
 
+from homeassistant.components.lcn import PchkConnectionManager
+from homeassistant.components.lcn.config_flow import LcnFlowHandler
 from homeassistant.components.lcn.const import DOMAIN
-from homeassistant.components.lcn.helpers import generate_unique_id
-from homeassistant.const import CONF_HOST
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.components.lcn.helpers import AddressType, generate_unique_id
+from homeassistant.const import CONF_ADDRESS, CONF_DEVICES, CONF_ENTITIES, CONF_HOST
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, async_mock_service, load_fixture
+from tests.common import MockConfigEntry, load_fixture
+
+LATEST_CONFIG_ENTRY_VERSION = (LcnFlowHandler.VERSION, LcnFlowHandler.MINOR_VERSION)
 
 
-class MockModuleConnection(ModuleConnection):
+class MockDeviceConnection(DeviceConnection):
     """Fake a LCN module connection."""
 
-    status_request_handler = AsyncMock()
-    activate_status_request_handler = AsyncMock()
-    cancel_status_request_handler = AsyncMock()
     request_name = AsyncMock(return_value="TestModule")
+    request_serials = AsyncMock(
+        return_value=Serials(
+            hardware_serial=0x1A20A1234,
+            manu=0x01,
+            software_serial=0x190B11,
+            hardware_type=lcn_defs.HardwareType.UPP,
+        )
+    )
     send_command = AsyncMock(return_value=True)
+    request_status_output = AsyncMock()
+    request_status_relays = AsyncMock()
+    request_status_motor_position = AsyncMock()
+    request_status_binary_sensors = AsyncMock()
+    request_status_variable = AsyncMock()
+    request_status_led_and_logic_ops = AsyncMock()
+    request_status_locked_keys = AsyncMock()
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Construct ModuleConnection instance."""
         super().__init__(*args, **kwargs)
-        self.serials_request_handler.serial_known.set()
-
-
-class MockGroupConnection(GroupConnection):
-    """Fake a LCN group connection."""
-
-    send_command = AsyncMock(return_value=True)
+        self._serials_known.set()
 
 
 class MockPchkConnectionManager(PchkConnectionManager):
     """Fake connection handler."""
 
-    async def async_connect(self, timeout=30):
+    async def async_connect(self, timeout: int = 30) -> None:
         """Mock establishing a connection to PCHK."""
         self.authentication_completed_future.set_result(True)
         self.license_error_future.set_result(True)
         self.segment_scan_completed_event.set()
 
-    async def async_close(self):
+    async def async_close(self) -> None:
         """Mock closing a connection to PCHK."""
 
-    @patch.object(pypck.connection, "ModuleConnection", MockModuleConnection)
-    @patch.object(pypck.connection, "GroupConnection", MockGroupConnection)
-    def get_address_conn(self, addr, request_serials=False):
-        """Get LCN address connection."""
-        return super().get_address_conn(addr, request_serials)
+    @patch.object(pypck.connection, "DeviceConnection", MockDeviceConnection)
+    def get_device_connection(self, addr):
+        """Get LCN device connection."""
+        return super().get_device_connection(addr)
 
+    scan_modules = AsyncMock()
     send_command = AsyncMock()
 
 
-def create_config_entry(name):
+def create_config_entry(
+    name: str, version: tuple[int, int] = LATEST_CONFIG_ENTRY_VERSION
+) -> MockConfigEntry:
     """Set up config entries with configuration data."""
     fixture_filename = f"lcn/config_entry_{name}.json"
     entry_data = json.loads(load_fixture(fixture_filename))
+    for device in entry_data[CONF_DEVICES]:
+        device[CONF_ADDRESS] = tuple(device[CONF_ADDRESS])
+    for entity in entry_data[CONF_ENTITIES]:
+        entity[CONF_ADDRESS] = tuple(entity[CONF_ADDRESS])
+
     options = {}
 
     title = entry_data[CONF_HOST]
-    unique_id = fixture_filename
     return MockConfigEntry(
+        entry_id=fixture_filename.replace(".", "_"),
         domain=DOMAIN,
         title=title,
-        unique_id=unique_id,
         data=entry_data,
         options=options,
+        version=version[0],
+        minor_version=version[1],
     )
 
 
-@pytest.fixture
-def calls(hass: HomeAssistant) -> list[ServiceCall]:
-    """Track calls to a mock service."""
-    return async_mock_service(hass, "test", "automation")
-
-
 @pytest.fixture(name="entry")
-def create_config_entry_pchk():
+def create_config_entry_pchk() -> MockConfigEntry:
     """Return one specific config entry."""
     return create_config_entry("pchk")
 
 
 @pytest.fixture(name="entry2")
-def create_config_entry_myhome():
+def create_config_entry_myhome() -> MockConfigEntry:
     """Return one specific config entry."""
     return create_config_entry("myhome")
 
 
-@pytest.fixture(name="lcn_connection")
-async def init_integration(hass, entry):
+async def init_integration(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> MockPchkConnectionManager:
     """Set up the LCN integration in Home Assistant."""
+    hass.http = Mock()  # needs to be mocked as hass.http.register_static_path is called when registering the frontend
     lcn_connection = None
 
     def lcn_connection_factory(*args, **kwargs):
@@ -108,24 +121,18 @@ async def init_integration(hass, entry):
 
     entry.add_to_hass(hass)
     with patch(
-        "pypck.connection.PchkConnectionManager",
+        "homeassistant.components.lcn.PchkConnectionManager",
         side_effect=lcn_connection_factory,
     ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-        yield lcn_connection
+
+    return lcn_connection
 
 
-async def setup_component(hass):
-    """Set up the LCN component."""
-    fixture_filename = "lcn/config.json"
-    config_data = json.loads(load_fixture(fixture_filename))
-
-    await async_setup_component(hass, DOMAIN, config_data)
-    await hass.async_block_till_done()
-
-
-def get_device(hass, entry, address):
+def get_device(
+    hass: HomeAssistant, entry: MockConfigEntry, address: AddressType
+) -> dr.DeviceEntry:
     """Get LCN device for specified address."""
     device_registry = dr.async_get(hass)
     identifiers = {(DOMAIN, generate_unique_id(entry.entry_id, address))}

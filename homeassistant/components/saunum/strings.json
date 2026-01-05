@@ -1,0 +1,91 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::ip%]"
+        },
+        "data_description": {
+          "host": "[%key:component::saunum::config::step::user::data_description::host%]"
+        },
+        "description": "[%key:component::saunum::config::step::user::description%]"
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::ip%]"
+        },
+        "data_description": {
+          "host": "IP address of your Saunum Leil sauna control unit"
+        },
+        "description": "To find the IP address, navigate to Settings → Modbus Settings on your Leil touch panel"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "alarm_door_open": {
+        "name": "Door open during heating alarm"
+      },
+      "alarm_door_sensor": {
+        "name": "Door open too long alarm"
+      },
+      "alarm_internal_temp": {
+        "name": "Internal temperature alarm"
+      },
+      "alarm_temp_sensor_open": {
+        "name": "Temperature sensor disconnected alarm"
+      },
+      "alarm_temp_sensor_short": {
+        "name": "Temperature sensor shorted alarm"
+      },
+      "alarm_thermal_cutoff": {
+        "name": "Thermal cutoff alarm"
+      }
+    },
+    "light": {
+      "light": {
+        "name": "[%key:component::light::title%]"
+      }
+    },
+    "sensor": {
+      "heater_elements_active": {
+        "name": "Heater elements active",
+        "unit_of_measurement": "heater elements"
+      },
+      "on_time": {
+        "name": "Total time turned on"
+      }
+    }
+  },
+  "exceptions": {
+    "communication_error": {
+      "message": "Communication error: {error}"
+    },
+    "door_open": {
+      "message": "Cannot start sauna session when sauna door is open"
+    },
+    "session_not_active": {
+      "message": "Cannot change fan mode when sauna session is not active"
+    },
+    "set_hvac_mode_failed": {
+      "message": "Failed to set HVAC mode to {hvac_mode}"
+    },
+    "set_light_off_failed": {
+      "message": "Failed to turn off light"
+    },
+    "set_light_on_failed": {
+      "message": "Failed to turn on light"
+    },
+    "set_temperature_failed": {
+      "message": "Failed to set temperature to {temperature}"
+    }
+  }
+}

@@ -3,143 +3,143 @@
 import logging
 
 from pyvesync import VeSync
-
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
-from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-
-from .common import async_process_devices
-from .const import (
-    DOMAIN,
-    SERVICE_UPDATE_DEVS,
-    VS_DISCOVERY,
-    VS_FANS,
-    VS_LIGHTS,
-    VS_MANAGER,
-    VS_SENSORS,
-    VS_SWITCHES,
+from pyvesync.utils.errors import (
+    VeSyncAPIResponseError,
+    VeSyncLoginError,
+    VeSyncServerError,
 )
 
-PLATFORMS = [Platform.FAN, Platform.LIGHT, Platform.SENSOR, Platform.SWITCH]
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.typing import ConfigType
+
+from .const import DOMAIN
+from .coordinator import VesyncConfigEntry, VeSyncDataCoordinator
+from .services import async_setup_services
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.FAN,
+    Platform.HUMIDIFIER,
+    Platform.LIGHT,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.UPDATE,
+]
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up my integration."""
+
+    async_setup_services(hass)
+
+    return True
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: VesyncConfigEntry
+) -> bool:
     """Set up Vesync as config entry."""
     username = config_entry.data[CONF_USERNAME]
     password = config_entry.data[CONF_PASSWORD]
 
     time_zone = str(hass.config.time_zone)
 
-    manager = VeSync(username, password, time_zone)
-
-    login = await hass.async_add_executor_job(manager.login)
-
-    if not login:
-        _LOGGER.error("Unable to login to the VeSync server")
-        return False
-
-    device_dict = await async_process_devices(hass, manager)
-
-    forward_setups = hass.config_entries.async_forward_entry_setups
-
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][VS_MANAGER] = manager
-
-    switches = hass.data[DOMAIN][VS_SWITCHES] = []
-    fans = hass.data[DOMAIN][VS_FANS] = []
-    lights = hass.data[DOMAIN][VS_LIGHTS] = []
-    sensors = hass.data[DOMAIN][VS_SENSORS] = []
-    platforms = []
-
-    if device_dict[VS_SWITCHES]:
-        switches.extend(device_dict[VS_SWITCHES])
-        platforms.append(Platform.SWITCH)
-
-    if device_dict[VS_FANS]:
-        fans.extend(device_dict[VS_FANS])
-        platforms.append(Platform.FAN)
-
-    if device_dict[VS_LIGHTS]:
-        lights.extend(device_dict[VS_LIGHTS])
-        platforms.append(Platform.LIGHT)
-
-    if device_dict[VS_SENSORS]:
-        sensors.extend(device_dict[VS_SENSORS])
-        platforms.append(Platform.SENSOR)
-
-    await hass.config_entries.async_forward_entry_setups(config_entry, platforms)
-
-    async def async_new_device_discovery(service: ServiceCall) -> None:
-        """Discover if new devices should be added."""
-        manager = hass.data[DOMAIN][VS_MANAGER]
-        switches = hass.data[DOMAIN][VS_SWITCHES]
-        fans = hass.data[DOMAIN][VS_FANS]
-        lights = hass.data[DOMAIN][VS_LIGHTS]
-        sensors = hass.data[DOMAIN][VS_SENSORS]
-
-        dev_dict = await async_process_devices(hass, manager)
-        switch_devs = dev_dict.get(VS_SWITCHES, [])
-        fan_devs = dev_dict.get(VS_FANS, [])
-        light_devs = dev_dict.get(VS_LIGHTS, [])
-        sensor_devs = dev_dict.get(VS_SENSORS, [])
-
-        switch_set = set(switch_devs)
-        new_switches = list(switch_set.difference(switches))
-        if new_switches and switches:
-            switches.extend(new_switches)
-            async_dispatcher_send(hass, VS_DISCOVERY.format(VS_SWITCHES), new_switches)
-            return
-        if new_switches and not switches:
-            switches.extend(new_switches)
-            hass.async_create_task(forward_setups(config_entry, [Platform.SWITCH]))
-
-        fan_set = set(fan_devs)
-        new_fans = list(fan_set.difference(fans))
-        if new_fans and fans:
-            fans.extend(new_fans)
-            async_dispatcher_send(hass, VS_DISCOVERY.format(VS_FANS), new_fans)
-            return
-        if new_fans and not fans:
-            fans.extend(new_fans)
-            hass.async_create_task(forward_setups(config_entry, [Platform.FAN]))
-
-        light_set = set(light_devs)
-        new_lights = list(light_set.difference(lights))
-        if new_lights and lights:
-            lights.extend(new_lights)
-            async_dispatcher_send(hass, VS_DISCOVERY.format(VS_LIGHTS), new_lights)
-            return
-        if new_lights and not lights:
-            lights.extend(new_lights)
-            hass.async_create_task(forward_setups(config_entry, [Platform.LIGHT]))
-
-        sensor_set = set(sensor_devs)
-        new_sensors = list(sensor_set.difference(sensors))
-        if new_sensors and sensors:
-            sensors.extend(new_sensors)
-            async_dispatcher_send(hass, VS_DISCOVERY.format(VS_SENSORS), new_sensors)
-            return
-        if new_sensors and not sensors:
-            sensors.extend(new_sensors)
-            hass.async_create_task(forward_setups(config_entry, [Platform.SENSOR]))
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_UPDATE_DEVS, async_new_device_discovery
+    manager = VeSync(
+        username=username,
+        password=password,
+        time_zone=time_zone,
+        session=async_get_clientsession(hass),
     )
+    try:
+        await manager.login()
+    except VeSyncLoginError as err:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN, translation_key="invalid_auth"
+        ) from err
+    except VeSyncServerError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN, translation_key="server_error"
+        ) from err
+    except VeSyncAPIResponseError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN, translation_key="api_response_error"
+        ) from err
+
+    await manager.update()
+    await manager.check_firmware()
+
+    config_entry.runtime_data = VeSyncDataCoordinator(hass, config_entry, manager)
+
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: VesyncConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    return unload_ok
+
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: VesyncConfigEntry
+) -> bool:
+    """Migrate old entry."""
+    _LOGGER.debug(
+        "Migrating VeSync config entry: %s minor version: %s",
+        config_entry.version,
+        config_entry.minor_version,
+    )
+    if config_entry.minor_version == 1:
+        # Migrate switch/outlets entity to a new unique ID
+        _LOGGER.debug("Migrating VeSync config entry from version 1 to version 2")
+        entity_registry = er.async_get(hass)
+        registry_entries = er.async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
+        )
+        for reg_entry in registry_entries:
+            if "-" not in reg_entry.unique_id and reg_entry.entity_id.startswith(
+                Platform.SWITCH
+            ):
+                _LOGGER.debug(
+                    "Migrating switch/outlet entity from unique_id: %s to unique_id: %s",
+                    reg_entry.unique_id,
+                    reg_entry.unique_id + "-device_status",
+                )
+                entity_registry.async_update_entity(
+                    reg_entry.entity_id,
+                    new_unique_id=reg_entry.unique_id + "-device_status",
+                )
+            else:
+                _LOGGER.debug("Skipping entity with unique_id: %s", reg_entry.unique_id)
+        hass.config_entries.async_update_entry(config_entry, minor_version=2)
+
+    return True
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: VesyncConfigEntry, device_entry: DeviceEntry
+) -> bool:
+    """Remove a config entry from a device."""
+    manager = config_entry.runtime_data.manager
+    await manager.get_devices()
+    for dev in manager.devices:
+        if isinstance(dev.sub_device_no, int):
+            device_id = f"{dev.cid}{dev.sub_device_no!s}"
+        else:
+            device_id = dev.cid
+        identifier = next(iter(device_entry.identifiers), None)
+        if identifier and device_id == identifier[1]:
+            return False
+
+    return True

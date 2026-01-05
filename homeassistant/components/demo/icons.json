@@ -11,6 +11,13 @@
               "on_low": "mdi:fan-chevron-down"
             }
           },
+          "swing_horizontal_mode": {
+            "state": {
+              "auto": "mdi:compare-horizontal",
+              "off": "mdi:arrow-oscillating-off",
+              "rangefull": "mdi:pan-horizontal"
+            }
+          },
           "swing_mode": {
             "state": {
               "1": "mdi:numeric-1",
@@ -30,23 +37,34 @@
             "default": "mdi:circle-medium",
             "state": {
               "auto": "mdi:fan-auto",
+              "on": "mdi:power",
               "sleep": "mdi:bed",
-              "smart": "mdi:brain",
-              "on": "mdi:power"
+              "smart": "mdi:brain"
+            }
+          }
+        }
+      }
+    },
+    "light": {
+      "bed_light": {
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "rainbow": "mdi:looks"
             }
           }
         }
       }
     },
     "number": {
-      "volume": {
-        "default": "mdi:volume-high"
-      },
       "pwm": {
         "default": "mdi:square-wave"
       },
       "range": {
         "default": "mdi:square-wave"
+      },
+      "volume": {
+        "default": "mdi:volume-high"
       }
     },
     "select": {
@@ -75,6 +93,8 @@
     }
   },
   "services": {
-    "randomize_device_tracker_data": "mdi:dice-multiple"
+    "randomize_device_tracker_data": {
+      "service": "mdi:dice-multiple"
+    }
   }
 }

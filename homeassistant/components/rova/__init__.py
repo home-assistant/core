@@ -46,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         raise ConfigEntryError("Rova does not collect garbage in this area")
 
-    coordinator = RovaCoordinator(hass, api)
+    coordinator = RovaCoordinator(hass, entry, api)
 
     await coordinator.async_config_entry_first_refresh()
 

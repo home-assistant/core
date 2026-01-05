@@ -1,13 +1,16 @@
 """Tests for the floor registry."""
 
+from datetime import UTC, datetime
 from functools import partial
 import re
 from typing import Any
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import area_registry as ar, floor_registry as fr
+from homeassistant.util.dt import utcnow
 
 from tests.common import async_capture_events, flush_store
 
@@ -18,8 +21,10 @@ async def test_list_floors(floor_registry: fr.FloorRegistry) -> None:
     assert len(list(floors)) == len(floor_registry.floors)
 
 
+@pytest.mark.usefixtures("freezer")
 async def test_create_floor(
-    hass: HomeAssistant, floor_registry: fr.FloorRegistry
+    hass: HomeAssistant,
+    floor_registry: fr.FloorRegistry,
 ) -> None:
     """Make sure that we can create floors."""
     update_events = async_capture_events(hass, fr.EVENT_FLOOR_REGISTRY_UPDATED)
@@ -30,11 +35,15 @@ async def test_create_floor(
         level=1,
     )
 
-    assert floor.floor_id == "first_floor"
-    assert floor.name == "First floor"
-    assert floor.icon == "mdi:home-floor-1"
-    assert floor.aliases == {"first", "ground", "ground floor"}
-    assert floor.level == 1
+    assert floor == fr.FloorEntry(
+        floor_id="first_floor",
+        name="First floor",
+        icon="mdi:home-floor-1",
+        aliases={"first", "ground", "ground floor"},
+        level=1,
+        created_at=utcnow(),
+        modified_at=utcnow(),
+    )
 
     assert len(floor_registry.floors) == 1
 
@@ -116,18 +125,30 @@ async def test_delete_non_existing_floor(floor_registry: fr.FloorRegistry) -> No
 
 
 async def test_update_floor(
-    hass: HomeAssistant, floor_registry: fr.FloorRegistry
+    hass: HomeAssistant,
+    floor_registry: fr.FloorRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Make sure that we can update floors."""
+    created_at = datetime.fromisoformat("2024-01-01T01:00:00+00:00")
+    freezer.move_to(created_at)
+
     update_events = async_capture_events(hass, fr.EVENT_FLOOR_REGISTRY_UPDATED)
     floor = floor_registry.async_create("First floor")
 
+    assert floor == fr.FloorEntry(
+        floor_id="first_floor",
+        name="First floor",
+        icon=None,
+        aliases=set(),
+        level=None,
+        created_at=created_at,
+        modified_at=created_at,
+    )
     assert len(floor_registry.floors) == 1
-    assert floor.floor_id == "first_floor"
-    assert floor.name == "First floor"
-    assert floor.icon is None
-    assert floor.aliases == set()
-    assert floor.level is None
+
+    modified_at = datetime.fromisoformat("2024-02-01T01:00:00+00:00")
+    freezer.move_to(modified_at)
 
     updated_floor = floor_registry.async_update(
         floor.floor_id,
@@ -138,11 +159,15 @@ async def test_update_floor(
     )
 
     assert updated_floor != floor
-    assert updated_floor.floor_id == "first_floor"
-    assert updated_floor.name == "Second floor"
-    assert updated_floor.icon == "mdi:home-floor-2"
-    assert updated_floor.aliases == {"ground", "downstairs"}
-    assert updated_floor.level == 2
+    assert updated_floor == fr.FloorEntry(
+        floor_id="first_floor",
+        name="Second floor",
+        icon="mdi:home-floor-2",
+        aliases={"ground", "downstairs"},
+        level=2,
+        created_at=created_at,
+        modified_at=modified_at,
+    )
 
     assert len(floor_registry.floors) == 1
 
@@ -236,15 +261,22 @@ async def test_update_floor_with_normalized_name_already_in_use(
 
 
 async def test_load_floors(
-    hass: HomeAssistant, floor_registry: fr.FloorRegistry
+    hass: HomeAssistant,
+    floor_registry: fr.FloorRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Make sure that we can load/save data correctly."""
+    floor1_created = datetime.fromisoformat("2024-01-01T00:00:00+00:00")
+    freezer.move_to(floor1_created)
     floor1 = floor_registry.async_create(
         "First floor",
         icon="mdi:home-floor-1",
         aliases={"first", "ground"},
         level=1,
     )
+
+    floor2_created = datetime.fromisoformat("2024-02-01T00:00:00+00:00")
+    freezer.move_to(floor2_created)
     floor2 = floor_registry.async_create(
         "Second floor",
         icon="mdi:home-floor-2",
@@ -262,25 +294,16 @@ async def test_load_floors(
     assert list(floor_registry.floors) == list(registry2.floors)
 
     floor1_registry2 = registry2.async_get_floor_by_name("First floor")
-    assert floor1_registry2.floor_id == floor1.floor_id
-    assert floor1_registry2.name == floor1.name
-    assert floor1_registry2.icon == floor1.icon
-    assert floor1_registry2.aliases == floor1.aliases
-    assert floor1_registry2.level == floor1.level
-    assert floor1_registry2.normalized_name == floor1.normalized_name
+    assert floor1_registry2 == floor1
 
     floor2_registry2 = registry2.async_get_floor_by_name("Second floor")
-    assert floor2_registry2.floor_id == floor2.floor_id
-    assert floor2_registry2.name == floor2.name
-    assert floor2_registry2.icon == floor2.icon
-    assert floor2_registry2.aliases == floor2.aliases
-    assert floor2_registry2.level == floor2.level
-    assert floor2_registry2.normalized_name == floor2.normalized_name
+    assert floor2_registry2 == floor2
 
 
 @pytest.mark.parametrize("load_registries", [False])
 async def test_loading_floors_from_storage(
-    hass: HomeAssistant, hass_storage: dict[str, Any]
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
 ) -> None:
     """Test loading stored floors on start."""
     hass_storage[fr.STORAGE_KEY] = {
@@ -304,7 +327,7 @@ async def test_loading_floors_from_storage(
     assert len(registry.floors) == 1
 
 
-async def test_getting_floor(floor_registry: fr.FloorRegistry) -> None:
+async def test_getting_floor_by_name(floor_registry: fr.FloorRegistry) -> None:
     """Make sure we can get the floors by name."""
     floor = floor_registry.async_create("First floor")
     floor2 = floor_registry.async_get_floor_by_name("first floor")
@@ -316,6 +339,56 @@ async def test_getting_floor(floor_registry: fr.FloorRegistry) -> None:
 
     get_floor = floor_registry.async_get_floor(floor.floor_id)
     assert get_floor == floor
+
+
+async def test_async_get_floors_by_alias(
+    floor_registry: fr.FloorRegistry,
+) -> None:
+    """Make sure we can get the floors by alias."""
+    floor1 = floor_registry.async_create("First floor", aliases=("alias_1", "alias_2"))
+    floor2 = floor_registry.async_create("Second floor", aliases=("alias_1", "alias_3"))
+
+    assert floor_registry.async_get_floors_by_alias("A l i a s_1") == [floor1, floor2]
+    assert floor_registry.async_get_floors_by_alias("A l i a s_2") == [floor1]
+    assert floor_registry.async_get_floors_by_alias("A l i a s_3") == [floor2]
+
+
+async def test_async_get_floors_by_alias_collisions(
+    floor_registry: fr.FloorRegistry,
+) -> None:
+    """Make sure we can get the floors by alias when the aliases have collisions."""
+    floor = floor_registry.async_create("First floor")
+    assert floor_registry.async_get_floors_by_alias("A l i a s 1") == []
+
+    # Add an alias
+    updated_floor = floor_registry.async_update(floor.floor_id, aliases={"alias1"})
+    assert floor_registry.async_get_floors_by_alias("A l i a s 1") == [updated_floor]
+
+    # Add a colliding alias
+    updated_floor = floor_registry.async_update(
+        floor.floor_id, aliases={"alias1", "alias  1"}
+    )
+    assert floor_registry.async_get_floors_by_alias("A l i a s 1") == [updated_floor]
+
+    # Add a colliding alias
+    updated_floor = floor_registry.async_update(
+        floor.floor_id, aliases={"alias1", "alias 1", "alias  1"}
+    )
+    assert floor_registry.async_get_floors_by_alias("A l i a s 1") == [updated_floor]
+
+    # Remove a colliding alias
+    updated_floor = floor_registry.async_update(
+        floor.floor_id, aliases={"alias1", "alias  1"}
+    )
+    assert floor_registry.async_get_floors_by_alias("A l i a s 1") == [updated_floor]
+
+    # Remove a colliding alias
+    updated_floor = floor_registry.async_update(floor.floor_id, aliases={"alias1"})
+    assert floor_registry.async_get_floors_by_alias("A l i a s 1") == [updated_floor]
+
+    # Remove all aliases
+    updated_floor = floor_registry.async_update(floor.floor_id, aliases={})
+    assert floor_registry.async_get_floors_by_alias("A l i a s 1") == []
 
 
 async def test_async_get_floor_by_name_not_found(
@@ -392,3 +465,340 @@ async def test_async_update_thread_safety(
         await hass.async_add_executor_job(
             partial(floor_registry.async_update, any_floor.floor_id, name="new name")
         )
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_migration_from_1_1(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test migration from version 1.1."""
+    hass_storage[fr.STORAGE_KEY] = {
+        "version": 1,
+        "data": {
+            "floors": [
+                {
+                    "floor_id": "12345A",
+                    "name": "AA floor no level floor",
+                    "aliases": [],
+                    "icon": None,
+                    "level": None,
+                },
+                {
+                    "floor_id": "12345B",
+                    "name": "CC floor no level floor",
+                    "aliases": [],
+                    "icon": None,
+                    "level": None,
+                },
+                {
+                    "floor_id": "12345C",
+                    "name": "bb floor no level floor",
+                    "aliases": [],
+                    "icon": None,
+                    "level": None,
+                },
+                {
+                    "floor_id": "12345D",
+                    "name": "AA floor level -1",
+                    "aliases": [],
+                    "icon": None,
+                    "level": -1,
+                },
+                {
+                    "floor_id": "12345E",
+                    "name": "CC floor level -1",
+                    "aliases": [],
+                    "icon": None,
+                    "level": -1,
+                },
+                {
+                    "floor_id": "12345F",
+                    "name": "bb floor level -1",
+                    "aliases": [],
+                    "icon": None,
+                    "level": -1,
+                },
+                {
+                    "floor_id": "12345G",
+                    "name": "AA floor level 0",
+                    "aliases": [],
+                    "icon": None,
+                    "level": 0,
+                },
+                {
+                    "floor_id": "12345H",
+                    "name": "CC floor level 0",
+                    "aliases": [],
+                    "icon": None,
+                    "level": 0,
+                },
+                {
+                    "floor_id": "12345I",
+                    "name": "bb floor level 0",
+                    "aliases": [],
+                    "icon": None,
+                    "level": 0,
+                },
+                {
+                    "floor_id": "12345J",
+                    "name": "AA floor level 1",
+                    "aliases": [],
+                    "icon": None,
+                    "level": 1,
+                },
+                {
+                    "floor_id": "12345K",
+                    "name": "CC floor level 1",
+                    "aliases": [],
+                    "icon": None,
+                    "level": 1,
+                },
+                {
+                    "floor_id": "12345L",
+                    "name": "bb floor level 1",
+                    "aliases": [],
+                    "icon": None,
+                    "level": 1,
+                },
+            ]
+        },
+    }
+
+    await fr.async_load(hass)
+    registry = fr.async_get(hass)
+
+    # Test data was loaded
+    entry = registry.async_get_floor_by_name("AA floor no level floor")
+    assert entry.floor_id == "12345A"
+
+    # Check sort order
+    assert list(registry.async_list_floors()) == [
+        fr.FloorEntry(
+            name="AA floor level 1",
+            created_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            modified_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            aliases=set(),
+            floor_id="12345J",
+            icon=None,
+            level=1,
+        ),
+        fr.FloorEntry(
+            name="bb floor level 1",
+            created_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            modified_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            aliases=set(),
+            floor_id="12345L",
+            icon=None,
+            level=1,
+        ),
+        fr.FloorEntry(
+            name="CC floor level 1",
+            created_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            modified_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            aliases=set(),
+            floor_id="12345K",
+            icon=None,
+            level=1,
+        ),
+        fr.FloorEntry(
+            name="AA floor level 0",
+            created_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            modified_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            aliases=set(),
+            floor_id="12345G",
+            icon=None,
+            level=0,
+        ),
+        fr.FloorEntry(
+            name="bb floor level 0",
+            created_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            modified_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            aliases=set(),
+            floor_id="12345I",
+            icon=None,
+            level=0,
+        ),
+        fr.FloorEntry(
+            name="CC floor level 0",
+            created_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            modified_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            aliases=set(),
+            floor_id="12345H",
+            icon=None,
+            level=0,
+        ),
+        fr.FloorEntry(
+            name="AA floor level -1",
+            created_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            modified_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            aliases=set(),
+            floor_id="12345D",
+            icon=None,
+            level=-1,
+        ),
+        fr.FloorEntry(
+            name="bb floor level -1",
+            created_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            modified_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            aliases=set(),
+            floor_id="12345F",
+            icon=None,
+            level=-1,
+        ),
+        fr.FloorEntry(
+            name="CC floor level -1",
+            created_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            modified_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            aliases=set(),
+            floor_id="12345E",
+            icon=None,
+            level=-1,
+        ),
+        fr.FloorEntry(
+            name="AA floor no level floor",
+            created_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            modified_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            aliases=set(),
+            floor_id="12345A",
+            icon=None,
+            level=None,
+        ),
+        fr.FloorEntry(
+            name="bb floor no level floor",
+            created_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            modified_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            aliases=set(),
+            floor_id="12345C",
+            icon=None,
+            level=None,
+        ),
+        fr.FloorEntry(
+            name="CC floor no level floor",
+            created_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            modified_at=datetime(1970, 1, 1, 0, 0, tzinfo=UTC),
+            aliases=set(),
+            floor_id="12345B",
+            icon=None,
+            level=None,
+        ),
+    ]
+
+    # Check we store migrated data
+    await flush_store(registry._store)
+    assert hass_storage[fr.STORAGE_KEY] == {
+        "version": fr.STORAGE_VERSION_MAJOR,
+        "minor_version": fr.STORAGE_VERSION_MINOR,
+        "key": fr.STORAGE_KEY,
+        "data": {
+            "floors": [
+                {
+                    "aliases": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "floor_id": "12345J",
+                    "icon": None,
+                    "level": 1,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": "AA floor level 1",
+                },
+                {
+                    "aliases": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "floor_id": "12345L",
+                    "icon": None,
+                    "level": 1,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": "bb floor level 1",
+                },
+                {
+                    "aliases": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "floor_id": "12345K",
+                    "icon": None,
+                    "level": 1,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": "CC floor level 1",
+                },
+                {
+                    "aliases": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "floor_id": "12345G",
+                    "icon": None,
+                    "level": 0,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": "AA floor level 0",
+                },
+                {
+                    "aliases": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "floor_id": "12345I",
+                    "icon": None,
+                    "level": 0,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": "bb floor level 0",
+                },
+                {
+                    "aliases": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "floor_id": "12345H",
+                    "icon": None,
+                    "level": 0,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": "CC floor level 0",
+                },
+                {
+                    "aliases": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "floor_id": "12345D",
+                    "icon": None,
+                    "level": -1,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": "AA floor level -1",
+                },
+                {
+                    "aliases": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "floor_id": "12345F",
+                    "icon": None,
+                    "level": -1,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": "bb floor level -1",
+                },
+                {
+                    "aliases": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "floor_id": "12345E",
+                    "icon": None,
+                    "level": -1,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": "CC floor level -1",
+                },
+                {
+                    "aliases": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "floor_id": "12345A",
+                    "icon": None,
+                    "level": None,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": "AA floor no level floor",
+                },
+                {
+                    "aliases": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "floor_id": "12345C",
+                    "icon": None,
+                    "level": None,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": "bb floor no level floor",
+                },
+                {
+                    "aliases": [],
+                    "created_at": "1970-01-01T00:00:00+00:00",
+                    "floor_id": "12345B",
+                    "icon": None,
+                    "level": None,
+                    "modified_at": "1970-01-01T00:00:00+00:00",
+                    "name": "CC floor no level floor",
+                },
+            ]
+        },
+    }

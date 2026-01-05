@@ -1,0 +1,113 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    },
+    "error": {
+      "authentication_error": "[%key:common::config_flow::error::invalid_auth%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        }
+      }
+    }
+  },
+  "config_subentries": {
+    "ai_task_data": {
+      "abort": {
+        "entry_not_loaded": "[%key:component::anthropic::config_subentries::conversation::abort::entry_not_loaded%]",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      },
+      "entry_type": "AI task",
+      "initiate_flow": {
+        "reconfigure": "Reconfigure AI task",
+        "user": "Add AI task"
+      },
+      "step": {
+        "advanced": {
+          "data": {
+            "chat_model": "[%key:common::generic::model%]",
+            "max_tokens": "[%key:component::anthropic::config_subentries::conversation::step::advanced::data::max_tokens%]",
+            "temperature": "[%key:component::anthropic::config_subentries::conversation::step::advanced::data::temperature%]"
+          },
+          "title": "[%key:component::anthropic::config_subentries::conversation::step::advanced::title%]"
+        },
+        "init": {
+          "data": {
+            "name": "[%key:common::config_flow::data::name%]",
+            "recommended": "[%key:component::anthropic::config_subentries::conversation::step::init::data::recommended%]"
+          },
+          "title": "[%key:component::anthropic::config_subentries::conversation::step::init::title%]"
+        },
+        "model": {
+          "data": {
+            "thinking_budget": "[%key:component::anthropic::config_subentries::conversation::step::model::data::thinking_budget%]",
+            "user_location": "[%key:component::anthropic::config_subentries::conversation::step::model::data::user_location%]",
+            "web_search": "[%key:component::anthropic::config_subentries::conversation::step::model::data::web_search%]",
+            "web_search_max_uses": "[%key:component::anthropic::config_subentries::conversation::step::model::data::web_search_max_uses%]"
+          },
+          "data_description": {
+            "thinking_budget": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::thinking_budget%]",
+            "user_location": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::user_location%]",
+            "web_search": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::web_search%]",
+            "web_search_max_uses": "[%key:component::anthropic::config_subentries::conversation::step::model::data_description::web_search_max_uses%]"
+          },
+          "title": "[%key:component::anthropic::config_subentries::conversation::step::model::title%]"
+        }
+      }
+    },
+    "conversation": {
+      "abort": {
+        "entry_not_loaded": "Cannot add things while the configuration is disabled.",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      },
+      "entry_type": "Conversation agent",
+      "initiate_flow": {
+        "reconfigure": "Reconfigure conversation agent",
+        "user": "Add conversation agent"
+      },
+      "step": {
+        "advanced": {
+          "data": {
+            "chat_model": "[%key:common::generic::model%]",
+            "max_tokens": "Maximum tokens to return in response",
+            "temperature": "Temperature"
+          },
+          "title": "Advanced settings"
+        },
+        "init": {
+          "data": {
+            "llm_hass_api": "[%key:common::config_flow::data::llm_hass_api%]",
+            "name": "[%key:common::config_flow::data::name%]",
+            "prompt": "[%key:common::config_flow::data::prompt%]",
+            "recommended": "Recommended model settings"
+          },
+          "data_description": {
+            "prompt": "Instruct how the LLM should respond. This can be a template."
+          },
+          "title": "Basic settings"
+        },
+        "model": {
+          "data": {
+            "thinking_budget": "Thinking budget",
+            "user_location": "Include home location",
+            "web_search": "Enable web search",
+            "web_search_max_uses": "Maximum web searches"
+          },
+          "data_description": {
+            "thinking_budget": "The number of tokens the model can use to think about the response out of the total maximum number of tokens. Set to 1024 or greater to enable extended thinking.",
+            "user_location": "Localize search results based on home location",
+            "web_search": "The web search tool gives Claude direct access to real-time web content, allowing it to answer questions with up-to-date information beyond its knowledge cutoff",
+            "web_search_max_uses": "Limit the number of searches performed per response"
+          },
+          "title": "Model-specific options"
+        }
+      }
+    }
+  }
+}

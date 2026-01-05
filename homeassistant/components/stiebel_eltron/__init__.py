@@ -1,69 +1,43 @@
 """The component for STIEBEL ELTRON heat pumps with ISGWeb Modbus module."""
 
-from datetime import timedelta
 import logging
 
-from pystiebeleltron import pystiebeleltron
-import voluptuous as vol
+from pymodbus.client import ModbusTcpClient
+from pystiebeleltron.pystiebeleltron import StiebelEltronAPI
 
-from homeassistant.const import CONF_NAME, DEVICE_DEFAULT_NAME, Platform
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import discovery
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import Throttle
-
-CONF_HUB = "hub"
-DEFAULT_HUB = "modbus_hub"
-MODBUS_DOMAIN = "modbus"
-DOMAIN = "stiebel_eltron"
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): cv.string,
-                vol.Optional(CONF_HUB, default=DEFAULT_HUB): cv.string,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+from homeassistant.exceptions import ConfigEntryNotReady
 
 _LOGGER = logging.getLogger(__name__)
+_PLATFORMS: list[Platform] = [Platform.CLIMATE]
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
+
+type StiebelEltronConfigEntry = ConfigEntry[StiebelEltronAPI]
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the STIEBEL ELTRON unit.
+async def async_setup_entry(
+    hass: HomeAssistant, entry: StiebelEltronConfigEntry
+) -> bool:
+    """Set up STIEBEL ELTRON from a config entry."""
+    client = StiebelEltronAPI(
+        ModbusTcpClient(entry.data[CONF_HOST], port=entry.data[CONF_PORT]), 1
+    )
 
-    Will automatically load climate platform.
-    """
-    name = config[DOMAIN][CONF_NAME]
-    modbus_client = hass.data[MODBUS_DOMAIN][config[DOMAIN][CONF_HUB]]
+    success = await hass.async_add_executor_job(client.update)
+    if not success:
+        raise ConfigEntryNotReady("Could not connect to device")
 
-    hass.data[DOMAIN] = {
-        "name": name,
-        "ste_data": StiebelEltronData(name, modbus_client),
-    }
+    entry.runtime_data = client
 
-    discovery.load_platform(hass, Platform.CLIMATE, DOMAIN, {}, config)
+    await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
+
     return True
 
 
-class StiebelEltronData:
-    """Get the latest data and update the states."""
-
-    def __init__(self, name, modbus_client):
-        """Init the STIEBEL ELTRON data object."""
-
-        self.api = pystiebeleltron.StiebelEltronAPI(modbus_client, 1)
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
-        """Update unit data."""
-        if not self.api.update():
-            _LOGGER.warning("Modbus read failed")
-        else:
-            _LOGGER.debug("Data updated successfully")
+async def async_unload_entry(
+    hass: HomeAssistant, entry: StiebelEltronConfigEntry
+) -> bool:
+    """Unload a config entry."""
+    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)

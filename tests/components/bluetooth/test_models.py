@@ -26,6 +26,7 @@ from . import (
     generate_ble_device,
     inject_advertisement,
     inject_advertisement_with_source,
+    patch_bleak_backend_type,
 )
 
 
@@ -107,6 +108,7 @@ async def test_wrapped_bleak_client_local_adapter_only(hass: HomeAssistant) -> N
         "00:00:00:00:00:01",
         "hci0",
     )
+    # pylint: disable-next=attribute-defined-outside-init
     scanner.connectable = True
     cancel = manager.async_register_scanner(scanner)
     inject_advertisement_with_source(
@@ -123,7 +125,7 @@ async def test_wrapped_bleak_client_local_adapter_only(hass: HomeAssistant) -> N
             "bleak.backends.bluezdbus.client.BleakClientBlueZDBus.is_connected", True
         ),
     ):
-        assert await client.connect() is True
+        await client.connect()
         assert client.is_connected is True
     client.set_disconnected_callback(lambda client: None)
     await client.disconnect()
@@ -144,7 +146,6 @@ async def test_wrapped_bleak_client_set_disconnected_callback_after_connected(
             "source": "esp32_has_connection_slot",
             "path": "/org/bluez/hci0/dev_44_44_33_11_23_45",
         },
-        rssi=-40,
     )
     switchbot_proxy_device_adv_has_connection_slot = generate_advertisement_data(
         local_name="wohand",
@@ -214,7 +215,7 @@ async def test_wrapped_bleak_client_set_disconnected_callback_after_connected(
             "bleak.backends.bluezdbus.client.BleakClientBlueZDBus.is_connected", True
         ),
     ):
-        assert await client.connect() is True
+        await client.connect()
         assert client.is_connected is True
     client.set_disconnected_callback(lambda client: None)
     await client.disconnect()
@@ -235,10 +236,9 @@ async def test_ble_device_with_proxy_client_out_of_connections_no_scanners(
             "source": "esp32",
             "path": "/org/bluez/hci0/dev_44_44_33_11_23_45",
         },
-        rssi=-30,
     )
     switchbot_adv = generate_advertisement_data(
-        local_name="wohand", service_uuids=[], manufacturer_data={1: b"\x01"}
+        local_name="wohand", service_uuids=[], manufacturer_data={1: b"\x01"}, rssi=-30
     )
 
     inject_advertisement_with_source(
@@ -274,10 +274,9 @@ async def test_ble_device_with_proxy_client_out_of_connections(
             "source": "esp32",
             "path": "/org/bluez/hci0/dev_44_44_33_11_23_45",
         },
-        rssi=-30,
     )
     switchbot_adv = generate_advertisement_data(
-        local_name="wohand", service_uuids=[], manufacturer_data={1: b"\x01"}
+        local_name="wohand", service_uuids=[], manufacturer_data={1: b"\x01"}, rssi=-30
     )
 
     class FakeScanner(FakeScannerMixin, BaseHaRemoteScanner):
@@ -339,10 +338,9 @@ async def test_ble_device_with_proxy_clear_cache(hass: HomeAssistant) -> None:
             "source": "esp32",
             "path": "/org/bluez/hci0/dev_44_44_33_11_23_45",
         },
-        rssi=-30,
     )
     switchbot_adv = generate_advertisement_data(
-        local_name="wohand", service_uuids=[], manufacturer_data={1: b"\x01"}
+        local_name="wohand", service_uuids=[], manufacturer_data={1: b"\x01"}, rssi=-30
     )
 
     class FakeScanner(FakeScannerMixin, BaseHaRemoteScanner):
@@ -416,7 +414,6 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
             "source": "esp32_has_connection_slot",
             "path": "/org/bluez/hci0/dev_44_44_33_11_23_45",
         },
-        rssi=-40,
     )
     switchbot_proxy_device_adv_has_connection_slot = generate_advertisement_data(
         local_name="wohand",
@@ -510,7 +507,6 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
             "source": "esp32_no_connection_slot",
             "path": "/org/bluez/hci0/dev_44_44_33_11_23_45",
         },
-        rssi=-30,
     )
     switchbot_proxy_device_no_connection_slot_adv = generate_advertisement_data(
         local_name="wohand",
@@ -537,7 +533,6 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
         "44:44:33:11:23:45",
         "wohand",
         {},
-        rssi=-100,
     )
     switchbot_device_adv = generate_advertisement_data(
         local_name="wohand",
@@ -601,7 +596,7 @@ async def test_ble_device_with_proxy_client_out_of_connections_uses_best_availab
     ]
 
     client = HaBleakClientWrapper(switchbot_proxy_device_no_connection_slot)
-    with patch("bleak.get_platform_client_backend_type"):
+    with patch_bleak_backend_type():
         await client.connect()
     assert client.is_connected is True
     client.set_disconnected_callback(lambda client: None)

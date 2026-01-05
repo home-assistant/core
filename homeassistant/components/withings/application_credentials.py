@@ -75,3 +75,11 @@ class WithingsLocalOAuth2Implementation(AuthImplementation):
             }
         )
         return {**token, **new_token}
+
+
+async def async_get_description_placeholders(hass: HomeAssistant) -> dict[str, str]:
+    """Return description placeholders for the credentials dialog."""
+    return {
+        "developer_dashboard_url": "https://developer.withings.com/dashboard/welcome",
+        "redirect_url": "https://my.home-assistant.io/redirect/oauth",
+    }
