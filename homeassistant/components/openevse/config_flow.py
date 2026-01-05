@@ -21,7 +21,7 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Set up the instance."""
-        self.discovery_info = {}
+        self.discovery_info: dict{str, Any} = {}
 
     async def check_status(self, host: str) -> bool:
         """Check if we can connect to the OpenEVSE charger."""
