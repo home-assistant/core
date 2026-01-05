@@ -20,7 +20,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .models import DPCodeEnumWrapper, DPCodeRawWrapper
+from .models import DeviceWrapper, DPCodeEnumWrapper, DPCodeRawWrapper
 from .type_information import EnumTypeInformation
 
 ALARM: dict[DeviceCategory, tuple[AlarmControlPanelEntityDescription, ...]] = {
@@ -170,9 +170,9 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
         device_manager: Manager,
         description: AlarmControlPanelEntityDescription,
         *,
-        action_wrapper: _AlarmActionWrapper,
-        changed_by_wrapper: _AlarmChangedByWrapper | None,
-        state_wrapper: _AlarmStateWrapper,
+        action_wrapper: DeviceWrapper[str],
+        changed_by_wrapper: DeviceWrapper[str] | None,
+        state_wrapper: DeviceWrapper[AlarmControlPanelState],
     ) -> None:
         """Init Tuya Alarm."""
         super().__init__(device, device_manager)

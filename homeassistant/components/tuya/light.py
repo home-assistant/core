@@ -31,6 +31,7 @@ from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode, WorkMode
 from .entity import TuyaEntity
 from .models import (
+    DeviceWrapper,
     DPCodeBooleanWrapper,
     DPCodeEnumWrapper,
     DPCodeIntegerWrapper,
@@ -673,11 +674,11 @@ class TuyaLightEntity(TuyaEntity, LightEntity):
         device_manager: Manager,
         description: TuyaLightEntityDescription,
         *,
-        brightness_wrapper: _BrightnessWrapper | None,
-        color_data_wrapper: _ColorDataWrapper | None,
+        brightness_wrapper: DeviceWrapper[int] | None,
+        color_data_wrapper: DeviceWrapper[tuple[float, float, float]] | None,
         color_mode_wrapper: DPCodeEnumWrapper | None,
-        color_temp_wrapper: _ColorTempWrapper | None,
-        switch_wrapper: DPCodeBooleanWrapper,
+        color_temp_wrapper: DeviceWrapper[int] | None,
+        switch_wrapper: DeviceWrapper[bool],
     ) -> None:
         """Init TuyaHaLight."""
         super().__init__(device, device_manager)
