@@ -25,7 +25,7 @@ from .const import (
     DPCode,
 )
 from .entity import TuyaEntity
-from .models import DPCodeIntegerWrapper
+from .models import DeviceWrapper, DPCodeIntegerWrapper
 
 NUMBERS: dict[DeviceCategory, tuple[NumberEntityDescription, ...]] = {
     DeviceCategory.BH: (
@@ -488,7 +488,7 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: NumberEntityDescription,
-        dpcode_wrapper: DPCodeIntegerWrapper,
+        dpcode_wrapper: DeviceWrapper[float],
     ) -> None:
         """Init Tuya sensor."""
         super().__init__(device, device_manager)
