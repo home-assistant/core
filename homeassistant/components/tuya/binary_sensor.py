@@ -19,7 +19,12 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .models import DPCodeBitmapBitWrapper, DPCodeBooleanWrapper, DPCodeWrapper
+from .models import (
+    DeviceWrapper,
+    DPCodeBitmapBitWrapper,
+    DPCodeBooleanWrapper,
+    DPCodeWrapper,
+)
 
 
 @dataclass(frozen=True)
@@ -450,7 +455,7 @@ class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: TuyaBinarySensorEntityDescription,
-        dpcode_wrapper: DPCodeWrapper,
+        dpcode_wrapper: DeviceWrapper[bool],
     ) -> None:
         """Init Tuya binary sensor."""
         super().__init__(device, device_manager)

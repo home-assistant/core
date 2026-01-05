@@ -25,6 +25,8 @@ from .entity import VeSyncBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 1
+
 
 @dataclass(frozen=True, kw_only=True)
 class VeSyncSwitchEntityDescription(SwitchEntityDescription):
@@ -63,6 +65,16 @@ SENSOR_DESCRIPTIONS: Final[tuple[VeSyncSwitchEntityDescription, ...]] = (
         translation_key="child_lock",
         on_fn=lambda device: device.toggle_child_lock(True),
         off_fn=lambda device: device.toggle_child_lock(False),
+    ),
+    VeSyncSwitchEntityDescription(
+        key="auto_off_config",
+        is_on=lambda device: device.state.automatic_stop_config,
+        exists_fn=(
+            lambda device: rgetattr(device, "state.automatic_stop_config") is not None
+        ),
+        translation_key="auto_off_config",
+        on_fn=lambda device: device.toggle_automatic_stop(True),
+        off_fn=lambda device: device.toggle_automatic_stop(False),
     ),
 )
 
