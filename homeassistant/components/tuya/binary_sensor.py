@@ -19,7 +19,12 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .models import DPCodeBitmapBitWrapper, DPCodeBooleanWrapper, DPCodeWrapper
+from .models import (
+    DeviceWrapper,
+    DPCodeBitmapBitWrapper,
+    DPCodeBooleanWrapper,
+    DPCodeWrapper,
+)
 
 
 @dataclass(frozen=True)
@@ -380,7 +385,7 @@ class _CustomDPCodeWrapper(DPCodeWrapper):
 
     def read_device_status(self, device: CustomerDevice) -> bool | None:
         """Read the device value for the dpcode."""
-        if (raw_value := self._read_device_status_raw(device)) is None:
+        if (raw_value := device.status.get(self.dpcode)) is None:
             return None
         return raw_value in self._valid_values
 
@@ -450,7 +455,7 @@ class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: TuyaBinarySensorEntityDescription,
-        dpcode_wrapper: DPCodeWrapper,
+        dpcode_wrapper: DeviceWrapper[bool],
     ) -> None:
         """Init Tuya binary sensor."""
         super().__init__(device, device_manager)

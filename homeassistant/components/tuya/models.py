@@ -2,12 +2,9 @@
 
 from __future__ import annotations
 
-import base64
 from typing import Any, Self
 
 from tuya_sharing import CustomerDevice
-
-from homeassistant.util.json import json_loads
 
 from .type_information import (
     BitmapTypeInformation,
@@ -21,15 +18,23 @@ from .type_information import (
 )
 
 
-class DeviceWrapper:
+class DeviceWrapper[T]:
     """Base device wrapper."""
 
-    def read_device_status(self, device: CustomerDevice) -> Any | None:
+    native_unit: str | None = None
+    options: list[str] | None = None
+    suggested_unit: str | None = None
+
+    max_value: float
+    min_value: float
+    value_step: float
+
+    def read_device_status(self, device: CustomerDevice) -> T | None:
         """Read device status and convert to a Home Assistant value."""
         raise NotImplementedError
 
     def get_update_commands(
-        self, device: CustomerDevice, value: Any
+        self, device: CustomerDevice, value: T
     ) -> list[dict[str, Any]]:
         """Generate update commands for a Home Assistant action."""
         raise NotImplementedError
@@ -42,19 +47,9 @@ class DPCodeWrapper(DeviceWrapper):
     access read conversion routines.
     """
 
-    native_unit: str | None = None
-    suggested_unit: str | None = None
-
     def __init__(self, dpcode: str) -> None:
         """Init DPCodeWrapper."""
         self.dpcode = dpcode
-
-    def _read_device_status_raw(self, device: CustomerDevice) -> Any | None:
-        """Read the raw device status for the DPCode.
-
-        Private helper method for `read_device_status`.
-        """
-        return device.status.get(self.dpcode)
 
     def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
         """Convert a Home Assistant value back to a raw device value.
@@ -93,7 +88,7 @@ class DPCodeTypeInformationWrapper[T: TypeInformation](DPCodeWrapper):
     def read_device_status(self, device: CustomerDevice) -> Any | None:
         """Read the device value for the dpcode."""
         return self.type_information.process_raw_value(
-            self._read_device_status_raw(device), device
+            device.status.get(self.dpcode), device
         )
 
     @classmethod
@@ -112,20 +107,6 @@ class DPCodeTypeInformationWrapper[T: TypeInformation](DPCodeWrapper):
                 dpcode=type_information.dpcode, type_information=type_information
             )
         return None
-
-
-class DPCodeBase64Wrapper(DPCodeTypeInformationWrapper[RawTypeInformation]):
-    """Wrapper to extract information from a RAW/binary value."""
-
-    _DPTYPE = RawTypeInformation
-
-    def read_bytes(self, device: CustomerDevice) -> bytes | None:
-        """Read the device value for the dpcode."""
-        if (raw_value := self._read_device_status_raw(device)) is None or (
-            len(decoded := base64.b64decode(raw_value)) == 0
-        ):
-            return None
-        return decoded
 
 
 class DPCodeBooleanWrapper(DPCodeTypeInformationWrapper[BooleanTypeInformation]):
@@ -152,17 +133,17 @@ class DPCodeJsonWrapper(DPCodeTypeInformationWrapper[JsonTypeInformation]):
 
     _DPTYPE = JsonTypeInformation
 
-    def read_json(self, device: CustomerDevice) -> Any | None:
-        """Read the device value for the dpcode."""
-        if (raw_value := self._read_device_status_raw(device)) is None:
-            return None
-        return json_loads(raw_value)
-
 
 class DPCodeEnumWrapper(DPCodeTypeInformationWrapper[EnumTypeInformation]):
     """Simple wrapper for EnumTypeInformation values."""
 
     _DPTYPE = EnumTypeInformation
+    options: list[str]
+
+    def __init__(self, dpcode: str, type_information: EnumTypeInformation) -> None:
+        """Init DPCodeEnumWrapper."""
+        super().__init__(dpcode, type_information)
+        self.options = type_information.range
 
     def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
         """Convert a Home Assistant value back to a raw device value."""
@@ -184,6 +165,9 @@ class DPCodeIntegerWrapper(DPCodeTypeInformationWrapper[IntegerTypeInformation])
         """Init DPCodeIntegerWrapper."""
         super().__init__(dpcode, type_information)
         self.native_unit = type_information.unit
+        self.min_value = self.type_information.scale_value(type_information.min)
+        self.max_value = self.type_information.scale_value(type_information.max)
+        self.value_step = self.type_information.scale_value(type_information.step)
 
     def _convert_value_to_raw_value(self, device: CustomerDevice, value: Any) -> Any:
         """Convert a Home Assistant value back to a raw device value."""
@@ -196,6 +180,12 @@ class DPCodeIntegerWrapper(DPCodeTypeInformationWrapper[IntegerTypeInformation])
             f"Value `{new_value}` (converted from `{value}`) out of range:"
             f" ({self.type_information.min}-{self.type_information.max})"
         )
+
+
+class DPCodeRawWrapper(DPCodeTypeInformationWrapper[RawTypeInformation]):
+    """Wrapper to extract information from a RAW/binary value."""
+
+    _DPTYPE = RawTypeInformation
 
 
 class DPCodeStringWrapper(DPCodeTypeInformationWrapper[StringTypeInformation]):
@@ -214,7 +204,7 @@ class DPCodeBitmapBitWrapper(DPCodeWrapper):
 
     def read_device_status(self, device: CustomerDevice) -> bool | None:
         """Read the device value for the dpcode."""
-        if (raw_value := self._read_device_status_raw(device)) is None:
+        if (raw_value := device.status.get(self.dpcode)) is None:
             return None
         return (raw_value & (1 << self._mask)) != 0
 

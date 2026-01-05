@@ -15,6 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PortainerConfigEntry
+from .const import CONTAINER_STATE_RUNNING
 from .coordinator import PortainerContainerData, PortainerCoordinator
 from .entity import (
     PortainerContainerEntity,
@@ -41,7 +42,7 @@ CONTAINER_SENSORS: tuple[PortainerContainerBinarySensorEntityDescription, ...] =
     PortainerContainerBinarySensorEntityDescription(
         key="status",
         translation_key="status",
-        state_fn=lambda data: data.container.state == "running",
+        state_fn=lambda data: data.container.state == CONTAINER_STATE_RUNNING,
         device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -163,7 +164,11 @@ class PortainerContainerSensor(PortainerContainerEntity, BinarySensorEntity):
     @property
     def available(self) -> bool:
         """Return if the device is available."""
-        return super().available and self.endpoint_id in self.coordinator.data
+        return (
+            super().available
+            and self.endpoint_id in self.coordinator.data
+            and self.device_name in self.coordinator.data[self.endpoint_id].containers
+        )
 
     @property
     def is_on(self) -> bool | None:

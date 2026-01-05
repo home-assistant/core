@@ -27,7 +27,7 @@ from homeassistant.helpers.issue_registry import (
 from . import TuyaConfigEntry
 from .const import DOMAIN, TUYA_DISCOVERY_NEW, DeviceCategory, DPCode
 from .entity import TuyaEntity
-from .models import DPCodeBooleanWrapper
+from .models import DeviceWrapper, DPCodeBooleanWrapper
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -1027,7 +1027,7 @@ class TuyaSwitchEntity(TuyaEntity, SwitchEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: SwitchEntityDescription,
-        dpcode_wrapper: DPCodeBooleanWrapper,
+        dpcode_wrapper: DeviceWrapper[bool],
     ) -> None:
         """Init TuyaHaSwitch."""
         super().__init__(device, device_manager)

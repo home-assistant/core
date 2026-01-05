@@ -9,15 +9,16 @@ from actron_neo_api import (
 
 from homeassistant.const import CONF_API_TOKEN, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-from .const import _LOGGER
+from .const import _LOGGER, DOMAIN
 from .coordinator import (
     ActronAirConfigEntry,
     ActronAirRuntimeData,
     ActronAirSystemCoordinator,
 )
 
-PLATFORM = [Platform.CLIMATE]
+PLATFORMS = [Platform.CLIMATE, Platform.SWITCH]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ActronAirConfigEntry) -> bool:
@@ -29,12 +30,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ActronAirConfigEntry) ->
     try:
         systems = await api.get_ac_systems()
         await api.update_status()
-    except ActronAirAuthError:
-        _LOGGER.error("Authentication error while setting up Actron Air integration")
-        raise
+    except ActronAirAuthError as err:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="auth_error",
+        ) from err
     except ActronAirAPIError as err:
-        _LOGGER.error("API error while setting up Actron Air integration: %s", err)
-        raise
+        raise ConfigEntryNotReady from err
 
     system_coordinators: dict[str, ActronAirSystemCoordinator] = {}
     for system in systems:
@@ -48,10 +50,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ActronAirConfigEntry) ->
         system_coordinators=system_coordinators,
     )
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORM)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ActronAirConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORM)
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
