@@ -8,8 +8,8 @@ from tuya_sharing import CustomerDevice, Manager
 
 from homeassistant.components.sensor import (
     DEVICE_CLASS_UNITS as SENSOR_DEVICE_CLASS_UNITS,
-    RestoreSensor,
     SensorDeviceClass,
+    SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
@@ -1786,7 +1786,7 @@ async def async_setup_entry(
     )
 
 
-class TuyaSensorEntity(TuyaEntity, RestoreSensor):
+class TuyaSensorEntity(TuyaEntity, SensorEntity):
     """Tuya Sensor Entity."""
 
     entity_description: TuyaSensorEntityDescription
@@ -1819,29 +1819,7 @@ class TuyaSensorEntity(TuyaEntity, RestoreSensor):
         """Handle entity added to Home Assistant."""
         await super().async_added_to_hass()
 
-        if not self._is_delta_report:
-            return
-
-        # Restore accumulated value from previous state using RestoreSensor
-        if (last_sensor_data := await self.async_get_last_sensor_data()) is not None:
-            native_value = last_sensor_data.native_value
-            if native_value is not None and isinstance(native_value, (int, float, str)):
-                try:
-                    self._accumulated_value = float(native_value)
-                    LOGGER.debug(
-                        "Restored accumulated value for %s: %s",
-                        self.unique_id,
-                        self._accumulated_value,
-                    )
-                except (ValueError, TypeError):
-                    LOGGER.warning(
-                        "Could not restore accumulated value for %s from state %s",
-                        self.unique_id,
-                        native_value,
-                    )
-
-        # Initialize from device if no restored value
-        if self._accumulated_value is None:
+        if self._is_delta_report:
             self._initialize_accumulated_value()
 
     def _initialize_accumulated_value(self) -> None:
