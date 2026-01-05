@@ -19,6 +19,9 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
     },
     "step": {
+      "oauth_discovery": {
+        "description": "Home Assistant has found a SmartThings device on your network. Press **Submit** to continue setting up SmartThings."
+      },
       "pick_implementation": {
         "data": {
           "implementation": "[%key:common::config_flow::data::implementation%]"
