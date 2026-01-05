@@ -2,7 +2,7 @@
 
 from typing import Any
 
-import openevsewifi
+from openevsehttp.__main__ import OpenEVSE
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -20,13 +20,13 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
     async def check_status(self, host: str) -> bool:
         """Check if we can connect to the OpenEVSE charger."""
 
-        charger = openevsewifi.Charger(host)
+        charger = OpenEVSE(host)
         try:
-            result = await self.hass.async_add_executor_job(charger.getStatus)
-        except AttributeError:
+            await charger.update()
+        except TimeoutError:
             return False
         else:
-            return result is not None
+            return True
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

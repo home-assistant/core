@@ -6,7 +6,7 @@
   "documentation": "https://www.home-assistant.io/integrations/openevse",
   "integration_type": "device",
   "iot_class": "local_polling",
-  "loggers": ["openevsewifi"],
+  "loggers": ["openevsehttp"],
   "quality_scale": "legacy",
-  "requirements": ["openevsewifi==1.1.2"]
+  "requirements": ["python-openevse-http==0.1.91"]
 }
