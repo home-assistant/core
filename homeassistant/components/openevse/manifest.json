@@ -1,6 +1,7 @@
 {
   "domain": "openevse",
   "name": "OpenEVSE",
+  "after_dependencies": ["zeroconf"],
   "codeowners": ["@c00w"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/openevse",
@@ -8,5 +9,6 @@
   "iot_class": "local_polling",
   "loggers": ["openevsewifi"],
   "quality_scale": "legacy",
-  "requirements": ["openevsewifi==1.1.2"]
+  "requirements": ["openevsewifi==1.1.2"],
+  "zeroconf": ["_openevse._tcp.local."]
 }

@@ -1,12 +1,15 @@
 """Tests for the OpenEVSE sensor platform."""
 
-from unittest.mock import AsyncMock, MagicMock
+from ipaddress import ip_address
+from unittest.mock import AsyncMock, MagicMock, patch
 
+from homeassistant import config_entries
 from homeassistant.components.openevse.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 
 async def test_user_flow(
@@ -136,4 +139,145 @@ async def test_import_flow_duplicate(
         data={CONF_HOST: "192.168.1.100"},
     )
     assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_zeroconf_already_configured_unique_id(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MagicMock,
+):
+    """Test zeroconf discovery updates info if unique_id is already configured."""
+    # Create an existing entry with the same unique_id but different IP
+    mock_config_entry.add_to_hass(hass)
+
+    discovery_info = ZeroconfServiceInfo(
+        ip_address=ip_address("192.168.1.123"),
+        ip_addresses=[ip_address("192.168.1.123"), ip_address("2001:db8::1")],
+        hostname="openevse-1234.local.",
+        name="openevse-1234._openevse._tcp.local.",
+        port=80,
+        properties={"id": "1234", "type": "openevse"},
+        type="_openevse._tcp.local.",
+    )
+
+    with patch("openevse.config_flow.check_status", return_value=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=discovery_info,
+        )
+
+        # Should abort because unique_id matches, but it updates the config entry
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == "already_configured"
+
+        # Verify the entry IP was updated to the new discovery IP
+        assert mock_config_entry.data["host"] == "192.168.1.123"
+
+
+async def test_zeroconf_discovery(hass: HomeAssistant, mock_setup_entry: AsyncMock):
+    """Test zeroconf discovery."""
+    # Simulate a Zeroconf discovery packet
+    discovery_info = ZeroconfServiceInfo(
+        ip_address=ip_address("192.168.1.123"),
+        ip_addresses=[ip_address("192.168.1.123")],
+        hostname="openevse-1234.local.",
+        name="openevse-1234._openevse._tcp.local.",
+        port=80,
+        properties={"id": "1234", "type": "openevse"},
+        type="_openevse._tcp.local.",
+    )
+
+    # Trigger the zeroconf step
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+
+    # Should present a confirmation form
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+    assert result["description_placeholders"] == {"name": "OpenEVSE: openevse-1234"}
+
+    # Confirm the discovery
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    # Should create the entry
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "OpenEVSE: openevse-1234"
+    assert result["data"][CONF_HOST] == "192.168.1.123"
+
+
+async def test_zeroconf_no_serial(hass: HomeAssistant):
+    """Test zeroconf discovery with missing serial number."""
+    discovery_info = ZeroconfServiceInfo(
+        ip_address=ip_address("192.168.1.123"),
+        ip_addresses=[ip_address("192.168.1.123"), ip_address("2001:db8::1")],
+        hostname="openevse-1234.local.",
+        name="openevse-1234._openevse._tcp.local.",
+        port=80,
+        properties={"type": "openevse"},  # Missing 'id'
+        type="_openevse._tcp.local.",
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "invalid_discovery_parameters"
+
+
+async def test_zeroconf_connection_error(hass: HomeAssistant):
+    """Test zeroconf discovery with connection failure."""
+    discovery_info = ZeroconfServiceInfo(
+        ip_address=ip_address("192.168.1.123"),
+        ip_addresses=[ip_address("192.168.1.123"), ip_address("2001:db8::1")],
+        hostname="openevse-1234.local.",
+        name="openevse-1234._openevse._tcp.local.",
+        port=80,
+        properties={"id": "1234", "type": "openevse"},
+        type="_openevse._tcp.local.",
+    )
+
+    # Mock update to raise an exception (simulating connection failure)
+    with patch("openevse.config_flow.check_status", return_value=False):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=discovery_info,
+        )
+
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == "unknown_error"
+
+
+async def test_zeroconf_already_configured_host(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+):
+    """Test zeroconf discovery aborts if host is already configured."""
+    discovery_info = ZeroconfServiceInfo(
+        ip_address=ip_address("192.168.1.100"),
+        ip_addresses=[ip_address("192.168.1.100"), ip_address("2001:db8::1")],
+        hostname="openevse-1234.local.",
+        name="openevse-1234._openevse._tcp.local.",
+        port=80,
+        properties={"id": "1234", "type": "openevse"},
+        type="_openevse._tcp.local.",
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+
+    # Should abort because the host matches an existing entry
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
