@@ -18,6 +18,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "art_frame_mode": {
+        "name": "Auto Play Mode"
+      }
+    },
     "fan": {
       "air_purifier": {
         "state_attributes": {
