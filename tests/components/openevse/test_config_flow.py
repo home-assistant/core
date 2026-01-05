@@ -181,8 +181,9 @@ async def test_zeroconf_already_configured_unique_id(
     assert config_entry.data["host"] == "192.168.1.123"
 
 
-async def test_zeroconf_discovery(hass: HomeAssistant, mock_setup_entry: AsyncMock, 
-    mock_charger: MagicMock):
+async def test_zeroconf_discovery(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_charger: MagicMock
+):
     """Test zeroconf discovery."""
     # Simulate a Zeroconf discovery packet
     discovery_info = ZeroconfServiceInfo(
@@ -218,8 +219,9 @@ async def test_zeroconf_discovery(hass: HomeAssistant, mock_setup_entry: AsyncMo
     assert result["data"][CONF_HOST] == "192.168.1.123"
 
 
-async def test_zeroconf_no_serial(hass: HomeAssistant, mock_setup_entry: AsyncMock, 
-    mock_charger: MagicMock):
+async def test_zeroconf_no_serial(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_charger: MagicMock
+):
     """Test zeroconf discovery with missing serial number."""
     discovery_info = ZeroconfServiceInfo(
         ip_address=ip_address("192.168.1.123"),
@@ -254,7 +256,6 @@ async def test_zeroconf_connection_error(hass: HomeAssistant, mock_charger: Magi
         type="_openevse._tcp.local.",
     )
 
-    
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
