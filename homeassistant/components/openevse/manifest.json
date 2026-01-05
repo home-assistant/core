@@ -2,7 +2,7 @@
   "domain": "openevse",
   "name": "OpenEVSE",
   "after_dependencies": ["zeroconf"],
-  "codeowners": ["@c00w"],
+  "codeowners": ["@c00w", "@firstof9"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/openevse",
   "integration_type": "device",
