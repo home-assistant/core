@@ -1,6 +1,7 @@
 """Test person trigger."""
 
 from collections.abc import Generator
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -70,7 +71,7 @@ async def test_person_triggers_gated_by_labs_flag(
     parametrize_target_entities(DOMAIN),
 )
 @pytest.mark.parametrize(
-    ("trigger", "states"),
+    ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
             trigger="person.entered_home",
@@ -92,6 +93,7 @@ async def test_person_home_trigger_behavior_any(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
+    trigger_options: dict[str, Any],
     states: list[StateDescription],
 ) -> None:
     """Test that the person home triggers when any person changes to a specific state."""
@@ -127,7 +129,7 @@ async def test_person_home_trigger_behavior_any(
     parametrize_target_entities(DOMAIN),
 )
 @pytest.mark.parametrize(
-    ("trigger", "states"),
+    ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
             trigger="person.entered_home",
@@ -149,6 +151,7 @@ async def test_person_state_trigger_behavior_first(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
+    trigger_options: dict[str, Any],
     states: list[StateDescription],
 ) -> None:
     """Test that the person home triggers when the first person changes to a specific state."""
@@ -183,7 +186,7 @@ async def test_person_state_trigger_behavior_first(
     parametrize_target_entities(DOMAIN),
 )
 @pytest.mark.parametrize(
-    ("trigger", "states"),
+    ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
             trigger="person.entered_home",
@@ -205,6 +208,7 @@ async def test_person_state_trigger_behavior_last(
     entity_id: str,
     entities_in_target: int,
     trigger: str,
+    trigger_options: dict[str, Any],
     states: list[StateDescription],
 ) -> None:
     """Test that the person home triggers when the last person changes to a specific state."""
