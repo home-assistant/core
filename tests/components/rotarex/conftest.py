@@ -1,4 +1,5 @@
 """Test stubs for rotarex_api dependency."""
+
 import sys
 import types
 from typing import Any
@@ -12,7 +13,9 @@ class InvalidAuth(Exception):
 
 class RotarexApi:
     """Minimal stub for Rotarex API used by config_flow imports."""
+
     async def login(self, email: str, password: str) -> Any:  # pragma: no cover
+        """Simulate user login."""
         return None
 
 

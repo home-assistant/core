@@ -1,9 +1,13 @@
+# homeassistant/components/rotarex/config_flow.py
+"""Config flow for Rotarex integration."""
+
 import logging
+from typing import Any
 
 from rotarex_api import InvalidAuth, RotarexApi
 import voluptuous as vol
 
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -12,12 +16,17 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-class RotarexConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+
+class RotarexConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Rotarex."""
 
-    async def async_step_user(self, user_input=None):
+    VERSION = 1
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             session = async_get_clientsession(self.hass)
             api = RotarexApi(session)
