@@ -3,6 +3,7 @@
 import math
 from typing import Any
 
+from pyintelliclima.const import FanMode, FanSpeed
 from pyintelliclima.intelliclima_types import IntelliClimaECO
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
@@ -14,7 +15,6 @@ from homeassistant.util.percentage import (
 )
 from homeassistant.util.scaling import int_states_in_range
 
-from .const import FanMode, FanSpeed
 from .coordinator import IntelliClimaConfigEntry, IntelliClimaCoordinator
 from .entity import IntelliClimaECOEntity
 

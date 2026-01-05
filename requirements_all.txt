@@ -2100,7 +2100,7 @@ pyicloud==2.2.0
 pyinsteon==1.6.4
 
 # homeassistant.components.intelliclima
-pyintelliclima==0.2.0
+pyintelliclima==0.2.1
 
 # homeassistant.components.intesishome
 pyintesishome==1.8.0
