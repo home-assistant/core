@@ -754,7 +754,7 @@ easyenergy==2.1.2
 egauge-async==0.4.0
 
 # homeassistant.components.eheimdigital
-eheimdigital==1.4.0
+eheimdigital==1.5.0
 
 # homeassistant.components.ekeybionyx
 ekey-bionyxpy==1.0.1
@@ -1444,6 +1444,9 @@ openai==2.11.0
 
 # homeassistant.components.openerz
 openerz-api==0.3.0
+
+# homeassistant.components.openevse
+openevsewifi==1.1.2
 
 # homeassistant.components.openhome
 openhomedevice==2.2.0
