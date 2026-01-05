@@ -41,8 +41,6 @@ from .const import (
     SIGNAL_EDL21_TELEGRAM,
 )
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
-
 # OBIS format: A-B:C.D.E*F
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     # A=1: Electricity
@@ -292,6 +290,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the EDL21 sensor."""
+    update_seconds = hass.data[DOMAIN][config_entry.entry_id]["update_interval_seconds"]
     api = EDL21(hass, config_entry.data, async_add_entities)
     await api.connect()
 
@@ -318,6 +317,7 @@ class EDL21:
         hass: HomeAssistant,
         config: Mapping[str, Any],
         async_add_entities: AddConfigEntryEntitiesCallback,
+        update_seconds: int,
     ) -> None:
         """Initialize an EDL21 object."""
         self._registered_obis: set[tuple[str, str]] = set()
@@ -327,8 +327,9 @@ class EDL21:
         self._proto = SmlProtocol(config[CONF_SERIAL_PORT])
         self._proto.add_listener(self.event, ["SmlGetListResponse"])
         LOGGER.debug(
-            "Initialized EDL21 on %s",
+            "Initialized EDL21 on %s with update interval %s seconds",
             config[CONF_SERIAL_PORT],
+            update_seconds,
         )
 
     async def connect(self) -> None:
@@ -367,6 +368,7 @@ class EDL21:
                             obis,
                             entity_description,
                             telegram,
+                            self._update_seconds,
                         )
                     )
                     self._registered_obis.add((electricity_id, obis))
@@ -393,7 +395,7 @@ class EDL21Entity(SensorEntity):
         self._electricity_id = electricity_id
         self._obis = obis
         self._telegram = telegram
-        self._min_time = MIN_TIME_BETWEEN_UPDATES
+        self._min_time = timedelta(seconds=update_seconds)
         self._last_update = utcnow()
         self._async_remove_dispatcher = None
         self.entity_description = entity_description
