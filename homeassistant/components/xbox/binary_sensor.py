@@ -112,7 +112,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Xbox Live friends."""
-    coordinator = entry.runtime_data.status
+    coordinator = entry.runtime_data.presence
 
     if TYPE_CHECKING:
         assert entry.unique_id
