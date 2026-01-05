@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 
 from httpx import HTTPStatusError, RequestError, TimeoutException
@@ -19,13 +20,15 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 from homeassistant.helpers.httpx_client import get_async_client
 
+from . import api
 from .api import AsyncConfigEntryAuth
 from .const import DOMAIN
 from .coordinator import (
     XboxConfigEntry,
     XboxConsolesCoordinator,
+    XboxConsoleStatusCoordinator,
     XboxCoordinators,
-    XboxUpdateCoordinator,
+    XboxPresenceCoordinator,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,12 +47,30 @@ PLATFORMS = [
 async def async_setup_entry(hass: HomeAssistant, entry: XboxConfigEntry) -> bool:
     """Set up xbox from a config entry."""
 
-    coordinator = XboxUpdateCoordinator(hass, entry)
-    await coordinator.async_config_entry_first_refresh()
+    try:
+        implementation = await async_get_config_entry_implementation(hass, entry)
+    except ImplementationUnavailableError as e:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="oauth2_implementation_unavailable",
+        ) from e
 
-    consoles = XboxConsolesCoordinator(hass, entry, coordinator)
+    session = OAuth2Session(hass, entry, implementation)
+    async_session = get_async_client(hass)
+    auth = api.AsyncConfigEntryAuth(async_session, session)
+    client = XboxLiveClient(auth)
 
-    entry.runtime_data = XboxCoordinators(coordinator, consoles)
+    consoles = XboxConsolesCoordinator(hass, entry, client)
+    await consoles.async_config_entry_first_refresh()
+
+    status = XboxConsoleStatusCoordinator(hass, entry, client, consoles.data)
+    presence = XboxPresenceCoordinator(hass, entry, client)
+    await asyncio.gather(
+        status.async_config_entry_first_refresh(),
+        presence.async_config_entry_first_refresh(),
+    )
+
+    entry.runtime_data = XboxCoordinators(consoles, status, presence)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
