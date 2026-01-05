@@ -23,10 +23,6 @@ def mock_charger() -> Generator[MagicMock]:
             "homeassistant.components.openevse.config_flow.openevsewifi.Charger",
             new=mock,
         ),
-        patch(
-            "homeassistant.components.openevse.sensor.openevsewifi.Charger",
-            new=mock,
-        ),
     ):
         charger = mock.return_value
         charger.getStatus.return_value = "Charging"
