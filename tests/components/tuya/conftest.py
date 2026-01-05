@@ -191,9 +191,8 @@ async def _create_device(hass: HomeAssistant, mock_device_code: str) -> Customer
         )
         for key, value in details["function"].items()
     }
-    device.status_range = {}
-    for key, value in details["status_range"].items():
-        status_range = DeviceStatusRange(
+    device.status_range = {
+        key: DeviceStatusRange(
             code=key,
             report_type=value.get("report_type"),
             type=value["type"],
@@ -203,9 +202,8 @@ async def _create_device(hass: HomeAssistant, mock_device_code: str) -> Customer
                 else json_dumps(values)
             ),
         )
-        # Add report_type attribute if present in fixture
-        status_range.report_type = value.get("report_type")
-        device.status_range[key] = status_range
+        for key, value in details["status_range"].items()
+    }
     device.status = details["status"]
     for key, value in device.status.items():
         # Some devices do not provide a status_range for all status DPs
