@@ -1,6 +1,6 @@
 {
   "domain": "elke27",
-  "name": "Elke27",
+  "name": "Elk E27",
   "codeowners": ["@gwww", "@bdraco"],
   "config_flow": true,
   "dependencies": ["network"],

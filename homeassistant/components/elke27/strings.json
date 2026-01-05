@@ -13,7 +13,7 @@
     },
     "step": {
       "user": {
-        "title": "Set up Elke27",
+        "title": "Set up Elk E27 Alarm Panel",
         "description": "Enter the panel address, linking credentials, and user PIN.",
         "data": {
           "host": "Address",
