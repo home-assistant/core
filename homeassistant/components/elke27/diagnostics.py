@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict, is_dataclass
-from enum import Enum
-from typing import Any, Mapping
+from collections.abc import Mapping
+from dataclasses import fields, is_dataclass
+from datetime import date, datetime
+import enum
+from types import MappingProxyType
+from typing import Any
 
 from elke27_lib import redact_for_diagnostics
 
@@ -53,15 +56,24 @@ def _to_jsonable(value: Any) -> Any:
     if value is None:
         return None
     if is_dataclass(value):
-        return _to_jsonable(asdict(value))
+        return {
+            field.name: _to_jsonable(getattr(value, field.name))
+            for field in fields(value)
+        }
+    if isinstance(value, MappingProxyType):
+        return {str(key): _to_jsonable(val) for key, val in dict(value).items()}
     if isinstance(value, Mapping):
         return {str(key): _to_jsonable(val) for key, val in value.items()}
-    if isinstance(value, list | tuple | set):
+    if isinstance(value, list | tuple):
         return [_to_jsonable(item) for item in value]
-    if isinstance(value, bytes | bytearray | memoryview):
-        return f"<{len(value)} bytes>"
-    if isinstance(value, Enum):
+    if isinstance(value, set | frozenset):
+        return sorted([_to_jsonable(item) for item in value], key=str)
+    if isinstance(value, bytes | bytearray):
+        return value.hex()
+    if isinstance(value, enum.Enum):
         return value.name
+    if isinstance(value, datetime | date):
+        return value.isoformat()
     if isinstance(value, (str, int, float, bool)):
         return value
     return str(value)
