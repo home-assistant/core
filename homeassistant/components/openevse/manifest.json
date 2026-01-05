@@ -8,5 +8,5 @@
   "iot_class": "local_polling",
   "loggers": ["openevsehttp"],
   "quality_scale": "legacy",
-  "requirements": ["python-openevse-http==0.1.91"]
+  "requirements": ["python-openevse-http==0.2.1"]
 }
