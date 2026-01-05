@@ -9,12 +9,14 @@ from requests import RequestException
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
+    DOMAIN as HOMEASSISTANT_DOMAIN,
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_HOST,
     CONF_MONITORED_VARIABLES,
@@ -23,9 +25,16 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from . import ConfigEntry
+from .const import DOMAIN, INTEGRATION_TITLE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,6 +63,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="rtc_temp",
@@ -61,6 +71,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="usage_session",
@@ -90,33 +101,86 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the OpenEVSE sensor."""
-    host = config[CONF_HOST]
-    monitored_variables = config[CONF_MONITORED_VARIABLES]
+    """Set up the openevse platform."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=config,
+    )
 
-    charger = openevsewifi.Charger(host)
+    if (
+        result.get("type") is FlowResultType.ABORT
+        and result.get("reason") != "already_configured"
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{result.get('reason')}",
+            breaks_in_ha_version="2026.6.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_{result.get('reason')}",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": INTEGRATION_TITLE,
+            },
+        )
+        return
 
-    entities = [
-        OpenEVSESensor(charger, description)
-        for description in SENSOR_TYPES
-        if description.key in monitored_variables
-    ]
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        "deprecated_yaml",
+        breaks_in_ha_version="2026.7.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": INTEGRATION_TITLE,
+        },
+    )
 
-    add_entities(entities, True)
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Add sensors for passed config_entry in HA."""
+    async_add_entities(
+        (
+            OpenEVSESensor(
+                config_entry.data[CONF_HOST],
+                config_entry.runtime_data,
+                description,
+            )
+            for description in SENSOR_TYPES
+        ),
+        True,
+    )
 
 
 class OpenEVSESensor(SensorEntity):
     """Implementation of an OpenEVSE sensor."""
 
-    def __init__(self, charger, description: SensorEntityDescription) -> None:
+    def __init__(
+        self,
+        host: str,
+        charger: openevsewifi.Charger,
+        description: SensorEntityDescription,
+    ) -> None:
         """Initialize the sensor."""
         self.entity_description = description
+        self.host = host
         self.charger = charger
 
     def update(self) -> None:
