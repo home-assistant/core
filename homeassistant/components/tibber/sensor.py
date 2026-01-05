@@ -281,7 +281,7 @@ DATA_API_SENSORS: tuple[SensorEntityDescription, ...] = (
         key="range.remaining",
         translation_key="range_remaining",
         device_class=SensorDeviceClass.DISTANCE,
-        native_unit_of_measurement=UnitOfLength.KILOMETERS,
+        native_unit_of_measurement=UnitOfLength.METERS,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
     ),
