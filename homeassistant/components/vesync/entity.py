@@ -42,4 +42,4 @@ class VeSyncBaseEntity(CoordinatorEntity[VeSyncDataCoordinator]):
     @property
     def available(self) -> bool:
         """Return True if device is available."""
-        return self.device.state.connection_status == "online"
+        return super().available and self.device.state.connection_status == "online"
