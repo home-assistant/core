@@ -430,7 +430,7 @@ async def test_ceiling_light_turn_off(
 async def test_rgbic_neon_rope_light(
     hass: HomeAssistant, mock_list_devices, mock_get_status, device_type
 ) -> None:
-    """Test rgbww light turn on."""
+    """Test rgbic neon rope light."""
     mock_list_devices.return_value = [
         Device(
             version="V1.0",
@@ -443,26 +443,6 @@ async def test_rgbic_neon_rope_light(
     mock_get_status.side_effect = [
         {"power": "off", "brightness": 1, "color": "0:0:0"},
         {"power": "on", "brightness": 10, "color": "0:0:0"},
-        {
-            "power": "on",
-            "brightness": 10,
-            "color": "255:255:255",
-        },
-        {
-            "power": "on",
-            "brightness": 10,
-            "color": "255:255:255",
-        },
-        {
-            "power": "on",
-            "brightness": 10,
-            "color": "255:255:255",
-        },
-        {
-            "power": "on",
-            "brightness": 10,
-            "color": "255:255:255",
-        },
         {
             "power": "on",
             "brightness": 10,
@@ -517,7 +497,7 @@ async def test_rgbic_neon_rope_light(
 async def test_candle_warmer_lamp(
     hass: HomeAssistant, mock_list_devices, mock_get_status
 ) -> None:
-    """Test rgbww light turn on."""
+    """Test candle warmer lamp."""
     mock_list_devices.return_value = [
         Device(
             version="V1.0",
@@ -531,26 +511,6 @@ async def test_candle_warmer_lamp(
         {
             "power": "off",
             "brightness": 1,
-        },
-        {
-            "power": "on",
-            "brightness": 10,
-        },
-        {
-            "power": "on",
-            "brightness": 10,
-        },
-        {
-            "power": "on",
-            "brightness": 10,
-        },
-        {
-            "power": "on",
-            "brightness": 10,
-        },
-        {
-            "power": "on",
-            "brightness": 10,
         },
         {
             "power": "on",
