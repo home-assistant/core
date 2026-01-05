@@ -111,23 +111,16 @@ class _SpecialInstructionEnumWrapper(_InstructionEnumWrapper):
     _ACTION_MAPPINGS = {"open": "FZ", "close": "ZZ", "stop": "STOP"}
 
 
-class _IsClosedWrapper:
-    """Wrapper for checking if cover is closed."""
-
-    def is_closed(self, device: CustomerDevice) -> bool | None:
-        return None
-
-
-class _IsClosedInvertedWrapper(DPCodeBooleanWrapper, _IsClosedWrapper):
+class _IsClosedInvertedWrapper(DPCodeBooleanWrapper):
     """Boolean wrapper for checking if cover is closed (inverted)."""
 
-    def is_closed(self, device: CustomerDevice) -> bool | None:
-        if (value := self.read_device_status(device)) is None:
+    def read_device_status(self, device: CustomerDevice) -> bool | None:
+        if (value := super().read_device_status(device)) is None:
             return None
         return not value
 
 
-class _IsClosedEnumWrapper(DPCodeEnumWrapper, _IsClosedWrapper):
+class _IsClosedEnumWrapper(DPCodeEnumWrapper):
     """Enum wrapper for checking if state is closed."""
 
     _MAPPINGS = {
@@ -137,15 +130,15 @@ class _IsClosedEnumWrapper(DPCodeEnumWrapper, _IsClosedWrapper):
         "fully_open": False,
     }
 
-    def is_closed(self, device: CustomerDevice) -> bool | None:
-        if (value := self.read_device_status(device)) is None:
+    def read_device_status(self, device: CustomerDevice) -> bool | None:
+        if (value := super().read_device_status(device)) is None:
             return None
         return self._MAPPINGS.get(value)
 
 
 @dataclass(frozen=True)
 class TuyaCoverEntityDescription(CoverEntityDescription):
-    """Describe an Tuya cover entity."""
+    """Describe a Tuya cover entity."""
 
     current_state: DPCode | tuple[DPCode, ...] | None = None
     current_state_wrapper: type[_IsClosedInvertedWrapper | _IsClosedEnumWrapper] = (
@@ -298,11 +291,11 @@ async def async_setup_entry(
                         current_position=description.position_wrapper.find_dpcode(
                             device, description.current_position
                         ),
-                        instruction_wrapper=_get_instruction_wrapper(
-                            device, description
-                        ),
                         current_state_wrapper=description.current_state_wrapper.find_dpcode(
                             device, description.current_state
+                        ),
+                        instruction_wrapper=_get_instruction_wrapper(
+                            device, description
                         ),
                         set_position=description.position_wrapper.find_dpcode(
                             device, description.set_position, prefer_function=True
@@ -341,7 +334,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         description: TuyaCoverEntityDescription,
         *,
         current_position: DeviceWrapper[int] | None,
-        current_state_wrapper: _IsClosedWrapper | None,
+        current_state_wrapper: DeviceWrapper[bool] | None,
         instruction_wrapper: DeviceWrapper[str] | None,
         set_position: DeviceWrapper[int] | None,
         tilt_position: DeviceWrapper[int] | None,
@@ -391,10 +384,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         if (position := self.current_cover_position) is not None:
             return position == 0
 
-        if self._current_state_wrapper:
-            return self._current_state_wrapper.is_closed(self.device)
-
-        return None
+        return self._read_wrapper(self._current_state_wrapper)
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
